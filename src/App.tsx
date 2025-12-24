@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/layout/AppLayout";
@@ -12,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import CustomersPage from "./pages/customers/CustomersPage";
 import CustomerDetailsPage from "./pages/customers/CustomerDetailsPage";
 import ProductsPage from "./pages/products/ProductsPage";
+import ProductDetailsPage from "./pages/products/ProductDetailsPage";
 import CategoriesPage from "./pages/categories/CategoriesPage";
 import QuotationsPage from "./pages/quotations/QuotationsPage";
 import SalesOrdersPage from "./pages/sales-orders/SalesOrdersPage";
@@ -38,8 +38,8 @@ const App = () => (
               <Route path="customers" element={<CustomersPage />} />
               <Route path="customers/:id" element={<CustomerDetailsPage />} />
               <Route path="products" element={<ProductsPage />} />
+              <Route path="products/:id" element={<ProductDetailsPage />} />
               <Route path="categories" element={<CategoriesPage />} />
-              <Route path="quotations" element={<QuotationsPage />} />
               <Route path="sales-orders" element={<SalesOrdersPage />} />
               <Route path="invoices" element={<InvoicesPage />} />
               <Route path="payments" element={<PaymentsPage />} />

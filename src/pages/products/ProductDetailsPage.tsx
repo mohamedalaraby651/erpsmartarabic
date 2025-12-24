@@ -1,0 +1,322 @@
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowRight, Edit, Plus, Package, Trash2, Layers, Box } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import ProductFormDialog from "@/components/products/ProductFormDialog";
+import ProductVariantDialog from "@/components/products/ProductVariantDialog";
+import type { Database } from "@/integrations/supabase/types";
+
+type Product = Database['public']['Tables']['products']['Row'];
+type ProductVariant = Database['public']['Tables']['product_variants']['Row'];
+type ProductStock = Database['public']['Tables']['product_stock']['Row'];
+
+const ProductDetailsPage = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
+  const { data: product, isLoading } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id!)
+        .single();
+      if (error) throw error;
+      return data as Product;
+    },
+    enabled: !!id,
+  });
+
+  const { data: category } = useQuery({
+    queryKey: ['product-category', product?.category_id],
+    queryFn: async () => {
+      if (!product?.category_id) return null;
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('*')
+        .eq('id', product.category_id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!product?.category_id,
+  });
+
+  const { data: variants = [] } = useQuery({
+    queryKey: ['product-variants', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_variants')
+        .select('*')
+        .eq('product_id', id!)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as ProductVariant[];
+    },
+    enabled: !!id,
+  });
+
+  const { data: stockData = [] } = useQuery({
+    queryKey: ['product-stock', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_stock')
+        .select('*, warehouses(name)')
+        .eq('product_id', id!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const totalStock = stockData.reduce((sum, s) => sum + s.quantity, 0);
+
+  const deleteVariantMutation = useMutation({
+    mutationFn: async (variantId: string) => {
+      const { error } = await supabase
+        .from('product_variants')
+        .delete()
+        .eq('id', variantId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-variants', id] });
+      toast({ title: "تم حذف المتغير بنجاح" });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">المنتج غير موجود</p>
+        <Button variant="link" onClick={() => navigate('/products')}>
+          العودة للمنتجات
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/products')}>
+          <ArrowRight className="h-5 w-5" />
+        </Button>
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{product.name}</h1>
+            {product.sku && (
+              <code className="text-sm bg-muted px-2 py-1 rounded">{product.sku}</code>
+            )}
+            <Badge variant={product.is_active ? "default" : "secondary"}>
+              {product.is_active ? "نشط" : "غير نشط"}
+            </Badge>
+          </div>
+          {category && <p className="text-muted-foreground">{category.name}</p>}
+        </div>
+        <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
+          <Edit className="h-4 w-4 ml-2" />
+          تعديل
+        </Button>
+      </div>
+
+      {/* Product Image & Info */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-1">
+          <CardContent className="p-4">
+            {product.image_url ? (
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full aspect-square object-cover rounded-lg"
+              />
+            ) : (
+              <div className="w-full aspect-square bg-muted rounded-lg flex items-center justify-center">
+                <Package className="h-16 w-16 text-muted-foreground" />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>معلومات المنتج</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">سعر التكلفة</p>
+                <p className="text-lg font-bold">{Number(product.cost_price).toLocaleString()} ج.م</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">سعر البيع</p>
+                <p className="text-lg font-bold text-primary">{Number(product.selling_price).toLocaleString()} ج.م</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">هامش الربح</p>
+                <p className="text-lg font-bold text-success">
+                  {(Number(product.selling_price) - Number(product.cost_price)).toLocaleString()} ج.م
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">المخزون الكلي</p>
+                <p className="text-lg font-bold">{totalStock}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">الحد الأدنى</p>
+                <p className="text-lg font-bold">{product.min_stock || 0}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">المتغيرات</p>
+                <p className="text-lg font-bold">{variants.length}</p>
+              </div>
+            </div>
+            {product.description && (
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <p className="text-sm">{product.description}</p>
+              </div>
+            )}
+            {(product.weight_kg || product.length_cm || product.width_cm || product.height_cm) && (
+              <div className="mt-4 grid grid-cols-4 gap-2 text-sm">
+                {product.weight_kg && <div>الوزن: {product.weight_kg} كجم</div>}
+                {product.length_cm && <div>الطول: {product.length_cm} سم</div>}
+                {product.width_cm && <div>العرض: {product.width_cm} سم</div>}
+                {product.height_cm && <div>الارتفاع: {product.height_cm} سم</div>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="variants" className="w-full">
+        <TabsList>
+          <TabsTrigger value="variants">المتغيرات ({variants.length})</TabsTrigger>
+          <TabsTrigger value="stock">المخزون ({stockData.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="variants" className="mt-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5" />
+                متغيرات المنتج
+              </CardTitle>
+              <Button size="sm" onClick={() => { setSelectedVariant(null); setVariantDialogOpen(true); }}>
+                <Plus className="h-4 w-4 ml-2" />
+                إضافة متغير
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {variants.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">لا توجد متغيرات</p>
+              ) : (
+                <div className="space-y-3">
+                  {variants.map((variant) => (
+                    <div key={variant.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{variant.name}</span>
+                          {variant.sku && (
+                            <code className="text-xs bg-muted px-2 py-1 rounded">{variant.sku}</code>
+                          )}
+                          <Badge variant={variant.is_active ? "default" : "secondary"}>
+                            {variant.is_active ? "نشط" : "غير نشط"}
+                          </Badge>
+                        </div>
+                        {Number(variant.additional_price) > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            سعر إضافي: +{Number(variant.additional_price).toLocaleString()} ج.م
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => { setSelectedVariant(variant); setVariantDialogOpen(true); }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => deleteVariantMutation.mutate(variant.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="stock" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Box className="h-5 w-5" />
+                المخزون في المستودعات
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {stockData.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">لا يوجد مخزون مسجل</p>
+              ) : (
+                <div className="space-y-3">
+                  {stockData.map((stock: any) => (
+                    <div key={stock.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <span className="font-medium">{stock.warehouses?.name || 'مستودع غير محدد'}</span>
+                      </div>
+                      <span className="text-lg font-bold">{stock.quantity} وحدة</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Dialogs */}
+      <ProductFormDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        product={product}
+      />
+      <ProductVariantDialog
+        open={variantDialogOpen}
+        onOpenChange={setVariantDialogOpen}
+        productId={id!}
+        variant={selectedVariant}
+      />
+    </div>
+  );
+};
+
+export default ProductDetailsPage;
