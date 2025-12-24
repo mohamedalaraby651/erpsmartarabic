@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { paymentSchema, type PaymentFormData } from "@/lib/validations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -29,16 +31,6 @@ type Invoice = Database['public']['Tables']['invoices']['Row'];
 interface PaymentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface FormData {
-  customer_id: string;
-  invoice_id: string;
-  amount: number;
-  payment_method: 'cash' | 'bank_transfer' | 'credit' | 'advance_payment' | 'installment';
-  payment_date: string;
-  reference_number: string;
-  notes: string;
 }
 
 const paymentMethods = [
@@ -67,7 +59,8 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
     },
   });
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<PaymentFormData>({
+    resolver: zodResolver(paymentSchema),
     defaultValues: {
       customer_id: '',
       invoice_id: '',
@@ -120,11 +113,7 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
   };
 
   const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      if (data.amount <= 0) {
-        throw new Error('المبلغ يجب أن يكون أكبر من صفر');
-      }
-
+    mutationFn: async (data: PaymentFormData) => {
       const paymentData = {
         customer_id: data.customer_id,
         invoice_id: data.invoice_id || null,
@@ -132,8 +121,8 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
         amount: data.amount,
         payment_method: data.payment_method,
         payment_date: data.payment_date,
-        reference_number: data.reference_number || null,
-        notes: data.notes || null,
+        reference_number: data.reference_number?.trim() || null,
+        notes: data.notes?.trim() || null,
         created_by: user?.id || null,
       };
 
@@ -176,7 +165,7 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
     },
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: PaymentFormData) => {
     mutation.mutate(data);
   };
 
@@ -251,6 +240,7 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
                 step="0.01"
                 {...register('amount', { valueAsNumber: true })}
               />
+              {errors.amount && <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>}
             </div>
 
             <div>

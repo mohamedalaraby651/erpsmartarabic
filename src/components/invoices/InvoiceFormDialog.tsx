@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -30,6 +31,7 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/lib/validations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -49,15 +51,6 @@ interface InvoiceItem {
   unit_price: number;
   discount_percentage: number;
   total_price: number;
-}
-
-interface FormData {
-  customer_id: string;
-  payment_method: 'cash' | 'bank_transfer' | 'credit' | 'advance_payment' | 'installment';
-  due_date: string;
-  notes: string;
-  discount_amount: number;
-  tax_amount: number;
 }
 
 const paymentMethods = [
@@ -101,7 +94,8 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
     },
   });
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
       customer_id: '',
       payment_method: 'cash',
@@ -203,9 +197,20 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
   };
 
   const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: InvoiceFormData) => {
       if (items.length === 0) {
         throw new Error('يجب إضافة منتج واحد على الأقل');
+      }
+
+      // Validate each item
+      for (const item of items) {
+        if (!item.product_id) {
+          throw new Error('يجب اختيار منتج لكل صف');
+        }
+        const result = invoiceItemSchema.safeParse(item);
+        if (!result.success) {
+          throw new Error(result.error.issues[0].message);
+        }
       }
 
       const invoiceData = {
@@ -213,7 +218,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
         invoice_number: invoice?.invoice_number || generateInvoiceNumber(),
         payment_method: data.payment_method,
         due_date: data.due_date || null,
-        notes: data.notes || null,
+        notes: data.notes?.trim() || null,
         subtotal,
         discount_amount: discountAmount,
         tax_amount: taxAmount,
@@ -271,7 +276,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
     },
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: InvoiceFormData) => {
     mutation.mutate(data);
   };
 
@@ -301,6 +306,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
                   ))}
                 </SelectContent>
               </Select>
+              {errors.customer_id && <p className="text-sm text-destructive mt-1">{errors.customer_id.message}</p>}
             </div>
 
             <div>
