@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -22,6 +23,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { productSchema, type ProductFormData } from "@/lib/validations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -32,22 +34,6 @@ interface ProductFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   product?: Product | null;
-}
-
-interface FormData {
-  name: string;
-  sku: string;
-  description: string;
-  category_id: string;
-  cost_price: number;
-  selling_price: number;
-  min_stock: number;
-  image_url: string;
-  weight_kg: number;
-  length_cm: number;
-  width_cm: number;
-  height_cm: number;
-  is_active: boolean;
 }
 
 const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogProps) => {
@@ -67,7 +53,8 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
     },
   });
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
       sku: '',
@@ -122,16 +109,16 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
   }, [product, reset]);
 
   const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: ProductFormData) => {
       const payload: ProductInsert = {
-        name: data.name,
-        sku: data.sku || null,
-        description: data.description || null,
+        name: data.name.trim(),
+        sku: data.sku?.trim() || null,
+        description: data.description?.trim() || null,
         category_id: data.category_id || null,
         cost_price: data.cost_price,
         selling_price: data.selling_price,
         min_stock: data.min_stock,
-        image_url: data.image_url || null,
+        image_url: data.image_url?.trim() || null,
         weight_kg: data.weight_kg || null,
         length_cm: data.length_cm || null,
         width_cm: data.width_cm || null,
@@ -162,7 +149,7 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
     },
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: ProductFormData) => {
     mutation.mutate(data);
   };
 

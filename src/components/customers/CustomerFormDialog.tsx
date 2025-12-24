@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { customerSchema, type CustomerFormData } from "@/lib/validations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -31,20 +33,6 @@ interface CustomerFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   customer?: Customer | null;
-}
-
-interface FormData {
-  name: string;
-  customer_type: 'individual' | 'company';
-  vip_level: 'regular' | 'silver' | 'gold' | 'platinum';
-  phone: string;
-  phone2: string;
-  email: string;
-  tax_number: string;
-  credit_limit: number;
-  category_id: string;
-  notes: string;
-  is_active: boolean;
 }
 
 const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialogProps) => {
@@ -64,7 +52,8 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     },
   });
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<CustomerFormData>({
+    resolver: zodResolver(customerSchema),
     defaultValues: {
       name: '',
       customer_type: 'individual',
@@ -113,18 +102,18 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   }, [customer, reset]);
 
   const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: CustomerFormData) => {
       const payload: CustomerInsert = {
-        name: data.name,
+        name: data.name.trim(),
         customer_type: data.customer_type,
         vip_level: data.vip_level,
-        phone: data.phone || null,
-        phone2: data.phone2 || null,
-        email: data.email || null,
-        tax_number: data.tax_number || null,
+        phone: data.phone?.trim() || null,
+        phone2: data.phone2?.trim() || null,
+        email: data.email?.trim().toLowerCase() || null,
+        tax_number: data.tax_number?.trim() || null,
         credit_limit: data.credit_limit,
         category_id: data.category_id || null,
-        notes: data.notes || null,
+        notes: data.notes?.trim() || null,
         is_active: data.is_active,
       };
 
@@ -152,7 +141,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     },
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: CustomerFormData) => {
     mutation.mutate(data);
   };
 
