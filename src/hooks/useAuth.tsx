@@ -64,13 +64,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
       
       if (error) {
-        console.error('Error fetching user role:', error);
+        // Only log errors in development to avoid exposing schema details
+        if (import.meta.env.DEV) {
+          console.error('Error fetching user role:', error);
+        }
         return;
       }
       
       setUserRole(data?.role ?? null);
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      // Only log errors in development to avoid exposing schema details
+      if (import.meta.env.DEV) {
+        console.error('Error fetching user role:', error);
+      }
     }
   };
 
