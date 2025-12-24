@@ -14,9 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Eye, Edit, ArrowLeftRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Plus, Search, FileText, Edit, ArrowLeftRight, Printer } from "lucide-react";
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog";
+import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -38,11 +38,12 @@ const statusColors: Record<string, string> = {
 };
 
 const QuotationsPage = () => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [printQuotationId, setPrintQuotationId] = useState<string | null>(null);
 
   const { data: quotations = [], isLoading } = useQuery({
     queryKey: ['quotations', searchQuery, statusFilter],
@@ -80,6 +81,11 @@ const QuotationsPage = () => {
   const handleAdd = () => {
     setSelectedQuotation(null);
     setDialogOpen(true);
+  };
+
+  const handlePrint = (quotationId: string) => {
+    setPrintQuotationId(quotationId);
+    setPrintDialogOpen(true);
   };
 
   return (
@@ -239,6 +245,9 @@ const QuotationsPage = () => {
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(quotation)}>
                             <Edit className="h-4 w-4" />
                           </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handlePrint(quotation.id)}>
+                            <Printer className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -255,6 +264,14 @@ const QuotationsPage = () => {
         onOpenChange={setDialogOpen}
         quotation={selectedQuotation}
       />
+
+      {printQuotationId && (
+        <QuotationPrintView
+          quotationId={printQuotationId}
+          open={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+        />
+      )}
     </div>
   );
 };

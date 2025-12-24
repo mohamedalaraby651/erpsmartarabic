@@ -18,9 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, Edit, Trash2, FileText } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SalesOrderFormDialog from "@/components/sales-orders/SalesOrderFormDialog";
+import { SalesOrderPrintView } from "@/components/print/SalesOrderPrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type SalesOrder = Database['public']['Tables']['sales_orders']['Row'] & {
@@ -47,6 +48,8 @@ const SalesOrdersPage = () => {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<SalesOrder | null>(null);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [printOrderId, setPrintOrderId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -169,6 +172,10 @@ const SalesOrdersPage = () => {
                           <Edit className="h-4 w-4 ml-2" />
                           تعديل
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setPrintOrderId(order.id); setPrintDialogOpen(true); }}>
+                          <Printer className="h-4 w-4 ml-2" />
+                          طباعة
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => deleteMutation.mutate(order.id)}
                           className="text-destructive"
@@ -191,6 +198,14 @@ const SalesOrdersPage = () => {
         onOpenChange={setDialogOpen}
         order={selectedOrder}
       />
+
+      {printOrderId && (
+        <SalesOrderPrintView
+          orderId={printOrderId}
+          open={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+        />
+      )}
     </div>
   );
 };

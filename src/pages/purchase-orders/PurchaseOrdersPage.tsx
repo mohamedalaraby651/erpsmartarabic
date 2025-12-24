@@ -18,9 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PurchaseOrderFormDialog from "@/components/purchase-orders/PurchaseOrderFormDialog";
+import { PurchaseOrderPrintView } from "@/components/print/PurchaseOrderPrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'] & {
@@ -47,6 +48,8 @@ const PurchaseOrdersPage = () => {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [printOrderId, setPrintOrderId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -169,6 +172,10 @@ const PurchaseOrdersPage = () => {
                           <Edit className="h-4 w-4 ml-2" />
                           تعديل
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setPrintOrderId(order.id); setPrintDialogOpen(true); }}>
+                          <Printer className="h-4 w-4 ml-2" />
+                          طباعة
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => deleteMutation.mutate(order.id)}
                           className="text-destructive"
@@ -191,6 +198,14 @@ const PurchaseOrdersPage = () => {
         onOpenChange={setDialogOpen}
         order={selectedOrder}
       />
+
+      {printOrderId && (
+        <PurchaseOrderPrintView
+          orderId={printOrderId}
+          open={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+        />
+      )}
     </div>
   );
 };
