@@ -14,8 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Receipt, Eye, Edit } from "lucide-react";
+import { Plus, Search, Receipt, Edit, Printer } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
+import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -37,6 +38,8 @@ const InvoicesPage = () => {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [printInvoiceId, setPrintInvoiceId] = useState<string | null>(null);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices', searchQuery, paymentStatusFilter],
@@ -76,6 +79,11 @@ const InvoicesPage = () => {
   const handleAdd = () => {
     setSelectedInvoice(null);
     setDialogOpen(true);
+  };
+
+  const handlePrint = (invoiceId: string) => {
+    setPrintInvoiceId(invoiceId);
+    setPrintDialogOpen(true);
   };
 
   return (
@@ -234,9 +242,14 @@ const InvoicesPage = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handlePrint(invoice.id)}>
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -253,6 +266,14 @@ const InvoicesPage = () => {
         onOpenChange={setDialogOpen}
         invoice={selectedInvoice}
       />
+
+      {printInvoiceId && (
+        <InvoicePrintView
+          invoiceId={printInvoiceId}
+          open={printDialogOpen}
+          onOpenChange={setPrintDialogOpen}
+        />
+      )}
     </div>
   );
 };

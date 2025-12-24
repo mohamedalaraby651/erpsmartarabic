@@ -22,9 +22,9 @@ import {
   CreditCard,
   FolderTree,
   ClipboardList,
-  Bell,
   Moon,
   Sun,
+  BarChart3,
 } from 'lucide-react';
 
 interface NavItem {
@@ -100,6 +100,12 @@ const navItems: NavItem[] = [
     icon: ClipboardList,
     href: '/purchase-orders',
     roles: ['admin', 'warehouse'],
+  },
+  {
+    title: 'التقارير',
+    icon: BarChart3,
+    href: '/reports',
+    roles: ['admin', 'accountant'],
   },
 ];
 
