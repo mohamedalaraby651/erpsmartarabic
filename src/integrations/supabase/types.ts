@@ -62,6 +62,36 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_roles: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_system: boolean | null
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
       customer_addresses: {
         Row: {
           address: string
@@ -869,6 +899,120 @@ export type Database = {
           },
         ]
       }
+      role_field_permissions: {
+        Row: {
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          field_name: string
+          id: string
+          role_id: string
+          section: string
+        }
+        Insert: {
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          field_name: string
+          id?: string
+          role_id: string
+          section: string
+        }
+        Update: {
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          field_name?: string
+          id?: string
+          role_id?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_field_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_limits: {
+        Row: {
+          created_at: string | null
+          id: string
+          max_credit_limit: number | null
+          max_discount_percentage: number | null
+          max_invoice_amount: number | null
+          role_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          max_credit_limit?: number | null
+          max_discount_percentage?: number | null
+          max_invoice_amount?: number | null
+          role_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          max_credit_limit?: number | null
+          max_discount_percentage?: number | null
+          max_invoice_amount?: number | null
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_limits_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: true
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_section_permissions: {
+        Row: {
+          can_create: boolean | null
+          can_delete: boolean | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          id: string
+          role_id: string
+          section: string
+        }
+        Insert: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          role_id: string
+          section: string
+        }
+        Update: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          role_id?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_section_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_order_items: {
         Row: {
           created_at: string
@@ -998,6 +1142,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      section_customizations: {
+        Row: {
+          created_at: string | null
+          custom_label: string | null
+          field_name: string
+          field_options: Json | null
+          field_type: string | null
+          id: string
+          is_custom_field: boolean | null
+          is_visible: boolean | null
+          section: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_label?: string | null
+          field_name: string
+          field_options?: Json | null
+          field_type?: string | null
+          id?: string
+          is_custom_field?: boolean | null
+          is_visible?: boolean | null
+          section: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_label?: string | null
+          field_name?: string
+          field_options?: Json | null
+          field_type?: string | null
+          id?: string
+          is_custom_field?: boolean | null
+          is_visible?: boolean | null
+          section?: string
+          sort_order?: number | null
+        }
+        Relationships: []
       }
       stock_movements: {
         Row: {
@@ -1163,23 +1346,34 @@ export type Database = {
       user_roles: {
         Row: {
           created_at: string
+          custom_role_id: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
+          custom_role_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
+          custom_role_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_custom_role_id_fkey"
+            columns: ["custom_role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       warehouses: {
         Row: {

@@ -23,6 +23,10 @@ import SuppliersPage from "./pages/suppliers/SuppliersPage";
 import PurchaseOrdersPage from "./pages/purchase-orders/PurchaseOrdersPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import SearchPage from "./pages/search/SearchPage";
+import RolesPage from "./pages/admin/RolesPage";
+import PermissionsPage from "./pages/admin/PermissionsPage";
+import CustomizationsPage from "./pages/admin/CustomizationsPage";
+import UsersPage from "./pages/admin/UsersPage";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +56,10 @@ const App = () => (
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="search" element={<SearchPage />} />
+              <Route path="admin/roles" element={<RolesPage />} />
+              <Route path="admin/permissions" element={<PermissionsPage />} />
+              <Route path="admin/customizations" element={<CustomizationsPage />} />
+              <Route path="admin/users" element={<UsersPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
