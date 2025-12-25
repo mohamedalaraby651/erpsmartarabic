@@ -3,13 +3,19 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
+import MobileHeader from './MobileHeader';
+import MobileBottomNav from './MobileBottomNav';
+import MobileDrawer from './MobileDrawer';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark';
@@ -56,6 +62,26 @@ export default function AppLayout() {
     return null;
   }
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-16">
+        <MobileHeader />
+        <main className="p-4">
+          <Outlet />
+        </main>
+        <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
+        <MobileDrawer
+          open={mobileMenuOpen}
+          onOpenChange={setMobileMenuOpen}
+          isDark={isDark}
+          onThemeToggle={toggleTheme}
+        />
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar

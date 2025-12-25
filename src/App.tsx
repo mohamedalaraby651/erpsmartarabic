@@ -22,6 +22,7 @@ import InventoryPage from "./pages/inventory/InventoryPage";
 import SuppliersPage from "./pages/suppliers/SuppliersPage";
 import PurchaseOrdersPage from "./pages/purchase-orders/PurchaseOrdersPage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import SearchPage from "./pages/search/SearchPage";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="quotations" element={<QuotationsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="search" element={<SearchPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
