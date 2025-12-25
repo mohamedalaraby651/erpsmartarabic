@@ -14,6 +14,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import AdminMenu from './AdminMenu';
+import QuickActions from '@/components/navigation/QuickActions';
+import OfflineIndicator from '@/components/offline/OfflineIndicator';
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -33,6 +36,13 @@ export default function AppHeader() {
     navigate('/auth');
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   const userInitials = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() || 'U';
@@ -40,7 +50,7 @@ export default function AppHeader() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
       {/* Search */}
-      <div className="flex items-center gap-4 flex-1 max-w-md">
+      <form onSubmit={handleSearch} className="flex items-center gap-4 flex-1 max-w-md">
         <div className="relative w-full">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -50,10 +60,19 @@ export default function AppHeader() {
             className="pr-10 w-full"
           />
         </div>
-      </div>
+      </form>
 
       {/* Actions */}
       <div className="flex items-center gap-3">
+        {/* Offline Indicator */}
+        <OfflineIndicator />
+
+        {/* Quick Actions */}
+        <QuickActions />
+
+        {/* Admin Menu */}
+        <AdminMenu />
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
