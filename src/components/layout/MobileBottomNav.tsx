@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, Receipt, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Users, Package, Receipt, ShoppingCart, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -8,6 +9,7 @@ interface NavItem {
   icon: React.ElementType;
   href: string;
   roles?: string[];
+  color?: string;
 }
 
 const quickNavItems: NavItem[] = [
@@ -15,24 +17,35 @@ const quickNavItems: NavItem[] = [
     title: 'الرئيسية',
     icon: LayoutDashboard,
     href: '/',
+    color: 'text-primary',
   },
   {
     title: 'العملاء',
     icon: Users,
     href: '/customers',
     roles: ['admin', 'sales'],
+    color: 'text-blue-600',
   },
   {
     title: 'المنتجات',
     icon: Package,
     href: '/products',
     roles: ['admin', 'warehouse'],
+    color: 'text-emerald-600',
+  },
+  {
+    title: 'المبيعات',
+    icon: ShoppingCart,
+    href: '/sales-orders',
+    roles: ['admin', 'sales'],
+    color: 'text-orange-600',
   },
   {
     title: 'الفواتير',
     icon: Receipt,
     href: '/invoices',
     roles: ['admin', 'sales', 'accountant'],
+    color: 'text-purple-600',
   },
 ];
 
@@ -40,7 +53,7 @@ interface MobileBottomNavProps {
   onMenuOpen: () => void;
 }
 
-export default function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
+function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { userRole } = useAuth();
@@ -52,7 +65,7 @@ export default function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
   }).slice(0, 4);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t md:hidden safe-area-bottom">
       <div className="flex items-center justify-around h-16">
         {filteredItems.map((item) => {
           const isActive = location.pathname === item.href;
@@ -63,14 +76,24 @@ export default function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
               key={item.href}
               onClick={() => navigate(item.href)}
               className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors',
+                'flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all',
                 isActive 
-                  ? 'text-primary' 
+                  ? item.color 
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'text-primary')} />
-              <span className="text-[10px] font-medium">{item.title}</span>
+              <div className={cn(
+                'p-1.5 rounded-lg transition-colors',
+                isActive && 'bg-primary/10'
+              )}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <span className={cn(
+                'text-[10px] font-medium',
+                isActive && 'font-semibold'
+              )}>
+                {item.title}
+              </span>
             </button>
           );
         })}
@@ -80,10 +103,14 @@ export default function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
           onClick={onMenuOpen}
           className="flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground hover:text-foreground transition-colors"
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <div className="p-1.5 rounded-lg">
+            <MoreHorizontal className="h-5 w-5" />
+          </div>
           <span className="text-[10px] font-medium">المزيد</span>
         </button>
       </div>
     </nav>
   );
 }
+
+export default memo(MobileBottomNav);

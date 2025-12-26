@@ -14,6 +14,8 @@ import {
   Settings,
   Bell,
   Shield,
+  CheckSquare,
+  Wallet,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -113,6 +115,13 @@ export const navSections: NavSection[] = [
         roles: ['admin', 'warehouse'],
         color: 'emerald',
       },
+      {
+        title: 'مدفوعات الموردين',
+        icon: Wallet,
+        href: '/supplier-payments',
+        roles: ['admin', 'accountant'],
+        color: 'emerald',
+      },
     ],
   },
   {
@@ -167,6 +176,12 @@ export const navSections: NavSection[] = [
         icon: BarChart3,
         href: '/reports',
         roles: ['admin', 'accountant'],
+        color: 'slate',
+      },
+      {
+        title: 'المهام',
+        icon: CheckSquare,
+        href: '/tasks',
         color: 'slate',
       },
       {
@@ -252,6 +267,7 @@ export const routeLabels: Record<string, string> = {
   '/payments': 'التحصيل',
   '/inventory': 'المخزون',
   '/suppliers': 'الموردين',
+  '/supplier-payments': 'مدفوعات الموردين',
   '/purchase-orders': 'أوامر الشراء',
   '/reports': 'التقارير',
   '/notifications': 'الإشعارات',
