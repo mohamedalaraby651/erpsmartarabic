@@ -43,6 +43,7 @@ const ExportTemplatesPage = lazy(() => import("./pages/admin/ExportTemplatesPage
 const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
 const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetailsPage"));
 const ProfilePage = lazy(() => import("./pages/profile/ProfilePage"));
+const SyncStatusPage = lazy(() => import("./pages/sync/SyncStatusPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -109,6 +110,7 @@ const App = () => (
                 <Route path="employees" element={<EmployeesPage />} />
                 <Route path="employees/:id" element={<EmployeeDetailsPage />} />
                 <Route path="profile" element={<ProfilePage />} />
+                <Route path="sync" element={<SyncStatusPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
