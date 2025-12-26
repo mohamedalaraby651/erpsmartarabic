@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,11 @@ const SettingsPage = () => {
   const [formData, setFormData] = useState<Partial<CompanySettings>>({});
 
   // Sync settings to form when loaded
-  useState(() => {
+  useEffect(() => {
     if (settings) {
       setFormData(settings);
     }
-  });
+  }, [settings]);
 
   const mutation = useMutation({
     mutationFn: async (data: Partial<CompanySettings>) => {
