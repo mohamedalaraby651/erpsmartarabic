@@ -27,9 +27,9 @@ export function useOfflineMutation(
       if (isOnline) {
         const { data: result, error } = await supabase
           .from(table)
-          .insert(newData)
+          .insert(newData as any)
           .select()
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         return result;
@@ -61,10 +61,10 @@ export function useOfflineMutation(
       if (isOnline) {
         const { data: result, error } = await supabase
           .from(table)
-          .update(data)
+          .update(data as any)
           .eq('id', id)
           .select()
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         return result;
