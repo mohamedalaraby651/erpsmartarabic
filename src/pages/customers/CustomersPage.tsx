@@ -14,9 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Eye, Filter } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown, Eye, Filter, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
+import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -94,10 +95,26 @@ const CustomersPage = () => {
           <h1 className="text-2xl font-bold">إدارة العملاء</h1>
           <p className="text-muted-foreground">إدارة بيانات العملاء والتصنيفات</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 ml-2" />
-          إضافة عميل
-        </Button>
+        <div className="flex gap-2">
+          <ExportWithTemplateButton
+            section="customers"
+            sectionLabel="العملاء"
+            data={customers}
+            columns={[
+              { key: 'name', label: 'الاسم' },
+              { key: 'phone', label: 'الهاتف' },
+              { key: 'email', label: 'البريد الإلكتروني' },
+              { key: 'customer_type', label: 'النوع' },
+              { key: 'vip_level', label: 'مستوى VIP' },
+              { key: 'current_balance', label: 'الرصيد' },
+              { key: 'credit_limit', label: 'حد الائتمان' },
+            ]}
+          />
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 ml-2" />
+            إضافة عميل
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

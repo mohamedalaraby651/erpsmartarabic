@@ -14,9 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Edit, ArrowLeftRight, Printer } from "lucide-react";
+import { Plus, Search, FileText, Edit, ArrowLeftRight, Printer, Download } from "lucide-react";
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
+import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -95,10 +96,25 @@ const QuotationsPage = () => {
           <h1 className="text-2xl font-bold">عروض الأسعار</h1>
           <p className="text-muted-foreground">إدارة عروض الأسعار للعملاء</p>
         </div>
-        <Button onClick={handleAdd}>
-          <Plus className="h-4 w-4 ml-2" />
-          عرض سعر جديد
-        </Button>
+        <div className="flex gap-2">
+          <ExportWithTemplateButton
+            section="quotations"
+            sectionLabel="عروض الأسعار"
+            data={quotations}
+            columns={[
+              { key: 'quotation_number', label: 'رقم العرض' },
+              { key: 'customers.name', label: 'العميل' },
+              { key: 'total_amount', label: 'الإجمالي' },
+              { key: 'status', label: 'الحالة' },
+              { key: 'valid_until', label: 'صالح حتى' },
+              { key: 'created_at', label: 'التاريخ' },
+            ]}
+          />
+          <Button onClick={handleAdd}>
+            <Plus className="h-4 w-4 ml-2" />
+            عرض سعر جديد
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -18,10 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Printer } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Printer, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SalesOrderFormDialog from "@/components/sales-orders/SalesOrderFormDialog";
 import { SalesOrderPrintView } from "@/components/print/SalesOrderPrintView";
+import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type SalesOrder = Database['public']['Tables']['sales_orders']['Row'] & {
@@ -99,10 +100,25 @@ const SalesOrdersPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">أوامر البيع</h1>
-        <Button onClick={handleNew}>
-          <Plus className="h-4 w-4 ml-2" />
-          أمر بيع جديد
-        </Button>
+        <div className="flex gap-2">
+          <ExportWithTemplateButton
+            section="sales_orders"
+            sectionLabel="أوامر البيع"
+            data={orders}
+            columns={[
+              { key: 'order_number', label: 'رقم الأمر' },
+              { key: 'customers.name', label: 'العميل' },
+              { key: 'total_amount', label: 'الإجمالي' },
+              { key: 'status', label: 'الحالة' },
+              { key: 'delivery_date', label: 'تاريخ التسليم' },
+              { key: 'created_at', label: 'تاريخ الإنشاء' },
+            ]}
+          />
+          <Button onClick={handleNew}>
+            <Plus className="h-4 w-4 ml-2" />
+            أمر بيع جديد
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
