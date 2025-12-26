@@ -159,38 +159,62 @@ export default function EmployeeFormDialog({
 
   const mutation = useMutation({
     mutationFn: async (data: EmployeeFormData) => {
-      const employeeData = {
-        ...data,
-        email: data.email || null,
-        phone: data.phone || null,
-        phone2: data.phone2 || null,
-        address: data.address || null,
-        national_id: data.national_id || null,
-        image_url: data.image_url || null,
-        job_title: data.job_title || null,
-        department: data.department || null,
-        hire_date: data.hire_date || null,
-        contract_type: data.contract_type || null,
-        employment_status: data.employment_status || null,
-        base_salary: data.base_salary || null,
-        bank_account: data.bank_account || null,
-        birth_date: data.birth_date || null,
-        gender: data.gender || null,
-        marital_status: data.marital_status || null,
-        emergency_contact_name: data.emergency_contact_name || null,
-        emergency_contact_phone: data.emergency_contact_phone || null,
-        notes: data.notes || null,
-        created_by: isEditing ? undefined : user?.id,
-      };
-
       if (isEditing) {
+        const updateData = {
+          full_name: data.full_name,
+          email: data.email || null,
+          phone: data.phone || null,
+          phone2: data.phone2 || null,
+          address: data.address || null,
+          national_id: data.national_id || null,
+          image_url: data.image_url || null,
+          job_title: data.job_title || null,
+          department: data.department || null,
+          hire_date: data.hire_date || null,
+          contract_type: data.contract_type || null,
+          employment_status: data.employment_status || null,
+          base_salary: data.base_salary || null,
+          bank_account: data.bank_account || null,
+          birth_date: data.birth_date || null,
+          gender: data.gender || null,
+          marital_status: data.marital_status || null,
+          emergency_contact_name: data.emergency_contact_name || null,
+          emergency_contact_phone: data.emergency_contact_phone || null,
+          notes: data.notes || null,
+        };
+        
         const { error } = await supabase
           .from('employees')
-          .update(employeeData)
+          .update(updateData)
           .eq('id', employee.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('employees').insert(employeeData);
+        const insertData = {
+          employee_number: data.employee_number,
+          full_name: data.full_name,
+          email: data.email || null,
+          phone: data.phone || null,
+          phone2: data.phone2 || null,
+          address: data.address || null,
+          national_id: data.national_id || null,
+          image_url: data.image_url || null,
+          job_title: data.job_title || null,
+          department: data.department || null,
+          hire_date: data.hire_date || null,
+          contract_type: data.contract_type || null,
+          employment_status: data.employment_status || null,
+          base_salary: data.base_salary || null,
+          bank_account: data.bank_account || null,
+          birth_date: data.birth_date || null,
+          gender: data.gender || null,
+          marital_status: data.marital_status || null,
+          emergency_contact_name: data.emergency_contact_name || null,
+          emergency_contact_phone: data.emergency_contact_phone || null,
+          notes: data.notes || null,
+          created_by: user?.id || null,
+        };
+        
+        const { error } = await supabase.from('employees').insert([insertData]);
         if (error) throw error;
       }
     },

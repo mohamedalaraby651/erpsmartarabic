@@ -13,13 +13,17 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clock,
-  AlertCircle,
-  Warehouse,
+  ShoppingCart,
+  ClipboardList,
+  Truck,
+  CreditCard,
+  Briefcase,
+  ListChecks,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Sample chart data
 const salesData = [
@@ -39,9 +43,35 @@ const roleLabels: Record<string, string> = {
   hr: 'موارد بشرية',
 };
 
+interface QuickAction {
+  title: string;
+  icon: React.ElementType;
+  href: string;
+  color: string;
+  roles: string[];
+}
+
+const allQuickActions: QuickAction[] = [
+  { title: 'عميل جديد', icon: Users, href: '/customers', color: 'bg-blue-500', roles: ['admin', 'sales'] },
+  { title: 'منتج جديد', icon: Package, href: '/products', color: 'bg-green-500', roles: ['admin', 'warehouse'] },
+  { title: 'عرض سعر', icon: FileText, href: '/quotations', color: 'bg-purple-500', roles: ['admin', 'sales'] },
+  { title: 'فاتورة جديدة', icon: Receipt, href: '/invoices', color: 'bg-orange-500', roles: ['admin', 'sales', 'accountant'] },
+  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders', color: 'bg-indigo-500', roles: ['admin', 'sales'] },
+  { title: 'أمر شراء', icon: ClipboardList, href: '/purchase-orders', color: 'bg-teal-500', roles: ['admin', 'warehouse'] },
+  { title: 'مورد جديد', icon: Truck, href: '/suppliers', color: 'bg-emerald-500', roles: ['admin', 'warehouse'] },
+  { title: 'تحصيل جديد', icon: CreditCard, href: '/payments', color: 'bg-cyan-500', roles: ['admin', 'accountant'] },
+  { title: 'موظف جديد', icon: Briefcase, href: '/employees', color: 'bg-amber-500', roles: ['admin', 'hr'] },
+  { title: 'مهمة جديدة', icon: ListChecks, href: '/tasks', color: 'bg-rose-500', roles: ['admin', 'sales', 'warehouse', 'accountant', 'hr'] },
+];
+
 export default function Dashboard() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+
+  // Filter quick actions based on user role
+  const quickActions = allQuickActions.filter(action => 
+    !userRole || action.roles.includes(userRole)
+  );
 
   // Fetch stats
   const { data: customersCount } = useQuery({
@@ -110,19 +140,16 @@ export default function Dashboard() {
 
   const userName = user?.user_metadata?.full_name || 'المستخدم';
 
-  const quickActions = [
-    { title: 'عميل جديد', icon: Users, href: '/customers/new', color: 'bg-blue-500' },
-    { title: 'منتج جديد', icon: Package, href: '/products/new', color: 'bg-green-500' },
-    { title: 'عرض سعر', icon: FileText, href: '/quotations/new', color: 'bg-purple-500' },
-    { title: 'فاتورة جديدة', icon: Receipt, href: '/invoices/new', color: 'bg-orange-500' },
-  ];
-
   const stats = [
     { title: 'العملاء', value: customersCount || 0, icon: Users, change: '+12%', positive: true },
     { title: 'المنتجات', value: productsCount || 0, icon: Package, change: '+5%', positive: true },
     { title: 'عروض الأسعار', value: quotationsCount || 0, icon: FileText, change: '+18%', positive: true },
     { title: 'الفواتير', value: invoicesCount || 0, icon: Receipt, change: '+8%', positive: true },
   ];
+
+  const handleQuickAction = (action: QuickAction) => {
+    navigate(action.href, { state: { openNew: true } });
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -145,7 +172,7 @@ export default function Dashboard() {
           {quickActions.slice(0, 2).map((action) => (
             <Button
               key={action.href}
-              onClick={() => navigate(action.href)}
+              onClick={() => handleQuickAction(action)}
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -187,21 +214,21 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Expanded */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">الإجراءات السريعة</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
                 <Button
-                  key={action.href}
+                  key={action.href + action.title}
                   variant="outline"
                   className="h-auto py-4 flex-col gap-2 hover:bg-accent"
-                  onClick={() => navigate(action.href)}
+                  onClick={() => handleQuickAction(action)}
                 >
                   <div className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center`}>
                     <Icon className="h-5 w-5 text-white" />
@@ -358,7 +385,7 @@ export default function Dashboard() {
               <Button
                 variant="link"
                 className="mt-2"
-                onClick={() => navigate('/invoices/new')}
+                onClick={() => navigate('/invoices', { state: { openNew: true } })}
               >
                 إنشاء فاتورة جديدة
               </Button>

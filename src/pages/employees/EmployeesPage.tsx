@@ -160,9 +160,9 @@ export default function EmployeesPage() {
         <div className="flex gap-2">
           <ExportWithTemplateButton
             section="employees"
+            sectionLabel="الموظفين"
             data={filteredEmployees}
             columns={exportColumns}
-            title="قائمة الموظفين"
           />
           <Button onClick={() => { setSelectedEmployee(null); setDialogOpen(true); }}>
             <Plus className="h-4 w-4 ml-2" />

@@ -16,6 +16,8 @@ import {
   Shield,
   CheckSquare,
   Wallet,
+  UserCircle,
+  Briefcase,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -167,6 +169,20 @@ export const navSections: NavSection[] = [
     ],
   },
   {
+    title: 'الموارد البشرية',
+    color: 'amber',
+    colorClass: 'text-amber-600 dark:text-amber-400',
+    items: [
+      {
+        title: 'الموظفين',
+        icon: Briefcase,
+        href: '/employees',
+        roles: ['admin', 'hr'],
+        color: 'amber',
+      },
+    ],
+  },
+  {
     title: 'التقارير والإعدادات',
     color: 'slate',
     colorClass: 'text-slate-600 dark:text-slate-400',
@@ -194,6 +210,12 @@ export const navSections: NavSection[] = [
         title: 'الإعدادات',
         icon: Settings,
         href: '/settings',
+        color: 'slate',
+      },
+      {
+        title: 'ملفي الشخصي',
+        icon: UserCircle,
+        href: '/profile',
         color: 'slate',
       },
     ],
@@ -293,6 +315,8 @@ export const routeLabels: Record<string, string> = {
   '/suppliers': 'الموردين',
   '/supplier-payments': 'مدفوعات الموردين',
   '/purchase-orders': 'أوامر الشراء',
+  '/employees': 'الموظفين',
+  '/profile': 'ملفي الشخصي',
   '/reports': 'التقارير',
   '/notifications': 'الإشعارات',
   '/tasks': 'المهام',
