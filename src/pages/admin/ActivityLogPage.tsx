@@ -193,7 +193,7 @@ const ActivityLogPage = () => {
                 onChange={(e) => setDateTo(e.target.value)}
                 className="w-auto"
               />
-            />
+            </div>
           </div>
         </CardContent>
       </Card>
