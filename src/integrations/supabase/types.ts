@@ -264,6 +264,93 @@ export type Database = {
           },
         ]
       }
+      employees: {
+        Row: {
+          address: string | null
+          bank_account: string | null
+          base_salary: number | null
+          birth_date: string | null
+          contract_type: string | null
+          created_at: string | null
+          created_by: string | null
+          department: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_number: string
+          employment_status: string | null
+          full_name: string
+          gender: string | null
+          hire_date: string | null
+          id: string
+          image_url: string | null
+          job_title: string | null
+          marital_status: string | null
+          national_id: string | null
+          notes: string | null
+          phone: string | null
+          phone2: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          bank_account?: string | null
+          base_salary?: number | null
+          birth_date?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_number: string
+          employment_status?: string | null
+          full_name: string
+          gender?: string | null
+          hire_date?: string | null
+          id?: string
+          image_url?: string | null
+          job_title?: string | null
+          marital_status?: string | null
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          phone2?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          bank_account?: string | null
+          base_salary?: number | null
+          birth_date?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_number?: string
+          employment_status?: string | null
+          full_name?: string
+          gender?: string | null
+          hire_date?: string | null
+          id?: string
+          image_url?: string | null
+          job_title?: string | null
+          marital_status?: string | null
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          phone2?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       export_templates: {
         Row: {
           columns: Json
@@ -727,27 +814,45 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
           created_at: string
+          department: string | null
           full_name: string
           id: string
+          job_title: string | null
+          last_login_at: string | null
+          login_count: number | null
           phone: string | null
+          phone2: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
+          department?: string | null
           full_name?: string
           id: string
+          job_title?: string | null
+          last_login_at?: string | null
+          login_count?: number | null
           phone?: string | null
+          phone2?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
+          department?: string | null
           full_name?: string
           id?: string
+          job_title?: string | null
+          last_login_at?: string | null
+          login_count?: number | null
           phone?: string | null
+          phone2?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1408,6 +1513,7 @@ export type Database = {
           current_balance: number | null
           email: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           name: string
           notes: string | null
@@ -1423,6 +1529,7 @@ export type Database = {
           current_balance?: number | null
           email?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name: string
           notes?: string | null
@@ -1438,6 +1545,7 @@ export type Database = {
           current_balance?: number | null
           email?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name?: string
           notes?: string | null
@@ -1484,6 +1592,66 @@ export type Database = {
           priority?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_login_history: {
+        Row: {
+          device_type: string | null
+          id: string
+          ip_address: string | null
+          login_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notification_settings: {
+        Row: {
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          low_stock_alerts: boolean | null
+          overdue_invoice_alerts: boolean | null
+          system_notifications: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          low_stock_alerts?: boolean | null
+          overdue_invoice_alerts?: boolean | null
+          system_notifications?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          low_stock_alerts?: boolean | null
+          overdue_invoice_alerts?: boolean | null
+          system_notifications?: boolean | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
