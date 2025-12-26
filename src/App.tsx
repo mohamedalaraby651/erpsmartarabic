@@ -40,6 +40,9 @@ const ActivityLogPage = lazy(() => import("./pages/admin/ActivityLogPage"));
 const RoleLimitsPage = lazy(() => import("./pages/admin/RoleLimitsPage"));
 const BackupPage = lazy(() => import("./pages/admin/BackupPage"));
 const ExportTemplatesPage = lazy(() => import("./pages/admin/ExportTemplatesPage"));
+const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
+const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetailsPage"));
+const ProfilePage = lazy(() => import("./pages/profile/ProfilePage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -103,6 +106,9 @@ const App = () => (
                 <Route path="admin/role-limits" element={<RoleLimitsPage />} />
                 <Route path="admin/backup" element={<BackupPage />} />
                 <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
+                <Route path="employees" element={<EmployeesPage />} />
+                <Route path="employees/:id" element={<EmployeeDetailsPage />} />
+                <Route path="profile" element={<ProfilePage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
