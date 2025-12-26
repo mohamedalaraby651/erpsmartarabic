@@ -6,14 +6,17 @@ import AppHeader from './AppHeader';
 import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
 import MobileDrawer from './MobileDrawer';
+import { FABMenu } from '@/components/mobile/FABMenu';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  useKeyboardShortcuts(); // Global keyboard shortcuts
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
@@ -70,6 +73,7 @@ export default function AppLayout() {
         <main className="p-4">
           <Outlet />
         </main>
+        <FABMenu />
         <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
         <MobileDrawer
           open={mobileMenuOpen}
