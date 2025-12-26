@@ -20,9 +20,12 @@ import InvoicesPage from "./pages/invoices/InvoicesPage";
 import PaymentsPage from "./pages/payments/PaymentsPage";
 import InventoryPage from "./pages/inventory/InventoryPage";
 import SuppliersPage from "./pages/suppliers/SuppliersPage";
+import SupplierDetailsPage from "./pages/suppliers/SupplierDetailsPage";
 import PurchaseOrdersPage from "./pages/purchase-orders/PurchaseOrdersPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import SearchPage from "./pages/search/SearchPage";
+import NotificationsPage from "./pages/notifications/NotificationsPage";
+import TasksPage from "./pages/tasks/TasksPage";
 import RolesPage from "./pages/admin/RolesPage";
 import PermissionsPage from "./pages/admin/PermissionsPage";
 import CustomizationsPage from "./pages/admin/CustomizationsPage";
@@ -51,11 +54,14 @@ const App = () => (
               <Route path="payments" element={<PaymentsPage />} />
               <Route path="inventory" element={<InventoryPage />} />
               <Route path="suppliers" element={<SuppliersPage />} />
+              <Route path="suppliers/:id" element={<SupplierDetailsPage />} />
               <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
               <Route path="quotations" element={<QuotationsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="search" element={<SearchPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="tasks" element={<TasksPage />} />
               <Route path="admin/roles" element={<RolesPage />} />
               <Route path="admin/permissions" element={<PermissionsPage />} />
               <Route path="admin/customizations" element={<CustomizationsPage />} />

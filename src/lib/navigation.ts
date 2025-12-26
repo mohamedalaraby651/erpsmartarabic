@@ -255,6 +255,7 @@ export const routeLabels: Record<string, string> = {
   '/purchase-orders': 'أوامر الشراء',
   '/reports': 'التقارير',
   '/notifications': 'الإشعارات',
+  '/tasks': 'المهام',
   '/settings': 'الإعدادات',
   '/search': 'البحث',
   '/admin/roles': 'إدارة الأدوار',
