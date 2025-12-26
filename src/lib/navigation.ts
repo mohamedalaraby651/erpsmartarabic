@@ -306,6 +306,12 @@ export const adminNavItems: NavItem[] = [
     href: '/admin/backup',
     roles: ['admin'],
   },
+  {
+    title: 'إعدادات النظام',
+    icon: Settings,
+    href: '/admin/system-settings',
+    roles: ['admin'],
+  },
 ];
 
 // خريطة المسارات للـ Breadcrumb
@@ -339,6 +345,7 @@ export const routeLabels: Record<string, string> = {
   '/admin/role-limits': 'الحدود المالية',
   '/admin/backup': 'النسخ الاحتياطي',
   '/admin/export-templates': 'قوالب التصدير',
+  '/admin/system-settings': 'إعدادات النظام',
 };
 
 export function getRouteLabel(path: string): string {
