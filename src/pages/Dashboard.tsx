@@ -132,14 +132,14 @@ export default function Dashboard() {
           <h1 className="text-2xl md:text-3xl font-bold">
             {greeting()}، {userName} 👋
           </h1>
-          <p className="text-muted-foreground mt-1">
-            مرحباً بك في لوحة التحكم
+          <div className="text-muted-foreground mt-1 flex items-center gap-2">
+            <span>مرحباً بك في لوحة التحكم</span>
             {userRole && (
-              <Badge variant="secondary" className="mr-2">
+              <Badge variant="secondary">
                 {roleLabels[userRole]}
               </Badge>
             )}
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
           {quickActions.slice(0, 2).map((action) => (
