@@ -25,6 +25,8 @@ import {
   Moon,
   Sun,
   BarChart3,
+  Bell,
+  CheckSquare,
 } from 'lucide-react';
 
 interface NavItem {
@@ -106,6 +108,16 @@ const navItems: NavItem[] = [
     icon: BarChart3,
     href: '/reports',
     roles: ['admin', 'accountant'],
+  },
+  {
+    title: 'المهام',
+    icon: CheckSquare,
+    href: '/tasks',
+  },
+  {
+    title: 'الإشعارات',
+    icon: Bell,
+    href: '/notifications',
   },
 ];
 
