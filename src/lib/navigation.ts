@@ -230,6 +230,12 @@ export const mobileQuickNavItems: NavItem[] = [
 // قائمة الأدمن
 export const adminNavItems: NavItem[] = [
   {
+    title: 'لوحة الإدارة',
+    icon: LayoutDashboard,
+    href: '/admin/dashboard',
+    roles: ['admin'],
+  },
+  {
     title: 'إدارة الأدوار',
     icon: Shield,
     href: '/admin/roles',
@@ -251,6 +257,24 @@ export const adminNavItems: NavItem[] = [
     title: 'إدارة المستخدمين',
     icon: Users,
     href: '/admin/users',
+    roles: ['admin'],
+  },
+  {
+    title: 'سجل النشاطات',
+    icon: BarChart3,
+    href: '/admin/activity-log',
+    roles: ['admin'],
+  },
+  {
+    title: 'الحدود المالية',
+    icon: CreditCard,
+    href: '/admin/role-limits',
+    roles: ['admin'],
+  },
+  {
+    title: 'النسخ الاحتياطي',
+    icon: Warehouse,
+    href: '/admin/backup',
     roles: ['admin'],
   },
 ];
@@ -278,6 +302,11 @@ export const routeLabels: Record<string, string> = {
   '/admin/permissions': 'إدارة الصلاحيات',
   '/admin/customizations': 'تخصيص الأقسام',
   '/admin/users': 'إدارة المستخدمين',
+  '/admin/dashboard': 'لوحة الإدارة',
+  '/admin/activity-log': 'سجل النشاطات',
+  '/admin/role-limits': 'الحدود المالية',
+  '/admin/backup': 'النسخ الاحتياطي',
+  '/admin/export-templates': 'قوالب التصدير',
 };
 
 export function getRouteLabel(path: string): string {

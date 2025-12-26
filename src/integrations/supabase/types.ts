@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           address: string | null
@@ -224,6 +263,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      export_templates: {
+        Row: {
+          columns: Json
+          created_at: string
+          created_by: string | null
+          filters: Json | null
+          format: string | null
+          id: string
+          include_company_info: boolean | null
+          include_logo: boolean | null
+          is_default: boolean | null
+          name: string
+          section: string
+        }
+        Insert: {
+          columns: Json
+          created_at?: string
+          created_by?: string | null
+          filters?: Json | null
+          format?: string | null
+          id?: string
+          include_company_info?: boolean | null
+          include_logo?: boolean | null
+          is_default?: boolean | null
+          name: string
+          section: string
+        }
+        Update: {
+          columns?: Json
+          created_at?: string
+          created_by?: string | null
+          filters?: Json | null
+          format?: string | null
+          id?: string
+          include_company_info?: boolean | null
+          include_logo?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          section?: string
+        }
+        Relationships: []
       }
       invoice_items: {
         Row: {
@@ -942,24 +1023,30 @@ export type Database = {
           created_at: string | null
           id: string
           max_credit_limit: number | null
+          max_daily_transactions: number | null
           max_discount_percentage: number | null
           max_invoice_amount: number | null
+          max_refund_amount: number | null
           role_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           max_credit_limit?: number | null
+          max_daily_transactions?: number | null
           max_discount_percentage?: number | null
           max_invoice_amount?: number | null
+          max_refund_amount?: number | null
           role_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
           max_credit_limit?: number | null
+          max_daily_transactions?: number | null
           max_discount_percentage?: number | null
           max_invoice_amount?: number | null
+          max_refund_amount?: number | null
           role_id?: string
         }
         Relationships: [
