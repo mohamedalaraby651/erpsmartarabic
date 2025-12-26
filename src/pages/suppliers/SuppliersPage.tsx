@@ -22,9 +22,11 @@ import {
   Edit,
   Trash2,
   Eye,
+  Download,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
+import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -130,10 +132,25 @@ const SuppliersPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">إدارة الموردين</h1>
-        <Button onClick={() => { setSelectedSupplier(null); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 ml-2" />
-          مورد جديد
-        </Button>
+        <div className="flex gap-2">
+          <ExportWithTemplateButton
+            section="suppliers"
+            sectionLabel="الموردين"
+            data={suppliers}
+            columns={[
+              { key: 'name', label: 'اسم المورد' },
+              { key: 'contact_person', label: 'جهة الاتصال' },
+              { key: 'phone', label: 'الهاتف' },
+              { key: 'email', label: 'البريد الإلكتروني' },
+              { key: 'current_balance', label: 'الرصيد' },
+              { key: 'is_active', label: 'الحالة' },
+            ]}
+          />
+          <Button onClick={() => { setSelectedSupplier(null); setDialogOpen(true); }}>
+            <Plus className="h-4 w-4 ml-2" />
+            مورد جديد
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

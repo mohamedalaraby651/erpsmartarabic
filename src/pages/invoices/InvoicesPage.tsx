@@ -14,9 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Receipt, Edit, Printer } from "lucide-react";
+import { Plus, Search, Receipt, Edit, Printer, Download } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
+import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -93,10 +94,25 @@ const InvoicesPage = () => {
           <h1 className="text-2xl font-bold">الفواتير</h1>
           <p className="text-muted-foreground">إدارة فواتير المبيعات</p>
         </div>
-        <Button onClick={handleAdd}>
-          <Plus className="h-4 w-4 ml-2" />
-          فاتورة جديدة
-        </Button>
+        <div className="flex gap-2">
+          <ExportWithTemplateButton
+            section="invoices"
+            sectionLabel="الفواتير"
+            data={invoices}
+            columns={[
+              { key: 'invoice_number', label: 'رقم الفاتورة' },
+              { key: 'customers.name', label: 'العميل' },
+              { key: 'total_amount', label: 'الإجمالي' },
+              { key: 'paid_amount', label: 'المدفوع' },
+              { key: 'payment_status', label: 'حالة الدفع' },
+              { key: 'created_at', label: 'التاريخ' },
+            ]}
+          />
+          <Button onClick={handleAdd}>
+            <Plus className="h-4 w-4 ml-2" />
+            فاتورة جديدة
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

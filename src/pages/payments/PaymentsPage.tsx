@@ -14,8 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Wallet, CreditCard, Banknote } from "lucide-react";
+import { Plus, Search, Wallet, CreditCard, Banknote, Download } from "lucide-react";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
+import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "نقدي",
@@ -65,10 +66,25 @@ const PaymentsPage = () => {
           <h1 className="text-2xl font-bold">التحصيل</h1>
           <p className="text-muted-foreground">سجل مدفوعات العملاء</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 ml-2" />
-          تسجيل دفعة
-        </Button>
+        <div className="flex gap-2">
+          <ExportWithTemplateButton
+            section="payments"
+            sectionLabel="المدفوعات"
+            data={payments}
+            columns={[
+              { key: 'payment_number', label: 'رقم الدفعة' },
+              { key: 'customers.name', label: 'العميل' },
+              { key: 'invoices.invoice_number', label: 'الفاتورة' },
+              { key: 'amount', label: 'المبلغ' },
+              { key: 'payment_method', label: 'طريقة الدفع' },
+              { key: 'payment_date', label: 'التاريخ' },
+            ]}
+          />
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 ml-2" />
+            تسجيل دفعة
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

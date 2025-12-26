@@ -14,9 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Package, Eye, Edit, AlertTriangle, Layers } from "lucide-react";
+import { Plus, Search, Package, Eye, Edit, AlertTriangle, Layers, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
+import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -115,10 +116,25 @@ const ProductsPage = () => {
           <h1 className="text-2xl font-bold">إدارة المنتجات</h1>
           <p className="text-muted-foreground">إدارة المنتجات والمخزون</p>
         </div>
-        <Button onClick={handleAdd}>
-          <Plus className="h-4 w-4 ml-2" />
-          إضافة منتج
-        </Button>
+        <div className="flex gap-2">
+          <ExportWithTemplateButton
+            section="products"
+            sectionLabel="المنتجات"
+            data={products}
+            columns={[
+              { key: 'name', label: 'اسم المنتج' },
+              { key: 'sku', label: 'الكود' },
+              { key: 'cost_price', label: 'سعر التكلفة' },
+              { key: 'selling_price', label: 'سعر البيع' },
+              { key: 'min_stock', label: 'الحد الأدنى' },
+              { key: 'is_active', label: 'الحالة' },
+            ]}
+          />
+          <Button onClick={handleAdd}>
+            <Plus className="h-4 w-4 ml-2" />
+            إضافة منتج
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
