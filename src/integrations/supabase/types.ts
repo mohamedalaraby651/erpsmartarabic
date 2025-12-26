@@ -1556,6 +1556,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          operation: string
+          record_id: string | null
+          status: string
+          synced_at: string | null
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          operation: string
+          record_id?: string | null
+          status?: string
+          synced_at?: string | null
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          operation?: string
+          record_id?: string | null
+          status?: string
+          synced_at?: string | null
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -1592,6 +1628,30 @@ export type Database = {
           priority?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_dashboard_settings: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          widgets: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          widgets?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          widgets?: Json
         }
         Relationships: []
       }
@@ -1651,6 +1711,36 @@ export type Database = {
           overdue_invoice_alerts?: boolean | null
           system_notifications?: boolean | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_offline_settings: {
+        Row: {
+          auto_sync_interval: number
+          created_at: string
+          enabled_tables: Json
+          id: string
+          sync_on_login: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_sync_interval?: number
+          created_at?: string
+          enabled_tables?: Json
+          id?: string
+          sync_on_login?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_sync_interval?: number
+          created_at?: string
+          enabled_tables?: Json
+          id?: string
+          sync_on_login?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

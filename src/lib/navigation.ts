@@ -18,6 +18,7 @@ import {
   Wallet,
   UserCircle,
   Briefcase,
+  RefreshCw,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -207,6 +208,12 @@ export const navSections: NavSection[] = [
         color: 'slate',
       },
       {
+        title: 'حالة المزامنة',
+        icon: RefreshCw,
+        href: '/sync',
+        color: 'slate',
+      },
+      {
         title: 'الإعدادات',
         icon: Settings,
         href: '/settings',
@@ -320,6 +327,7 @@ export const routeLabels: Record<string, string> = {
   '/reports': 'التقارير',
   '/notifications': 'الإشعارات',
   '/tasks': 'المهام',
+  '/sync': 'حالة المزامنة',
   '/settings': 'الإعدادات',
   '/search': 'البحث',
   '/admin/roles': 'إدارة الأدوار',
