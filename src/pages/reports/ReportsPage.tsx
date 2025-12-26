@@ -8,13 +8,19 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ar } from "date-fns/locale";
 import { TrendingUp, TrendingDown, DollarSign, Package, Users, FileText, AlertTriangle } from "lucide-react";
+import { ExportButton } from "@/components/reports/ExportButton";
+import { DateRangePicker } from "@/components/reports/DateRangePicker";
+import PageHeader from "@/components/navigation/PageHeader";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 export default function ReportsPage() {
   const [period, setPeriod] = useState("30");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
 
-  const startDate = subDays(new Date(), parseInt(period));
+  const startDate = customFrom || subDays(new Date(), parseInt(period));
+  const endDate = customTo || new Date();
 
   // Sales Report Data
   const { data: salesData } = useQuery({
@@ -203,14 +209,39 @@ export default function ReportsPage() {
     }).format(amount) + " ج.م";
   };
 
+  // Prepare export data
+  const salesExportData = salesData?.map((s) => ({
+    date: format(new Date(s.created_at), 'yyyy-MM-dd'),
+    amount: s.total_amount,
+    status: s.payment_status,
+  })) || [];
+
+  const productsExportData = topProducts?.map((p) => ({
+    name: p.name,
+    quantity: p.quantity,
+    revenue: p.revenue,
+  })) || [];
+
+  const customersExportData = topCustomers?.map((c) => ({
+    name: c.name,
+    total: c.total,
+    count: c.count,
+  })) || [];
+
   return (
     <div className="space-y-6" dir="rtl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">التقارير والتحليلات</h1>
-          <p className="text-muted-foreground">نظرة شاملة على أداء الأعمال</p>
-        </div>
-        <Select value={period} onValueChange={setPeriod}>
+      <PageHeader
+        title="التقارير والتحليلات"
+        description="نظرة شاملة على أداء الأعمال"
+        showBack
+      />
+
+      <div className="flex flex-wrap items-center gap-4">
+        <Select value={period} onValueChange={(value) => {
+          setPeriod(value);
+          setCustomFrom(undefined);
+          setCustomTo(undefined);
+        }}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="الفترة" />
           </SelectTrigger>
@@ -221,6 +252,25 @@ export default function ReportsPage() {
             <SelectItem value="365">آخر سنة</SelectItem>
           </SelectContent>
         </Select>
+
+        <DateRangePicker
+          from={customFrom}
+          to={customTo}
+          onSelect={(from, to) => {
+            setCustomFrom(from);
+            setCustomTo(to);
+          }}
+        />
+
+        <ExportButton
+          data={salesExportData}
+          filename="تقرير_المبيعات"
+          headers={{
+            date: 'التاريخ',
+            amount: 'المبلغ',
+            status: 'الحالة',
+          }}
+        />
       </div>
 
       {/* Summary Cards */}
