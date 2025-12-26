@@ -35,6 +35,11 @@ const RolesPage = lazy(() => import("./pages/admin/RolesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/PermissionsPage"));
 const CustomizationsPage = lazy(() => import("./pages/admin/CustomizationsPage"));
 const UsersPage = lazy(() => import("./pages/admin/UsersPage"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const ActivityLogPage = lazy(() => import("./pages/admin/ActivityLogPage"));
+const RoleLimitsPage = lazy(() => import("./pages/admin/RoleLimitsPage"));
+const BackupPage = lazy(() => import("./pages/admin/BackupPage"));
+const ExportTemplatesPage = lazy(() => import("./pages/admin/ExportTemplatesPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +98,11 @@ const App = () => (
                 <Route path="admin/permissions" element={<PermissionsPage />} />
                 <Route path="admin/customizations" element={<CustomizationsPage />} />
                 <Route path="admin/users" element={<UsersPage />} />
+                <Route path="admin/dashboard" element={<AdminDashboard />} />
+                <Route path="admin/activity-log" element={<ActivityLogPage />} />
+                <Route path="admin/role-limits" element={<RoleLimitsPage />} />
+                <Route path="admin/backup" element={<BackupPage />} />
+                <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
