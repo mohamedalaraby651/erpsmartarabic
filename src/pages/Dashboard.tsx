@@ -24,6 +24,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
+import { useDashboardSettings } from '@/hooks/useDashboardSettings';
+import { WidgetConfig } from '@/components/dashboard/DraggableWidget';
+import { useToast } from '@/hooks/use-toast';
 
 // Sample chart data
 const salesData = [
@@ -67,6 +71,8 @@ const allQuickActions: QuickAction[] = [
 export default function Dashboard() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { widgets, updateWidgets, isSaving } = useDashboardSettings();
 
   // Filter quick actions based on user role
   const quickActions = allQuickActions.filter(action => 
@@ -151,6 +157,242 @@ export default function Dashboard() {
     navigate(action.href, { state: { openNew: true } });
   };
 
+  const handleWidgetsChange = (newWidgets: WidgetConfig[]) => {
+    updateWidgets(newWidgets, {
+      onSuccess: () => {
+        toast({ title: 'تم حفظ ترتيب لوحة التحكم' });
+      },
+      onError: () => {
+        toast({ title: 'فشل في حفظ الترتيب', variant: 'destructive' });
+      },
+    });
+  };
+
+  const renderWidget = (widget: WidgetConfig) => {
+    switch (widget.id) {
+      case 'stats':
+        return (
+          <>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">الإحصائيات</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {stats.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div key={stat.title} className="p-4 rounded-lg bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">{stat.title}</p>
+                          <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                          <div className="flex items-center gap-1 mt-2">
+                            {stat.positive ? (
+                              <TrendingUp className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 text-red-500" />
+                            )}
+                            <span className={`text-sm ${stat.positive ? 'text-green-500' : 'text-red-500'}`}>
+                              {stat.change}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </>
+        );
+
+      case 'quick_actions':
+        return (
+          <>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">الإجراءات السريعة</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <Button
+                      key={action.href + action.title}
+                      variant="outline"
+                      className="h-auto py-4 flex-col gap-2 hover:bg-accent"
+                      onClick={() => handleQuickAction(action)}
+                    >
+                      <div className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center`}>
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="text-sm font-medium">{action.title}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </>
+        );
+
+      case 'chart':
+        return (
+          <>
+            <CardHeader>
+              <CardTitle className="text-lg">المبيعات الشهرية</CardTitle>
+              <CardDescription>إجمالي المبيعات خلال الأشهر الماضية</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={salesData}>
+                    <defs>
+                      <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="sales"
+                      stroke="hsl(var(--primary))"
+                      fillOpacity={1}
+                      fill="url(#colorSales)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </>
+        );
+
+      case 'tasks':
+        return (
+          <>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">المهام</CardTitle>
+                <CardDescription>المهام المطلوب إنجازها</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/tasks')}>
+                عرض الكل
+                <ArrowLeft className="mr-2 h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {tasks && tasks.length > 0 ? (
+                <div className="space-y-2">
+                  {tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <div className={`h-2 w-2 rounded-full ${
+                        task.priority === 'high' ? 'bg-destructive' :
+                        task.priority === 'medium' ? 'bg-warning' : 'bg-success'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{task.title}</p>
+                        {task.due_date && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Clock className="h-3 w-3" />
+                            {new Date(task.due_date).toLocaleDateString('ar-EG')}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant={task.priority === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                        {task.priority === 'high' ? 'عاجل' : task.priority === 'medium' ? 'متوسط' : 'منخفض'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <CheckCircle2 className="h-10 w-10 mx-auto mb-2 text-success" />
+                  <p>لا توجد مهام معلقة</p>
+                </div>
+              )}
+            </CardContent>
+          </>
+        );
+
+      case 'activities':
+        return (
+          <>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">آخر الفواتير</CardTitle>
+                <CardDescription>أحدث الفواتير المصدرة</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>
+                عرض الكل
+                <ArrowLeft className="mr-2 h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {recentInvoices && recentInvoices.length > 0 ? (
+                <div className="space-y-2">
+                  {recentInvoices.map((invoice) => (
+                    <div
+                      key={invoice.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                      onClick={() => navigate(`/invoices/${invoice.id}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Receipt className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{invoice.invoice_number}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(invoice.customers as any)?.name || 'عميل'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-sm">{invoice.total_amount.toLocaleString()} ج.م</p>
+                        <Badge
+                          variant={
+                            invoice.payment_status === 'paid' ? 'default' :
+                            invoice.payment_status === 'partial' ? 'secondary' : 'destructive'
+                          }
+                          className="text-xs"
+                        >
+                          {invoice.payment_status === 'paid' ? 'مدفوع' :
+                           invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Receipt className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                  <p>لا توجد فواتير بعد</p>
+                </div>
+              )}
+            </CardContent>
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Welcome Section */}
@@ -182,217 +424,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title} className="relative overflow-hidden">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-2xl md:text-3xl font-bold mt-1">{stat.value}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      {stat.positive ? (
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className={`text-sm ${stat.positive ? 'text-green-500' : 'text-red-500'}`}>
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Quick Actions - Expanded */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">الإجراءات السريعة</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Button
-                  key={action.href + action.title}
-                  variant="outline"
-                  className="h-auto py-4 flex-col gap-2 hover:bg-accent"
-                  onClick={() => handleQuickAction(action)}
-                >
-                  <div className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center`}>
-                    <Icon className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-sm font-medium">{action.title}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Charts and Tasks Row */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Sales Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">المبيعات الشهرية</CardTitle>
-            <CardDescription>إجمالي المبيعات خلال الأشهر الماضية</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={salesData}>
-                  <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="sales"
-                    stroke="hsl(var(--primary))"
-                    fillOpacity={1}
-                    fill="url(#colorSales)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tasks */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">المهام</CardTitle>
-              <CardDescription>المهام المطلوب إنجازها</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/tasks')}>
-              عرض الكل
-              <ArrowLeft className="mr-2 h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {tasks && tasks.length > 0 ? (
-              <div className="space-y-3">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <div className={`h-2 w-2 rounded-full ${
-                      task.priority === 'high' ? 'bg-destructive' :
-                      task.priority === 'medium' ? 'bg-warning' : 'bg-success'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{task.title}</p>
-                      {task.due_date && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(task.due_date).toLocaleDateString('ar-EG')}
-                        </p>
-                      )}
-                    </div>
-                    <Badge variant={task.priority === 'high' ? 'destructive' : 'secondary'}>
-                      {task.priority === 'high' ? 'عاجل' : task.priority === 'medium' ? 'متوسط' : 'منخفض'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-success" />
-                <p>لا توجد مهام معلقة</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Invoices */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg">آخر الفواتير</CardTitle>
-            <CardDescription>أحدث الفواتير المصدرة</CardDescription>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>
-            عرض الكل
-            <ArrowLeft className="mr-2 h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {recentInvoices && recentInvoices.length > 0 ? (
-            <div className="space-y-3">
-              {recentInvoices.map((invoice) => (
-                <div
-                  key={invoice.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                  onClick={() => navigate(`/invoices/${invoice.id}`)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Receipt className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{invoice.invoice_number}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {(invoice.customers as any)?.name || 'عميل'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-left">
-                    <p className="font-bold">{invoice.total_amount.toLocaleString()} ج.م</p>
-                    <Badge
-                      variant={
-                        invoice.payment_status === 'paid' ? 'default' :
-                        invoice.payment_status === 'partial' ? 'secondary' : 'destructive'
-                      }
-                    >
-                      {invoice.payment_status === 'paid' ? 'مدفوع' :
-                       invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Receipt className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>لا توجد فواتير بعد</p>
-              <Button
-                variant="link"
-                className="mt-2"
-                onClick={() => navigate('/invoices', { state: { openNew: true } })}
-              >
-                إنشاء فاتورة جديدة
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Customizable Widgets */}
+      <WidgetContainer
+        widgets={widgets}
+        onWidgetsChange={handleWidgetsChange}
+        renderWidget={renderWidget}
+        isSaving={isSaving}
+      />
     </div>
   );
 }

@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, FileText, Palette, Save } from "lucide-react";
+import { Building2, FileText, Palette, Save, WifiOff } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { OfflineSettings } from "@/components/settings/OfflineSettings";
 
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
 
@@ -104,7 +105,7 @@ const SettingsPage = () => {
       </div>
 
       <Tabs defaultValue="company" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
           <TabsTrigger value="company">
             <Building2 className="h-4 w-4 ml-2" />
             الشركة
@@ -116,6 +117,10 @@ const SettingsPage = () => {
           <TabsTrigger value="appearance">
             <Palette className="h-4 w-4 ml-2" />
             المظهر
+          </TabsTrigger>
+          <TabsTrigger value="offline">
+            <WifiOff className="h-4 w-4 ml-2" />
+            Offline
           </TabsTrigger>
         </TabsList>
 
@@ -314,6 +319,10 @@ const SettingsPage = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="offline" className="space-y-6">
+          <OfflineSettings />
         </TabsContent>
       </Tabs>
     </div>
