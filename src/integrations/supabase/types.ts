@@ -53,6 +53,48 @@ export type Database = {
         }
         Relationships: []
       }
+      attachments: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          mime_type: string | null
+          notes: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           address: string | null

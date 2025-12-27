@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +14,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Eye, Filter, Download } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
+import { DataTableHeader } from "@/components/ui/data-table-header";
+import { DataTableActions } from "@/components/ui/data-table-actions";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableFilter } from "@/hooks/useTableFilter";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
-type CustomerCategory = Database['public']['Tables']['customer_categories']['Row'];
 
 const vipColors = {
   regular: "bg-muted text-muted-foreground",
@@ -37,15 +42,26 @@ const vipLabels = {
   platinum: "بلاتيني",
 };
 
+const typeLabels = {
+  individual: "فرد",
+  company: "شركة",
+  farm: "مزرعة",
+};
+
 const CustomersPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [vipFilter, setVipFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const canEdit = userRole === 'admin' || userRole === 'sales';
+  const canDelete = userRole === 'admin';
 
   const { data: customers = [], isLoading } = useQuery({
-    queryKey: ['customers', searchQuery, typeFilter, vipFilter],
+    queryKey: ['customers', searchQuery],
     queryFn: async () => {
       let query = supabase
         .from('customers')
@@ -55,12 +71,6 @@ const CustomersPage = () => {
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
       }
-      if (typeFilter !== 'all') {
-        query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
-      }
-      if (vipFilter !== 'all') {
-        query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
-      }
 
       const { data, error } = await query;
       if (error) throw error;
@@ -68,17 +78,42 @@ const CustomersPage = () => {
     },
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['customer-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customer_categories')
-        .select('*')
-        .order('name');
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('customers').delete().eq('id', id);
       if (error) throw error;
-      return data as CustomerCategory[];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('تم حذف العميل بنجاح');
+      setDeletingId(null);
+    },
+    onError: () => {
+      toast.error('فشل حذف العميل');
+      setDeletingId(null);
     },
   });
+
+  // Filtering
+  const { filteredData, filters, setFilter } = useTableFilter(customers);
+
+  // Sorting
+  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
+
+  const handleEdit = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedCustomer(null);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    deleteMutation.mutate(id);
+  };
 
   const stats = {
     total: customers.length,
@@ -110,10 +145,12 @@ const CustomersPage = () => {
               { key: 'credit_limit', label: 'حد الائتمان' },
             ]}
           />
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 ml-2" />
-            إضافة عميل
-          </Button>
+          {canEdit && (
+            <Button onClick={handleAdd}>
+              <Plus className="h-4 w-4 ml-2" />
+              إضافة عميل
+            </Button>
+          )}
         </div>
       </div>
 
@@ -186,7 +223,10 @@ const CustomersPage = () => {
                 className="pr-10"
               />
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select 
+              value={(filters.customer_type as string) || 'all'} 
+              onValueChange={(v) => setFilter('customer_type', v === 'all' ? undefined : v)}
+            >
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="نوع العميل" />
               </SelectTrigger>
@@ -194,9 +234,13 @@ const CustomersPage = () => {
                 <SelectItem value="all">الكل</SelectItem>
                 <SelectItem value="individual">فرد</SelectItem>
                 <SelectItem value="company">شركة</SelectItem>
+                <SelectItem value="farm">مزرعة</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={vipFilter} onValueChange={setVipFilter}>
+            <Select 
+              value={(filters.vip_level as string) || 'all'} 
+              onValueChange={(v) => setFilter('vip_level', v === 'all' ? undefined : v)}
+            >
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="مستوى VIP" />
               </SelectTrigger>
@@ -215,38 +259,81 @@ const CustomersPage = () => {
       {/* Customers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة العملاء</CardTitle>
+          <CardTitle>قائمة العملاء ({sortedData.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : customers.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">لا يوجد عملاء</p>
-              <Button variant="link" onClick={() => setDialogOpen(true)}>
-                إضافة عميل جديد
-              </Button>
+              {canEdit && (
+                <Button variant="link" onClick={handleAdd}>
+                  إضافة عميل جديد
+                </Button>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>الاسم</TableHead>
-                    <TableHead>النوع</TableHead>
+                    <TableHead>
+                      <DataTableHeader
+                        label="الاسم"
+                        sortKey="name"
+                        sortConfig={sortConfig}
+                        onSort={requestSort}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <DataTableHeader
+                        label="النوع"
+                        filterKey="customer_type"
+                        filterValue={filters.customer_type as string}
+                        filterType="select"
+                        filterOptions={[
+                          { label: 'فرد', value: 'individual' },
+                          { label: 'شركة', value: 'company' },
+                          { label: 'مزرعة', value: 'farm' },
+                        ]}
+                        onFilter={setFilter}
+                      />
+                    </TableHead>
                     <TableHead>الهاتف</TableHead>
-                    <TableHead>مستوى VIP</TableHead>
-                    <TableHead>الرصيد</TableHead>
+                    <TableHead>
+                      <DataTableHeader
+                        label="مستوى VIP"
+                        filterKey="vip_level"
+                        filterValue={filters.vip_level as string}
+                        filterType="select"
+                        filterOptions={[
+                          { label: 'عادي', value: 'regular' },
+                          { label: 'فضي', value: 'silver' },
+                          { label: 'ذهبي', value: 'gold' },
+                          { label: 'بلاتيني', value: 'platinum' },
+                        ]}
+                        onFilter={setFilter}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <DataTableHeader
+                        label="الرصيد"
+                        sortKey="current_balance"
+                        sortConfig={sortConfig}
+                        onSort={requestSort}
+                      />
+                    </TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead className="text-left">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customers.map((customer) => (
-                    <TableRow key={customer.id} className="cursor-pointer hover:bg-muted/50">
+                  {sortedData.map((customer) => (
+                    <TableRow key={customer.id} className="hover:bg-muted/50">
                       <TableCell>
                         <div>
                           <p className="font-medium">{customer.name}</p>
@@ -259,6 +346,8 @@ const CustomersPage = () => {
                         <Badge variant="outline">
                           {customer.customer_type === 'company' ? (
                             <><Building2 className="h-3 w-3 ml-1" /> شركة</>
+                          ) : customer.customer_type === 'farm' ? (
+                            <>مزرعة</>
                           ) : (
                             <><Users className="h-3 w-3 ml-1" /> فرد</>
                           )}
@@ -282,13 +371,15 @@ const CustomersPage = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/customers/${customer.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <DataTableActions
+                          onView={() => navigate(`/customers/${customer.id}`)}
+                          onEdit={() => handleEdit(customer)}
+                          onDelete={() => handleDelete(customer.id)}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                          isDeleting={deletingId === customer.id}
+                          deleteDescription="سيتم حذف العميل وجميع بياناته. هذا الإجراء لا يمكن التراجع عنه."
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -299,10 +390,11 @@ const CustomersPage = () => {
         </CardContent>
       </Card>
 
-      {/* Add Customer Dialog */}
+      {/* Add/Edit Customer Dialog */}
       <CustomerFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+        customer={selectedCustomer}
       />
     </div>
   );

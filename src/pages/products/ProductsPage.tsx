@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +14,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Package, Eye, Edit, AlertTriangle, Layers, Download } from "lucide-react";
+import { Plus, Search, Package, AlertTriangle, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
+import { DataTableHeader } from "@/components/ui/data-table-header";
+import { DataTableActions } from "@/components/ui/data-table-actions";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableFilter } from "@/hooks/useTableFilter";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -25,14 +31,19 @@ type ProductCategory = Database['public']['Tables']['product_categories']['Row']
 
 const ProductsPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const canEdit = userRole === 'admin' || userRole === 'warehouse';
+  const canDelete = userRole === 'admin';
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products', searchQuery, categoryFilter, statusFilter],
+    queryKey: ['products', searchQuery, categoryFilter],
     queryFn: async () => {
       let query = supabase
         .from('products')
@@ -44,11 +55,6 @@ const ProductsPage = () => {
       }
       if (categoryFilter !== 'all') {
         query = query.eq('category_id', categoryFilter);
-      }
-      if (statusFilter === 'active') {
-        query = query.eq('is_active', true);
-      } else if (statusFilter === 'inactive') {
-        query = query.eq('is_active', false);
       }
 
       const { data, error } = await query;
@@ -80,6 +86,22 @@ const ProductsPage = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('تم حذف المنتج بنجاح');
+      setDeletingId(null);
+    },
+    onError: () => {
+      toast.error('فشل حذف المنتج');
+      setDeletingId(null);
+    },
+  });
+
   const getProductStock = (productId: string) => {
     const stocks = stockData.filter(s => s.product_id === productId);
     return stocks.reduce((sum, s) => sum + s.quantity, 0);
@@ -91,12 +113,11 @@ const ProductsPage = () => {
     return cat?.name || '-';
   };
 
-  const stats = {
-    total: products.length,
-    active: products.filter(p => p.is_active).length,
-    lowStock: products.filter(p => getProductStock(p.id) <= (p.min_stock || 0)).length,
-    categories: categories.length,
-  };
+  // Filtering
+  const { filteredData, filters, setFilter } = useTableFilter(products);
+
+  // Sorting
+  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
@@ -106,6 +127,18 @@ const ProductsPage = () => {
   const handleAdd = () => {
     setSelectedProduct(null);
     setDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    deleteMutation.mutate(id);
+  };
+
+  const stats = {
+    total: products.length,
+    active: products.filter(p => p.is_active).length,
+    lowStock: products.filter(p => getProductStock(p.id) <= (p.min_stock || 0)).length,
+    categories: categories.length,
   };
 
   return (
@@ -130,10 +163,12 @@ const ProductsPage = () => {
               { key: 'is_active', label: 'الحالة' },
             ]}
           />
-          <Button onClick={handleAdd}>
-            <Plus className="h-4 w-4 ml-2" />
-            إضافة منتج
-          </Button>
+          {canEdit && (
+            <Button onClick={handleAdd}>
+              <Plus className="h-4 w-4 ml-2" />
+              إضافة منتج
+            </Button>
+          )}
         </div>
       </div>
 
@@ -217,14 +252,17 @@ const ProductsPage = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select 
+              value={(filters.is_active as string) || 'all'} 
+              onValueChange={(v) => setFilter('is_active', v === 'all' ? undefined : v === 'true')}
+            >
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="الحالة" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="active">نشط</SelectItem>
-                <SelectItem value="inactive">غير نشط</SelectItem>
+                <SelectItem value="true">نشط</SelectItem>
+                <SelectItem value="false">غير نشط</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -234,37 +272,53 @@ const ProductsPage = () => {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة المنتجات</CardTitle>
+          <CardTitle>قائمة المنتجات ({sortedData.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : products.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">لا توجد منتجات</p>
-              <Button variant="link" onClick={handleAdd}>
-                إضافة منتج جديد
-              </Button>
+              {canEdit && (
+                <Button variant="link" onClick={handleAdd}>
+                  إضافة منتج جديد
+                </Button>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>المنتج</TableHead>
+                    <TableHead>
+                      <DataTableHeader
+                        label="المنتج"
+                        sortKey="name"
+                        sortConfig={sortConfig}
+                        onSort={requestSort}
+                      />
+                    </TableHead>
                     <TableHead>الكود</TableHead>
                     <TableHead>التصنيف</TableHead>
-                    <TableHead>سعر البيع</TableHead>
+                    <TableHead>
+                      <DataTableHeader
+                        label="سعر البيع"
+                        sortKey="selling_price"
+                        sortConfig={sortConfig}
+                        onSort={requestSort}
+                      />
+                    </TableHead>
                     <TableHead>المخزون</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead className="text-left">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.map((product) => {
+                  {sortedData.map((product) => {
                     const stock = getProductStock(product.id);
                     const isLowStock = stock <= (product.min_stock || 0);
                     return (
@@ -319,22 +373,15 @@ const ProductsPage = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/products/${product.id}`)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(product)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DataTableActions
+                            onView={() => navigate(`/products/${product.id}`)}
+                            onEdit={() => handleEdit(product)}
+                            onDelete={() => handleDelete(product.id)}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                            isDeleting={deletingId === product.id}
+                            deleteDescription="سيتم حذف المنتج. هذا الإجراء لا يمكن التراجع عنه."
+                          />
                         </TableCell>
                       </TableRow>
                     );
