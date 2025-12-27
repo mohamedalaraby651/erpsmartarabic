@@ -19,24 +19,15 @@ import {
   Users,
   Phone,
   Mail,
-  Edit,
-  Trash2,
-  Eye,
-  Download,
 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DataTableHeader } from "@/components/ui/data-table-header";
+import { DataTableActions } from "@/components/ui/data-table-actions";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableFilter } from "@/hooks/useTableFilter";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Select,
   SelectContent,
@@ -47,21 +38,29 @@ import {
 
 const SuppliersPage = () => {
   const queryClient = useQueryClient();
+  const { userRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const canEdit = userRole === 'admin' || userRole === 'warehouse';
+  const canDelete = userRole === 'admin';
 
   // Fetch suppliers
   const { data: suppliers = [], isLoading } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: ["suppliers", searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("suppliers")
         .select("*")
         .order("name");
+
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -87,26 +86,20 @@ const SuppliersPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });
-      toast({ title: "تم حذف المورد بنجاح" });
-      setDeleteDialogOpen(false);
+      toast.success("تم حذف المورد بنجاح");
+      setDeletingId(null);
     },
     onError: () => {
-      toast({ title: "خطأ في حذف المورد", variant: "destructive" });
+      toast.error("خطأ في حذف المورد");
+      setDeletingId(null);
     },
   });
 
-  // Filter suppliers
-  const filteredSuppliers = suppliers.filter((supplier: any) => {
-    const matchesSearch =
-      supplier.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.phone?.includes(searchTerm) ||
-      supplier.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && supplier.is_active) ||
-      (statusFilter === "inactive" && !supplier.is_active);
-    return matchesSearch && matchesStatus;
-  });
+  // Filtering
+  const { filteredData, filters, setFilter } = useTableFilter(suppliers);
+
+  // Sorting
+  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
   // Calculate stats
   const activeSuppliers = suppliers.filter((s: any) => s.is_active).length;
@@ -128,6 +121,21 @@ const SuppliersPage = () => {
     };
   };
 
+  const handleEdit = (supplier: any) => {
+    setSelectedSupplier(supplier);
+    setDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedSupplier(null);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+    deleteSupplierMutation.mutate(id);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -146,10 +154,12 @@ const SuppliersPage = () => {
               { key: 'is_active', label: 'الحالة' },
             ]}
           />
-          <Button onClick={() => { setSelectedSupplier(null); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4 ml-2" />
-            مورد جديد
-          </Button>
+          {canEdit && (
+            <Button onClick={handleAdd}>
+              <Plus className="h-4 w-4 ml-2" />
+              مورد جديد
+            </Button>
+          )}
         </div>
       </div>
 
@@ -204,120 +214,136 @@ const SuppliersPage = () => {
             className="pr-10"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={(filters.is_active as string) || 'all'}
+          onValueChange={(v) => setFilter('is_active', v === 'all' ? undefined : v === 'true')}
+        >
           <SelectTrigger className="w-40">
             <SelectValue placeholder="الحالة" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">الكل</SelectItem>
-            <SelectItem value="active">نشط</SelectItem>
-            <SelectItem value="inactive">غير نشط</SelectItem>
+            <SelectItem value="true">نشط</SelectItem>
+            <SelectItem value="false">غير نشط</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Suppliers Table */}
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>اسم المورد</TableHead>
-              <TableHead>جهة الاتصال</TableHead>
-              <TableHead>الهاتف</TableHead>
-              <TableHead>البريد الإلكتروني</TableHead>
-              <TableHead>عدد الطلبات</TableHead>
-              <TableHead>إجمالي المشتريات</TableHead>
-              <TableHead>الرصيد</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead>الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        <CardHeader>
+          <CardTitle>قائمة الموردين ({sortedData.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8">
-                  جاري التحميل...
-                </TableCell>
+                <TableHead>
+                  <DataTableHeader
+                    label="اسم المورد"
+                    sortKey="name"
+                    sortConfig={sortConfig}
+                    onSort={requestSort}
+                  />
+                </TableHead>
+                <TableHead>جهة الاتصال</TableHead>
+                <TableHead>الهاتف</TableHead>
+                <TableHead>البريد الإلكتروني</TableHead>
+                <TableHead>عدد الطلبات</TableHead>
+                <TableHead>
+                  <DataTableHeader
+                    label="إجمالي المشتريات"
+                    sortKey="totalPurchases"
+                    sortConfig={sortConfig}
+                    onSort={requestSort}
+                  />
+                </TableHead>
+                <TableHead>
+                  <DataTableHeader
+                    label="الرصيد"
+                    sortKey="current_balance"
+                    sortConfig={sortConfig}
+                    onSort={requestSort}
+                  />
+                </TableHead>
+                <TableHead>الحالة</TableHead>
+                <TableHead>الإجراءات</TableHead>
               </TableRow>
-            ) : filteredSuppliers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                  لا يوجد موردين
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredSuppliers.map((supplier: any) => {
-                const stats = getSupplierStats(supplier.id);
-                return (
-                  <TableRow key={supplier.id}>
-                    <TableCell className="font-medium">{supplier.name}</TableCell>
-                    <TableCell>{supplier.contact_person || "-"}</TableCell>
-                    <TableCell>
-                      {supplier.phone ? (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {supplier.phone}
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {supplier.email ? (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {supplier.email}
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>{stats.orderCount}</TableCell>
-                    <TableCell>{stats.totalAmount.toLocaleString()} ج.م</TableCell>
-                    <TableCell
-                      className={
-                        (supplier.current_balance || 0) > 0
-                          ? "text-destructive"
-                          : ""
-                      }
-                    >
-                      {(supplier.current_balance || 0).toLocaleString()} ج.م
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={supplier.is_active ? "default" : "secondary"}>
-                        {supplier.is_active ? "نشط" : "غير نشط"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedSupplier(supplier);
-                            setDialogOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSupplierToDelete(supplier.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8">
+                    جاري التحميل...
+                  </TableCell>
+                </TableRow>
+              ) : sortedData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    لا يوجد موردين
+                  </TableCell>
+                </TableRow>
+              ) : (
+                sortedData.map((supplier: any) => {
+                  const stats = getSupplierStats(supplier.id);
+                  return (
+                    <TableRow key={supplier.id}>
+                      <TableCell className="font-medium">{supplier.name}</TableCell>
+                      <TableCell>{supplier.contact_person || "-"}</TableCell>
+                      <TableCell>
+                        {supplier.phone ? (
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {supplier.phone}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {supplier.email ? (
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {supplier.email}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell>{stats.orderCount}</TableCell>
+                      <TableCell>{stats.totalAmount.toLocaleString()} ج.م</TableCell>
+                      <TableCell
+                        className={
+                          (supplier.current_balance || 0) > 0
+                            ? "text-destructive"
+                            : ""
+                        }
+                      >
+                        {(supplier.current_balance || 0).toLocaleString()} ج.م
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={supplier.is_active ? "default" : "secondary"}>
+                          {supplier.is_active ? "نشط" : "غير نشط"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DataTableActions
+                          onEdit={() => handleEdit(supplier)}
+                          onDelete={() => handleDelete(supplier.id)}
+                          canView={false}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                          isDeleting={deletingId === supplier.id}
+                          deleteDescription="سيتم حذف المورد. هذا الإجراء لا يمكن التراجع عنه."
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
       </Card>
 
       {/* Dialogs */}
@@ -326,26 +352,6 @@ const SuppliersPage = () => {
         onOpenChange={setDialogOpen}
         supplier={selectedSupplier}
       />
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف المورد نهائياً. هذا الإجراء لا يمكن التراجع عنه.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => supplierToDelete && deleteSupplierMutation.mutate(supplierToDelete)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
