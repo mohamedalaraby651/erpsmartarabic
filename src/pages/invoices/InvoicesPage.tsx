@@ -1,23 +1,27 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Receipt, Edit, Printer, Download } from "lucide-react";
+import { Plus, Search, Receipt, Printer } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
+import { DataTableHeader } from "@/components/ui/data-table-header";
+import { DataTableActions } from "@/components/ui/data-table-actions";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableFilter } from "@/hooks/useTableFilter";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -36,40 +40,60 @@ const paymentStatusColors: Record<string, string> = {
 
 const InvoicesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printInvoiceId, setPrintInvoiceId] = useState<string | null>(null);
+  const { userRole } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const canEdit = userRole === 'admin' || userRole === 'sales' || userRole === 'accountant';
+  const canDelete = userRole === 'admin';
 
   const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ['invoices', searchQuery, paymentStatusFilter],
+    queryKey: ['invoices'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('invoices')
         .select('*, customers(name)')
         .order('created_at', { ascending: false });
-
-      if (searchQuery) {
-        query = query.ilike('invoice_number', `%${searchQuery}%`);
-      }
-      if (paymentStatusFilter !== 'all') {
-        query = query.eq('payment_status', paymentStatusFilter as any);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('invoice_items').delete().eq('invoice_id', id);
+      const { error } = await supabase.from('invoices').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast({ title: "تم حذف الفاتورة بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "خطأ في حذف الفاتورة", variant: "destructive" });
+    },
+  });
+
+  // Filter by search
+  const searchFiltered = invoices.filter((inv: any) =>
+    inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    inv.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
+  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
+
   const stats = {
     total: invoices.length,
-    unpaid: invoices.filter(i => i.payment_status === 'pending').length,
-    totalValue: invoices.reduce((sum, i) => sum + Number(i.total_amount), 0),
+    unpaid: invoices.filter((i: any) => i.payment_status === 'pending').length,
+    totalValue: invoices.reduce((sum: number, i: any) => sum + Number(i.total_amount), 0),
     unpaidValue: invoices
-      .filter(i => i.payment_status !== 'paid')
-      .reduce((sum, i) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
+      .filter((i: any) => i.payment_status !== 'paid')
+      .reduce((sum: number, i: any) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
   };
 
   const handleEdit = (invoice: Invoice) => {
@@ -98,7 +122,7 @@ const InvoicesPage = () => {
           <ExportWithTemplateButton
             section="invoices"
             sectionLabel="الفواتير"
-            data={invoices}
+            data={sortedData}
             columns={[
               { key: 'invoice_number', label: 'رقم الفاتورة' },
               { key: 'customers.name', label: 'العميل' },
@@ -172,27 +196,14 @@ const InvoicesPage = () => {
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="بحث برقم الفاتورة..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10"
-              />
-            </div>
-            <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="حالة الدفع" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="pending">غير مدفوع</SelectItem>
-                <SelectItem value="partial">جزئي</SelectItem>
-                <SelectItem value="paid">مدفوع</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="بحث برقم الفاتورة أو اسم العميل..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10"
+            />
           </div>
         </CardContent>
       </Card>
@@ -206,7 +217,7 @@ const InvoicesPage = () => {
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : invoices.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-12">
               <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">لا توجد فواتير</p>
@@ -217,18 +228,44 @@ const InvoicesPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>رقم الفاتورة</TableHead>
-                    <TableHead>العميل</TableHead>
-                    <TableHead>التاريخ</TableHead>
-                    <TableHead>الإجمالي</TableHead>
-                    <TableHead>المدفوع</TableHead>
-                    <TableHead>المتبقي</TableHead>
-                    <TableHead>حالة الدفع</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
+                    <DataTableHeader
+                      label="رقم الفاتورة"
+                      sortKey="invoice_number"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader label="العميل" />
+                    <DataTableHeader
+                      label="التاريخ"
+                      sortKey="created_at"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader
+                      label="الإجمالي"
+                      sortKey="total_amount"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader label="المدفوع" />
+                    <DataTableHeader label="المتبقي" />
+                    <DataTableHeader
+                      label="حالة الدفع"
+                      filterKey="payment_status"
+                      filterType="select"
+                      filterOptions={[
+                        { value: 'pending', label: 'غير مدفوع' },
+                        { value: 'partial', label: 'جزئي' },
+                        { value: 'paid', label: 'مدفوع' },
+                      ]}
+                      filterValue={filters.payment_status as string}
+                      onFilter={setFilter}
+                    />
+                    <DataTableHeader label="إجراءات" className="text-left" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invoices.map((invoice: any) => {
+                  {sortedData.map((invoice: any) => {
                     const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
                     return (
                       <TableRow key={invoice.id}>
@@ -259,12 +296,16 @@ const InvoicesPage = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(invoice)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => handlePrint(invoice.id)}>
                               <Printer className="h-4 w-4" />
                             </Button>
+                            <DataTableActions
+                              onEdit={() => handleEdit(invoice)}
+                              onDelete={() => deleteMutation.mutate(invoice.id)}
+                              canEdit={canEdit}
+                              canDelete={canDelete}
+                              deleteDescription="سيتم حذف هذه الفاتورة وجميع بنودها نهائياً."
+                            />
                           </div>
                         </TableCell>
                       </TableRow>

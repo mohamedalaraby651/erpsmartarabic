@@ -1,22 +1,26 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Wallet, CreditCard, Banknote, Download } from "lucide-react";
+import { Plus, Search, Wallet, CreditCard, Banknote } from "lucide-react";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
+import { DataTableHeader } from "@/components/ui/data-table-header";
+import { DataTableActions } from "@/components/ui/data-table-actions";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableFilter } from "@/hooks/useTableFilter";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "نقدي",
@@ -28,35 +32,54 @@ const paymentMethodLabels: Record<string, string> = {
 
 const PaymentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [methodFilter, setMethodFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { userRole } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const canEdit = userRole === 'admin' || userRole === 'accountant';
+  const canDelete = userRole === 'admin';
 
   const { data: payments = [], isLoading } = useQuery({
-    queryKey: ['payments', searchQuery, methodFilter],
+    queryKey: ['payments'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('payments')
         .select('*, customers(name), invoices(invoice_number)')
         .order('created_at', { ascending: false });
-
-      if (searchQuery) {
-        query = query.ilike('payment_number', `%${searchQuery}%`);
-      }
-      if (methodFilter !== 'all') {
-        query = query.eq('payment_method', methodFilter as any);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('payments').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast({ title: "تم حذف الدفعة بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "خطأ في حذف الدفعة", variant: "destructive" });
+    },
+  });
+
+  // Filter by search
+  const searchFiltered = payments.filter((p: any) =>
+    p.payment_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
+  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
+
   const stats = {
     total: payments.length,
-    totalAmount: payments.reduce((sum, p) => sum + Number(p.amount), 0),
-    cash: payments.filter(p => p.payment_method === 'cash').reduce((sum, p) => sum + Number(p.amount), 0),
-    bank: payments.filter(p => p.payment_method === 'bank_transfer').reduce((sum, p) => sum + Number(p.amount), 0),
+    totalAmount: payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0),
+    cash: payments.filter((p: any) => p.payment_method === 'cash').reduce((sum: number, p: any) => sum + Number(p.amount), 0),
+    bank: payments.filter((p: any) => p.payment_method === 'bank_transfer').reduce((sum: number, p: any) => sum + Number(p.amount), 0),
   };
 
   return (
@@ -70,7 +93,7 @@ const PaymentsPage = () => {
           <ExportWithTemplateButton
             section="payments"
             sectionLabel="المدفوعات"
-            data={payments}
+            data={sortedData}
             columns={[
               { key: 'payment_number', label: 'رقم الدفعة' },
               { key: 'customers.name', label: 'العميل' },
@@ -144,27 +167,14 @@ const PaymentsPage = () => {
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="بحث برقم الدفعة..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10"
-              />
-            </div>
-            <Select value={methodFilter} onValueChange={setMethodFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="طريقة الدفع" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="cash">نقدي</SelectItem>
-                <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
-                <SelectItem value="credit">آجل</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="بحث برقم الدفعة أو اسم العميل..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10"
+            />
           </div>
         </CardContent>
       </Card>
@@ -178,7 +188,7 @@ const PaymentsPage = () => {
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : payments.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-12">
               <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">لا توجد مدفوعات</p>
@@ -189,17 +199,44 @@ const PaymentsPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>رقم الدفعة</TableHead>
-                    <TableHead>العميل</TableHead>
-                    <TableHead>الفاتورة</TableHead>
-                    <TableHead>التاريخ</TableHead>
-                    <TableHead>المبلغ</TableHead>
-                    <TableHead>طريقة الدفع</TableHead>
-                    <TableHead>المرجع</TableHead>
+                    <DataTableHeader
+                      label="رقم الدفعة"
+                      sortKey="payment_number"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader label="العميل" />
+                    <DataTableHeader label="الفاتورة" />
+                    <DataTableHeader
+                      label="التاريخ"
+                      sortKey="payment_date"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader
+                      label="المبلغ"
+                      sortKey="amount"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader
+                      label="طريقة الدفع"
+                      filterKey="payment_method"
+                      filterType="select"
+                      filterOptions={[
+                        { value: 'cash', label: 'نقدي' },
+                        { value: 'bank_transfer', label: 'تحويل بنكي' },
+                        { value: 'credit', label: 'آجل' },
+                      ]}
+                      filterValue={filters.payment_method as string}
+                      onFilter={setFilter}
+                    />
+                    <DataTableHeader label="المرجع" />
+                    <DataTableHeader label="إجراءات" className="text-left" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.map((payment: any) => (
+                  {sortedData.map((payment: any) => (
                     <TableRow key={payment.id}>
                       <TableCell>
                         <code className="text-sm bg-muted px-2 py-1 rounded">
@@ -222,6 +259,14 @@ const PaymentsPage = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{payment.reference_number || '-'}</TableCell>
+                      <TableCell>
+                        <DataTableActions
+                          onDelete={() => deleteMutation.mutate(payment.id)}
+                          canEdit={false}
+                          canDelete={canDelete}
+                          deleteDescription="سيتم حذف هذه الدفعة نهائياً."
+                        />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
