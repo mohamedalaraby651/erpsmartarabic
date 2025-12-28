@@ -1,23 +1,27 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Edit, ArrowLeftRight, Printer, Download } from "lucide-react";
+import { Plus, Search, FileText, Printer, ArrowLeftRight } from "lucide-react";
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
+import { DataTableHeader } from "@/components/ui/data-table-header";
+import { DataTableActions } from "@/components/ui/data-table-actions";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableFilter } from "@/hooks/useTableFilter";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -40,38 +44,58 @@ const statusColors: Record<string, string> = {
 
 const QuotationsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printQuotationId, setPrintQuotationId] = useState<string | null>(null);
+  const { userRole } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const canEdit = userRole === 'admin' || userRole === 'sales';
+  const canDelete = userRole === 'admin';
 
   const { data: quotations = [], isLoading } = useQuery({
-    queryKey: ['quotations', searchQuery, statusFilter],
+    queryKey: ['quotations'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('quotations')
         .select('*, customers(name)')
         .order('created_at', { ascending: false });
-
-      if (searchQuery) {
-        query = query.ilike('quotation_number', `%${searchQuery}%`);
-      }
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as any);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('quotation_items').delete().eq('quotation_id', id);
+      const { error } = await supabase.from('quotations').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      toast({ title: "تم حذف عرض السعر بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "خطأ في حذف عرض السعر", variant: "destructive" });
+    },
+  });
+
+  // Filter by search
+  const searchFiltered = quotations.filter((q: any) =>
+    q.quotation_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    q.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
+  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
+
   const stats = {
     total: quotations.length,
-    pending: quotations.filter(q => q.status === 'pending').length,
-    approved: quotations.filter(q => q.status === 'approved').length,
-    totalValue: quotations.reduce((sum, q) => sum + Number(q.total_amount), 0),
+    pending: quotations.filter((q: any) => q.status === 'pending').length,
+    approved: quotations.filter((q: any) => q.status === 'approved').length,
+    totalValue: quotations.reduce((sum: number, q: any) => sum + Number(q.total_amount), 0),
   };
 
   const handleEdit = (quotation: Quotation) => {
@@ -100,7 +124,7 @@ const QuotationsPage = () => {
           <ExportWithTemplateButton
             section="quotations"
             sectionLabel="عروض الأسعار"
-            data={quotations}
+            data={sortedData}
             columns={[
               { key: 'quotation_number', label: 'رقم العرض' },
               { key: 'customers.name', label: 'العميل' },
@@ -174,28 +198,14 @@ const QuotationsPage = () => {
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="بحث برقم العرض..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="الحالة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="draft">مسودة</SelectItem>
-                <SelectItem value="pending">معلق</SelectItem>
-                <SelectItem value="approved">معتمد</SelectItem>
-                <SelectItem value="rejected">مرفوض</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="بحث برقم العرض أو اسم العميل..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10"
+            />
           </div>
         </CardContent>
       </Card>
@@ -209,7 +219,7 @@ const QuotationsPage = () => {
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : quotations.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">لا توجد عروض أسعار</p>
@@ -220,17 +230,44 @@ const QuotationsPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>رقم العرض</TableHead>
-                    <TableHead>العميل</TableHead>
-                    <TableHead>التاريخ</TableHead>
-                    <TableHead>صالح حتى</TableHead>
-                    <TableHead>الإجمالي</TableHead>
-                    <TableHead>الحالة</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
+                    <DataTableHeader
+                      label="رقم العرض"
+                      sortKey="quotation_number"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader label="العميل" />
+                    <DataTableHeader
+                      label="التاريخ"
+                      sortKey="created_at"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader label="صالح حتى" />
+                    <DataTableHeader
+                      label="الإجمالي"
+                      sortKey="total_amount"
+                      sortConfig={sortConfig}
+                      onSort={requestSort}
+                    />
+                    <DataTableHeader
+                      label="الحالة"
+                      filterKey="status"
+                      filterType="select"
+                      filterOptions={[
+                        { value: 'draft', label: 'مسودة' },
+                        { value: 'pending', label: 'معلق' },
+                        { value: 'approved', label: 'معتمد' },
+                        { value: 'rejected', label: 'مرفوض' },
+                      ]}
+                      filterValue={filters.status as string}
+                      onFilter={setFilter}
+                    />
+                    <DataTableHeader label="إجراءات" className="text-left" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {quotations.map((quotation: any) => (
+                  {sortedData.map((quotation: any) => (
                     <TableRow key={quotation.id}>
                       <TableCell>
                         <code className="text-sm bg-muted px-2 py-1 rounded">
@@ -258,12 +295,16 @@ const QuotationsPage = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(quotation)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handlePrint(quotation.id)}>
                             <Printer className="h-4 w-4" />
                           </Button>
+                          <DataTableActions
+                            onEdit={() => handleEdit(quotation)}
+                            onDelete={() => deleteMutation.mutate(quotation.id)}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                            deleteDescription="سيتم حذف عرض السعر وجميع بنوده نهائياً."
+                          />
                         </div>
                       </TableCell>
                     </TableRow>

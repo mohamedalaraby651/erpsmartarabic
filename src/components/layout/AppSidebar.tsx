@@ -78,6 +78,15 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: 'الموارد البشرية',
+    icon: Users,
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-500/10',
+    items: [
+      { title: 'الموظفين', icon: Users, href: '/employees', roles: ['admin', 'hr'] },
+    ],
+  },
+  {
     title: 'التقارير والإعدادات',
     icon: BarChart3,
     color: 'text-slate-600 dark:text-slate-400',
@@ -99,6 +108,7 @@ const navSections: NavSection[] = [
       { title: 'إدارة الصلاحيات', icon: Shield, href: '/admin/permissions', roles: ['admin'] },
       { title: 'تخصيص الأقسام', icon: Settings, href: '/admin/customizations', roles: ['admin'] },
       { title: 'إدارة المستخدمين', icon: Users, href: '/admin/users', roles: ['admin'] },
+      { title: 'إعدادات النظام', icon: Settings, href: '/admin/system-settings', roles: ['admin'] },
     ],
   },
 ];
