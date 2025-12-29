@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Edit, Plus, Package, Trash2, Layers, Box } from "lucide-react";
+import { ArrowRight, Edit, Plus, Package, Trash2, Layers, Box, Paperclip } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
 import ProductVariantDialog from "@/components/products/ProductVariantDialog";
+import { FileUpload } from "@/components/shared/FileUpload";
+import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -214,6 +216,7 @@ const ProductDetailsPage = () => {
         <TabsList>
           <TabsTrigger value="variants">المتغيرات ({variants.length})</TabsTrigger>
           <TabsTrigger value="stock">المخزون ({stockData.length})</TabsTrigger>
+          <TabsTrigger value="attachments">الملفات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="variants" className="mt-4">
@@ -298,6 +301,25 @@ const ProductDetailsPage = () => {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="attachments" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                الملفات والمرفقات
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FileUpload
+                entityType="product"
+                entityId={id!}
+                onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'product', id] })}
+              />
+              <AttachmentsList entityType="product" entityId={id!} />
             </CardContent>
           </Card>
         </TabsContent>

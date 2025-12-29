@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,7 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowRight, Truck, Phone, Mail, MapPin, CreditCard, ClipboardList, User } from "lucide-react";
+import { ArrowRight, Truck, Phone, Mail, MapPin, CreditCard, ClipboardList, User, Paperclip } from "lucide-react";
+import { FileUpload } from "@/components/shared/FileUpload";
+import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -22,6 +24,7 @@ type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
 const SupplierDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: supplier, isLoading: loadingSupplier } = useQuery({
     queryKey: ['supplier', id],
@@ -138,6 +141,7 @@ const SupplierDetailsPage = () => {
         <TabsList>
           <TabsTrigger value="info">معلومات المورد</TabsTrigger>
           <TabsTrigger value="orders">أوامر الشراء ({totalOrders})</TabsTrigger>
+          <TabsTrigger value="attachments">المرفقات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
@@ -246,6 +250,25 @@ const SupplierDetailsPage = () => {
                   <p className="text-muted-foreground">لا توجد أوامر شراء</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="attachments" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                المستندات والمرفقات
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FileUpload
+                entityType="supplier"
+                entityId={id!}
+                onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'supplier', id] })}
+              />
+              <AttachmentsList entityType="supplier" entityId={id!} />
             </CardContent>
           </Card>
         </TabsContent>

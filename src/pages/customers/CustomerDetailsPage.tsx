@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User, Crown, CreditCard } from "lucide-react";
+import { ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User, Crown, CreditCard, Paperclip } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
+import { FileUpload } from "@/components/shared/FileUpload";
+import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -249,6 +251,7 @@ const CustomerDetailsPage = () => {
           <TabsTrigger value="addresses">العناوين ({addresses.length})</TabsTrigger>
           <TabsTrigger value="invoices">الفواتير ({invoices.length})</TabsTrigger>
           <TabsTrigger value="payments">المدفوعات ({payments.length})</TabsTrigger>
+          <TabsTrigger value="attachments">المرفقات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="addresses" className="mt-4">
@@ -363,6 +366,25 @@ const CustomerDetailsPage = () => {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="attachments" className="mt-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                المستندات والمرفقات
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FileUpload
+                entityType="customer"
+                entityId={id!}
+                onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'customer', id] })}
+              />
+              <AttachmentsList entityType="customer" entityId={id!} />
             </CardContent>
           </Card>
         </TabsContent>
