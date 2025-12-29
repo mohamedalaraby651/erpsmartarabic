@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +23,11 @@ import {
   Building2,
   Heart,
   AlertCircle,
+  Paperclip,
 } from 'lucide-react';
 import EmployeeFormDialog from '@/components/employees/EmployeeFormDialog';
+import { FileUpload } from '@/components/shared/FileUpload';
+import { AttachmentsList } from '@/components/shared/AttachmentsList';
 
 interface Employee {
   id: string;
@@ -80,6 +83,7 @@ const maritalLabels: Record<string, string> = {
 export default function EmployeeDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const { data: employee, isLoading } = useQuery({
@@ -213,6 +217,10 @@ export default function EmployeeDetailsPage() {
           <TabsTrigger value="financial" className="gap-2">
             <Wallet className="h-4 w-4" />
             البيانات المالية
+          </TabsTrigger>
+          <TabsTrigger value="attachments" className="gap-2">
+            <Paperclip className="h-4 w-4" />
+            المستندات
           </TabsTrigger>
           <TabsTrigger value="activity" className="gap-2">
             <Clock className="h-4 w-4" />
@@ -368,6 +376,26 @@ export default function EmployeeDetailsPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Attachments Tab */}
+        <TabsContent value="attachments" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                المستندات والمرفقات
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FileUpload
+                entityType="employee"
+                entityId={id!}
+                onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'employee', id] })}
+              />
+              <AttachmentsList entityType="employee" entityId={id!} />
             </CardContent>
           </Card>
         </TabsContent>
