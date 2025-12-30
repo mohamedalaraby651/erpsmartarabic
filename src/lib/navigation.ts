@@ -19,6 +19,7 @@ import {
   UserCircle,
   Briefcase,
   RefreshCw,
+  Paperclip,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -265,6 +266,12 @@ export const adminNavItems: NavItem[] = [
     roles: ['admin'],
   },
   {
+    title: 'إدارة المرفقات',
+    icon: Paperclip,
+    href: '/attachments',
+    roles: ['admin'],
+  },
+  {
     title: 'إدارة الأدوار',
     icon: Shield,
     href: '/admin/roles',
@@ -336,6 +343,7 @@ export const routeLabels: Record<string, string> = {
   '/sync': 'حالة المزامنة',
   '/settings': 'الإعدادات',
   '/search': 'البحث',
+  '/attachments': 'إدارة المرفقات',
   '/admin/roles': 'إدارة الأدوار',
   '/admin/permissions': 'إدارة الصلاحيات',
   '/admin/customizations': 'تخصيص الأقسام',
