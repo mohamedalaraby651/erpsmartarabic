@@ -55,9 +55,11 @@ export type Database = {
       }
       attachments: {
         Row: {
+          category: string | null
           created_at: string
           entity_id: string
           entity_type: string
+          expiry_date: string | null
           file_name: string
           file_size: number
           file_type: string
@@ -68,9 +70,11 @@ export type Database = {
           uploaded_by: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           entity_id: string
           entity_type: string
+          expiry_date?: string | null
           file_name: string
           file_size: number
           file_type: string
@@ -81,9 +85,11 @@ export type Database = {
           uploaded_by?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           entity_id?: string
           entity_type?: string
+          expiry_date?: string | null
           file_name?: string
           file_size?: number
           file_type?: string
