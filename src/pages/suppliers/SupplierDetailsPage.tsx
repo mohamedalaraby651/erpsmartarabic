@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -13,18 +15,47 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowRight, Truck, Phone, Mail, MapPin, CreditCard, ClipboardList, User, Paperclip } from "lucide-react";
+import { 
+  ArrowRight, 
+  Truck, 
+  ClipboardList, 
+  Paperclip,
+  AlertTriangle,
+  Info,
+  CreditCard,
+  Package,
+  Star,
+  Activity,
+  ShoppingCart,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
+import SupplierProfileHeader from "@/components/suppliers/SupplierProfileHeader";
+import SupplierStatsCards from "@/components/suppliers/SupplierStatsCards";
+import SupplierPurchasesChart from "@/components/suppliers/SupplierPurchasesChart";
+import SupplierInfoTab from "@/components/suppliers/SupplierInfoTab";
+import SupplierPaymentsTab from "@/components/suppliers/SupplierPaymentsTab";
+import SupplierProductsTab from "@/components/suppliers/SupplierProductsTab";
+import SupplierRatingTab from "@/components/suppliers/SupplierRatingTab";
+import SupplierActivityTab from "@/components/suppliers/SupplierActivityTab";
+import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
+import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
 
+const HIGH_BALANCE_THRESHOLD = 50000; // تنبيه عند الرصيد أكثر من 50 ألف
+
 const SupplierDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   const { data: supplier, isLoading: loadingSupplier } = useQuery({
     queryKey: ['supplier', id],
@@ -36,12 +67,20 @@ const SupplierDetailsPage = () => {
         .eq('id', id)
         .maybeSingle();
       if (error) throw error;
-      return data as Supplier | null;
+      return data as (Supplier & {
+        supplier_type?: string | null;
+        category?: string | null;
+        bank_name?: string | null;
+        bank_account?: string | null;
+        iban?: string | null;
+        rating?: number | null;
+        website?: string | null;
+      }) | null;
     },
     enabled: !!id,
   });
 
-  const { data: purchaseOrders, isLoading: loadingOrders } = useQuery({
+  const { data: purchaseOrders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['supplier-purchase-orders', id],
     queryFn: async () => {
       if (!id) return [];
@@ -56,8 +95,34 @@ const SupplierDetailsPage = () => {
     enabled: !!id,
   });
 
-  const totalOrders = purchaseOrders?.length || 0;
-  const totalAmount = purchaseOrders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
+  // Update rating mutation
+  const updateRatingMutation = useMutation({
+    mutationFn: async (rating: number) => {
+      const { error } = await supabase
+        .from('suppliers')
+        .update({ rating })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supplier', id] });
+      toast({ title: "تم تحديث التقييم بنجاح" });
+    },
+    onError: (error) => {
+      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Calculate stats
+  const totalOrders = purchaseOrders.length;
+  const totalPurchases = purchaseOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+  const currentBalance = Number(supplier?.current_balance || 0);
+  const averageOrderValue = totalOrders > 0 ? totalPurchases / totalOrders : 0;
+  const lastOrderDate = purchaseOrders.length > 0 ? purchaseOrders[0].created_at : null;
+  const hasHighBalance = currentBalance > HIGH_BALANCE_THRESHOLD;
+
+  // Pending orders count
+  const pendingOrders = purchaseOrders.filter(o => o.status === 'pending' || o.status === 'draft');
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -69,6 +134,15 @@ const SupplierDetailsPage = () => {
     };
     const s = statusMap[status] || { label: status, variant: 'secondary' };
     return <Badge variant={s.variant}>{s.label}</Badge>;
+  };
+
+  const handleCreatePurchaseOrder = () => {
+    navigate('/purchase-orders', { state: { prefillSupplierId: id } });
+  };
+
+  const handlePrintStatement = () => {
+    toast({ title: "جاري إعداد كشف الحساب...", description: "سيتم تحميل الملف قريباً" });
+    // TODO: Implement PDF generation
   };
 
   if (loadingSupplier) {
@@ -94,134 +168,112 @@ const SupplierDetailsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate('/suppliers')}>
-          <ArrowRight className="h-4 w-4 ml-2" />
-          العودة
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">{supplier.name}</h1>
-          <p className="text-muted-foreground">تفاصيل المورد</p>
-        </div>
-        <Badge variant={supplier.is_active ? 'default' : 'secondary'} className="mr-auto">
-          {supplier.is_active ? 'نشط' : 'غير نشط'}
-        </Badge>
+      {/* Back Button */}
+      <Button variant="ghost" onClick={() => navigate('/suppliers')} className="mb-2">
+        <ArrowRight className="h-4 w-4 ml-2" />
+        العودة للموردين
+      </Button>
+
+      {/* Hero Header */}
+      <SupplierProfileHeader
+        supplier={supplier}
+        onEdit={() => setEditDialogOpen(true)}
+        onCreatePurchaseOrder={handleCreatePurchaseOrder}
+        onRecordPayment={() => setPaymentDialogOpen(true)}
+        onPrintStatement={handlePrintStatement}
+      />
+
+      {/* Alerts */}
+      <div className="space-y-3">
+        {hasHighBalance && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>تنبيه: رصيد مرتفع</AlertTitle>
+            <AlertDescription>
+              الرصيد الحالي للمورد ({currentBalance.toLocaleString()} ج.م) يتجاوز الحد المسموح به.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {pendingOrders.length > 0 && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>طلبات معلقة</AlertTitle>
+            <AlertDescription>
+              يوجد {pendingOrders.length} أمر شراء في انتظار المراجعة أو الاعتماد.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">إجمالي الطلبات</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalOrders}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">إجمالي المشتريات</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalAmount.toLocaleString()} ج.م</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">الرصيد الحالي</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">
-              {(supplier.current_balance || 0).toLocaleString()} ج.م
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Stats Cards */}
+      <SupplierStatsCards
+        totalOrders={totalOrders}
+        totalPurchases={totalPurchases}
+        currentBalance={currentBalance}
+        averageOrderValue={averageOrderValue}
+        lastOrderDate={lastOrderDate}
+        hasHighBalance={hasHighBalance}
+      />
 
-      <Tabs defaultValue="info">
-        <TabsList>
-          <TabsTrigger value="info">معلومات المورد</TabsTrigger>
-          <TabsTrigger value="orders">أوامر الشراء ({totalOrders})</TabsTrigger>
-          <TabsTrigger value="attachments">المرفقات</TabsTrigger>
+      {/* Chart */}
+      <SupplierPurchasesChart purchaseOrders={purchaseOrders} />
+
+      {/* Tabs */}
+      <Tabs defaultValue="info" className="mt-6">
+        <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+          <TabsTrigger value="info" className="gap-2">
+            <Info className="h-4 w-4" />
+            معلومات المورد
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            أوامر الشراء ({totalOrders})
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            المدفوعات
+          </TabsTrigger>
+          <TabsTrigger value="products" className="gap-2">
+            <Package className="h-4 w-4" />
+            المنتجات
+          </TabsTrigger>
+          <TabsTrigger value="rating" className="gap-2">
+            <Star className="h-4 w-4" />
+            التقييم
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="gap-2">
+            <Activity className="h-4 w-4" />
+            النشاطات
+          </TabsTrigger>
+          <TabsTrigger value="attachments" className="gap-2">
+            <Paperclip className="h-4 w-4" />
+            المرفقات
+          </TabsTrigger>
         </TabsList>
 
+        {/* Supplier Info Tab */}
         <TabsContent value="info" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>بيانات المورد</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  {supplier.contact_person && (
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">جهة الاتصال</p>
-                        <p className="font-medium">{supplier.contact_person}</p>
-                      </div>
-                    </div>
-                  )}
-                  {supplier.phone && (
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">الهاتف</p>
-                        <p className="font-medium">{supplier.phone}</p>
-                        {supplier.phone2 && <p className="text-sm">{supplier.phone2}</p>}
-                      </div>
-                    </div>
-                  )}
-                  {supplier.email && (
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">البريد الإلكتروني</p>
-                        <p className="font-medium">{supplier.email}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {supplier.address && (
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">العنوان</p>
-                        <p className="font-medium">{supplier.address}</p>
-                      </div>
-                    </div>
-                  )}
-                  {supplier.tax_number && (
-                    <div className="flex items-center gap-3">
-                      <CreditCard className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">الرقم الضريبي</p>
-                        <p className="font-medium">{supplier.tax_number}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {supplier.notes && (
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground mb-1">ملاحظات</p>
-                  <p>{supplier.notes}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <SupplierInfoTab supplier={supplier} />
         </TabsContent>
 
+        {/* Purchase Orders Tab */}
         <TabsContent value="orders" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>أوامر الشراء</CardTitle>
-              <CardDescription>سجل أوامر الشراء من هذا المورد</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>أوامر الشراء</CardTitle>
+                <CardDescription>سجل أوامر الشراء من هذا المورد</CardDescription>
+              </div>
+              <Button onClick={handleCreatePurchaseOrder} size="sm" className="gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                أمر شراء جديد
+              </Button>
             </CardHeader>
             <CardContent>
               {loadingOrders ? (
                 <p className="text-muted-foreground text-center py-8">جاري التحميل...</p>
-              ) : purchaseOrders && purchaseOrders.length > 0 ? (
+              ) : purchaseOrders.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -233,12 +285,16 @@ const SupplierDetailsPage = () => {
                   </TableHeader>
                   <TableBody>
                     {purchaseOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.order_number}</TableCell>
+                      <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
+                        <TableCell className="font-medium font-mono">
+                          {order.order_number}
+                        </TableCell>
                         <TableCell>
                           {new Date(order.created_at).toLocaleDateString('ar-EG')}
                         </TableCell>
-                        <TableCell>{order.total_amount.toLocaleString()} ج.م</TableCell>
+                        <TableCell className="font-bold">
+                          {Number(order.total_amount).toLocaleString()} ج.م
+                        </TableCell>
                         <TableCell>{getStatusBadge(order.status)}</TableCell>
                       </TableRow>
                     ))}
@@ -248,12 +304,43 @@ const SupplierDetailsPage = () => {
                 <div className="text-center py-8">
                   <ClipboardList className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
                   <p className="text-muted-foreground">لا توجد أوامر شراء</p>
+                  <Button onClick={handleCreatePurchaseOrder} variant="outline" size="sm" className="mt-4">
+                    إنشاء أول أمر شراء
+                  </Button>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Payments Tab */}
+        <TabsContent value="payments" className="mt-6">
+          <SupplierPaymentsTab 
+            supplierId={id!} 
+            onAddPayment={() => setPaymentDialogOpen(true)} 
+          />
+        </TabsContent>
+
+        {/* Products Tab */}
+        <TabsContent value="products" className="mt-6">
+          <SupplierProductsTab supplierId={id!} />
+        </TabsContent>
+
+        {/* Rating Tab */}
+        <TabsContent value="rating" className="mt-6">
+          <SupplierRatingTab
+            supplierId={id!}
+            currentRating={supplier.rating || 0}
+            onRatingChange={(rating) => updateRatingMutation.mutate(rating)}
+          />
+        </TabsContent>
+
+        {/* Activity Tab */}
+        <TabsContent value="activity" className="mt-6">
+          <SupplierActivityTab supplierId={id!} />
+        </TabsContent>
+
+        {/* Attachments Tab */}
         <TabsContent value="attachments" className="mt-6">
           <Card>
             <CardHeader>
@@ -273,6 +360,19 @@ const SupplierDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <SupplierFormDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        supplier={supplier}
+      />
+
+      <SupplierPaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        supplier={supplier}
+      />
     </div>
   );
 };
