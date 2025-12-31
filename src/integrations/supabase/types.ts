@@ -1496,6 +1496,38 @@ export type Database = {
           },
         ]
       }
+      supplier_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_notes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_payments: {
         Row: {
           amount: number
@@ -1556,10 +1588,14 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
+          bank_account: string | null
+          bank_name: string | null
+          category: string | null
           contact_person: string | null
           created_at: string
           current_balance: number | null
           email: string | null
+          iban: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -1567,15 +1603,22 @@ export type Database = {
           notes: string | null
           phone: string | null
           phone2: string | null
+          rating: number | null
+          supplier_type: string | null
           tax_number: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
+          category?: string | null
           contact_person?: string | null
           created_at?: string
           current_balance?: number | null
           email?: string | null
+          iban?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -1583,15 +1626,22 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           phone2?: string | null
+          rating?: number | null
+          supplier_type?: string | null
           tax_number?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
+          category?: string | null
           contact_person?: string | null
           created_at?: string
           current_balance?: number | null
           email?: string | null
+          iban?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -1599,8 +1649,11 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           phone2?: string | null
+          rating?: number | null
+          supplier_type?: string | null
           tax_number?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
