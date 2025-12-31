@@ -29,7 +29,10 @@ import {
   Package,
   Receipt,
   Users,
+  Paperclip,
 } from 'lucide-react';
+import { AttachmentUploadForm } from '@/components/shared/AttachmentUploadForm';
+import { AttachmentsList } from '@/components/shared/AttachmentsList';
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -344,6 +347,10 @@ export default function ProfilePage() {
             <Palette className="h-4 w-4" />
             المظهر
           </TabsTrigger>
+          <TabsTrigger value="documents" className="gap-2">
+            <Paperclip className="h-4 w-4" />
+            مستنداتي
+          </TabsTrigger>
         </TabsList>
 
         {/* Personal Data Tab */}
@@ -589,6 +596,32 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Documents Tab */}
+        <TabsContent value="documents" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>مستنداتي</CardTitle>
+              <CardDescription>إدارة المستندات والملفات الشخصية</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {user?.id && (
+                <>
+                  <AttachmentUploadForm
+                    entityType="profile"
+                    entityId={user.id}
+                    onUploadComplete={() => {}}
+                  />
+                  <AttachmentsList
+                    entityType="profile"
+                    entityId={user.id}
+                    showSearch={true}
+                  />
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -45,6 +45,7 @@ const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetails
 const ProfilePage = lazy(() => import("./pages/profile/ProfilePage"));
 const SyncStatusPage = lazy(() => import("./pages/sync/SyncStatusPage"));
 const SystemSettingsPage = lazy(() => import("./pages/admin/SystemSettingsPage"));
+const AttachmentsPage = lazy(() => import("./pages/attachments/AttachmentsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -113,6 +114,7 @@ const App = () => (
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="sync" element={<SyncStatusPage />} />
                 <Route path="admin/system-settings" element={<SystemSettingsPage />} />
+                <Route path="attachments" element={<AttachmentsPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
