@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import {
   Dialog,
   DialogContent,
@@ -113,7 +114,8 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('CategoryFormDialog', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

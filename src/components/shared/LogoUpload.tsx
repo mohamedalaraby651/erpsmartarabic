@@ -68,15 +68,19 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
         throw uploadError;
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
+      // Use signed URL for private bucket (7 day expiry for logos)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from('logos')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 60 * 60 * 24 * 7);
 
-      onUpload(urlData.publicUrl);
+      if (urlError) throw urlError;
+
+      onUpload(urlData.signedUrl);
       toast.success('تم رفع الشعار بنجاح');
     } catch (error: any) {
-      console.error('Upload error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Upload error:', error);
+      }
       toast.error('فشل رفع الشعار');
       setPreviewUrl(currentLogoUrl || null);
     } finally {
