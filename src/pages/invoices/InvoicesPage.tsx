@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -22,6 +23,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { EntityLink } from "@/components/shared/EntityLink";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -47,6 +49,7 @@ const InvoicesPage = () => {
   const { userRole } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const canEdit = userRole === 'admin' || userRole === 'sales' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
@@ -268,13 +271,19 @@ const InvoicesPage = () => {
                   {sortedData.map((invoice: any) => {
                     const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
                     return (
-                      <TableRow key={invoice.id}>
+                      <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
                         <TableCell>
-                          <code className="text-sm bg-muted px-2 py-1 rounded">
+                          <EntityLink type="invoice" id={invoice.id}>
                             {invoice.invoice_number}
-                          </code>
+                          </EntityLink>
                         </TableCell>
-                        <TableCell>{invoice.customers?.name || '-'}</TableCell>
+                        <TableCell>
+                          {invoice.customers?.name ? (
+                            <EntityLink type="customer" id={invoice.customer_id}>
+                              {invoice.customers.name}
+                            </EntityLink>
+                          ) : '-'}
+                        </TableCell>
                         <TableCell>
                           {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
                         </TableCell>
@@ -295,7 +304,10 @@ const InvoicesPage = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
+                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => handlePrint(invoice.id)}>
                               <Printer className="h-4 w-4" />
                             </Button>

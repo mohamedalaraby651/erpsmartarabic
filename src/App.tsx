@@ -18,15 +18,19 @@ const ProductsPage = lazy(() => import("./pages/products/ProductsPage"));
 const ProductDetailsPage = lazy(() => import("./pages/products/ProductDetailsPage"));
 const CategoriesPage = lazy(() => import("./pages/categories/CategoriesPage"));
 const QuotationsPage = lazy(() => import("./pages/quotations/QuotationsPage"));
+const QuotationDetailsPage = lazy(() => import("./pages/quotations/QuotationDetailsPage"));
 const SalesOrdersPage = lazy(() => import("./pages/sales-orders/SalesOrdersPage"));
+const SalesOrderDetailsPage = lazy(() => import("./pages/sales-orders/SalesOrderDetailsPage"));
 const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
 const InvoicesPage = lazy(() => import("./pages/invoices/InvoicesPage"));
+const InvoiceDetailsPage = lazy(() => import("./pages/invoices/InvoiceDetailsPage"));
 const PaymentsPage = lazy(() => import("./pages/payments/PaymentsPage"));
 const InventoryPage = lazy(() => import("./pages/inventory/InventoryPage"));
 const SuppliersPage = lazy(() => import("./pages/suppliers/SuppliersPage"));
 const SupplierDetailsPage = lazy(() => import("./pages/suppliers/SupplierDetailsPage"));
 const SupplierPaymentsPage = lazy(() => import("./pages/suppliers/SupplierPaymentsPage"));
 const PurchaseOrdersPage = lazy(() => import("./pages/purchase-orders/PurchaseOrdersPage"));
+const PurchaseOrderDetailsPage = lazy(() => import("./pages/purchase-orders/PurchaseOrderDetailsPage"));
 const SettingsPage = lazy(() => import("./pages/settings/SettingsPage"));
 const SearchPage = lazy(() => import("./pages/search/SearchPage"));
 const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
@@ -87,14 +91,18 @@ const App = () => (
                 <Route path="products/:id" element={<ProductDetailsPage />} />
                 <Route path="categories" element={<CategoriesPage />} />
                 <Route path="sales-orders" element={<SalesOrdersPage />} />
+                <Route path="sales-orders/:id" element={<SalesOrderDetailsPage />} />
                 <Route path="invoices" element={<InvoicesPage />} />
+                <Route path="invoices/:id" element={<InvoiceDetailsPage />} />
                 <Route path="payments" element={<PaymentsPage />} />
                 <Route path="inventory" element={<InventoryPage />} />
                 <Route path="suppliers" element={<SuppliersPage />} />
                 <Route path="suppliers/:id" element={<SupplierDetailsPage />} />
                 <Route path="supplier-payments" element={<SupplierPaymentsPage />} />
                 <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
+                <Route path="purchase-orders/:id" element={<PurchaseOrderDetailsPage />} />
                 <Route path="quotations" element={<QuotationsPage />} />
+                <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="search" element={<SearchPage />} />

@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Search, Wallet, CreditCard, Banknote } from "lucide-react";
+import { EntityLink } from "@/components/shared/EntityLink";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
@@ -243,8 +244,20 @@ const PaymentsPage = () => {
                           {payment.payment_number}
                         </code>
                       </TableCell>
-                      <TableCell>{payment.customers?.name || '-'}</TableCell>
-                      <TableCell>{payment.invoices?.invoice_number || '-'}</TableCell>
+                      <TableCell>
+                        {payment.customers?.name ? (
+                          <EntityLink type="customer" id={payment.customer_id}>
+                            {payment.customers.name}
+                          </EntityLink>
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {payment.invoices?.invoice_number ? (
+                          <EntityLink type="invoice" id={payment.invoice_id}>
+                            {payment.invoices.invoice_number}
+                          </EntityLink>
+                        ) : '-'}
+                      </TableCell>
                       <TableCell>
                         {new Date(payment.payment_date).toLocaleDateString('ar-EG')}
                       </TableCell>

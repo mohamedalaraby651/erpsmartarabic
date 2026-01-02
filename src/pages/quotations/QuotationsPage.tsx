@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Printer, ArrowLeftRight } from "lucide-react";
+import { Plus, Search, FileText, Printer, ArrowLeftRight, Eye } from "lucide-react";
+import { EntityLink } from "@/components/shared/EntityLink";
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -51,6 +53,7 @@ const QuotationsPage = () => {
   const { userRole } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
@@ -268,13 +271,19 @@ const QuotationsPage = () => {
                 </TableHeader>
                 <TableBody>
                   {sortedData.map((quotation: any) => (
-                    <TableRow key={quotation.id}>
+                    <TableRow key={quotation.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/quotations/${quotation.id}`)}>
                       <TableCell>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">
+                        <EntityLink type="quotation" id={quotation.id}>
                           {quotation.quotation_number}
-                        </code>
+                        </EntityLink>
                       </TableCell>
-                      <TableCell>{quotation.customers?.name || '-'}</TableCell>
+                      <TableCell>
+                        {quotation.customers?.name ? (
+                          <EntityLink type="customer" id={quotation.customer_id}>
+                            {quotation.customers.name}
+                          </EntityLink>
+                        ) : '-'}
+                      </TableCell>
                       <TableCell>
                         {new Date(quotation.created_at).toLocaleDateString('ar-EG')}
                       </TableCell>
@@ -294,7 +303,10 @@ const QuotationsPage = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" onClick={() => navigate(`/quotations/${quotation.id}`)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handlePrint(quotation.id)}>
                             <Printer className="h-4 w-4" />
                           </Button>
