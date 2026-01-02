@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, ClipboardList, Printer } from "lucide-react";
+import { Plus, Search, ClipboardList, Printer, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { EntityLink } from "@/components/shared/EntityLink";
 import PurchaseOrderFormDialog from "@/components/purchase-orders/PurchaseOrderFormDialog";
 import { PurchaseOrderPrintView } from "@/components/print/PurchaseOrderPrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -53,6 +55,7 @@ const PurchaseOrdersPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { userRole } = useAuth();
+  const navigate = useNavigate();
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';
@@ -266,13 +269,19 @@ const PurchaseOrdersPage = () => {
                 </TableHeader>
                 <TableBody>
                   {sortedData.map((order) => (
-                    <TableRow key={order.id}>
+                    <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/purchase-orders/${order.id}`)}>
                       <TableCell>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">
+                        <EntityLink type="purchase-order" id={order.id}>
                           {order.order_number}
-                        </code>
+                        </EntityLink>
                       </TableCell>
-                      <TableCell>{order.suppliers?.name || '-'}</TableCell>
+                      <TableCell>
+                        {order.suppliers?.name ? (
+                          <EntityLink type="supplier" id={order.supplier_id}>
+                            {order.suppliers.name}
+                          </EntityLink>
+                        ) : '-'}
+                      </TableCell>
                       <TableCell>
                         <span className="font-bold">
                           {Number(order.total_amount).toLocaleString()} ج.م
@@ -290,7 +299,10 @@ const PurchaseOrdersPage = () => {
                         {new Date(order.created_at).toLocaleDateString('ar-EG')}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" onClick={() => navigate(`/purchase-orders/${order.id}`)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => { setPrintOrderId(order.id); setPrintDialogOpen(true); }}>
                             <Printer className="h-4 w-4" />
                           </Button>
