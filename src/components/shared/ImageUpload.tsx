@@ -76,15 +76,22 @@ export default function ImageUpload({
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+      // Use signed URL for private buckets (24 hour expiry)
+      const { data, error: urlError } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(filePath, 60 * 60 * 24);
 
-      onImageUploaded(data.publicUrl);
+      if (urlError) throw urlError;
+
+      onImageUploaded(data.signedUrl);
       toast({
         title: 'تم رفع الصورة',
         description: 'تم رفع الصورة بنجاح',
       });
     } catch (error) {
-      console.error('Error uploading image:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error uploading image:', error);
+      }
       toast({
         title: 'خطأ في الرفع',
         description: 'فشل في رفع الصورة، يرجى المحاولة مرة أخرى',
