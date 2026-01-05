@@ -25,6 +25,7 @@ import { ColumnSelector, Column } from './ColumnSelector';
 import { generatePDF } from '@/lib/pdfGenerator';
 import { Download, FileSpreadsheet, FileText, FileJson, Loader2, Save, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import * as XLSX from 'xlsx';
 
 interface ExportWithTemplateButtonProps {
@@ -92,7 +93,8 @@ export function ExportWithTemplateButton({
       queryClient.invalidateQueries({ queryKey: ['export-templates', section] });
     },
     onError: (error: any) => {
-      toast.error(error.message || 'حدث خطأ أثناء حفظ القالب');
+      logErrorSafely('ExportWithTemplateButton.saveTemplateMutation', error);
+      toast.error(getSafeErrorMessage(error));
     },
   });
 

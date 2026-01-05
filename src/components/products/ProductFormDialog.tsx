@@ -23,6 +23,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { productSchema, type ProductFormData } from "@/lib/validations";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -145,7 +146,8 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('ProductFormDialog', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

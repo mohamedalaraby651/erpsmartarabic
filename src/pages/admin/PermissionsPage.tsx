@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -123,7 +124,8 @@ export default function PermissionsPage() {
       toast.success('تم حفظ الصلاحيات بنجاح');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'حدث خطأ');
+      logErrorSafely('PermissionsPage.saveMutation', error);
+      toast.error(getSafeErrorMessage(error));
     },
   });
 

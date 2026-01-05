@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOnlineStatus } from './useOnlineStatus';
 import { addToSyncQueue, getCachedData, cacheData } from '@/lib/offlineStorage';
 import { useToast } from './use-toast';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 
 type TableName = 'customers' | 'products' | 'invoices' | 'quotations' | 'suppliers';
 
@@ -51,7 +52,8 @@ export function useOfflineMutation(
       options.onSuccess?.(data);
     },
     onError: (error: Error) => {
-      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+      logErrorSafely('useOfflineMutation.insert', error);
+      toast({ title: 'خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
       options.onError?.(error);
     },
   });
@@ -89,7 +91,8 @@ export function useOfflineMutation(
       options.onSuccess?.(data);
     },
     onError: (error: Error) => {
-      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+      logErrorSafely('useOfflineMutation.update', error);
+      toast({ title: 'خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
       options.onError?.(error);
     },
   });
@@ -119,7 +122,8 @@ export function useOfflineMutation(
       options.onSuccess?.(data);
     },
     onError: (error: Error) => {
-      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+      logErrorSafely('useOfflineMutation.delete', error);
+      toast({ title: 'خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
       options.onError?.(error);
     },
   });

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import { useTheme } from 'next-themes';
 import ImageUpload from '@/components/shared/ImageUpload';
 import {
@@ -199,7 +200,8 @@ export default function ProfilePage() {
       toast({ title: 'تم تغيير كلمة المرور بنجاح' });
     },
     onError: (error: any) => {
-      toast({ title: 'خطأ في تغيير كلمة المرور', description: error.message, variant: 'destructive' });
+      logErrorSafely('ProfilePage.changePasswordMutation', error);
+      toast({ title: 'خطأ في تغيير كلمة المرور', description: getSafeErrorMessage(error), variant: 'destructive' });
     },
   });
 

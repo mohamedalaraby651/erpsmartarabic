@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DollarSign, Percent, Receipt, RotateCcw, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 
 const RoleLimitsPage = () => {
   const queryClient = useQueryClient();
@@ -130,7 +131,8 @@ const RoleLimitsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['all-role-limits'] });
     },
     onError: (error: any) => {
-      toast.error(error.message || 'حدث خطأ أثناء الحفظ');
+      logErrorSafely('RoleLimitsPage.saveMutation', error);
+      toast.error(getSafeErrorMessage(error));
     },
   });
 

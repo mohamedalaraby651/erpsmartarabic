@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -126,7 +127,8 @@ export default function CustomizationsPage() {
       toast.success('تم الحفظ');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'حدث خطأ');
+      logErrorSafely('CustomizationsPage.saveMutation', error);
+      toast.error(getSafeErrorMessage(error));
     },
   });
 

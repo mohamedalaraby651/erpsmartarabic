@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -238,8 +239,8 @@ export function AttachmentUploadForm({
       setExpiryDate(undefined);
       setNotes('');
     } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error('فشل رفع الملف: ' + (error.message || 'خطأ غير معروف'));
+      logErrorSafely('AttachmentUploadForm.handleUpload', error);
+      toast.error('فشل رفع الملف: ' + getSafeErrorMessage(error));
     } finally {
       setIsUploading(false);
       setUploadProgress(0);

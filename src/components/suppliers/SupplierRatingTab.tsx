@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { Star, Plus, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -61,7 +62,8 @@ const SupplierRatingTab = ({ supplierId, currentRating, onRatingChange }: Suppli
       toast({ title: "تم إضافة الملاحظة بنجاح" });
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('SupplierRatingTab', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

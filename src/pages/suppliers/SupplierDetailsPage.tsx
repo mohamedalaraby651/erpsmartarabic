@@ -29,6 +29,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import SupplierProfileHeader from "@/components/suppliers/SupplierProfileHeader";
@@ -109,7 +110,8 @@ const SupplierDetailsPage = () => {
       toast({ title: "تم تحديث التقييم بنجاح" });
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('SupplierDetailsPage', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 
