@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import ImageUpload from "@/components/shared/ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Phone, Building2, CreditCard, FileText } from "lucide-react";
@@ -185,7 +186,8 @@ const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialog
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('SupplierFormDialog', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

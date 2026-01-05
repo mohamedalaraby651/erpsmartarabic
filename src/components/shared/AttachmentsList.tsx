@@ -42,6 +42,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { AttachmentsSearch, AttachmentFilters, defaultFilters } from './AttachmentsSearch';
@@ -173,7 +174,8 @@ export function AttachmentsList({
       setDeleteId(null);
     },
     onError: (error: any) => {
-      toast.error('فشل حذف الملف: ' + error.message);
+      logErrorSafely('AttachmentsList.deleteMutation', error);
+      toast.error('فشل حذف الملف: ' + getSafeErrorMessage(error));
     },
   });
 

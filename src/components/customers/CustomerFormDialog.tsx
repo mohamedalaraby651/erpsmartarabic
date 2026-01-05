@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { customerSchema, type CustomerFormData } from "@/lib/validations";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -137,7 +138,8 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('CustomerFormDialog', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
 type Warehouse = Database['public']['Tables']['warehouses']['Row'];
@@ -91,7 +92,8 @@ const WarehouseFormDialog = ({ open, onOpenChange, warehouse }: WarehouseFormDia
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('WarehouseFormDialog', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

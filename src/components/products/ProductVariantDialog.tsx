@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
 type ProductVariant = Database['public']['Tables']['product_variants']['Row'];
@@ -93,7 +94,8 @@ const ProductVariantDialog = ({ open, onOpenChange, productId, variant }: Produc
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('ProductVariantDialog', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

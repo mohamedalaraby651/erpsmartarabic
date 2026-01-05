@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import { useAuth } from '@/hooks/useAuth';
 import ImageUpload from '@/components/shared/ImageUpload';
 import { User, Briefcase, Wallet, AlertCircle } from 'lucide-react';
@@ -227,9 +228,10 @@ export default function EmployeeFormDialog({
       onOpenChange(false);
     },
     onError: (error: any) => {
+      logErrorSafely('EmployeeFormDialog', error);
       toast({
         title: 'حدث خطأ',
-        description: error.message,
+        description: getSafeErrorMessage(error),
         variant: 'destructive',
       });
     },

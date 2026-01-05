@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
@@ -196,8 +197,8 @@ export function FileUpload({
 
       setSelectedFile(null);
     } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error('فشل رفع الملف: ' + (error.message || 'خطأ غير معروف'));
+      logErrorSafely('FileUpload.handleUpload', error);
+      toast.error('فشل رفع الملف: ' + getSafeErrorMessage(error));
     } finally {
       setIsUploading(false);
       setUploadProgress(0);

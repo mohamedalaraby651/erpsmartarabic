@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
 type CustomerAddress = Database['public']['Tables']['customer_addresses']['Row'];
@@ -104,7 +105,8 @@ const CustomerAddressDialog = ({ open, onOpenChange, customerId, address }: Cust
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('CustomerAddressDialog', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 
