@@ -1133,6 +1133,39 @@ export type Database = {
           },
         ]
       }
+      report_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          template_data: Json
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          template_data?: Json
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          template_data?: Json
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       role_field_permissions: {
         Row: {
           can_edit: boolean | null
@@ -1693,6 +1726,36 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -1842,6 +1905,63 @@ export type Database = {
           id?: string
           sync_on_login?: boolean
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          accent_color: string | null
+          collapsed_sections: Json | null
+          created_at: string | null
+          dashboard_widgets: Json | null
+          favorite_pages: Json | null
+          font_family: string | null
+          font_size: string | null
+          id: string
+          notification_settings: Json | null
+          primary_color: string | null
+          sidebar_compact: boolean | null
+          sidebar_order: Json | null
+          table_settings: Json | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string | null
+          collapsed_sections?: Json | null
+          created_at?: string | null
+          dashboard_widgets?: Json | null
+          favorite_pages?: Json | null
+          font_family?: string | null
+          font_size?: string | null
+          id?: string
+          notification_settings?: Json | null
+          primary_color?: string | null
+          sidebar_compact?: boolean | null
+          sidebar_order?: Json | null
+          table_settings?: Json | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accent_color?: string | null
+          collapsed_sections?: Json | null
+          created_at?: string | null
+          dashboard_widgets?: Json | null
+          favorite_pages?: Json | null
+          font_family?: string | null
+          font_size?: string | null
+          id?: string
+          notification_settings?: Json | null
+          primary_color?: string | null
+          sidebar_compact?: boolean | null
+          sidebar_order?: Json | null
+          table_settings?: Json | null
+          theme?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
