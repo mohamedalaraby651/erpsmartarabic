@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, FileText, Palette, Save, WifiOff } from "lucide-react";
+import { Building2, FileText, Palette, Save, WifiOff, Bell } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { OfflineSettings } from "@/components/settings/OfflineSettings";
+import { ThemeCustomizer } from "@/components/settings/ThemeCustomizer";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
 
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
 
@@ -105,7 +107,7 @@ const SettingsPage = () => {
       </div>
 
       <Tabs defaultValue="company" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1 lg:w-auto">
           <TabsTrigger value="company">
             <Building2 className="h-4 w-4 ml-2" />
             الشركة
@@ -117,6 +119,10 @@ const SettingsPage = () => {
           <TabsTrigger value="appearance">
             <Palette className="h-4 w-4 ml-2" />
             المظهر
+          </TabsTrigger>
+          <TabsTrigger value="notifications">
+            <Bell className="h-4 w-4 ml-2" />
+            الإشعارات
           </TabsTrigger>
           <TabsTrigger value="offline">
             <WifiOff className="h-4 w-4 ml-2" />
@@ -253,72 +259,11 @@ const SettingsPage = () => {
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>تخصيص المظهر</CardTitle>
-              <CardDescription>
-                تخصيص ألوان العلامة التجارية للشركة
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="primary_color">اللون الأساسي</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="primary_color"
-                      type="color"
-                      value={currentData.primary_color}
-                      onChange={(e) => updateField('primary_color', e.target.value)}
-                      className="w-16 h-10 p-1"
-                    />
-                    <Input
-                      value={currentData.primary_color}
-                      onChange={(e) => updateField('primary_color', e.target.value)}
-                      placeholder="#2563eb"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="secondary_color">اللون الثانوي</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="secondary_color"
-                      type="color"
-                      value={currentData.secondary_color}
-                      onChange={(e) => updateField('secondary_color', e.target.value)}
-                      className="w-16 h-10 p-1"
-                    />
-                    <Input
-                      value={currentData.secondary_color}
-                      onChange={(e) => updateField('secondary_color', e.target.value)}
-                      placeholder="#1e40af"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-              </div>
+          <ThemeCustomizer />
+        </TabsContent>
 
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium mb-3">معاينة الألوان</h4>
-                <div className="flex gap-4">
-                  <div
-                    className="w-24 h-12 rounded-lg flex items-center justify-center text-white text-sm font-medium"
-                    style={{ backgroundColor: currentData.primary_color }}
-                  >
-                    أساسي
-                  </div>
-                  <div
-                    className="w-24 h-12 rounded-lg flex items-center justify-center text-white text-sm font-medium"
-                    style={{ backgroundColor: currentData.secondary_color }}
-                  >
-                    ثانوي
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="notifications" className="space-y-6">
+          <NotificationSettings />
         </TabsContent>
 
         <TabsContent value="offline" className="space-y-6">
