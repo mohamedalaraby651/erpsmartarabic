@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const STORAGE_KEY = 'sidebar_favorites';
 const MAX_FAVORITES = 7;
@@ -12,12 +14,15 @@ export interface FavoritePage {
 
 export function useFavoritePages() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [favorites, setFavorites] = useState<FavoritePage[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load favorites from localStorage
+  // Load favorites from localStorage first, then sync with DB
   useEffect(() => {
     if (!user?.id) return;
     
+    // Load from localStorage first (fast)
     const stored = localStorage.getItem(`${STORAGE_KEY}_${user.id}`);
     if (stored) {
       try {
@@ -26,14 +31,59 @@ export function useFavoritePages() {
         setFavorites([]);
       }
     }
+    setIsLoaded(true);
+
+    // Then sync from database
+    const loadFromDb = async () => {
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('favorite_pages')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (data?.favorite_pages) {
+        const dbFavorites = data.favorite_pages as unknown as FavoritePage[];
+        if (Array.isArray(dbFavorites)) {
+          setFavorites(dbFavorites);
+          localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(dbFavorites));
+        }
+      }
+    };
+
+    loadFromDb();
   }, [user?.id]);
 
-  // Save favorites to localStorage
-  const saveFavorites = useCallback((newFavorites: FavoritePage[]) => {
+  // Save favorites to both localStorage and database
+  const saveFavorites = useCallback(async (newFavorites: FavoritePage[]) => {
     if (!user?.id) return;
+    
+    // Save to localStorage (fast)
     localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newFavorites));
     setFavorites(newFavorites);
-  }, [user?.id]);
+
+    // Save to database (background)
+    const { data: existing } = await supabase
+      .from('user_preferences')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('user_preferences')
+        .update({ favorite_pages: JSON.parse(JSON.stringify(newFavorites)) })
+        .eq('user_id', user.id);
+    } else {
+      await (supabase
+        .from('user_preferences')
+        .insert as any)({
+          user_id: user.id,
+          favorite_pages: JSON.parse(JSON.stringify(newFavorites)),
+        });
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['user-preferences', user.id] });
+  }, [user?.id, queryClient]);
 
   const addFavorite = useCallback((href: string, title: string) => {
     if (favorites.length >= MAX_FAVORITES) return false;
@@ -75,5 +125,6 @@ export function useFavoritePages() {
     reorderFavorites,
     maxFavorites: MAX_FAVORITES,
     canAddMore: favorites.length < MAX_FAVORITES,
+    isLoaded,
   };
 }
