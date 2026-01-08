@@ -73,12 +73,12 @@ export function useDashboardSettings() {
       // Then save to database
       const { error } = await supabase
         .from('user_dashboard_settings')
-        .upsert({
-          user_id: user.id,
-          widgets: newWidgets as unknown as Record<string, unknown>,
-        } as any, {
-          onConflict: 'user_id',
-        });
+        .upsert([
+          {
+            user_id: user.id,
+            widgets: JSON.stringify(newWidgets),
+          },
+        ], { onConflict: 'user_id' });
 
       if (error) throw error;
     },
