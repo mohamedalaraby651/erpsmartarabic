@@ -71,15 +71,15 @@ export function useFavoritePages() {
     if (existing) {
       await supabase
         .from('user_preferences')
-        .update({ favorite_pages: JSON.parse(JSON.stringify(newFavorites)) })
+        .update({ favorite_pages: JSON.stringify(newFavorites) })
         .eq('user_id', user.id);
     } else {
-      await (supabase
+      await supabase
         .from('user_preferences')
-        .insert as any)({
+        .insert([{
           user_id: user.id,
-          favorite_pages: JSON.parse(JSON.stringify(newFavorites)),
-        });
+          favorite_pages: JSON.stringify(newFavorites),
+        }]);
     }
 
     queryClient.invalidateQueries({ queryKey: ['user-preferences', user.id] });

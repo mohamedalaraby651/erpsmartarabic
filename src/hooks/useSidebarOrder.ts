@@ -74,15 +74,15 @@ export function useSidebarOrder() {
     if (existing) {
       await supabase
         .from('user_preferences')
-        .update({ sidebar_order: JSON.parse(JSON.stringify(newOrder)) })
+        .update({ sidebar_order: JSON.stringify(newOrder) })
         .eq('user_id', user.id);
     } else {
-      await (supabase
+      await supabase
         .from('user_preferences')
-        .insert as any)({
+        .insert([{
           user_id: user.id,
-          sidebar_order: JSON.parse(JSON.stringify(newOrder)),
-        });
+          sidebar_order: JSON.stringify(newOrder),
+        }]);
     }
 
     queryClient.invalidateQueries({ queryKey: ['user-preferences', user.id] });
