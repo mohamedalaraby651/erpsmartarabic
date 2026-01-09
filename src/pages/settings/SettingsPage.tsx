@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, FileText, Palette, Save, WifiOff, Bell } from "lucide-react";
+import { Building2, FileText, Palette, Save, WifiOff, Bell, FileBox, Download } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { OfflineSettings } from "@/components/settings/OfflineSettings";
 import { ThemeCustomizer } from "@/components/settings/ThemeCustomizer";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { ReportTemplateEditor } from "@/components/reports/ReportTemplateEditor";
+import { SettingsExportImport } from "@/components/settings/SettingsExportImport";
 
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
 
@@ -123,6 +125,14 @@ const SettingsPage = () => {
           <TabsTrigger value="notifications">
             <Bell className="h-4 w-4 ml-2" />
             الإشعارات
+          </TabsTrigger>
+          <TabsTrigger value="templates">
+            <FileBox className="h-4 w-4 ml-2" />
+            القوالب
+          </TabsTrigger>
+          <TabsTrigger value="export">
+            <Download className="h-4 w-4 ml-2" />
+            تصدير/استيراد
           </TabsTrigger>
           <TabsTrigger value="offline">
             <WifiOff className="h-4 w-4 ml-2" />
@@ -264,6 +274,14 @@ const SettingsPage = () => {
 
         <TabsContent value="notifications" className="space-y-6">
           <NotificationSettings />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-6">
+          <ReportTemplateEditor />
+        </TabsContent>
+
+        <TabsContent value="export" className="space-y-6">
+          <SettingsExportImport />
         </TabsContent>
 
         <TabsContent value="offline" className="space-y-6">
