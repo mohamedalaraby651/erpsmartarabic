@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { waitFor } from '@testing-library/dom';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { ReactNode } from 'react';
@@ -29,7 +28,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { applyTheme, saveThemeToLocalStorage } from '@/lib/themeManager';
+import { applyTheme } from '@/lib/themeManager';
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -201,7 +200,7 @@ describe('useUserPreferences Hook', () => {
       expect(mockUpsert).toHaveBeenCalled();
     });
 
-    it('should call applyTheme and saveThemeToLocalStorage on theme change', async () => {
+    it('should call applyTheme when preferences are fetched', async () => {
       const { result } = renderHook(() => useUserPreferences(), { wrapper: createWrapper() });
       
       await waitFor(() => {
