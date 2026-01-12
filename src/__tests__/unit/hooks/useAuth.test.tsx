@@ -1,16 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { waitFor } from '@testing-library/dom';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { ReactNode } from 'react';
+// Helper to create AuthError-like object
+const createAuthError = (message: string) => {
+  const error = new Error(message) as any;
+  error.code = 'auth_error';
+  error.status = 400;
+  return error;
+};
 
 // Mock Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
       onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } }
+        data: { subscription: { unsubscribe: vi.fn(), id: 'sub-1', callback: vi.fn() } }
       })),
       getSession: vi.fn(() => Promise.resolve({ 
         data: { session: null }, 
@@ -101,7 +107,7 @@ describe('useAuth Hook', () => {
     });
 
     it('should return error on failed sign in', async () => {
-      const mockError = new Error('Invalid credentials');
+      const mockError = createAuthError('Invalid credentials');
       vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({ 
         error: mockError,
         data: { user: null, session: null }
@@ -150,7 +156,7 @@ describe('useAuth Hook', () => {
     });
 
     it('should return error on failed sign up', async () => {
-      const mockError = new Error('User already exists');
+      const mockError = createAuthError('User already exists');
       vi.mocked(supabase.auth.signUp).mockResolvedValue({ 
         error: mockError,
         data: { user: null, session: null }
@@ -203,7 +209,13 @@ describe('useAuth Hook', () => {
     it('should unsubscribe on unmount', () => {
       const unsubscribeMock = vi.fn();
       vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
-        data: { subscription: { unsubscribe: unsubscribeMock } }
+        data: { 
+          subscription: { 
+            unsubscribe: unsubscribeMock, 
+            id: 'sub-1', 
+            callback: vi.fn() 
+          } 
+        }
       });
 
       const { unmount } = renderHook(() => useAuth(), { wrapper: createWrapper() });
