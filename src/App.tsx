@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReloadPrompt } from "@/components/offline/ReloadPrompt";
 
 // Lazy load pages for better performance
 const Auth = lazy(() => import("./pages/Auth"));
@@ -80,6 +81,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <ReloadPrompt />
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -126,7 +128,6 @@ const App = () => (
                 <Route path="attachments" element={<AttachmentsPage />} />
                 <Route path="install" element={<InstallPage />} />
               </Route>
-              <Route path="*" element={<NotFound />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
