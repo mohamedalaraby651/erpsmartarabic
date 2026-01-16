@@ -1,9 +1,8 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { registerServiceWorker } from "./lib/registerServiceWorker";
 
-// Register Service Worker
-registerServiceWorker();
+// vite-plugin-pwa handles service worker registration automatically
+// with registerType: 'autoUpdate' in vite.config.ts
 
 createRoot(document.getElementById("root")!).render(<App />);
