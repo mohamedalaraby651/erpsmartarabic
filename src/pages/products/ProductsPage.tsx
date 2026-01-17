@@ -23,8 +23,16 @@ import { DataTableActions } from "@/components/ui/data-table-actions";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
+import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+
+// Mobile components
+import { DataCard } from "@/components/mobile/DataCard";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type Product = Database['public']['Tables']['products']['Row'];
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
@@ -33,6 +41,7 @@ const ProductsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { userRole } = useAuth();
+  const { isMobile, isTableView } = useResponsiveView();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -42,7 +51,7 @@ const ProductsPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, refetch } = useQuery({
     queryKey: ['products', searchQuery, categoryFilter],
     queryFn: async () => {
       let query = supabase
@@ -134,6 +143,10 @@ const ProductsPage = () => {
     deleteMutation.mutate(id);
   };
 
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
   const stats = {
     total: products.length,
     active: products.filter(p => p.is_active).length,
@@ -141,97 +154,301 @@ const ProductsPage = () => {
     categories: categories.length,
   };
 
+  // Render mobile list view
+  const renderMobileView = () => {
+    if (isLoading) {
+      return <MobileListSkeleton count={5} />;
+    }
+
+    if (sortedData.length === 0) {
+      return (
+        <EmptyState
+          icon={Package}
+          title="لا توجد منتجات"
+          description="ابدأ بإضافة منتجك الأول"
+          action={canEdit ? { label: 'إضافة منتج', onClick: handleAdd, icon: Plus } : undefined}
+        />
+      );
+    }
+
+    return (
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="space-y-3">
+          {sortedData.map((product) => {
+            const stock = getProductStock(product.id);
+            const isLowStock = stock <= (product.min_stock || 0);
+            
+            return (
+              <DataCard
+                key={product.id}
+                title={product.name}
+                subtitle={product.sku ? `كود: ${product.sku}` : getCategoryName(product.category_id)}
+                avatar={product.image_url || undefined}
+                avatarFallback={product.name.slice(0, 2)}
+                icon={<Package className="h-5 w-5" />}
+                badge={isLowStock ? {
+                  text: 'مخزون منخفض',
+                  variant: 'destructive',
+                } : undefined}
+                fields={[
+                  { label: 'السعر', value: `${Number(product.selling_price).toLocaleString()} ج.م` },
+                  { label: 'المخزون', value: stock.toString(), icon: isLowStock ? <AlertTriangle className="h-3 w-3" /> : undefined },
+                ]}
+                onClick={() => navigate(`/products/${product.id}`)}
+                onView={() => navigate(`/products/${product.id}`)}
+                onEdit={canEdit ? () => handleEdit(product) : undefined}
+                onDelete={canDelete ? () => handleDelete(product.id) : undefined}
+              />
+            );
+          })}
+        </div>
+      </PullToRefresh>
+    );
+  };
+
+  // Render desktop table view
+  const renderTableView = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    if (sortedData.length === 0) {
+      return (
+        <EmptyState
+          icon={Package}
+          title="لا توجد منتجات"
+          description="ابدأ بإضافة منتجك الأول"
+          action={canEdit ? { label: 'إضافة منتج جديد', onClick: handleAdd, icon: Plus } : undefined}
+        />
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>
+                <DataTableHeader
+                  label="المنتج"
+                  sortKey="name"
+                  sortConfig={sortConfig}
+                  onSort={requestSort}
+                />
+              </TableHead>
+              <TableHead>الكود</TableHead>
+              <TableHead>التصنيف</TableHead>
+              <TableHead>
+                <DataTableHeader
+                  label="سعر البيع"
+                  sortKey="selling_price"
+                  sortConfig={sortConfig}
+                  onSort={requestSort}
+                />
+              </TableHead>
+              <TableHead>المخزون</TableHead>
+              <TableHead>الحالة</TableHead>
+              <TableHead className="text-left">إجراءات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedData.map((product) => {
+              const stock = getProductStock(product.id);
+              const isLowStock = stock <= (product.min_stock || 0);
+              return (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="h-10 w-10 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                          <Package className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium">{product.name}</p>
+                        {product.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-1">
+                            {product.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <code className="text-sm bg-muted px-2 py-1 rounded">
+                      {product.sku || '-'}
+                    </code>
+                  </TableCell>
+                  <TableCell>{getCategoryName(product.category_id)}</TableCell>
+                  <TableCell>
+                    <span className="font-bold">
+                      {Number(product.selling_price).toLocaleString()} ج.م
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className={isLowStock ? 'text-destructive font-bold' : ''}>
+                        {stock}
+                      </span>
+                      {isLowStock && (
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={product.is_active ? "default" : "secondary"}>
+                      {product.is_active ? "نشط" : "غير نشط"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DataTableActions
+                      onView={() => navigate(`/products/${product.id}`)}
+                      onEdit={() => handleEdit(product)}
+                      onDelete={() => handleDelete(product.id)}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                      isDeleting={deletingId === product.id}
+                      deleteDescription="سيتم حذف المنتج. هذا الإجراء لا يمكن التراجع عنه."
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 md:space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">إدارة المنتجات</h1>
-          <p className="text-muted-foreground">إدارة المنتجات والمخزون</p>
+          <h1 className="text-xl md:text-2xl font-bold">إدارة المنتجات</h1>
+          <p className="text-sm text-muted-foreground">إدارة المنتجات والمخزون</p>
         </div>
-        <div className="flex gap-2">
-          <ExportWithTemplateButton
-            section="products"
-            sectionLabel="المنتجات"
-            data={products}
-            columns={[
-              { key: 'name', label: 'اسم المنتج' },
-              { key: 'sku', label: 'الكود' },
-              { key: 'cost_price', label: 'سعر التكلفة' },
-              { key: 'selling_price', label: 'سعر البيع' },
-              { key: 'min_stock', label: 'الحد الأدنى' },
-              { key: 'is_active', label: 'الحالة' },
-            ]}
-          />
-          {canEdit && (
-            <Button onClick={handleAdd}>
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة منتج
-            </Button>
-          )}
-        </div>
+        {!isMobile && (
+          <div className="flex gap-2">
+            <ExportWithTemplateButton
+              section="products"
+              sectionLabel="المنتجات"
+              data={products}
+              columns={[
+                { key: 'name', label: 'اسم المنتج' },
+                { key: 'sku', label: 'الكود' },
+                { key: 'cost_price', label: 'سعر التكلفة' },
+                { key: 'selling_price', label: 'سعر البيع' },
+                { key: 'min_stock', label: 'الحد الأدنى' },
+                { key: 'is_active', label: 'الحالة' },
+              ]}
+            />
+            {canEdit && (
+              <Button onClick={handleAdd}>
+                <Plus className="h-4 w-4 ml-2" />
+                إضافة منتج
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Package className="h-5 w-5 text-primary" />
+      {/* Stats Cards - Horizontal scroll on mobile */}
+      {isMobile ? (
+        <ScrollArea className="w-full">
+          <div className="flex gap-3 pb-2">
+            {[
+              { icon: Package, value: stats.total, label: 'الإجمالي', color: 'text-primary' },
+              { icon: Package, value: stats.active, label: 'نشط', color: 'text-success' },
+              { icon: AlertTriangle, value: stats.lowStock, label: 'مخزون منخفض', color: 'text-warning' },
+              { icon: Layers, value: stats.categories, label: 'التصنيفات', color: 'text-info' },
+            ].map((stat, i) => (
+              <Card key={i} className="min-w-[110px] shrink-0">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                    <div>
+                      <p className="text-lg font-bold">{stat.value}</p>
+                      <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Package className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-sm text-muted-foreground">إجمالي المنتجات</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">إجمالي المنتجات</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-success/10">
+                  <Package className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.active}</p>
+                  <p className="text-sm text-muted-foreground">منتجات نشطة</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <Package className="h-5 w-5 text-success" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-warning/10">
+                  <AlertTriangle className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.lowStock}</p>
+                  <p className="text-sm text-muted-foreground">مخزون منخفض</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.active}</p>
-                <p className="text-sm text-muted-foreground">منتجات نشطة</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-info/10">
+                  <Layers className="h-5 w-5 text-info" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.categories}</p>
+                  <p className="text-sm text-muted-foreground">التصنيفات</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <AlertTriangle className="h-5 w-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.lowStock}</p>
-                <p className="text-sm text-muted-foreground">مخزون منخفض</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-info/10">
-                <Layers className="h-5 w-5 text-info" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.categories}</p>
-                <p className="text-sm text-muted-foreground">التصنيفات</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="p-3 md:p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -241,157 +458,53 @@ const ProductsPage = () => {
                 className="pr-10"
               />
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="التصنيف" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل التصنيفات</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select 
-              value={(filters.is_active as string) || 'all'} 
-              onValueChange={(v) => setFilter('is_active', v === 'all' ? undefined : v === 'true')}
-            >
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="الحالة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="true">نشط</SelectItem>
-                <SelectItem value="false">غير نشط</SelectItem>
-              </SelectContent>
-            </Select>
+            {!isMobile && (
+              <>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="التصنيف" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل التصنيفات</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select 
+                  value={(filters.is_active as string) || 'all'} 
+                  onValueChange={(v) => setFilter('is_active', v === 'all' ? undefined : v === 'true')}
+                >
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="الحالة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="true">نشط</SelectItem>
+                    <SelectItem value="false">غير نشط</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Products Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>قائمة المنتجات ({sortedData.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : sortedData.length === 0 ? (
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">لا توجد منتجات</p>
-              {canEdit && (
-                <Button variant="link" onClick={handleAdd}>
-                  إضافة منتج جديد
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <DataTableHeader
-                        label="المنتج"
-                        sortKey="name"
-                        sortConfig={sortConfig}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>الكود</TableHead>
-                    <TableHead>التصنيف</TableHead>
-                    <TableHead>
-                      <DataTableHeader
-                        label="سعر البيع"
-                        sortKey="selling_price"
-                        sortConfig={sortConfig}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>المخزون</TableHead>
-                    <TableHead>الحالة</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedData.map((product) => {
-                    const stock = getProductStock(product.id);
-                    const isLowStock = stock <= (product.min_stock || 0);
-                    return (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.name}
-                                className="h-10 w-10 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                                <Package className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium">{product.name}</p>
-                              {product.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-1">
-                                  {product.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <code className="text-sm bg-muted px-2 py-1 rounded">
-                            {product.sku || '-'}
-                          </code>
-                        </TableCell>
-                        <TableCell>{getCategoryName(product.category_id)}</TableCell>
-                        <TableCell>
-                          <span className="font-bold">
-                            {Number(product.selling_price).toLocaleString()} ج.م
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className={isLowStock ? 'text-destructive font-bold' : ''}>
-                              {stock}
-                            </span>
-                            {isLowStock && (
-                              <AlertTriangle className="h-4 w-4 text-destructive" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={product.is_active ? "default" : "secondary"}>
-                            {product.is_active ? "نشط" : "غير نشط"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DataTableActions
-                            onView={() => navigate(`/products/${product.id}`)}
-                            onEdit={() => handleEdit(product)}
-                            onDelete={() => handleDelete(product.id)}
-                            canEdit={canEdit}
-                            canDelete={canDelete}
-                            isDeleting={deletingId === product.id}
-                            deleteDescription="سيتم حذف المنتج. هذا الإجراء لا يمكن التراجع عنه."
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Content - Mobile or Desktop */}
+      {isMobile ? (
+        <div className="pb-20">
+          {renderMobileView()}
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>قائمة المنتجات ({sortedData.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {renderTableView()}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add/Edit Product Dialog */}
       <ProductFormDialog

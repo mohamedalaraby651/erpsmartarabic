@@ -1,0 +1,274 @@
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+  Users,
+  Package,
+  FileText,
+  Receipt,
+  Plus,
+  ArrowLeft,
+  Clock,
+  CheckCircle2,
+  UserPlus,
+  ShoppingCart,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { MobileStatSkeleton } from '@/components/mobile/MobileListSkeleton';
+
+const roleLabels: Record<string, string> = {
+  admin: 'مدير النظام',
+  sales: 'موظف مبيعات',
+  warehouse: 'أمين مخزن',
+  accountant: 'محاسب',
+  hr: 'موارد بشرية',
+};
+
+interface QuickActionItem {
+  title: string;
+  icon: React.ElementType;
+  href: string;
+  color: string;
+  roles: string[];
+}
+
+const quickActions: QuickActionItem[] = [
+  { title: 'عميل جديد', icon: UserPlus, href: '/customers', color: 'bg-primary', roles: ['admin', 'sales'] },
+  { title: 'فاتورة', icon: Receipt, href: '/invoices', color: 'bg-success', roles: ['admin', 'sales', 'accountant'] },
+  { title: 'عرض سعر', icon: FileText, href: '/quotations', color: 'bg-info', roles: ['admin', 'sales'] },
+  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders', color: 'bg-warning', roles: ['admin', 'sales'] },
+];
+
+export function MobileDashboard() {
+  const navigate = useNavigate();
+  const { user, userRole } = useAuth();
+
+  // Filter quick actions based on role
+  const filteredActions = quickActions.filter(action => 
+    !userRole || action.roles.includes(userRole)
+  );
+
+  // Fetch stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['mobile-dashboard-stats'],
+    queryFn: async () => {
+      const [customers, products, invoices, quotations] = await Promise.all([
+        supabase.from('customers').select('*', { count: 'exact', head: true }),
+        supabase.from('products').select('*', { count: 'exact', head: true }),
+        supabase.from('invoices').select('*', { count: 'exact', head: true }),
+        supabase.from('quotations').select('*', { count: 'exact', head: true }),
+      ]);
+      return {
+        customers: customers.count || 0,
+        products: products.count || 0,
+        invoices: invoices.count || 0,
+        quotations: quotations.count || 0,
+      };
+    },
+  });
+
+  const { data: tasks } = useQuery({
+    queryKey: ['mobile-dashboard-tasks'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('is_completed', false)
+        .order('due_date', { ascending: true })
+        .limit(3);
+      return data || [];
+    },
+  });
+
+  const { data: recentInvoices } = useQuery({
+    queryKey: ['mobile-dashboard-invoices'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('invoices')
+        .select('*, customers(name)')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      return data || [];
+    },
+  });
+
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'صباح الخير';
+    return 'مساء الخير';
+  };
+
+  const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'المستخدم';
+
+  const statItems = [
+    { title: 'العملاء', value: stats?.customers || 0, icon: Users, color: 'text-primary' },
+    { title: 'المنتجات', value: stats?.products || 0, icon: Package, color: 'text-success' },
+    { title: 'الفواتير', value: stats?.invoices || 0, icon: Receipt, color: 'text-warning' },
+    { title: 'عروض الأسعار', value: stats?.quotations || 0, icon: FileText, color: 'text-info' },
+  ];
+
+  return (
+    <div className="space-y-4 pb-20">
+      {/* Welcome Header */}
+      <div className="px-1">
+        <h1 className="text-xl font-bold">
+          {greeting()}، {userName} 👋
+        </h1>
+        {userRole && (
+          <Badge variant="secondary" className="mt-1">
+            {roleLabels[userRole]}
+          </Badge>
+        )}
+      </div>
+
+      {/* Stats - Horizontal Scroll */}
+      {statsLoading ? (
+        <MobileStatSkeleton count={4} />
+      ) : (
+        <ScrollArea className="w-full">
+          <div className="flex gap-3 pb-2 px-1">
+            {statItems.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={stat.title} className="min-w-[130px] shrink-0">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-10 w-10 rounded-lg bg-muted flex items-center justify-center`}>
+                        <Icon className={`h-5 w-5 ${stat.color}`} />
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold">{stat.value}</p>
+                        <p className="text-xs text-muted-foreground">{stat.title}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      )}
+
+      {/* Quick Actions - Grid */}
+      <div className="grid grid-cols-4 gap-2 px-1">
+        {filteredActions.slice(0, 4).map((action) => {
+          const Icon = action.icon;
+          return (
+            <Button
+              key={action.title}
+              variant="outline"
+              className="h-auto py-3 px-2 flex-col gap-1.5 text-xs"
+              onClick={() => navigate(action.href, { state: { openNew: true } })}
+            >
+              <div className={`h-9 w-9 rounded-lg ${action.color} flex items-center justify-center`}>
+                <Icon className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="font-medium truncate w-full text-center">{action.title}</span>
+            </Button>
+          );
+        })}
+      </div>
+
+      {/* Tasks Card */}
+      <Card className="mx-1">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-base">المهام</CardTitle>
+          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/tasks')}>
+            <span className="text-xs">عرض الكل</span>
+            <ArrowLeft className="mr-1 h-3 w-3" />
+          </Button>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {tasks && tasks.length > 0 ? (
+            <div className="space-y-2">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50"
+                >
+                  <div className={`h-2 w-2 rounded-full shrink-0 ${
+                    task.priority === 'high' ? 'bg-destructive' :
+                    task.priority === 'medium' ? 'bg-warning' : 'bg-success'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{task.title}</p>
+                    {task.due_date && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(task.due_date).toLocaleDateString('ar-EG')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <CheckCircle2 className="h-8 w-8 mx-auto mb-1 text-success" />
+              <p className="text-sm text-muted-foreground">لا توجد مهام معلقة</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent Invoices Card */}
+      <Card className="mx-1">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-base">آخر الفواتير</CardTitle>
+          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/invoices')}>
+            <span className="text-xs">عرض الكل</span>
+            <ArrowLeft className="mr-1 h-3 w-3" />
+          </Button>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {recentInvoices && recentInvoices.length > 0 ? (
+            <div className="space-y-2">
+              {recentInvoices.map((invoice) => (
+                <div
+                  key={invoice.id}
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50"
+                  onClick={() => navigate(`/invoices/${invoice.id}`)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Receipt className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{invoice.invoice_number}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(invoice.customers as any)?.name || 'عميل'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold">{invoice.total_amount.toLocaleString()}</p>
+                    <Badge
+                      variant={
+                        invoice.payment_status === 'paid' ? 'default' :
+                        invoice.payment_status === 'partial' ? 'secondary' : 'destructive'
+                      }
+                      className="text-[10px] px-1.5"
+                    >
+                      {invoice.payment_status === 'paid' ? 'مدفوع' :
+                       invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <Receipt className="h-8 w-8 mx-auto mb-1 opacity-50" />
+              <p className="text-sm text-muted-foreground">لا توجد فواتير بعد</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
