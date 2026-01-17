@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
+import { MobileDashboard } from '@/components/dashboard/MobileDashboard';
 import { useDashboardSettings } from '@/hooks/useDashboardSettings';
 import { WidgetConfig } from '@/components/dashboard/DraggableWidget';
 import { useToast } from '@/hooks/use-toast';
@@ -72,7 +74,13 @@ export default function Dashboard() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const { widgets, updateWidgets, isSaving } = useDashboardSettings();
+
+  // Use mobile dashboard for mobile devices
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
 
   // Filter quick actions based on user role
   const quickActions = allQuickActions.filter(action => 
