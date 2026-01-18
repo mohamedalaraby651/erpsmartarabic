@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,27 +22,36 @@ export function StickySearchBar({
   className,
 }: StickySearchBarProps) {
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const ticking = useRef(false);
+
+  const updateVisibility = useCallback(() => {
+    const currentScrollY = window.scrollY;
+    
+    // Show when scrolling up or at top
+    if (currentScrollY < lastScrollY.current || currentScrollY < 50) {
+      setIsVisible(true);
+    } else if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+      // Hide when scrolling down and past threshold
+      setIsVisible(false);
+    }
+    
+    lastScrollY.current = currentScrollY;
+    ticking.current = false;
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Show when scrolling up or at top
-      if (currentScrollY < lastScrollY || currentScrollY < 50) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Hide when scrolling down and past threshold
-        setIsVisible(false);
+      if (!ticking.current) {
+        requestAnimationFrame(updateVisibility);
+        ticking.current = true;
       }
-      
-      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, [updateVisibility]);
 
   return (
     <div

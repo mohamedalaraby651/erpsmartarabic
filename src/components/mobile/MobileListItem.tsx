@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,7 +20,7 @@ interface MobileListItemProps {
   className?: string;
 }
 
-export function MobileListItem({
+export const MobileListItem = memo(function MobileListItem({
   title,
   subtitle,
   badge,
@@ -100,4 +101,4 @@ export function MobileListItem({
       </CardContent>
     </Card>
   );
-}
+});

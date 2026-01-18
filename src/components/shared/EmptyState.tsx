@@ -27,22 +27,27 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={cn(
-      'flex flex-col items-center justify-center text-center',
-      compact ? 'py-8' : 'py-12',
+      'flex flex-col items-center justify-center text-center animate-fade-in',
+      compact ? 'py-8' : 'py-16',
       className
     )}>
-      <div className={cn(
-        'rounded-full bg-muted flex items-center justify-center mb-4',
-        compact ? 'h-12 w-12' : 'h-16 w-16'
-      )}>
-        <Icon className={cn(
-          'text-muted-foreground',
-          compact ? 'h-6 w-6' : 'h-8 w-8'
-        )} />
+      <div className="relative mb-6">
+        <div className={cn(
+          'rounded-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center shadow-inner',
+          compact ? 'h-14 w-14' : 'h-20 w-20'
+        )}>
+          <Icon className={cn(
+            'text-muted-foreground/50',
+            compact ? 'h-7 w-7' : 'h-10 w-10'
+          )} />
+        </div>
+        <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background border-2 border-muted flex items-center justify-center">
+          <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
+        </div>
       </div>
       
       <h3 className={cn(
-        'font-semibold mb-1',
+        'font-semibold text-foreground mb-2',
         compact ? 'text-base' : 'text-lg'
       )}>
         {title}
@@ -50,8 +55,8 @@ export function EmptyState({
       
       {description && (
         <p className={cn(
-          'text-muted-foreground max-w-[250px]',
-          compact ? 'text-xs mb-3' : 'text-sm mb-4'
+          'text-muted-foreground max-w-[280px] leading-relaxed',
+          compact ? 'text-xs mb-4' : 'text-sm mb-6'
         )}>
           {description}
         </p>
@@ -61,7 +66,7 @@ export function EmptyState({
         <Button 
           onClick={action.onClick}
           size={compact ? 'sm' : 'default'}
-          className="gap-2"
+          className="gap-2 shadow-md hover:shadow-lg transition-shadow"
         >
           {action.icon && <action.icon className="h-4 w-4" />}
           {action.label}

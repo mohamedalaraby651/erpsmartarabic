@@ -87,41 +87,29 @@ export default function Dashboard() {
     !userRole || action.roles.includes(userRole)
   );
 
-  // Fetch stats
-  const { data: customersCount } = useQuery({
-    queryKey: ['customers-count'],
+  // Batch fetch all counts in one query for better performance
+  const { data: dashboardStats, isLoading: isStatsLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const { count } = await supabase.from('customers').select('*', { count: 'exact', head: true });
-      return count || 0;
+      const [customersRes, productsRes, invoicesRes, quotationsRes] = await Promise.all([
+        supabase.from('customers').select('*', { count: 'exact', head: true }),
+        supabase.from('products').select('*', { count: 'exact', head: true }),
+        supabase.from('invoices').select('*', { count: 'exact', head: true }),
+        supabase.from('quotations').select('*', { count: 'exact', head: true }),
+      ]);
+      return {
+        customersCount: customersRes.count || 0,
+        productsCount: productsRes.count || 0,
+        invoicesCount: invoicesRes.count || 0,
+        quotationsCount: quotationsRes.count || 0,
+      };
     },
-  });
-
-  const { data: productsCount } = useQuery({
-    queryKey: ['products-count'],
-    queryFn: async () => {
-      const { count } = await supabase.from('products').select('*', { count: 'exact', head: true });
-      return count || 0;
-    },
-  });
-
-  const { data: invoicesCount } = useQuery({
-    queryKey: ['invoices-count'],
-    queryFn: async () => {
-      const { count } = await supabase.from('invoices').select('*', { count: 'exact', head: true });
-      return count || 0;
-    },
-  });
-
-  const { data: quotationsCount } = useQuery({
-    queryKey: ['quotations-count'],
-    queryFn: async () => {
-      const { count } = await supabase.from('quotations').select('*', { count: 'exact', head: true });
-      return count || 0;
-    },
+    staleTime: 30000, // 30 seconds
+    gcTime: 60000, // 1 minute
   });
 
   const { data: tasks } = useQuery({
-    queryKey: ['tasks'],
+    queryKey: ['dashboard-tasks'],
     queryFn: async () => {
       const { data } = await supabase
         .from('tasks')
@@ -131,10 +119,11 @@ export default function Dashboard() {
         .limit(5);
       return data || [];
     },
+    staleTime: 15000, // 15 seconds
   });
 
   const { data: recentInvoices } = useQuery({
-    queryKey: ['recent-invoices'],
+    queryKey: ['dashboard-recent-invoices'],
     queryFn: async () => {
       const { data } = await supabase
         .from('invoices')
@@ -143,6 +132,7 @@ export default function Dashboard() {
         .limit(5);
       return data || [];
     },
+    staleTime: 15000, // 15 seconds
   });
 
   const greeting = () => {
@@ -155,10 +145,10 @@ export default function Dashboard() {
   const userName = user?.user_metadata?.full_name || 'المستخدم';
 
   const stats = [
-    { title: 'العملاء', value: customersCount || 0, icon: Users, change: '+12%', positive: true },
-    { title: 'المنتجات', value: productsCount || 0, icon: Package, change: '+5%', positive: true },
-    { title: 'عروض الأسعار', value: quotationsCount || 0, icon: FileText, change: '+18%', positive: true },
-    { title: 'الفواتير', value: invoicesCount || 0, icon: Receipt, change: '+8%', positive: true },
+    { title: 'العملاء', value: dashboardStats?.customersCount || 0, icon: Users, change: '+12%', positive: true },
+    { title: 'المنتجات', value: dashboardStats?.productsCount || 0, icon: Package, change: '+5%', positive: true },
+    { title: 'عروض الأسعار', value: dashboardStats?.quotationsCount || 0, icon: FileText, change: '+18%', positive: true },
+    { title: 'الفواتير', value: dashboardStats?.invoicesCount || 0, icon: Receipt, change: '+8%', positive: true },
   ];
 
   const handleQuickAction = (action: QuickAction) => {

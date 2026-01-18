@@ -71,7 +71,9 @@ export default function AppLayout() {
       <div className="min-h-screen bg-background pb-16">
         <MobileHeader />
         <main className="p-4">
-          <Outlet />
+          <div className="animate-fade-in">
+            <Outlet />
+          </div>
         </main>
         <FABMenu />
         <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
@@ -103,7 +105,9 @@ export default function AppLayout() {
       >
         <AppHeader />
         <main className="p-6">
-          <Outlet />
+          <div className="animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
