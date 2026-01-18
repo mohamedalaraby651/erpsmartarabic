@@ -1,11 +1,4 @@
-import { useState } from 'react';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from '@/components/ui/context-menu';
+import { useState, useCallback } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +6,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Eye, Edit, Trash2, Share2, Copy, MoreVertical } from 'lucide-react';
+import { Eye, Edit, Trash2, Share2 } from 'lucide-react';
 import { useLongPress } from '@/hooks/useLongPress';
 import { cn } from '@/lib/utils';
+import { haptics } from '@/lib/haptics';
 
 interface MenuItem {
   label: string;
@@ -45,6 +39,7 @@ export function LongPressMenu({
   className,
 }: LongPressMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPressing, setIsPressing] = useState(false);
 
   const defaultItems: MenuItem[] = [
     ...(onView
@@ -71,8 +66,16 @@ export function LongPressMenu({
 
   const allItems = [...defaultItems, ...items];
 
+  const handleLongPress = useCallback(() => {
+    haptics.medium();
+    setIsMenuOpen(true);
+    setIsPressing(false);
+  }, []);
+
   const longPressHandlers = useLongPress({
-    onLongPress: () => setIsMenuOpen(true),
+    onLongPress: handleLongPress,
+    onStart: () => setIsPressing(true),
+    onCancel: () => setIsPressing(false),
     delay: 500,
   });
 
@@ -80,18 +83,23 @@ export function LongPressMenu({
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <DropdownMenuTrigger asChild>
         <div
-          className={cn('touch-none select-none', className)}
+          className={cn(
+            'touch-none select-none transition-all duration-150',
+            isPressing && 'scale-[0.98] opacity-80',
+            className
+          )}
           {...longPressHandlers}
         >
           {children}
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
+      <DropdownMenuContent align="start" className="w-48 animate-scale-in">
         {allItems.map((item, index) => (
           <div key={index}>
             {item.separator && index > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
               onClick={() => {
+                haptics.light();
                 item.onClick();
                 setIsMenuOpen(false);
               }}

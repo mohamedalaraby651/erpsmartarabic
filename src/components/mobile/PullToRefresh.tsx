@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { haptics } from '@/lib/haptics';
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
@@ -25,11 +26,13 @@ export function PullToRefresh({
 
   const THRESHOLD = 80;
   const MAX_PULL = 120;
+  const hasTriggeredHaptic = useRef(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled || isRefreshing) return;
     if (containerRef.current?.scrollTop === 0) {
       startY.current = e.touches[0].clientY;
+      hasTriggeredHaptic.current = false;
       setIsPulling(true);
     }
   }, [disabled, isRefreshing]);
@@ -44,6 +47,14 @@ export function PullToRefresh({
       e.preventDefault();
       const distance = Math.min(diff * 0.5, MAX_PULL);
       setPullDistance(distance);
+      
+      // Haptic feedback when reaching threshold
+      if (distance >= THRESHOLD && !hasTriggeredHaptic.current) {
+        haptics.medium();
+        hasTriggeredHaptic.current = true;
+      } else if (distance < THRESHOLD) {
+        hasTriggeredHaptic.current = false;
+      }
     }
   }, [isPulling, disabled]);
 
@@ -56,6 +67,7 @@ export function PullToRefresh({
       
       try {
         await onRefresh();
+        haptics.success();
         setRefreshComplete(true);
         setTimeout(() => setRefreshComplete(false), 1000);
       } finally {
@@ -91,25 +103,40 @@ export function PullToRefresh({
         }}
       >
         {isRefreshing ? (
-          <div className="flex flex-col items-center gap-1">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <span className="text-xs text-muted-foreground">جاري التحديث...</span>
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            </div>
+            <span className="text-xs font-medium text-muted-foreground">جاري التحديث...</span>
           </div>
         ) : refreshComplete ? (
-          <div className="flex flex-col items-center gap-1">
-            <RefreshCw className="h-6 w-6 text-success" />
-            <span className="text-xs text-success">تم التحديث!</span>
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
+              <Check className="h-5 w-5 text-green-500" />
+            </div>
+            <span className="text-xs font-medium text-green-500">تم التحديث!</span>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-1">
-            <RefreshCw
-              className="h-6 w-6 text-primary transition-transform"
-              style={{ 
-                transform: `rotate(${rotation}deg) scale(${scale})`,
-              }}
-            />
-            <span className="text-xs text-muted-foreground">
-              {pullDistance >= THRESHOLD ? 'اترك للتحديث' : 'اسحب للتحديث'}
+          <div className="flex flex-col items-center gap-2">
+            <div className={cn(
+              'h-10 w-10 rounded-full flex items-center justify-center transition-colors',
+              pullDistance >= THRESHOLD ? 'bg-primary/20' : 'bg-muted'
+            )}>
+              <RefreshCw
+                className={cn(
+                  'h-5 w-5 transition-all',
+                  pullDistance >= THRESHOLD ? 'text-primary' : 'text-muted-foreground'
+                )}
+                style={{ 
+                  transform: `rotate(${rotation}deg) scale(${scale})`,
+                }}
+              />
+            </div>
+            <span className={cn(
+              'text-xs font-medium transition-colors',
+              pullDistance >= THRESHOLD ? 'text-primary' : 'text-muted-foreground'
+            )}>
+              {pullDistance >= THRESHOLD ? 'أفلت للتحديث' : 'اسحب للتحديث'}
             </span>
           </div>
         )}

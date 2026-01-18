@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ChevronLeft, Phone, Mail, MapPin, Calendar } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LongPressMenu } from './LongPressMenu';
 import { useDoubleTap } from '@/hooks/useDoubleTap';
@@ -40,7 +41,7 @@ interface DataCardProps {
   }>;
 }
 
-export function DataCard({
+export const DataCard = memo(function DataCard({
   title,
   subtitle,
   badge,
@@ -147,4 +148,4 @@ export function DataCard({
   }
 
   return cardContent;
-}
+});

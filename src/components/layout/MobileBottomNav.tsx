@@ -76,24 +76,30 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
               key={item.href}
               onClick={() => navigate(item.href)}
               className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all',
+                'relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all active:scale-95',
                 isActive 
                   ? item.color 
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <div className={cn(
-                'p-1.5 rounded-lg transition-colors',
-                isActive && 'bg-primary/10'
+                'p-1.5 rounded-xl transition-all duration-200',
+                isActive && 'bg-primary/10 scale-110'
               )}>
-                <Icon className="h-5 w-5" />
+                <Icon className={cn(
+                  'h-5 w-5 transition-transform',
+                  isActive && 'scale-105'
+                )} />
               </div>
               <span className={cn(
-                'text-[10px] font-medium',
-                isActive && 'font-semibold'
+                'text-[10px] font-medium transition-all',
+                isActive && 'font-semibold scale-105'
               )}>
                 {item.title}
               </span>
+              {isActive && (
+                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-current" />
+              )}
             </button>
           );
         })}
@@ -101,9 +107,9 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
         {/* More Button */}
         <button
           onClick={onMenuOpen}
-          className="flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground hover:text-foreground transition-colors"
+          className="relative flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground hover:text-foreground transition-all active:scale-95"
         >
-          <div className="p-1.5 rounded-lg">
+          <div className="p-1.5 rounded-xl">
             <MoreHorizontal className="h-5 w-5" />
           </div>
           <span className="text-[10px] font-medium">المزيد</span>

@@ -3,12 +3,16 @@ import { useCallback, useRef, useState } from 'react';
 interface UseLongPressOptions {
   onLongPress: () => void;
   onPress?: () => void;
+  onStart?: () => void;
+  onCancel?: () => void;
   delay?: number;
 }
 
 export function useLongPress({
   onLongPress,
   onPress,
+  onStart,
+  onCancel,
   delay = 500,
 }: UseLongPressOptions) {
   const [isPressed, setIsPressed] = useState(false);
@@ -20,13 +24,14 @@ export function useLongPress({
       e.preventDefault();
       targetRef.current = e.target;
       setIsPressed(true);
+      onStart?.();
 
       timeoutRef.current = setTimeout(() => {
         onLongPress();
         setIsPressed(false);
       }, delay);
     },
-    [onLongPress, delay]
+    [onLongPress, onStart, delay]
   );
 
   const cancel = useCallback(
@@ -41,8 +46,9 @@ export function useLongPress({
         }
       }
       setIsPressed(false);
+      onCancel?.();
     },
-    [isPressed, onPress]
+    [isPressed, onPress, onCancel]
   );
 
   return {

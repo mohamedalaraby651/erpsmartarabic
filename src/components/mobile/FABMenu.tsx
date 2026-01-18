@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, X, Users, Package, FileText, ShoppingCart, UserPlus, Truck } from 'lucide-react';
+import { Plus, X, Users, Package, FileText, ShoppingCart, Truck, Receipt, ClipboardList, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { haptics } from '@/lib/haptics';
 
 interface FABAction {
   icon: React.ReactNode;
@@ -15,67 +16,130 @@ interface FABMenuProps {
   actions?: FABAction[];
   defaultAction?: () => void;
   className?: string;
+  pageContext?: string;
 }
 
-const defaultActions: FABAction[] = [
-  {
-    icon: <Users className="h-5 w-5" />,
-    label: 'عميل جديد',
-    onClick: () => {},
-    color: 'bg-purple-500 hover:bg-purple-600',
-  },
-  {
-    icon: <Package className="h-5 w-5" />,
-    label: 'منتج جديد',
-    onClick: () => {},
-    color: 'bg-green-500 hover:bg-green-600',
-  },
-  {
-    icon: <FileText className="h-5 w-5" />,
-    label: 'فاتورة جديدة',
-    onClick: () => {},
-    color: 'bg-blue-500 hover:bg-blue-600',
-  },
-  {
-    icon: <ShoppingCart className="h-5 w-5" />,
-    label: 'أمر بيع جديد',
-    onClick: () => {},
-    color: 'bg-orange-500 hover:bg-orange-600',
-  },
-];
-
-export function FABMenu({ actions, defaultAction, className }: FABMenuProps) {
+export function FABMenu({ actions, defaultAction, className, pageContext }: FABMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const menuActions = actions || [
-    {
-      icon: <Users className="h-5 w-5" />,
-      label: 'عميل جديد',
-      onClick: () => navigate('/customers?action=new'),
-      color: 'bg-purple-500 hover:bg-purple-600',
-    },
-    {
-      icon: <Package className="h-5 w-5" />,
-      label: 'منتج جديد',
-      onClick: () => navigate('/products?action=new'),
-      color: 'bg-green-500 hover:bg-green-600',
-    },
-    {
-      icon: <FileText className="h-5 w-5" />,
-      label: 'فاتورة جديدة',
-      onClick: () => navigate('/invoices?action=new'),
-      color: 'bg-blue-500 hover:bg-blue-600',
-    },
-    {
-      icon: <ShoppingCart className="h-5 w-5" />,
-      label: 'أمر بيع',
-      onClick: () => navigate('/sales-orders?action=new'),
-      color: 'bg-orange-500 hover:bg-orange-600',
-    },
-  ];
+  // Determine context from location if not provided
+  const context = pageContext || location.pathname.split('/')[1] || 'dashboard';
+
+  const menuActions = useMemo(() => {
+    if (actions) return actions;
+
+    // Context-aware actions
+    switch (context) {
+      case 'customers':
+        return [
+          {
+            icon: <Users className="h-5 w-5" />,
+            label: 'عميل جديد',
+            onClick: () => navigate('/customers?action=new'),
+            color: 'bg-purple-500 hover:bg-purple-600',
+          },
+          {
+            icon: <FileText className="h-5 w-5" />,
+            label: 'فاتورة للعميل',
+            onClick: () => navigate('/invoices?action=new'),
+            color: 'bg-blue-500 hover:bg-blue-600',
+          },
+        ];
+      case 'products':
+        return [
+          {
+            icon: <Package className="h-5 w-5" />,
+            label: 'منتج جديد',
+            onClick: () => navigate('/products?action=new'),
+            color: 'bg-green-500 hover:bg-green-600',
+          },
+          {
+            icon: <ClipboardList className="h-5 w-5" />,
+            label: 'جرد المخزون',
+            onClick: () => navigate('/inventory'),
+            color: 'bg-amber-500 hover:bg-amber-600',
+          },
+        ];
+      case 'invoices':
+        return [
+          {
+            icon: <FileText className="h-5 w-5" />,
+            label: 'فاتورة جديدة',
+            onClick: () => navigate('/invoices?action=new'),
+            color: 'bg-blue-500 hover:bg-blue-600',
+          },
+          {
+            icon: <Receipt className="h-5 w-5" />,
+            label: 'تسجيل دفعة',
+            onClick: () => navigate('/payments?action=new'),
+            color: 'bg-emerald-500 hover:bg-emerald-600',
+          },
+        ];
+      case 'suppliers':
+        return [
+          {
+            icon: <Truck className="h-5 w-5" />,
+            label: 'مورد جديد',
+            onClick: () => navigate('/suppliers?action=new'),
+            color: 'bg-indigo-500 hover:bg-indigo-600',
+          },
+          {
+            icon: <ClipboardList className="h-5 w-5" />,
+            label: 'أمر شراء',
+            onClick: () => navigate('/purchase-orders?action=new'),
+            color: 'bg-orange-500 hover:bg-orange-600',
+          },
+        ];
+      case 'sales-orders':
+        return [
+          {
+            icon: <ShoppingCart className="h-5 w-5" />,
+            label: 'أمر بيع جديد',
+            onClick: () => navigate('/sales-orders?action=new'),
+            color: 'bg-orange-500 hover:bg-orange-600',
+          },
+          {
+            icon: <FileText className="h-5 w-5" />,
+            label: 'تحويل لفاتورة',
+            onClick: () => navigate('/invoices?action=new'),
+            color: 'bg-blue-500 hover:bg-blue-600',
+          },
+        ];
+      default:
+        // Default dashboard actions
+        return [
+          {
+            icon: <Users className="h-5 w-5" />,
+            label: 'عميل جديد',
+            onClick: () => navigate('/customers?action=new'),
+            color: 'bg-purple-500 hover:bg-purple-600',
+          },
+          {
+            icon: <Package className="h-5 w-5" />,
+            label: 'منتج جديد',
+            onClick: () => navigate('/products?action=new'),
+            color: 'bg-green-500 hover:bg-green-600',
+          },
+          {
+            icon: <FileText className="h-5 w-5" />,
+            label: 'فاتورة جديدة',
+            onClick: () => navigate('/invoices?action=new'),
+            color: 'bg-blue-500 hover:bg-blue-600',
+          },
+          {
+            icon: <ShoppingCart className="h-5 w-5" />,
+            label: 'أمر بيع',
+            onClick: () => navigate('/sales-orders?action=new'),
+            color: 'bg-orange-500 hover:bg-orange-600',
+          },
+        ];
+    }
+  }, [actions, context, navigate]);
 
   const handleMainClick = () => {
+    haptics.light();
     if (defaultAction) {
       defaultAction();
     } else {
@@ -84,6 +148,7 @@ export function FABMenu({ actions, defaultAction, className }: FABMenuProps) {
   };
 
   const handleActionClick = (action: FABAction) => {
+    haptics.medium();
     action.onClick();
     setIsOpen(false);
   };
@@ -93,7 +158,7 @@ export function FABMenu({ actions, defaultAction, className }: FABMenuProps) {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 animate-fade-in"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -113,13 +178,13 @@ export function FABMenu({ actions, defaultAction, className }: FABMenuProps) {
             className="flex items-center gap-3 animate-scale-in"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <span className="bg-card text-card-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
+            <span className="bg-card text-card-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border">
               {action.label}
             </span>
             <Button
               size="icon"
               className={cn(
-                'h-12 w-12 rounded-full shadow-lg text-white',
+                'h-12 w-12 rounded-full shadow-lg text-white transition-transform active:scale-95',
                 action.color || 'bg-primary hover:bg-primary/90'
               )}
               onClick={() => handleActionClick(action)}
@@ -134,8 +199,8 @@ export function FABMenu({ actions, defaultAction, className }: FABMenuProps) {
       <Button
         size="icon"
         className={cn(
-          'h-14 w-14 rounded-full shadow-lg transition-transform duration-300 z-50',
-          isOpen && 'rotate-45'
+          'h-14 w-14 rounded-full shadow-lg transition-all duration-300 z-50 active:scale-95',
+          isOpen && 'rotate-45 bg-destructive hover:bg-destructive/90'
         )}
         onClick={handleMainClick}
       >
