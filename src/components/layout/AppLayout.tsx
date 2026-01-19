@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
@@ -11,10 +11,39 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Full screen loader for initial app load
+function AppLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+        <p className="text-muted-foreground">جاري التحميل...</p>
+      </div>
+    </div>
+  );
+}
+
+// Skeleton loader for page content
+function PageSkeleton() {
+  return (
+    <div className="p-4 space-y-4">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-32 w-full rounded-lg" />
+        ))}
+      </div>
+      <Skeleton className="h-64 w-full rounded-lg" />
+    </div>
+  );
+}
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   useKeyboardShortcuts(); // Global keyboard shortcuts
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -25,6 +54,12 @@ export default function AppLayout() {
     }
     return false;
   });
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Mark as hydrated after first render
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -50,19 +85,24 @@ export default function AppLayout() {
     setIsDark(!isDark);
   };
 
+  // Get current page context for FAB
+  const getPageContext = () => {
+    const path = location.pathname.split('/')[1];
+    return path || 'dashboard';
+  };
+
+  // Show loader while auth is loading
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
+    return <AppLoader />;
   }
 
   if (!user) {
     return null;
+  }
+
+  // Show skeleton while hydrating to prevent flash
+  if (!isHydrated) {
+    return <AppLoader />;
   }
 
   // Mobile Layout
@@ -75,7 +115,7 @@ export default function AppLayout() {
             <Outlet />
           </div>
         </main>
-        <FABMenu />
+        <FABMenu pageContext={getPageContext()} />
         <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
         <MobileDrawer
           open={mobileMenuOpen}
