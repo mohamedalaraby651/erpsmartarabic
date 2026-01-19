@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer, Eye } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -24,6 +24,12 @@ import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { EntityLink } from "@/components/shared/EntityLink";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { DataCard } from "@/components/mobile/DataCard";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -50,11 +56,12 @@ const InvoicesPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const canEdit = userRole === 'admin' || userRole === 'sales' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
 
-  const { data: invoices = [], isLoading } = useQuery({
+  const { data: invoices = [], isLoading, refetch } = useQuery({
     queryKey: ['invoices'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -109,97 +116,52 @@ const InvoicesPage = () => {
     setDialogOpen(true);
   };
 
-  const handlePrint = (invoiceId: string) => {
-    setPrintInvoiceId(invoiceId);
-    setPrintDialogOpen(true);
+  const handleRefresh = async () => {
+    await refetch();
   };
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">الفواتير</h1>
-          <p className="text-muted-foreground">إدارة فواتير المبيعات</p>
-        </div>
-        <div className="flex gap-2">
-          <ExportWithTemplateButton
-            section="invoices"
-            sectionLabel="الفواتير"
-            data={sortedData}
-            columns={[
-              { key: 'invoice_number', label: 'رقم الفاتورة' },
-              { key: 'customers.name', label: 'العميل' },
-              { key: 'total_amount', label: 'الإجمالي' },
-              { key: 'paid_amount', label: 'المدفوع' },
-              { key: 'payment_status', label: 'حالة الدفع' },
-              { key: 'created_at', label: 'التاريخ' },
-            ]}
-          />
-          <Button onClick={handleAdd}>
-            <Plus className="h-4 w-4 ml-2" />
-            فاتورة جديدة
-          </Button>
-        </div>
-      </div>
+  const statItems = [
+    { label: 'إجمالي الفواتير', value: stats.total, icon: Receipt, color: 'text-primary', bgColor: 'bg-primary/10' },
+    { label: 'غير مدفوعة', value: stats.unpaid, icon: Receipt, color: 'text-destructive', bgColor: 'bg-destructive/10' },
+    { label: 'إجمالي المبيعات', value: `${stats.totalValue.toLocaleString()}`, icon: CreditCard, color: 'text-success', bgColor: 'bg-success/10' },
+    { label: 'مستحق التحصيل', value: `${stats.unpaidValue.toLocaleString()}`, icon: CreditCard, color: 'text-warning', bgColor: 'bg-warning/10' },
+  ];
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Receipt className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">إجمالي الفواتير</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/10">
-                <Receipt className="h-5 w-5 text-destructive" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.unpaid}</p>
-                <p className="text-sm text-muted-foreground">غير مدفوعة</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <Receipt className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.totalValue.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">إجمالي المبيعات</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <Receipt className="h-5 w-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.unpaidValue.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">مستحق التحصيل</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+  // Mobile View
+  const renderMobileView = () => {
+    if (isLoading) {
+      return (
+        <div className="space-y-4">
+          <MobileStatSkeleton count={4} />
+          <MobileListSkeleton count={5} variant="invoice" />
+        </div>
+      );
+    }
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative flex-1">
+    return (
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="space-y-4">
+          {/* Mobile Stats */}
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+            {statItems.map((stat, i) => (
+              <Card key={i} className="min-w-[140px] shrink-0">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                      <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold">{stat.value}</p>
+                      <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="بحث برقم الفاتورة أو اسم العميل..."
@@ -208,127 +170,257 @@ const InvoicesPage = () => {
               className="pr-10"
             />
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>قائمة الفواتير</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : sortedData.length === 0 ? (
-            <div className="text-center py-12">
-              <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">لا توجد فواتير</p>
-              <Button variant="link" onClick={handleAdd}>إضافة فاتورة جديدة</Button>
-            </div>
+          {/* Invoices List */}
+          {sortedData.length === 0 ? (
+            <EmptyState
+              icon={Receipt}
+              title="لا توجد فواتير"
+              description="ابدأ بإضافة فاتورة جديدة"
+              action={{
+                label: "فاتورة جديدة",
+                onClick: handleAdd,
+                icon: Plus,
+              }}
+            />
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <DataTableHeader
-                      label="رقم الفاتورة"
-                      sortKey="invoice_number"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader label="العميل" />
-                    <DataTableHeader
-                      label="التاريخ"
-                      sortKey="created_at"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader
-                      label="الإجمالي"
-                      sortKey="total_amount"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader label="المدفوع" />
-                    <DataTableHeader label="المتبقي" />
-                    <DataTableHeader
-                      label="حالة الدفع"
-                      filterKey="payment_status"
-                      filterType="select"
-                      filterOptions={[
-                        { value: 'pending', label: 'غير مدفوع' },
-                        { value: 'partial', label: 'جزئي' },
-                        { value: 'paid', label: 'مدفوع' },
-                      ]}
-                      filterValue={filters.payment_status as string}
-                      onFilter={setFilter}
-                    />
-                    <DataTableHeader label="إجراءات" className="text-left" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedData.map((invoice: any) => {
-                    const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
-                    return (
-                      <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
-                        <TableCell>
-                          <EntityLink type="invoice" id={invoice.id}>
-                            {invoice.invoice_number}
-                          </EntityLink>
-                        </TableCell>
-                        <TableCell>
-                          {invoice.customers?.name ? (
-                            <EntityLink type="customer" id={invoice.customer_id}>
-                              {invoice.customers.name}
-                            </EntityLink>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold">
-                            {Number(invoice.total_amount).toLocaleString()} ج.م
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-success">
-                          {Number(invoice.paid_amount || 0).toLocaleString()} ج.م
-                        </TableCell>
-                        <TableCell className={remaining > 0 ? 'text-destructive' : ''}>
-                          {remaining.toLocaleString()} ج.م
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={paymentStatusColors[invoice.payment_status]}>
-                            {paymentStatusLabels[invoice.payment_status]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handlePrint(invoice.id)}>
-                              <Printer className="h-4 w-4" />
-                            </Button>
-                            <DataTableActions
-                              onEdit={() => handleEdit(invoice)}
-                              onDelete={() => deleteMutation.mutate(invoice.id)}
-                              canEdit={canEdit}
-                              canDelete={canDelete}
-                              deleteDescription="سيتم حذف هذه الفاتورة وجميع بنودها نهائياً."
-                            />
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+            <div className="space-y-3">
+              {sortedData.map((invoice: any) => {
+                const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
+                return (
+                  <DataCard
+                    key={invoice.id}
+                    title={invoice.invoice_number}
+                    subtitle={invoice.customers?.name || 'بدون عميل'}
+                    badge={{
+                      label: paymentStatusLabels[invoice.payment_status],
+                      variant: invoice.payment_status === 'paid' ? 'default' : invoice.payment_status === 'partial' ? 'secondary' : 'destructive',
+                    }}
+                    icon={Receipt}
+                    iconBgColor="bg-primary/10"
+                    iconColor="text-primary"
+                    fields={[
+                      { label: 'الإجمالي', value: `${Number(invoice.total_amount).toLocaleString()} ج.م` },
+                      { label: 'المتبقي', value: `${remaining.toLocaleString()} ج.م`, icon: remaining > 0 ? CreditCard : undefined },
+                      { label: 'التاريخ', value: new Date(invoice.created_at).toLocaleDateString('ar-EG'), icon: Calendar },
+                    ]}
+                    onClick={() => navigate(`/invoices/${invoice.id}`)}
+                    onView={() => navigate(`/invoices/${invoice.id}`)}
+                    onEdit={canEdit ? () => handleEdit(invoice) : undefined}
+                    onDelete={canDelete ? () => deleteMutation.mutate(invoice.id) : undefined}
+                  />
+                );
+              })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </PullToRefresh>
+    );
+  };
+
+  // Desktop View
+  const renderTableView = () => {
+    if (isLoading) {
+      return <TableSkeleton rows={5} columns={8} />;
+    }
+
+    if (sortedData.length === 0) {
+      return (
+        <EmptyState
+          icon={Receipt}
+          title="لا توجد فواتير"
+          description="ابدأ بإضافة فاتورة جديدة"
+          action={{
+            label: "فاتورة جديدة",
+            onClick: handleAdd,
+            icon: Plus,
+          }}
+        />
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <DataTableHeader
+                label="رقم الفاتورة"
+                sortKey="invoice_number"
+                sortConfig={sortConfig}
+                onSort={requestSort}
+              />
+              <DataTableHeader label="العميل" />
+              <DataTableHeader
+                label="التاريخ"
+                sortKey="created_at"
+                sortConfig={sortConfig}
+                onSort={requestSort}
+              />
+              <DataTableHeader
+                label="الإجمالي"
+                sortKey="total_amount"
+                sortConfig={sortConfig}
+                onSort={requestSort}
+              />
+              <DataTableHeader label="المدفوع" />
+              <DataTableHeader label="المتبقي" />
+              <DataTableHeader
+                label="حالة الدفع"
+                filterKey="payment_status"
+                filterType="select"
+                filterOptions={[
+                  { value: 'pending', label: 'غير مدفوع' },
+                  { value: 'partial', label: 'جزئي' },
+                  { value: 'paid', label: 'مدفوع' },
+                ]}
+                filterValue={filters.payment_status as string}
+                onFilter={setFilter}
+              />
+              <DataTableHeader label="إجراءات" className="text-left" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedData.map((invoice: any) => {
+              const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
+              return (
+                <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                  <TableCell>
+                    <EntityLink type="invoice" id={invoice.id}>
+                      {invoice.invoice_number}
+                    </EntityLink>
+                  </TableCell>
+                  <TableCell>
+                    {invoice.customers?.name ? (
+                      <EntityLink type="customer" id={invoice.customer_id}>
+                        {invoice.customers.name}
+                      </EntityLink>
+                    ) : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-bold">
+                      {Number(invoice.total_amount).toLocaleString()} ج.م
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-success">
+                    {Number(invoice.paid_amount || 0).toLocaleString()} ج.م
+                  </TableCell>
+                  <TableCell className={remaining > 0 ? 'text-destructive' : ''}>
+                    {remaining.toLocaleString()} ج.م
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={paymentStatusColors[invoice.payment_status]}>
+                      {paymentStatusLabels[invoice.payment_status]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setPrintInvoiceId(invoice.id); setPrintDialogOpen(true); }}>
+                        <Printer className="h-4 w-4" />
+                      </Button>
+                      <DataTableActions
+                        onEdit={() => handleEdit(invoice)}
+                        onDelete={() => deleteMutation.mutate(invoice.id)}
+                        canEdit={canEdit}
+                        canDelete={canDelete}
+                        deleteDescription="سيتم حذف هذه الفاتورة وجميع بنودها نهائياً."
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">الفواتير</h1>
+          <p className="text-muted-foreground">إدارة فواتير المبيعات</p>
+        </div>
+        <div className="flex gap-2">
+          {!isMobile && (
+            <ExportWithTemplateButton
+              section="invoices"
+              sectionLabel="الفواتير"
+              data={sortedData}
+              columns={[
+                { key: 'invoice_number', label: 'رقم الفاتورة' },
+                { key: 'customers.name', label: 'العميل' },
+                { key: 'total_amount', label: 'الإجمالي' },
+                { key: 'paid_amount', label: 'المدفوع' },
+                { key: 'payment_status', label: 'حالة الدفع' },
+                { key: 'created_at', label: 'التاريخ' },
+              ]}
+            />
+          )}
+          <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
+            <Plus className="h-4 w-4 ml-2" />
+            {isMobile ? "جديد" : "فاتورة جديدة"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {isMobile ? renderMobileView() : (
+        <>
+          {/* Desktop Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {statItems.map((stat, i) => (
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Search */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="بحث برقم الفاتورة أو اسم العميل..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>قائمة الفواتير</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderTableView()}
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <InvoiceFormDialog
         open={dialogOpen}

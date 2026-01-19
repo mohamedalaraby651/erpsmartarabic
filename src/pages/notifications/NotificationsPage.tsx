@@ -3,11 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Check, CheckCheck, Trash2, AlertCircle, Info, CheckCircle2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Bell, Check, CheckCheck, AlertCircle, Info, CheckCircle2 } from "lucide-react";
+import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import type { Database } from "@/integrations/supabase/types";
 
 type Notification = Database['public']['Tables']['notifications']['Row'];
@@ -16,9 +20,10 @@ const NotificationsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
 
-  const { data: notifications, isLoading } = useQuery({
+  const { data: notifications, isLoading, refetch } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -96,16 +101,76 @@ const NotificationsPage = () => {
     }
   };
 
-  if (isLoading) {
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <MobileListSkeleton count={5} />;
+    }
+
+    if (filteredNotifications.length === 0) {
+      return (
+        <EmptyState
+          icon={Bell}
+          title="لا توجد إشعارات"
+          description={filter === 'unread' ? "لا توجد إشعارات غير مقروءة" : "لا توجد إشعارات"}
+        />
+      );
+    }
+
     return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
+      <div className="space-y-3">
+        {filteredNotifications.map((notification) => (
+          <Card
+            key={notification.id}
+            className={`transition-colors cursor-pointer hover:bg-muted/50 ${
+              !notification.is_read ? 'border-primary/30 bg-primary/5' : ''
+            }`}
+            onClick={() => !notification.is_read && markAsReadMutation.mutate(notification.id)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start gap-4">
+                <div className="mt-1 shrink-0">
+                  {getTypeIcon(notification.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h4 className="font-semibold">{notification.title}</h4>
+                    {getTypeBadge(notification.type)}
+                    {!notification.is_read && (
+                      <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-muted-foreground text-sm">{notification.message}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {new Date(notification.created_at).toLocaleString('ar-EG')}
+                  </p>
+                </div>
+                {!notification.is_read && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markAsReadMutation.mutate(notification.id);
+                    }}
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
-  }
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Bell className="h-6 w-6 text-primary" />
@@ -117,75 +182,30 @@ const NotificationsPage = () => {
         {unreadCount > 0 && (
           <Button
             variant="outline"
+            size={isMobile ? "sm" : "default"}
             onClick={() => markAllAsReadMutation.mutate()}
             disabled={markAllAsReadMutation.isPending}
           >
             <CheckCheck className="h-4 w-4 ml-2" />
-            تحديد الكل كمقروء
+            {isMobile ? "تحديد الكل" : "تحديد الكل كمقروء"}
           </Button>
         )}
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-        <TabsList>
-          <TabsTrigger value="all">الكل ({notifications?.length || 0})</TabsTrigger>
-          <TabsTrigger value="unread">غير مقروء ({unreadCount})</TabsTrigger>
-          <TabsTrigger value="read">مقروء ({(notifications?.length || 0) - unreadCount})</TabsTrigger>
+        <TabsList className="w-full md:w-auto">
+          <TabsTrigger value="all" className="flex-1 md:flex-none">الكل ({notifications?.length || 0})</TabsTrigger>
+          <TabsTrigger value="unread" className="flex-1 md:flex-none">غير مقروء ({unreadCount})</TabsTrigger>
+          <TabsTrigger value="read" className="flex-1 md:flex-none">مقروء ({(notifications?.length || 0) - unreadCount})</TabsTrigger>
         </TabsList>
 
         <TabsContent value={filter} className="mt-6">
-          {filteredNotifications.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Bell className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">لا توجد إشعارات</p>
-              </CardContent>
-            </Card>
+          {isMobile ? (
+            <PullToRefresh onRefresh={handleRefresh}>
+              {renderContent()}
+            </PullToRefresh>
           ) : (
-            <div className="space-y-3">
-              {filteredNotifications.map((notification) => (
-                <Card
-                  key={notification.id}
-                  className={`transition-colors cursor-pointer hover:bg-muted/50 ${
-                    !notification.is_read ? 'border-primary/30 bg-primary/5' : ''
-                  }`}
-                  onClick={() => !notification.is_read && markAsReadMutation.mutate(notification.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1">
-                        {getTypeIcon(notification.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold">{notification.title}</h4>
-                          {getTypeBadge(notification.type)}
-                          {!notification.is_read && (
-                            <span className="h-2 w-2 rounded-full bg-primary" />
-                          )}
-                        </div>
-                        <p className="text-muted-foreground">{notification.message}</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {new Date(notification.created_at).toLocaleString('ar-EG')}
-                        </p>
-                      </div>
-                      {!notification.is_read && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            markAsReadMutation.mutate(notification.id);
-                          }}
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            renderContent()
           )}
         </TabsContent>
       </Tabs>
