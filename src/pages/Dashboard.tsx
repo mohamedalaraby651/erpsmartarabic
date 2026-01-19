@@ -71,15 +71,32 @@ const allQuickActions: QuickAction[] = [
 ];
 
 export default function Dashboard() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { widgets, updateWidgets, isSaving } = useDashboardSettings();
+  const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
 
   // Use mobile dashboard for mobile devices
   if (isMobile) {
     return <MobileDashboard />;
+  }
+
+  // Show loading state for desktop
+  if (authLoading || widgetsLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-64 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
+      </div>
+    );
   }
 
   // Filter quick actions based on user role

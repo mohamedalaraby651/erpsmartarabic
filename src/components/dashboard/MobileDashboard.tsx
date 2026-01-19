@@ -5,20 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Users,
   Package,
   FileText,
   Receipt,
-  Plus,
   ArrowLeft,
   Clock,
   CheckCircle2,
   UserPlus,
   ShoppingCart,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { MobileStatSkeleton } from '@/components/mobile/MobileListSkeleton';
+import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -38,22 +40,22 @@ interface QuickActionItem {
 
 const quickActions: QuickActionItem[] = [
   { title: 'عميل جديد', icon: UserPlus, href: '/customers', color: 'bg-primary', roles: ['admin', 'sales'] },
-  { title: 'فاتورة', icon: Receipt, href: '/invoices', color: 'bg-success', roles: ['admin', 'sales', 'accountant'] },
-  { title: 'عرض سعر', icon: FileText, href: '/quotations', color: 'bg-info', roles: ['admin', 'sales'] },
-  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders', color: 'bg-warning', roles: ['admin', 'sales'] },
+  { title: 'فاتورة', icon: Receipt, href: '/invoices', color: 'bg-green-500', roles: ['admin', 'sales', 'accountant'] },
+  { title: 'عرض سعر', icon: FileText, href: '/quotations', color: 'bg-blue-500', roles: ['admin', 'sales'] },
+  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders', color: 'bg-orange-500', roles: ['admin', 'sales'] },
 ];
 
 export function MobileDashboard() {
   const navigate = useNavigate();
-  const { user, userRole } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
 
   // Filter quick actions based on role
   const filteredActions = quickActions.filter(action => 
     !userRole || action.roles.includes(userRole)
   );
 
-  // Fetch stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  // Fetch stats with proper loading states
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['mobile-dashboard-stats'],
     queryFn: async () => {
       const [customers, products, invoices, quotations] = await Promise.all([
@@ -69,9 +71,11 @@ export function MobileDashboard() {
         quotations: quotations.count || 0,
       };
     },
+    staleTime: 30000,
+    gcTime: 60000,
   });
 
-  const { data: tasks } = useQuery({
+  const { data: tasks, isLoading: tasksLoading, refetch: refetchTasks } = useQuery({
     queryKey: ['mobile-dashboard-tasks'],
     queryFn: async () => {
       const { data } = await supabase
@@ -82,9 +86,10 @@ export function MobileDashboard() {
         .limit(3);
       return data || [];
     },
+    staleTime: 15000,
   });
 
-  const { data: recentInvoices } = useQuery({
+  const { data: recentInvoices, isLoading: invoicesLoading, refetch: refetchInvoices } = useQuery({
     queryKey: ['mobile-dashboard-invoices'],
     queryFn: async () => {
       const { data } = await supabase
@@ -94,7 +99,16 @@ export function MobileDashboard() {
         .limit(3);
       return data || [];
     },
+    staleTime: 15000,
   });
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchStats(),
+      refetchTasks(),
+      refetchInvoices(),
+    ]);
+  };
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -106,169 +120,204 @@ export function MobileDashboard() {
 
   const statItems = [
     { title: 'العملاء', value: stats?.customers || 0, icon: Users, color: 'text-primary' },
-    { title: 'المنتجات', value: stats?.products || 0, icon: Package, color: 'text-success' },
-    { title: 'الفواتير', value: stats?.invoices || 0, icon: Receipt, color: 'text-warning' },
-    { title: 'عروض الأسعار', value: stats?.quotations || 0, icon: FileText, color: 'text-info' },
+    { title: 'المنتجات', value: stats?.products || 0, icon: Package, color: 'text-green-500' },
+    { title: 'الفواتير', value: stats?.invoices || 0, icon: Receipt, color: 'text-orange-500' },
+    { title: 'عروض الأسعار', value: stats?.quotations || 0, icon: FileText, color: 'text-blue-500' },
   ];
 
-  return (
-    <div className="space-y-4 pb-20">
-      {/* Welcome Header */}
-      <div className="px-1">
-        <h1 className="text-xl font-bold">
-          {greeting()}، {userName} 👋
-        </h1>
-        {userRole && (
-          <Badge variant="secondary" className="mt-1">
-            {roleLabels[userRole]}
-          </Badge>
-        )}
-      </div>
-
-      {/* Stats - Horizontal Scroll */}
-      {statsLoading ? (
+  // Show full skeleton on initial load
+  if (authLoading) {
+    return (
+      <div className="space-y-4 pb-20 animate-fade-in">
+        <div className="px-1">
+          <Skeleton className="h-7 w-48 mb-2" />
+          <Skeleton className="h-5 w-24" />
+        </div>
         <MobileStatSkeleton count={4} />
-      ) : (
-        <ScrollArea className="w-full">
-          <div className="flex gap-3 pb-2 px-1">
-            {statItems.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <Card key={stat.title} className="min-w-[130px] shrink-0">
-                  <CardContent className="p-3">
+        <div className="grid grid-cols-4 gap-2 px-1">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-48 w-full mx-1 rounded-lg" />
+        <Skeleton className="h-48 w-full mx-1 rounded-lg" />
+      </div>
+    );
+  }
+
+  return (
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-4 pb-20 animate-fade-in">
+        {/* Welcome Header */}
+        <div className="px-1">
+          <h1 className="text-xl font-bold">
+            {greeting()}، {userName} 👋
+          </h1>
+          {userRole && (
+            <Badge variant="secondary" className="mt-1">
+              {roleLabels[userRole]}
+            </Badge>
+          )}
+        </div>
+
+        {/* Stats - Horizontal Scroll */}
+        {statsLoading ? (
+          <MobileStatSkeleton count={4} />
+        ) : (
+          <ScrollArea className="w-full">
+            <div className="flex gap-3 pb-2 px-1">
+              {statItems.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <Card key={stat.title} className="min-w-[130px] shrink-0 shadow-sm">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                          <Icon className={`h-5 w-5 ${stat.color}`} />
+                        </div>
+                        <div>
+                          <p className="text-xl font-bold">{stat.value}</p>
+                          <p className="text-xs text-muted-foreground">{stat.title}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        )}
+
+        {/* Quick Actions - Grid */}
+        <div className="grid grid-cols-4 gap-2 px-1">
+          {filteredActions.slice(0, 4).map((action) => {
+            const Icon = action.icon;
+            return (
+              <Button
+                key={action.title}
+                variant="outline"
+                className="h-auto py-3 px-2 flex-col gap-1.5 text-xs shadow-sm active:scale-95 transition-transform"
+                onClick={() => navigate(action.href, { state: { openNew: true } })}
+              >
+                <div className={`h-9 w-9 rounded-lg ${action.color} flex items-center justify-center`}>
+                  <Icon className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-medium truncate w-full text-center">{action.title}</span>
+              </Button>
+            );
+          })}
+        </div>
+
+        {/* Tasks Card */}
+        <Card className="mx-1 shadow-sm">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-base">المهام</CardTitle>
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/tasks')}>
+              <span className="text-xs">عرض الكل</span>
+              <ArrowLeft className="mr-1 h-3 w-3" />
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {tasksLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : tasks && tasks.length > 0 ? (
+              <div className="space-y-2">
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 active:bg-muted transition-colors"
+                    onClick={() => navigate('/tasks')}
+                  >
+                    <div className={`h-2 w-2 rounded-full shrink-0 ${
+                      task.priority === 'high' ? 'bg-destructive' :
+                      task.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{task.title}</p>
+                      {task.due_date && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(task.due_date).toLocaleDateString('ar-EG')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <CheckCircle2 className="h-8 w-8 mx-auto mb-1 text-green-500" />
+                <p className="text-sm text-muted-foreground">لا توجد مهام معلقة</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Invoices Card */}
+        <Card className="mx-1 shadow-sm">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-base">آخر الفواتير</CardTitle>
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/invoices')}>
+              <span className="text-xs">عرض الكل</span>
+              <ArrowLeft className="mr-1 h-3 w-3" />
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {invoicesLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : recentInvoices && recentInvoices.length > 0 ? (
+              <div className="space-y-2">
+                {recentInvoices.map((invoice) => (
+                  <div
+                    key={invoice.id}
+                    className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 active:bg-muted transition-colors"
+                    onClick={() => navigate(`/invoices/${invoice.id}`)}
+                  >
                     <div className="flex items-center gap-2">
-                      <div className={`h-10 w-10 rounded-lg bg-muted flex items-center justify-center`}>
-                        <Icon className={`h-5 w-5 ${stat.color}`} />
+                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Receipt className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-xl font-bold">{stat.value}</p>
-                        <p className="text-xs text-muted-foreground">{stat.title}</p>
+                        <p className="text-sm font-medium">{invoice.invoice_number}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(invoice.customers as any)?.name || 'عميل'}
+                        </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      )}
-
-      {/* Quick Actions - Grid */}
-      <div className="grid grid-cols-4 gap-2 px-1">
-        {filteredActions.slice(0, 4).map((action) => {
-          const Icon = action.icon;
-          return (
-            <Button
-              key={action.title}
-              variant="outline"
-              className="h-auto py-3 px-2 flex-col gap-1.5 text-xs"
-              onClick={() => navigate(action.href, { state: { openNew: true } })}
-            >
-              <div className={`h-9 w-9 rounded-lg ${action.color} flex items-center justify-center`}>
-                <Icon className="h-4 w-4 text-primary-foreground" />
+                    <div className="text-left">
+                      <p className="text-sm font-bold">{invoice.total_amount.toLocaleString()}</p>
+                      <Badge
+                        variant={
+                          invoice.payment_status === 'paid' ? 'default' :
+                          invoice.payment_status === 'partial' ? 'secondary' : 'destructive'
+                        }
+                        className="text-[10px] px-1.5"
+                      >
+                        {invoice.payment_status === 'paid' ? 'مدفوع' :
+                         invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <span className="font-medium truncate w-full text-center">{action.title}</span>
-            </Button>
-          );
-        })}
+            ) : (
+              <div className="text-center py-4">
+                <Receipt className="h-8 w-8 mx-auto mb-1 opacity-50" />
+                <p className="text-sm text-muted-foreground">لا توجد فواتير بعد</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Tasks Card */}
-      <Card className="mx-1">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-base">المهام</CardTitle>
-          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/tasks')}>
-            <span className="text-xs">عرض الكل</span>
-            <ArrowLeft className="mr-1 h-3 w-3" />
-          </Button>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {tasks && tasks.length > 0 ? (
-            <div className="space-y-2">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50"
-                >
-                  <div className={`h-2 w-2 rounded-full shrink-0 ${
-                    task.priority === 'high' ? 'bg-destructive' :
-                    task.priority === 'medium' ? 'bg-warning' : 'bg-success'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{task.title}</p>
-                    {task.due_date && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(task.due_date).toLocaleDateString('ar-EG')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-4">
-              <CheckCircle2 className="h-8 w-8 mx-auto mb-1 text-success" />
-              <p className="text-sm text-muted-foreground">لا توجد مهام معلقة</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Invoices Card */}
-      <Card className="mx-1">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-base">آخر الفواتير</CardTitle>
-          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/invoices')}>
-            <span className="text-xs">عرض الكل</span>
-            <ArrowLeft className="mr-1 h-3 w-3" />
-          </Button>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {recentInvoices && recentInvoices.length > 0 ? (
-            <div className="space-y-2">
-              {recentInvoices.map((invoice) => (
-                <div
-                  key={invoice.id}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50"
-                  onClick={() => navigate(`/invoices/${invoice.id}`)}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Receipt className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{invoice.invoice_number}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(invoice.customers as any)?.name || 'عميل'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold">{invoice.total_amount.toLocaleString()}</p>
-                    <Badge
-                      variant={
-                        invoice.payment_status === 'paid' ? 'default' :
-                        invoice.payment_status === 'partial' ? 'secondary' : 'destructive'
-                      }
-                      className="text-[10px] px-1.5"
-                    >
-                      {invoice.payment_status === 'paid' ? 'مدفوع' :
-                       invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-4">
-              <Receipt className="h-8 w-8 mx-auto mb-1 opacity-50" />
-              <p className="text-sm text-muted-foreground">لا توجد فواتير بعد</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    </PullToRefresh>
   );
 }
