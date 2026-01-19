@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Printer, ArrowLeftRight, Eye } from "lucide-react";
+import { Plus, Search, FileText, Printer, Eye, Calendar, CheckCircle } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
@@ -24,6 +24,12 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { DataCard } from "@/components/mobile/DataCard";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -54,11 +60,12 @@ const QuotationsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
 
-  const { data: quotations = [], isLoading } = useQuery({
+  const { data: quotations = [], isLoading, refetch } = useQuery({
     queryKey: ['quotations'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -111,97 +118,52 @@ const QuotationsPage = () => {
     setDialogOpen(true);
   };
 
-  const handlePrint = (quotationId: string) => {
-    setPrintQuotationId(quotationId);
-    setPrintDialogOpen(true);
+  const handleRefresh = async () => {
+    await refetch();
   };
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">عروض الأسعار</h1>
-          <p className="text-muted-foreground">إدارة عروض الأسعار للعملاء</p>
-        </div>
-        <div className="flex gap-2">
-          <ExportWithTemplateButton
-            section="quotations"
-            sectionLabel="عروض الأسعار"
-            data={sortedData}
-            columns={[
-              { key: 'quotation_number', label: 'رقم العرض' },
-              { key: 'customers.name', label: 'العميل' },
-              { key: 'total_amount', label: 'الإجمالي' },
-              { key: 'status', label: 'الحالة' },
-              { key: 'valid_until', label: 'صالح حتى' },
-              { key: 'created_at', label: 'التاريخ' },
-            ]}
-          />
-          <Button onClick={handleAdd}>
-            <Plus className="h-4 w-4 ml-2" />
-            عرض سعر جديد
-          </Button>
-        </div>
-      </div>
+  const statItems = [
+    { label: 'إجمالي العروض', value: stats.total, icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10' },
+    { label: 'قيد الانتظار', value: stats.pending, icon: FileText, color: 'text-warning', bgColor: 'bg-warning/10' },
+    { label: 'معتمدة', value: stats.approved, icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10' },
+    { label: 'إجمالي القيمة', value: `${stats.totalValue.toLocaleString()}`, icon: FileText, color: 'text-info', bgColor: 'bg-info/10' },
+  ];
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">إجمالي العروض</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <FileText className="h-5 w-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.pending}</p>
-                <p className="text-sm text-muted-foreground">قيد الانتظار</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <FileText className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.approved}</p>
-                <p className="text-sm text-muted-foreground">معتمدة</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-info/10">
-                <ArrowLeftRight className="h-5 w-5 text-info" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.totalValue.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">إجمالي القيمة (ج.م)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+  // Mobile View
+  const renderMobileView = () => {
+    if (isLoading) {
+      return (
+        <div className="space-y-4">
+          <MobileStatSkeleton count={4} />
+          <MobileListSkeleton count={5} variant="order" />
+        </div>
+      );
+    }
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative flex-1">
+    return (
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="space-y-4">
+          {/* Mobile Stats */}
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+            {statItems.map((stat, i) => (
+              <Card key={i} className="min-w-[140px] shrink-0">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                      <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold">{stat.value}</p>
+                      <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="بحث برقم العرض أو اسم العميل..."
@@ -210,123 +172,249 @@ const QuotationsPage = () => {
               className="pr-10"
             />
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>قائمة عروض الأسعار</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : sortedData.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">لا توجد عروض أسعار</p>
-              <Button variant="link" onClick={handleAdd}>إضافة عرض سعر جديد</Button>
-            </div>
+          {/* Quotations List */}
+          {sortedData.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="لا توجد عروض أسعار"
+              description="ابدأ بإضافة عرض سعر جديد"
+              action={{
+                label: "عرض سعر جديد",
+                onClick: handleAdd,
+                icon: Plus,
+              }}
+            />
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <DataTableHeader
-                      label="رقم العرض"
-                      sortKey="quotation_number"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader label="العميل" />
-                    <DataTableHeader
-                      label="التاريخ"
-                      sortKey="created_at"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader label="صالح حتى" />
-                    <DataTableHeader
-                      label="الإجمالي"
-                      sortKey="total_amount"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader
-                      label="الحالة"
-                      filterKey="status"
-                      filterType="select"
-                      filterOptions={[
-                        { value: 'draft', label: 'مسودة' },
-                        { value: 'pending', label: 'معلق' },
-                        { value: 'approved', label: 'معتمد' },
-                        { value: 'rejected', label: 'مرفوض' },
-                      ]}
-                      filterValue={filters.status as string}
-                      onFilter={setFilter}
-                    />
-                    <DataTableHeader label="إجراءات" className="text-left" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedData.map((quotation: any) => (
-                    <TableRow key={quotation.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/quotations/${quotation.id}`)}>
-                      <TableCell>
-                        <EntityLink type="quotation" id={quotation.id}>
-                          {quotation.quotation_number}
-                        </EntityLink>
-                      </TableCell>
-                      <TableCell>
-                        {quotation.customers?.name ? (
-                          <EntityLink type="customer" id={quotation.customer_id}>
-                            {quotation.customers.name}
-                          </EntityLink>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(quotation.created_at).toLocaleDateString('ar-EG')}
-                      </TableCell>
-                      <TableCell>
-                        {quotation.valid_until 
-                          ? new Date(quotation.valid_until).toLocaleDateString('ar-EG')
-                          : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-bold">
-                          {Number(quotation.total_amount).toLocaleString()} ج.م
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={statusColors[quotation.status]}>
-                          {statusLabels[quotation.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/quotations/${quotation.id}`)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handlePrint(quotation.id)}>
-                            <Printer className="h-4 w-4" />
-                          </Button>
-                          <DataTableActions
-                            onEdit={() => handleEdit(quotation)}
-                            onDelete={() => deleteMutation.mutate(quotation.id)}
-                            canEdit={canEdit}
-                            canDelete={canDelete}
-                            deleteDescription="سيتم حذف عرض السعر وجميع بنوده نهائياً."
-                          />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-3">
+              {sortedData.map((quotation: any) => (
+                <DataCard
+                  key={quotation.id}
+                  title={quotation.quotation_number}
+                  subtitle={quotation.customers?.name || 'بدون عميل'}
+                  badge={{
+                    label: statusLabels[quotation.status],
+                    variant: quotation.status === 'approved' ? 'default' : quotation.status === 'pending' ? 'secondary' : 'outline',
+                  }}
+                  icon={FileText}
+                  iconBgColor="bg-primary/10"
+                  iconColor="text-primary"
+                  fields={[
+                    { label: 'الإجمالي', value: `${Number(quotation.total_amount).toLocaleString()} ج.م` },
+                    { label: 'صالح حتى', value: quotation.valid_until ? new Date(quotation.valid_until).toLocaleDateString('ar-EG') : '-', icon: Calendar },
+                  ]}
+                  onClick={() => navigate(`/quotations/${quotation.id}`)}
+                  onView={() => navigate(`/quotations/${quotation.id}`)}
+                  onEdit={canEdit ? () => handleEdit(quotation) : undefined}
+                  onDelete={canDelete ? () => deleteMutation.mutate(quotation.id) : undefined}
+                />
+              ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </PullToRefresh>
+    );
+  };
+
+  // Desktop View
+  const renderTableView = () => {
+    if (isLoading) {
+      return <TableSkeleton rows={5} columns={7} />;
+    }
+
+    if (sortedData.length === 0) {
+      return (
+        <EmptyState
+          icon={FileText}
+          title="لا توجد عروض أسعار"
+          description="ابدأ بإضافة عرض سعر جديد"
+          action={{
+            label: "عرض سعر جديد",
+            onClick: handleAdd,
+            icon: Plus,
+          }}
+        />
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <DataTableHeader
+                label="رقم العرض"
+                sortKey="quotation_number"
+                sortConfig={sortConfig}
+                onSort={requestSort}
+              />
+              <DataTableHeader label="العميل" />
+              <DataTableHeader
+                label="التاريخ"
+                sortKey="created_at"
+                sortConfig={sortConfig}
+                onSort={requestSort}
+              />
+              <DataTableHeader label="صالح حتى" />
+              <DataTableHeader
+                label="الإجمالي"
+                sortKey="total_amount"
+                sortConfig={sortConfig}
+                onSort={requestSort}
+              />
+              <DataTableHeader
+                label="الحالة"
+                filterKey="status"
+                filterType="select"
+                filterOptions={[
+                  { value: 'draft', label: 'مسودة' },
+                  { value: 'pending', label: 'معلق' },
+                  { value: 'approved', label: 'معتمد' },
+                  { value: 'rejected', label: 'مرفوض' },
+                ]}
+                filterValue={filters.status as string}
+                onFilter={setFilter}
+              />
+              <DataTableHeader label="إجراءات" className="text-left" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedData.map((quotation: any) => (
+              <TableRow key={quotation.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/quotations/${quotation.id}`)}>
+                <TableCell>
+                  <EntityLink type="quotation" id={quotation.id}>
+                    {quotation.quotation_number}
+                  </EntityLink>
+                </TableCell>
+                <TableCell>
+                  {quotation.customers?.name ? (
+                    <EntityLink type="customer" id={quotation.customer_id}>
+                      {quotation.customers.name}
+                    </EntityLink>
+                  ) : '-'}
+                </TableCell>
+                <TableCell>
+                  {new Date(quotation.created_at).toLocaleDateString('ar-EG')}
+                </TableCell>
+                <TableCell>
+                  {quotation.valid_until 
+                    ? new Date(quotation.valid_until).toLocaleDateString('ar-EG')
+                    : '-'}
+                </TableCell>
+                <TableCell>
+                  <span className="font-bold">
+                    {Number(quotation.total_amount).toLocaleString()} ج.م
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Badge className={statusColors[quotation.status]}>
+                    {statusLabels[quotation.status]}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" onClick={() => navigate(`/quotations/${quotation.id}`)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => { setPrintQuotationId(quotation.id); setPrintDialogOpen(true); }}>
+                      <Printer className="h-4 w-4" />
+                    </Button>
+                    <DataTableActions
+                      onEdit={() => handleEdit(quotation)}
+                      onDelete={() => deleteMutation.mutate(quotation.id)}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                      deleteDescription="سيتم حذف عرض السعر وجميع بنوده نهائياً."
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">عروض الأسعار</h1>
+          <p className="text-muted-foreground">إدارة عروض الأسعار للعملاء</p>
+        </div>
+        <div className="flex gap-2">
+          {!isMobile && (
+            <ExportWithTemplateButton
+              section="quotations"
+              sectionLabel="عروض الأسعار"
+              data={sortedData}
+              columns={[
+                { key: 'quotation_number', label: 'رقم العرض' },
+                { key: 'customers.name', label: 'العميل' },
+                { key: 'total_amount', label: 'الإجمالي' },
+                { key: 'status', label: 'الحالة' },
+                { key: 'valid_until', label: 'صالح حتى' },
+                { key: 'created_at', label: 'التاريخ' },
+              ]}
+            />
+          )}
+          <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
+            <Plus className="h-4 w-4 ml-2" />
+            {isMobile ? "جديد" : "عرض سعر جديد"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {isMobile ? renderMobileView() : (
+        <>
+          {/* Desktop Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {statItems.map((stat, i) => (
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Search */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="بحث برقم العرض أو اسم العميل..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>قائمة عروض الأسعار</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderTableView()}
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <QuotationFormDialog
         open={dialogOpen}
