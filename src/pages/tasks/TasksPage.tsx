@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,8 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckSquare, Plus, Calendar, Clock, User } from "lucide-react";
+import { CheckSquare, Plus, Calendar, Clock, User, ListTodo, CheckCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { DataCard } from "@/components/mobile/DataCard";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 
@@ -33,6 +38,7 @@ const TasksPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [formData, setFormData] = useState({
@@ -42,7 +48,7 @@ const TasksPage = () => {
     due_date: '',
   });
 
-  const { data: tasks, isLoading } = useQuery({
+  const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -90,6 +96,10 @@ const TasksPage = () => {
     },
   });
 
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   const filteredTasks = tasks?.filter(t => {
     if (filter === 'pending') return !t.is_completed;
     if (filter === 'completed') return t.is_completed;
@@ -102,25 +112,52 @@ const TasksPage = () => {
   const getPriorityBadge = (priority: string | null) => {
     switch (priority) {
       case 'high':
-        return <Badge variant="destructive">عاجل</Badge>;
+        return { text: 'عاجل', variant: 'destructive' as const };
       case 'medium':
-        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">متوسط</Badge>;
+        return { text: 'متوسط', variant: 'outline' as const, className: 'bg-warning/10 text-warning border-warning/20' };
       default:
-        return <Badge variant="secondary">منخفض</Badge>;
+        return { text: 'منخفض', variant: 'secondary' as const };
     }
   };
 
-  if (isLoading) {
+  // Mobile Task Card
+  const renderTaskCard = (task: Task) => {
+    const priorityBadge = getPriorityBadge(task.priority);
     return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
-      </div>
+      <DataCard
+        key={task.id}
+        title={task.title}
+        subtitle={task.description || undefined}
+        icon={
+          task.is_completed ? (
+            <CheckCircle className="h-5 w-5 text-success" />
+          ) : (
+            <ListTodo className="h-5 w-5" />
+          )
+        }
+        badge={priorityBadge}
+        className={task.is_completed ? 'opacity-60' : ''}
+        fields={[
+          task.due_date && { label: "الاستحقاق", value: new Date(task.due_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
+          { label: "الإنشاء", value: new Date(task.created_at).toLocaleDateString('ar-EG'), icon: <Clock className="h-3 w-3" /> },
+        ].filter(Boolean) as any[]}
+        onClick={() => toggleTaskMutation.mutate({ id: task.id, is_completed: !task.is_completed })}
+        rightContent={
+          <Checkbox
+            checked={task.is_completed || false}
+            onCheckedChange={(checked) =>
+              toggleTaskMutation.mutate({ id: task.id, is_completed: checked as boolean })
+            }
+            onClick={(e) => e.stopPropagation()}
+          />
+        }
+      />
     );
-  }
+  };
 
-  return (
+  const pageContent = (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <CheckSquare className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">المهام</h1>
@@ -196,34 +233,100 @@ const TasksPage = () => {
         </Dialog>
       </div>
 
-      <div className="flex gap-2">
+      {/* Stats Cards - Mobile optimized */}
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <ListTodo className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{tasks?.length || 0}</p>
+                <p className="text-sm text-muted-foreground">إجمالي المهام</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-warning/10">
+                <Clock className="h-5 w-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{pendingCount}</p>
+                <p className="text-sm text-muted-foreground">معلقة</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {!isMobile && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-success/10">
+                  <CheckCircle className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{completedCount}</p>
+                  <p className="text-sm text-muted-foreground">مكتملة</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
         <Button
           variant={filter === 'all' ? 'default' : 'outline'}
           onClick={() => setFilter('all')}
+          size={isMobile ? "sm" : "default"}
         >
           الكل ({tasks?.length || 0})
         </Button>
         <Button
           variant={filter === 'pending' ? 'default' : 'outline'}
           onClick={() => setFilter('pending')}
+          size={isMobile ? "sm" : "default"}
         >
           معلقة ({pendingCount})
         </Button>
         <Button
           variant={filter === 'completed' ? 'default' : 'outline'}
           onClick={() => setFilter('completed')}
+          size={isMobile ? "sm" : "default"}
         >
           مكتملة ({completedCount})
         </Button>
       </div>
 
-      {filteredTasks.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <CheckSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">لا توجد مهام</p>
-          </CardContent>
-        </Card>
+      {isLoading ? (
+        isMobile ? (
+          <MobileListSkeleton count={5} />
+        ) : (
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </CardContent>
+          </Card>
+        )
+      ) : filteredTasks.length === 0 ? (
+        <EmptyState
+          icon={CheckSquare}
+          title="لا توجد مهام"
+          description={filter === 'all' ? "أضف مهمة جديدة للبدء" : filter === 'pending' ? "لا توجد مهام معلقة" : "لا توجد مهام مكتملة"}
+          action={filter === 'all' ? {
+            label: "إضافة مهمة",
+            onClick: () => setIsDialogOpen(true)
+          } : undefined}
+        />
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {filteredTasks.map(renderTaskCard)}
+        </div>
       ) : (
         <div className="space-y-3">
           {filteredTasks.map((task) => (
@@ -245,7 +348,12 @@ const TasksPage = () => {
                       <h4 className={`font-semibold ${task.is_completed ? 'line-through' : ''}`}>
                         {task.title}
                       </h4>
-                      {getPriorityBadge(task.priority)}
+                      <Badge 
+                        variant={getPriorityBadge(task.priority).variant}
+                        className={getPriorityBadge(task.priority).className}
+                      >
+                        {getPriorityBadge(task.priority).text}
+                      </Badge>
                     </div>
                     {task.description && (
                       <p className="text-muted-foreground text-sm mb-2">{task.description}</p>
@@ -271,6 +379,16 @@ const TasksPage = () => {
       )}
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <PullToRefresh onRefresh={handleRefresh}>
+        {pageContent}
+      </PullToRefresh>
+    );
+  }
+
+  return pageContent;
 };
 
 export default TasksPage;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,20 +11,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Layers, Edit, Trash2, FolderTree } from "lucide-react";
+import { Plus, Layers, Edit, Trash2, FolderTree, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CategoryFormDialog from "@/components/categories/CategoryFormDialog";
 import type { Database } from "@/integrations/supabase/types";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { DataCard } from "@/components/mobile/DataCard";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Badge } from "@/components/ui/badge";
 
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
 
 const CategoriesPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-  const { data: categories = [], isLoading } = useQuery({
+  const { data: categories = [], isLoading, refetch } = useQuery({
     queryKey: ['product-categories'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -53,6 +61,10 @@ const CategoriesPage = () => {
     },
   });
 
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   const handleEdit = (category: ProductCategory) => {
     setSelectedCategory(category);
     setDialogOpen(true);
@@ -75,6 +87,61 @@ const CategoriesPage = () => {
 
   const rootCategories = categories.filter(c => !c.parent_id);
   const getChildren = (parentId: string) => categories.filter(c => c.parent_id === parentId);
+
+  const toggleExpand = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  };
+
+  // Mobile Category Card
+  const renderCategoryCard = (category: ProductCategory, level: number = 0): JSX.Element[] => {
+    const children = getChildren(category.id);
+    const hasChildren = children.length > 0;
+    const isExpanded = expandedCategories.has(category.id);
+
+    return [
+      <div key={category.id} style={{ marginRight: `${level * 16}px` }}>
+        <DataCard
+          title={category.name}
+          subtitle={category.description || undefined}
+          icon={<Layers className="h-5 w-5" />}
+          badge={hasChildren ? { text: `${children.length} فرعي`, variant: "secondary" } : undefined}
+          fields={[
+            category.parent_id && { label: "التصنيف الأب", value: getParentName(category.parent_id) },
+            { label: "الترتيب", value: category.sort_order || 0 },
+          ].filter(Boolean) as any[]}
+          onEdit={() => handleEdit(category)}
+          onDelete={() => {
+            if (confirm('هل أنت متأكد من حذف هذا التصنيف؟')) {
+              deleteMutation.mutate(category.id);
+            }
+          }}
+          rightContent={
+            hasChildren ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpand(category.id);
+                }}
+              >
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>,
+      ...(isExpanded ? children.flatMap(child => renderCategoryCard(child, level + 1)) : [])
+    ];
+  };
 
   const renderCategoryRow = (category: ProductCategory, level: number = 0): JSX.Element[] => {
     const children = getChildren(category.id);
@@ -114,7 +181,7 @@ const CategoriesPage = () => {
     ];
   };
 
-  return (
+  const pageContent = (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -127,7 +194,7 @@ const CategoriesPage = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -154,37 +221,53 @@ const CategoriesPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-secondary">
-                <Layers className="h-5 w-5 text-secondary-foreground" />
+        {!isMobile && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-secondary">
+                  <Layers className="h-5 w-5 text-secondary-foreground" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{categories.length - rootCategories.length}</p>
+                  <p className="text-sm text-muted-foreground">تصنيفات فرعية</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{categories.length - rootCategories.length}</p>
-                <p className="text-sm text-muted-foreground">تصنيفات فرعية</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>قائمة التصنيفات</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="text-center py-12">
-              <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">لا توجد تصنيفات</p>
-              <Button variant="link" onClick={handleAdd}>إضافة تصنيف جديد</Button>
-            </div>
-          ) : (
+      {isLoading ? (
+        isMobile ? (
+          <MobileListSkeleton count={5} />
+        ) : (
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </CardContent>
+          </Card>
+        )
+      ) : categories.length === 0 ? (
+        <EmptyState
+          icon={Layers}
+          title="لا توجد تصنيفات"
+          description="أضف تصنيفًا جديدًا للبدء في تنظيم المنتجات"
+          action={{
+            label: "إضافة تصنيف",
+            onClick: handleAdd
+          }}
+        />
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {rootCategories.flatMap(category => renderCategoryCard(category, 0))}
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>قائمة التصنيفات</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -202,9 +285,9 @@ const CategoriesPage = () => {
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <CategoryFormDialog
         open={dialogOpen}
@@ -214,6 +297,16 @@ const CategoriesPage = () => {
       />
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <PullToRefresh onRefresh={handleRefresh}>
+        {pageContent}
+      </PullToRefresh>
+    );
+  }
+
+  return pageContent;
 };
 
 export default CategoriesPage;

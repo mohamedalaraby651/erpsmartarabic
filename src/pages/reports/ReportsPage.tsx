@@ -7,14 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ar } from "date-fns/locale";
-import { TrendingUp, TrendingDown, DollarSign, Package, Users, FileText, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Package, Users, FileText, AlertTriangle, BarChart3 } from "lucide-react";
 import { ExportButton } from "@/components/reports/ExportButton";
 import { DateRangePicker } from "@/components/reports/DateRangePicker";
 import PageHeader from "@/components/navigation/PageHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { Badge } from "@/components/ui/badge";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 export default function ReportsPage() {
+  const isMobile = useIsMobile();
   const [period, setPeriod] = useState("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
@@ -23,7 +27,7 @@ export default function ReportsPage() {
   const endDate = customTo || new Date();
 
   // Sales Report Data
-  const { data: salesData } = useQuery({
+  const { data: salesData, isLoading: loadingSales } = useQuery({
     queryKey: ["sales-report", period],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -216,17 +220,116 @@ export default function ReportsPage() {
     status: s.payment_status,
   })) || [];
 
-  const productsExportData = topProducts?.map((p) => ({
-    name: p.name,
-    quantity: p.quantity,
-    revenue: p.revenue,
-  })) || [];
+  // Mobile Summary Cards Component
+  const MobileSummaryCards = () => (
+    <div className="grid grid-cols-2 gap-3">
+      <Card>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-primary/10">
+              <DollarSign className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{formatCurrency(totalSales)}</p>
+              <p className="text-xs text-muted-foreground">إجمالي المبيعات</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-success/10">
+              <TrendingUp className="h-4 w-4 text-success" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-success">{formatCurrency(paidAmount)}</p>
+              <p className="text-xs text-muted-foreground">المحصل</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-destructive/10">
+              <TrendingDown className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-destructive">{formatCurrency(unpaidAmount)}</p>
+              <p className="text-xs text-muted-foreground">المستحق</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-info/10">
+              <FileText className="h-4 w-4 text-info" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">{invoiceCount}</p>
+              <p className="text-xs text-muted-foreground">الفواتير</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-  const customersExportData = topCustomers?.map((c) => ({
-    name: c.name,
-    total: c.total,
-    count: c.count,
-  })) || [];
+  // Mobile Top Items List
+  const MobileTopItemsList = ({ items, type }: { items: any[]; type: 'products' | 'customers' }) => (
+    <div className="space-y-2">
+      {items?.map((item, index) => (
+        <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="h-6 w-6 rounded-full p-0 flex items-center justify-center">
+              {index + 1}
+            </Badge>
+            <span className="font-medium">{item.name}</span>
+          </div>
+          <span className="font-bold text-primary">
+            {formatCurrency(type === 'products' ? item.revenue : item.total)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Mobile Low Stock List
+  const MobileLowStockList = ({ items }: { items: any[] }) => (
+    <div className="space-y-2">
+      {items?.map((item, index) => (
+        <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+          <div>
+            <p className="font-medium">{item.name}</p>
+            <p className="text-xs text-muted-foreground">الحد الأدنى: {item.minStock}</p>
+          </div>
+          <Badge variant="destructive">{item.currentStock}</Badge>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (loadingSales) {
+    return (
+      <div className="space-y-6" dir="rtl">
+        <PageHeader
+          title="التقارير والتحليلات"
+          description="نظرة شاملة على أداء الأعمال"
+          showBack
+        />
+        {isMobile ? (
+          <MobileListSkeleton count={4} />
+        ) : (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -242,7 +345,7 @@ export default function ReportsPage() {
           setCustomFrom(undefined);
           setCustomTo(undefined);
         }}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className={isMobile ? "w-full" : "w-40"}>
             <SelectValue placeholder="الفترة" />
           </SelectTrigger>
           <SelectContent>
@@ -253,140 +356,172 @@ export default function ReportsPage() {
           </SelectContent>
         </Select>
 
-        <DateRangePicker
-          from={customFrom}
-          to={customTo}
-          onSelect={(from, to) => {
-            setCustomFrom(from);
-            setCustomTo(to);
-          }}
-        />
+        {!isMobile && (
+          <>
+            <DateRangePicker
+              from={customFrom}
+              to={customTo}
+              onSelect={(from, to) => {
+                setCustomFrom(from);
+                setCustomTo(to);
+              }}
+            />
 
-        <ExportButton
-          data={salesExportData}
-          filename="تقرير_المبيعات"
-          headers={{
-            date: 'التاريخ',
-            amount: 'المبلغ',
-            status: 'الحالة',
-          }}
-        />
+            <ExportButton
+              data={salesExportData}
+              filename="تقرير_المبيعات"
+              headers={{
+                date: 'التاريخ',
+                amount: 'المبلغ',
+                status: 'الحالة',
+              }}
+            />
+          </>
+        )}
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي المبيعات</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <TrendingUp className="h-3 w-3 text-green-500" />
-              خلال الفترة المحددة
-            </p>
-          </CardContent>
-        </Card>
+      {isMobile ? (
+        <MobileSummaryCards />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">إجمالي المبيعات</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <TrendingUp className="h-3 w-3 text-green-500" />
+                خلال الفترة المحددة
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">المبالغ المحصلة</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(paidAmount)}</div>
-            <p className="text-xs text-muted-foreground">
-              {totalSales > 0 ? ((paidAmount / totalSales) * 100).toFixed(1) : 0}% من الإجمالي
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">المبالغ المحصلة</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{formatCurrency(paidAmount)}</div>
+              <p className="text-xs text-muted-foreground">
+                {totalSales > 0 ? ((paidAmount / totalSales) * 100).toFixed(1) : 0}% من الإجمالي
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">المبالغ المستحقة</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(unpaidAmount)}</div>
-            <p className="text-xs text-muted-foreground">
-              {totalSales > 0 ? ((unpaidAmount / totalSales) * 100).toFixed(1) : 0}% من الإجمالي
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">المبالغ المستحقة</CardTitle>
+              <TrendingDown className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{formatCurrency(unpaidAmount)}</div>
+              <p className="text-xs text-muted-foreground">
+                {totalSales > 0 ? ((unpaidAmount / totalSales) * 100).toFixed(1) : 0}% من الإجمالي
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">عدد الفواتير</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{invoiceCount}</div>
-            <p className="text-xs text-muted-foreground">فاتورة خلال الفترة</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">عدد الفواتير</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{invoiceCount}</div>
+              <p className="text-xs text-muted-foreground">فاتورة خلال الفترة</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="sales">المبيعات</TabsTrigger>
-          <TabsTrigger value="products">المنتجات</TabsTrigger>
-          <TabsTrigger value="customers">العملاء</TabsTrigger>
-          <TabsTrigger value="inventory">المخزون</TabsTrigger>
+        <TabsList className={isMobile ? "grid grid-cols-4 w-full" : "grid w-full grid-cols-4 lg:w-auto lg:inline-grid"}>
+          <TabsTrigger value="sales" className="text-xs sm:text-sm">المبيعات</TabsTrigger>
+          <TabsTrigger value="products" className="text-xs sm:text-sm">المنتجات</TabsTrigger>
+          <TabsTrigger value="customers" className="text-xs sm:text-sm">العملاء</TabsTrigger>
+          <TabsTrigger value="inventory" className="text-xs sm:text-sm">المخزون</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {isMobile ? (
             <Card>
               <CardHeader>
-                <CardTitle>اتجاه المبيعات والمشتريات</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  اتجاه المبيعات
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthlyTrend}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
+                      <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Legend />
                       <Line type="monotone" dataKey="sales" name="المبيعات" stroke="hsl(var(--primary))" strokeWidth={2} />
-                      <Line type="monotone" dataKey="purchases" name="المشتريات" stroke="hsl(var(--chart-2))" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>اتجاه المبيعات والمشتريات</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyTrend}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Legend />
+                        <Line type="monotone" dataKey="sales" name="المبيعات" stroke="hsl(var(--primary))" strokeWidth={2} />
+                        <Line type="monotone" dataKey="purchases" name="المشتريات" stroke="hsl(var(--chart-2))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>توزيع حالات الدفع</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={paymentDistribution}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {paymentDistribution?.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>توزيع حالات الدفع</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={paymentDistribution}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {paymentDistribution?.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="products" className="space-y-4">
@@ -398,17 +533,21 @@ export default function ReportsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topProducts} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={120} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                    <Bar dataKey="revenue" name="الإيرادات" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {isMobile ? (
+                <MobileTopItemsList items={topProducts || []} type="products" />
+              ) : (
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topProducts} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" width={120} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Bar dataKey="revenue" name="الإيرادات" fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -422,22 +561,26 @@ export default function ReportsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topCustomers} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={120} />
-                    <Tooltip 
-                      formatter={(value: number, name: string) => {
-                        if (name === "total") return formatCurrency(value);
-                        return value;
-                      }} 
-                    />
-                    <Bar dataKey="total" name="إجمالي المشتريات" fill="hsl(var(--chart-2))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {isMobile ? (
+                <MobileTopItemsList items={topCustomers || []} type="customers" />
+              ) : (
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topCustomers} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" width={120} />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => {
+                          if (name === "total") return formatCurrency(value);
+                          return value;
+                        }} 
+                      />
+                      <Bar dataKey="total" name="إجمالي المشتريات" fill="hsl(var(--chart-2))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -448,32 +591,35 @@ export default function ReportsPage() {
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
                 المنتجات منخفضة المخزون
+                {lowStockProducts && lowStockProducts.length > 0 && (
+                  <Badge variant="destructive">{lowStockProducts.length}</Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {lowStockProducts && lowStockProducts.length > 0 ? (
-                <div className="space-y-4">
-                  {lowStockProducts.map((product, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          الحد الأدنى: {product.minStock}
-                        </p>
+                isMobile ? (
+                  <MobileLowStockList items={lowStockProducts} />
+                ) : (
+                  <div className="space-y-4">
+                    {lowStockProducts.map((product, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          <p className="text-sm text-muted-foreground">الحد الأدنى: {product.minStock}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-amber-600">{product.currentStock}</p>
+                          <p className="text-xs text-muted-foreground">الكمية الحالية</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className={`text-lg font-bold ${product.currentStock === 0 ? "text-red-600" : "text-amber-600"}`}>
-                          {product.currentStock}
-                        </p>
-                        <p className="text-xs text-muted-foreground">المتوفر</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>جميع المنتجات في مستوى مخزون جيد</p>
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">جميع المنتجات في مستوى آمن</p>
                 </div>
               )}
             </CardContent>
