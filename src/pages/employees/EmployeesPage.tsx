@@ -236,14 +236,14 @@ export default function EmployeesPage() {
                   title={employee.full_name}
                   subtitle={employee.job_title || employee.department || 'بدون منصب'}
                   badge={{
-                    label: statusLabels[employee.employment_status || 'active']?.label || employee.employment_status || 'نشط',
+                    text: statusLabels[employee.employment_status || 'active']?.label || employee.employment_status || 'نشط',
                     variant: statusLabels[employee.employment_status || 'active']?.variant || 'secondary',
                   }}
-                  avatarUrl={employee.image_url}
+                  avatar={employee.image_url || undefined}
                   avatarFallback={employee.full_name.charAt(0)}
                   fields={[
                     { label: 'رقم الموظف', value: employee.employee_number },
-                    { label: 'القسم', value: employee.department || '-', icon: Briefcase },
+                    { label: 'القسم', value: employee.department || '-', icon: <Briefcase className="h-4 w-4" /> },
                   ]}
                   onClick={() => navigate(`/employees/${employee.id}`)}
                   onView={() => navigate(`/employees/${employee.id}`)}

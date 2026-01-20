@@ -193,15 +193,13 @@ const QuotationsPage = () => {
                   title={quotation.quotation_number}
                   subtitle={quotation.customers?.name || 'بدون عميل'}
                   badge={{
-                    label: statusLabels[quotation.status],
+                    text: statusLabels[quotation.status],
                     variant: quotation.status === 'approved' ? 'default' : quotation.status === 'pending' ? 'secondary' : 'outline',
                   }}
-                  icon={FileText}
-                  iconBgColor="bg-primary/10"
-                  iconColor="text-primary"
+                  icon={<FileText className="h-5 w-5" />}
                   fields={[
                     { label: 'الإجمالي', value: `${Number(quotation.total_amount).toLocaleString()} ج.م` },
-                    { label: 'صالح حتى', value: quotation.valid_until ? new Date(quotation.valid_until).toLocaleDateString('ar-EG') : '-', icon: Calendar },
+                    { label: 'صالح حتى', value: quotation.valid_until ? new Date(quotation.valid_until).toLocaleDateString('ar-EG') : '-', icon: <Calendar className="h-4 w-4" /> },
                   ]}
                   onClick={() => navigate(`/quotations/${quotation.id}`)}
                   onView={() => navigate(`/quotations/${quotation.id}`)}

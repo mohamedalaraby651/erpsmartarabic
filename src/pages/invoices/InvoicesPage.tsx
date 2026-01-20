@@ -193,16 +193,14 @@ const InvoicesPage = () => {
                     title={invoice.invoice_number}
                     subtitle={invoice.customers?.name || 'بدون عميل'}
                     badge={{
-                      label: paymentStatusLabels[invoice.payment_status],
+                      text: paymentStatusLabels[invoice.payment_status],
                       variant: invoice.payment_status === 'paid' ? 'default' : invoice.payment_status === 'partial' ? 'secondary' : 'destructive',
                     }}
-                    icon={Receipt}
-                    iconBgColor="bg-primary/10"
-                    iconColor="text-primary"
+                    icon={<Receipt className="h-5 w-5" />}
                     fields={[
                       { label: 'الإجمالي', value: `${Number(invoice.total_amount).toLocaleString()} ج.م` },
-                      { label: 'المتبقي', value: `${remaining.toLocaleString()} ج.م`, icon: remaining > 0 ? CreditCard : undefined },
-                      { label: 'التاريخ', value: new Date(invoice.created_at).toLocaleDateString('ar-EG'), icon: Calendar },
+                      { label: 'المتبقي', value: `${remaining.toLocaleString()} ج.م`, icon: remaining > 0 ? <CreditCard className="h-4 w-4" /> : undefined },
+                      { label: 'التاريخ', value: new Date(invoice.created_at).toLocaleDateString('ar-EG'), icon: <Calendar className="h-4 w-4" /> },
                     ]}
                     onClick={() => navigate(`/invoices/${invoice.id}`)}
                     onView={() => navigate(`/invoices/${invoice.id}`)}

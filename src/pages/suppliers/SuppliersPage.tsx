@@ -216,14 +216,12 @@ const SuppliersPage = () => {
                     title={supplier.name}
                     subtitle={supplier.contact_person || 'بدون جهة اتصال'}
                     badge={{
-                      label: supplier.is_active ? 'نشط' : 'غير نشط',
+                      text: supplier.is_active ? 'نشط' : 'غير نشط',
                       variant: supplier.is_active ? 'default' : 'secondary',
                     }}
-                    icon={Building2}
-                    iconBgColor="bg-primary/10"
-                    iconColor="text-primary"
+                    icon={<Building2 className="h-5 w-5" />}
                     fields={[
-                      { label: 'الهاتف', value: supplier.phone || '-', icon: Phone },
+                      { label: 'الهاتف', value: supplier.phone || '-', icon: <Phone className="h-4 w-4" /> },
                       { label: 'الطلبات', value: stats.orderCount.toString() },
                       { label: 'الرصيد', value: `${(supplier.current_balance || 0).toLocaleString()} ج.م` },
                     ]}

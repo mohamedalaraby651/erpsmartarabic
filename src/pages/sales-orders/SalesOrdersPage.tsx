@@ -195,15 +195,13 @@ const SalesOrdersPage = () => {
                   title={order.order_number}
                   subtitle={order.customers?.name || 'بدون عميل'}
                   badge={{
-                    label: statusLabels[order.status],
+                    text: statusLabels[order.status],
                     variant: order.status === 'completed' ? 'default' : order.status === 'pending' ? 'secondary' : 'outline',
                   }}
-                  icon={ShoppingCart}
-                  iconBgColor="bg-primary/10"
-                  iconColor="text-primary"
+                  icon={<ShoppingCart className="h-5 w-5" />}
                   fields={[
                     { label: 'الإجمالي', value: `${Number(order.total_amount).toLocaleString()} ج.م` },
-                    { label: 'التاريخ', value: new Date(order.created_at).toLocaleDateString('ar-EG'), icon: Calendar },
+                    { label: 'التاريخ', value: new Date(order.created_at).toLocaleDateString('ar-EG'), icon: <Calendar className="h-4 w-4" /> },
                   ]}
                   onClick={() => navigate(`/sales-orders/${order.id}`)}
                   onView={() => navigate(`/sales-orders/${order.id}`)}
