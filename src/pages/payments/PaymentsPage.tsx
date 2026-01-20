@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Wallet, CreditCard, Banknote } from "lucide-react";
+import { Plus, Search, Wallet, CreditCard, Banknote, Calendar } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -22,6 +22,11 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
+import { DataCard } from "@/components/mobile/DataCard";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "نقدي",
@@ -37,11 +42,12 @@ const PaymentsPage = () => {
   const { userRole } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const canEdit = userRole === 'admin' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
 
-  const { data: payments = [], isLoading } = useQuery({
+  const { data: payments = [], isLoading, refetch } = useQuery({
     queryKey: ['payments'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -67,6 +73,10 @@ const PaymentsPage = () => {
     },
   });
 
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   // Filter by search
   const searchFiltered = payments.filter((p: any) =>
     p.payment_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -83,35 +93,54 @@ const PaymentsPage = () => {
     bank: payments.filter((p: any) => p.payment_method === 'bank_transfer').reduce((sum: number, p: any) => sum + Number(p.amount), 0),
   };
 
-  return (
+  // Mobile Payment Card
+  const renderPaymentCard = (payment: any) => (
+    <DataCard
+      key={payment.id}
+      title={payment.customers?.name || "عميل غير معروف"}
+      subtitle={`#${payment.payment_number}`}
+      icon={<Wallet className="h-5 w-5" />}
+      badge={{ text: paymentMethodLabels[payment.payment_method] || payment.payment_method, variant: "outline" }}
+      fields={[
+        { label: "المبلغ", value: <span className="font-bold text-success">{Number(payment.amount).toLocaleString()} ج.م</span> },
+        { label: "التاريخ", value: new Date(payment.payment_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
+        payment.invoices?.invoice_number && { label: "الفاتورة", value: payment.invoices.invoice_number },
+      ].filter(Boolean) as any[]}
+      onDelete={canDelete ? () => deleteMutation.mutate(payment.id) : undefined}
+    />
+  );
+
+  const pageContent = (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">التحصيل</h1>
           <p className="text-muted-foreground">سجل مدفوعات العملاء</p>
         </div>
-        <div className="flex gap-2">
-          <ExportWithTemplateButton
-            section="payments"
-            sectionLabel="المدفوعات"
-            data={sortedData}
-            columns={[
-              { key: 'payment_number', label: 'رقم الدفعة' },
-              { key: 'customers.name', label: 'العميل' },
-              { key: 'invoices.invoice_number', label: 'الفاتورة' },
-              { key: 'amount', label: 'المبلغ' },
-              { key: 'payment_method', label: 'طريقة الدفع' },
-              { key: 'payment_date', label: 'التاريخ' },
-            ]}
-          />
-          <Button onClick={() => setDialogOpen(true)}>
+        <div className="flex gap-2 w-full sm:w-auto">
+          {!isMobile && (
+            <ExportWithTemplateButton
+              section="payments"
+              sectionLabel="المدفوعات"
+              data={sortedData}
+              columns={[
+                { key: 'payment_number', label: 'رقم الدفعة' },
+                { key: 'customers.name', label: 'العميل' },
+                { key: 'invoices.invoice_number', label: 'الفاتورة' },
+                { key: 'amount', label: 'المبلغ' },
+                { key: 'payment_method', label: 'طريقة الدفع' },
+                { key: 'payment_date', label: 'التاريخ' },
+              ]}
+            />
+          )}
+          <Button onClick={() => setDialogOpen(true)} className="flex-1 sm:flex-none">
             <Plus className="h-4 w-4 ml-2" />
             تسجيل دفعة
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -133,37 +162,41 @@ const PaymentsPage = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalAmount.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">إجمالي المبلغ (ج.م)</p>
+                <p className="text-sm text-muted-foreground">إجمالي المبلغ</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-info/10">
-                <Banknote className="h-5 w-5 text-info" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.cash.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">نقدي (ج.م)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <CreditCard className="h-5 w-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.bank.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">تحويل بنكي (ج.م)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {!isMobile && (
+          <>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-info/10">
+                    <Banknote className="h-5 w-5 text-info" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.cash.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">نقدي (ج.م)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-warning/10">
+                    <CreditCard className="h-5 w-5 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.bank.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">تحويل بنكي</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       <Card>
@@ -180,22 +213,36 @@ const PaymentsPage = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>سجل المدفوعات</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : sortedData.length === 0 ? (
-            <div className="text-center py-12">
-              <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">لا توجد مدفوعات</p>
-              <Button variant="link" onClick={() => setDialogOpen(true)}>تسجيل دفعة جديدة</Button>
-            </div>
-          ) : (
+      {isLoading ? (
+        isMobile ? (
+          <MobileListSkeleton count={5} />
+        ) : (
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </CardContent>
+          </Card>
+        )
+      ) : sortedData.length === 0 ? (
+        <EmptyState
+          icon={Wallet}
+          title="لا توجد مدفوعات"
+          description="ابدأ بتسجيل دفعة جديدة"
+          action={{
+            label: "تسجيل دفعة",
+            onClick: () => setDialogOpen(true)
+          }}
+        />
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {sortedData.map(renderPaymentCard)}
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>سجل المدفوعات</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -285,13 +332,23 @@ const PaymentsPage = () => {
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <PaymentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <PullToRefresh onRefresh={handleRefresh}>
+        {pageContent}
+      </PullToRefresh>
+    );
+  }
+
+  return pageContent;
 };
 
 export default PaymentsPage;
