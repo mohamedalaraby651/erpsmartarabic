@@ -20,6 +20,8 @@ import {
   Briefcase,
   RefreshCw,
   Paperclip,
+  Banknote,
+  CircleDollarSign,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -185,6 +187,34 @@ export const navSections: NavSection[] = [
     ],
   },
   {
+    title: 'المالية',
+    color: 'violet',
+    colorClass: 'text-violet-600 dark:text-violet-400',
+    items: [
+      {
+        title: 'الخزينة',
+        icon: Banknote,
+        href: '/treasury',
+        roles: ['admin', 'accountant'],
+        color: 'violet',
+      },
+      {
+        title: 'المصروفات',
+        icon: CircleDollarSign,
+        href: '/expenses',
+        roles: ['admin', 'accountant'],
+        color: 'violet',
+      },
+      {
+        title: 'تصنيفات المصروفات',
+        icon: FolderTree,
+        href: '/expense-categories',
+        roles: ['admin', 'accountant'],
+        color: 'violet',
+      },
+    ],
+  },
+  {
     title: 'التقارير والإعدادات',
     color: 'slate',
     colorClass: 'text-slate-600 dark:text-slate-400',
@@ -344,6 +374,9 @@ export const routeLabels: Record<string, string> = {
   '/settings': 'الإعدادات',
   '/search': 'البحث',
   '/attachments': 'إدارة المرفقات',
+  '/treasury': 'الخزينة',
+  '/expenses': 'المصروفات',
+  '/expense-categories': 'تصنيفات المصروفات',
   '/admin/roles': 'إدارة الأدوار',
   '/admin/permissions': 'إدارة الصلاحيات',
   '/admin/customizations': 'تخصيص الأقسام',
