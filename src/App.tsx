@@ -52,6 +52,10 @@ const SyncStatusPage = lazy(() => import("./pages/sync/SyncStatusPage"));
 const SystemSettingsPage = lazy(() => import("./pages/admin/SystemSettingsPage"));
 const AttachmentsPage = lazy(() => import("./pages/attachments/AttachmentsPage"));
 const InstallPage = lazy(() => import("./pages/install/InstallPage"));
+const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
+const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
+const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
+const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,6 +131,10 @@ const App = () => (
                 <Route path="admin/system-settings" element={<SystemSettingsPage />} />
                 <Route path="attachments" element={<AttachmentsPage />} />
                 <Route path="install" element={<InstallPage />} />
+                <Route path="treasury" element={<TreasuryPage />} />
+                <Route path="treasury/:id" element={<CashRegisterDetailsPage />} />
+                <Route path="expenses" element={<ExpensesPage />} />
+                <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
