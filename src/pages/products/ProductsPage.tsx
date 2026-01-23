@@ -33,6 +33,7 @@ import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 
 type Product = Database['public']['Tables']['products']['Row'];
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
@@ -209,11 +210,7 @@ const ProductsPage = () => {
   // Render desktop table view
   const renderTableView = () => {
     if (isLoading) {
-      return (
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      );
+      return <TableSkeleton rows={5} columns={7} />;
     }
 
     if (sortedData.length === 0) {

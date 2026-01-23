@@ -12,6 +12,7 @@ import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog"
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
+import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -113,11 +114,7 @@ const CustomerDetailsPage = () => {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <DetailPageSkeleton variant="customer" tabCount={3} />;
   }
 
   if (!customer) {

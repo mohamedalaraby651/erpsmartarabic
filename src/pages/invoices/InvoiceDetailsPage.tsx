@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
+import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
@@ -136,11 +137,7 @@ const InvoiceDetailsPage = () => {
   });
 
   if (loadingInvoice) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
-      </div>
-    );
+    return <DetailPageSkeleton variant="invoice" tabCount={4} />;
   }
 
   if (!invoice) {

@@ -42,6 +42,7 @@ import SupplierRatingTab from "@/components/suppliers/SupplierRatingTab";
 import SupplierActivityTab from "@/components/suppliers/SupplierActivityTab";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
 import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog";
+import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -148,11 +149,7 @@ const SupplierDetailsPage = () => {
   };
 
   if (loadingSupplier) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
-      </div>
-    );
+    return <DetailPageSkeleton variant="default" tabCount={5} />;
   }
 
   if (!supplier) {

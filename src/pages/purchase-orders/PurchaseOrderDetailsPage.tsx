@@ -34,6 +34,7 @@ import { EntityLink } from "@/components/shared/EntityLink";
 import PurchaseOrderFormDialog from "@/components/purchase-orders/PurchaseOrderFormDialog";
 import { PurchaseOrderPrintView } from "@/components/print/PurchaseOrderPrintView";
 import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog";
+import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
@@ -139,11 +140,7 @@ const PurchaseOrderDetailsPage = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
-      </div>
-    );
+    return <DetailPageSkeleton variant="order" tabCount={4} />;
   }
 
   if (!order) {

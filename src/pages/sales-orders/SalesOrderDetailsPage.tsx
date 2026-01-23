@@ -36,6 +36,7 @@ import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
 import SalesOrderFormDialog from "@/components/sales-orders/SalesOrderFormDialog";
 import { SalesOrderPrintView } from "@/components/print/SalesOrderPrintView";
+import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
@@ -139,11 +140,7 @@ const SalesOrderDetailsPage = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
-      </div>
-    );
+    return <DetailPageSkeleton variant="order" tabCount={4} />;
   }
 
   if (!order) {

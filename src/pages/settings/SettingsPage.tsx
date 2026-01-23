@@ -15,6 +15,7 @@ import { ThemeCustomizer } from "@/components/settings/ThemeCustomizer";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { ReportTemplateEditor } from "@/components/reports/ReportTemplateEditor";
 import { SettingsExportImport } from "@/components/settings/SettingsExportImport";
+import { SettingsPageSkeleton } from "@/components/shared/AdminPageSkeleton";
 
 type CompanySettings = Database['public']['Tables']['company_settings']['Row'];
 
@@ -91,11 +92,7 @@ const SettingsPage = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
-      </div>
-    );
+    return <SettingsPageSkeleton />;
   }
 
   return (

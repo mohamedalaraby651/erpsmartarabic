@@ -28,6 +28,7 @@ import {
 import EmployeeFormDialog from '@/components/employees/EmployeeFormDialog';
 import { FileUpload } from '@/components/shared/FileUpload';
 import { AttachmentsList } from '@/components/shared/AttachmentsList';
+import { DetailPageSkeleton } from '@/components/shared/DetailPageSkeleton';
 
 interface Employee {
   id: string;
@@ -118,11 +119,7 @@ export default function EmployeeDetailsPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <DetailPageSkeleton variant="default" tabCount={4} />;
   }
 
   if (!employee) {
