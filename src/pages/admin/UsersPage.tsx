@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Users, Loader2, Shield } from 'lucide-react';
+import { AdminPageSkeleton } from '@/components/shared/AdminPageSkeleton';
 
 const legacyRoleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -99,11 +100,7 @@ export default function UsersPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AdminPageSkeleton variant="table" rows={5} columns={4} />;
   }
 
   return (

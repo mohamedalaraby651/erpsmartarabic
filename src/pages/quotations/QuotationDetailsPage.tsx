@@ -37,6 +37,7 @@ import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
+import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -142,11 +143,7 @@ const QuotationDetailsPage = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <span className="text-muted-foreground">جاري التحميل...</span>
-      </div>
-    );
+    return <DetailPageSkeleton variant="order" tabCount={4} />;
   }
 
   if (!quotation) {

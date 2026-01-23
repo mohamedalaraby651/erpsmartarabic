@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { AttachmentUploadForm } from '@/components/shared/AttachmentUploadForm';
 import { AttachmentsList } from '@/components/shared/AttachmentsList';
+import { SettingsPageSkeleton } from '@/components/shared/AdminPageSkeleton';
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -228,11 +229,7 @@ export default function ProfilePage() {
   };
 
   if (loadingProfile) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <SettingsPageSkeleton />;
   }
 
   return (

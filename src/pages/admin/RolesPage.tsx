@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Plus, Pencil, Trash2, Shield, Loader2 } from 'lucide-react';
+import { AdminPageSkeleton } from '@/components/shared/AdminPageSkeleton';
 
 interface CustomRole {
   id: string;
@@ -159,11 +160,7 @@ export default function RolesPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AdminPageSkeleton variant="table" rows={5} columns={4} />;
   }
 
   return (

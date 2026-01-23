@@ -1,4 +1,17 @@
-import { useState, useEffect } from 'react';
+/**
+ * useResponsiveView - Hook for managing responsive view modes
+ * 
+ * Returns:
+ * - effectiveView: The actual view being used (considers auto mode)
+ * - setViewMode: Function to change view mode
+ * - viewMode: The current mode setting ('auto', 'list', 'grid', 'table')
+ * - isMobile: Whether current device is mobile
+ * - isListView: Boolean shorthand for list view
+ * - isGridView: Boolean shorthand for grid view
+ * - isTableView: Boolean shorthand for table view
+ */
+
+import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export type ViewMode = 'list' | 'grid' | 'table' | 'auto';
@@ -11,12 +24,6 @@ export function useResponsiveView(defaultView: ViewMode = 'auto') {
   const effectiveView = viewMode === 'auto' 
     ? (isMobile ? 'list' : 'table') 
     : viewMode;
-
-  // Reset to auto when device changes
-  useEffect(() => {
-    if (viewMode === 'auto') return;
-    // Keep user preference if they explicitly set it
-  }, [isMobile]);
 
   return { 
     effectiveView, 
