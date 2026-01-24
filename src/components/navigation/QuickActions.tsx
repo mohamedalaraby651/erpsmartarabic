@@ -74,8 +74,9 @@ export default function QuickActions() {
   });
 
   const handleAction = (action: QuickAction) => {
-    // Navigate with state to trigger new dialog
-    navigate(action.href, { state: { openNew: true } });
+    // Navigate with action param to trigger new dialog
+    const url = action.action ? `${action.href}?action=${action.action}` : action.href;
+    navigate(url);
   };
 
   if (filteredActions.length === 0) return null;

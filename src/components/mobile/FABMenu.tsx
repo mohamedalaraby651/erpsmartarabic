@@ -37,7 +37,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <Users className="h-5 w-5" />,
             label: 'عميل جديد',
-            onClick: () => navigate('/customers?action=new'),
+            onClick: () => navigate(`/customers?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-purple-500 hover:bg-purple-600',
           },
           {
@@ -52,7 +52,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <Package className="h-5 w-5" />,
             label: 'منتج جديد',
-            onClick: () => navigate('/products?action=new'),
+            onClick: () => navigate(`/products?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-green-500 hover:bg-green-600',
           },
           {
@@ -67,7 +67,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <FileText className="h-5 w-5" />,
             label: 'فاتورة جديدة',
-            onClick: () => navigate('/invoices?action=new'),
+            onClick: () => navigate(`/invoices?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-blue-500 hover:bg-blue-600',
           },
           {
@@ -82,7 +82,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <Truck className="h-5 w-5" />,
             label: 'مورد جديد',
-            onClick: () => navigate('/suppliers?action=new'),
+            onClick: () => navigate(`/suppliers?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-indigo-500 hover:bg-indigo-600',
           },
           {
@@ -97,7 +97,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <ShoppingCart className="h-5 w-5" />,
             label: 'أمر بيع جديد',
-            onClick: () => navigate('/sales-orders?action=new'),
+            onClick: () => navigate(`/sales-orders?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-orange-500 hover:bg-orange-600',
           },
           {
@@ -112,7 +112,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <FileText className="h-5 w-5" />,
             label: 'عرض سعر جديد',
-            onClick: () => navigate('/quotations?action=new'),
+            onClick: () => navigate(`/quotations?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-amber-500 hover:bg-amber-600',
           },
           {
@@ -127,7 +127,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <ClipboardList className="h-5 w-5" />,
             label: 'أمر شراء جديد',
-            onClick: () => navigate('/purchase-orders?action=new'),
+            onClick: () => navigate(`/purchase-orders?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-cyan-500 hover:bg-cyan-600',
           },
           {
@@ -142,7 +142,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <Receipt className="h-5 w-5" />,
             label: 'صندوق جديد',
-            onClick: () => navigate('/treasury?action=new'),
+            onClick: () => navigate(`/treasury?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-emerald-500 hover:bg-emerald-600',
           },
           {
@@ -157,7 +157,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <Receipt className="h-5 w-5" />,
             label: 'مصروف جديد',
-            onClick: () => navigate('/expenses?action=new'),
+            onClick: () => navigate(`/expenses?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-red-500 hover:bg-red-600',
           },
         ];
@@ -166,7 +166,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <ClipboardList className="h-5 w-5" />,
             label: 'مهمة جديدة',
-            onClick: () => navigate('/tasks?action=new'),
+            onClick: () => navigate(`/tasks?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-violet-500 hover:bg-violet-600',
           },
         ];
@@ -175,7 +175,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <Users className="h-5 w-5" />,
             label: 'موظف جديد',
-            onClick: () => navigate('/employees?action=new'),
+            onClick: () => navigate(`/employees?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-blue-500 hover:bg-blue-600',
           },
         ];
@@ -184,7 +184,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
           {
             icon: <Package className="h-5 w-5" />,
             label: 'تصنيف جديد',
-            onClick: () => navigate('/categories?action=new'),
+            onClick: () => navigate(`/categories?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-teal-500 hover:bg-teal-600',
           },
         ];

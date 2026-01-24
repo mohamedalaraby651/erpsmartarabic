@@ -334,11 +334,11 @@ const CustomersPage = () => {
     <div className="space-y-4 md:space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl md:text-2xl font-bold">إدارة العملاء</h1>
           <p className="text-sm text-muted-foreground">إدارة بيانات العملاء والتصنيفات</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isMobile && (
             <ExportWithTemplateButton
               section="customers"
@@ -356,9 +356,9 @@ const CustomersPage = () => {
             />
           )}
           {canEdit && (
-            <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
+            <Button onClick={handleAdd} size={isMobile ? "default" : "default"} className="flex-1 sm:flex-none">
               <Plus className="h-4 w-4 ml-2" />
-              {isMobile ? "جديد" : "إضافة عميل"}
+              إضافة عميل
             </Button>
           )}
         </div>

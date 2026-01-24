@@ -253,11 +253,11 @@ export function ThemeCustomizer() {
             />
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between opacity-50">
             <div className="space-y-0.5">
               <Label>عرض الإحصائيات في الرأس</Label>
               <p className="text-sm text-muted-foreground">
-                إظهار بطاقات الإحصائيات السريعة
+                إظهار بطاقات الإحصائيات السريعة (قريباً)
               </p>
             </div>
             <Switch
@@ -266,11 +266,11 @@ export function ThemeCustomizer() {
             />
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between opacity-50">
             <div className="space-y-0.5">
               <Label>التنسيق التلقائي للجوال</Label>
               <p className="text-sm text-muted-foreground">
-                تحويل الجداول لبطاقات على الشاشات الصغيرة
+                تحويل الجداول لبطاقات على الشاشات الصغيرة (قريباً)
               </p>
             </div>
             <Switch
