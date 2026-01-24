@@ -239,7 +239,7 @@ export function ThemeCustomizer() {
             التخطيط
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>القائمة الجانبية المضغوطة</Label>
@@ -250,6 +250,32 @@ export function ThemeCustomizer() {
             <Switch
               checked={localConfig.sidebar_compact}
               onCheckedChange={(checked) => handleChange('sidebar_compact', checked)}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>عرض الإحصائيات في الرأس</Label>
+              <p className="text-sm text-muted-foreground">
+                إظهار بطاقات الإحصائيات السريعة
+              </p>
+            </div>
+            <Switch
+              checked={true}
+              disabled
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>التنسيق التلقائي للجوال</Label>
+              <p className="text-sm text-muted-foreground">
+                تحويل الجداول لبطاقات على الشاشات الصغيرة
+              </p>
+            </div>
+            <Switch
+              checked={true}
+              disabled
             />
           </div>
         </CardContent>

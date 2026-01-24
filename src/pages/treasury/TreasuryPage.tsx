@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ interface CashRegister {
 }
 
 export default function TreasuryPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [selectedRegister, setSelectedRegister] = useState<CashRegister | null>(null);
@@ -33,6 +35,15 @@ export default function TreasuryPage() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Handle action parameter from URL (FAB/QuickActions)
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new' || action === 'create') {
+      setIsRegisterDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { data: registers, isLoading, refetch } = useQuery({
     queryKey: ['cash-registers'],

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Search, Users, Building2, Crown, Phone, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
@@ -68,6 +68,7 @@ const CustomersPage = () => {
   const queryClient = useQueryClient();
   const { userRole } = useAuth();
   const { isMobile, isTableView } = useResponsiveView();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -75,6 +76,15 @@ const CustomersPage = () => {
 
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
+
+  // Handle action parameter from URL (FAB/QuickActions)
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new' || action === 'create') {
+      setDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { data: customers = [], isLoading, refetch } = useQuery({
     queryKey: ['customers', searchQuery],
@@ -328,8 +338,8 @@ const CustomersPage = () => {
           <h1 className="text-xl md:text-2xl font-bold">إدارة العملاء</h1>
           <p className="text-sm text-muted-foreground">إدارة بيانات العملاء والتصنيفات</p>
         </div>
-        {!isMobile && (
-          <div className="flex gap-2">
+        <div className="flex gap-2">
+          {!isMobile && (
             <ExportWithTemplateButton
               section="customers"
               sectionLabel="العملاء"
@@ -344,14 +354,14 @@ const CustomersPage = () => {
                 { key: 'credit_limit', label: 'حد الائتمان' },
               ]}
             />
-            {canEdit && (
-              <Button onClick={handleAdd}>
-                <Plus className="h-4 w-4 ml-2" />
-                إضافة عميل
-              </Button>
-            )}
-          </div>
-        )}
+          )}
+          {canEdit && (
+            <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
+              <Plus className="h-4 w-4 ml-2" />
+              {isMobile ? "جديد" : "إضافة عميل"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards - Horizontal scroll on mobile */}

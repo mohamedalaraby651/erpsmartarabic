@@ -107,6 +107,87 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
             color: 'bg-blue-500 hover:bg-blue-600',
           },
         ];
+      case 'quotations':
+        return [
+          {
+            icon: <FileText className="h-5 w-5" />,
+            label: 'عرض سعر جديد',
+            onClick: () => navigate('/quotations?action=new'),
+            color: 'bg-amber-500 hover:bg-amber-600',
+          },
+          {
+            icon: <ShoppingCart className="h-5 w-5" />,
+            label: 'تحويل لأمر بيع',
+            onClick: () => navigate('/sales-orders?action=new'),
+            color: 'bg-orange-500 hover:bg-orange-600',
+          },
+        ];
+      case 'purchase-orders':
+        return [
+          {
+            icon: <ClipboardList className="h-5 w-5" />,
+            label: 'أمر شراء جديد',
+            onClick: () => navigate('/purchase-orders?action=new'),
+            color: 'bg-cyan-500 hover:bg-cyan-600',
+          },
+          {
+            icon: <Truck className="h-5 w-5" />,
+            label: 'إضافة مورد',
+            onClick: () => navigate('/suppliers?action=new'),
+            color: 'bg-indigo-500 hover:bg-indigo-600',
+          },
+        ];
+      case 'treasury':
+        return [
+          {
+            icon: <Receipt className="h-5 w-5" />,
+            label: 'صندوق جديد',
+            onClick: () => navigate('/treasury?action=new'),
+            color: 'bg-emerald-500 hover:bg-emerald-600',
+          },
+          {
+            icon: <BarChart3 className="h-5 w-5" />,
+            label: 'مصروف جديد',
+            onClick: () => navigate('/expenses?action=new'),
+            color: 'bg-red-500 hover:bg-red-600',
+          },
+        ];
+      case 'expenses':
+        return [
+          {
+            icon: <Receipt className="h-5 w-5" />,
+            label: 'مصروف جديد',
+            onClick: () => navigate('/expenses?action=new'),
+            color: 'bg-red-500 hover:bg-red-600',
+          },
+        ];
+      case 'tasks':
+        return [
+          {
+            icon: <ClipboardList className="h-5 w-5" />,
+            label: 'مهمة جديدة',
+            onClick: () => navigate('/tasks?action=new'),
+            color: 'bg-violet-500 hover:bg-violet-600',
+          },
+        ];
+      case 'employees':
+        return [
+          {
+            icon: <Users className="h-5 w-5" />,
+            label: 'موظف جديد',
+            onClick: () => navigate('/employees?action=new'),
+            color: 'bg-blue-500 hover:bg-blue-600',
+          },
+        ];
+      case 'categories':
+        return [
+          {
+            icon: <Package className="h-5 w-5" />,
+            label: 'تصنيف جديد',
+            onClick: () => navigate('/categories?action=new'),
+            color: 'bg-teal-500 hover:bg-teal-600',
+          },
+        ];
       default:
         // Default dashboard actions
         return [
