@@ -1,5 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,16 +43,6 @@ const PaymentsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // Handle URL action parameter to auto-open dialog
-  useEffect(() => {
-    const action = searchParams.get('action');
-    if (action === 'new' || action === 'create') {
-      setDialogOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
 
   const canEdit = userRole === 'admin' || userRole === 'accountant';
   const canDelete = userRole === 'admin';

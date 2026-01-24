@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -46,17 +46,6 @@ const SuppliersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // Handle URL action parameter to auto-open dialog
-  useEffect(() => {
-    const action = searchParams.get('action');
-    if (action === 'new' || action === 'create') {
-      setSelectedSupplier(null);
-      setDialogOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';

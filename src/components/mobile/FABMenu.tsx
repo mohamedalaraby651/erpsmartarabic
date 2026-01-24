@@ -1,9 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Plus, X, Users, Package, FileText, ShoppingCart, Truck, Receipt, 
-  ClipboardList, Wallet, CircleDollarSign, CheckSquare, Layers
-} from 'lucide-react';
+import { Plus, X, Users, Package, FileText, ShoppingCart, Truck, Receipt, ClipboardList, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { haptics } from '@/lib/haptics';
@@ -59,10 +56,10 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
             color: 'bg-green-500 hover:bg-green-600',
           },
           {
-            icon: <Layers className="h-5 w-5" />,
-            label: 'تصنيف جديد',
-            onClick: () => navigate('/categories?action=new'),
-            color: 'bg-violet-500 hover:bg-violet-600',
+            icon: <ClipboardList className="h-5 w-5" />,
+            label: 'جرد المخزون',
+            onClick: () => navigate('/inventory'),
+            color: 'bg-amber-500 hover:bg-amber-600',
           },
         ];
       case 'invoices':
@@ -78,21 +75,6 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
             label: 'تسجيل دفعة',
             onClick: () => navigate('/payments?action=new'),
             color: 'bg-emerald-500 hover:bg-emerald-600',
-          },
-        ];
-      case 'quotations':
-        return [
-          {
-            icon: <FileText className="h-5 w-5" />,
-            label: 'عرض سعر جديد',
-            onClick: () => navigate('/quotations?action=new'),
-            color: 'bg-amber-500 hover:bg-amber-600',
-          },
-          {
-            icon: <ShoppingCart className="h-5 w-5" />,
-            label: 'أمر بيع',
-            onClick: () => navigate('/sales-orders?action=new'),
-            color: 'bg-orange-500 hover:bg-orange-600',
           },
         ];
       case 'suppliers':
@@ -123,108 +105,6 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
             label: 'تحويل لفاتورة',
             onClick: () => navigate('/invoices?action=new'),
             color: 'bg-blue-500 hover:bg-blue-600',
-          },
-        ];
-      case 'purchase-orders':
-        return [
-          {
-            icon: <ClipboardList className="h-5 w-5" />,
-            label: 'أمر شراء جديد',
-            onClick: () => navigate('/purchase-orders?action=new'),
-            color: 'bg-cyan-500 hover:bg-cyan-600',
-          },
-          {
-            icon: <Truck className="h-5 w-5" />,
-            label: 'مورد جديد',
-            onClick: () => navigate('/suppliers?action=new'),
-            color: 'bg-indigo-500 hover:bg-indigo-600',
-          },
-        ];
-      case 'payments':
-        return [
-          {
-            icon: <Receipt className="h-5 w-5" />,
-            label: 'تسجيل دفعة',
-            onClick: () => navigate('/payments?action=new'),
-            color: 'bg-emerald-500 hover:bg-emerald-600',
-          },
-          {
-            icon: <FileText className="h-5 w-5" />,
-            label: 'فاتورة جديدة',
-            onClick: () => navigate('/invoices?action=new'),
-            color: 'bg-blue-500 hover:bg-blue-600',
-          },
-        ];
-      case 'treasury':
-        return [
-          {
-            icon: <Wallet className="h-5 w-5" />,
-            label: 'صندوق جديد',
-            onClick: () => navigate('/treasury?action=new'),
-            color: 'bg-primary hover:bg-primary/90',
-          },
-          {
-            icon: <CircleDollarSign className="h-5 w-5" />,
-            label: 'مصروف جديد',
-            onClick: () => navigate('/expenses?action=new'),
-            color: 'bg-rose-500 hover:bg-rose-600',
-          },
-        ];
-      case 'expenses':
-        return [
-          {
-            icon: <CircleDollarSign className="h-5 w-5" />,
-            label: 'مصروف جديد',
-            onClick: () => navigate('/expenses?action=new'),
-            color: 'bg-rose-500 hover:bg-rose-600',
-          },
-          {
-            icon: <Wallet className="h-5 w-5" />,
-            label: 'الخزينة',
-            onClick: () => navigate('/treasury'),
-            color: 'bg-primary hover:bg-primary/90',
-          },
-        ];
-      case 'employees':
-        return [
-          {
-            icon: <Users className="h-5 w-5" />,
-            label: 'موظف جديد',
-            onClick: () => navigate('/employees?action=new'),
-            color: 'bg-indigo-500 hover:bg-indigo-600',
-          },
-        ];
-      case 'tasks':
-        return [
-          {
-            icon: <CheckSquare className="h-5 w-5" />,
-            label: 'مهمة جديدة',
-            onClick: () => navigate('/tasks?action=new'),
-            color: 'bg-violet-500 hover:bg-violet-600',
-          },
-        ];
-      case 'categories':
-        return [
-          {
-            icon: <Layers className="h-5 w-5" />,
-            label: 'تصنيف جديد',
-            onClick: () => navigate('/categories?action=new'),
-            color: 'bg-amber-500 hover:bg-amber-600',
-          },
-        ];
-      case 'inventory':
-        return [
-          {
-            icon: <Package className="h-5 w-5" />,
-            label: 'حركة مخزون',
-            onClick: () => navigate('/inventory'),
-            color: 'bg-green-500 hover:bg-green-600',
-          },
-          {
-            icon: <ClipboardList className="h-5 w-5" />,
-            label: 'أمر شراء',
-            onClick: () => navigate('/purchase-orders?action=new'),
-            color: 'bg-cyan-500 hover:bg-cyan-600',
           },
         ];
       default:

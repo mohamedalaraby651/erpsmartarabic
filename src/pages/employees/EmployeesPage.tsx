@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -74,17 +73,6 @@ export default function EmployeesPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // Handle URL action parameter to auto-open dialog
-  useEffect(() => {
-    const action = searchParams.get('action');
-    if (action === 'new' || action === 'create') {
-      setSelectedEmployee(null);
-      setDialogOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
 
   const { data: employees = [], isLoading, refetch } = useQuery({
     queryKey: ['employees'],
