@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +67,7 @@ export default function EmployeesPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const [searchParamsState, setSearchParamsState] = useSearchParams();
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -73,6 +75,15 @@ export default function EmployeesPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
+
+  // Handle action parameter from URL (FAB/QuickActions)
+  useEffect(() => {
+    const action = searchParamsState.get('action');
+    if (action === 'new' || action === 'create') {
+      setDialogOpen(true);
+      setSearchParamsState({}, { replace: true });
+    }
+  }, [searchParamsState, setSearchParamsState]);
 
   const { data: employees = [], isLoading, refetch } = useQuery({
     queryKey: ['employees'],
