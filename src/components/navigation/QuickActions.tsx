@@ -15,7 +15,6 @@ interface QuickAction {
   title: string;
   icon: React.ElementType;
   href: string;
-  action?: string;
   roles?: string[];
   color?: string;
 }
@@ -24,40 +23,35 @@ const quickActions: QuickAction[] = [
   {
     title: 'عميل جديد',
     icon: Users,
-    href: '/customers',
-    action: 'new',
+    href: '/customers?action=new',
     roles: ['admin', 'sales'],
     color: 'text-blue-600',
   },
   {
     title: 'منتج جديد',
     icon: Package,
-    href: '/products',
-    action: 'new',
+    href: '/products?action=new',
     roles: ['admin', 'warehouse'],
     color: 'text-emerald-600',
   },
   {
     title: 'عرض سعر',
     icon: FileText,
-    href: '/quotations',
-    action: 'new',
+    href: '/quotations?action=new',
     roles: ['admin', 'sales'],
     color: 'text-blue-600',
   },
   {
     title: 'أمر بيع',
     icon: ShoppingCart,
-    href: '/sales-orders',
-    action: 'new',
+    href: '/sales-orders?action=new',
     roles: ['admin', 'sales'],
     color: 'text-blue-600',
   },
   {
     title: 'فاتورة جديدة',
     icon: Receipt,
-    href: '/invoices',
-    action: 'new',
+    href: '/invoices?action=new',
     roles: ['admin', 'sales', 'accountant'],
     color: 'text-blue-600',
   },
@@ -74,8 +68,8 @@ export default function QuickActions() {
   });
 
   const handleAction = (action: QuickAction) => {
-    // Navigate with state to trigger new dialog
-    navigate(action.href, { state: { openNew: true } });
+    // Navigate directly - the page will handle the action=new param
+    navigate(action.href);
   };
 
   if (filteredActions.length === 0) return null;
@@ -95,7 +89,7 @@ export default function QuickActions() {
           const Icon = action.icon;
           return (
             <DropdownMenuItem
-              key={action.href + action.action}
+              key={action.href}
               onClick={() => handleAction(action)}
               className="gap-3 cursor-pointer"
             >

@@ -19,7 +19,7 @@ const quickActions: QuickAction[] = [
   {
     title: 'فاتورة جديدة',
     icon: Receipt,
-    href: '/invoices?action=create',
+    href: '/invoices?action=new',
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-500/10 hover:bg-blue-500/20',
     roles: ['admin', 'sales', 'accountant'],
@@ -27,7 +27,7 @@ const quickActions: QuickAction[] = [
   {
     title: 'عميل جديد',
     icon: Users,
-    href: '/customers?action=create',
+    href: '/customers?action=new',
     color: 'text-emerald-600 dark:text-emerald-400',
     bgColor: 'bg-emerald-500/10 hover:bg-emerald-500/20',
     roles: ['admin', 'sales'],
@@ -35,7 +35,7 @@ const quickActions: QuickAction[] = [
   {
     title: 'أمر بيع',
     icon: ShoppingCart,
-    href: '/sales-orders?action=create',
+    href: '/sales-orders?action=new',
     color: 'text-violet-600 dark:text-violet-400',
     bgColor: 'bg-violet-500/10 hover:bg-violet-500/20',
     roles: ['admin', 'sales'],
@@ -43,7 +43,7 @@ const quickActions: QuickAction[] = [
   {
     title: 'عرض سعر',
     icon: FileText,
-    href: '/quotations?action=create',
+    href: '/quotations?action=new',
     color: 'text-amber-600 dark:text-amber-400',
     bgColor: 'bg-amber-500/10 hover:bg-amber-500/20',
     roles: ['admin', 'sales'],
@@ -51,7 +51,7 @@ const quickActions: QuickAction[] = [
   {
     title: 'منتج جديد',
     icon: Package,
-    href: '/products?action=create',
+    href: '/products?action=new',
     color: 'text-rose-600 dark:text-rose-400',
     bgColor: 'bg-rose-500/10 hover:bg-rose-500/20',
     roles: ['admin', 'warehouse'],
@@ -59,7 +59,7 @@ const quickActions: QuickAction[] = [
   {
     title: 'أمر شراء',
     icon: Truck,
-    href: '/purchase-orders?action=create',
+    href: '/purchase-orders?action=new',
     color: 'text-cyan-600 dark:text-cyan-400',
     bgColor: 'bg-cyan-500/10 hover:bg-cyan-500/20',
     roles: ['admin', 'warehouse'],
