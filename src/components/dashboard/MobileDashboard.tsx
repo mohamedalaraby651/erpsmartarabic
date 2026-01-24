@@ -39,10 +39,10 @@ interface QuickActionItem {
 }
 
 const quickActions: QuickActionItem[] = [
-  { title: 'عميل جديد', icon: UserPlus, href: '/customers', color: 'bg-primary', roles: ['admin', 'sales'] },
-  { title: 'فاتورة', icon: Receipt, href: '/invoices', color: 'bg-green-500', roles: ['admin', 'sales', 'accountant'] },
-  { title: 'عرض سعر', icon: FileText, href: '/quotations', color: 'bg-blue-500', roles: ['admin', 'sales'] },
-  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders', color: 'bg-orange-500', roles: ['admin', 'sales'] },
+  { title: 'عميل جديد', icon: UserPlus, href: '/customers?action=new', color: 'bg-primary', roles: ['admin', 'sales'] },
+  { title: 'فاتورة', icon: Receipt, href: '/invoices?action=new', color: 'bg-green-500', roles: ['admin', 'sales', 'accountant'] },
+  { title: 'عرض سعر', icon: FileText, href: '/quotations?action=new', color: 'bg-blue-500', roles: ['admin', 'sales'] },
+  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders?action=new', color: 'bg-orange-500', roles: ['admin', 'sales'] },
 ];
 
 export function MobileDashboard() {
@@ -198,7 +198,7 @@ export function MobileDashboard() {
                 key={action.title}
                 variant="outline"
                 className="h-auto py-3 px-2 flex-col gap-1.5 text-xs shadow-sm active:scale-95 transition-transform"
-                onClick={() => navigate(action.href, { state: { openNew: true } })}
+                onClick={() => navigate(action.href)}
               >
                 <div className={`h-9 w-9 rounded-lg ${action.color} flex items-center justify-center`}>
                   <Icon className="h-4 w-4 text-white" />
