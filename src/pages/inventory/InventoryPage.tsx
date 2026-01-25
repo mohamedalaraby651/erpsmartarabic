@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,8 +48,18 @@ import { EmptyState } from "@/components/shared/EmptyState";
 const InventoryPage = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [warehouseDialogOpen, setWarehouseDialogOpen] = useState(false);
+
+  // Listen for URL action parameter to open dialog
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new' || action === 'create') {
+      setWarehouseDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const [movementDialogOpen, setMovementDialogOpen] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

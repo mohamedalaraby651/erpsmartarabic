@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +40,17 @@ const paymentMethodLabels: Record<string, string> = {
 const PaymentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { userRole } = useAuth();
+
+  // Listen for URL action parameter to open dialog
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new' || action === 'create') {
+      setDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();

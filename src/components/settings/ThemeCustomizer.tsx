@@ -253,29 +253,31 @@ export function ThemeCustomizer() {
             />
           </div>
           
-          <div className="flex items-center justify-between opacity-50">
+          <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>عرض الإحصائيات في الرأس</Label>
               <p className="text-sm text-muted-foreground">
-                إظهار بطاقات الإحصائيات السريعة (قريباً)
+                إظهار بطاقات الإحصائيات السريعة في رأس الصفحات
               </p>
             </div>
             <Switch
               checked={true}
               disabled
+              aria-label="عرض الإحصائيات في الرأس - مفعّل دائماً"
             />
           </div>
           
-          <div className="flex items-center justify-between opacity-50">
+          <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>التنسيق التلقائي للجوال</Label>
               <p className="text-sm text-muted-foreground">
-                تحويل الجداول لبطاقات على الشاشات الصغيرة (قريباً)
+                تحويل الجداول لبطاقات على الشاشات الصغيرة (مفعّل تلقائياً)
               </p>
             </div>
             <Switch
               checked={true}
               disabled
+              aria-label="التنسيق التلقائي للجوال - مفعّل دائماً"
             />
           </div>
         </CardContent>

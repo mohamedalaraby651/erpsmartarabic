@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -38,6 +39,16 @@ export default function SupplierPaymentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSupplier, setSelectedSupplier] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Listen for URL action parameter to open dialog
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new' || action === 'create') {
+      setDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ['supplier-payments'],
