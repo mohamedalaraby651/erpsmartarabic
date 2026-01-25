@@ -32,7 +32,7 @@ const SupplierDetailsPage = lazy(() => import("./pages/suppliers/SupplierDetails
 const SupplierPaymentsPage = lazy(() => import("./pages/suppliers/SupplierPaymentsPage"));
 const PurchaseOrdersPage = lazy(() => import("./pages/purchase-orders/PurchaseOrdersPage"));
 const PurchaseOrderDetailsPage = lazy(() => import("./pages/purchase-orders/PurchaseOrderDetailsPage"));
-const SettingsPage = lazy(() => import("./pages/settings/SettingsPage"));
+const UnifiedSettingsPage = lazy(() => import("./pages/settings/UnifiedSettingsPage"));
 const SearchPage = lazy(() => import("./pages/search/SearchPage"));
 const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
 const TasksPage = lazy(() => import("./pages/tasks/TasksPage"));
@@ -47,9 +47,7 @@ const BackupPage = lazy(() => import("./pages/admin/BackupPage"));
 const ExportTemplatesPage = lazy(() => import("./pages/admin/ExportTemplatesPage"));
 const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
 const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetailsPage"));
-const ProfilePage = lazy(() => import("./pages/profile/ProfilePage"));
 const SyncStatusPage = lazy(() => import("./pages/sync/SyncStatusPage"));
-const SystemSettingsPage = lazy(() => import("./pages/admin/SystemSettingsPage"));
 const AttachmentsPage = lazy(() => import("./pages/attachments/AttachmentsPage"));
 const InstallPage = lazy(() => import("./pages/install/InstallPage"));
 const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
@@ -111,7 +109,7 @@ const App = () => (
                 <Route path="quotations" element={<QuotationsPage />} />
                 <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                 <Route path="reports" element={<ReportsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
+                <Route path="settings" element={<UnifiedSettingsPage />} />
                 <Route path="search" element={<SearchPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="tasks" element={<TasksPage />} />
@@ -126,9 +124,8 @@ const App = () => (
                 <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
                 <Route path="employees" element={<EmployeesPage />} />
                 <Route path="employees/:id" element={<EmployeeDetailsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
+                <Route path="profile" element={<UnifiedSettingsPage />} />
                 <Route path="sync" element={<SyncStatusPage />} />
-                <Route path="admin/system-settings" element={<SystemSettingsPage />} />
                 <Route path="attachments" element={<AttachmentsPage />} />
                 <Route path="install" element={<InstallPage />} />
                 <Route path="treasury" element={<TreasuryPage />} />

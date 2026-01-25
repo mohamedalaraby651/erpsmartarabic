@@ -1,0 +1,150 @@
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Receipt, Save, Loader2, Info } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+interface InvoiceSettingsSectionProps {
+  onDataChange?: () => void;
+}
+
+export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [currency, setCurrency] = useState('ج.م');
+
+  // Fetch settings
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Load settings into form
+  useEffect(() => {
+    if (settings?.currency) {
+      setCurrency(settings.currency);
+    }
+  }, [settings]);
+
+  // Update settings mutation
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (settings?.id) {
+        const { error } = await supabase
+          .from('company_settings')
+          .update({ currency })
+          .eq('id', settings.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('company_settings')
+          .insert({ company_name: 'شركتي', currency });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company-settings'] });
+      toast({ title: 'تم حفظ إعدادات الفواتير بنجاح' });
+    },
+    onError: () => {
+      toast({ title: 'فشل حفظ الإعدادات', variant: 'destructive' });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Receipt className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>إعدادات الفواتير</CardTitle>
+                <CardDescription>تخصيص العملة وإعدادات الفواتير الافتراضية</CardDescription>
+              </div>
+            </div>
+            <Button onClick={handleSave} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 ml-2" />
+              )}
+              حفظ
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="currency">العملة</Label>
+              <Input
+                id="currency"
+                value={currency}
+                onChange={(e) => {
+                  setCurrency(e.target.value);
+                  onDataChange?.();
+                }}
+                placeholder="ج.م"
+              />
+            </div>
+          </div>
+
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              سيتم استخدام هذه الإعدادات كقيم افتراضية عند إنشاء فواتير جديدة.
+              يمكنك تغيير هذه القيم لكل فاتورة على حدة.
+            </AlertDescription>
+          </Alert>
+
+          {/* Currency Examples */}
+          <div className="p-4 border rounded-lg space-y-3">
+            <Label className="block">أمثلة على العملات الشائعة</Label>
+            <div className="flex flex-wrap gap-2">
+              {['ج.م', 'ر.س', 'د.إ', 'د.ك', 'ر.ق', 'ر.ع', 'د.ب', '$', '€', '£'].map((curr) => (
+                <Button
+                  key={curr}
+                  variant={currency === curr ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setCurrency(curr);
+                    onDataChange?.();
+                  }}
+                >
+                  {curr}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

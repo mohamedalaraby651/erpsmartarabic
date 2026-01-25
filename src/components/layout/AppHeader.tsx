@@ -117,11 +117,11 @@ export default function AppHeader() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>حسابي</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/profile')}>
+            <DropdownMenuItem onClick={() => navigate('/settings?tab=profile')}>
               <User className="ml-2 h-4 w-4" />
               الملف الشخصي
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/settings')}>
+            <DropdownMenuItem onClick={() => navigate('/settings?tab=appearance')}>
               <Settings className="ml-2 h-4 w-4" />
               الإعدادات
             </DropdownMenuItem>

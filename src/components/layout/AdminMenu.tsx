@@ -39,9 +39,9 @@ export default function AdminMenu() {
           <Shield className="h-4 w-4" />
           إدارة الصلاحيات
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/admin/customizations')} className="gap-3 cursor-pointer">
+        <DropdownMenuItem onClick={() => navigate('/settings?tab=company')} className="gap-3 cursor-pointer">
           <Settings className="h-4 w-4" />
-          تخصيص الأقسام
+          إعدادات النظام
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/admin/users')} className="gap-3 cursor-pointer">
           <Users className="h-4 w-4" />
