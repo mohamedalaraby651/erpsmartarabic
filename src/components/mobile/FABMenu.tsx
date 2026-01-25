@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, X, Users, Package, FileText, ShoppingCart, Truck, Receipt, ClipboardList, BarChart3 } from 'lucide-react';
+import { Plus, X, Users, Package, FileText, ShoppingCart, Truck, Receipt, ClipboardList, BarChart3, Wallet, Warehouse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { haptics } from '@/lib/haptics';
@@ -159,6 +159,51 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
             label: 'مصروف جديد',
             onClick: () => navigate(`/expenses?action=new&t=${Date.now()}`, { replace: true }),
             color: 'bg-red-500 hover:bg-red-600',
+          },
+        ];
+      case 'payments':
+        return [
+          {
+            icon: <Wallet className="h-5 w-5" />,
+            label: 'تسجيل دفعة',
+            onClick: () => navigate(`/payments?action=new&t=${Date.now()}`, { replace: true }),
+            color: 'bg-emerald-500 hover:bg-emerald-600',
+          },
+          {
+            icon: <FileText className="h-5 w-5" />,
+            label: 'فاتورة جديدة',
+            onClick: () => navigate('/invoices?action=new'),
+            color: 'bg-blue-500 hover:bg-blue-600',
+          },
+        ];
+      case 'inventory':
+        return [
+          {
+            icon: <Warehouse className="h-5 w-5" />,
+            label: 'مستودع جديد',
+            onClick: () => navigate(`/inventory?action=new&t=${Date.now()}`, { replace: true }),
+            color: 'bg-amber-500 hover:bg-amber-600',
+          },
+          {
+            icon: <Package className="h-5 w-5" />,
+            label: 'حركة مخزون',
+            onClick: () => navigate('/inventory'),
+            color: 'bg-cyan-500 hover:bg-cyan-600',
+          },
+        ];
+      case 'supplier-payments':
+        return [
+          {
+            icon: <Wallet className="h-5 w-5" />,
+            label: 'دفعة للمورد',
+            onClick: () => navigate(`/supplier-payments?action=new&t=${Date.now()}`, { replace: true }),
+            color: 'bg-indigo-500 hover:bg-indigo-600',
+          },
+          {
+            icon: <ClipboardList className="h-5 w-5" />,
+            label: 'أمر شراء',
+            onClick: () => navigate('/purchase-orders?action=new'),
+            color: 'bg-orange-500 hover:bg-orange-600',
           },
         ];
       case 'tasks':
