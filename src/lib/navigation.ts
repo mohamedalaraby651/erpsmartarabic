@@ -16,7 +16,6 @@ import {
   Shield,
   CheckSquare,
   Wallet,
-  UserCircle,
   Briefcase,
   RefreshCw,
   Paperclip,
@@ -250,12 +249,6 @@ export const navSections: NavSection[] = [
         href: '/settings',
         color: 'slate',
       },
-      {
-        title: 'ملفي الشخصي',
-        icon: UserCircle,
-        href: '/profile',
-        color: 'slate',
-      },
     ],
   },
 ];
@@ -340,13 +333,13 @@ export const adminNavItems: NavItem[] = [
   {
     title: 'النسخ الاحتياطي',
     icon: Warehouse,
-    href: '/admin/backup',
+    href: '/settings?tab=backup',
     roles: ['admin'],
   },
   {
     title: 'إعدادات النظام',
     icon: Settings,
-    href: '/admin/system-settings',
+    href: '/settings?tab=company',
     roles: ['admin'],
   },
 ];
@@ -366,7 +359,6 @@ export const routeLabels: Record<string, string> = {
   '/supplier-payments': 'مدفوعات الموردين',
   '/purchase-orders': 'أوامر الشراء',
   '/employees': 'الموظفين',
-  '/profile': 'ملفي الشخصي',
   '/reports': 'التقارير',
   '/notifications': 'الإشعارات',
   '/tasks': 'المهام',
@@ -386,7 +378,6 @@ export const routeLabels: Record<string, string> = {
   '/admin/role-limits': 'الحدود المالية',
   '/admin/backup': 'النسخ الاحتياطي',
   '/admin/export-templates': 'قوالب التصدير',
-  '/admin/system-settings': 'إعدادات النظام',
 };
 
 export function getRouteLabel(path: string): string {
