@@ -370,7 +370,10 @@ export default function UnifiedSettingsPage() {
         {/* Section Header - Mobile */}
         <div className="lg:hidden mb-4 pb-4 border-b">
           <div className="flex items-center gap-2">
-            {currentTab && <currentTab.icon className="h-5 w-5 text-primary" />}
+            {currentTab && (() => {
+              const IconComponent = currentTab.icon;
+              return <IconComponent className="h-5 w-5 text-primary" />;
+            })()}
             <div>
               <h2 className="text-lg font-semibold">{currentTab?.label}</h2>
               <p className="text-sm text-muted-foreground">{currentTab?.description}</p>
