@@ -79,14 +79,22 @@ interface NavSection {
   items: NavItem[];
 }
 
+// Section icon colors for visual distinction
+const sectionIconColors = {
+  sales: { icon: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', hover: 'hover:bg-blue-500/20' },
+  inventory: { icon: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', hover: 'hover:bg-emerald-500/20' },
+  finance: { icon: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10', hover: 'hover:bg-orange-500/20' },
+  system: { icon: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-500/10', hover: 'hover:bg-slate-500/20' },
+};
+
 // الهيكل الجديد: 4 أقسام رئيسية
 const defaultNavSections: NavSection[] = [
   {
     id: 'sales',
     title: 'المبيعات والعملاء',
     icon: ShoppingCart,
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-500/10',
+    color: sectionIconColors.sales.icon,
+    bgColor: sectionIconColors.sales.bg,
     items: [
       { title: 'العملاء', icon: Users, href: '/customers', roles: ['admin', 'sales'] },
       { title: 'عروض الأسعار', icon: FileText, href: '/quotations', roles: ['admin', 'sales'], countKey: 'pendingQuotations', countColor: 'info' },
@@ -99,8 +107,8 @@ const defaultNavSections: NavSection[] = [
     id: 'inventory',
     title: 'المخزون والمشتريات',
     icon: Warehouse,
-    color: 'text-emerald-600 dark:text-emerald-400',
-    bgColor: 'bg-emerald-500/10',
+    color: sectionIconColors.inventory.icon,
+    bgColor: sectionIconColors.inventory.bg,
     items: [
       { title: 'المنتجات', icon: Package, href: '/products', roles: ['admin', 'warehouse'] },
       { title: 'التصنيفات', icon: FolderTree, href: '/categories', roles: ['admin', 'warehouse'] },
@@ -113,8 +121,8 @@ const defaultNavSections: NavSection[] = [
     id: 'finance',
     title: 'المالية',
     icon: DollarSign,
-    color: 'text-orange-600 dark:text-orange-400',
-    bgColor: 'bg-orange-500/10',
+    color: sectionIconColors.finance.icon,
+    bgColor: sectionIconColors.finance.bg,
     items: [
       { title: 'الخزينة', icon: Wallet, href: '/treasury', roles: ['admin', 'accountant'] },
       { title: 'المصروفات', icon: Receipt, href: '/expenses', roles: ['admin', 'accountant'] },
@@ -126,8 +134,8 @@ const defaultNavSections: NavSection[] = [
     id: 'system',
     title: 'النظام',
     icon: Settings,
-    color: 'text-slate-600 dark:text-slate-400',
-    bgColor: 'bg-slate-500/10',
+    color: sectionIconColors.system.icon,
+    bgColor: sectionIconColors.system.bg,
     items: [
       { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
       { title: 'المهام', icon: CheckSquare, href: '/tasks', countKey: 'openTasks', countColor: 'success' },
@@ -520,10 +528,10 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-full h-9"
+                    className="w-full h-10 bg-primary/10 hover:bg-primary/20"
                     onClick={onToggle}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-5 w-5 text-primary" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">توسيع القائمة</TooltipContent>
@@ -531,10 +539,12 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
             ) : (
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 h-9"
+                className="w-full justify-start gap-3 h-10 bg-muted/50 hover:bg-muted"
                 onClick={onToggle}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <div className="p-1.5 rounded-md bg-primary/10">
+                  <ChevronLeft className="h-4 w-4 text-primary" />
+                </div>
                 <span>طي القائمة</span>
               </Button>
             )}

@@ -54,8 +54,15 @@ function DraggableNavSection({
       <div
         ref={setNodeRef}
         style={style}
-        className={cn('space-y-1', isDragging && 'opacity-50')}
+        className={cn('space-y-1 p-1', isDragging && 'opacity-50')}
       >
+        {/* Section Icon Header in Collapsed Mode */}
+        <div className={cn(
+          'flex items-center justify-center p-2 rounded-lg mb-2',
+          bgColor
+        )}>
+          <SectionIcon className={cn('h-5 w-5', color)} />
+        </div>
         {children}
       </div>
     );
