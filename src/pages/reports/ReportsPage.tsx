@@ -14,6 +14,9 @@ import PageHeader from "@/components/navigation/PageHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { Badge } from "@/components/ui/badge";
+import { ProfitabilityReport } from "@/components/reports/ProfitabilityReport";
+import { AgingReport } from "@/components/reports/AgingReport";
+import { InventoryFlowReport } from "@/components/reports/InventoryFlowReport";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -439,11 +442,14 @@ export default function ReportsPage() {
       )}
 
       <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList className={isMobile ? "grid grid-cols-4 w-full" : "grid w-full grid-cols-4 lg:w-auto lg:inline-grid"}>
+        <TabsList className={isMobile ? "grid grid-cols-3 w-full" : "grid w-full grid-cols-7 lg:w-auto lg:inline-grid"}>
           <TabsTrigger value="sales" className="text-xs sm:text-sm">المبيعات</TabsTrigger>
           <TabsTrigger value="products" className="text-xs sm:text-sm">المنتجات</TabsTrigger>
           <TabsTrigger value="customers" className="text-xs sm:text-sm">العملاء</TabsTrigger>
           <TabsTrigger value="inventory" className="text-xs sm:text-sm">المخزون</TabsTrigger>
+          <TabsTrigger value="profitability" className="text-xs sm:text-sm">الربحية</TabsTrigger>
+          <TabsTrigger value="aging" className="text-xs sm:text-sm">أعمار الديون</TabsTrigger>
+          <TabsTrigger value="flow" className="text-xs sm:text-sm">حركة المخزون</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
@@ -624,6 +630,21 @@ export default function ReportsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Profitability Tab */}
+        <TabsContent value="profitability" className="space-y-4">
+          <ProfitabilityReport startDate={startDate} endDate={endDate} />
+        </TabsContent>
+
+        {/* Aging Report Tab */}
+        <TabsContent value="aging" className="space-y-4">
+          <AgingReport />
+        </TabsContent>
+
+        {/* Inventory Flow Tab */}
+        <TabsContent value="flow" className="space-y-4">
+          <InventoryFlowReport startDate={startDate} endDate={endDate} />
         </TabsContent>
       </Tabs>
     </div>
