@@ -2234,6 +2234,33 @@ export type Database = {
           },
         ]
       }
+      user_sidebar_settings: {
+        Row: {
+          collapsed_sections: string[] | null
+          created_at: string | null
+          id: string
+          section_order: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          collapsed_sections?: string[] | null
+          created_at?: string | null
+          id?: string
+          section_order?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          collapsed_sections?: string[] | null
+          created_at?: string | null
+          id?: string
+          section_order?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       warehouses: {
         Row: {
           created_at: string

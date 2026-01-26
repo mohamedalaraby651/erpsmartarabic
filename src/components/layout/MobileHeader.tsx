@@ -2,15 +2,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Factory, Search, Bell } from 'lucide-react';
+import { Factory, Search, Bell, LayoutGrid } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
 
 interface MobileHeaderProps {
-  onSearchClick?: () => void;
+  onMenuOpen?: () => void;
 }
 
-export default function MobileHeader({ onSearchClick }: MobileHeaderProps) {
+export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOnline } = useOnlineStatus();
@@ -64,6 +64,16 @@ export default function MobileHeader({ onSearchClick }: MobileHeaderProps) {
             {userInitials}
           </AvatarFallback>
         </Avatar>
+
+        {/* Menu Button - Grid Icon */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          onClick={onMenuOpen}
+        >
+          <LayoutGrid className="h-5 w-5" />
+        </Button>
       </div>
     </header>
   );
