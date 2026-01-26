@@ -30,9 +30,9 @@ AlertDialogOverlay.displayName = "AlertDialogOverlay";
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(function AlertDialogContent({ className, ...props }, ref) {
+>(function AlertDialogContent({ className, children, ...props }, ref) {
   return (
-    <AlertDialogPortal>
+    <AlertDialogPrimitive.Portal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         ref={ref}
@@ -41,8 +41,10 @@ const AlertDialogContent = React.forwardRef<
           className,
         )}
         {...props}
-      />
-    </AlertDialogPortal>
+      >
+        {children}
+      </AlertDialogPrimitive.Content>
+    </AlertDialogPrimitive.Portal>
   );
 });
 AlertDialogContent.displayName = "AlertDialogContent";
