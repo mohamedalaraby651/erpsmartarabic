@@ -521,31 +521,33 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
               </Button>
             )}
 
-            {/* Collapse Toggle */}
+            {/* Collapse Toggle - Enhanced */}
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-full h-10 bg-primary/10 hover:bg-primary/20"
+                    className="w-full h-10 bg-gradient-to-r from-primary/15 to-primary/5 hover:from-primary/25 hover:to-primary/10 border border-primary/20 shadow-sm transition-all duration-200 group"
                     onClick={onToggle}
                   >
-                    <ChevronRight className="h-5 w-5 text-primary" />
+                    <ChevronRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-0.5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left">توسيع القائمة</TooltipContent>
+                <TooltipContent side="left" className="font-semibold">
+                  توسيع القائمة
+                </TooltipContent>
               </Tooltip>
             ) : (
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 h-10 bg-muted/50 hover:bg-muted"
+                className="w-full justify-start gap-3 h-11 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent hover:from-primary/20 hover:via-primary/10 hover:to-primary/5 border border-primary/15 shadow-sm transition-all duration-200 group"
                 onClick={onToggle}
               >
-                <div className="p-1.5 rounded-md bg-primary/10">
-                  <ChevronLeft className="h-4 w-4 text-primary" />
+                <div className="p-1.5 rounded-lg bg-primary/15 group-hover:bg-primary/25 transition-colors">
+                  <ChevronLeft className="h-4 w-4 text-primary transition-transform group-hover:-translate-x-0.5" />
                 </div>
-                <span>طي القائمة</span>
+                <span className="font-medium">طي القائمة</span>
               </Button>
             )}
 

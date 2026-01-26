@@ -304,13 +304,13 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
             className="flex items-center gap-3 animate-scale-in"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <span className="bg-card text-card-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border">
+            <span className="bg-card text-card-foreground text-sm font-semibold px-3.5 py-2 rounded-xl shadow-lg whitespace-nowrap border border-border/50 backdrop-blur-sm">
               {action.label}
             </span>
             <Button
               size="icon"
               className={cn(
-                'h-12 w-12 rounded-full shadow-lg text-white transition-transform active:scale-95',
+                'h-12 w-12 rounded-full shadow-lg text-white transition-all duration-200 active:scale-90',
                 action.color || 'bg-primary hover:bg-primary/90'
               )}
               onClick={() => handleActionClick(action)}
@@ -325,8 +325,10 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
       <Button
         size="icon"
         className={cn(
-          'h-14 w-14 rounded-full shadow-lg transition-all duration-300 z-50 active:scale-95',
-          isOpen && 'rotate-45 bg-destructive hover:bg-destructive/90'
+          'h-14 w-14 rounded-full shadow-xl transition-all duration-300 z-50 active:scale-90 border-2 border-white/20',
+          isOpen 
+            ? 'rotate-45 bg-destructive hover:bg-destructive/90' 
+            : 'bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 animate-pulse-glow'
         )}
         onClick={handleMainClick}
       >

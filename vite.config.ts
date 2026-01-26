@@ -87,6 +87,32 @@ export default defineConfig(({ mode }) => ({
             form_factor: 'wide',
             label: 'ERP Smart Dashboard'
           }
+        ],
+        shortcuts: [
+          {
+            name: 'فاتورة جديدة',
+            short_name: 'فاتورة',
+            url: '/invoices?action=new',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
+          },
+          {
+            name: 'عميل جديد',
+            short_name: 'عميل',
+            url: '/customers?action=new',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
+          },
+          {
+            name: 'أمر بيع جديد',
+            short_name: 'بيع',
+            url: '/sales-orders?action=new',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
+          },
+          {
+            name: 'منتج جديد',
+            short_name: 'منتج',
+            url: '/products?action=new',
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
+          }
         ]
       },
       workbox: {
