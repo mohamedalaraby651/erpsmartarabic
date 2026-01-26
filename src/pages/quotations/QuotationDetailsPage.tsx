@@ -36,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
+import { WhatsAppShareButton } from "@/components/shared/WhatsAppShareButton";
 import QuotationFormDialog from "@/components/quotations/QuotationFormDialog";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
@@ -289,6 +290,15 @@ const QuotationDetailsPage = () => {
                 <Printer className="h-4 w-4 ml-2" />
                 طباعة
               </Button>
+              <WhatsAppShareButton
+                customerPhone={quotation.customers?.phone}
+                documentType="quotation"
+                documentNumber={quotation.quotation_number}
+                customerName={quotation.customers?.name || 'العميل'}
+                totalAmount={totalAmount}
+                validUntil={quotation.valid_until}
+                size="sm"
+              />
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 ml-2" />
                 تعديل

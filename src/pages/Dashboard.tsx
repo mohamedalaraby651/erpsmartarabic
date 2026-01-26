@@ -30,6 +30,9 @@ import { MobileDashboard } from '@/components/dashboard/MobileDashboard';
 import { useDashboardSettings } from '@/hooks/useDashboardSettings';
 import { WidgetConfig } from '@/components/dashboard/DraggableWidget';
 import { useToast } from '@/hooks/use-toast';
+import { TodayPerformanceWidget } from '@/components/dashboard/TodayPerformanceWidget';
+import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
+import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
 
 // Sample chart data
 const salesData = [
@@ -403,6 +406,15 @@ export default function Dashboard() {
             </CardContent>
           </>
         );
+
+      case 'today_performance':
+        return <TodayPerformanceWidget />;
+
+      case 'low_stock':
+        return <LowStockWidget />;
+
+      case 'calendar':
+        return <CalendarWidget />;
 
       default:
         return null;

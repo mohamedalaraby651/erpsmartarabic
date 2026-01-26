@@ -39,6 +39,7 @@ import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
+import { WhatsAppShareButton } from "@/components/shared/WhatsAppShareButton";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
@@ -220,6 +221,15 @@ const InvoiceDetailsPage = () => {
                 <Printer className="h-4 w-4 ml-2" />
                 طباعة
               </Button>
+              <WhatsAppShareButton
+                customerPhone={invoice.customers?.phone}
+                documentType="invoice"
+                documentNumber={invoice.invoice_number}
+                customerName={invoice.customers?.name || 'العميل'}
+                totalAmount={totalAmount}
+                dueDate={invoice.due_date}
+                size="sm"
+              />
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 ml-2" />
                 تعديل

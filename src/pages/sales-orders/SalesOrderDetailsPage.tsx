@@ -34,6 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
+import { WhatsAppShareButton } from "@/components/shared/WhatsAppShareButton";
 import SalesOrderFormDialog from "@/components/sales-orders/SalesOrderFormDialog";
 import { SalesOrderPrintView } from "@/components/print/SalesOrderPrintView";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
@@ -220,6 +221,14 @@ const SalesOrderDetailsPage = () => {
                 <Printer className="h-4 w-4 ml-2" />
                 طباعة
               </Button>
+              <WhatsAppShareButton
+                customerPhone={order.customers?.phone}
+                documentType="sales_order"
+                documentNumber={order.order_number}
+                customerName={order.customers?.name || 'العميل'}
+                totalAmount={totalAmount}
+                size="sm"
+              />
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 ml-2" />
                 تعديل

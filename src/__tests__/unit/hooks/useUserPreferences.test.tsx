@@ -15,7 +15,22 @@ vi.mock('@/hooks/useAuth', () => ({
 vi.mock('@/lib/themeManager', () => ({
   applyTheme: vi.fn(),
   saveThemeToLocalStorage: vi.fn(),
-  getThemeFromLocalStorage: vi.fn(() => ({}))
+  getThemeFromLocalStorage: vi.fn(() => ({
+    theme: 'system',
+    primaryColor: '#2563eb',
+    accentColor: '#8b5cf6',
+    fontFamily: 'Cairo',
+    fontSize: 'medium',
+    sidebarCompact: false,
+  })),
+  defaultThemeConfig: {
+    theme: 'system',
+    primaryColor: '#2563eb',
+    accentColor: '#8b5cf6',
+    fontFamily: 'Cairo',
+    fontSize: 'medium',
+    sidebarCompact: false,
+  }
 }));
 
 // Mock Supabase client
