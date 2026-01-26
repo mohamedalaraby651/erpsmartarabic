@@ -21,24 +21,18 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:hidden">
-      {/* Logo */}
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-          <Factory className="h-4 w-4 text-primary" />
-        </div>
-        <span className="font-bold text-sm">معدات الدواجن</span>
-        
-        {/* Offline Indicator */}
-        {!isOnline && (
-          <span className="flex items-center gap-1 text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
-            <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" />
-            Offline
-          </span>
-        )}
-      </div>
-
-      {/* Actions */}
+      {/* Right Side - Menu Button First (RTL) */}
       <div className="flex items-center gap-1">
+        {/* Menu Button - Grid Icon - Now on the right (RTL means it appears first visually) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 bg-primary/10 hover:bg-primary/20"
+          onClick={onMenuOpen}
+        >
+          <LayoutGrid className="h-5 w-5 text-primary" />
+        </Button>
+        
         <Button
           variant="ghost"
           size="icon"
@@ -57,23 +51,29 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
           <Bell className="h-4 w-4" />
           <span className="absolute top-1 left-1 h-2 w-2 rounded-full bg-destructive" />
         </Button>
+      </div>
 
+      {/* Left Side - Logo and Avatar (RTL) */}
+      <div className="flex items-center gap-2">
+        {/* Offline Indicator */}
+        {!isOnline && (
+          <span className="flex items-center gap-1 text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
+            <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" />
+            Offline
+          </span>
+        )}
+        
+        <span className="font-bold text-sm">معدات الدواجن</span>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+          <Factory className="h-4 w-4 text-primary" />
+        </div>
+        
         <Avatar className="h-8 w-8 cursor-pointer" onClick={() => navigate('/settings')}>
           <AvatarImage src={user?.user_metadata?.avatar_url} />
           <AvatarFallback className="bg-primary/10 text-primary text-xs">
             {userInitials}
           </AvatarFallback>
         </Avatar>
-
-        {/* Menu Button - Grid Icon */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9"
-          onClick={onMenuOpen}
-        >
-          <LayoutGrid className="h-5 w-5" />
-        </Button>
       </div>
     </header>
   );
