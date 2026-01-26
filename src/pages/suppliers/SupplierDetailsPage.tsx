@@ -27,9 +27,11 @@ import {
   Star,
   Activity,
   ShoppingCart,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+import { generatePDF, getCompanySettings } from "@/lib/pdfGenerator";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import SupplierProfileHeader from "@/components/suppliers/SupplierProfileHeader";
@@ -58,6 +60,7 @@ const SupplierDetailsPage = () => {
   
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [isPrintingStatement, setIsPrintingStatement] = useState(false);
 
   const { data: supplier, isLoading: loadingSupplier } = useQuery({
     queryKey: ['supplier', id],
@@ -143,9 +146,93 @@ const SupplierDetailsPage = () => {
     navigate('/purchase-orders', { state: { prefillSupplierId: id } });
   };
 
-  const handlePrintStatement = () => {
-    toast({ title: "جاري إعداد كشف الحساب...", description: "سيتم تحميل الملف قريباً" });
-    // TODO: Implement PDF generation
+  const handlePrintStatement = async () => {
+    if (!supplier) return;
+    
+    setIsPrintingStatement(true);
+    try {
+      // Fetch supplier payments
+      const { data: payments, error: paymentsError } = await supabase
+        .from('supplier_payments')
+        .select('*')
+        .eq('supplier_id', id)
+        .order('payment_date', { ascending: false });
+      
+      if (paymentsError) throw paymentsError;
+      
+      // Prepare statement data combining orders and payments
+      const statementData: any[] = [];
+      
+      // Add purchase orders
+      purchaseOrders.forEach(order => {
+        statementData.push({
+          date: order.created_at,
+          type: 'أمر شراء',
+          reference: order.order_number,
+          debit: Number(order.total_amount),
+          credit: 0,
+          status: order.status === 'approved' ? 'معتمد' : order.status === 'pending' ? 'معلق' : order.status,
+        });
+      });
+      
+      // Add payments
+      (payments || []).forEach((payment: any) => {
+        statementData.push({
+          date: payment.payment_date,
+          type: 'دفعة',
+          reference: payment.payment_number,
+          debit: 0,
+          credit: Number(payment.amount),
+          status: 'مسدد',
+        });
+      });
+      
+      // Sort by date
+      statementData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      // Calculate running balance
+      let runningBalance = Number(supplier.current_balance || 0);
+      const dataWithBalance = statementData.map(item => {
+        const balance = runningBalance;
+        runningBalance = runningBalance - item.debit + item.credit;
+        return {
+          ...item,
+          date: new Date(item.date).toLocaleDateString('ar-EG'),
+          debit: item.debit > 0 ? item.debit.toLocaleString() : '-',
+          credit: item.credit > 0 ? item.credit.toLocaleString() : '-',
+          balance: balance.toLocaleString(),
+        };
+      });
+      
+      // Generate PDF
+      await generatePDF({
+        title: `كشف حساب المورد: ${supplier.name}`,
+        data: dataWithBalance,
+        columns: [
+          { key: 'date', label: 'التاريخ' },
+          { key: 'type', label: 'النوع' },
+          { key: 'reference', label: 'المرجع' },
+          { key: 'debit', label: 'مدين' },
+          { key: 'credit', label: 'دائن' },
+          { key: 'balance', label: 'الرصيد' },
+          { key: 'status', label: 'الحالة' },
+        ],
+        includeCompanyInfo: true,
+        includeLogo: true,
+        orientation: 'landscape',
+      });
+      
+      toast({ title: "تم تصدير كشف الحساب بنجاح" });
+    } catch (error) {
+      logErrorSafely('SupplierDetailsPage', error);
+      toast({ 
+        title: "حدث خطأ", 
+        description: getSafeErrorMessage(error), 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsPrintingStatement(false);
+    }
   };
 
   if (loadingSupplier) {
@@ -180,6 +267,7 @@ const SupplierDetailsPage = () => {
         onCreatePurchaseOrder={handleCreatePurchaseOrder}
         onRecordPayment={() => setPaymentDialogOpen(true)}
         onPrintStatement={handlePrintStatement}
+        isPrintingStatement={isPrintingStatement}
       />
 
       {/* Alerts */}
