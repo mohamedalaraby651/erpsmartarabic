@@ -82,8 +82,22 @@
 
 @layer utilities {
   .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
+  @keyframes slideInRight { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  
+  .animate-slide-out-right { animation: slideOutRight 0.3s ease-out; }
+  @keyframes slideOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-20px); } }
+  
+  .animate-slide-in-left { animation: slideInLeft 0.3s ease-out; }
+  @keyframes slideInLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  
   .glass { @apply bg-card/80 backdrop-blur-lg border border-border/50; }
+  
+  /* Settings page specific */
+  .settings-card-hover { @apply hover:shadow-md hover:border-primary/20 transition-all duration-200; }
+  .pb-safe-area-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
   
   /* Safe area for mobile devices with notches */
   .safe-area-top { padding-top: env(safe-area-inset-top); }
