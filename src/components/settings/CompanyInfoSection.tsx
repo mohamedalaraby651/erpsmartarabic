@@ -274,6 +274,41 @@ export function CompanyInfoSection({ onDataChange }: CompanyInfoSectionProps) {
               </div>
             </div>
           </div>
+
+          {/* Invoice Preview Mini */}
+          <div className="p-4 border rounded-lg bg-muted/30">
+            <Label className="mb-3 block">معاينة رأس الفاتورة</Label>
+            <div className="bg-background border rounded-lg p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  {formData.logo_url ? (
+                    <img 
+                      src={formData.logo_url} 
+                      alt="Logo" 
+                      className="h-12 w-12 object-contain rounded"
+                    />
+                  ) : (
+                    <div 
+                      className="h-12 w-12 rounded flex items-center justify-center text-white font-bold text-lg"
+                      style={{ backgroundColor: formData.primary_color || '#2563eb' }}
+                    >
+                      {formData.company_name?.charAt(0) || 'ش'}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-bold" style={{ color: formData.primary_color || '#2563eb' }}>
+                      {formData.company_name || 'اسم الشركة'}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">{formData.address || 'العنوان'}</p>
+                  </div>
+                </div>
+                <div className="text-left text-xs text-muted-foreground">
+                  <p>{formData.phone || '01xxxxxxxxx'}</p>
+                  <p>{formData.email || 'email@company.com'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

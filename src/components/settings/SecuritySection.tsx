@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { 
   Monitor, 
   Smartphone, 
@@ -16,6 +17,9 @@ import {
   MapPin,
   Shield,
   Key,
+  Loader2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 interface SecuritySectionProps {
@@ -24,6 +28,8 @@ interface SecuritySectionProps {
 
 export function SecuritySection({ userId }: SecuritySectionProps) {
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
     newPassword: '',
     confirmPassword: '',
@@ -118,29 +124,72 @@ export function SecuritySection({ userId }: SecuritySectionProps) {
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>كلمة المرور الجديدة</Label>
-              <Input
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                placeholder="أدخل كلمة المرور الجديدة"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  placeholder="أدخل كلمة المرور الجديدة"
+                  className="pl-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>تأكيد كلمة المرور</Label>
-              <Input
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                placeholder="أعد إدخال كلمة المرور"
-              />
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  placeholder="أعد إدخال كلمة المرور"
+                  className="pl-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
+          
+          {/* Password Strength Indicator */}
+          <PasswordStrengthIndicator password={passwordData.newPassword} />
+          
+          {/* Password Match Indicator */}
+          {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+            <p className="text-sm text-destructive flex items-center gap-1">
+              كلمة المرور غير متطابقة
+            </p>
+          )}
+          
           <div className="flex justify-end">
             <Button 
               onClick={handleChangePassword} 
-              disabled={changePasswordMutation.isPending || !passwordData.newPassword}
+              disabled={
+                changePasswordMutation.isPending || 
+                !passwordData.newPassword || 
+                passwordData.newPassword !== passwordData.confirmPassword
+              }
+              className="gap-2"
             >
-              {changePasswordMutation.isPending ? 'جاري التغيير...' : 'تغيير كلمة المرور'}
+              {changePasswordMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  جاري التغيير...
+                </>
+              ) : (
+                'تغيير كلمة المرور'
+              )}
             </Button>
           </div>
         </CardContent>
