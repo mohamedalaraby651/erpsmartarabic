@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
@@ -137,9 +138,76 @@ const QuotationDetailsPage = () => {
     navigate('/sales-orders', { state: { prefillQuotationId: id } });
   };
 
+  // Duplicate quotation mutation
+  const duplicateMutation = useMutation({
+    mutationFn: async () => {
+      if (!quotation) throw new Error('No quotation to duplicate');
+      
+      // Generate new quotation number
+      const timestamp = Date.now().toString().slice(-6);
+      const newQuotationNumber = `QT-${new Date().getFullYear()}-${timestamp}`;
+      
+      // Create new quotation (without id, created_at, updated_at)
+      const { data: newQuotation, error: quotationError } = await supabase
+        .from('quotations')
+        .insert({
+          customer_id: quotation.customer_id,
+          quotation_number: newQuotationNumber,
+          status: 'draft',
+          subtotal: quotation.subtotal,
+          discount_amount: quotation.discount_amount,
+          tax_amount: quotation.tax_amount,
+          total_amount: quotation.total_amount,
+          valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+          notes: quotation.notes,
+        })
+        .select()
+        .single();
+      
+      if (quotationError) throw quotationError;
+      
+      // Copy quotation items
+      if (quotationItems.length > 0) {
+        const newItems = quotationItems.map((item: any) => ({
+          quotation_id: newQuotation.id,
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_percentage: item.discount_percentage,
+          total_price: item.total_price,
+          notes: item.notes,
+        }));
+        
+        const { error: itemsError } = await supabase
+          .from('quotation_items')
+          .insert(newItems);
+        
+        if (itemsError) throw itemsError;
+      }
+      
+      return newQuotation;
+    },
+    onSuccess: (newQuotation) => {
+      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      toast({ 
+        title: "تم نسخ عرض السعر بنجاح", 
+        description: `تم إنشاء عرض سعر جديد برقم ${newQuotation.quotation_number}` 
+      });
+      navigate(`/quotations/${newQuotation.id}`);
+    },
+    onError: (error) => {
+      logErrorSafely('QuotationDetailsPage', error);
+      toast({ 
+        title: "حدث خطأ", 
+        description: getSafeErrorMessage(error), 
+        variant: "destructive" 
+      });
+    },
+  });
+
   const handleDuplicateQuotation = () => {
-    toast({ title: "جاري نسخ عرض السعر...", description: "سيتم فتح نموذج عرض سعر جديد" });
-    // TODO: Implement duplication
+    duplicateMutation.mutate();
   };
 
   if (isLoading) {
@@ -225,8 +293,17 @@ const QuotationDetailsPage = () => {
                 <Edit className="h-4 w-4 ml-2" />
                 تعديل
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDuplicateQuotation}>
-                <Copy className="h-4 w-4 ml-2" />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDuplicateQuotation}
+                disabled={duplicateMutation.isPending}
+              >
+                {duplicateMutation.isPending ? (
+                  <span className="h-4 w-4 ml-2 animate-spin border-2 border-current border-t-transparent rounded-full" />
+                ) : (
+                  <Copy className="h-4 w-4 ml-2" />
+                )}
                 نسخ
               </Button>
               {quotation.status === 'approved' && !isExpired && (

@@ -13,6 +13,7 @@ import {
   Building2,
   CheckCircle,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -32,6 +33,7 @@ interface SupplierProfileHeaderProps {
   onCreatePurchaseOrder: () => void;
   onRecordPayment: () => void;
   onPrintStatement: () => void;
+  isPrintingStatement?: boolean;
 }
 
 const supplierTypeLabels: Record<string, string> = {
@@ -55,6 +57,7 @@ const SupplierProfileHeader = ({
   onCreatePurchaseOrder,
   onRecordPayment,
   onPrintStatement,
+  isPrintingStatement = false,
 }: SupplierProfileHeaderProps) => {
   const initials = supplier.name
     .split(' ')
@@ -151,8 +154,12 @@ const SupplierProfileHeader = ({
             <CreditCard className="h-4 w-4" />
             تسجيل دفعة
           </Button>
-          <Button onClick={onPrintStatement} variant="outline" size="sm" className="gap-2">
-            <Printer className="h-4 w-4" />
+          <Button onClick={onPrintStatement} variant="outline" size="sm" className="gap-2" disabled={isPrintingStatement}>
+            {isPrintingStatement ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Printer className="h-4 w-4" />
+            )}
             كشف حساب
           </Button>
           <Button onClick={onEdit} variant="ghost" size="sm" className="gap-2">
