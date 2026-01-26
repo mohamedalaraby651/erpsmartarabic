@@ -77,33 +77,7 @@ export default function Dashboard() {
   const isMobile = useIsMobile();
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
 
-  // Use mobile dashboard for mobile devices
-  if (isMobile) {
-    return <MobileDashboard />;
-  }
-
-  // Show loading state for desktop
-  if (authLoading || widgetsLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-64 bg-muted rounded animate-pulse" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
-          ))}
-        </div>
-        <div className="h-64 bg-muted rounded-lg animate-pulse" />
-      </div>
-    );
-  }
-
-  // Filter quick actions based on user role
-  const quickActions = allQuickActions.filter(action => 
-    !userRole || action.roles.includes(userRole)
-  );
-
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Batch fetch all counts in one query for better performance
   const { data: dashboardStats, isLoading: isStatsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -151,6 +125,33 @@ export default function Dashboard() {
     },
     staleTime: 15000, // 15 seconds
   });
+
+  // Filter quick actions based on user role
+  const quickActions = allQuickActions.filter(action => 
+    !userRole || action.roles.includes(userRole)
+  );
+
+  // Use mobile dashboard for mobile devices
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
+
+  // Show loading state for desktop
+  if (authLoading || widgetsLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-64 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
+      </div>
+    );
+  }
 
   const greeting = () => {
     const hour = new Date().getHours();
