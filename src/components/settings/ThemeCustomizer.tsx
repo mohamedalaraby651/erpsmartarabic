@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { availableFonts, presetColors, applyTheme, ThemeConfig } from '@/lib/themeManager';
 import { Sun, Moon, Monitor, Palette, Type, Maximize2, RotateCcw, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -52,7 +53,8 @@ const themePresets = [
 ];
 
 export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
-  const { preferences, updatePreferences, isUpdating } = useUserPreferences();
+  const { preferences, updatePreferences, isUpdating, updateSidebarCompact } = useUserPreferences();
+  const isMobile = useIsMobile();
   
   const [localConfig, setLocalConfig] = useState({
     theme: preferences.theme || 'system',
@@ -90,6 +92,11 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
     if (key === 'sidebar_compact') themeConfig.sidebarCompact = value;
     
     applyTheme(themeConfig);
+    
+    // Apply sidebar_compact immediately to database for AppLayout sync
+    if (key === 'sidebar_compact') {
+      updateSidebarCompact(value);
+    }
   };
 
   const applyPreset = (preset: typeof themePresets[0]) => {
