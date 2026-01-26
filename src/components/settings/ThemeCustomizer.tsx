@@ -7,13 +7,49 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { availableFonts, presetColors, applyTheme, ThemeConfig } from '@/lib/themeManager';
-import { Sun, Moon, Monitor, Palette, Type, Maximize2, RotateCcw, Check } from 'lucide-react';
+import { Sun, Moon, Monitor, Palette, Type, Maximize2, RotateCcw, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { LivePreviewCard } from './LivePreviewCard';
+import { ResetSettingsButton } from './ResetSettingsButton';
 
 interface ThemeCustomizerProps {
   onDataChange?: () => void;
 }
+
+// Theme presets
+const themePresets = [
+  { 
+    name: 'كلاسيكي أزرق', 
+    primary: '#2563eb', 
+    accent: '#8b5cf6',
+    description: 'الثيم الافتراضي'
+  },
+  { 
+    name: 'أخضر طبيعي', 
+    primary: '#16a34a', 
+    accent: '#14b8a6',
+    description: 'هادئ ومريح للعين'
+  },
+  { 
+    name: 'برتقالي دافئ', 
+    primary: '#ea580c', 
+    accent: '#f59e0b',
+    description: 'حيوي ونشيط'
+  },
+  { 
+    name: 'أحمر أنيق', 
+    primary: '#dc2626', 
+    accent: '#e11d48',
+    description: 'جريء ومميز'
+  },
+  { 
+    name: 'بنفسجي ملكي', 
+    primary: '#7c3aed', 
+    accent: '#a855f7',
+    description: 'فخم وراقي'
+  },
+];
 
 export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
   const { preferences, updatePreferences, isUpdating } = useUserPreferences();
@@ -54,6 +90,12 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
     if (key === 'sidebar_compact') themeConfig.sidebarCompact = value;
     
     applyTheme(themeConfig);
+  };
+
+  const applyPreset = (preset: typeof themePresets[0]) => {
+    handleChange('primary_color', preset.primary);
+    setTimeout(() => handleChange('accent_color', preset.accent), 50);
+    toast.success(`تم تطبيق ثيم "${preset.name}"`);
   };
 
   const handleSave = () => {
@@ -109,7 +151,7 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
                   key={mode.value}
                   onClick={() => handleChange('theme', mode.value)}
                   className={cn(
-                    'relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all',
+                    'relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all touch-target',
                     isActive 
                       ? 'border-primary bg-primary/5 shadow-sm' 
                       : 'border-muted hover:border-primary/50 hover:bg-muted/50'
@@ -131,14 +173,54 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
         </CardContent>
       </Card>
 
-      {/* Colors */}
+      {/* Theme Presets */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Palette className="h-5 w-5 text-primary" />
-            الألوان
+            ثيمات جاهزة
           </CardTitle>
-          <CardDescription>خصص ألوان الواجهة حسب تفضيلاتك</CardDescription>
+          <CardDescription>اختر ثيم جاهز أو خصص الألوان</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {themePresets.map((preset) => {
+              const isActive = localConfig.primary_color === preset.primary && 
+                               localConfig.accent_color === preset.accent;
+              return (
+                <button
+                  key={preset.name}
+                  onClick={() => applyPreset(preset)}
+                  className={cn(
+                    'p-3 rounded-xl border-2 transition-all text-center touch-target',
+                    isActive 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-muted hover:border-primary/50'
+                  )}
+                >
+                  <div className="flex justify-center gap-1 mb-2">
+                    <div 
+                      className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
+                      style={{ backgroundColor: preset.primary }}
+                    />
+                    <div 
+                      className="w-6 h-6 rounded-full border-2 border-white shadow-sm -mr-2"
+                      style={{ backgroundColor: preset.accent }}
+                    />
+                  </div>
+                  <p className="text-xs font-medium">{preset.name}</p>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Custom Colors */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">تخصيص الألوان</CardTitle>
+          <CardDescription>اختر ألوانك المفضلة</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Primary Color */}
@@ -156,7 +238,7 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
                   key={color.value}
                   onClick={() => handleChange('primary_color', color.value)}
                   className={cn(
-                    'w-10 h-10 rounded-full border-2 transition-all relative',
+                    'w-10 h-10 rounded-full border-2 transition-all relative touch-target',
                     localConfig.primary_color === color.value 
                       ? 'border-foreground scale-110 ring-2 ring-offset-2 ring-foreground/20' 
                       : 'border-transparent hover:scale-105 hover:border-muted-foreground/30'
@@ -195,7 +277,7 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
                   key={color.value}
                   onClick={() => handleChange('accent_color', color.value)}
                   className={cn(
-                    'w-10 h-10 rounded-full border-2 transition-all relative',
+                    'w-10 h-10 rounded-full border-2 transition-all relative touch-target',
                     localConfig.accent_color === color.value 
                       ? 'border-foreground scale-110 ring-2 ring-offset-2 ring-foreground/20' 
                       : 'border-transparent hover:scale-105 hover:border-muted-foreground/30'
@@ -218,33 +300,17 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
               </div>
             </div>
           </div>
-
-          {/* Color Preview */}
-          <div className="p-4 rounded-lg border bg-gradient-to-l from-transparent to-muted/30">
-            <p className="text-sm text-muted-foreground mb-2">معاينة الألوان</p>
-            <div className="flex items-center gap-3">
-              <div 
-                className="h-12 w-12 rounded-lg shadow-md"
-                style={{ backgroundColor: localConfig.primary_color }}
-              />
-              <div 
-                className="h-12 w-12 rounded-lg shadow-md"
-                style={{ backgroundColor: localConfig.accent_color }}
-              />
-              <div className="flex-1 space-y-1">
-                <div 
-                  className="h-2 rounded-full w-full"
-                  style={{ backgroundColor: localConfig.primary_color }}
-                />
-                <div 
-                  className="h-2 rounded-full w-3/4"
-                  style={{ backgroundColor: localConfig.accent_color }}
-                />
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
+
+      {/* Live Preview */}
+      <LivePreviewCard
+        primaryColor={localConfig.primary_color}
+        accentColor={localConfig.accent_color}
+        fontFamily={localConfig.font_family}
+        fontSize={localConfig.font_size}
+        theme={localConfig.theme}
+      />
 
       {/* Typography */}
       <Card>
@@ -306,7 +372,7 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
               )}
               style={{ fontFamily: localConfig.font_family }}
             >
-              هذا نص تجريبي لمعاينة الخط المختار
+              هذا نص تجريبي لمعاينة الخط المختار - 1234567890
             </p>
           </div>
         </CardContent>
@@ -351,13 +417,20 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
       </Card>
 
       {/* Actions */}
-      <div className="flex gap-3 justify-end sticky bottom-0 bg-background py-4 border-t -mx-4 px-4 md:mx-0 md:px-0 md:border-0 md:bg-transparent md:py-0">
-        <Button variant="outline" onClick={handleReset} className="gap-2">
-          <RotateCcw className="h-4 w-4" />
-          استعادة الافتراضي
-        </Button>
+      <div className="flex gap-3 justify-between sticky bottom-0 bg-background py-4 border-t -mx-4 px-4 md:mx-0 md:px-0 md:border-0 md:bg-transparent md:py-0">
+        <ResetSettingsButton 
+          onReset={handleReset} 
+          sectionName="المظهر"
+        />
         <Button onClick={handleSave} disabled={isUpdating} className="gap-2 min-w-[120px]">
-          {isUpdating ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+          {isUpdating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              جاري الحفظ...
+            </>
+          ) : (
+            'حفظ التغييرات'
+          )}
         </Button>
       </div>
     </div>

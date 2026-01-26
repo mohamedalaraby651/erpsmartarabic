@@ -1,12 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
-import { Bell, Volume2, Mail, Moon, RotateCcw } from 'lucide-react';
+import { Bell, Volume2, Mail, Moon, BellRing, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { ResetSettingsButton } from './ResetSettingsButton';
 
 export function NotificationSettings() {
   const {
@@ -24,96 +27,134 @@ export function NotificationSettings() {
     toast.success('تم استعادة إعدادات الإشعارات الافتراضية');
   };
 
+  const handleTestNotification = () => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('اختبار الإشعارات', {
+        body: 'هذا إشعار تجريبي للتأكد من عمل الإشعارات',
+        icon: '/icons/icon-192x192.png',
+      });
+      toast.success('تم إرسال إشعار تجريبي');
+    } else if ('Notification' in window && Notification.permission !== 'denied') {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          new Notification('تم تفعيل الإشعارات!', {
+            body: 'ستصلك الإشعارات الآن',
+            icon: '/icons/icon-192x192.png',
+          });
+        }
+      });
+    } else {
+      toast.info('الإشعارات غير مدعومة أو محظورة في المتصفح');
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Notification Types */}
+      {/* Quick Actions */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            أنواع الإشعارات
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <BellRing className="h-5 w-5 text-primary" />
+            اختبار الإشعارات
           </CardTitle>
+          <CardDescription>تأكد من عمل الإشعارات على جهازك</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="grid grid-cols-4 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
-              <div>النوع</div>
-              <div className="text-center">تفعيل</div>
-              <div className="text-center flex items-center justify-center gap-1">
-                <Volume2 className="h-4 w-4" />
-                صوت
-              </div>
-              <div className="text-center flex items-center justify-center gap-1">
-                <Mail className="h-4 w-4" />
-                بريد
-              </div>
-            </div>
+          <Button onClick={handleTestNotification} variant="outline" className="gap-2">
+            <Bell className="h-4 w-4" />
+            إرسال إشعار تجريبي
+          </Button>
+        </CardContent>
+      </Card>
 
-            {/* Types */}
+      {/* Notification Types */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Bell className="h-5 w-5 text-primary" />
+            أنواع الإشعارات
+          </CardTitle>
+          <CardDescription>تحكم في أنواع الإشعارات التي تريد استلامها</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
             {settings.types.map((type) => (
-              <div key={type.id} className="grid grid-cols-4 gap-4 items-center py-2">
-                <Label className="font-normal">{type.label}</Label>
-                <div className="flex justify-center">
-                  <Switch
-                    checked={type.enabled}
-                    onCheckedChange={() => toggleTypeEnabled(type.id)}
-                  />
-                </div>
-                <div className="flex justify-center">
-                  <Switch
-                    checked={type.sound}
-                    onCheckedChange={() => toggleTypeSound(type.id)}
-                    disabled={!type.enabled}
-                  />
-                </div>
-                <div className="flex justify-center">
-                  <Switch
-                    checked={type.email}
-                    onCheckedChange={() => toggleTypeEmail(type.id)}
-                    disabled={!type.enabled}
-                  />
-                </div>
-              </div>
+              <AccordionItem key={type.id} value={type.id}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center justify-between w-full pl-4">
+                    <span className="font-medium">{type.label}</span>
+                    <Switch
+                      checked={type.enabled}
+                      onCheckedChange={() => toggleTypeEnabled(type.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className={cn(
+                    'space-y-3 pr-4 transition-opacity',
+                    !type.enabled && 'opacity-50 pointer-events-none'
+                  )}>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <Volume2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">تشغيل صوت</span>
+                      </div>
+                      <Switch
+                        checked={type.sound}
+                        onCheckedChange={() => toggleTypeSound(type.id)}
+                        disabled={!type.enabled}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">إرسال بريد إلكتروني</span>
+                      </div>
+                      <Switch
+                        checked={type.email}
+                        onCheckedChange={() => toggleTypeEmail(type.id)}
+                        disabled={!type.enabled}
+                      />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </CardContent>
       </Card>
 
       {/* Quiet Hours */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Moon className="h-5 w-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Moon className="h-5 w-5 text-primary" />
             أوقات عدم الإزعاج
           </CardTitle>
+          <CardDescription>إيقاف الإشعارات الصوتية في أوقات محددة</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-3 rounded-lg border">
             <div className="space-y-0.5">
-              <Label>تفعيل وضع عدم الإزعاج</Label>
-              <p className="text-sm text-muted-foreground">
-                إيقاف الإشعارات الصوتية في أوقات محددة
-              </p>
+              <Label className="text-base">تفعيل وضع عدم الإزعاج</Label>
+              <p className="text-sm text-muted-foreground">لن تصدر أصوات في الفترة المحددة</p>
             </div>
             <Switch
               checked={settings.quietHours.enabled}
-              onCheckedChange={(enabled) => 
-                setQuietHours({ ...settings.quietHours, enabled })
-              }
+              onCheckedChange={(enabled) => setQuietHours({ ...settings.quietHours, enabled })}
             />
           </div>
 
           {settings.quietHours.enabled && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 animate-fade-in">
               <div className="space-y-2">
                 <Label>من الساعة</Label>
                 <Input
                   type="time"
                   value={settings.quietHours.start}
-                  onChange={(e) => 
-                    setQuietHours({ ...settings.quietHours, start: e.target.value })
-                  }
+                  onChange={(e) => setQuietHours({ ...settings.quietHours, start: e.target.value })}
+                  className="text-center"
                 />
               </div>
               <div className="space-y-2">
@@ -121,9 +162,8 @@ export function NotificationSettings() {
                 <Input
                   type="time"
                   value={settings.quietHours.end}
-                  onChange={(e) => 
-                    setQuietHours({ ...settings.quietHours, end: e.target.value })
-                  }
+                  onChange={(e) => setQuietHours({ ...settings.quietHours, end: e.target.value })}
+                  className="text-center"
                 />
               </div>
             </div>
@@ -133,59 +173,48 @@ export function NotificationSettings() {
 
       {/* Priority Settings */}
       <Card>
-        <CardHeader>
-          <CardTitle>أولوية الإشعارات</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Settings2 className="h-5 w-5 text-primary" />
+            أولوية الإشعارات
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
+            <div className="space-y-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
               <Label className="text-destructive font-medium">عاجل</Label>
               <Select
                 value={settings.priority.high}
-                onValueChange={(value: any) => 
-                  setPriority({ ...settings.priority, high: value })
-                }
+                onValueChange={(value: any) => setPriority({ ...settings.priority, high: value })}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sound_popup">صوت + إشعار منبثق</SelectItem>
-                  <SelectItem value="popup">إشعار منبثق فقط</SelectItem>
+                  <SelectItem value="sound_popup">صوت + إشعار</SelectItem>
+                  <SelectItem value="popup">إشعار فقط</SelectItem>
                   <SelectItem value="badge">شارة فقط</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-orange-500 font-medium">عادي</Label>
+            <div className="space-y-2 p-3 rounded-lg border border-warning/30 bg-warning/5">
+              <Label className="text-warning font-medium">عادي</Label>
               <Select
                 value={settings.priority.medium}
-                onValueChange={(value: any) => 
-                  setPriority({ ...settings.priority, medium: value })
-                }
+                onValueChange={(value: any) => setPriority({ ...settings.priority, medium: value })}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="popup">إشعار منبثق</SelectItem>
                   <SelectItem value="badge">شارة فقط</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
+            <div className="space-y-2 p-3 rounded-lg border bg-muted/30">
               <Label className="text-muted-foreground font-medium">منخفض</Label>
               <Select
                 value={settings.priority.low}
-                onValueChange={(value: any) => 
-                  setPriority({ ...settings.priority, low: value })
-                }
+                onValueChange={(value: any) => setPriority({ ...settings.priority, low: value })}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="badge">شارة فقط</SelectItem>
                   <SelectItem value="none">بدون إشعار</SelectItem>
@@ -196,12 +225,9 @@ export function NotificationSettings() {
         </CardContent>
       </Card>
 
-      {/* Reset Button */}
+      {/* Reset */}
       <div className="flex justify-end">
-        <Button variant="outline" onClick={handleReset}>
-          <RotateCcw className="h-4 w-4 ml-2" />
-          استعادة الافتراضي
-        </Button>
+        <ResetSettingsButton onReset={handleReset} sectionName="الإشعارات" />
       </div>
     </div>
   );
