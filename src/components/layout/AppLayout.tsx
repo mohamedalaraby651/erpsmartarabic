@@ -109,7 +109,7 @@ export default function AppLayout() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-16">
-        <MobileHeader />
+        <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-4">
           <div className="animate-fade-in">
             <Outlet />

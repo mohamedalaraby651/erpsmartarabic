@@ -1,15 +1,16 @@
-import { useState, memo, useMemo } from 'react';
+import { useState, memo, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import { useSidebarSearch } from '@/hooks/useSidebarSearch';
+import { useSidebarSettings } from '@/hooks/useSidebarSettings';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import SidebarSearch from '@/components/sidebar/SidebarSearch';
+import ClickableSearchButton from '@/components/sidebar/ClickableSearchButton';
 import QuickActions from '@/components/sidebar/QuickActions';
 import FavoritesSection from '@/components/sidebar/FavoritesSection';
 import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
@@ -55,10 +56,9 @@ import {
   Search,
   Wallet,
   Briefcase,
-  UserCircle,
   RefreshCw,
-  Paperclip,
   RotateCcw,
+  DollarSign,
 } from 'lucide-react';
 
 interface NavItem {
@@ -79,18 +79,19 @@ interface NavSection {
   items: NavItem[];
 }
 
+// الهيكل الجديد: 4 أقسام رئيسية
 const defaultNavSections: NavSection[] = [
   {
-    id: 'daily-operations',
-    title: 'العمليات اليومية',
+    id: 'sales',
+    title: 'المبيعات والعملاء',
     icon: ShoppingCart,
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-500/10',
     items: [
       { title: 'العملاء', icon: Users, href: '/customers', roles: ['admin', 'sales'] },
-      { title: 'الفواتير', icon: Receipt, href: '/invoices', roles: ['admin', 'sales', 'accountant'], countKey: 'pendingInvoices', countColor: 'destructive' },
-      { title: 'أوامر البيع', icon: ShoppingCart, href: '/sales-orders', roles: ['admin', 'sales'], countKey: 'pendingSalesOrders', countColor: 'warning' },
       { title: 'عروض الأسعار', icon: FileText, href: '/quotations', roles: ['admin', 'sales'], countKey: 'pendingQuotations', countColor: 'info' },
+      { title: 'أوامر البيع', icon: ShoppingCart, href: '/sales-orders', roles: ['admin', 'sales'], countKey: 'pendingSalesOrders', countColor: 'warning' },
+      { title: 'الفواتير', icon: Receipt, href: '/invoices', roles: ['admin', 'sales', 'accountant'], countKey: 'pendingInvoices', countColor: 'destructive' },
       { title: 'التحصيل', icon: CreditCard, href: '/payments', roles: ['admin', 'accountant'] },
     ],
   },
@@ -106,51 +107,33 @@ const defaultNavSections: NavSection[] = [
       { title: 'المخزون', icon: Warehouse, href: '/inventory', roles: ['admin', 'warehouse'], countKey: 'lowStockAlerts', countColor: 'warning' },
       { title: 'الموردين', icon: Truck, href: '/suppliers', roles: ['admin', 'warehouse'] },
       { title: 'أوامر الشراء', icon: ClipboardList, href: '/purchase-orders', roles: ['admin', 'warehouse'], countKey: 'pendingPurchaseOrders', countColor: 'info' },
-      { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
     ],
   },
   {
-    id: 'hr',
-    title: 'الموارد البشرية',
-    icon: Briefcase,
+    id: 'finance',
+    title: 'المالية',
+    icon: DollarSign,
     color: 'text-orange-600 dark:text-orange-400',
     bgColor: 'bg-orange-500/10',
     items: [
-      { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
+      { title: 'الخزينة', icon: Wallet, href: '/treasury', roles: ['admin', 'accountant'] },
+      { title: 'المصروفات', icon: Receipt, href: '/expenses', roles: ['admin', 'accountant'] },
+      { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
+      { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
     ],
   },
   {
     id: 'system',
-    title: 'النظام والإعدادات',
+    title: 'النظام',
     icon: Settings,
     color: 'text-slate-600 dark:text-slate-400',
     bgColor: 'bg-slate-500/10',
     items: [
-      { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
+      { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
       { title: 'المهام', icon: CheckSquare, href: '/tasks', countKey: 'openTasks', countColor: 'success' },
       { title: 'الإشعارات', icon: Bell, href: '/notifications', countKey: 'unreadNotifications', countColor: 'info' },
       { title: 'حالة المزامنة', icon: RefreshCw, href: '/sync' },
       { title: 'الإعدادات', icon: Settings, href: '/settings' },
-      { title: 'ملفي الشخصي', icon: UserCircle, href: '/profile' },
-    ],
-  },
-  {
-    id: 'admin',
-    title: 'إدارة النظام',
-    icon: Shield,
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-500/10',
-    items: [
-      { title: 'لوحة الإدارة', icon: LayoutDashboard, href: '/admin/dashboard', roles: ['admin'] },
-      { title: 'إدارة المرفقات', icon: Paperclip, href: '/attachments', roles: ['admin'] },
-      { title: 'إدارة الأدوار', icon: Shield, href: '/admin/roles', roles: ['admin'] },
-      { title: 'إدارة الصلاحيات', icon: Shield, href: '/admin/permissions', roles: ['admin'] },
-      { title: 'تخصيص الأقسام', icon: Settings, href: '/admin/customizations', roles: ['admin'] },
-      { title: 'إدارة المستخدمين', icon: Users, href: '/admin/users', roles: ['admin'] },
-      { title: 'سجل النشاطات', icon: BarChart3, href: '/admin/activity-log', roles: ['admin'] },
-      { title: 'الحدود المالية', icon: CreditCard, href: '/admin/role-limits', roles: ['admin'] },
-      { title: 'النسخ الاحتياطي', icon: Warehouse, href: '/admin/backup', roles: ['admin'] },
-      { title: 'إعدادات النظام', icon: Settings, href: '/admin/system-settings', roles: ['admin'] },
     ],
   },
 ];
@@ -168,13 +151,33 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
   const { signOut, userRole } = useAuth();
   const { favorites, removeFavorite, isFavorite, toggleFavorite, reorderFavorites } = useFavoritePages();
   const { data: counts } = useSidebarCounts();
-  const [openSections, setOpenSections] = useState<string[]>(['daily-operations', 'inventory']);
-  const [sections, setSections] = useState(defaultNavSections);
+  const { settings, updateSectionOrder, toggleSectionCollapsed, isSectionCollapsed, resetSettings } = useSidebarSettings();
+  const [openSections, setOpenSections] = useState<string[]>(['sales', 'inventory']);
+
+  // Order sections based on saved settings
+  const orderedSections = useMemo(() => {
+    const sectionMap = new Map(defaultNavSections.map(s => [s.id, s]));
+    const ordered: NavSection[] = [];
+    
+    // Add sections in saved order
+    settings.sectionOrder.forEach(id => {
+      const section = sectionMap.get(id);
+      if (section) {
+        ordered.push(section);
+        sectionMap.delete(id);
+      }
+    });
+    
+    // Add any remaining sections
+    sectionMap.forEach(section => ordered.push(section));
+    
+    return ordered;
+  }, [settings.sectionOrder]);
 
   // Build searchable items
   const allItems = useMemo(() => {
     const items: { title: string; href: string; section: string }[] = [];
-    sections.forEach(section => {
+    orderedSections.forEach(section => {
       section.items.forEach(item => {
         items.push({
           title: item.title,
@@ -184,7 +187,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
       });
     });
     return items;
-  }, [sections]);
+  }, [orderedSections]);
 
   const { searchQuery, setSearchQuery, clearSearch, isSearching, filteredItems } = useSidebarSearch(allItems);
 
@@ -224,14 +227,16 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
   const handleSectionDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = sections.findIndex(s => s.id === active.id);
-      const newIndex = sections.findIndex(s => s.id === over.id);
-      setSections(arrayMove(sections, oldIndex, newIndex));
+      const oldIndex = orderedSections.findIndex(s => s.id === active.id);
+      const newIndex = orderedSections.findIndex(s => s.id === over.id);
+      const newOrder = arrayMove(orderedSections.map(s => s.id), oldIndex, newIndex);
+      updateSectionOrder(newOrder);
     }
   };
 
-  const resetSectionOrder = () => {
-    setSections(defaultNavSections);
+  const handleResetOrder = () => {
+    resetSettings();
+    setOpenSections(['sales', 'inventory']);
   };
 
   const getCount = (item: NavItem) => {
@@ -241,15 +246,17 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
 
   // Filter sections based on search
   const visibleSections = useMemo(() => {
-    if (!isSearching) return sections;
+    if (!isSearching) return orderedSections;
     
-    return sections.map(section => ({
+    return orderedSections.map(section => ({
       ...section,
       items: section.items.filter(item =>
         filteredItems.some(f => f.href === item.href)
       ),
     })).filter(section => section.items.length > 0);
-  }, [sections, isSearching, filteredItems]);
+  }, [orderedSections, isSearching, filteredItems]);
+
+  const isAdmin = userRole === 'admin';
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -286,11 +293,10 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
           {/* Search */}
           <div className="px-3 pt-3">
             {!collapsed ? (
-              <SidebarSearch
+              <ClickableSearchButton
                 value={searchQuery}
                 onChange={setSearchQuery}
                 onClear={clearSearch}
-                collapsed={collapsed}
               />
             ) : (
               <Tooltip>
@@ -442,13 +448,34 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
               </SortableContext>
             </DndContext>
 
+            {/* Admin Link */}
+            {!collapsed && !isSearching && isAdmin && (
+              <>
+                <Separator className="my-3" />
+                <Button
+                  variant={location.pathname.startsWith('/admin') ? 'secondary' : 'ghost'}
+                  className={cn(
+                    'w-full justify-start gap-3 h-10',
+                    location.pathname.startsWith('/admin') && 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                  )}
+                  onClick={() => handleNavigation('/admin/dashboard')}
+                >
+                  <div className="p-1.5 rounded-md bg-purple-500/10">
+                    <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <span>إدارة النظام</span>
+                  <ChevronLeft className="mr-auto h-4 w-4" />
+                </Button>
+              </>
+            )}
+
             {/* Reset Order Button */}
             {!collapsed && !isSearching && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="w-full mt-4 text-xs text-muted-foreground hover:text-foreground gap-2"
-                onClick={resetSectionOrder}
+                onClick={handleResetOrder}
               >
                 <RotateCcw className="h-3 w-3" />
                 إعادة الترتيب الافتراضي
@@ -478,7 +505,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
             ) : (
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 h-9 text-sm"
+                className="w-full justify-start gap-3 h-9"
                 onClick={onThemeToggle}
               >
                 {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -486,7 +513,33 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
               </Button>
             )}
 
-            {/* Logout */}
+            {/* Collapse Toggle */}
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-full h-9"
+                    onClick={onToggle}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">توسيع القائمة</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-9"
+                onClick={onToggle}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span>طي القائمة</span>
+              </Button>
+            )}
+
+            {/* Sign Out */}
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -504,23 +557,13 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
             ) : (
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 h-9 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="w-full justify-start gap-3 h-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4" />
                 <span>تسجيل الخروج</span>
               </Button>
             )}
-
-            {/* Collapse Toggle */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-full h-8 mt-2"
-              onClick={onToggle}
-            >
-              {collapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            </Button>
           </div>
         </div>
       </aside>

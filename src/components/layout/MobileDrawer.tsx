@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
@@ -41,12 +41,11 @@ import {
   Star,
   Plus,
   Briefcase,
-  UserCircle,
   RefreshCw,
-  Paperclip,
   X,
+  ChevronLeft,
+  DollarSign,
 } from 'lucide-react';
-import { useState } from 'react';
 
 interface NavItem {
   title: string;
@@ -60,28 +59,32 @@ interface NavItem {
 interface NavSection {
   id: string;
   title: string;
+  icon: React.ElementType;
   color: string;
   bgColor: string;
   items: NavItem[];
 }
 
+// الهيكل الجديد: 4 أقسام رئيسية
 const navSections: NavSection[] = [
   {
-    id: 'daily-operations',
-    title: 'العمليات اليومية',
+    id: 'sales',
+    title: 'المبيعات والعملاء',
+    icon: ShoppingCart,
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-500/10',
     items: [
       { title: 'العملاء', icon: Users, href: '/customers', roles: ['admin', 'sales'] },
-      { title: 'الفواتير', icon: Receipt, href: '/invoices', roles: ['admin', 'sales', 'accountant'], countKey: 'pendingInvoices', countColor: 'bg-destructive' },
-      { title: 'أوامر البيع', icon: ShoppingCart, href: '/sales-orders', roles: ['admin', 'sales'], countKey: 'pendingSalesOrders', countColor: 'bg-amber-500' },
       { title: 'عروض الأسعار', icon: FileText, href: '/quotations', roles: ['admin', 'sales'] },
+      { title: 'أوامر البيع', icon: ShoppingCart, href: '/sales-orders', roles: ['admin', 'sales'], countKey: 'pendingSalesOrders', countColor: 'bg-amber-500' },
+      { title: 'الفواتير', icon: Receipt, href: '/invoices', roles: ['admin', 'sales', 'accountant'], countKey: 'pendingInvoices', countColor: 'bg-destructive' },
       { title: 'التحصيل', icon: CreditCard, href: '/payments', roles: ['admin', 'accountant'] },
     ],
   },
   {
     id: 'inventory',
     title: 'المخزون والمشتريات',
+    icon: Warehouse,
     color: 'text-emerald-600 dark:text-emerald-400',
     bgColor: 'bg-emerald-500/10',
     items: [
@@ -90,51 +93,42 @@ const navSections: NavSection[] = [
       { title: 'المخزون', icon: Warehouse, href: '/inventory', roles: ['admin', 'warehouse'], countKey: 'lowStockAlerts', countColor: 'bg-amber-500' },
       { title: 'الموردين', icon: Truck, href: '/suppliers', roles: ['admin', 'warehouse'] },
       { title: 'أوامر الشراء', icon: ClipboardList, href: '/purchase-orders', roles: ['admin', 'warehouse'] },
-      { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
     ],
   },
   {
-    id: 'hr',
-    title: 'الموارد البشرية',
+    id: 'finance',
+    title: 'المالية',
+    icon: DollarSign,
     color: 'text-orange-600 dark:text-orange-400',
     bgColor: 'bg-orange-500/10',
     items: [
-      { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
+      { title: 'الخزينة', icon: Wallet, href: '/treasury', roles: ['admin', 'accountant'] },
+      { title: 'المصروفات', icon: Receipt, href: '/expenses', roles: ['admin', 'accountant'] },
+      { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
+      { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
     ],
   },
   {
     id: 'system',
-    title: 'النظام والإعدادات',
+    title: 'النظام',
+    icon: Settings,
     color: 'text-slate-600 dark:text-slate-400',
     bgColor: 'bg-slate-500/10',
     items: [
-      { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
+      { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
       { title: 'المهام', icon: CheckSquare, href: '/tasks', countKey: 'openTasks', countColor: 'bg-emerald-500' },
       { title: 'الإشعارات', icon: Bell, href: '/notifications', countKey: 'unreadNotifications', countColor: 'bg-blue-500' },
       { title: 'حالة المزامنة', icon: RefreshCw, href: '/sync' },
       { title: 'الإعدادات', icon: Settings, href: '/settings' },
-      { title: 'ملفي الشخصي', icon: UserCircle, href: '/profile' },
     ],
   },
 ];
 
-const adminItems: NavItem[] = [
-  { title: 'لوحة الإدارة', icon: LayoutDashboard, href: '/admin/dashboard', roles: ['admin'] },
-  { title: 'إدارة المرفقات', icon: Paperclip, href: '/attachments', roles: ['admin'] },
-  { title: 'إدارة الأدوار', icon: Shield, href: '/admin/roles', roles: ['admin'] },
-  { title: 'إدارة الصلاحيات', icon: Shield, href: '/admin/permissions', roles: ['admin'] },
-  { title: 'تخصيص الأقسام', icon: Settings, href: '/admin/customizations', roles: ['admin'] },
-  { title: 'إدارة المستخدمين', icon: Users, href: '/admin/users', roles: ['admin'] },
-  { title: 'سجل النشاطات', icon: BarChart3, href: '/admin/activity-log', roles: ['admin'] },
-  { title: 'الحدود المالية', icon: CreditCard, href: '/admin/role-limits', roles: ['admin'] },
-  { title: 'إعدادات النظام', icon: Settings, href: '/admin/system-settings', roles: ['admin'] },
-];
-
 const quickActions = [
-  { title: 'فاتورة', icon: Receipt, href: '/invoices?action=create', color: 'text-blue-600', bgColor: 'bg-blue-500/10' },
-  { title: 'عميل', icon: Users, href: '/customers?action=create', color: 'text-emerald-600', bgColor: 'bg-emerald-500/10' },
-  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders?action=create', color: 'text-violet-600', bgColor: 'bg-violet-500/10' },
-  { title: 'منتج', icon: Package, href: '/products?action=create', color: 'text-rose-600', bgColor: 'bg-rose-500/10' },
+  { title: 'فاتورة', icon: Receipt, href: '/invoices?action=new&t=' + Date.now(), color: 'text-blue-600', bgColor: 'bg-blue-500/10' },
+  { title: 'عميل', icon: Users, href: '/customers?action=new&t=' + Date.now(), color: 'text-emerald-600', bgColor: 'bg-emerald-500/10' },
+  { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders?action=new&t=' + Date.now(), color: 'text-violet-600', bgColor: 'bg-violet-500/10' },
+  { title: 'منتج', icon: Package, href: '/products?action=new&t=' + Date.now(), color: 'text-rose-600', bgColor: 'bg-rose-500/10' },
 ];
 
 interface MobileDrawerProps {
@@ -156,6 +150,7 @@ function MobileDrawer({
   const { favorites, isFavorite, toggleFavorite, removeFavorite } = useFavoritePages();
   const { data: counts } = useSidebarCounts();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const handleNavigation = (href: string) => {
     navigate(href);
@@ -198,6 +193,11 @@ function MobileDrawer({
     })).filter(section => section.items.length > 0);
   }, [searchQuery]);
 
+  const handleSearchClear = () => {
+    setSearchQuery('');
+    setIsSearchActive(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[320px] p-0">
@@ -215,27 +215,42 @@ function MobileDrawer({
 
         <ScrollArea className="h-[calc(100vh-220px)]">
           <div className="p-4 space-y-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="ابحث في القائمة..."
-                className="pr-9 pl-9 h-10 bg-muted/50"
-              />
-              {searchQuery && (
+            {/* Search - Click to activate */}
+            {!isSearchActive && !searchQuery ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 h-10 bg-muted/50 border-transparent text-muted-foreground"
+                onClick={() => setIsSearchActive(true)}
+              >
+                <Search className="h-4 w-4" />
+                <span>ابحث في القائمة...</span>
+              </Button>
+            ) : (
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="ابحث في القائمة..."
+                  className="pr-9 pl-9 h-10 bg-background"
+                  autoFocus
+                  onBlur={() => {
+                    if (!searchQuery.trim()) {
+                      setIsSearchActive(false);
+                    }
+                  }}
+                />
                 <Button
                   variant="ghost"
                   size="icon"
                   className="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                  onClick={() => setSearchQuery('')}
+                  onClick={handleSearchClear}
                 >
                   <X className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Quick Actions */}
             {!searchQuery && (
@@ -249,7 +264,7 @@ function MobileDrawer({
                     const Icon = action.icon;
                     return (
                       <Button
-                        key={action.href}
+                        key={action.title}
                         variant="ghost"
                         className={cn(
                           'flex-col h-auto py-3 gap-1.5',
@@ -324,11 +339,13 @@ function MobileDrawer({
               const filteredItems = filterItems(section.items);
               if (filteredItems.length === 0) return null;
 
+              const SectionIcon = section.icon;
+
               return (
                 <div key={section.id}>
                   <div className={cn('flex items-center gap-2 mb-2', section.color)}>
-                    <div className={cn('p-1 rounded', section.bgColor)}>
-                      <div className="h-3 w-3" />
+                    <div className={cn('p-1.5 rounded', section.bgColor)}>
+                      <SectionIcon className="h-3.5 w-3.5" />
                     </div>
                     <h3 className="text-sm font-semibold">{section.title}</h3>
                   </div>
@@ -389,39 +406,24 @@ function MobileDrawer({
               );
             })}
 
-            {/* Admin Section */}
+            {/* Admin Link - Separate Button */}
             {isAdmin && !searchQuery && (
               <>
                 <Separator />
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-purple-600 dark:text-purple-400">
-                    <div className="p-1 rounded bg-purple-500/10">
-                      <Shield className="h-3 w-3" />
-                    </div>
-                    <h3 className="text-sm font-semibold">إدارة النظام</h3>
+                <Button
+                  variant={location.pathname.startsWith('/admin') ? 'secondary' : 'outline'}
+                  className={cn(
+                    'w-full justify-start gap-3 h-11 border-purple-200 dark:border-purple-800',
+                    location.pathname.startsWith('/admin') && 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                  )}
+                  onClick={() => handleNavigation('/admin/dashboard')}
+                >
+                  <div className="p-1.5 rounded bg-purple-500/10">
+                    <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <div className="space-y-1">
-                    {adminItems.map((item) => {
-                      const Icon = item.icon;
-                      const active = isActive(item.href);
-
-                      return (
-                        <Button
-                          key={item.href}
-                          variant={active ? 'secondary' : 'ghost'}
-                          className={cn(
-                            'w-full justify-start gap-3 h-9',
-                            active && 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                          )}
-                          onClick={() => handleNavigation(item.href)}
-                        >
-                          <Icon className="h-4 w-4" />
-                          {item.title}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
+                  <span className="flex-1 text-right">إدارة النظام</span>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
               </>
             )}
           </div>
@@ -450,9 +452,8 @@ function MobileDrawer({
             </Button>
           </div>
           <Button
-            variant="destructive"
-            size="sm"
-            className="w-full h-10"
+            variant="ghost"
+            className="w-full h-10 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleSignOut}
           >
             <LogOut className="h-4 w-4 ml-2" />
