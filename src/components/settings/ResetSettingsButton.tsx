@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -24,13 +24,11 @@ interface ResetSettingsButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-export function ResetSettingsButton({
-  onReset,
-  sectionName,
-  requireConfirmation = false,
-  variant = 'outline',
-  size = 'default',
-}: ResetSettingsButtonProps) {
+export const ResetSettingsButton = forwardRef<HTMLButtonElement, ResetSettingsButtonProps>(
+  function ResetSettingsButton(
+    { onReset, sectionName, requireConfirmation = false, variant = 'outline', size = 'default' },
+    ref
+  ) {
   const [confirmText, setConfirmText] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -48,7 +46,7 @@ export function ResetSettingsButton({
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} className="gap-2">
+        <Button ref={ref} variant={variant} size={size} className="gap-2">
           <RotateCcw className="h-4 w-4" />
           {size !== 'icon' && (sectionName ? `إعادة تعيين ${sectionName}` : 'استعادة الافتراضي')}
         </Button>
@@ -97,4 +95,4 @@ export function ResetSettingsButton({
       </AlertDialogContent>
     </AlertDialog>
   );
-}
+});

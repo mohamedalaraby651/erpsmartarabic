@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
 import MobileHeader from './MobileHeader';
@@ -46,15 +47,18 @@ export default function AppLayout() {
   const location = useLocation();
   const isMobile = useIsMobile();
   useKeyboardShortcuts(); // Global keyboard shortcuts
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // ربط مع تفضيلات المستخدم
+  const { preferences, updateSidebarCompact, updateTheme } = useUserPreferences();
+  
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(preferences.sidebar_compact);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark';
-    }
-    return false;
-  });
   const [isHydrated, setIsHydrated] = useState(false);
+
+  // مزامنة حالة القائمة مع التفضيلات
+  useEffect(() => {
+    setSidebarCollapsed(preferences.sidebar_compact);
+  }, [preferences.sidebar_compact]);
 
   // Mark as hydrated after first render
   useEffect(() => {
@@ -67,23 +71,21 @@ export default function AppLayout() {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
-
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    const newValue = !sidebarCollapsed;
+    setSidebarCollapsed(newValue);
+    updateSidebarCompact(newValue);
   };
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
+    const currentTheme = preferences.theme;
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    updateTheme(newTheme);
   };
+
+  // حساب isDark من التفضيلات
+  const isDark = preferences.theme === 'dark' || 
+    (preferences.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   // Get current page context for FAB
   const getPageContext = () => {
