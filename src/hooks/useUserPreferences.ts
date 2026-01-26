@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { ThemeConfig, defaultThemeConfig, applyTheme, saveThemeToLocalStorage, getThemeFromLocalStorage } from '@/lib/themeManager';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export interface UserPreferences {
   id?: string;
@@ -66,6 +66,19 @@ export function useUserPreferences() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // تحميل أولي سريع من localStorage
+  const localStoragePrefs = useMemo(() => {
+    const config = getThemeFromLocalStorage();
+    return {
+      theme: config.theme,
+      primary_color: config.primaryColor,
+      accent_color: config.accentColor,
+      font_family: config.fontFamily,
+      font_size: config.fontSize,
+      sidebar_compact: config.sidebarCompact,
+    };
+  }, []);
+
   // Fetch preferences from database
   const { data: dbPreferences, isLoading } = useQuery({
     queryKey: ['user-preferences', user?.id],
@@ -89,8 +102,17 @@ export function useUserPreferences() {
   });
 
   // Merge local and DB preferences with proper parsing
+  // أولوية: قاعدة البيانات > localStorage > الافتراضي
   const preferences: UserPreferences = {
     ...defaultPreferences,
+    // تطبيق إعدادات localStorage أولاً
+    theme: localStoragePrefs.theme,
+    primary_color: localStoragePrefs.primary_color,
+    accent_color: localStoragePrefs.accent_color,
+    font_family: localStoragePrefs.font_family,
+    font_size: localStoragePrefs.font_size,
+    sidebar_compact: localStoragePrefs.sidebar_compact,
+    // ثم تطبيق إعدادات قاعدة البيانات (الأولوية الأعلى)
     ...(dbPreferences ? {
       ...dbPreferences,
       sidebar_order: parseJsonArray(dbPreferences.sidebar_order),
