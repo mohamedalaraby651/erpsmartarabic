@@ -137,10 +137,30 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
                     setCurrency(curr);
                     onDataChange?.();
                   }}
+                  className="touch-target"
                 >
                   {curr}
                 </Button>
               ))}
+            </div>
+          </div>
+
+          {/* Invoice Preview */}
+          <div className="p-4 border rounded-lg bg-muted/30 space-y-2">
+            <Label className="block">معاينة عرض السعر</Label>
+            <div className="bg-background border rounded-lg p-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">المجموع الفرعي</span>
+                <span>1,000.00 {currency}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm mt-2">
+                <span className="text-muted-foreground">الضريبة (14%)</span>
+                <span>140.00 {currency}</span>
+              </div>
+              <div className="border-t mt-2 pt-2 flex justify-between items-center font-bold">
+                <span>الإجمالي</span>
+                <span className="text-primary">1,140.00 {currency}</span>
+              </div>
             </div>
           </div>
         </CardContent>

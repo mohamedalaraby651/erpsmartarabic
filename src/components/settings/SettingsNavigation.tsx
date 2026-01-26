@@ -311,9 +311,9 @@ export function MobileSettingsDetail({ tab, onBack, children }: MobileSettingsDe
   const TabIcon = tab.icon;
   
   return (
-    <div className="animate-slide-in-right">
+    <div className="animate-slide-in-right -mx-4">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b -mx-4 px-4 py-3 mb-4">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-4 py-3 mb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
@@ -334,7 +334,7 @@ export function MobileSettingsDetail({ tab, onBack, children }: MobileSettingsDe
       </div>
 
       {/* Content */}
-      <div className="pb-safe-area-bottom">
+      <div className="px-4 pb-safe-area-bottom">
         {children}
       </div>
     </div>

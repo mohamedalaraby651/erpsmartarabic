@@ -226,7 +226,7 @@ export function NotificationSettings() {
       </Card>
 
       {/* Reset */}
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-4">
         <ResetSettingsButton onReset={handleReset} sectionName="الإشعارات" />
       </div>
     </div>

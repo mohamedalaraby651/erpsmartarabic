@@ -161,7 +161,7 @@ export default function UnifiedSettingsPage() {
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="min-h-screen pb-20">
+      <div className="min-h-screen pb-20 px-4">
         {mobileViewMode === 'list' ? (
           <MobileSettingsList
             onTabSelect={handleTabChange}
