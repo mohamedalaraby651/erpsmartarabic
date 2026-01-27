@@ -280,7 +280,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
   };
 
   return (
-    <div className={cn('fixed bottom-20 left-4 z-40 md:hidden', className)}>
+    <div className={cn('fixed bottom-[68px] left-3 z-40 md:hidden', className)}>
       {/* Backdrop */}
       {isOpen && (
         <div
@@ -292,7 +292,7 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
       {/* Action buttons */}
       <div
         className={cn(
-          'absolute bottom-16 left-0 flex flex-col-reverse gap-3 transition-all duration-300 z-50',
+          'absolute bottom-14 left-0 flex flex-col-reverse gap-2.5 transition-all duration-200 z-50',
           isOpen
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
@@ -301,16 +301,16 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
         {menuActions.map((action, index) => (
           <div
             key={index}
-            className="flex items-center gap-3 animate-scale-in"
+            className="flex items-center gap-2.5 animate-scale-in"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <span className="bg-card text-card-foreground text-sm font-semibold px-3.5 py-2 rounded-xl shadow-lg whitespace-nowrap border border-border/50 backdrop-blur-sm">
+            <span className="bg-card text-card-foreground text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border border-border/50 backdrop-blur-sm">
               {action.label}
             </span>
             <Button
               size="icon"
               className={cn(
-                'h-12 w-12 rounded-full shadow-lg text-white transition-all duration-200 active:scale-90',
+                'h-10 w-10 rounded-full shadow-lg text-white transition-all duration-200 active:scale-90',
                 action.color || 'bg-primary hover:bg-primary/90'
               )}
               onClick={() => handleActionClick(action)}
@@ -325,14 +325,14 @@ export function FABMenu({ actions, defaultAction, className, pageContext }: FABM
       <Button
         size="icon"
         className={cn(
-          'h-14 w-14 rounded-full shadow-xl transition-all duration-300 z-50 active:scale-90 border-2 border-white/20',
+          'h-12 w-12 rounded-full shadow-xl transition-all duration-200 z-50 active:scale-90 border-2 border-white/20',
           isOpen 
             ? 'rotate-45 bg-destructive hover:bg-destructive/90' 
-            : 'bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 animate-pulse-glow'
+            : 'bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 animate-pulse-glow-sm'
         )}
         onClick={handleMainClick}
       >
-        {isOpen ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
+        {isOpen ? <X className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
       </Button>
     </div>
   );

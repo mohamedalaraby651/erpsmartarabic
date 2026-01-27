@@ -200,40 +200,40 @@ function MobileDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[320px] p-0">
-        <SheetHeader className="p-4 border-b bg-gradient-to-l from-primary/5 to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-              <Factory className="h-5 w-5 text-primary" />
+      <SheetContent side="right" className="w-[280px] p-0">
+        <SheetHeader className="p-3 border-b bg-gradient-to-l from-primary/5 to-transparent">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+              <Factory className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <SheetTitle className="text-right">معدات الدواجن</SheetTitle>
-              <p className="text-xs text-muted-foreground">نظام الإدارة</p>
+              <SheetTitle className="text-right text-sm">معدات الدواجن</SheetTitle>
+              <p className="text-[10px] text-muted-foreground">نظام الإدارة</p>
             </div>
           </div>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className="p-4 space-y-4">
+        <ScrollArea className="h-[calc(100vh-180px)]">
+          <div className="p-3 space-y-3">
             {/* Search - Click to activate */}
             {!isSearchActive && !searchQuery ? (
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2 h-10 bg-muted/50 border-transparent text-muted-foreground"
+                className="w-full justify-start gap-2 h-9 bg-muted/50 border-transparent text-muted-foreground text-sm"
                 onClick={() => setIsSearchActive(true)}
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-3.5 w-3.5" />
                 <span>ابحث في القائمة...</span>
               </Button>
             ) : (
               <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="ابحث في القائمة..."
-                  className="pr-9 pl-9 h-10 bg-background"
+                  className="pr-8 pl-8 h-9 bg-background text-sm"
                   autoFocus
                   onBlur={() => {
                     if (!searchQuery.trim()) {
@@ -244,22 +244,22 @@ function MobileDrawer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  className="absolute left-0.5 top-1/2 -translate-y-1/2 h-6 w-6"
                   onClick={handleSearchClear}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
             )}
 
             {/* Quick Actions */}
             {!searchQuery && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Plus className="h-3 w-3" />
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <Plus className="h-2.5 w-2.5" />
                   <span>إنشاء سريع</span>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5">
                   {quickActions.map((action) => {
                     const Icon = action.icon;
                     return (
@@ -267,14 +267,14 @@ function MobileDrawer({
                         key={action.title}
                         variant="ghost"
                         className={cn(
-                          'flex-col h-auto py-3 gap-1.5',
+                          'flex-col h-auto py-2 gap-1',
                           action.bgColor,
                           action.color
                         )}
                         onClick={() => handleNavigation(action.href)}
                       >
-                        <Icon className="h-5 w-5" />
-                        <span className="text-[10px]">{action.title}</span>
+                        <Icon className="h-4 w-4" />
+                        <span className="text-[9px]">{action.title}</span>
                       </Button>
                     );
                   })}
@@ -413,16 +413,16 @@ function MobileDrawer({
                 <Button
                   variant={location.pathname.startsWith('/admin') ? 'secondary' : 'outline'}
                   className={cn(
-                    'w-full justify-start gap-3 h-11 border-purple-200 dark:border-purple-800',
+                    'w-full justify-start gap-2.5 h-9 border-purple-200 dark:border-purple-800 text-sm',
                     location.pathname.startsWith('/admin') && 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
                   )}
                   onClick={() => handleNavigation('/admin/dashboard')}
                 >
-                  <div className="p-1.5 rounded bg-purple-500/10">
-                    <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <div className="p-1 rounded bg-purple-500/10">
+                    <Shield className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <span className="flex-1 text-right">إدارة النظام</span>
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
               </>
             )}
@@ -430,33 +430,33 @@ function MobileDrawer({
         </ScrollArea>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-4 space-y-2">
-          <div className="flex gap-2">
+        <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-2.5 space-y-1.5">
+          <div className="flex gap-1.5">
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 h-10"
+              className="flex-1 h-8 text-xs gap-1.5"
               onClick={onThemeToggle}
             >
-              {isDark ? <Sun className="h-4 w-4 ml-2" /> : <Moon className="h-4 w-4 ml-2" />}
+              {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
               {isDark ? 'فاتح' : 'داكن'}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 h-10"
+              className="flex-1 h-8 text-xs gap-1.5"
               onClick={() => handleNavigation('/settings')}
             >
-              <Settings className="h-4 w-4 ml-2" />
+              <Settings className="h-3.5 w-3.5" />
               الإعدادات
             </Button>
           </div>
           <Button
             variant="ghost"
-            className="w-full h-10 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="w-full h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleSignOut}
           >
-            <LogOut className="h-4 w-4 ml-2" />
+            <LogOut className="h-3.5 w-3.5 ml-1.5" />
             تسجيل الخروج
           </Button>
         </div>

@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Users,
   Package,
@@ -16,11 +15,10 @@ import {
   CheckCircle2,
   UserPlus,
   ShoppingCart,
-  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { MobileStatSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
+import { ShimmerSkeleton } from '@/components/shared/ShimmerSkeleton';
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -128,26 +126,44 @@ export function MobileDashboard() {
   // Show full skeleton on initial load
   if (authLoading) {
     return (
-      <div className="space-y-4 pb-20 animate-fade-in">
+      <div className="space-y-3 pb-14 animate-fade-in">
+        {/* Header skeleton */}
         <div className="px-1">
-          <Skeleton className="h-7 w-48 mb-2" />
-          <Skeleton className="h-5 w-24" />
+          <ShimmerSkeleton variant="text" className="h-6 w-40 mb-1.5" />
+          <ShimmerSkeleton variant="rounded" className="h-5 w-24" />
         </div>
-        <MobileStatSkeleton count={4} />
-        <div className="grid grid-cols-4 gap-2 px-1">
+        
+        {/* Stats shimmer - horizontal scroll */}
+        <div className="flex gap-2.5 pb-2 px-1 overflow-hidden">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-lg" />
+            <ShimmerSkeleton key={i} variant="card" className="min-w-[120px] h-[72px] shrink-0" />
           ))}
         </div>
-        <Skeleton className="h-48 w-full mx-1 rounded-lg" />
-        <Skeleton className="h-48 w-full mx-1 rounded-lg" />
+        
+        {/* Quick actions shimmer */}
+        <div className="grid grid-cols-4 gap-2 px-1">
+          {[1, 2, 3, 4].map((i) => (
+            <ShimmerSkeleton key={i} variant="rounded" className="h-[68px]" />
+          ))}
+        </div>
+        
+        {/* Section shimmer */}
+        <div className="px-1 space-y-2.5">
+          <ShimmerSkeleton variant="text" className="h-5 w-24" />
+          <ShimmerSkeleton variant="card" className="h-44" />
+        </div>
+        
+        <div className="px-1 space-y-2.5">
+          <ShimmerSkeleton variant="text" className="h-5 w-28" />
+          <ShimmerSkeleton variant="card" className="h-44" />
+        </div>
       </div>
     );
   }
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="space-y-4 pb-20 animate-fade-in">
+      <div className="space-y-3 pb-14 animate-fade-in">
         {/* Welcome Header */}
         <div className="px-1">
           <h1 className="text-xl font-bold">
@@ -162,22 +178,26 @@ export function MobileDashboard() {
 
         {/* Stats - Horizontal Scroll */}
         {statsLoading ? (
-          <MobileStatSkeleton count={4} />
+          <div className="flex gap-2.5 pb-2 px-1 overflow-hidden">
+            {[1, 2, 3, 4].map((i) => (
+              <ShimmerSkeleton key={i} variant="card" className="min-w-[120px] h-[72px] shrink-0" />
+            ))}
+          </div>
         ) : (
           <ScrollArea className="w-full">
-            <div className="flex gap-3 pb-2 px-1">
+            <div className="flex gap-2.5 pb-2 px-1">
               {statItems.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <Card key={stat.title} className="min-w-[130px] shrink-0 shadow-sm">
-                    <CardContent className="p-3">
+                  <Card key={stat.title} className="min-w-[120px] shrink-0 shadow-sm">
+                    <CardContent className="p-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                          <Icon className={`h-5 w-5 ${stat.color}`} />
+                        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                          <Icon className={`h-4 w-4 ${stat.color}`} />
                         </div>
                         <div>
-                          <p className="text-xl font-bold">{stat.value}</p>
-                          <p className="text-xs text-muted-foreground">{stat.title}</p>
+                          <p className="text-lg font-bold">{stat.value}</p>
+                          <p className="text-[10px] text-muted-foreground">{stat.title}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -190,18 +210,18 @@ export function MobileDashboard() {
         )}
 
         {/* Quick Actions - Grid */}
-        <div className="grid grid-cols-4 gap-2 px-1">
+        <div className="grid grid-cols-4 gap-1.5 px-1">
           {filteredActions.slice(0, 4).map((action) => {
             const Icon = action.icon;
             return (
               <Button
                 key={action.title}
                 variant="outline"
-                className="h-auto py-3 px-2 flex-col gap-1.5 text-xs shadow-sm active:scale-95 transition-transform"
+                className="h-auto py-2.5 px-1.5 flex-col gap-1 text-[10px] shadow-sm active:scale-95 transition-transform"
                 onClick={() => navigate(action.href)}
               >
-                <div className={`h-9 w-9 rounded-lg ${action.color} flex items-center justify-center`}>
-                  <Icon className="h-4 w-4 text-white" />
+                <div className={`h-8 w-8 rounded-lg ${action.color} flex items-center justify-center`}>
+                  <Icon className="h-3.5 w-3.5 text-white" />
                 </div>
                 <span className="font-medium truncate w-full text-center">{action.title}</span>
               </Button>
@@ -211,18 +231,18 @@ export function MobileDashboard() {
 
         {/* Tasks Card */}
         <Card className="mx-1 shadow-sm">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-base">المهام</CardTitle>
-            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/tasks')}>
-              <span className="text-xs">عرض الكل</span>
+          <CardHeader className="pb-1.5 flex flex-row items-center justify-between py-2.5 px-3">
+            <CardTitle className="text-sm">المهام</CardTitle>
+            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => navigate('/tasks')}>
+              <span className="text-[10px]">عرض الكل</span>
               <ArrowLeft className="mr-1 h-3 w-3" />
             </Button>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 pb-2.5 px-3">
             {tasksLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                  <ShimmerSkeleton key={i} variant="rounded" className="h-12" />
                 ))}
               </div>
             ) : tasks && tasks.length > 0 ? (
@@ -260,18 +280,18 @@ export function MobileDashboard() {
 
         {/* Recent Invoices Card */}
         <Card className="mx-1 shadow-sm">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-base">آخر الفواتير</CardTitle>
-            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => navigate('/invoices')}>
-              <span className="text-xs">عرض الكل</span>
+          <CardHeader className="pb-1.5 flex flex-row items-center justify-between py-2.5 px-3">
+            <CardTitle className="text-sm">آخر الفواتير</CardTitle>
+            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => navigate('/invoices')}>
+              <span className="text-[10px]">عرض الكل</span>
               <ArrowLeft className="mr-1 h-3 w-3" />
             </Button>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 pb-2.5 px-3">
             {invoicesLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                  <ShimmerSkeleton key={i} variant="rounded" className="h-14" />
                 ))}
               </div>
             ) : recentInvoices && recentInvoices.length > 0 ? (
