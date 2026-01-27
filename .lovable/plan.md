@@ -1,521 +1,706 @@
 
-
-# خطة احترافية متكاملة لتطوير PWA
-
-## نظرة تنفيذية
-
-هذه الخطة المتطورة مصممة لمشروع ERP بحجم enterprise-grade، تتضمن:
-- **نظام تحميل ذكي** بتأثيرات shimmer متقدمة
-- **واجهة مضغوطة** توفر مساحة عرض أكبر
-- **تأثيرات متناسبة ديناميكياً** مع حجم العناصر
-- **أداء فائق** مع استجابة أقل من 200ms
-- **تجربة PWA احترافية** متطابقة مع التطبيقات الأصلية
+# خطة اختبار شاملة لنظام ERP
+## Enterprise-Grade Testing Plan
 
 ---
 
-## المرحلة 1: نظام شاشة البدء المتقدم (AppInitSkeleton)
+## 📊 نظرة تحليلية على المشروع
 
-### ملف جديد: `src/components/shared/AppInitSkeleton.tsx`
+### إحصائيات المشروع
 
-**التصميم:**
+| المقياس | القيمة | التعليق |
+|---------|--------|---------|
+| عدد الصفحات | 27 صفحة | تغطي جميع وحدات النظام |
+| عدد المكونات | 100+ مكون | UI + Business Logic |
+| عدد الـ Hooks | 28 hook | Custom React Hooks |
+| جداول قاعدة البيانات | 43+ جدول | مع 118 سياسة RLS |
+| ملفات الاختبار الحالية | 17 ملف | Unit + Integration + E2E |
+| حالات الاختبار الحالية | 113 حالة | ~65% تغطية |
+| عدد أسطر الكود | ~25,000 سطر | TypeScript + TSX |
+
+### المشاكل المكتشفة حالياً
+
+| المشكلة | الخطورة | الموقع |
+|---------|---------|--------|
+| forwardRef Warning | متوسطة | `SettingsPageSkeleton`, `MobileSettingsList` |
+| Bank Accounts Exposure | عالية | RLS policy يسمح لجميع المستخدمين برؤية حسابات البنوك |
+
+---
+
+## 🏗️ هيكل خطة الاختبار
+
 ```text
-+--------------------------------------------------+
-|                                                  |
-|              ████████  [Logo Shimmer]            |
-|              معدات الدواجن                       |
-|                                                  |
-|     ░░░░░░░░████████████░░░░░░░░  [Progress]     |
-|                                                  |
-|              جاري تحميل النظام...                |
-|                                                  |
-|                 [Shimmer Dots]                   |
-+--------------------------------------------------+
-```
-
-**المميزات الاحترافية:**
-- شعار مع تأثير shimmer coordinated
-- شريط تقدم متحرك بأنيميشن smooth
-- نص تحميل مع fade effect
-- انتقال سلس للمحتوى باستخدام opacity transition
-- دعم الوضع الداكن والفاتح تلقائياً
-
-**الكود المقترح:**
-```typescript
-// AppInitSkeleton.tsx
-export default function AppInitSkeleton() {
-  const [progress, setProgress] = useState(0);
-  
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress(prev => Math.min(prev + 15, 90));
-    }, 200);
-    return () => clearInterval(timer);
-  }, []);
-  
-  return (
-    <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-[100]">
-      {/* Logo with shimmer */}
-      <div className="relative mb-8">
-        <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shimmer-container">
-          <Factory className="h-10 w-10 text-primary" />
-        </div>
-      </div>
-      
-      {/* App name */}
-      <h1 className="text-xl font-bold mb-6 text-foreground">معدات الدواجن</h1>
-      
-      {/* Progress bar */}
-      <div className="w-48 h-1.5 bg-muted rounded-full overflow-hidden mb-4">
-        <div 
-          className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      
-      {/* Loading text */}
-      <p className="text-sm text-muted-foreground animate-pulse">
-        جاري تحميل النظام...
-      </p>
-    </div>
-  );
-}
+┌─────────────────────────────────────────────────────────────┐
+│                    خطة الاختبار الشاملة                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  المرحلة 1: اختبارات الوحدة (Unit Tests)                   │
+│  ├── Hooks Testing                                          │
+│  ├── Utilities Testing                                      │
+│  └── Validations Testing                                    │
+│                                                             │
+│  المرحلة 2: اختبارات التكامل (Integration Tests)           │
+│  ├── Data Flow Testing                                      │
+│  ├── Component Integration                                  │
+│  └── API Integration                                        │
+│                                                             │
+│  المرحلة 3: اختبارات الأمان (Security Tests)               │
+│  ├── RLS Policy Testing                                     │
+│  ├── Input Validation                                       │
+│  ├── Authentication/Authorization                           │
+│  └── Data Exposure Testing                                  │
+│                                                             │
+│  المرحلة 4: اختبارات الأداء (Performance Tests)            │
+│  ├── Load Time Testing                                      │
+│  ├── Response Time Testing                                  │
+│  └── Memory/Resource Testing                                │
+│                                                             │
+│  المرحلة 5: اختبارات E2E (End-to-End Tests)                │
+│  ├── User Journeys                                          │
+│  ├── Business Workflows                                     │
+│  └── Cross-Browser Testing                                  │
+│                                                             │
+│  المرحلة 6: اختبارات UX/UI                                  │
+│  ├── Responsive Design                                      │
+│  ├── RTL Layout                                             │
+│  ├── Accessibility (A11y)                                   │
+│  └── Mobile Experience                                      │
+│                                                             │
+│  المرحلة 7: اختبارات الوظائف المالية                        │
+│  ├── Invoice Calculations                                   │
+│  ├── Payment Processing                                     │
+│  └── Financial Reports                                      │
+│                                                             │
+│  المرحلة 8: اختبارات التصدير والطباعة                       │
+│  ├── PDF Generation                                         │
+│  ├── Excel Export                                           │
+│  └── Print Templates                                        │
+│                                                             │
+│  المرحلة 9: اختبارات PWA والعمل دون اتصال                  │
+│  ├── Service Worker                                         │
+│  ├── Offline Storage                                        │
+│  └── Sync Queue                                             │
+│                                                             │
+│  المرحلة 10: اختبارات الروابط والتنقل                       │
+│  ├── Route Testing                                          │
+│  ├── Navigation Flow                                        │
+│  └── Deep Linking                                           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## المرحلة 2: القائمة السفلية المضغوطة والمحسنة
+## 📋 المرحلة 1: اختبارات الوحدة (Unit Tests)
 
-### تعديل: `src/components/layout/MobileBottomNav.tsx`
+### 1.1 اختبارات Hooks
 
-**مقارنة الأبعاد:**
+#### Hooks المطلوب اختبارها
 
-| العنصر | الحالي | المحسن | التوفير |
-|--------|--------|--------|---------|
-| ارتفاع القائمة | `h-16` (64px) | `h-14` (56px) | 8px |
-| حجم الأيقونة | `h-5 w-5` (20px) | `h-[18px] w-[18px]` | 2px |
-| Ripple Size | ثابت 50px | ديناميكي 70% | متناسب |
-| مدة Ripple | 600ms | 350ms | أسرع 42% |
-| Padding | `py-2` | `py-1.5` | 4px |
+| Hook | الحالة الحالية | الاختبارات المطلوبة |
+|------|----------------|---------------------|
+| `useAuth` | ✅ مكتمل | 15 حالة |
+| `usePermissions` | ✅ مكتمل | 12 حالة |
+| `useUserPreferences` | ✅ مكتمل | 8 حالات |
+| `useDashboardSettings` | ✅ موجود | التحقق من الاكتمال |
+| `useFavoritePages` | ✅ موجود | التحقق من الاكتمال |
+| `useTableFilter` | ✅ موجود | التحقق من الاكتمال |
+| `useTableSort` | ✅ موجود | التحقق من الاكتمال |
+| `useOnlineStatus` | ✅ موجود | التحقق من الاكتمال |
+| `useDoubleTap` | ✅ موجود | التحقق من الاكتمال |
+| `useLongPress` | ✅ موجود | التحقق من الاكتمال |
+| `useOfflineData` | ⏳ مفقود | إنشاء جديد |
+| `useOfflineSync` | ⏳ مفقود | إنشاء جديد |
+| `useOfflineMutation` | ⏳ مفقود | إنشاء جديد |
+| `useInfiniteScroll` | ⏳ مفقود | إنشاء جديد |
+| `useVirtualList` | ⏳ مفقود | إنشاء جديد |
+| `useSidebarCounts` | ⏳ مفقود | إنشاء جديد |
+| `useSidebarOrder` | ⏳ مفقود | إنشاء جديد |
+| `useKeyboardShortcuts` | ⏳ مفقود | إنشاء جديد |
 
-**تأثير Ripple الديناميكي المحسن:**
+#### حالات الاختبار المطلوبة لـ useOfflineData
+
 ```typescript
-// RippleEffect component محسن
-function RippleEffect({ x, y, size = 40, color }: RippleProps) {
-  return (
-    <span
-      className={cn(
-        "absolute rounded-full opacity-30 animate-ripple-fast pointer-events-none",
-        color || "bg-current"
-      )}
-      style={{
-        left: x - size / 2,
-        top: y - size / 2,
-        width: size,
-        height: size,
-      }}
-    />
-  );
-}
-
-// حساب Ripple ديناميكياً
-const handleNavClick = (item, e) => {
-  haptics.light();
-  const rect = e.currentTarget.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  
-  // حجم Ripple = 70% من أصغر بُعد للزر
-  const rippleSize = Math.min(rect.width, rect.height) * 0.7;
-  
-  setRipple({ x, y, size: rippleSize, key: Date.now() });
-  setTimeout(() => setRipple(null), 350); // أسرع
-  navigate(item.href);
-};
+describe('useOfflineData', () => {
+  it('should return cached data when offline');
+  it('should sync data when online');
+  it('should handle sync conflicts');
+  it('should queue mutations when offline');
+  it('should process queue when back online');
+  it('should show sync status correctly');
+  it('should handle IndexedDB errors gracefully');
+});
 ```
 
-**التصميم المحسن:**
+### 1.2 اختبارات المكتبات (lib/)
+
+| الملف | الحالة | الحالات المطلوبة |
+|-------|--------|------------------|
+| `utils.ts` | ✅ مكتمل | 12 حالة |
+| `errorHandler.ts` | ✅ مكتمل | 10 حالات |
+| `themeManager.ts` | ✅ مكتمل | 10 حالات |
+| `validations.ts` | ✅ مكتمل | 13 حالة |
+| `pdfGenerator.ts` | ⏳ مفقود | 8 حالات جديدة |
+| `offlineStorage.ts` | ⏳ مفقود | 10 حالات جديدة |
+| `syncManager.ts` | ⏳ مفقود | 8 حالات جديدة |
+| `haptics.ts` | ⏳ مفقود | 4 حالات جديدة |
+| `navigation.ts` | ⏳ مفقود | 5 حالات جديدة |
+
+#### اختبارات pdfGenerator.ts الجديدة
+
+```typescript
+describe('pdfGenerator', () => {
+  it('should generate PDF with Arabic text correctly');
+  it('should include company header when enabled');
+  it('should format numbers in Arabic locale');
+  it('should handle RTL layout');
+  it('should generate table with correct columns');
+  it('should add page numbers to footer');
+  it('should handle empty data gracefully');
+  it('should apply custom colors from settings');
+});
+```
+
+---
+
+## 📋 المرحلة 2: اختبارات التكامل (Integration Tests)
+
+### 2.1 سيناريوهات تدفق البيانات
+
+| السيناريو | الوصف | الحالة |
+|-----------|-------|--------|
+| Customer → Invoice | إنشاء عميل ثم فاتورة له | ⏳ مطلوب |
+| Quotation → Order → Invoice | تحويل العرض لأمر ثم فاتورة | ⏳ مطلوب |
+| Product → Stock → Movement | إضافة منتج وتتبع المخزون | ⏳ مطلوب |
+| Supplier → PO → Stock | أمر شراء واستلام المخزون | ⏳ مطلوب |
+| Invoice → Payment → Balance | فاتورة ودفعات وتحديث الرصيد | ⏳ مطلوب |
+
+### 2.2 ملفات الاختبار المطلوبة
+
 ```text
-قبل:
-+------------------------------------------+ h-16
-|  [🏠]     [👥]     [📦]     [🛒 المبيعات]     [≡]  |
-+------------------------------------------+
+src/__tests__/integration/
+├── customer-workflow.test.tsx     // جديد
+├── sales-workflow.test.tsx        // جديد
+├── inventory-workflow.test.tsx    // جديد
+├── payment-workflow.test.tsx      // جديد
+├── supplier-workflow.test.tsx     // جديد
+├── business-logic.test.ts         // موجود
+├── data-flow.test.tsx             // موجود
+└── ui-interactions.test.tsx       // موجود
+```
 
-بعد:
-+------------------------------------------+ h-14
-| [🏠] [👥] [📦] [🛒مبيعات] [≡]                    |
-+------------------------------------------+
+### 2.3 اختبار سير العمل الكامل
+
+```typescript
+describe('Sales Workflow Integration', () => {
+  it('should create customer successfully');
+  it('should create quotation for customer');
+  it('should convert quotation to sales order');
+  it('should create invoice from sales order');
+  it('should record payment against invoice');
+  it('should update customer balance after payment');
+  it('should update stock after invoice confirmation');
+  it('should track all movements in audit log');
+});
 ```
 
 ---
 
-## المرحلة 3: القائمة الجانبية المحكمة (MobileDrawer)
+## 📋 المرحلة 3: اختبارات الأمان (Security Tests)
 
-### تعديل: `src/components/layout/MobileDrawer.tsx`
+### 3.1 مشاكل أمنية مكتشفة تحتاج إصلاح
 
-**مقارنة الأبعاد:**
+| المشكلة | الخطورة | الحل المطلوب |
+|---------|---------|--------------|
+| Bank Accounts Exposure | 🔴 عالية | تقييد SELECT لـ admin و accountant فقط |
+| forwardRef Warnings | 🟡 متوسطة | إضافة forwardRef للمكونات المتأثرة |
 
-| العنصر | الحالي | المحسن | التوفير |
-|--------|--------|--------|---------|
-| عرض القائمة | `w-[320px]` | `w-[280px]` | 40px |
-| Padding رئيسي | `p-4` | `p-3` | 8px |
-| Logo | `h-11 w-11` | `h-9 w-9` | 8px |
-| أزرار التنقل | `h-10/h-11` | `h-9` | 4-8px |
-| Quick Actions | `py-3` | `py-2` | 8px |
-| Footer buttons | `h-10` | `h-8` | 8px |
-| Footer text | `text-sm` | `text-xs` | أصغر |
+### 3.2 اختبارات RLS الشاملة
 
-**الهيكل المحسن:**
+```typescript
+describe('RLS Policy Security', () => {
+  describe('bank_accounts table', () => {
+    it('should deny SELECT for sales role');
+    it('should deny SELECT for warehouse role');
+    it('should allow SELECT for admin role');
+    it('should allow SELECT for accountant role');
+  });
+  
+  describe('customers table', () => {
+    it('should allow admin full access');
+    it('should allow sales full access');
+    it('should allow accountant read access only');
+    it('should deny warehouse any access');
+  });
+  
+  describe('employees table', () => {
+    it('should allow admin full access');
+    it('should allow hr full access');
+    it('should allow employee to view own record only');
+  });
+  
+  describe('attachments table', () => {
+    it('should enforce entity-type based access');
+    it('should allow uploader to delete own files');
+  });
+});
+```
+
+### 3.3 اختبارات التحقق من المدخلات
+
+| نوع الاختبار | الحالة | الملاحظات |
+|--------------|--------|-----------|
+| SQL Injection | ✅ موجود | في input-validation.test.ts |
+| XSS Prevention | ✅ موجود | في input-validation.test.ts |
+| Length Validation | ✅ موجود | في input-validation.test.ts |
+| Numeric Validation | ✅ موجود | في input-validation.test.ts |
+| Email/Phone Validation | ✅ موجود | في input-validation.test.ts |
+| CSRF Protection | ⏳ مطلوب | إضافة اختبارات جديدة |
+| Rate Limiting | ⏳ مطلوب | إضافة اختبارات جديدة |
+
+### 3.4 ملف اختبار أمان جديد
+
 ```text
-+----------------------------+ (w-280px)
-| [Logo h-9] معدات الدواجن  | ← رأس مضغوط p-3
-|----------------------------|
-| 🔍 ابحث... [h-9]          | ← بحث أصغر
-|----------------------------|
-| ⚡ إنشاء سريع             |
-| [📄][👤][🛒][📦] py-2     | ← أيقونات مضغوطة
-|----------------------------|
-| ★ المفضلة                 |
-| ├ العملاء [h-9]           |
-|----------------------------|
-| 📊 المبيعات والعملاء      |
-| ├ العملاء      [3]        | ← h-9 بدلاً من h-10
-| ├ الفواتير     [5]        |
-|----------------------------|
-| [🌙داكن][⚙️إعدادات] h-8   | ← footer مضغوط
-| [🚪 خروج] h-8             | ← text-xs
-+----------------------------+ (p-2.5)
-```
-
-**تحسين Footer:**
-```typescript
-<div className="absolute bottom-0 left-0 right-0 border-t bg-background p-2.5 space-y-1.5">
-  <div className="flex gap-1.5">
-    <Button size="sm" className="flex-1 h-8 text-xs gap-1.5">
-      {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-      {isDark ? 'فاتح' : 'داكن'}
-    </Button>
-    <Button size="sm" className="flex-1 h-8 text-xs gap-1.5">
-      <Settings className="h-3.5 w-3.5" />
-      إعدادات
-    </Button>
-  </div>
-  <Button className="w-full h-8 text-xs">
-    <LogOut className="h-3.5 w-3.5 ml-1.5" />
-    خروج
-  </Button>
-</div>
+src/__tests__/security/
+├── input-validation.test.ts    // موجود
+├── rls-policies.test.ts        // جديد
+├── auth-security.test.ts       // جديد
+└── data-exposure.test.ts       // جديد
 ```
 
 ---
 
-## المرحلة 4: زر FAB المحسن
+## 📋 المرحلة 4: اختبارات الأداء (Performance Tests)
 
-### تعديل: `src/components/mobile/FABMenu.tsx`
+### 4.1 مقاييس الأداء المستهدفة
 
-**مقارنة الأبعاد:**
+| المقياس | الهدف | الأداة |
+|---------|-------|--------|
+| First Contentful Paint (FCP) | < 1.5s | Lighthouse |
+| Time to Interactive (TTI) | < 3s | Lighthouse |
+| Largest Contentful Paint (LCP) | < 2.5s | Lighthouse |
+| Cumulative Layout Shift (CLS) | < 0.1 | Lighthouse |
+| API Response Time | < 500ms | Custom |
+| Page Load Time | < 3s | Playwright |
 
-| العنصر | الحالي | المحسن |
-|--------|--------|--------|
-| الحجم الرئيسي | `h-14 w-14` (56px) | `h-12 w-12` (48px) |
-| الموضع | `bottom-20` (80px) | `bottom-[68px]` |
-| أيقونة رئيسية | `h-6 w-6` | `h-5 w-5` |
-| أزرار الإجراءات | `h-12 w-12` | `h-10 w-10` |
-| Labels | `text-sm` | `text-xs` |
-| Pulse glow | 12px | 8px |
+### 4.2 اختبارات الأداء E2E
 
-**التحسينات:**
 ```typescript
-// FAB محسن
-<Button
-  size="icon"
-  className={cn(
-    'h-12 w-12 rounded-full shadow-xl z-50 active:scale-90',
-    'border-2 border-white/20 transition-all duration-200',
-    isOpen 
-      ? 'rotate-45 bg-destructive' 
-      : 'bg-gradient-to-br from-primary to-primary/80 animate-pulse-glow-sm'
-  )}
->
-  {isOpen ? <X className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-</Button>
-
-// Action buttons محسنة
-<Button
-  className="h-10 w-10 rounded-full shadow-lg text-white active:scale-90"
->
-  {action.icon}
-</Button>
+describe('Performance Tests', () => {
+  it('should load dashboard under 3 seconds');
+  it('should render customer list with 1000 items smoothly');
+  it('should filter data in under 200ms');
+  it('should export PDF in under 5 seconds');
+  it('should handle concurrent operations');
+  it('should not leak memory on navigation');
+});
 ```
+
+### 4.3 اختبارات حجم الحزمة
+
+| الحزمة | الحجم المستهدف | الحالة |
+|--------|----------------|--------|
+| Main Bundle | < 500KB gzipped | ⏳ للقياس |
+| Vendor Bundle | < 300KB gzipped | ⏳ للقياس |
+| Lazy Chunks | < 50KB each | ⏳ للقياس |
 
 ---
 
-## المرحلة 5: تحسين MobileHeader
+## 📋 المرحلة 5: اختبارات E2E (End-to-End)
 
-### تعديل: `src/components/layout/MobileHeader.tsx`
+### 5.1 رحلات المستخدم الكاملة
 
-**مقارنة الأبعاد:**
+| الرحلة | الوصف | الحالة |
+|--------|-------|--------|
+| تسجيل مستخدم جديد | Signup → Email Confirm → Login | ✅ موجود |
+| دورة العميل الكاملة | Create → Edit → Invoices → Payments | ⏳ مطلوب |
+| دورة المبيعات | Quote → Order → Invoice → Payment | ⏳ مطلوب |
+| دورة المشتريات | PO → Receive → Stock Update | ⏳ مطلوب |
+| إدارة المخزون | Add Product → Stock → Transfer | ⏳ مطلوب |
+| التقارير والتصدير | Generate → Filter → Export | ⏳ مطلوب |
 
-| العنصر | الحالي | المحسن |
-|--------|--------|--------|
-| ارتفاع Header | `h-14` (56px) | `h-12` (48px) |
-| زر القائمة | `h-10 w-10` | `h-9 w-9` |
-| أزرار أخرى | `h-9 w-9` | `h-8 w-8` |
-| أيقونات رئيسية | `h-5 w-5` | `h-4 w-4` |
-| أيقونات ثانوية | `h-4 w-4` | `h-3.5 w-3.5` |
-| Avatar | `h-8 w-8` | `h-7 w-7` |
-| Logo | `h-8 w-8` | `h-7 w-7` |
+### 5.2 ملفات E2E المطلوبة
 
-**التصميم المحسن:**
+```text
+e2e/
+├── auth.spec.ts              // موجود
+├── navigation.spec.ts        // موجود
+├── accessibility.spec.ts     // موجود
+├── performance.spec.ts       // موجود
+├── customer-journey.spec.ts  // جديد
+├── sales-journey.spec.ts     // جديد
+├── inventory-journey.spec.ts // جديد
+├── reports-journey.spec.ts   // جديد
+├── settings-journey.spec.ts  // جديد
+└── mobile-journey.spec.ts    // جديد
+```
+
+### 5.3 اختبار رحلة المبيعات
+
 ```typescript
-<header className="sticky top-0 z-40 flex h-12 items-center justify-between 
-  border-b bg-background/95 backdrop-blur-xl px-3 md:hidden safe-area-top">
-  <div className="flex items-center gap-1">
-    <Button className="h-9 w-9 bg-primary/10 hover:bg-primary/15 rounded-lg">
-      <LayoutGrid className="h-4 w-4 text-primary" />
-    </Button>
+describe('Sales Journey E2E', () => {
+  test('complete sales cycle', async ({ page }) => {
+    // 1. Login as sales user
+    await loginAs(page, 'sales@company.com');
     
-    <Button variant="ghost" size="icon" className="h-8 w-8">
-      <Search className="h-3.5 w-3.5" />
-    </Button>
+    // 2. Create new customer
+    await page.goto('/customers');
+    await page.click('[data-testid="add-customer"]');
+    await fillCustomerForm(page, testCustomer);
+    await page.click('[data-testid="save-customer"]');
     
-    <Button variant="ghost" size="icon" className="h-8 w-8 relative">
-      <Bell className="h-3.5 w-3.5" />
-      <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-destructive" />
-    </Button>
-  </div>
+    // 3. Create quotation
+    await page.goto('/quotations');
+    await page.click('[data-testid="add-quotation"]');
+    await selectCustomer(page, testCustomer.name);
+    await addProducts(page, testProducts);
+    await page.click('[data-testid="save-quotation"]');
+    
+    // 4. Convert to sales order
+    await page.click('[data-testid="convert-to-order"]');
+    await expect(page).toHaveURL(/sales-orders/);
+    
+    // 5. Create invoice
+    await page.click('[data-testid="create-invoice"]');
+    await expect(page).toHaveURL(/invoices/);
+    
+    // 6. Record payment
+    await page.click('[data-testid="add-payment"]');
+    await fillPaymentForm(page, { amount: 1000, method: 'cash' });
+    await page.click('[data-testid="save-payment"]');
+    
+    // 7. Verify customer balance updated
+    await page.goto('/customers');
+    const balance = await page.textContent('[data-testid="customer-balance"]');
+    expect(balance).toBe('0');
+  });
+});
+```
+
+---
+
+## 📋 المرحلة 6: اختبارات UX/UI
+
+### 6.1 اختبارات الاستجابة (Responsive)
+
+| نقطة الكسر | العرض | الاختبارات |
+|------------|-------|------------|
+| Mobile S | 320px | Layout, Navigation, Forms |
+| Mobile M | 375px | Layout, Navigation, Forms |
+| Mobile L | 425px | Layout, Navigation, Forms |
+| Tablet | 768px | Sidebar, Grid, Tables |
+| Laptop | 1024px | Full features |
+| Desktop | 1440px | Full features |
+
+### 6.2 اختبارات RTL
+
+```typescript
+describe('RTL Layout Tests', () => {
+  it('should display text right-to-left');
+  it('should mirror icons correctly');
+  it('should align form labels to the right');
+  it('should position sidebar on the right');
+  it('should handle bidirectional text (numbers in Arabic)');
+  it('should maintain correct scroll direction');
+});
+```
+
+### 6.3 اختبارات إمكانية الوصول (A11y)
+
+| المعيار | المستوى | الحالة |
+|---------|---------|--------|
+| WCAG 2.1 Level A | Required | ✅ موجود |
+| WCAG 2.1 Level AA | Recommended | ⏳ جزئي |
+| Keyboard Navigation | Required | ✅ موجود |
+| Screen Reader | Required | ⏳ مطلوب |
+| Color Contrast | Required | ⏳ للفحص |
+
+### 6.4 مشاكل UX مكتشفة
+
+| المشكلة | الموقع | الحل |
+|---------|--------|------|
+| forwardRef warning | SettingsPageSkeleton | إضافة React.forwardRef |
+| forwardRef warning | MobileSettingsList | إضافة React.forwardRef |
+
+---
+
+## 📋 المرحلة 7: اختبارات الوظائف المالية
+
+### 7.1 اختبارات الحسابات
+
+| العملية | الحالة | الملاحظات |
+|---------|--------|-----------|
+| حساب المجموع الفرعي | ✅ موجود | في business-logic.test.ts |
+| حساب الخصم | ✅ موجود | في business-logic.test.ts |
+| حساب الضريبة | ✅ موجود | في business-logic.test.ts |
+| حساب الإجمالي | ✅ موجود | في business-logic.test.ts |
+| حساب الرصيد المتبقي | ✅ موجود | في business-logic.test.ts |
+| تحديث رصيد العميل | ⏳ مطلوب | اختبار تكامل |
+| تحديث رصيد المورد | ⏳ مطلوب | اختبار تكامل |
+| تقارب الأرقام العشرية | ⏳ مطلوب | دقة الحسابات |
+
+### 7.2 اختبارات الدقة المالية
+
+```typescript
+describe('Financial Precision Tests', () => {
+  it('should handle decimal precision correctly', () => {
+    // 0.1 + 0.2 should equal 0.3 exactly
+    const result = calculateTotal([
+      { price: 0.1, quantity: 1 },
+      { price: 0.2, quantity: 1 }
+    ]);
+    expect(result).toBe(0.3);
+  });
   
-  <div className="flex items-center gap-1.5">
-    <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-      <Factory className="h-3.5 w-3.5 text-primary" />
-    </div>
-    <Avatar className="h-7 w-7 border border-primary/20">
-      ...
-    </Avatar>
-  </div>
-</header>
+  it('should round to 2 decimal places for currency');
+  it('should handle very large amounts correctly');
+  it('should prevent negative totals');
+  it('should validate discount cannot exceed subtotal');
+});
 ```
 
----
+### 7.3 اختبارات حدود الأدوار
 
-## المرحلة 6: تحسين AppLayout
-
-### تعديل: `src/components/layout/AppLayout.tsx`
-
-**التغييرات:**
 ```typescript
-// 1. استيراد AppInitSkeleton
-import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
-
-// 2. استخدام AppInitSkeleton بدلاً من AppLoader
-if (loading || !isHydrated) {
-  return <AppInitSkeleton />;
-}
-
-// 3. تحديث Mobile Layout padding
-if (isMobile) {
-  return (
-    <div className="min-h-screen bg-background pb-14">  {/* pb-14 بدلاً من pb-16 */}
-      <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
-      <main className="p-3">  {/* p-3 بدلاً من p-4 */}
-        <div className="animate-fade-in">
-          <Outlet />
-        </div>
-      </main>
-      <FABMenu pageContext={getPageContext()} />
-      <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
-      <MobileDrawer ... />
-    </div>
-  );
-}
+describe('Role Limits Tests', () => {
+  it('should prevent sales from exceeding max discount');
+  it('should prevent exceeding customer credit limit');
+  it('should prevent invoice amount over role limit');
+  it('should allow admin to bypass all limits');
+});
 ```
 
 ---
 
-## المرحلة 7: CSS المتقدم
+## 📋 المرحلة 8: اختبارات التصدير والطباعة
 
-### تعديل: `src/index.css`
+### 8.1 اختبارات تصدير PDF
 
-**Animations جديدة:**
-```css
-/* Ripple أسرع وأصغر */
-.animate-ripple-fast { 
-  animation: rippleFast 0.35s ease-out forwards; 
-}
-@keyframes rippleFast {
-  0% { transform: scale(0); opacity: 0.4; }
-  100% { transform: scale(3); opacity: 0; }
-}
+| السيناريو | الحالة | الملاحظات |
+|-----------|--------|-----------|
+| تصدير فاتورة كـ PDF | ⏳ مطلوب | مع النص العربي |
+| تصدير تقرير كـ PDF | ⏳ مطلوب | مع الجداول |
+| تصدير عرض أسعار كـ PDF | ⏳ مطلوب | مع الشعار |
+| تصدير أمر بيع كـ PDF | ⏳ مطلوب | مع التفاصيل |
 
-/* Pulse glow أصغر للـ FAB */
-.animate-pulse-glow-sm { 
-  animation: pulseGlowSm 2.5s ease-in-out infinite; 
-}
-@keyframes pulseGlowSm {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3); }
-  50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
-}
+### 8.2 اختبارات تصدير Excel
 
-/* Shimmer container */
-.shimmer-container {
-  position: relative;
-  overflow: hidden;
-}
-.shimmer-container::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255,255,255,0.2) 50%,
-    transparent 100%
-  );
-  animation: shimmerMove 1.5s infinite;
-}
-@keyframes shimmerMove {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* Safe area مضغوطة */
-.safe-area-bottom-compact {
-  padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
-}
-
-/* Progress bar smooth */
-.progress-smooth {
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-```
-
----
-
-## المرحلة 8: تحسين MobileDashboard
-
-### تعديل: `src/components/dashboard/MobileDashboard.tsx`
-
-**استخدام ShimmerSkeleton المتقدم:**
 ```typescript
-if (authLoading) {
-  return (
-    <div className="space-y-3 pb-14 animate-fade-in">
-      {/* Header skeleton */}
-      <div className="px-1">
-        <ShimmerSkeleton variant="text" className="h-6 w-40 mb-1.5" />
-        <ShimmerSkeleton variant="rounded" className="h-5 w-24" />
-      </div>
-      
-      {/* Stats shimmer - horizontal scroll */}
-      <ShimmerStatsSkeleton count={4} />
-      
-      {/* Quick actions shimmer */}
-      <div className="grid grid-cols-4 gap-2 px-1">
-        {[1, 2, 3, 4].map(i => (
-          <ShimmerSkeleton key={i} variant="rounded" className="h-[68px]" />
-        ))}
-      </div>
-      
-      {/* Section shimmer */}
-      <div className="px-1 space-y-3">
-        <ShimmerSkeleton variant="text" className="h-5 w-28" />
-        <ShimmerCardSkeleton />
-        <ShimmerCardSkeleton />
-      </div>
-    </div>
-  );
-}
+describe('Excel Export Tests', () => {
+  it('should export customers to Excel with all columns');
+  it('should export with Arabic headers correctly');
+  it('should respect column selection');
+  it('should format dates correctly');
+  it('should format numbers correctly');
+  it('should handle empty data gracefully');
+});
+```
+
+### 8.3 اختبارات الطباعة
+
+```typescript
+describe('Print Tests', () => {
+  it('should render print template correctly');
+  it('should include company header');
+  it('should format invoice items in table');
+  it('should show totals correctly');
+  it('should hide screen-only elements');
+  it('should respect page breaks');
+});
 ```
 
 ---
 
-## ملخص الملفات
+## 📋 المرحلة 9: اختبارات PWA والعمل دون اتصال
 
-### ملفات جديدة:
-| الملف | الوصف |
-|-------|-------|
-| `src/components/shared/AppInitSkeleton.tsx` | شاشة بدء احترافية مع progress bar وshimmer |
+### 9.1 اختبارات Service Worker
 
-### ملفات للتعديل:
-| الملف | التعديلات الرئيسية |
-|-------|-------------------|
-| `MobileBottomNav.tsx` | h-14، ripple ديناميكي 70%، أيقونات 18px |
-| `MobileDrawer.tsx` | w-280، p-3، footer h-8، text-xs |
-| `FABMenu.tsx` | h-12 w-12، bottom-68، pulse-glow-sm |
-| `MobileHeader.tsx` | h-12، أزرار h-8/h-9، أيقونات أصغر |
-| `AppLayout.tsx` | pb-14، p-3، دمج AppInitSkeleton |
-| `MobileDashboard.tsx` | ShimmerSkeleton محسن |
-| `index.css` | animate-ripple-fast، pulse-glow-sm، shimmer-container |
+| السيناريو | الحالة | الملاحظات |
+|-----------|--------|-----------|
+| تسجيل SW | ⏳ مطلوب | عند بدء التشغيل |
+| تخزين الأصول | ⏳ مطلوب | CSS, JS, Images |
+| اعتراض الطلبات | ⏳ مطلوب | API Caching |
+| تحديث SW | ⏳ مطلوب | Prompt User |
+
+### 9.2 اختبارات التخزين المحلي
+
+```typescript
+describe('Offline Storage Tests', () => {
+  it('should store customers in IndexedDB');
+  it('should store products in IndexedDB');
+  it('should store invoices in IndexedDB');
+  it('should retrieve cached data when offline');
+  it('should queue mutations when offline');
+  it('should handle storage quota exceeded');
+});
+```
+
+### 9.3 اختبارات المزامنة
+
+```typescript
+describe('Sync Tests', () => {
+  it('should sync pending operations when online');
+  it('should handle sync conflicts (server wins)');
+  it('should notify user of sync status');
+  it('should retry failed syncs');
+  it('should maintain data integrity');
+});
+```
 
 ---
 
-## مقارنة المساحة الإجمالية
+## 📋 المرحلة 10: اختبارات الروابط والتنقل
+
+### 10.1 جميع مسارات التطبيق
+
+| المسار | النوع | الحالة |
+|--------|-------|--------|
+| `/` | Dashboard | ⏳ للاختبار |
+| `/auth` | Public | ✅ موجود |
+| `/customers` | List | ⏳ للاختبار |
+| `/customers/:id` | Detail | ⏳ للاختبار |
+| `/products` | List | ⏳ للاختبار |
+| `/products/:id` | Detail | ⏳ للاختبار |
+| `/invoices` | List | ⏳ للاختبار |
+| `/invoices/:id` | Detail | ⏳ للاختبار |
+| `/quotations` | List | ⏳ للاختبار |
+| `/quotations/:id` | Detail | ⏳ للاختبار |
+| `/sales-orders` | List | ⏳ للاختبار |
+| `/sales-orders/:id` | Detail | ⏳ للاختبار |
+| `/purchase-orders` | List | ⏳ للاختبار |
+| `/purchase-orders/:id` | Detail | ⏳ للاختبار |
+| `/suppliers` | List | ⏳ للاختبار |
+| `/suppliers/:id` | Detail | ⏳ للاختبار |
+| `/inventory` | List | ⏳ للاختبار |
+| `/treasury` | List | ⏳ للاختبار |
+| `/treasury/:id` | Detail | ⏳ للاختبار |
+| `/expenses` | List | ⏳ للاختبار |
+| `/employees` | List | ⏳ للاختبار |
+| `/employees/:id` | Detail | ⏳ للاختبار |
+| `/reports` | Reports | ⏳ للاختبار |
+| `/settings` | Settings | ⏳ للاختبار |
+| `/admin/*` | Admin | ⏳ للاختبار |
+| `/search` | Search | ⏳ للاختبار |
+| `/notifications` | Notifications | ⏳ للاختبار |
+| `/tasks` | Tasks | ⏳ للاختبار |
+| `/*` (404) | Not Found | ✅ موجود |
+
+### 10.2 اختبارات الروابط الداخلية
+
+```typescript
+describe('Internal Links Tests', () => {
+  it('should navigate from customer to their invoices');
+  it('should navigate from invoice to customer details');
+  it('should navigate from product to stock movements');
+  it('should navigate from order to related quotation');
+  it('should handle back navigation correctly');
+  it('should preserve filters on navigation');
+  it('should handle deep links correctly');
+});
+```
+
+### 10.3 اختبارات الـ Breadcrumbs
+
+```typescript
+describe('Breadcrumbs Tests', () => {
+  it('should show correct path for nested pages');
+  it('should be clickable for navigation');
+  it('should update on route change');
+  it('should truncate long paths on mobile');
+});
+```
+
+---
+
+## 🛠️ التنفيذ التقني
+
+### الملفات الجديدة المطلوبة
 
 ```text
-+--------------------------------------------------+
-|                    قبل التحسين                    |
-+--------------------------------------------------+
-|  Header h-14 (56px)                              |
-|--------------------------------------------------|
-|                                                  |
-|              محتوى الصفحة                        |
-|              (مساحة المحتوى الأصلية)              |
-|                                                  |
-+--------------------------------------------------+
-|     القائمة السفلية h-16 (64px)                 |
-+--------------------------------------------------+
+src/__tests__/
+├── unit/
+│   ├── hooks/
+│   │   ├── useOfflineData.test.ts        // جديد
+│   │   ├── useOfflineSync.test.ts        // جديد
+│   │   ├── useInfiniteScroll.test.ts     // جديد
+│   │   ├── useVirtualList.test.ts        // جديد
+│   │   ├── useSidebarCounts.test.ts      // جديد
+│   │   └── useKeyboardShortcuts.test.ts  // جديد
+│   └── lib/
+│       ├── pdfGenerator.test.ts          // جديد
+│       ├── offlineStorage.test.ts        // جديد
+│       └── syncManager.test.ts           // جديد
+├── integration/
+│   ├── customer-workflow.test.tsx        // جديد
+│   ├── sales-workflow.test.tsx           // جديد
+│   ├── inventory-workflow.test.tsx       // جديد
+│   └── payment-workflow.test.tsx         // جديد
+└── security/
+    ├── rls-policies.test.ts              // جديد
+    └── data-exposure.test.ts             // جديد
 
-+--------------------------------------------------+
-|                    بعد التحسين                    |
-+--------------------------------------------------+
-|  Header h-12 (48px) ← توفير 8px                  |
-|--------------------------------------------------|
-|                                                  |
-|              محتوى الصفحة                        |
-|         (مساحة محتوى أكبر بـ 20px)               |
-|                                                  |
-|                                                  |
-+--------------------------------------------------+
-|   القائمة السفلية h-14 (56px) ← توفير 8px       |
-+--------------------------------------------------+
-
-إجمالي المساحة الموفرة للمحتوى: ~20px
-+ 4px من تقليل padding (p-3 بدلاً من p-4)
+e2e/
+├── customer-journey.spec.ts              // جديد
+├── sales-journey.spec.ts                 // جديد
+├── inventory-journey.spec.ts             // جديد
+├── reports-journey.spec.ts               // جديد
+└── mobile-journey.spec.ts                // جديد
 ```
+
+### إصلاحات مطلوبة
+
+1. **إصلاح RLS لـ bank_accounts**:
+```sql
+DROP POLICY "Authenticated can view bank accounts" ON public.bank_accounts;
+
+CREATE POLICY "Financial staff can view bank accounts"
+ON public.bank_accounts FOR SELECT
+USING (
+  has_role(auth.uid(), 'admin'::app_role) OR 
+  has_role(auth.uid(), 'accountant'::app_role)
+);
+```
+
+2. **إصلاح forwardRef warnings**:
+   - إضافة `React.forwardRef` لمكون `SettingsPageSkeleton`
+   - إضافة `React.forwardRef` لمكون `MobileSettingsList`
 
 ---
 
-## ترتيب التنفيذ
+## 📊 ملخص التغطية المستهدفة
 
-```text
-المرحلة 1: إنشاء AppInitSkeleton.tsx
-     ↓
-المرحلة 2: تحسين MobileBottomNav (h-14، ripple ديناميكي)
-     ↓
-المرحلة 3: تحسين MobileDrawer (w-280، footer مضغوط)
-     ↓
-المرحلة 4: تحسين FABMenu (h-12، موضع 68px)
-     ↓
-المرحلة 5: تحسين MobileHeader (h-12، عناصر أصغر)
-     ↓
-المرحلة 6: تحسين AppLayout (pb-14، دمج Skeleton)
-     ↓
-المرحلة 7: تحديث index.css (animations جديدة)
-     ↓
-المرحلة 8: تحسين MobileDashboard (ShimmerSkeleton)
-```
+| نوع الاختبار | الحالي | المستهدف |
+|--------------|--------|----------|
+| Unit Tests | 65% | 90% |
+| Integration Tests | 40% | 80% |
+| E2E Tests | 30% | 70% |
+| Security Tests | 100% | 100% |
+| Performance Tests | 20% | 60% |
+| A11y Tests | 50% | 80% |
+
+### عدد الاختبارات المتوقع
+
+| النوع | الحالي | الإضافات | الإجمالي |
+|-------|--------|----------|----------|
+| Unit | 80 | +45 | 125 |
+| Integration | 15 | +35 | 50 |
+| E2E | 15 | +25 | 40 |
+| Security | 8 | +20 | 28 |
+| **الإجمالي** | **118** | **+125** | **243** |
 
 ---
 
-## النتائج المتوقعة
+## 🗓️ جدول التنفيذ المقترح
 
-| الميزة | التحسين |
-|--------|---------|
-| **مساحة المحتوى** | +20-24px للعرض |
-| **سرعة الاستجابة** | Ripple 350ms (-42%) |
-| **تناسب التأثيرات** | Ripple ديناميكي 70% من الزر |
-| **تجربة التحميل** | شاشة بدء احترافية مع progress |
-| **القائمة الجانبية** | أضيق بـ 40px مع تخطيط محكم |
-| **توافق PWA** | جميع التحسينات تنطبق على التطبيق المثبت |
-| **Safe Area** | دعم كامل للشاشات الحديثة |
-| **Shimmer Effects** | تأثيرات تحميل متناسقة ومحترفة |
+| المرحلة | المدة | الأولوية |
+|---------|-------|----------|
+| إصلاح مشاكل الأمان | 1 يوم | P0 |
+| اختبارات Hooks المفقودة | 2 يوم | P1 |
+| اختبارات lib المفقودة | 1 يوم | P1 |
+| اختبارات التكامل | 3 أيام | P1 |
+| اختبارات E2E | 3 أيام | P2 |
+| اختبارات الأداء | 1 يوم | P2 |
+| اختبارات PWA | 2 يوم | P2 |
+| اختبارات UX/UI | 2 يوم | P3 |
 
+**إجمالي الوقت المقدر**: 15 يوم عمل
