@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 
 interface ShimmerSkeletonProps {
   className?: string;
-  variant?: 'text' | 'circular' | 'rectangular' | 'rounded';
+  variant?: 'text' | 'circular' | 'rectangular' | 'rounded' | 'card';
   width?: string | number;
   height?: string | number;
   lines?: number;
@@ -22,6 +22,7 @@ export function ShimmerSkeleton({
     circular: 'rounded-full',
     rectangular: '',
     rounded: 'rounded-lg',
+    card: 'rounded-xl border bg-card',
   };
 
   const shimmerClasses = 'before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent';

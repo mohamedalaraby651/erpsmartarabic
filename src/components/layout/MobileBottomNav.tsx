@@ -66,21 +66,26 @@ interface MobileBottomNavProps {
   onMenuOpen: () => void;
 }
 
-// Enhanced Ripple Effect Component
-function RippleEffect({ x, y, color }: { x: number; y: number; color?: string }) {
+// Enhanced Ripple Effect Component with dynamic sizing
+interface RippleProps {
+  x: number;
+  y: number;
+  size?: number;
+  color?: string;
+}
+
+function RippleEffect({ x, y, size = 40, color }: RippleProps) {
   return (
     <span
       className={cn(
-        "absolute rounded-full opacity-30 animate-ripple pointer-events-none",
+        "absolute rounded-full opacity-30 animate-ripple-fast pointer-events-none",
         color || "bg-current"
       )}
       style={{
-        left: x,
-        top: y,
-        width: 50,
-        height: 50,
-        marginLeft: -25,
-        marginTop: -25,
+        left: x - size / 2,
+        top: y - size / 2,
+        width: size,
+        height: size,
       }}
     />
   );
@@ -90,20 +95,22 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { userRole } = useAuth();
-  const [ripple, setRipple] = useState<{ x: number; y: number; key: number; color?: string } | null>(null);
+  const [ripple, setRipple] = useState<{ x: number; y: number; size: number; key: number; color?: string } | null>(null);
 
   const handleNavClick = useCallback((item: NavItem, e: React.MouseEvent<HTMLButtonElement>) => {
     // Haptic feedback
     haptics.light();
     
-    // Ripple effect
+    // Ripple effect - dynamic size based on button
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    setRipple({ x, y, key: Date.now(), color: item.bgColor?.replace('/15', '/40') });
+    const rippleSize = Math.min(rect.width, rect.height) * 0.7;
     
-    // Clear ripple after animation
-    setTimeout(() => setRipple(null), 600);
+    setRipple({ x, y, size: rippleSize, key: Date.now(), color: item.bgColor?.replace('/15', '/40') });
+    
+    // Clear ripple after animation - faster
+    setTimeout(() => setRipple(null), 350);
     
     // Navigate
     navigate(item.href);
@@ -112,12 +119,14 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
   const handleMenuOpen = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     haptics.medium();
     
-    // Ripple effect for menu button
+    // Ripple effect for menu button - dynamic size
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    setRipple({ x, y, key: Date.now() });
-    setTimeout(() => setRipple(null), 600);
+    const rippleSize = Math.min(rect.width, rect.height) * 0.7;
+    
+    setRipple({ x, y, size: rippleSize, key: Date.now() });
+    setTimeout(() => setRipple(null), 350);
     
     onMenuOpen();
   }, [onMenuOpen]);
@@ -129,8 +138,8 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
   }).slice(0, 4);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/50 shadow-[0_-4px_30px_-5px_rgba(0,0,0,0.1)] md:hidden safe-area-bottom">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/50 shadow-[0_-4px_30px_-5px_rgba(0,0,0,0.1)] md:hidden safe-area-bottom-compact">
+      <div className="flex items-center justify-around h-14 px-1.5">
         {filteredItems.map((item) => {
           const isActive = location.pathname === item.href;
           const Icon = item.icon;
@@ -140,27 +149,27 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
               key={item.href}
               onClick={(e) => handleNavClick(item, e)}
               className={cn(
-                'relative flex items-center justify-center gap-1.5 py-2 rounded-2xl transition-all duration-300 overflow-hidden touch-target',
+                'relative flex items-center justify-center gap-1 py-1.5 rounded-2xl transition-all duration-200 overflow-hidden touch-target',
                 isActive 
-                  ? `${item.color} ${item.bgColor} px-4 min-w-fit shadow-lg ${item.activeColor}` 
-                  : 'text-muted-foreground hover:text-foreground px-3 active:scale-95'
+                  ? `${item.color} ${item.bgColor} px-3 min-w-fit shadow-md ${item.activeColor}` 
+                  : 'text-muted-foreground hover:text-foreground px-2.5 active:scale-95'
               )}
             >
               {/* Ripple container */}
               {ripple && (
-                <RippleEffect x={ripple.x} y={ripple.y} color={ripple.color} />
+                <RippleEffect x={ripple.x} y={ripple.y} size={ripple.size} color={ripple.color} />
               )}
               
               <Icon className={cn(
-                'h-5 w-5 transition-all duration-300 flex-shrink-0',
-                isActive && 'scale-110'
+                'h-[18px] w-[18px] transition-all duration-200 flex-shrink-0',
+                isActive && 'scale-105'
               )} />
               
               {/* Title appears only for active item - beside the icon */}
               <span className={cn(
-                'text-xs font-bold transition-all duration-300 whitespace-nowrap overflow-hidden',
+                'text-[11px] font-bold transition-all duration-200 whitespace-nowrap overflow-hidden',
                 isActive 
-                  ? 'max-w-[80px] opacity-100' 
+                  ? 'max-w-[70px] opacity-100' 
                   : 'max-w-0 opacity-0'
               )}>
                 {item.title}
@@ -168,7 +177,7 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
               
               {/* Active indicator dot */}
               {isActive && (
-                <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-current opacity-80" />
               )}
             </button>
           );
@@ -177,12 +186,12 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
         {/* More Button */}
         <button
           onClick={handleMenuOpen}
-          className="relative flex items-center justify-center p-3 text-muted-foreground hover:text-foreground transition-all active:scale-95 rounded-2xl overflow-hidden touch-target hover:bg-muted/50"
+          className="relative flex items-center justify-center p-2 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95 rounded-2xl overflow-hidden touch-target hover:bg-muted/50"
         >
           {ripple && (
-            <RippleEffect x={ripple.x} y={ripple.y} />
+            <RippleEffect x={ripple.x} y={ripple.y} size={ripple.size} />
           )}
-          <MoreHorizontal className="h-5 w-5" />
+          <MoreHorizontal className="h-[18px] w-[18px]" />
         </button>
       </div>
     </nav>

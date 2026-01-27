@@ -8,35 +8,22 @@ import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
 import MobileDrawer from './MobileDrawer';
 import { FABMenu } from '@/components/mobile/FABMenu';
+import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { Skeleton } from '@/components/ui/skeleton';
-
-// Full screen loader for initial app load
-function AppLoader() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-muted-foreground">جاري التحميل...</p>
-      </div>
-    </div>
-  );
-}
 
 // Skeleton loader for page content
 function PageSkeleton() {
   return (
     <div className="p-4 space-y-4">
-      <Skeleton className="h-8 w-48" />
+      <div className="h-8 w-48 bg-muted rounded animate-pulse" />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-32 w-full rounded-lg" />
+          <div key={i} className="h-32 w-full rounded-lg bg-muted animate-pulse" />
         ))}
       </div>
-      <Skeleton className="h-64 w-full rounded-lg" />
+      <div className="h-64 w-full rounded-lg bg-muted animate-pulse" />
     </div>
   );
 }
@@ -95,7 +82,7 @@ export default function AppLayout() {
 
   // Show loader while auth is loading
   if (loading) {
-    return <AppLoader />;
+    return <AppInitSkeleton />;
   }
 
   if (!user) {
@@ -104,15 +91,15 @@ export default function AppLayout() {
 
   // Show skeleton while hydrating to prevent flash
   if (!isHydrated) {
-    return <AppLoader />;
+    return <AppInitSkeleton />;
   }
 
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-16">
+      <div className="min-h-screen bg-background pb-14">
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
-        <main className="p-4">
+        <main className="p-3">
           <div className="animate-fade-in">
             <Outlet />
           </div>
