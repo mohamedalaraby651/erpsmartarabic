@@ -6,8 +6,8 @@
  * @module tests/hooks/useDashboardSettings
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 
@@ -21,20 +21,18 @@ vi.mock('@/hooks/useAuth', () => ({
   }),
 }));
 
-// Mock Supabase client
-const mockSupabase = {
-  from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      })),
-    })),
-    upsert: vi.fn(() => Promise.resolve({ error: null })),
-  })),
-};
-
+// Mock Supabase client - use inline function to avoid hoisting issues
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+      })),
+      upsert: vi.fn(() => Promise.resolve({ error: null })),
+    })),
+  },
 }));
 
 // Import after mocks are set up

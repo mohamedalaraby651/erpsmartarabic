@@ -64,10 +64,6 @@ vi.stubGlobal('indexedDB', {
 
 // Mock navigator.onLine
 let mockOnlineStatus = true;
-Object.defineProperty(navigator, 'onLine', {
-  get: () => mockOnlineStatus,
-  configurable: true,
-});
 
 // Mock Service Worker
 const mockServiceWorker = {
@@ -87,11 +83,15 @@ const mockServiceWorker = {
   getRegistrations: vi.fn(() => Promise.resolve([])),
 };
 
-vi.stubGlobal('navigator', {
-  ...navigator,
+// Create custom navigator mock with getter for onLine
+const mockNavigator = {
   serviceWorker: mockServiceWorker,
-  onLine: true,
-});
+  get onLine() {
+    return mockOnlineStatus;
+  },
+};
+
+vi.stubGlobal('navigator', mockNavigator);
 
 describe('Service Worker Tests / اختبارات Service Worker', () => {
   beforeEach(() => {

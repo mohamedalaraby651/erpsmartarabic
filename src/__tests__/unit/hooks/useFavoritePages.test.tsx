@@ -21,23 +21,21 @@ vi.mock('@/hooks/useAuth', () => ({
   }),
 }));
 
-// Mock Supabase client
-const mockSupabase = {
-  from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+// Mock Supabase client - use inline to avoid hoisting issues
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+      })),
+      insert: vi.fn(() => Promise.resolve({ error: null })),
+      update: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ error: null })),
       })),
     })),
-    insert: vi.fn(() => Promise.resolve({ error: null })),
-    update: vi.fn(() => ({
-      eq: vi.fn(() => Promise.resolve({ error: null })),
-    })),
-  })),
-};
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
+  },
 }));
 
 // Import after mocks are set up
