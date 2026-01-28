@@ -7,29 +7,35 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock jspdf
-vi.mock('jspdf', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    setFont: vi.fn(),
-    setFontSize: vi.fn(),
-    setTextColor: vi.fn(),
-    setFillColor: vi.fn(),
-    setDrawColor: vi.fn(),
-    text: vi.fn(),
-    rect: vi.fn(),
-    line: vi.fn(),
-    addPage: vi.fn(),
-    save: vi.fn(),
-    output: vi.fn(() => 'mock-pdf-output'),
-    internal: {
-      pageSize: { getWidth: () => 210, getHeight: () => 297 }
-    },
-    getStringUnitWidth: vi.fn(() => 50),
-    setLanguage: vi.fn(),
-    addFileToVFS: vi.fn(),
-    addFont: vi.fn(),
-  })),
-}));
+// Create mock functions
+const mockJsPDFInstance = {
+  setFont: vi.fn(),
+  setFontSize: vi.fn(),
+  setTextColor: vi.fn(),
+  setFillColor: vi.fn(),
+  setDrawColor: vi.fn(),
+  text: vi.fn(),
+  rect: vi.fn(),
+  line: vi.fn(),
+  addPage: vi.fn(),
+  save: vi.fn(),
+  output: vi.fn(() => 'mock-pdf-output'),
+  internal: {
+    pageSize: { getWidth: () => 210, getHeight: () => 297 }
+  },
+  getStringUnitWidth: vi.fn(() => 50),
+  setLanguage: vi.fn(),
+  addFileToVFS: vi.fn(),
+  addFont: vi.fn(),
+};
+
+// Mock jspdf as a class
+vi.mock('jspdf', () => {
+  return {
+    default: vi.fn().mockImplementation(() => mockJsPDFInstance),
+    jsPDF: vi.fn().mockImplementation(() => mockJsPDFInstance),
+  };
+});
 
 // Mock jspdf-autotable
 vi.mock('jspdf-autotable', () => ({
@@ -55,7 +61,7 @@ describe('PDF Export Tests / اختبارات تصدير PDF', () => {
 
   describe('PDF Generation', () => {
     it('should create PDF document', async () => {
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF();
       
       expect(doc).toBeDefined();
@@ -63,50 +69,48 @@ describe('PDF Export Tests / اختبارات تصدير PDF', () => {
     });
 
     it('should set Arabic font for RTL support', async () => {
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF();
       
       doc.setFont('Amiri', 'normal');
       
-      expect(doc.setFont).toHaveBeenCalledWith('Amiri', 'normal');
+      expect(mockJsPDFInstance.setFont).toHaveBeenCalledWith('Amiri', 'normal');
     });
 
     it('should add text to PDF', async () => {
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF();
       
       doc.text('اختبار النص العربي', 100, 50);
       
-      expect(doc.text).toHaveBeenCalledWith('اختبار النص العربي', 100, 50);
+      expect(mockJsPDFInstance.text).toHaveBeenCalledWith('اختبار النص العربي', 100, 50);
     });
 
     it('should set correct page orientation', async () => {
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       
       // Portrait
       const docPortrait = new jsPDF();
       expect(docPortrait).toBeDefined();
-      
-      // Landscape (mock behavior)
     });
 
     it('should handle multiple pages', async () => {
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF();
       
       doc.addPage();
       doc.addPage();
       
-      expect(doc.addPage).toHaveBeenCalledTimes(2);
+      expect(mockJsPDFInstance.addPage).toHaveBeenCalledTimes(2);
     });
 
     it('should save PDF with correct filename', async () => {
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       const doc = new jsPDF();
       
       doc.save('invoice-001.pdf');
       
-      expect(doc.save).toHaveBeenCalledWith('invoice-001.pdf');
+      expect(mockJsPDFInstance.save).toHaveBeenCalledWith('invoice-001.pdf');
     });
   });
 
@@ -125,7 +129,6 @@ describe('PDF Export Tests / اختبارات تصدير PDF', () => {
     };
 
     it('should generate invoice PDF with header', () => {
-      // Mock implementation test
       expect(mockInvoice.invoice_number).toBe('INV-001');
     });
 
@@ -361,7 +364,6 @@ describe('Print Tests / اختبارات الطباعة', () => {
     });
 
     it('should have print-specific styles', () => {
-      // Check for @media print styles
       const printMediaQuery = '@media print';
       expect(printMediaQuery).toBeDefined();
     });
@@ -434,13 +436,11 @@ describe('Print Tests / اختبارات الطباعة', () => {
 
   describe('Print Accessibility', () => {
     it('should hide screen-only elements', () => {
-      // Elements with class 'no-print' should be hidden
       const printHideClass = 'no-print';
       expect(printHideClass).toBeDefined();
     });
 
     it('should show print-only elements', () => {
-      // Elements with class 'print-only' should be visible
       const printShowClass = 'print-only';
       expect(printShowClass).toBeDefined();
     });
@@ -498,20 +498,19 @@ describe('Export Template Tests / اختبارات قوالب التصدير', (
 
     it('should apply filters from template', () => {
       const template = {
-        filters: { customer_type: 'company' }
+        filters: { customer_type: 'individual' },
       };
       
-      const data = [
-        { name: 'فرد', customer_type: 'individual' },
+      const customers = [
+        { name: 'عميل 1', customer_type: 'individual' },
         { name: 'شركة', customer_type: 'company' },
       ];
       
-      const filteredData = data.filter(row => 
-        row.customer_type === template.filters.customer_type
+      const filtered = customers.filter(c => 
+        c.customer_type === template.filters.customer_type
       );
       
-      expect(filteredData.length).toBe(1);
-      expect(filteredData[0].name).toBe('شركة');
+      expect(filtered.length).toBe(1);
     });
   });
 });

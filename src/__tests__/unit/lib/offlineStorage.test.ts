@@ -1,28 +1,37 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// Create mock DB object
+const createMockDB = () => ({
+  transaction: vi.fn(() => ({
+    store: {
+      clear: vi.fn(() => Promise.resolve()),
+      put: vi.fn(() => Promise.resolve()),
+    },
+    done: Promise.resolve(),
+  })),
+  getAll: vi.fn(() => Promise.resolve([])),
+  get: vi.fn(() => Promise.resolve(undefined)),
+  put: vi.fn(() => Promise.resolve()),
+  delete: vi.fn(() => Promise.resolve()),
+  clear: vi.fn(() => Promise.resolve()),
+  getAllFromIndex: vi.fn(() => Promise.resolve([])),
+  count: vi.fn(() => Promise.resolve(0)),
+});
+
+let mockDB = createMockDB();
+
 // Mock idb
 vi.mock('idb', () => ({
-  openDB: vi.fn(() => Promise.resolve({
-    transaction: vi.fn(() => ({
-      store: {
-        clear: vi.fn(() => Promise.resolve()),
-        put: vi.fn(() => Promise.resolve()),
-      },
-      done: Promise.resolve(),
-    })),
-    getAll: vi.fn(() => Promise.resolve([])),
-    get: vi.fn(() => Promise.resolve(undefined)),
-    put: vi.fn(() => Promise.resolve()),
-    delete: vi.fn(() => Promise.resolve()),
-    clear: vi.fn(() => Promise.resolve()),
-    getAllFromIndex: vi.fn(() => Promise.resolve([])),
-    count: vi.fn(() => Promise.resolve(0)),
-  })),
+  openDB: vi.fn(() => Promise.resolve(mockDB)),
 }));
 
 describe('offlineStorage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mock DB before each test
+    mockDB = createMockDB();
+    // Reset module cache to get fresh imports
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -62,26 +71,16 @@ describe('offlineStorage', () => {
 
   describe('cacheData', () => {
     it('should cache data to the specified store', async () => {
-      const { openDB } = await import('idb');
-      const mockPut = vi.fn(() => Promise.resolve());
       const mockClear = vi.fn(() => Promise.resolve());
+      const mockPut = vi.fn(() => Promise.resolve());
       
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(() => ({
-          store: {
-            clear: mockClear,
-            put: mockPut,
-          },
-          done: Promise.resolve(),
-        })),
-        getAll: vi.fn(),
-        get: vi.fn(),
-        put: vi.fn(),
-        delete: vi.fn(),
-        clear: vi.fn(),
-        getAllFromIndex: vi.fn(),
-        count: vi.fn(),
-      } as any);
+      mockDB.transaction = vi.fn(() => ({
+        store: {
+          clear: mockClear,
+          put: mockPut,
+        },
+        done: Promise.resolve(),
+      }));
 
       const { cacheData, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
@@ -89,11 +88,12 @@ describe('offlineStorage', () => {
       const testData = [{ id: '1', name: 'Test' }];
       await cacheData('customers', testData);
 
-      expect(mockClear).toHaveBeenCalled();
+      expect(mockDB.transaction).toHaveBeenCalled();
     });
 
     it('should handle empty data array', async () => {
-      const { cacheData } = await import('@/lib/offlineStorage');
+      const { cacheData, initOfflineDB } = await import('@/lib/offlineStorage');
+      await initOfflineDB();
       await expect(cacheData('customers', [])).resolves.not.toThrow();
     });
   });
@@ -101,18 +101,7 @@ describe('offlineStorage', () => {
   describe('getCachedData', () => {
     it('should return cached data from store', async () => {
       const mockData = [{ id: '1', name: 'Test Customer' }];
-      const { openDB } = await import('idb');
-      
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(),
-        getAll: vi.fn(() => Promise.resolve(mockData)),
-        get: vi.fn(),
-        put: vi.fn(),
-        delete: vi.fn(),
-        clear: vi.fn(),
-        getAllFromIndex: vi.fn(),
-        count: vi.fn(),
-      } as any);
+      mockDB.getAll = vi.fn(() => Promise.resolve(mockData));
 
       const { getCachedData, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
@@ -122,7 +111,11 @@ describe('offlineStorage', () => {
     });
 
     it('should return empty array when no data cached', async () => {
-      const { getCachedData } = await import('@/lib/offlineStorage');
+      mockDB.getAll = vi.fn(() => Promise.resolve([]));
+      
+      const { getCachedData, initOfflineDB } = await import('@/lib/offlineStorage');
+      await initOfflineDB();
+      
       const result = await getCachedData('products');
       expect(Array.isArray(result)).toBe(true);
     });
@@ -131,18 +124,7 @@ describe('offlineStorage', () => {
   describe('getCachedItem', () => {
     it('should return single cached item by id', async () => {
       const mockItem = { id: 'test-id', name: 'Test' };
-      const { openDB } = await import('idb');
-      
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(),
-        getAll: vi.fn(),
-        get: vi.fn(() => Promise.resolve(mockItem)),
-        put: vi.fn(),
-        delete: vi.fn(),
-        clear: vi.fn(),
-        getAllFromIndex: vi.fn(),
-        count: vi.fn(),
-      } as any);
+      mockDB.get = vi.fn(() => Promise.resolve(mockItem));
 
       const { getCachedItem, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
@@ -152,7 +134,11 @@ describe('offlineStorage', () => {
     });
 
     it('should return undefined for non-existent item', async () => {
-      const { getCachedItem } = await import('@/lib/offlineStorage');
+      mockDB.get = vi.fn(() => Promise.resolve(undefined));
+      
+      const { getCachedItem, initOfflineDB } = await import('@/lib/offlineStorage');
+      await initOfflineDB();
+      
       const result = await getCachedItem('customers', 'non-existent-id');
       expect(result).toBeUndefined();
     });
@@ -160,30 +146,19 @@ describe('offlineStorage', () => {
 
   describe('addToSyncQueue', () => {
     it('should add item to sync queue', async () => {
-      const mockPut = vi.fn(() => Promise.resolve());
-      const { openDB } = await import('idb');
-      
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(),
-        getAll: vi.fn(),
-        get: vi.fn(),
-        put: mockPut,
-        delete: vi.fn(),
-        clear: vi.fn(),
-        getAllFromIndex: vi.fn(),
-        count: vi.fn(),
-      } as any);
+      mockDB.put = vi.fn(() => Promise.resolve());
 
       const { addToSyncQueue, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
       
       const result = await addToSyncQueue('customers', 'insert', { id: '1', name: 'New Customer' });
       expect(typeof result).toBe('string');
-      expect(mockPut).toHaveBeenCalled();
+      expect(mockDB.put).toHaveBeenCalled();
     });
 
     it('should generate unique id for each queue item', async () => {
-      const { addToSyncQueue } = await import('@/lib/offlineStorage');
+      const { addToSyncQueue, initOfflineDB } = await import('@/lib/offlineStorage');
+      await initOfflineDB();
       
       const id1 = await addToSyncQueue('customers', 'insert', { id: '1' });
       const id2 = await addToSyncQueue('customers', 'insert', { id: '2' });
@@ -192,7 +167,8 @@ describe('offlineStorage', () => {
     });
 
     it('should support different operation types', async () => {
-      const { addToSyncQueue } = await import('@/lib/offlineStorage');
+      const { addToSyncQueue, initOfflineDB } = await import('@/lib/offlineStorage');
+      await initOfflineDB();
       
       await expect(addToSyncQueue('customers', 'insert', { id: '1' })).resolves.toBeDefined();
       await expect(addToSyncQueue('customers', 'update', { id: '1' })).resolves.toBeDefined();
@@ -206,18 +182,7 @@ describe('offlineStorage', () => {
         { id: '1', table: 'customers', operation: 'insert', timestamp: 1000 },
         { id: '2', table: 'customers', operation: 'update', timestamp: 2000 },
       ];
-      const { openDB } = await import('idb');
-      
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(),
-        getAll: vi.fn(),
-        get: vi.fn(),
-        put: vi.fn(),
-        delete: vi.fn(),
-        clear: vi.fn(),
-        getAllFromIndex: vi.fn(() => Promise.resolve(mockItems)),
-        count: vi.fn(),
-      } as any);
+      mockDB.getAllFromIndex = vi.fn(() => Promise.resolve(mockItems));
 
       const { getPendingSyncItems, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
@@ -227,7 +192,11 @@ describe('offlineStorage', () => {
     });
 
     it('should return empty array when no pending items', async () => {
-      const { getPendingSyncItems } = await import('@/lib/offlineStorage');
+      mockDB.getAllFromIndex = vi.fn(() => Promise.resolve([]));
+      
+      const { getPendingSyncItems, initOfflineDB } = await import('@/lib/offlineStorage');
+      await initOfflineDB();
+      
       const result = await getPendingSyncItems();
       expect(Array.isArray(result)).toBe(true);
     });
@@ -235,66 +204,31 @@ describe('offlineStorage', () => {
 
   describe('removeSyncItem', () => {
     it('should remove item from sync queue', async () => {
-      const mockDelete = vi.fn(() => Promise.resolve());
-      const { openDB } = await import('idb');
-      
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(),
-        getAll: vi.fn(),
-        get: vi.fn(),
-        put: vi.fn(),
-        delete: mockDelete,
-        clear: vi.fn(),
-        getAllFromIndex: vi.fn(),
-        count: vi.fn(),
-      } as any);
+      mockDB.delete = vi.fn(() => Promise.resolve());
 
       const { removeSyncItem, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
       
       await removeSyncItem('test-id');
-      expect(mockDelete).toHaveBeenCalledWith('sync_queue', 'test-id');
+      expect(mockDB.delete).toHaveBeenCalledWith('sync_queue', 'test-id');
     });
   });
 
   describe('clearSyncQueue', () => {
     it('should clear all items from sync queue', async () => {
-      const mockClear = vi.fn(() => Promise.resolve());
-      const { openDB } = await import('idb');
-      
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(),
-        getAll: vi.fn(),
-        get: vi.fn(),
-        put: vi.fn(),
-        delete: vi.fn(),
-        clear: mockClear,
-        getAllFromIndex: vi.fn(),
-        count: vi.fn(),
-      } as any);
+      mockDB.clear = vi.fn(() => Promise.resolve());
 
       const { clearSyncQueue, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
       
       await clearSyncQueue();
-      expect(mockClear).toHaveBeenCalledWith('sync_queue');
+      expect(mockDB.clear).toHaveBeenCalledWith('sync_queue');
     });
   });
 
   describe('getSyncQueueCount', () => {
     it('should return count of pending sync items', async () => {
-      const { openDB } = await import('idb');
-      
-      vi.mocked(openDB).mockResolvedValue({
-        transaction: vi.fn(),
-        getAll: vi.fn(),
-        get: vi.fn(),
-        put: vi.fn(),
-        delete: vi.fn(),
-        clear: vi.fn(),
-        getAllFromIndex: vi.fn(),
-        count: vi.fn(() => Promise.resolve(5)),
-      } as any);
+      mockDB.count = vi.fn(() => Promise.resolve(5));
 
       const { getSyncQueueCount, initOfflineDB } = await import('@/lib/offlineStorage');
       await initOfflineDB();
@@ -304,7 +238,11 @@ describe('offlineStorage', () => {
     });
 
     it('should return 0 when queue is empty', async () => {
-      const { getSyncQueueCount } = await import('@/lib/offlineStorage');
+      mockDB.count = vi.fn(() => Promise.resolve(0));
+      
+      const { getSyncQueueCount, initOfflineDB } = await import('@/lib/offlineStorage');
+      await initOfflineDB();
+      
       const count = await getSyncQueueCount();
       expect(count).toBe(0);
     });

@@ -108,7 +108,7 @@ describe('Invoice Calculations / حسابات الفواتير', () => {
       const vatRate = 14;
       
       const taxableAmount = subtotal - discount;
-      const vat = taxableAmount * (vatRate / 100);
+      const vat = Math.round((taxableAmount * (vatRate / 100)) * 100) / 100;
       
       expect(vat).toBe(126);
     });
