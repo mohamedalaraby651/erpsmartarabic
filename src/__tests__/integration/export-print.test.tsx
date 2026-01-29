@@ -7,33 +7,31 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Create mock functions
-const mockJsPDFInstance = {
-  setFont: vi.fn(),
-  setFontSize: vi.fn(),
-  setTextColor: vi.fn(),
-  setFillColor: vi.fn(),
-  setDrawColor: vi.fn(),
-  text: vi.fn(),
-  rect: vi.fn(),
-  line: vi.fn(),
-  addPage: vi.fn(),
-  save: vi.fn(),
-  output: vi.fn(() => 'mock-pdf-output'),
-  internal: {
-    pageSize: { getWidth: () => 210, getHeight: () => 297 }
-  },
-  getStringUnitWidth: vi.fn(() => 50),
-  setLanguage: vi.fn(),
-  addFileToVFS: vi.fn(),
-  addFont: vi.fn(),
-};
+// Create a proper class constructor mock
+class MockJsPDF {
+  setFont = vi.fn();
+  setFontSize = vi.fn();
+  setTextColor = vi.fn();
+  setFillColor = vi.fn();
+  setDrawColor = vi.fn();
+  text = vi.fn();
+  rect = vi.fn();
+  line = vi.fn();
+  addPage = vi.fn();
+  save = vi.fn();
+  output = vi.fn(() => 'mock-pdf-output');
+  internal = { pageSize: { getWidth: () => 210, getHeight: () => 297 } };
+  getStringUnitWidth = vi.fn(() => 50);
+  setLanguage = vi.fn();
+  addFileToVFS = vi.fn();
+  addFont = vi.fn();
+}
 
 // Mock jspdf as a class
 vi.mock('jspdf', () => {
   return {
-    default: vi.fn().mockImplementation(() => mockJsPDFInstance),
-    jsPDF: vi.fn().mockImplementation(() => mockJsPDFInstance),
+    default: MockJsPDF,
+    jsPDF: MockJsPDF,
   };
 });
 
@@ -74,7 +72,7 @@ describe('PDF Export Tests / اختبارات تصدير PDF', () => {
       
       doc.setFont('Amiri', 'normal');
       
-      expect(mockJsPDFInstance.setFont).toHaveBeenCalledWith('Amiri', 'normal');
+      expect(doc.setFont).toHaveBeenCalledWith('Amiri', 'normal');
     });
 
     it('should add text to PDF', async () => {
@@ -83,7 +81,7 @@ describe('PDF Export Tests / اختبارات تصدير PDF', () => {
       
       doc.text('اختبار النص العربي', 100, 50);
       
-      expect(mockJsPDFInstance.text).toHaveBeenCalledWith('اختبار النص العربي', 100, 50);
+      expect(doc.text).toHaveBeenCalledWith('اختبار النص العربي', 100, 50);
     });
 
     it('should set correct page orientation', async () => {
@@ -101,7 +99,7 @@ describe('PDF Export Tests / اختبارات تصدير PDF', () => {
       doc.addPage();
       doc.addPage();
       
-      expect(mockJsPDFInstance.addPage).toHaveBeenCalledTimes(2);
+      expect(doc.addPage).toHaveBeenCalledTimes(2);
     });
 
     it('should save PDF with correct filename', async () => {
@@ -110,7 +108,7 @@ describe('PDF Export Tests / اختبارات تصدير PDF', () => {
       
       doc.save('invoice-001.pdf');
       
-      expect(mockJsPDFInstance.save).toHaveBeenCalledWith('invoice-001.pdf');
+      expect(doc.save).toHaveBeenCalledWith('invoice-001.pdf');
     });
   });
 

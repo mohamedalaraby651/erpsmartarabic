@@ -128,8 +128,8 @@ describe('Numeric Validation', () => {
 
   it('should handle very large numbers', () => {
     const largeAmount = {
-      customer_id: 'uuid',
-      amount: Number.MAX_SAFE_INTEGER,
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
+      amount: 999999999, // Max allowed by schema
       payment_method: 'cash',
       payment_date: '2024-01-15',
     };
@@ -140,7 +140,7 @@ describe('Numeric Validation', () => {
 
   it('should reject NaN', () => {
     const nanAmount = {
-      customer_id: 'uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       amount: NaN,
       payment_method: 'cash',
       payment_date: '2024-01-15',
@@ -152,7 +152,7 @@ describe('Numeric Validation', () => {
 
   it('should reject Infinity', () => {
     const infinityAmount = {
-      customer_id: 'uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       amount: Infinity,
       payment_method: 'cash',
       payment_date: '2024-01-15',
@@ -241,7 +241,7 @@ describe('Phone Validation', () => {
 describe('Date Validation', () => {
   it('should accept valid date strings', () => {
     const validDate = {
-      customer_id: 'uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       amount: 100,
       payment_method: 'cash',
       payment_date: '2024-01-15',
@@ -253,7 +253,7 @@ describe('Date Validation', () => {
 
   it('should handle ISO date format', () => {
     const isoDate = {
-      customer_id: 'uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       amount: 100,
       payment_method: 'cash',
       payment_date: '2024-01-15T10:30:00Z',

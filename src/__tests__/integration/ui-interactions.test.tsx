@@ -74,7 +74,8 @@ const createWrapper = () => {
 };
 
 describe('UI Integration Tests / اختبارات تكامل واجهة المستخدم', () => {
-  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  // Use real timers - don't pass advanceTimers to userEvent
+  const user = userEvent.setup();
 
   beforeEach(() => {
     vi.clearAllMocks();
