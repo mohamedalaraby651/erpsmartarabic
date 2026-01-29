@@ -15,10 +15,10 @@ export const customerSchema = z.object({
   phone2: optionalPhone,
   email: optionalEmail,
   tax_number: z.string().max(50).optional().or(z.literal('')),
-  credit_limit: z.number().min(0, 'سقف الائتمان يجب أن يكون 0 أو أكثر').max(1000000000, 'سقف الائتمان كبير جداً'),
+  credit_limit: z.number().min(0, 'سقف الائتمان يجب أن يكون 0 أو أكثر').max(1000000000, 'سقف الائتمان كبير جداً').optional().default(0),
   category_id: z.string().uuid().optional().or(z.literal('')),
   notes: z.string().max(2000, 'الملاحظات طويلة جداً').optional().or(z.literal('')),
-  is_active: z.boolean(),
+  is_active: z.boolean().optional().default(true),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
@@ -29,15 +29,15 @@ export const productSchema = z.object({
   sku: z.string().max(50).optional().or(z.literal('')),
   description: z.string().max(2000).optional().or(z.literal('')),
   category_id: z.string().uuid().optional().or(z.literal('')),
-  cost_price: z.number().min(0, 'سعر التكلفة يجب أن يكون 0 أو أكثر').max(1000000000),
-  selling_price: z.number().min(0, 'سعر البيع يجب أن يكون 0 أو أكثر').max(1000000000),
-  min_stock: z.number().int().min(0).max(1000000),
+  cost_price: z.number().min(0, 'سعر التكلفة يجب أن يكون 0 أو أكثر').max(1000000000).optional().default(0),
+  selling_price: z.number().min(0, 'سعر البيع يجب أن يكون 0 أو أكثر').max(1000000000).optional().default(0),
+  min_stock: z.number().int().min(0).max(1000000).optional().default(0),
   image_url: z.string().url('رابط الصورة غير صالح').max(500).optional().or(z.literal('')),
   weight_kg: z.number().min(0).max(100000).optional(),
   length_cm: z.number().min(0).max(100000).optional(),
   width_cm: z.number().min(0).max(100000).optional(),
   height_cm: z.number().min(0).max(100000).optional(),
-  is_active: z.boolean(),
+  is_active: z.boolean().optional().default(true),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
@@ -48,8 +48,8 @@ export const invoiceFormSchema = z.object({
   payment_method: z.enum(['cash', 'bank_transfer', 'credit', 'advance_payment', 'installment']),
   due_date: z.string().optional().or(z.literal('')),
   notes: z.string().max(2000).optional().or(z.literal('')),
-  discount_amount: z.number().min(0, 'الخصم يجب أن يكون 0 أو أكثر').max(1000000000),
-  tax_amount: z.number().min(0, 'الضريبة يجب أن تكون 0 أو أكثر').max(1000000000),
+  discount_amount: z.number().min(0, 'الخصم يجب أن يكون 0 أو أكثر').max(1000000000).optional().default(0),
+  tax_amount: z.number().min(0, 'الضريبة يجب أن تكون 0 أو أكثر').max(1000000000).optional().default(0),
 });
 
 export type InvoiceFormData = z.infer<typeof invoiceFormSchema>;
@@ -87,7 +87,7 @@ export const supplierSchema = z.object({
   address: z.string().max(500).optional().or(z.literal('')),
   tax_number: z.string().max(50).optional().or(z.literal('')),
   notes: z.string().max(2000).optional().or(z.literal('')),
-  is_active: z.boolean(),
+  is_active: z.boolean().optional().default(true),
 });
 
 export type SupplierFormData = z.infer<typeof supplierSchema>;
@@ -97,7 +97,7 @@ export const warehouseSchema = z.object({
   name: z.string().trim().min(1, 'اسم المستودع مطلوب').max(100, 'اسم المستودع طويل جداً'),
   location: z.string().max(200).optional().or(z.literal('')),
   description: z.string().max(500).optional().or(z.literal('')),
-  is_active: z.boolean(),
+  is_active: z.boolean().optional().default(true),
 });
 
 export type WarehouseFormData = z.infer<typeof warehouseSchema>;

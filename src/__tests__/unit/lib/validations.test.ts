@@ -130,7 +130,7 @@ describe('productSchema', () => {
 describe('invoiceFormSchema', () => {
   it('should validate correct invoice data', () => {
     const validInvoice = {
-      customer_id: 'customer-uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       payment_method: 'cash',
     };
     
@@ -149,7 +149,7 @@ describe('invoiceFormSchema', () => {
 
   it('should validate discount is non-negative', () => {
     const negativeDiscount = {
-      customer_id: 'customer-uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       payment_method: 'cash',
       discount_amount: -100,
     };
@@ -162,7 +162,7 @@ describe('invoiceFormSchema', () => {
 describe('paymentSchema', () => {
   it('should validate correct payment data', () => {
     const validPayment = {
-      customer_id: 'customer-uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       amount: 1000,
       payment_method: 'cash',
       payment_date: '2024-01-15',
@@ -174,7 +174,7 @@ describe('paymentSchema', () => {
 
   it('should require positive amount', () => {
     const zeroAmount = {
-      customer_id: 'customer-uuid',
+      customer_id: '123e4567-e89b-12d3-a456-426614174000',
       amount: 0,
       payment_method: 'cash',
       payment_date: '2024-01-15',

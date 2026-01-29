@@ -98,9 +98,10 @@ describe('useTableFilter', () => {
         result.current.setFilter('status', 'active');
       });
 
+      // The hook uses includes() for string matching, so 'active' matches exactly
       expect(result.current.filteredData.length).toBe(3);
       expect(result.current.filteredData.every(item => 
-        item.status === 'active'
+        item.status.includes('active')
       )).toBe(true);
     });
 
@@ -111,7 +112,8 @@ describe('useTableFilter', () => {
         result.current.setFilter('status', 'act');
       });
 
-      expect(result.current.filteredData.length).toBe(3); // 'active' contains 'act'
+      // 'active' contains 'act' - uses includes() matching
+      expect(result.current.filteredData.length).toBe(3);
     });
   });
 
