@@ -6,7 +6,7 @@
  * @module tests/hooks/useFavoritePages
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
@@ -21,7 +21,7 @@ vi.mock('@/hooks/useAuth', () => ({
   }),
 }));
 
-// Mock Supabase client - use inline to avoid hoisting issues
+// Mock Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(() => ({
@@ -40,6 +40,23 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 // Import after mocks are set up
 import { useFavoritePages } from '@/hooks/useFavoritePages';
+
+// Setup localStorage mock with working storage
+let localStorageData: Record<string, string> = {};
+
+const localStorageMock = {
+  getItem: vi.fn((key: string) => localStorageData[key] || null),
+  setItem: vi.fn((key: string, value: string) => { localStorageData[key] = value; }),
+  removeItem: vi.fn((key: string) => { delete localStorageData[key]; }),
+  clear: vi.fn(() => { localStorageData = {}; }),
+  length: 0,
+  key: vi.fn((index: number) => Object.keys(localStorageData)[index] || null),
+};
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+});
 
 // Test wrapper with QueryClient
 const createWrapper = () => {
@@ -62,7 +79,11 @@ const createWrapper = () => {
 describe('useFavoritePages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
+    localStorageData = {};
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('Initialization / التهيئة', () => {
@@ -82,7 +103,7 @@ describe('useFavoritePages', () => {
       const savedFavorites = [
         { href: '/customers', title: 'العملاء', addedAt: Date.now() },
       ];
-      localStorage.setItem('sidebar_favorites_test-user-id', JSON.stringify(savedFavorites));
+      localStorageData['sidebar_favorites_test-user-id'] = JSON.stringify(savedFavorites);
 
       const { result } = renderHook(() => useFavoritePages(), {
         wrapper: createWrapper(),
@@ -175,7 +196,7 @@ describe('useFavoritePages', () => {
         { href: '/customers', title: 'العملاء', addedAt: Date.now() },
         { href: '/products', title: 'المنتجات', addedAt: Date.now() },
       ];
-      localStorage.setItem('sidebar_favorites_test-user-id', JSON.stringify(savedFavorites));
+      localStorageData['sidebar_favorites_test-user-id'] = JSON.stringify(savedFavorites);
 
       const { result } = renderHook(() => useFavoritePages(), {
         wrapper: createWrapper(),
@@ -199,7 +220,7 @@ describe('useFavoritePages', () => {
       const savedFavorites = [
         { href: '/customers', title: 'العملاء', addedAt: Date.now() },
       ];
-      localStorage.setItem('sidebar_favorites_test-user-id', JSON.stringify(savedFavorites));
+      localStorageData['sidebar_favorites_test-user-id'] = JSON.stringify(savedFavorites);
 
       const { result } = renderHook(() => useFavoritePages(), {
         wrapper: createWrapper(),
@@ -235,7 +256,7 @@ describe('useFavoritePages', () => {
       const savedFavorites = [
         { href: '/customers', title: 'العملاء', addedAt: Date.now() },
       ];
-      localStorage.setItem('sidebar_favorites_test-user-id', JSON.stringify(savedFavorites));
+      localStorageData['sidebar_favorites_test-user-id'] = JSON.stringify(savedFavorites);
 
       const { result } = renderHook(() => useFavoritePages(), {
         wrapper: createWrapper(),
@@ -259,7 +280,7 @@ describe('useFavoritePages', () => {
         { href: '/customers', title: 'العملاء', addedAt: 1 },
         { href: '/products', title: 'المنتجات', addedAt: 2 },
       ];
-      localStorage.setItem('sidebar_favorites_test-user-id', JSON.stringify(savedFavorites));
+      localStorageData['sidebar_favorites_test-user-id'] = JSON.stringify(savedFavorites);
 
       const { result } = renderHook(() => useFavoritePages(), {
         wrapper: createWrapper(),
@@ -302,7 +323,7 @@ describe('useFavoritePages', () => {
         title: `Page ${i}`,
         addedAt: Date.now(),
       }));
-      localStorage.setItem('sidebar_favorites_test-user-id', JSON.stringify(savedFavorites));
+      localStorageData['sidebar_favorites_test-user-id'] = JSON.stringify(savedFavorites);
 
       const { result } = renderHook(() => useFavoritePages(), {
         wrapper: createWrapper(),

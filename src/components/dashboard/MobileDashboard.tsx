@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,7 +44,7 @@ const quickActions: QuickActionItem[] = [
   { title: 'أمر بيع', icon: ShoppingCart, href: '/sales-orders?action=new', color: 'bg-orange-500', roles: ['admin', 'sales'] },
 ];
 
-export function MobileDashboard() {
+export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>((props, ref) => {
   const navigate = useNavigate();
   const { user, userRole, loading: authLoading } = useAuth();
 
@@ -340,4 +341,6 @@ export function MobileDashboard() {
       </div>
     </PullToRefresh>
   );
-}
+});
+
+MobileDashboard.displayName = 'MobileDashboard';
