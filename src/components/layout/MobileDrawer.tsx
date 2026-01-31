@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, forwardRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
@@ -138,12 +138,12 @@ interface MobileDrawerProps {
   onThemeToggle: () => void;
 }
 
-function MobileDrawer({
+const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function MobileDrawer({
   open,
   onOpenChange,
   isDark,
   onThemeToggle,
-}: MobileDrawerProps) {
+}, ref) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, userRole } = useAuth();
@@ -463,6 +463,8 @@ function MobileDrawer({
       </SheetContent>
     </Sheet>
   );
-}
+});
+
+MobileDrawer.displayName = 'MobileDrawer';
 
 export default memo(MobileDrawer);

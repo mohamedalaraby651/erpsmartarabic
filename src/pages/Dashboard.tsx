@@ -1,3 +1,4 @@
+import React, { forwardRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,7 +74,7 @@ const allQuickActions: QuickAction[] = [
   { title: 'مهمة جديدة', icon: ListChecks, href: '/tasks', color: 'bg-rose-500', roles: ['admin', 'sales', 'warehouse', 'accountant', 'hr'] },
 ];
 
-export default function Dashboard() {
+const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(function Dashboard(props, ref) {
   const { user, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -422,7 +423,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div ref={ref} className="space-y-6 animate-fade-in" {...props}>
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -461,4 +462,8 @@ export default function Dashboard() {
       />
     </div>
   );
-}
+});
+
+Dashboard.displayName = 'Dashboard';
+
+export default Dashboard;
