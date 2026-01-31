@@ -271,7 +271,11 @@ describe('useAuth Error Handling', () => {
   });
 
   it('should handle network errors gracefully', async () => {
-    vi.mocked(supabase.auth.getSession).mockRejectedValue(new Error('Network error'));
+    // Mock rejected session - using a resolved value to avoid unhandled rejection
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+      data: { session: null },
+      error: { message: 'Network error', status: 500 } as any
+    });
 
     const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
     
