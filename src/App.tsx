@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReloadPrompt } from "@/components/offline/ReloadPrompt";
+import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
 
 // Lazy load pages for better performance
 const Auth = lazy(() => import("./pages/Auth"));
@@ -78,68 +79,70 @@ const PageLoader = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <ReloadPrompt />
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<AppLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="customers" element={<CustomersPage />} />
-                <Route path="customers/:id" element={<CustomerDetailsPage />} />
-                <Route path="products" element={<ProductsPage />} />
-                <Route path="products/:id" element={<ProductDetailsPage />} />
-                <Route path="categories" element={<CategoriesPage />} />
-                <Route path="sales-orders" element={<SalesOrdersPage />} />
-                <Route path="sales-orders/:id" element={<SalesOrderDetailsPage />} />
-                <Route path="invoices" element={<InvoicesPage />} />
-                <Route path="invoices/:id" element={<InvoiceDetailsPage />} />
-                <Route path="payments" element={<PaymentsPage />} />
-                <Route path="inventory" element={<InventoryPage />} />
-                <Route path="suppliers" element={<SuppliersPage />} />
-                <Route path="suppliers/:id" element={<SupplierDetailsPage />} />
-                <Route path="supplier-payments" element={<SupplierPaymentsPage />} />
-                <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
-                <Route path="purchase-orders/:id" element={<PurchaseOrderDetailsPage />} />
-                <Route path="quotations" element={<QuotationsPage />} />
-                <Route path="quotations/:id" element={<QuotationDetailsPage />} />
-                <Route path="reports" element={<ReportsPage />} />
-                <Route path="settings" element={<UnifiedSettingsPage />} />
-                <Route path="search" element={<SearchPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
-                <Route path="tasks" element={<TasksPage />} />
-                <Route path="admin/roles" element={<RolesPage />} />
-                <Route path="admin/permissions" element={<PermissionsPage />} />
-                <Route path="admin/customizations" element={<CustomizationsPage />} />
-                <Route path="admin/users" element={<UsersPage />} />
-                <Route path="admin/dashboard" element={<AdminDashboard />} />
-                <Route path="admin/activity-log" element={<ActivityLogPage />} />
-                <Route path="admin/role-limits" element={<RoleLimitsPage />} />
-                <Route path="admin/backup" element={<BackupPage />} />
-                <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
-                <Route path="employees" element={<EmployeesPage />} />
-                <Route path="employees/:id" element={<EmployeeDetailsPage />} />
-                <Route path="profile" element={<UnifiedSettingsPage />} />
-                <Route path="sync" element={<SyncStatusPage />} />
-                <Route path="attachments" element={<AttachmentsPage />} />
-                <Route path="install" element={<InstallPage />} />
-                <Route path="treasury" element={<TreasuryPage />} />
-                <Route path="treasury/:id" element={<CashRegisterDetailsPage />} />
-                <Route path="expenses" element={<ExpensesPage />} />
-                <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <AppErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <ReloadPrompt />
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<AppLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="customers" element={<CustomersPage />} />
+                  <Route path="customers/:id" element={<CustomerDetailsPage />} />
+                  <Route path="products" element={<ProductsPage />} />
+                  <Route path="products/:id" element={<ProductDetailsPage />} />
+                  <Route path="categories" element={<CategoriesPage />} />
+                  <Route path="sales-orders" element={<SalesOrdersPage />} />
+                  <Route path="sales-orders/:id" element={<SalesOrderDetailsPage />} />
+                  <Route path="invoices" element={<InvoicesPage />} />
+                  <Route path="invoices/:id" element={<InvoiceDetailsPage />} />
+                  <Route path="payments" element={<PaymentsPage />} />
+                  <Route path="inventory" element={<InventoryPage />} />
+                  <Route path="suppliers" element={<SuppliersPage />} />
+                  <Route path="suppliers/:id" element={<SupplierDetailsPage />} />
+                  <Route path="supplier-payments" element={<SupplierPaymentsPage />} />
+                  <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
+                  <Route path="purchase-orders/:id" element={<PurchaseOrderDetailsPage />} />
+                  <Route path="quotations" element={<QuotationsPage />} />
+                  <Route path="quotations/:id" element={<QuotationDetailsPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
+                  <Route path="settings" element={<UnifiedSettingsPage />} />
+                  <Route path="search" element={<SearchPage />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="tasks" element={<TasksPage />} />
+                  <Route path="admin/roles" element={<RolesPage />} />
+                  <Route path="admin/permissions" element={<PermissionsPage />} />
+                  <Route path="admin/customizations" element={<CustomizationsPage />} />
+                  <Route path="admin/users" element={<UsersPage />} />
+                  <Route path="admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="admin/activity-log" element={<ActivityLogPage />} />
+                  <Route path="admin/role-limits" element={<RoleLimitsPage />} />
+                  <Route path="admin/backup" element={<BackupPage />} />
+                  <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
+                  <Route path="employees" element={<EmployeesPage />} />
+                  <Route path="employees/:id" element={<EmployeeDetailsPage />} />
+                  <Route path="profile" element={<UnifiedSettingsPage />} />
+                  <Route path="sync" element={<SyncStatusPage />} />
+                  <Route path="attachments" element={<AttachmentsPage />} />
+                  <Route path="install" element={<InstallPage />} />
+                  <Route path="treasury" element={<TreasuryPage />} />
+                  <Route path="treasury/:id" element={<CashRegisterDetailsPage />} />
+                  <Route path="expenses" element={<ExpensesPage />} />
+                  <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </AppErrorBoundary>
 );
 
 export default App;

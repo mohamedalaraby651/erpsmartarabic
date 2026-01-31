@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -184,7 +184,7 @@ export function DesktopSidebar({
   );
 }
 
-interface MobileSettingsListProps {
+interface MobileSettingsListProps extends React.HTMLAttributes<HTMLDivElement> {
   onTabSelect: (tabId: string) => void;
   isAdmin: boolean;
   searchQuery: string;
@@ -192,27 +192,29 @@ interface MobileSettingsListProps {
   hasUnsavedChanges: boolean;
 }
 
-export function MobileSettingsList({
-  onTabSelect,
-  isAdmin,
-  searchQuery,
-  onSearchChange,
-  hasUnsavedChanges,
-}: MobileSettingsListProps) {
-  const filterTabs = (tabs: SettingsTab[]) => {
-    if (!searchQuery) return tabs;
-    return tabs.filter(
-      (tab) =>
-        tab.label.includes(searchQuery) ||
-        tab.description?.includes(searchQuery)
-    );
-  };
+export const MobileSettingsList = forwardRef<HTMLDivElement, MobileSettingsListProps>(
+  function MobileSettingsList({
+    onTabSelect,
+    isAdmin,
+    searchQuery,
+    onSearchChange,
+    hasUnsavedChanges,
+    ...props
+  }, ref) {
+    const filterTabs = (tabs: SettingsTab[]) => {
+      if (!searchQuery) return tabs;
+      return tabs.filter(
+        (tab) =>
+          tab.label.includes(searchQuery) ||
+          tab.description?.includes(searchQuery)
+      );
+    };
 
-  const filteredPersonalTabs = filterTabs(personalTabs);
-  const filteredSystemTabs = isAdmin ? filterTabs(systemTabs) : [];
+    const filteredPersonalTabs = filterTabs(personalTabs);
+    const filteredSystemTabs = isAdmin ? filterTabs(systemTabs) : [];
 
-  return (
-    <div className="space-y-4 animate-fade-in">
+    return (
+      <div ref={ref} className="space-y-4 animate-fade-in" {...props}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">الإعدادات</h1>
@@ -299,16 +301,20 @@ export function MobileSettingsList({
       )}
     </div>
   );
-}
+  }
+);
 
-interface MobileSettingsDetailProps {
+MobileSettingsList.displayName = 'MobileSettingsList';
+
+interface MobileSettingsDetailProps extends React.HTMLAttributes<HTMLDivElement> {
   tab: SettingsTab;
   onBack: () => void;
   children: React.ReactNode;
 }
 
-export function MobileSettingsDetail({ tab, onBack, children }: MobileSettingsDetailProps) {
-  const TabIcon = tab.icon;
+export const MobileSettingsDetail = forwardRef<HTMLDivElement, MobileSettingsDetailProps>(
+  function MobileSettingsDetail({ tab, onBack, children, ...props }, ref) {
+    const TabIcon = tab.icon;
   
   return (
     <div className="animate-slide-in-right -mx-4">
@@ -339,4 +345,7 @@ export function MobileSettingsDetail({ tab, onBack, children }: MobileSettingsDe
       </div>
     </div>
   );
-}
+  }
+);
+
+MobileSettingsDetail.displayName = 'MobileSettingsDetail';
