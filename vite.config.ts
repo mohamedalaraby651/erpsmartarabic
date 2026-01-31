@@ -10,6 +10,58 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Data fetching
+          'vendor-query': ['@tanstack/react-query'],
+          // UI Components - Radix
+          'vendor-ui-core': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-tooltip',
+          ],
+          'vendor-ui-extended': [
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-radio-group',
+            '@radix-ui/react-slider',
+            '@radix-ui/react-scroll-area',
+          ],
+          // Charts
+          'vendor-charts': ['recharts'],
+          // PDF Generation
+          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+          // Excel Export
+          'vendor-excel': ['xlsx'],
+          // Date utilities
+          'vendor-dates': ['date-fns'],
+          // Drag and Drop
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          // Supabase
+          'vendor-supabase': ['@supabase/supabase-js'],
+          // IndexedDB
+          'vendor-idb': ['idb'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+    // Minification options
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+      },
+    },
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),

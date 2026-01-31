@@ -35,7 +35,7 @@ export default function SearchPage() {
   const { data: results, isLoading } = useQuery({
     queryKey: ['global-search', query],
     queryFn: async () => {
-      if (!query || query.length < 2) return [];
+      if (!query || query.length < 1) return [];
 
       const searchResults: SearchResult[] = [];
 
@@ -126,7 +126,8 @@ export default function SearchPage() {
 
       return searchResults;
     },
-    enabled: query.length >= 2,
+    enabled: query.length >= 1,
+    staleTime: 30000, // Cache results for 30 seconds
   });
 
   const getIcon = (type: string) => {
