@@ -1,29 +1,54 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
 describe('useInfiniteScroll', () => {
-  let mockObserve: ReturnType<typeof vi.fn>;
-  let mockDisconnect: ReturnType<typeof vi.fn>;
-  let mockIntersectionObserver: ReturnType<typeof vi.fn>;
-  let intersectionCallback: IntersectionObserverCallback;
+  let mockObserve: Mock;
+  let mockDisconnect: Mock;
+  let mockUnobserve: Mock;
+  let originalIntersectionObserver: typeof IntersectionObserver;
 
   beforeEach(() => {
     mockObserve = vi.fn();
     mockDisconnect = vi.fn();
-    mockIntersectionObserver = vi.fn((callback: IntersectionObserverCallback) => {
-      intersectionCallback = callback;
-      return {
-        observe: mockObserve,
-        disconnect: mockDisconnect,
-        unobserve: vi.fn(),
-      };
-    });
+    mockUnobserve = vi.fn();
     
-    global.IntersectionObserver = mockIntersectionObserver as any;
+    // Store original
+    originalIntersectionObserver = global.IntersectionObserver;
+    
+    // Create a proper class that can be instantiated with new
+    class MockIntersectionObserver {
+      readonly root: Element | null = null;
+      readonly rootMargin: string = '';
+      readonly thresholds: readonly number[] = [];
+      
+      constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {
+        // Store callback if needed
+      }
+      
+      observe(target: Element): void {
+        mockObserve(target);
+      }
+      
+      disconnect(): void {
+        mockDisconnect();
+      }
+      
+      unobserve(target: Element): void {
+        mockUnobserve(target);
+      }
+      
+      takeRecords(): IntersectionObserverEntry[] {
+        return [];
+      }
+    }
+    
+    global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.resetModules();
+    global.IntersectionObserver = originalIntersectionObserver;
   });
 
   it('should be defined', async () => {
@@ -73,7 +98,6 @@ describe('useInfiniteScroll', () => {
       result.current.observerRef(mockElement);
     });
 
-    expect(mockIntersectionObserver).toHaveBeenCalled();
     expect(mockObserve).toHaveBeenCalledWith(mockElement);
   });
 
