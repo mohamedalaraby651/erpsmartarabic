@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
-import { Bell, Volume2, Mail, Moon, BellRing, Settings2 } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { Bell, Volume2, Mail, Moon, BellRing, Settings2, Smartphone, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ResetSettingsButton } from './ResetSettingsButton';
+import { Badge } from '@/components/ui/badge';
 
 export function NotificationSettings() {
   const {
@@ -22,34 +24,90 @@ export function NotificationSettings() {
     resetToDefaults,
   } = useNotificationPreferences();
 
+  const {
+    permission,
+    isSupported,
+    isLoading: pushLoading,
+    requestPermission,
+    sendTestNotification,
+  } = usePushNotifications();
+
   const handleReset = () => {
     resetToDefaults();
     toast.success('تم استعادة إعدادات الإشعارات الافتراضية');
   };
 
   const handleTestNotification = () => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('اختبار الإشعارات', {
-        body: 'هذا إشعار تجريبي للتأكد من عمل الإشعارات',
-        icon: '/icons/icon-192x192.png',
-      });
-      toast.success('تم إرسال إشعار تجريبي');
-    } else if ('Notification' in window && Notification.permission !== 'denied') {
-      Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          new Notification('تم تفعيل الإشعارات!', {
-            body: 'ستصلك الإشعارات الآن',
-            icon: '/icons/icon-192x192.png',
-          });
-        }
-      });
-    } else {
-      toast.info('الإشعارات غير مدعومة أو محظورة في المتصفح');
+    sendTestNotification();
+  };
+
+  const handleRequestPermission = async () => {
+    await requestPermission();
+  };
+
+  const getPermissionBadge = () => {
+    switch (permission) {
+      case 'granted':
+        return <Badge variant="default" className="bg-success text-success-foreground">مُفعّل</Badge>;
+      case 'denied':
+        return <Badge variant="destructive">مرفوض</Badge>;
+      default:
+        return <Badge variant="secondary">غير محدد</Badge>;
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Push Notifications Permission */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Smartphone className="h-5 w-5 text-primary" />
+              إشعارات الدفع
+            </CardTitle>
+            {getPermissionBadge()}
+          </div>
+          <CardDescription>
+            تلقي إشعارات فورية حتى عند إغلاق المتصفح
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!isSupported ? (
+            <p className="text-sm text-muted-foreground">
+              إشعارات الدفع غير مدعومة في هذا المتصفح
+            </p>
+          ) : permission === 'denied' ? (
+            <p className="text-sm text-destructive">
+              تم رفض إذن الإشعارات. يرجى تفعيلها من إعدادات المتصفح
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {permission !== 'granted' && (
+                <Button 
+                  onClick={handleRequestPermission} 
+                  variant="default"
+                  disabled={pushLoading}
+                  className="gap-2"
+                >
+                  {pushLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  تفعيل الإشعارات
+                </Button>
+              )}
+              <Button 
+                onClick={handleTestNotification} 
+                variant="outline" 
+                className="gap-2"
+                disabled={permission !== 'granted'}
+              >
+                <Bell className="h-4 w-4" />
+                إرسال إشعار تجريبي
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-3">

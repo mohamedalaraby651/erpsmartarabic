@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, forwardRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,7 +45,8 @@ function SectionSkeleton() {
   );
 }
 
-export default function UnifiedSettingsPage() {
+const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  function UnifiedSettingsPage(props, ref) {
   const { user, userRole } = useAuth();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -186,7 +187,7 @@ export default function UnifiedSettingsPage() {
 
   // Desktop Layout
   return (
-    <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-8rem)]">
+    <div ref={ref} {...props} className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-8rem)]">
       {/* Sidebar - Desktop */}
       <DesktopSidebar
         activeTab={activeTab}
@@ -208,4 +209,8 @@ export default function UnifiedSettingsPage() {
       </main>
     </div>
   );
-}
+});
+
+UnifiedSettingsPage.displayName = 'UnifiedSettingsPage';
+
+export default UnifiedSettingsPage;
