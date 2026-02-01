@@ -1,5 +1,6 @@
-import { useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCustomShortcuts, ShortcutDefinition } from './useCustomShortcuts';
 
 interface ShortcutAction {
   key: string;
@@ -12,7 +13,8 @@ interface ShortcutAction {
 
 export function useKeyboardShortcuts(customActions?: ShortcutAction[]) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { shortcuts, findShortcutByKey, getShortcutLabel } = useCustomShortcuts();
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -25,7 +27,7 @@ export function useKeyboardShortcuts(customActions?: ShortcutAction[]) {
         return;
       }
 
-      // Custom actions take priority
+      // Custom page-specific actions take priority
       if (customActions) {
         for (const shortcut of customActions) {
           if (
@@ -41,85 +43,79 @@ export function useKeyboardShortcuts(customActions?: ShortcutAction[]) {
         }
       }
 
-      // Global shortcuts
-      const key = e.key.toLowerCase();
-      
-      // Ctrl+K: Global search
-      if (e.ctrlKey && key === 'k') {
+      // Find matching shortcut from custom shortcuts system
+      const matchedShortcut = findShortcutByKey(e.key, {
+        ctrl: e.ctrlKey,
+        alt: e.altKey,
+        shift: e.shiftKey,
+      });
+
+      if (matchedShortcut) {
         e.preventDefault();
-        navigate('/search');
+        handleShortcutAction(matchedShortcut);
         return;
       }
 
       // Escape: Go back or close modals
-      if (key === 'escape') {
+      if (e.key === 'Escape') {
         // This will be handled by individual modals
         return;
       }
-
-      // Ctrl+/: Show shortcuts help (can be implemented later)
-      if (e.ctrlKey && key === '/') {
-        e.preventDefault();
-        // Could open a shortcuts modal
-        return;
-      }
-
-      // Navigation shortcuts (Alt+number)
-      if (e.altKey) {
-        switch (key) {
-          case '1':
-            e.preventDefault();
-            navigate('/');
-            break;
-          case '2':
-            e.preventDefault();
-            navigate('/customers');
-            break;
-          case '3':
-            e.preventDefault();
-            navigate('/products');
-            break;
-          case '4':
-            e.preventDefault();
-            navigate('/invoices');
-            break;
-          case '5':
-            e.preventDefault();
-            navigate('/sales-orders');
-            break;
-          case '6':
-            e.preventDefault();
-            navigate('/reports');
-            break;
-          case '7':
-            e.preventDefault();
-            navigate('/settings');
-            break;
-        }
-      }
     },
-    [navigate, customActions]
+    [customActions, findShortcutByKey]
   );
+
+  const handleShortcutAction = (shortcut: ShortcutDefinition) => {
+    switch (shortcut.action) {
+      case 'show-shortcuts':
+        setShowShortcutsModal(true);
+        break;
+      case 'new-item':
+        // Dispatch custom event for page-specific handling
+        window.dispatchEvent(new CustomEvent('keyboard-new-item'));
+        break;
+      case 'save':
+        window.dispatchEvent(new CustomEvent('keyboard-save'));
+        break;
+      case 'print':
+        window.print();
+        break;
+      case 'export':
+        window.dispatchEvent(new CustomEvent('keyboard-export'));
+        break;
+      default:
+        // Navigation paths
+        if (shortcut.action.startsWith('/')) {
+          navigate(shortcut.action);
+        }
+    }
+  };
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // Get displayable shortcuts list
+  const displayableShortcuts = shortcuts
+    .filter(s => s.enabled)
+    .map(s => ({
+      key: getShortcutLabel(s),
+      description: s.description,
+    }));
+
+  // Add custom actions to display list
+  const allShortcuts = [
+    ...displayableShortcuts,
+    ...(customActions || []).map(a => ({
+      key: `${a.ctrlKey ? 'Ctrl+' : ''}${a.altKey ? 'Alt+' : ''}${a.shiftKey ? 'Shift+' : ''}${a.key.toUpperCase()}`,
+      description: a.description,
+    })),
+  ];
+
   return {
-    shortcuts: [
-      { key: 'Ctrl+K', description: 'البحث الشامل' },
-      { key: 'Alt+1', description: 'الرئيسية' },
-      { key: 'Alt+2', description: 'العملاء' },
-      { key: 'Alt+3', description: 'المنتجات' },
-      { key: 'Alt+4', description: 'الفواتير' },
-      { key: 'Alt+5', description: 'أوامر البيع' },
-      { key: 'Alt+6', description: 'التقارير' },
-      { key: 'Alt+7', description: 'الإعدادات' },
-      ...(customActions || []).map((a) => ({
-        key: `${a.ctrlKey ? 'Ctrl+' : ''}${a.altKey ? 'Alt+' : ''}${a.shiftKey ? 'Shift+' : ''}${a.key.toUpperCase()}`,
-        description: a.description,
-      })),
-    ],
+    shortcuts: allShortcuts,
+    showShortcutsModal,
+    setShowShortcutsModal,
   };
 }
