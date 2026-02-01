@@ -19,10 +19,37 @@ interface OfflineDB extends DBSchema {
   quotations: {
     key: string;
     value: any;
+    indexes: { 'by-number': string };
   };
   suppliers: {
     key: string;
     value: any;
+    indexes: { 'by-name': string };
+  };
+  sales_orders: {
+    key: string;
+    value: any;
+    indexes: { 'by-number': string };
+  };
+  purchase_orders: {
+    key: string;
+    value: any;
+    indexes: { 'by-number': string };
+  };
+  payments: {
+    key: string;
+    value: any;
+    indexes: { 'by-date': string };
+  };
+  expenses: {
+    key: string;
+    value: any;
+    indexes: { 'by-date': string };
+  };
+  tasks: {
+    key: string;
+    value: any;
+    indexes: { 'by-due_date': string };
   };
   sync_queue: {
     key: string;
@@ -32,6 +59,7 @@ interface OfflineDB extends DBSchema {
       operation: 'insert' | 'update' | 'delete';
       data: any;
       timestamp: number;
+      retryCount?: number;
     };
     indexes: { 'by-timestamp': number };
   };
@@ -39,32 +67,73 @@ interface OfflineDB extends DBSchema {
 
 let db: IDBPDatabase<OfflineDB> | null = null;
 
+// Database version - increment when schema changes
+const DB_VERSION = 2;
+
 export async function initOfflineDB() {
   if (db) return db;
   
-  db = await openDB<OfflineDB>('erp-offline-db', 1, {
-    upgrade(database) {
-      // Customers store
-      const customersStore = database.createObjectStore('customers', { keyPath: 'id' });
-      customersStore.createIndex('by-name', 'name');
+  db = await openDB<OfflineDB>('erp-offline-db', DB_VERSION, {
+    upgrade(database, oldVersion) {
+      // Version 1: Initial stores
+      if (oldVersion < 1) {
+        // Customers store
+        const customersStore = database.createObjectStore('customers', { keyPath: 'id' });
+        customersStore.createIndex('by-name', 'name');
+        
+        // Products store
+        const productsStore = database.createObjectStore('products', { keyPath: 'id' });
+        productsStore.createIndex('by-name', 'name');
+        
+        // Invoices store
+        const invoicesStore = database.createObjectStore('invoices', { keyPath: 'id' });
+        invoicesStore.createIndex('by-number', 'invoice_number');
+        
+        // Quotations store
+        const quotationsStore = database.createObjectStore('quotations', { keyPath: 'id' });
+        quotationsStore.createIndex('by-number', 'quotation_number');
+        
+        // Suppliers store
+        const suppliersStore = database.createObjectStore('suppliers', { keyPath: 'id' });
+        suppliersStore.createIndex('by-name', 'name');
+        
+        // Sync queue store
+        const syncStore = database.createObjectStore('sync_queue', { keyPath: 'id' });
+        syncStore.createIndex('by-timestamp', 'timestamp');
+      }
       
-      // Products store
-      const productsStore = database.createObjectStore('products', { keyPath: 'id' });
-      productsStore.createIndex('by-name', 'name');
-      
-      // Invoices store
-      const invoicesStore = database.createObjectStore('invoices', { keyPath: 'id' });
-      invoicesStore.createIndex('by-number', 'invoice_number');
-      
-      // Quotations store
-      database.createObjectStore('quotations', { keyPath: 'id' });
-      
-      // Suppliers store
-      database.createObjectStore('suppliers', { keyPath: 'id' });
-      
-      // Sync queue store
-      const syncStore = database.createObjectStore('sync_queue', { keyPath: 'id' });
-      syncStore.createIndex('by-timestamp', 'timestamp');
+      // Version 2: Additional stores for expanded offline support
+      if (oldVersion < 2) {
+        // Sales Orders store
+        if (!database.objectStoreNames.contains('sales_orders')) {
+          const salesOrdersStore = database.createObjectStore('sales_orders', { keyPath: 'id' });
+          salesOrdersStore.createIndex('by-number', 'order_number');
+        }
+        
+        // Purchase Orders store
+        if (!database.objectStoreNames.contains('purchase_orders')) {
+          const purchaseOrdersStore = database.createObjectStore('purchase_orders', { keyPath: 'id' });
+          purchaseOrdersStore.createIndex('by-number', 'order_number');
+        }
+        
+        // Payments store
+        if (!database.objectStoreNames.contains('payments')) {
+          const paymentsStore = database.createObjectStore('payments', { keyPath: 'id' });
+          paymentsStore.createIndex('by-date', 'payment_date');
+        }
+        
+        // Expenses store
+        if (!database.objectStoreNames.contains('expenses')) {
+          const expensesStore = database.createObjectStore('expenses', { keyPath: 'id' });
+          expensesStore.createIndex('by-date', 'expense_date');
+        }
+        
+        // Tasks store
+        if (!database.objectStoreNames.contains('tasks')) {
+          const tasksStore = database.createObjectStore('tasks', { keyPath: 'id' });
+          tasksStore.createIndex('by-due_date', 'due_date');
+        }
+      }
     },
   });
   
@@ -78,7 +147,18 @@ export async function getOfflineDB() {
   return db!;
 }
 
-type StoreName = 'customers' | 'products' | 'invoices' | 'quotations' | 'suppliers' | 'sync_queue';
+type StoreName = 
+  | 'customers' 
+  | 'products' 
+  | 'invoices' 
+  | 'quotations' 
+  | 'suppliers' 
+  | 'sales_orders'
+  | 'purchase_orders'
+  | 'payments'
+  | 'expenses'
+  | 'tasks'
+  | 'sync_queue';
 
 // Cache data locally
 export async function cacheData(
