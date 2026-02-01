@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -12,6 +12,9 @@ import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+
+// Lazy load ShortcutsModal
+const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
 
 // Skeleton loader for page content
 function PageSkeleton() {
@@ -33,7 +36,9 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  useKeyboardShortcuts(); // Global keyboard shortcuts
+  
+  // Keyboard shortcuts with modal
+  const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts();
   
   // ربط مع تفضيلات المستخدم
   const { preferences, updateSidebarCompact, updateTheme } = useUserPreferences();
@@ -118,27 +123,37 @@ export default function AppLayout() {
 
   // Desktop Layout
   return (
-    <div className="min-h-screen bg-background">
-      <AppSidebar
-        collapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-        isDark={isDark}
-        onThemeToggle={toggleTheme}
-      />
-      
-      <div
-        className={cn(
-          'transition-all duration-300',
-          sidebarCollapsed ? 'mr-[70px]' : 'mr-[260px]'
-        )}
-      >
-        <AppHeader />
-        <main className="p-6">
-          <div className="animate-fade-in">
-            <Outlet />
-          </div>
-        </main>
+    <>
+      <div className="min-h-screen bg-background">
+        <AppSidebar
+          collapsed={sidebarCollapsed}
+          onToggle={toggleSidebar}
+          isDark={isDark}
+          onThemeToggle={toggleTheme}
+        />
+        
+        <div
+          className={cn(
+            'transition-all duration-300',
+            sidebarCollapsed ? 'mr-[70px]' : 'mr-[260px]'
+          )}
+        >
+          <AppHeader />
+          <main className="p-6">
+            <div className="animate-fade-in">
+              <Outlet />
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+      
+      {/* Keyboard Shortcuts Modal */}
+      <Suspense fallback={null}>
+        <ShortcutsModal 
+          open={showShortcutsModal} 
+          onOpenChange={setShowShortcutsModal} 
+        />
+      </Suspense>
+    </>
   );
 }

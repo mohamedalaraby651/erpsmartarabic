@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import PageHeader from '@/components/navigation/PageHeader';
+import { useVoiceSearch } from '@/hooks/useVoiceSearch';
+import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { cn } from '@/lib/utils';
 import {
   Search,
   Users,
@@ -17,6 +20,11 @@ import {
   FileText,
   Truck,
   Loader2,
+  Mic,
+  MicOff,
+  Clock,
+  X,
+  Trash2,
 } from 'lucide-react';
 
 interface SearchResult {
@@ -31,6 +39,40 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Voice search
+  const { 
+    isListening, 
+    transcript, 
+    isSupported: voiceSupported, 
+    error: voiceError,
+    startListening, 
+    stopListening,
+    resetTranscript,
+  } = useVoiceSearch({
+    onResult: (text) => {
+      setQuery(prev => prev + text);
+      setShowHistory(false);
+    },
+  });
+
+  // Search history
+  const { 
+    recentQueries, 
+    addToHistory, 
+    removeFromHistory, 
+    clearHistory,
+    getSuggestions,
+  } = useSearchHistory();
+
+  // Update query from voice transcript
+  useEffect(() => {
+    if (transcript) {
+      setQuery(prev => prev + transcript);
+      resetTranscript();
+    }
+  }, [transcript, resetTranscript]);
 
   const { data: results, isLoading } = useQuery({
     queryKey: ['global-search', query],
@@ -124,10 +166,15 @@ export default function SearchPage() {
         });
       });
 
+      // Add to history if results found
+      if (searchResults.length > 0) {
+        addToHistory(query, searchResults.length);
+      }
+
       return searchResults;
     },
     enabled: query.length >= 1,
-    staleTime: 30000, // Cache results for 30 seconds
+    staleTime: 30000,
   });
 
   const getIcon = (type: string) => {
@@ -154,11 +201,11 @@ export default function SearchPage() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'customer': return 'bg-blue-500/10 text-blue-600';
-      case 'product': return 'bg-emerald-500/10 text-emerald-600';
-      case 'invoice': return 'bg-purple-500/10 text-purple-600';
-      case 'quotation': return 'bg-amber-500/10 text-amber-600';
-      case 'supplier': return 'bg-slate-500/10 text-slate-600';
+      case 'customer': return 'bg-info/10 text-info';
+      case 'product': return 'bg-success/10 text-success';
+      case 'invoice': return 'bg-primary/10 text-primary';
+      case 'quotation': return 'bg-warning/10 text-warning';
+      case 'supplier': return 'bg-muted text-muted-foreground';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -176,6 +223,13 @@ export default function SearchPage() {
     supplier: results?.filter(r => r.type === 'supplier').length || 0,
   };
 
+  const handleHistoryClick = (historyQuery: string) => {
+    setQuery(historyQuery);
+    setShowHistory(false);
+  };
+
+  const suggestions = getSuggestions(query);
+
   return (
     <div className="container max-w-4xl py-6">
       <PageHeader
@@ -190,17 +244,105 @@ export default function SearchPage() {
         <Input
           placeholder="ابحث عن عميل، منتج، فاتورة..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="pr-12 h-12 text-lg"
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setShowHistory(e.target.value.length === 0);
+          }}
+          onFocus={() => query.length === 0 && setShowHistory(true)}
+          onBlur={() => setTimeout(() => setShowHistory(false), 200)}
+          className="pr-12 pl-24 h-12 text-lg"
           autoFocus
         />
-        {isLoading && (
-          <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
-        )}
+        
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {isLoading && (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          )}
+          
+          {query && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setQuery('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {voiceSupported && (
+            <Button
+              variant={isListening ? "destructive" : "ghost"}
+              size="icon"
+              className={cn("h-8 w-8", isListening && "voice-pulse")}
+              onClick={isListening ? stopListening : startListening}
+            >
+              {isListening ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
+      {/* Voice error */}
+      {voiceError && (
+        <Card className="mb-4 border-destructive/50 bg-destructive/5">
+          <CardContent className="py-3 text-sm text-destructive">
+            {voiceError}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search History Dropdown */}
+      {showHistory && recentQueries.length > 0 && (
+        <Card className="mb-4 animate-fade-in">
+          <CardContent className="p-2">
+            <div className="flex items-center justify-between px-2 py-1 mb-1">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                عمليات البحث الأخيرة
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs"
+                onClick={clearHistory}
+              >
+                <Trash2 className="h-3 w-3 ml-1" />
+                مسح
+              </Button>
+            </div>
+            <div className="space-y-1">
+              {recentQueries.slice(0, 5).map((q, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-2 py-2 rounded-md hover:bg-muted cursor-pointer group"
+                  onClick={() => handleHistoryClick(q)}
+                >
+                  <span className="text-sm truncate">{q}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromHistory(q);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Results */}
-      {query.length >= 2 && (
+      {query.length >= 1 && (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">
@@ -218,7 +360,7 @@ export default function SearchPage() {
           </TabsList>
 
           <TabsContent value={activeTab}>
-            {filteredResults.length === 0 ? (
+            {filteredResults.length === 0 && !isLoading ? (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
                   <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -226,15 +368,16 @@ export default function SearchPage() {
                 </CardContent>
               </Card>
             ) : (
-              <ScrollArea className="h-[calc(100vh-320px)]">
+              <ScrollArea className="h-[calc(100vh-380px)]">
                 <div className="space-y-2">
-                  {filteredResults.map((result) => {
+                  {filteredResults.map((result, index) => {
                     const Icon = getIcon(result.type);
                     return (
                       <Card
                         key={`${result.type}-${result.id}`}
-                        className="cursor-pointer hover:bg-accent/50 transition-colors"
+                        className="cursor-pointer hover:bg-accent/50 transition-colors stagger-item"
                         onClick={() => navigate(result.href)}
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <CardContent className="p-4 flex items-center gap-4">
                           <div className={`p-2 rounded-lg ${getTypeColor(result.type)}`}>
@@ -263,11 +406,14 @@ export default function SearchPage() {
       )}
 
       {/* Empty State */}
-      {query.length < 2 && (
+      {query.length < 1 && !showHistory && (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>اكتب كلمتين على الأقل للبحث</p>
+            <p>ابدأ الكتابة للبحث</p>
+            {voiceSupported && (
+              <p className="text-xs mt-2">أو اضغط على أيقونة الميكروفون للبحث الصوتي</p>
+            )}
           </CardContent>
         </Card>
       )}
