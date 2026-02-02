@@ -55,6 +55,10 @@ const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
 const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
 const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
 const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
+// PWA 2025 Handler Pages
+const ShareTargetPage = lazy(() => import("./pages/share/ShareTargetPage"));
+const OpenFilePage = lazy(() => import("./pages/file/OpenFilePage"));
+const ProtocolHandlerPage = lazy(() => import("./pages/protocol/ProtocolHandlerPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -134,6 +138,10 @@ const App = () => (
                   <Route path="treasury/:id" element={<CashRegisterDetailsPage />} />
                   <Route path="expenses" element={<ExpensesPage />} />
                   <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
+                  {/* PWA 2025 Handler Routes */}
+                  <Route path="share-target" element={<ShareTargetPage />} />
+                  <Route path="open-file" element={<OpenFilePage />} />
+                  <Route path="protocol" element={<ProtocolHandlerPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

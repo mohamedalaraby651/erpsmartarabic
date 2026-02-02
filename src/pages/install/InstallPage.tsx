@@ -11,8 +11,17 @@ import {
   CheckCircle2,
   Share,
   MoreVertical,
-  Plus
+  Plus,
+  FileText,
+  Link2,
+  Share2,
+  Sparkles,
+  HardDrive,
+  Shield
 } from 'lucide-react';
+
+// PWA Version
+const PWA_VERSION = '2.0.0';
 
 export default function InstallPage() {
   const { 
@@ -21,13 +30,14 @@ export default function InstallPage() {
     isIOS, 
     isAndroid, 
     isStandalone,
+    isWindowControlsOverlay,
     promptInstall 
   } = useInstallPrompt();
 
   const handleInstall = async () => {
     const success = await promptInstall();
     if (success) {
-      console.log('تم تثبيت التطبيق بنجاح!');
+      console.log('[PWA 2.0] تم تثبيت التطبيق بنجاح!');
     }
   };
 
@@ -54,12 +64,36 @@ export default function InstallPage() {
     }
   ];
 
+  // PWA 2025 Advanced Features
+  const advancedFeatures = [
+    {
+      icon: Share2,
+      title: 'استقبال المشاركات',
+      description: 'شارك الملفات والنصوص من أي تطبيق'
+    },
+    {
+      icon: FileText,
+      title: 'فتح الملفات',
+      description: 'Excel و PDF مباشرة في التطبيق'
+    },
+    {
+      icon: Link2,
+      title: 'روابط مخصصة',
+      description: 'web+invoice:// للوصول السريع'
+    },
+    {
+      icon: HardDrive,
+      title: 'تخزين محلي ذكي',
+      description: 'IndexedDB v2 لأداء أفضل'
+    }
+  ];
+
   if (isStandalone || isInstalled) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-primary/10">
         <Card className="max-w-md w-full text-center">
           <CardHeader>
-            <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
               <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
             <CardTitle className="text-2xl">التطبيق مثبت بالفعل! 🎉</CardTitle>
@@ -67,10 +101,20 @@ export default function InstallPage() {
               أنت تستخدم ERP Smart كتطبيق مثبت
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="w-4 h-4" />
+              <span>PWA 2025 - الإصدار {PWA_VERSION}</span>
+            </div>
             <p className="text-muted-foreground">
-              استمتع بالوصول السريع والعمل دون اتصال بالإنترنت
+              استمتع بالوصول السريع والعمل دون اتصال بالإنترنت مع جميع ميزات PWA المتقدمة
             </p>
+            {isWindowControlsOverlay && (
+              <div className="p-3 bg-primary/10 rounded-lg text-sm">
+                <Shield className="w-4 h-4 inline ml-2" />
+                وضع Window Controls Overlay نشط
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -91,6 +135,10 @@ export default function InstallPage() {
           <p className="text-xl text-muted-foreground">
             احصل على تجربة أفضل بتثبيت التطبيق على جهازك
           </p>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full text-sm">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span>PWA 2025 - الإصدار {PWA_VERSION}</span>
+          </div>
         </div>
 
         {/* Features Grid */}
@@ -103,6 +151,34 @@ export default function InstallPage() {
             </Card>
           ))}
         </div>
+
+        {/* PWA 2025 Features */}
+        <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="w-5 h-5 text-primary" />
+              ميزات PWA 2025 الجديدة
+            </CardTitle>
+            <CardDescription>
+              ميزات متقدمة لتكامل أفضل مع النظام
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              {advancedFeatures.map((feature, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <feature.icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm">{feature.title}</h4>
+                    <p className="text-xs text-muted-foreground">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Install Button for supported browsers */}
         {isInstallable && (
@@ -117,7 +193,7 @@ export default function InstallPage() {
                 تثبيت التطبيق الآن
               </Button>
               <p className="text-center text-sm text-muted-foreground mt-3">
-                مجاني • لا يحتاج متجر تطبيقات
+                مجاني • لا يحتاج متجر تطبيقات • ~5 ميجابايت
               </p>
             </CardContent>
           </Card>
@@ -129,7 +205,7 @@ export default function InstallPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Smartphone className="w-5 h-5" />
-                تعليمات التثبيت على iPhone/iPad
+                تعليمات التثبيت على iPhone/iPad (iOS 17+)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -165,6 +241,9 @@ export default function InstallPage() {
                   <p className="font-medium">اضغط "إضافة"</p>
                   <p className="text-muted-foreground">سيظهر التطبيق على شاشتك الرئيسية</p>
                 </div>
+              </div>
+              <div className="p-3 bg-muted rounded-lg text-sm">
+                <strong>ملاحظة iOS 17+:</strong> يدعم التطبيق الآن الإشعارات وعداد الأيقونة على iOS
               </div>
             </CardContent>
           </Card>
@@ -248,6 +327,9 @@ export default function InstallPage() {
                   <p className="text-muted-foreground">سيُضاف التطبيق لقائمة التطبيقات</p>
                 </div>
               </div>
+              <div className="p-3 bg-muted rounded-lg text-sm">
+                <strong>Edge:</strong> يدعم اللوحة الجانبية (Side Panel) لفتح التطبيق بجانب صفحاتك الأخرى
+              </div>
             </CardContent>
           </Card>
         )}
@@ -277,7 +359,15 @@ export default function InstallPage() {
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span>لا يحتاج مساحة تخزين كبيرة</span>
+                <span>لا يحتاج مساحة تخزين كبيرة (~5 ميجابايت)</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <span>فتح ملفات Excel و PDF مباشرة (PWA 2025)</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <span>استقبال المشاركات من تطبيقات أخرى</span>
               </li>
             </ul>
           </CardContent>
