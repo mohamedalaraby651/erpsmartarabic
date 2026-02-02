@@ -68,19 +68,83 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png', 'screenshots/*.png'],
       manifest: {
         name: 'ERP Smart العربي',
         short_name: 'ERP Smart',
-        description: 'نظام إدارة موارد المؤسسات الذكي - يعمل دون اتصال بالإنترنت',
+        description: 'نظام إدارة موارد المؤسسات الذكي - يعمل دون اتصال بالإنترنت مع دعم كامل للعربية',
         theme_color: '#3b82f6',
-        background_color: '#ffffff',
+        background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
+        scope: '/',
         dir: 'rtl',
         lang: 'ar',
-        categories: ['business', 'productivity', 'utilities'],
+        categories: ['business', 'productivity', 'utilities', 'finance'],
+        // PWA 2025: Display Override for flexible windowing
+        display_override: ['standalone', 'minimal-ui', 'window-controls-overlay'],
+        // PWA 2025: Launch Handler for app behavior
+        launch_handler: {
+          client_mode: ['navigate-existing', 'auto']
+        },
+        // PWA 2025: Handle Links preference
+        handle_links: 'preferred',
+        // PWA 2025: Edge Side Panel support
+        edge_side_panel: {
+          preferred_width: 420
+        },
+        // PWA 2025: Share Target for receiving shares
+        share_target: {
+          action: '/share-target',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [
+              {
+                name: 'files',
+                accept: ['image/*', 'application/pdf', '.xlsx', '.xls', '.csv']
+              }
+            ]
+          }
+        },
+        // PWA 2025: File Handlers for opening files
+        file_handlers: [
+          {
+            action: '/open-file',
+            accept: {
+              'application/pdf': ['.pdf'],
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+              'application/vnd.ms-excel': ['.xls'],
+              'text/csv': ['.csv'],
+              'image/png': ['.png'],
+              'image/jpeg': ['.jpg', '.jpeg'],
+              'image/webp': ['.webp']
+            }
+          }
+        ],
+        // PWA 2025: Protocol Handlers for custom URLs
+        protocol_handlers: [
+          {
+            protocol: 'web+erp',
+            url: '/protocol?action=%s'
+          },
+          {
+            protocol: 'web+invoice',
+            url: '/invoices?number=%s'
+          },
+          {
+            protocol: 'web+customer',
+            url: '/customers?id=%s'
+          },
+          {
+            protocol: 'web+product',
+            url: '/products?id=%s'
+          }
+        ],
         icons: [
           {
             src: '/icons/icon-72x72.png',
@@ -137,31 +201,42 @@ export default defineConfig(({ mode }) => ({
             sizes: '512x512',
             type: 'image/png',
             form_factor: 'wide',
-            label: 'ERP Smart Dashboard'
+            label: 'لوحة التحكم الرئيسية - ERP Smart'
+          },
+          {
+            src: '/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'التطبيق على الهاتف'
           }
         ],
         shortcuts: [
           {
             name: 'فاتورة جديدة',
             short_name: 'فاتورة',
+            description: 'إنشاء فاتورة مبيعات جديدة',
             url: '/invoices?action=new',
             icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
           },
           {
             name: 'عميل جديد',
             short_name: 'عميل',
+            description: 'إضافة عميل جديد للنظام',
             url: '/customers?action=new',
             icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
           },
           {
             name: 'أمر بيع جديد',
             short_name: 'بيع',
+            description: 'إنشاء أمر بيع جديد',
             url: '/sales-orders?action=new',
             icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
           },
           {
             name: 'منتج جديد',
             short_name: 'منتج',
+            description: 'إضافة منتج جديد للمخزون',
             url: '/products?action=new',
             icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
           }
@@ -169,14 +244,18 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // PWA 2025: Enhanced caching strategies
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'images-cache',
+              cacheName: 'images-cache-v2',
               expiration: {
-                maxEntries: 100,
+                maxEntries: 150,
                 maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
               }
             }
@@ -185,7 +264,7 @@ export default defineConfig(({ mode }) => ({
             urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'fonts-cache',
+              cacheName: 'fonts-cache-v2',
               expiration: {
                 maxAgeSeconds: 365 * 24 * 60 * 60 // 1 year
               }
@@ -193,13 +272,14 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
-            handler: 'StaleWhileRevalidate',
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'api-cache-v2',
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 5 * 60 // 5 minutes
+                maxEntries: 100,
+                maxAgeSeconds: 10 * 60 // 10 minutes
               },
+              networkTimeoutSeconds: 10,
               cacheableResponse: {
                 statuses: [0, 200]
               }
@@ -209,24 +289,27 @@ export default defineConfig(({ mode }) => ({
             urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'storage-cache',
+              cacheName: 'storage-cache-v2',
               expiration: {
-                maxEntries: 100,
+                maxEntries: 150,
                 maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
               }
             }
           },
           {
             urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'StaleWhileRevalidate',
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'pages-cache',
+              cacheName: 'pages-cache-v2',
               expiration: {
                 maxEntries: 50
-              }
+              },
+              networkTimeoutSeconds: 5
             }
           }
-        ]
+        ],
+        navigateFallback: '/offline.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/auth/, /^\/share-target/]
       },
       devOptions: {
         enabled: false

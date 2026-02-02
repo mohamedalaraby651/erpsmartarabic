@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>غير متصل بالإنترنت</title>
+  <meta name="theme-color" content="#3b82f6">
+  <title>غير متصل بالإنترنت - ERP Smart</title>
   <style>
     * {
       margin: 0;
@@ -11,71 +12,167 @@
       box-sizing: border-box;
     }
     
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --bg-dark: #0f172a;
+      --bg-light: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+    }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans Arabic', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #e2e8f0;
+      color: var(--text-primary);
       padding: 20px;
     }
     
     .container {
       text-align: center;
-      max-width: 400px;
+      max-width: 480px;
+      width: 100%;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: var(--primary);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.5);
+    }
+    
+    .logo span {
+      font-size: 24px;
+      font-weight: 700;
+      color: white;
     }
     
     .icon {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
       margin: 0 auto 24px;
       background: rgba(239, 68, 68, 0.1);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
     }
     
     .icon svg {
-      width: 60px;
-      height: 60px;
-      color: #ef4444;
+      width: 50px;
+      height: 50px;
+      color: var(--error);
     }
     
     h1 {
-      font-size: 24px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
       margin-bottom: 12px;
-      color: #f8fafc;
+      color: var(--text-primary);
     }
     
-    p {
-      font-size: 16px;
-      color: #94a3b8;
+    .subtitle {
+      font-size: 18px;
+      color: var(--text-secondary);
       margin-bottom: 32px;
       line-height: 1.6;
+    }
+    
+    .status-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .status-item:last-child {
+      border-bottom: none;
+    }
+    
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+    }
+    
+    .status-value {
+      font-weight: 600;
+    }
+    
+    .status-online { color: var(--success); }
+    .status-offline { color: var(--error); }
+    .status-pending { color: var(--warning); }
+    
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
     
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 24px;
-      background: #3b82f6;
-      color: white;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 28px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 16px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      text-decoration: none;
     }
     
-    .btn:hover {
-      background: #2563eb;
-      transform: translateY(-1px);
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.5);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
     
     .btn:active {
@@ -88,9 +185,9 @@
     }
     
     .tips {
-      margin-top: 48px;
+      margin-top: 32px;
       padding: 20px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.03);
       border-radius: 12px;
       text-align: right;
     }
@@ -99,30 +196,53 @@
       font-size: 14px;
       font-weight: 600;
       margin-bottom: 12px;
-      color: #cbd5e1;
-    }
-    
-    .tips ul {
-      list-style: none;
-      font-size: 14px;
-      color: #64748b;
-    }
-    
-    .tips li {
-      padding: 6px 0;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       gap: 8px;
     }
     
+    .tips ul {
+      list-style: none;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    
+    .tips li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
     .tips li::before {
-      content: "•";
-      color: #3b82f6;
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--primary);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    
+    .version {
+      margin-top: 32px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    @media (max-width: 480px) {
+      h1 { font-size: 24px; }
+      .subtitle { font-size: 16px; }
+      .btn { padding: 14px 24px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="logo">
+      <span>ERP</span>
+    </div>
+    
     <div class="icon">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
@@ -130,26 +250,143 @@
     </div>
     
     <h1>أنت غير متصل بالإنترنت</h1>
-    <p>
+    <p class="subtitle">
       لا يمكن الوصول إلى هذه الصفحة حالياً. 
       تأكد من اتصالك بالإنترنت وحاول مرة أخرى.
     </p>
     
-    <button class="btn" onclick="window.location.reload()">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-      إعادة المحاولة
-    </button>
+    <div class="status-card">
+      <div class="status-item">
+        <span class="status-label">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <line x1="12" y1="20" x2="12.01" y2="20"/>
+          </svg>
+          حالة الاتصال
+        </span>
+        <span class="status-value status-offline" id="connection-status">غير متصل</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+          البيانات المحلية
+        </span>
+        <span class="status-value status-online" id="cache-status">متوفرة</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          Service Worker
+        </span>
+        <span class="status-value" id="sw-status">جاري الفحص...</span>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-primary" onclick="window.location.reload()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        إعادة المحاولة
+      </button>
+      
+      <a href="/" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        العودة للرئيسية
+      </a>
+    </div>
     
     <div class="tips">
-      <h3>نصائح:</h3>
+      <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4"/>
+          <path d="M12 8h.01"/>
+        </svg>
+        نصائح للعمل دون اتصال
+      </h3>
       <ul>
+        <li>الصفحات التي زرتها سابقاً محفوظة ويمكنك الوصول إليها</li>
+        <li>البيانات الجديدة ستتم مزامنتها عند عودة الاتصال</li>
+        <li>يمكنك إنشاء فواتير وعملاء جدد وسيتم حفظهم محلياً</li>
         <li>تحقق من اتصال WiFi أو بيانات الهاتف</li>
-        <li>حاول إعادة تشغيل جهاز التوجيه</li>
-        <li>الصفحات المحفوظة مسبقاً ستعمل بدون إنترنت</li>
       </ul>
     </div>
+    
+    <p class="version">ERP Smart v2.0.0 - PWA 2025</p>
   </div>
+
+  <script>
+    // Check connection status
+    function updateConnectionStatus() {
+      const statusEl = document.getElementById('connection-status');
+      if (navigator.onLine) {
+        statusEl.textContent = 'متصل';
+        statusEl.className = 'status-value status-online';
+        // Reload if back online
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        statusEl.textContent = 'غير متصل';
+        statusEl.className = 'status-value status-offline';
+      }
+    }
+
+    // Check Service Worker status
+    async function checkServiceWorker() {
+      const statusEl = document.getElementById('sw-status');
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          statusEl.textContent = 'نشط';
+          statusEl.className = 'status-value status-online';
+        } else {
+          statusEl.textContent = 'غير مسجل';
+          statusEl.className = 'status-value status-pending';
+        }
+      } else {
+        statusEl.textContent = 'غير مدعوم';
+        statusEl.className = 'status-value status-offline';
+      }
+    }
+
+    // Check cache status
+    async function checkCacheStatus() {
+      const statusEl = document.getElementById('cache-status');
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        if (cacheNames.length > 0) {
+          statusEl.textContent = `متوفرة (${cacheNames.length} مخزن)`;
+          statusEl.className = 'status-value status-online';
+        } else {
+          statusEl.textContent = 'فارغة';
+          statusEl.className = 'status-value status-pending';
+        }
+      } else {
+        statusEl.textContent = 'غير مدعومة';
+        statusEl.className = 'status-value status-offline';
+      }
+    }
+
+    // Listen for online/offline events
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+
+    // Initial checks
+    updateConnectionStatus();
+    checkServiceWorker();
+    checkCacheStatus();
+  </script>
 </body>
 </html>
