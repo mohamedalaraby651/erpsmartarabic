@@ -42,6 +42,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerAddress = Database['public']['Tables']['customer_addresses']['Row'];
+type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
 
 const vipColors = {
   regular: "bg-muted text-muted-foreground",
@@ -696,7 +697,7 @@ const CustomerDetailsPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {activities.map((activity: any) => (
+                  {activities.map((activity: ActivityLog) => (
                     <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <div className="p-2 rounded-full bg-primary/10">
                         <Activity className="h-4 w-4 text-primary" />

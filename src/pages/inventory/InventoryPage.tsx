@@ -63,6 +63,7 @@ type StockMovement = {
   id: string;
   movement_type: string;
   quantity: number;
+  notes: string | null;
   created_at: string;
   product: { id: string; name: string } | null;
   from_warehouse: { id: string; name: string } | null;
@@ -391,7 +392,7 @@ const InventoryPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStock.map((item: any) => {
+                  {filteredStock.map((item: ProductWithRelations) => {
                     const isLowStock = item.product?.min_stock && item.quantity <= item.product.min_stock;
                     return (
                       <TableRow key={item.id}>
@@ -456,7 +457,7 @@ const InventoryPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {warehouses.map((warehouse: any) => (
+                  {warehouses.map((warehouse: Warehouse) => (
                     <TableRow key={warehouse.id}>
                       <TableCell className="font-medium">{warehouse.name}</TableCell>
                       <TableCell>{warehouse.location || "-"}</TableCell>
@@ -529,7 +530,7 @@ const InventoryPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentMovements.map((movement: any) => (
+                  {recentMovements.map((movement: StockMovement) => (
                     <TableRow key={movement.id}>
                       <TableCell>
                         {new Date(movement.created_at).toLocaleDateString("ar-EG")}
@@ -584,7 +585,7 @@ const InventoryPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lowStockItems.map((item: any) => (
+                    {lowStockItems.map((item: ProductWithRelations) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.product?.name}</TableCell>
                         <TableCell>{item.warehouse?.name}</TableCell>

@@ -54,7 +54,7 @@ const tableLabels: Record<string, string> = {
   tasks: 'المهام',
 };
 
-const formatValue = (value: any): string => {
+const formatValue = (value: unknown): string => {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'boolean') return value ? 'نعم' : 'لا';
   if (typeof value === 'object') return JSON.stringify(value, null, 2);
