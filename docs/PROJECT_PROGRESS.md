@@ -2,8 +2,8 @@
 # ERP System - Progress & Roadmap
 
 > **Last Updated / آخر تحديث**: 2026-02-03
-> **Current Sprint / السبرنت الحالي**: Q1 Foundation & Governance ✅ COMPLETE
-> **Project Version / إصدار المشروع**: 1.1.0
+> **Current Sprint / السبرنت الحالي**: Q2 Enterprise Finance Core 🔄 IN PROGRESS
+> **Project Version / إصدار المشروع**: 1.2.0
 
 ---
 
@@ -11,10 +11,11 @@
 
 1. [Progress Dashboard / لوحة التقدم](#-progress-dashboard--لوحة-التقدم)
 2. [Q1 Completion Status / حالة إكمال Q1](#-q1-completion-status--حالة-إكمال-q1)
-3. [Feature Status / حالة الميزات](#-feature-status--حالة-الميزات)
-4. [Testing Status / حالة الاختبارات](#-testing-status--حالة-الاختبارات)
-5. [Roadmap / خارطة الطريق](#-roadmap--خارطة-الطريق)
-6. [Changelog / سجل التغييرات](#-changelog--سجل-التغييرات)
+3. [Q2 Progress / تقدم Q2](#-q2-progress--تقدم-q2)
+4. [Feature Status / حالة الميزات](#-feature-status--حالة-الميزات)
+5. [Testing Status / حالة الاختبارات](#-testing-status--حالة-الاختبارات)
+6. [Roadmap / خارطة الطريق](#-roadmap--خارطة-الطريق)
+7. [Changelog / سجل التغييرات](#-changelog--سجل-التغييرات)
 
 ---
 
@@ -23,7 +24,9 @@
 ### Overall Completion / الإكمال الكلي
 
 ```
-████████████████████████████ 100% Complete (Q1)
+Q1 Foundation & Governance:     ████████████████████████████ 100% ✅
+Q2 Enterprise Finance Core:     ████████████████████░░░░░░░░  85% 🔄
+Q3 Governance & Multi-Tenant:   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0% ⏳
 ```
 
 ### Module Status / حالة الوحدات
@@ -31,22 +34,23 @@
 | Module / الوحدة | Status / الحالة | Progress / التقدم | Notes / ملاحظات |
 |-----------------|-----------------|-------------------|-----------------|
 | 🏗️ Core Infrastructure | ✅ Complete | 100% | React, Vite, Tailwind, shadcn/ui |
-| 🗄️ Database Schema | ✅ Complete | 100% | 52 tables with RLS |
-| 🔐 Authentication | ✅ Complete | 100% | Email/Password auth |
+| 🗄️ Database Schema | ✅ Complete | 100% | **56 tables** with RLS (4 new accounting) |
+| 🔐 Authentication | ✅ Complete | 100% | Email/Password + **2FA Ready** |
 | 👥 Customers Module | ✅ Complete | 100% | **Server Permission Check** |
 | 📦 Products Module | ✅ Complete | 100% | Variants + Categories |
-| 💰 Invoices Module | ✅ Complete | 100% | **Edge Function Validated** |
+| 💰 Invoices Module | ✅ Complete | 100% | **Approval Workflow Added** |
 | 📝 Quotations Module | ✅ Complete | 100% | **Server Permission Check** |
 | 🛒 Sales Orders | ✅ Complete | 100% | **Server Permission Check** |
 | 📥 Purchase Orders | ✅ Complete | 100% | **Server Permission Check** |
 | 🏭 Inventory | ✅ Complete | 100% | **Edge Function Validated** |
 | 👔 Employees | ✅ Complete | 100% | Full HR features |
 | 📊 Reports | ✅ Complete | 100% | Charts + Export |
-| ⚙️ Settings | ✅ Complete | 100% | Unified Settings Page |
+| ⚙️ Settings | ✅ Complete | 100% | Unified Settings + **2FA Tab** |
 | 🛡️ Admin Panel | ✅ Complete | 100% | Roles + Permissions |
 | 📱 Mobile Support | ✅ Complete | 100% | PWA + Gestures |
-| 🔒 **Security Layer** | ✅ Complete | 100% | **4 Edge Functions + 120 Policies** |
-| 🧪 **Testing** | ✅ Complete | 100% | **45+ files, 850+ tests** |
+| 🔒 **Security Layer** | ✅ Complete | 100% | **7 Edge Functions + 120+ Policies** |
+| 📚 **Accounting** | 🔄 In Progress | 85% | **Double-Entry + Journals** |
+| 🧪 **Testing** | ✅ Complete | 100% | **45+ files, 860+ tests** |
 | 📚 Documentation | ✅ Complete | 100% | Fully documented |
 | 🔔 Push Notifications | ✅ Complete | 100% | Web Push API ready |
 | 💾 Offline Storage | ✅ Complete | 100% | 10 IndexedDB stores |
