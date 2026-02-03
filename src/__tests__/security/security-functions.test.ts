@@ -7,11 +7,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock supabase client
-const mockRpc = vi.fn();
+// Mock supabase client - must use inline function for hoisting
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    rpc: mockRpc,
+    rpc: vi.fn(),
     auth: {
       getUser: vi.fn().mockResolvedValue({ 
         data: { user: { id: 'test-user-id', email: 'test@example.com' } } 
@@ -20,10 +19,14 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
+import { supabase } from '@/integrations/supabase/client';
 import { 
   verifyPermissionOnServer, 
   verifyFinancialLimit 
 } from '@/lib/api/secureOperations';
+
+// Get the mocked rpc function
+const mockRpc = vi.mocked(supabase.rpc);
 
 describe('Security Functions Integration', () => {
   beforeEach(() => {
@@ -32,7 +35,7 @@ describe('Security Functions Integration', () => {
 
   describe('check_section_permission via verifyPermissionOnServer', () => {
     it('should return true for admin on any section', async () => {
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
 
       const result = await verifyPermissionOnServer('invoices', 'create');
 
@@ -45,7 +48,7 @@ describe('Security Functions Integration', () => {
     });
 
     it('should return true when permission is granted', async () => {
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
 
       const result = await verifyPermissionOnServer('products', 'view');
 
@@ -53,7 +56,7 @@ describe('Security Functions Integration', () => {
     });
 
     it('should return false when permission is denied', async () => {
-      mockRpc.mockResolvedValueOnce({ data: false, error: null });
+      mockRpc.mockResolvedValueOnce({ data: false, error: null } as never);
 
       const result = await verifyPermissionOnServer('employees', 'delete');
 
@@ -61,7 +64,7 @@ describe('Security Functions Integration', () => {
     });
 
     it('should return false on database error', async () => {
-      mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'Database error' } });
+      mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'Database error' } } as never);
 
       const result = await verifyPermissionOnServer('customers', 'edit');
 
@@ -70,28 +73,28 @@ describe('Security Functions Integration', () => {
 
     it('should check different actions correctly', async () => {
       // Test view action
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyPermissionOnServer('payments', 'view');
       expect(mockRpc).toHaveBeenLastCalledWith('check_section_permission', 
         expect.objectContaining({ _action: 'view' })
       );
 
       // Test create action
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyPermissionOnServer('payments', 'create');
       expect(mockRpc).toHaveBeenLastCalledWith('check_section_permission', 
         expect.objectContaining({ _action: 'create' })
       );
 
       // Test edit action
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyPermissionOnServer('payments', 'edit');
       expect(mockRpc).toHaveBeenLastCalledWith('check_section_permission', 
         expect.objectContaining({ _action: 'edit' })
       );
 
       // Test delete action
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyPermissionOnServer('payments', 'delete');
       expect(mockRpc).toHaveBeenLastCalledWith('check_section_permission', 
         expect.objectContaining({ _action: 'delete' })
@@ -105,7 +108,7 @@ describe('Security Functions Integration', () => {
       ];
 
       for (const section of sections) {
-        mockRpc.mockResolvedValueOnce({ data: true, error: null });
+        mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
         await verifyPermissionOnServer(section, 'view');
         expect(mockRpc).toHaveBeenLastCalledWith('check_section_permission', 
           expect.objectContaining({ _section: section })
@@ -116,7 +119,7 @@ describe('Security Functions Integration', () => {
 
   describe('check_financial_limit via verifyFinancialLimit', () => {
     it('should return true for admin (unlimited amounts)', async () => {
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
 
       const result = await verifyFinancialLimit('invoice', 1000000);
 
@@ -129,7 +132,7 @@ describe('Security Functions Integration', () => {
     });
 
     it('should return true when amount is within limit', async () => {
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
 
       const result = await verifyFinancialLimit('discount', 15);
 
@@ -137,7 +140,7 @@ describe('Security Functions Integration', () => {
     });
 
     it('should return false when amount exceeds limit', async () => {
-      mockRpc.mockResolvedValueOnce({ data: false, error: null });
+      mockRpc.mockResolvedValueOnce({ data: false, error: null } as never);
 
       const result = await verifyFinancialLimit('invoice', 500000);
 
@@ -146,21 +149,21 @@ describe('Security Functions Integration', () => {
 
     it('should check different limit types', async () => {
       // Discount limit
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyFinancialLimit('discount', 10);
       expect(mockRpc).toHaveBeenLastCalledWith('check_financial_limit', 
         expect.objectContaining({ _limit_type: 'discount' })
       );
 
       // Credit limit
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyFinancialLimit('credit', 50000);
       expect(mockRpc).toHaveBeenLastCalledWith('check_financial_limit', 
         expect.objectContaining({ _limit_type: 'credit' })
       );
 
       // Invoice limit
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyFinancialLimit('invoice', 100000);
       expect(mockRpc).toHaveBeenLastCalledWith('check_financial_limit', 
         expect.objectContaining({ _limit_type: 'invoice' })
@@ -168,7 +171,7 @@ describe('Security Functions Integration', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'Database error' } });
+      mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'Database error' } } as never);
 
       const result = await verifyFinancialLimit('invoice', 1000);
 
@@ -177,14 +180,14 @@ describe('Security Functions Integration', () => {
 
     it('should handle edge cases for amounts', async () => {
       // Zero amount
-      mockRpc.mockResolvedValueOnce({ data: true, error: null });
+      mockRpc.mockResolvedValueOnce({ data: true, error: null } as never);
       await verifyFinancialLimit('invoice', 0);
       expect(mockRpc).toHaveBeenLastCalledWith('check_financial_limit', 
         expect.objectContaining({ _value: 0 })
       );
 
       // Very large amount
-      mockRpc.mockResolvedValueOnce({ data: false, error: null });
+      mockRpc.mockResolvedValueOnce({ data: false, error: null } as never);
       const result = await verifyFinancialLimit('invoice', 999999999);
       expect(result).toBe(false);
     });

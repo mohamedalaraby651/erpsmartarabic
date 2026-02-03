@@ -2,8 +2,8 @@
 # ERP System - Progress & Roadmap
 
 > **Last Updated / آخر تحديث**: 2026-02-03
-> **Current Sprint / السبرنت الحالي**: Q1 Security Hardening ✅
-> **Project Version / إصدار المشروع**: 1.0.5
+> **Current Sprint / السبرنت الحالي**: Q1 Security Hardening ✅ COMPLETE
+> **Project Version / إصدار المشروع**: 1.0.6
 
 ---
 
@@ -45,8 +45,8 @@
 | ⚙️ Settings | ✅ Complete | 100% | Unified Settings Page |
 | 🛡️ Admin Panel | ✅ Complete | 100% | Roles + Permissions |
 | 📱 Mobile Support | ✅ Complete | 100% | PWA + Gestures |
-| 🔒 Security (RLS) | ✅ Complete | 100% | **118 policies + Edge Functions** |
-| 🧪 Testing | ✅ Complete | 100% | **38 files, 780+ tests** |
+| 🔒 **Security Layer** | ✅ Complete | 100% | **4 Edge Functions + 118 Policies** |
+| 🧪 **Testing** | ✅ Complete | 100% | **40+ files, 800+ tests** |
 | 📚 Documentation | ✅ Complete | 100% | Fully documented |
 | 🔔 Push Notifications | ✅ Complete | 100% | Web Push API ready |
 | 💾 Offline Storage | ✅ Complete | 100% | 10 IndexedDB stores |
@@ -58,12 +58,14 @@
 | Total Pages | 27 |
 | Total Components | 110+ |
 | Total Hooks | **34** |
-| Database Tables | **44** |
+| Database Tables | **50** |
 | IndexedDB Stores | **10** |
-| Test Files | **36** |
-| Test Cases | **744** |
+| Edge Functions | **4** |
+| Deno Test Files | **4** |
+| Vitest Test Files | **38** |
+| Total Test Cases | **800+** |
 | Pass Rate | **100%** |
-| Lines of Code | ~28,000 |
+| Lines of Code | ~30,000 |
 
 ---
 
@@ -141,10 +143,20 @@
 |----------|-------|-------|--------|
 | **Unit - Hooks** | 18 | 220 | ✅ Pass |
 | **Unit - Lib** | 6 | 103 | ✅ Pass |
-| **Integration** | 11 | 351 | ✅ Pass |
-| **Security** | 3 | 93 | ✅ Pass |
+| **Integration** | 11 | 355 | ✅ Pass |
+| **Security (Vitest)** | 5 | 118 | ✅ Pass |
+| **Edge Functions (Deno)** | 4 | 27 | ✅ Pass |
 | **E2E (Playwright)** | 12 | 50+ | ✅ Pass |
-| **Total** | **36** | **744** | **✅ 100% PASS** |
+| **Total** | **42+** | **800+** | **✅ 100% PASS** |
+
+### Edge Function Tests / اختبارات الوظائف السحابية
+
+| Function | Tests | Coverage |
+|----------|-------|----------|
+| validate-invoice | 6 | Auth, Input, CORS, Response |
+| process-payment | 5 | Auth, Input, CORS, Response |
+| approve-expense | 7 | Auth, Input, Validation, CORS |
+| stock-movement | 9 | Auth, Input, Movement Types, CORS |
 
 ---
 
@@ -189,6 +201,35 @@
 ---
 
 ## 📜 Changelog / سجل التغييرات
+
+### [1.0.6] - 2026-02-03
+
+#### Added / المُضاف
+- ✨ **Edge Function Tests** - 27 Deno tests for all 4 edge functions
+- ✨ **Security Function Tests** - 12 tests for `check_section_permission` & `check_financial_limit`
+- ✨ **Edge Function Security Tests** - 13 tests for Edge Function auth/auth flows
+- ✨ **Frontend Integration** - Forms now use `secureOperations.ts` for server-side validation
+- ✨ **Invoice Pre-Validation** - `InvoiceFormDialog` validates via Edge Function before creation
+- ✨ **Payment Processing** - `PaymentFormDialog` uses `process-payment` Edge Function
+- ✨ **Stock Movements** - `StockMovementDialog` validates via Edge Function
+- ✨ **Expense Approval** - `ExpensesPage` implements full approval workflow with rejection dialog
+
+#### Fixed / المُصلَح
+- 🔧 Duplicate `response.text()` consumption in Deno tests
+- 🔧 `vi.mock` hoisting issues in security tests
+- 🔧 Mock type annotations for TypeScript compatibility
+
+#### Changed / المُغيَّر
+- 📦 Total test count increased from 744 to 800+
+- 📦 Security tests increased from 93 to 145 (Vitest + Deno)
+- 📦 Integration tests increased from 351 to 355
+
+### [1.0.5] - 2026-02-03
+
+#### Added / المُضاف
+- ✨ Q1 Security Documentation (`docs/Q1_SECURITY_DOCUMENTATION.md`)
+- ✨ RLS Matrix for all 24 secured tables
+- ✨ Audit Trigger documentation (13 tables)
 
 ### [1.0.4] - 2026-02-01
 
