@@ -44,12 +44,36 @@
 
 ---
 
-## 📋 المهام المتبقية (للمستقبل - P2)
+## ✅ المرحلة 5: تقسيم الملفات الكبيرة (P2) - مكتمل
 
-- [ ] نقل Testing dependencies لـ devDependencies
-- [ ] تقسيم AppSidebar.tsx (586 سطر)
-- [ ] تقسيم InvoiceFormDialog.tsx (533 سطر)
-- [ ] تقسيم MobileDrawer.tsx (470 سطر)
+تم إنشاء **13 مكون جديد** قابل لإعادة الاستخدام:
+
+### مكونات Invoices:
+- `src/components/invoices/InvoiceItemsTable.tsx`
+- `src/components/invoices/InvoiceTotalsSection.tsx`
+- `src/components/invoices/useInvoiceItems.ts`
+
+### مكونات Quotations:
+- `src/components/quotations/QuotationItemsTable.tsx`
+- `src/components/quotations/QuotationTotalsSection.tsx`
+
+### مكونات Mobile:
+- `src/components/layout/mobile/MobileQuickActions.tsx`
+- `src/components/layout/mobile/MobileFavoritesSection.tsx`
+- `src/components/layout/mobile/MobileNavSection.tsx`
+- `src/components/layout/mobile/MobileFooter.tsx`
+- `src/components/layout/mobile/index.ts`
+
+### مكونات Sidebar:
+- `src/components/layout/sidebar/SidebarHeader.tsx`
+- `src/components/layout/sidebar/SidebarFooter.tsx`
+- `src/components/layout/sidebar/index.ts`
+
+---
+
+## 📋 المهام المتبقية (للمستقبل - اختيارية)
+
+- [ ] نقل Testing dependencies لـ devDependencies (يتطلب تعديل package.json مباشرة)
 
 ---
 
