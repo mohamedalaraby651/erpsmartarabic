@@ -322,7 +322,7 @@ const PurchaseOrderDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orderItems.map((item: any) => (
+                    {(orderItems as Array<{id: string; product_id: string; quantity: number; unit_price: number; total_price: number; products: {id: string; name: string} | null; product_variants: {id: string; name: string} | null}>).map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>
                           <div className="flex flex-col">
@@ -401,7 +401,7 @@ const PurchaseOrderDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payments.map((payment: any) => (
+                    {(payments as Array<{id: string; payment_number: string; payment_date: string; amount: number; payment_method: string; reference_number: string | null}>).map((payment) => (
                       <TableRow key={payment.id}>
                         <TableCell className="font-mono">{payment.payment_number}</TableCell>
                         <TableCell>
@@ -439,7 +439,7 @@ const PurchaseOrderDetailsPage = () => {
             <CardContent>
               {activities.length > 0 ? (
                 <div className="space-y-4">
-                  {activities.map((activity: any) => (
+                  {(activities as Array<{id: string; action: string; created_at: string; old_values: unknown; new_values: unknown}>).map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <div className="p-2 rounded-full bg-primary/10">
                         <Activity className="h-4 w-4 text-primary" />

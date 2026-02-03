@@ -48,9 +48,14 @@ export function useLaunchQueue() {
       return;
     }
 
-    const launchQueue = (window as any).launchQueue;
+    interface LaunchQueueParams {
+      files?: FileSystemFileHandle[];
+      targetURL?: string;
+    }
+
+    const launchQueue = (window as unknown as { launchQueue: { setConsumer: (cb: (params: LaunchQueueParams) => void) => void } }).launchQueue;
     
-    launchQueue.setConsumer(async (params: any) => {
+    launchQueue.setConsumer(async (params: LaunchQueueParams) => {
       setIsProcessing(true);
       console.log('[Launch Queue] Received launch params:', params);
       

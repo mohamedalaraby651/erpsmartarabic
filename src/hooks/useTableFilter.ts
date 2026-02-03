@@ -9,13 +9,13 @@ export function useTableFilter<T extends Record<string, any>>(data: T[]) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFields, setSearchFields] = useState<string[]>([]);
 
-  const setFilter = useCallback((key: string, value: any) => {
+  const setFilter = useCallback((key: string, value: string | string[] | { min?: unknown; max?: unknown } | undefined | boolean) => {
     setFilters((current) => {
       if (value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
         const { [key]: _, ...rest } = current;
         return rest;
       }
-      return { ...current, [key]: value };
+      return { ...current, [key]: value as FilterConfig[string] };
     });
   }, []);
 

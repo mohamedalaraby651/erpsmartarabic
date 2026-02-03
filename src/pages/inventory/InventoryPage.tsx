@@ -45,6 +45,30 @@ import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 
+import type { Database } from "@/integrations/supabase/types";
+
+type Warehouse = Database['public']['Tables']['warehouses']['Row'];
+type ProductWithRelations = {
+  id: string;
+  product_id: string;
+  warehouse_id: string;
+  variant_id: string | null;
+  quantity: number;
+  updated_at: string;
+  product: { id: string; name: string; sku: string | null; min_stock: number | null; image_url: string | null } | null;
+  warehouse: { id: string; name: string } | null;
+  variant: { id: string; name: string } | null;
+};
+type StockMovement = {
+  id: string;
+  movement_type: string;
+  quantity: number;
+  created_at: string;
+  product: { id: string; name: string } | null;
+  from_warehouse: { id: string; name: string } | null;
+  to_warehouse: { id: string; name: string } | null;
+};
+
 const InventoryPage = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -61,7 +85,7 @@ const InventoryPage = () => {
     }
   }, [searchParams, setSearchParams]);
   const [movementDialogOpen, setMovementDialogOpen] = useState(false);
-  const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [warehouseToDelete, setWarehouseToDelete] = useState<string | null>(null);
 
@@ -136,7 +160,7 @@ const InventoryPage = () => {
   }, [refetchWarehouses, refetchStock, refetchMovements]);
 
   // Filter stock by search term
-  const filteredStock = productStock.filter((item: any) =>
+  const filteredStock = productStock.filter((item: ProductWithRelations) =>
     item.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.product?.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.warehouse?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -144,12 +168,12 @@ const InventoryPage = () => {
 
   // Get low stock items
   const lowStockItems = productStock.filter(
-    (item: any) => item.product?.min_stock && item.quantity <= item.product.min_stock
+    (item: ProductWithRelations) => item.product?.min_stock && item.quantity <= item.product.min_stock
   );
 
   // Calculate stats
-  const totalProducts = new Set(productStock.map((item: any) => item.product_id)).size;
-  const totalQuantity = productStock.reduce((sum: number, item: any) => sum + item.quantity, 0);
+  const totalProducts = new Set(productStock.map((item: ProductWithRelations) => item.product_id)).size;
+  const totalQuantity = productStock.reduce((sum: number, item: ProductWithRelations) => sum + item.quantity, 0);
 
   const getMovementTypeLabel = (type: string) => {
     switch (type) {
@@ -172,7 +196,7 @@ const InventoryPage = () => {
   };
 
   // Mobile Stock Card
-  const renderStockCard = (item: any) => {
+  const renderStockCard = (item: ProductWithRelations) => {
     const isLowStock = item.product?.min_stock && item.quantity <= item.product.min_stock;
     return (
       <DataCard
@@ -192,7 +216,7 @@ const InventoryPage = () => {
   };
 
   // Mobile Warehouse Card
-  const renderWarehouseCard = (warehouse: any) => (
+  const renderWarehouseCard = (warehouse: Warehouse) => (
     <DataCard
       key={warehouse.id}
       title={warehouse.name}
@@ -212,7 +236,7 @@ const InventoryPage = () => {
   );
 
   // Mobile Movement Card
-  const renderMovementCard = (movement: any) => (
+  const renderMovementCard = (movement: StockMovement) => (
     <DataCard
       key={movement.id}
       title={movement.product?.name || "منتج غير معروف"}
@@ -228,7 +252,7 @@ const InventoryPage = () => {
   );
 
   // Mobile Low Stock Card
-  const renderLowStockCard = (item: any) => (
+  const renderLowStockCard = (item: ProductWithRelations) => (
     <DataCard
       key={item.id}
       title={item.product?.name || "منتج غير معروف"}

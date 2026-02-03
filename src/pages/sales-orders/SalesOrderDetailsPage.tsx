@@ -343,7 +343,7 @@ const SalesOrderDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orderItems.map((item: any) => (
+                    {(orderItems as Array<{id: string; product_id: string; quantity: number; unit_price: number; discount_percentage: number | null; total_price: number; products: {id: string; name: string} | null; product_variants: {id: string; name: string} | null}>).map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>
                           <div className="flex flex-col">
@@ -430,7 +430,7 @@ const SalesOrderDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoices.map((invoice: any) => (
+                    {(invoices as Array<{id: string; invoice_number: string; created_at: string; total_amount: number; payment_status: string}>).map((invoice) => (
                       <TableRow key={invoice.id}>
                         <TableCell>
                           <EntityLink type="invoice" id={invoice.id}>
