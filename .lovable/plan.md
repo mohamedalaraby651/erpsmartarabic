@@ -49,6 +49,35 @@
 | `src/lib/api/secureOperations.ts` | ✅ مكتمل |
 | `src/hooks/usePermissions.ts` | ✅ محدث (server-side verification) |
 
+### ✅ المرحلة 5: تحديث RLS Policies (مكتمل 100%)
+
+| الجدول | SELECT | INSERT | UPDATE | DELETE |
+|--------|--------|--------|--------|--------|
+| invoices | ✅ check_section_permission | ✅ + check_financial_limit | ✅ + check_financial_limit | admin only |
+| invoice_items | ✅ | ✅ | ✅ | admin only |
+| payments | ✅ | ✅ | ✅ | admin only |
+| quotations | ✅ | ✅ | ✅ | ✅ |
+| quotation_items | ✅ | ✅ | ✅ | ✅ |
+| sales_orders | ✅ | ✅ | ✅ | ✅ |
+| sales_order_items | ✅ | ✅ | ✅ | ✅ |
+| customers | ✅ | ✅ + check_financial_limit | ✅ + check_financial_limit | ✅ |
+| customer_addresses | ✅ | ✅ | ✅ | ✅ |
+| customer_categories | ✅ | admin | admin | admin |
+| products | ✅ | ✅ | ✅ | ✅ |
+| product_categories | ✅ | admin/warehouse | admin/warehouse | admin/warehouse |
+| product_stock | ✅ | ✅ | ✅ | admin only |
+| stock_movements | ✅ | ✅ | admin only | admin only |
+| suppliers | ✅ | ✅ | ✅ | ✅ |
+| supplier_notes | ✅ | ✅ | - | ✅ |
+| purchase_orders | ✅ | ✅ | ✅ | ✅ |
+| expenses | ✅ + own | authenticated | admin/accountant | admin only |
+| expense_categories | all | admin/accountant | admin/accountant | admin/accountant |
+| cash_registers | ✅ | admin/accountant | admin/accountant | admin/accountant |
+| cash_transactions | ✅ | ✅ | admin only | admin only |
+| bank_accounts | admin/accountant | admin/accountant | admin/accountant | admin/accountant |
+| employees | ✅ + own | ✅ | ✅ | admin only |
+| tasks | own/assigned | authenticated | own/assigned | own/admin |
+
 ---
 
 ## 📊 ملخص التقدم
@@ -59,7 +88,8 @@
 | Audit Triggers | ✅ مكتمل | 100% |
 | Edge Functions | ✅ مكتمل | 100% |
 | Frontend Security Layer | ✅ مكتمل | 100% |
-| **إجمالي Q1 Phase 1** | ✅ **مكتمل** | **100%** |
+| RLS Policies Update | ✅ مكتمل | 100% |
+| **إجمالي Q1 Phase 1 + 2** | ✅ **مكتمل** | **100%** |
 
 ---
 
