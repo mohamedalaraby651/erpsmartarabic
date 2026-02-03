@@ -74,7 +74,7 @@ export default function RolesPage() {
       setDialogOpen(false);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('RolesPage.createMutation', error);
       toast.error(getSafeErrorMessage(error));
     },
@@ -95,7 +95,7 @@ export default function RolesPage() {
       setDialogOpen(false);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('RolesPage.updateMutation', error);
       toast.error(getSafeErrorMessage(error));
     },
@@ -129,7 +129,7 @@ export default function RolesPage() {
       queryClient.invalidateQueries({ queryKey: ['custom-roles'] });
       toast.success('تم حذف الدور بنجاح');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('RolesPage.deleteMutation', error);
       toast.error(getSafeErrorMessage(error));
     },

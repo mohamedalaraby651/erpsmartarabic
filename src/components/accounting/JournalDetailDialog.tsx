@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { CheckCircle, Clock, FileText, Send } from "lucide-react";
 
 interface JournalDetailDialogProps {
@@ -73,10 +74,11 @@ const JournalDetailDialog = ({
       toast({ title: "تم ترحيل القيد بنجاح" });
       onOpenChange(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      logErrorSafely('JournalDetailDialog.postMutation', error);
       toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ أثناء الترحيل",
+        title: "خطأ في ترحيل القيد",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     },

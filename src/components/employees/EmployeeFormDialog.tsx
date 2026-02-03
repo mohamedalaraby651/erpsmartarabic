@@ -227,7 +227,7 @@ export default function EmployeeFormDialog({
       });
       onOpenChange(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('EmployeeFormDialog', error);
       toast({
         title: 'حدث خطأ',

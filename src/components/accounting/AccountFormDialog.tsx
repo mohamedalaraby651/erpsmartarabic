@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 
 type Account = {
   id?: string;
@@ -138,11 +139,13 @@ const AccountFormDialog = ({
       toast({ title: isEditing ? "تم تحديث الحساب" : "تم إنشاء الحساب" });
       onOpenChange(false);
     },
-    onError: (error: any) => {
-      const message = error.message?.includes("duplicate")
-        ? "كود الحساب موجود مسبقاً"
-        : error.message || "حدث خطأ";
-      toast({ title: "خطأ", description: message, variant: "destructive" });
+    onError: (error: unknown) => {
+      logErrorSafely('AccountFormDialog.mutation', error);
+      toast({ 
+        title: "خطأ في حفظ الحساب", 
+        description: getSafeErrorMessage(error), 
+        variant: "destructive" 
+      });
     },
   });
 

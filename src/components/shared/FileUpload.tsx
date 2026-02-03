@@ -196,7 +196,7 @@ export function FileUpload({
       }
 
       setSelectedFile(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logErrorSafely('FileUpload.handleUpload', error);
       toast.error('فشل رفع الملف: ' + getSafeErrorMessage(error));
     } finally {
