@@ -38,7 +38,19 @@ const ActivityLogPage = () => {
   const [entityFilter, setEntityFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [selectedLog, setSelectedLog] = useState<any>(null);
+interface ActivityLog {
+    id: string;
+    action: string;
+    entity_type: string;
+    entity_name: string | null;
+    entity_id: string | null;
+    user_id: string;
+    created_at: string;
+    ip_address: string | null;
+    old_values: Record<string, unknown> | null;
+    new_values: Record<string, unknown> | null;
+  }
+  const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const { data: logs = [], isLoading } = useQuery({
@@ -102,7 +114,7 @@ const ActivityLogPage = () => {
     export: 'bg-cyan-500/10 text-cyan-600',
   };
 
-  const handleViewDetails = (log: any) => {
+  const handleViewDetails = (log: ActivityLog) => {
     setSelectedLog(log);
     setDetailsOpen(true);
   };
@@ -127,7 +139,7 @@ const ActivityLogPage = () => {
           <p className="text-muted-foreground">تتبع جميع العمليات في النظام</p>
         </div>
         <ExportButton
-          data={logs.map((log: any) => ({
+          data={(logs as ActivityLog[]).map((log) => ({
             action: actionLabels[log.action] || log.action,
             entity_type: entityLabels[log.entity_type] || log.entity_type,
             entity_name: log.entity_name || '-',
@@ -229,7 +241,7 @@ const ActivityLogPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {logs.map((log: any) => (
+                  {(logs as ActivityLog[]).map((log) => (
                     <TableRow key={log.id}>
                       <TableCell>
                         <Badge className={actionColors[log.action] || 'bg-muted'}>

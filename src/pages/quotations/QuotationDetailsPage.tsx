@@ -548,7 +548,7 @@ const QuotationDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {salesOrders.map((order: any) => (
+                    {(salesOrders as Array<{ id: string; order_number: string; created_at: string; total_amount: number; status: string }>).map((order) => (
                       <TableRow key={order.id}>
                         <TableCell>
                           <EntityLink type="sales-order" id={order.id}>
@@ -595,7 +595,7 @@ const QuotationDetailsPage = () => {
             <CardContent>
               {activities.length > 0 ? (
                 <div className="space-y-4">
-                  {activities.map((activity: any) => (
+                  {(activities as Array<{ id: string; action: string; created_at: string }>).map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <div className="p-2 rounded-full bg-primary/10">
                         <Activity className="h-4 w-4 text-primary" />

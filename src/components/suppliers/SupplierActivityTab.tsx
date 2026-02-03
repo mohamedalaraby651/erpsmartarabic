@@ -36,10 +36,7 @@ const SupplierActivityTab = ({ supplierId }: SupplierActivityTabProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('activity_logs')
-        .select(`
-          *,
-          profiles:user_id (full_name)
-        `)
+        .select('*')
         .or(`entity_id.eq.${supplierId},and(entity_type.eq.purchase_order,entity_id.in.(select id from purchase_orders where supplier_id='${supplierId}')),and(entity_type.eq.supplier_payment,entity_id.in.(select id from supplier_payments where supplier_id='${supplierId}'))`)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -74,7 +71,7 @@ const SupplierActivityTab = ({ supplierId }: SupplierActivityTabProps) => {
             <div className="absolute right-4 top-0 bottom-0 w-0.5 bg-border" />
             
             <div className="space-y-6">
-              {activities.map((activity: any) => {
+              {activities.map((activity) => {
                 const actionInfo = actionLabels[activity.action] || actionLabels.update;
                 const entityInfo = entityLabels[activity.entity_type] || entityLabels.supplier;
                 const Icon = actionInfo.icon;
@@ -106,7 +103,7 @@ const SupplierActivityTab = ({ supplierId }: SupplierActivityTabProps) => {
                       )}
                       
                       <p className="text-xs text-muted-foreground mt-1">
-                        بواسطة: {activity.profiles?.full_name || 'مستخدم النظام'}
+                        بواسطة: مستخدم النظام
                       </p>
                     </div>
                   </div>

@@ -36,7 +36,7 @@ const defaultPreferences: UserPreferences = {
   notification_settings: {},
 };
 
-function parseJsonArray(value: any): any[] {
+function parseJsonArray(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
   if (typeof value === 'string') {
     try {
@@ -49,8 +49,8 @@ function parseJsonArray(value: any): any[] {
   return [];
 }
 
-function parseJsonObject(value: any): Record<string, any> {
-  if (value && typeof value === 'object' && !Array.isArray(value)) return value;
+function parseJsonObject(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, unknown>;
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value);
@@ -195,9 +195,9 @@ export function useUserPreferences() {
   const updateSidebarCompact = (sidebar_compact: boolean) => updateMutation.mutate({ sidebar_compact });
   const updateSidebarOrder = (sidebar_order: string[]) => updateMutation.mutate({ sidebar_order });
   const updateFavoritePages = (favorite_pages: string[]) => updateMutation.mutate({ favorite_pages });
-  const updateDashboardWidgets = (dashboard_widgets: any) => updateMutation.mutate({ dashboard_widgets });
-  const updateTableSettings = (table_settings: Record<string, any>) => updateMutation.mutate({ table_settings });
-  const updateNotificationSettings = (notification_settings: Record<string, any>) => updateMutation.mutate({ notification_settings });
+  const updateDashboardWidgets = (dashboard_widgets: Record<string, unknown> | null) => updateMutation.mutate({ dashboard_widgets });
+  const updateTableSettings = (table_settings: Record<string, unknown>) => updateMutation.mutate({ table_settings });
+  const updateNotificationSettings = (notification_settings: object) => updateMutation.mutate({ notification_settings });
 
   return {
     preferences,

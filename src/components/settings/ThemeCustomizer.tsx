@@ -77,25 +77,25 @@ export function ThemeCustomizer({ onDataChange }: ThemeCustomizerProps) {
   }, [preferences]);
 
   // Apply changes locally for preview
-  const handleChange = (key: string, value: any) => {
+  const handleChange = <K extends keyof typeof localConfig>(key: K, value: typeof localConfig[K]) => {
     const newConfig = { ...localConfig, [key]: value };
     setLocalConfig(newConfig);
     onDataChange?.();
     
     // Apply immediately for preview
     const themeConfig: Partial<ThemeConfig> = {};
-    if (key === 'theme') themeConfig.theme = value;
-    if (key === 'primary_color') themeConfig.primaryColor = value;
-    if (key === 'accent_color') themeConfig.accentColor = value;
-    if (key === 'font_family') themeConfig.fontFamily = value;
-    if (key === 'font_size') themeConfig.fontSize = value;
-    if (key === 'sidebar_compact') themeConfig.sidebarCompact = value;
+    if (key === 'theme') themeConfig.theme = value as ThemeConfig['theme'];
+    if (key === 'primary_color') themeConfig.primaryColor = value as string;
+    if (key === 'accent_color') themeConfig.accentColor = value as string;
+    if (key === 'font_family') themeConfig.fontFamily = value as string;
+    if (key === 'font_size') themeConfig.fontSize = value as ThemeConfig['fontSize'];
+    if (key === 'sidebar_compact') themeConfig.sidebarCompact = value as boolean;
     
     applyTheme(themeConfig);
     
     // Apply sidebar_compact immediately to database for AppLayout sync
     if (key === 'sidebar_compact') {
-      updateSidebarCompact(value);
+      updateSidebarCompact(value as boolean);
     }
   };
 

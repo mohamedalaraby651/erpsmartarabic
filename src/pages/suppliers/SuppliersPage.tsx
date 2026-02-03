@@ -143,7 +143,7 @@ const SuppliersPage = () => {
     };
   };
 
-  const handleEdit = (supplier: any) => {
+  const handleEdit = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setDialogOpen(true);
   };
