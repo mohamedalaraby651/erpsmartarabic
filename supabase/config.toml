@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.stock-movement]
 verify_jwt = false
+
+[functions.approve-invoice]
+verify_jwt = false
+
+[functions.create-journal]
+verify_jwt = false
+
+[functions.verify-totp]
+verify_jwt = false

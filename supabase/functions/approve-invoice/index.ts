@@ -1,0 +1,341 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface ApproveInvoiceRequest {
+  invoice_id: string;
+  action: 'approve' | 'reject' | 'submit';
+  rejection_reason?: string;
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    // Get authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verify user
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid token', code: 'INVALID_TOKEN' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claimsData.claims.sub as string;
+
+    // Parse request body
+    const body: ApproveInvoiceRequest = await req.json();
+    const { invoice_id, action, rejection_reason } = body;
+
+    console.log(`[approve-invoice] User ${userId} attempting ${action} on invoice ${invoice_id}`);
+
+    if (!invoice_id || !action) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing required fields', code: 'MISSING_DATA' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate action
+    if (!['approve', 'reject', 'submit'].includes(action)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid action', code: 'INVALID_ACTION' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Rejection requires reason
+    if (action === 'reject' && !rejection_reason) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'يجب إدخال سبب الرفض', code: 'MISSING_REASON' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Fetch invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select('*, customers(name)')
+      .eq('id', invoice_id)
+      .single();
+
+    if (invoiceError || !invoice) {
+      console.error('[approve-invoice] Invoice not found:', invoiceError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'الفاتورة غير موجودة', code: 'INVOICE_NOT_FOUND' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check permissions based on action
+    if (action === 'submit') {
+      // Anyone with edit permission can submit for approval
+      const { data: canEdit } = await supabase.rpc('check_section_permission', {
+        _user_id: userId,
+        _section: 'invoices',
+        _action: 'edit'
+      });
+
+      if (!canEdit) {
+        const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
+        if (!isAdmin) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'ليس لديك صلاحية لتقديم الفاتورة للموافقة', code: 'NO_PERMISSION' }),
+            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      // Validate current status
+      if (invoice.approval_status !== 'draft') {
+        return new Response(
+          JSON.stringify({ success: false, error: 'يمكن تقديم المسودات فقط للموافقة', code: 'INVALID_STATUS' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Submit for approval
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update({
+          approval_status: 'pending',
+          submitted_at: new Date().toISOString()
+        })
+        .eq('id', invoice_id);
+
+      if (updateError) {
+        console.error('[approve-invoice] Update error:', updateError);
+        throw updateError;
+      }
+
+      console.log(`[approve-invoice] Invoice ${invoice_id} submitted for approval`);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'تم تقديم الفاتورة للموافقة',
+          new_status: 'pending'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // For approve/reject, need admin or accountant role
+    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
+    const { data: isAccountant } = await supabase.rpc('has_role', { _user_id: userId, _role: 'accountant' });
+
+    if (!isAdmin && !isAccountant) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'ليس لديك صلاحية للموافقة على الفواتير', code: 'NO_PERMISSION' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Prevent self-approval
+    if (invoice.created_by === userId && action === 'approve') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'لا يمكنك الموافقة على فاتورتك الخاصة', code: 'SELF_APPROVAL' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate current status
+    if (invoice.approval_status !== 'pending') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'يمكن الموافقة/الرفض على الفواتير المعلقة فقط', code: 'INVALID_STATUS' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (action === 'approve') {
+      // Approve the invoice
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update({
+          approval_status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: userId,
+          rejection_reason: null
+        })
+        .eq('id', invoice_id);
+
+      if (updateError) {
+        console.error('[approve-invoice] Approval error:', updateError);
+        throw updateError;
+      }
+
+      // Create accounting journal entry (auto-posting)
+      try {
+        // Get current fiscal period
+        const { data: period } = await supabase
+          .from('fiscal_periods')
+          .select('id')
+          .eq('is_closed', false)
+          .gte('end_date', new Date().toISOString().split('T')[0])
+          .lte('start_date', new Date().toISOString().split('T')[0])
+          .single();
+
+        if (period) {
+          // Get accounts
+          const { data: arAccount } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('code', '1130')
+            .single();
+
+          const { data: revenueAccount } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('code', '4100')
+            .single();
+
+          const { data: vatAccount } = await supabase
+            .from('chart_of_accounts')
+            .select('id')
+            .eq('code', '2120')
+            .single();
+
+          if (arAccount && revenueAccount) {
+            // Create journal
+            const { data: journal, error: journalError } = await supabase
+              .from('journals')
+              .insert({
+                fiscal_period_id: period.id,
+                journal_date: new Date().toISOString().split('T')[0],
+                description: `فاتورة مبيعات رقم ${invoice.invoice_number} - ${invoice.customers?.name || 'عميل'}`,
+                source_type: 'invoice',
+                source_id: invoice_id,
+                created_by: userId,
+                is_posted: true,
+                posted_at: new Date().toISOString()
+              })
+              .select()
+              .single();
+
+            if (!journalError && journal) {
+              const entries = [];
+              let lineNumber = 1;
+
+              // DR: Accounts Receivable
+              entries.push({
+                journal_id: journal.id,
+                account_id: arAccount.id,
+                line_number: lineNumber++,
+                debit_amount: Number(invoice.total_amount),
+                credit_amount: 0,
+                memo: `ذمم ${invoice.customers?.name || 'العميل'}`
+              });
+
+              // CR: Sales Revenue
+              entries.push({
+                journal_id: journal.id,
+                account_id: revenueAccount.id,
+                line_number: lineNumber++,
+                debit_amount: 0,
+                credit_amount: Number(invoice.subtotal || invoice.total_amount),
+                memo: 'إيرادات المبيعات'
+              });
+
+              // CR: VAT (if applicable)
+              if (vatAccount && Number(invoice.tax_amount) > 0) {
+                entries.push({
+                  journal_id: journal.id,
+                  account_id: vatAccount.id,
+                  line_number: lineNumber++,
+                  debit_amount: 0,
+                  credit_amount: Number(invoice.tax_amount),
+                  memo: 'ضريبة القيمة المضافة'
+                });
+              }
+
+              await supabase.from('journal_entries').insert(entries);
+              console.log(`[approve-invoice] Auto-posted journal ${journal.journal_number} for invoice ${invoice_id}`);
+            }
+          }
+        }
+      } catch (journalErr) {
+        // Log but don't fail the approval
+        console.error('[approve-invoice] Journal creation error (non-fatal):', journalErr);
+      }
+
+      console.log(`[approve-invoice] Invoice ${invoice_id} approved by ${userId}`);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'تم اعتماد الفاتورة بنجاح',
+          new_status: 'approved'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (action === 'reject') {
+      // Reject the invoice
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update({
+          approval_status: 'rejected',
+          rejection_reason: rejection_reason,
+          approved_at: null,
+          approved_by: null
+        })
+        .eq('id', invoice_id);
+
+      if (updateError) {
+        console.error('[approve-invoice] Rejection error:', updateError);
+        throw updateError;
+      }
+
+      console.log(`[approve-invoice] Invoice ${invoice_id} rejected by ${userId}: ${rejection_reason}`);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'تم رفض الفاتورة',
+          new_status: 'rejected'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ success: false, error: 'Invalid action', code: 'INVALID_ACTION' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('[approve-invoice] Error:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
