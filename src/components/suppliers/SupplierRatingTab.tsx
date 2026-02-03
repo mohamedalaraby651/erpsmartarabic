@@ -167,11 +167,11 @@ const SupplierRatingTab = ({ supplierId, currentRating, onRatingChange }: Suppli
             <Skeleton className="h-24 w-full" />
           ) : notes && notes.length > 0 ? (
             <div className="space-y-3">
-              {notes.map((note: any) => (
+              {notes.map((note) => (
                 <div key={note.id} className="p-4 border rounded-lg bg-background">
                   <p className="text-sm">{note.note}</p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                    <span>{note.profiles?.full_name || 'مستخدم'}</span>
+                    <span>{'مستخدم'}</span>
                     <span>•</span>
                     <span>{format(new Date(note.created_at), "d MMM yyyy HH:mm", { locale: ar })}</span>
                   </div>

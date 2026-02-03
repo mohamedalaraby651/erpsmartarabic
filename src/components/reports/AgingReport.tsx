@@ -46,13 +46,23 @@ export function AgingReport() {
     staleTime: 60000,
   });
 
+  interface AgingInvoice {
+    id: string;
+    invoice_number: string;
+    total_amount: number;
+    paid_amount: number | null;
+    customers: { id: string; name: string; phone: string | null } | null;
+    daysPastDue: number;
+    remainingAmount: number;
+  }
+
   const agingData = useMemo(() => {
     if (!invoices) return [];
 
     const today = new Date();
     const bucketData = agingBuckets.map(bucket => ({
       ...bucket,
-      invoices: [] as any[],
+      invoices: [] as AgingInvoice[],
       totalAmount: 0,
       count: 0,
     }));
@@ -214,7 +224,7 @@ export function AgingReport() {
                     <Badge variant="outline">{bucket.count}</Badge>
                   </div>
                   <div className="space-y-2 pr-5">
-                    {bucket.invoices.slice(0, 5).map((invoice: any) => (
+                    {bucket.invoices.slice(0, 5).map((invoice) => (
                       <div 
                         key={invoice.id}
                         className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
@@ -222,7 +232,7 @@ export function AgingReport() {
                         <div>
                           <p className="font-medium">{invoice.invoice_number}</p>
                           <p className="text-sm text-muted-foreground">
-                            {(invoice.customers as any)?.name || 'عميل'}
+                            {invoice.customers?.name || 'عميل'}
                           </p>
                         </div>
                         <div className="text-left">

@@ -160,8 +160,17 @@ const SupplierDetailsPage = () => {
       
       if (paymentsError) throw paymentsError;
       
+      interface StatementItem {
+        date: string;
+        type: string;
+        reference: string;
+        debit: number;
+        credit: number;
+        status: string;
+      }
+
       // Prepare statement data combining orders and payments
-      const statementData: any[] = [];
+      const statementData: StatementItem[] = [];
       
       // Add purchase orders
       purchaseOrders.forEach(order => {
@@ -175,8 +184,15 @@ const SupplierDetailsPage = () => {
         });
       });
       
+      interface SupplierPaymentRow {
+        id: string;
+        payment_date: string;
+        payment_number: string;
+        amount: number;
+      }
+
       // Add payments
-      (payments || []).forEach((payment: any) => {
+      (payments as SupplierPaymentRow[] || []).forEach((payment) => {
         statementData.push({
           date: payment.payment_date,
           type: 'دفعة',

@@ -126,10 +126,19 @@ const InvoiceDetailsPage = () => {
     enabled: !!id,
   });
 
+  interface PaymentRow {
+    id: string;
+    payment_number: string;
+    payment_date: string;
+    amount: number;
+    payment_method: string;
+    reference_number: string | null;
+  }
+
   // Fetch payments for this invoice
   const { data: payments = [] } = useQuery({
     queryKey: ['invoice-payments', id],
-    queryFn: async () => {
+    queryFn: async (): Promise<PaymentRow[]> => {
       if (!id) return [];
       const { data, error } = await supabase
         .from('payments')
@@ -137,15 +146,21 @@ const InvoiceDetailsPage = () => {
         .eq('invoice_id', id)
         .order('payment_date', { ascending: false });
       if (error) throw error;
-      return data;
+      return data as PaymentRow[];
     },
     enabled: !!id,
   });
 
+  interface ActivityRow {
+    id: string;
+    action: string;
+    created_at: string;
+  }
+
   // Fetch activity logs
   const { data: activities = [] } = useQuery({
     queryKey: ['invoice-activities', id],
-    queryFn: async () => {
+    queryFn: async (): Promise<ActivityRow[]> => {
       if (!id) return [];
       const { data, error } = await supabase
         .from('activity_logs')
@@ -155,7 +170,7 @@ const InvoiceDetailsPage = () => {
         .order('created_at', { ascending: false })
         .limit(20);
       if (error) throw error;
-      return data;
+      return data as ActivityRow[];
     },
     enabled: !!id,
   });
@@ -489,7 +504,7 @@ const InvoiceDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payments.map((payment: any) => (
+                    {payments.map((payment) => (
                       <TableRow key={payment.id}>
                         <TableCell className="font-mono">{payment.payment_number}</TableCell>
                         <TableCell>
@@ -527,7 +542,7 @@ const InvoiceDetailsPage = () => {
             <CardContent>
               {activities.length > 0 ? (
                 <div className="space-y-4">
-                  {activities.map((activity: any) => (
+                  {activities.map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <div className="p-2 rounded-full bg-primary/10">
                         <Activity className="h-4 w-4 text-primary" />

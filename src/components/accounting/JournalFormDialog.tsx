@@ -123,19 +123,19 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
     }
   };
 
-  const updateEntry = (index: number, field: keyof JournalEntry, value: any) => {
+  const updateEntry = (index: number, field: keyof JournalEntry, value: string | number) => {
     const newEntries = [...entries];
     newEntries[index] = { ...newEntries[index], [field]: value };
 
     // If setting debit, clear credit and vice versa
-    if (field === "debit_amount" && value > 0) {
+    if (field === "debit_amount" && typeof value === 'number' && value > 0) {
       newEntries[index].credit_amount = 0;
-    } else if (field === "credit_amount" && value > 0) {
+    } else if (field === "credit_amount" && typeof value === 'number' && value > 0) {
       newEntries[index].debit_amount = 0;
     }
 
     // Add account name for display
-    if (field === "account_id") {
+    if (field === "account_id" && typeof value === 'string') {
       const account = accounts.find((a) => a.id === value);
       newEntries[index].account_name = account ? `${account.code} - ${account.name}` : "";
     }
