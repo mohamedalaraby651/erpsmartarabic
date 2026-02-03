@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
 import {
   Dialog,
   DialogContent,
@@ -107,7 +108,8 @@ export function ExpenseCategoryFormDialog({ open, onOpenChange, category }: Expe
       form.reset();
     },
     onError: (error) => {
-      toast({ title: 'حدث خطأ', description: error.message, variant: 'destructive' });
+      logErrorSafely('ExpenseCategoryFormDialog', error);
+      toast({ title: 'حدث خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
     },
   });
 

@@ -64,6 +64,85 @@ export const invoiceItemSchema = z.object({
 
 export type InvoiceItemData = z.infer<typeof invoiceItemSchema>;
 
+// Document item validation (for quotations, sales orders, purchase orders)
+export const documentItemSchema = z.object({
+  product_id: z.string().min(1, 'يجب اختيار منتج'),
+  quantity: z.number()
+    .min(1, 'الكمية يجب أن تكون 1 على الأقل')
+    .max(100000, 'الكمية كبيرة جداً'),
+  unit_price: z.number()
+    .min(0, 'السعر لا يمكن أن يكون سالباً')
+    .max(10000000, 'السعر كبير جداً'),
+  discount_percentage: z.number()
+    .min(0, 'الخصم لا يمكن أن يكون سالباً')
+    .max(100, 'الخصم لا يمكن أن يتجاوز 100%')
+    .optional()
+    .default(0),
+});
+
+export type DocumentItemData = z.infer<typeof documentItemSchema>;
+
+// Item validation error interface
+export interface ItemValidationError {
+  index: number;
+  field: string;
+  message: string;
+}
+
+// Validation result interface
+export interface ValidationResult {
+  valid: boolean;
+  errors: ItemValidationError[];
+}
+
+/**
+ * Validate document items (quotations, sales orders, purchase orders)
+ * Returns validation result with detailed error information
+ */
+export function validateDocumentItems(items: unknown[]): ValidationResult {
+  const errors: ItemValidationError[] = [];
+  
+  if (!Array.isArray(items) || items.length === 0) {
+    errors.push({
+      index: -1,
+      field: 'items',
+      message: 'يجب إضافة منتج واحد على الأقل',
+    });
+    return { valid: false, errors };
+  }
+  
+  items.forEach((item, index) => {
+    const result = documentItemSchema.safeParse(item);
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      errors.push({
+        index,
+        field: issue.path[0] as string || 'unknown',
+        message: issue.message,
+      });
+    }
+  });
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Get user-friendly error message for document items validation
+ */
+export function getItemsValidationMessage(result: ValidationResult): string {
+  if (result.valid) return '';
+  
+  const firstError = result.errors[0];
+  if (firstError.index === -1) {
+    return firstError.message;
+  }
+  
+  return `خطأ في الصف ${firstError.index + 1}: ${firstError.message}`;
+}
+
 // Payment validation schema
 export const paymentSchema = z.object({
   customer_id: z.string().uuid('يجب اختيار العميل'),

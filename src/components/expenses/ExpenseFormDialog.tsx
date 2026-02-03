@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
+import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
 
 const formSchema = z.object({
   category_id: z.string().optional(),
@@ -192,7 +193,8 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
       form.reset();
     },
     onError: (error) => {
-      toast({ title: 'حدث خطأ', description: error.message, variant: 'destructive' });
+      logErrorSafely('ExpenseFormDialog', error);
+      toast({ title: 'حدث خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
     },
   });
 

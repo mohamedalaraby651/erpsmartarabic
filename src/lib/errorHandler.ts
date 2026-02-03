@@ -1,41 +1,161 @@
 /**
- * Error Handler Utility
- * Maps technical database/API errors to user-friendly Arabic messages
+ * Enhanced Error Handler Utility
+ * Maps technical database/API errors to user-friendly Arabic messages with context
  * Prevents information leakage about database schema
  */
 
-// PostgreSQL error codes to user-friendly messages
-const POSTGRES_ERROR_MAP: Record<string, string> = {
-  '23505': 'هذا السجل موجود بالفعل',
-  '23503': 'لا يمكن حذف هذا السجل لأنه مرتبط بسجلات أخرى',
-  '23502': 'يرجى ملء جميع الحقول المطلوبة',
-  '23514': 'القيمة المدخلة غير صالحة',
-  '22001': 'النص المدخل طويل جداً',
-  '22003': 'الرقم المدخل خارج النطاق المسموح',
-  '42501': 'ليس لديك صلاحية لإجراء هذه العملية',
-  '42P01': 'حدث خطأ في النظام',
-  '28000': 'فشل التحقق من الهوية',
-  '28P01': 'بيانات الدخول غير صحيحة',
-  '40001': 'حدث تعارض، يرجى المحاولة مرة أخرى',
-  '40P01': 'حدث خطأ، يرجى المحاولة مرة أخرى',
-  '57014': 'انتهت مهلة العملية',
+import type { ReactNode } from 'react';
+
+// Contextual error interface
+interface ContextualError {
+  userMessage: string;
+  field?: string;
+  action?: string;
+  errorCode?: string;
+}
+
+// PostgreSQL error codes to contextual messages
+const POSTGRES_ERROR_MAP: Record<string, ContextualError> = {
+  '23505': {
+    userMessage: 'هذا السجل موجود بالفعل',
+    action: 'تحقق من البيانات المدخلة أو عدّل السجل الموجود',
+  },
+  '23503': {
+    userMessage: 'لا يمكن حذف هذا السجل',
+    action: 'يجب حذف السجلات المرتبطة به أولاً',
+  },
+  '23502': {
+    userMessage: 'يوجد حقل مطلوب فارغ',
+    action: 'يرجى ملء جميع الحقول المطلوبة (*)',
+  },
+  '23514': {
+    userMessage: 'القيمة المدخلة غير صالحة',
+    action: 'تحقق من صحة البيانات المدخلة',
+  },
+  '22001': {
+    userMessage: 'النص المدخل طويل جداً',
+    action: 'يرجى تقصير النص المدخل',
+  },
+  '22003': {
+    userMessage: 'الرقم المدخل خارج النطاق المسموح',
+    action: 'أدخل رقماً ضمن الحدود المسموحة',
+  },
+  '42501': {
+    userMessage: 'ليس لديك صلاحية لإجراء هذه العملية',
+    action: 'تواصل مع مسؤول النظام لطلب الصلاحية',
+  },
+  '42P01': {
+    userMessage: 'حدث خطأ في النظام',
+    action: 'يرجى المحاولة مرة أخرى أو التواصل مع الدعم',
+  },
+  '28000': {
+    userMessage: 'فشل التحقق من الهوية',
+    action: 'يرجى تسجيل الدخول مرة أخرى',
+  },
+  '28P01': {
+    userMessage: 'بيانات الدخول غير صحيحة',
+    action: 'تحقق من البريد الإلكتروني وكلمة المرور',
+  },
+  '40001': {
+    userMessage: 'حدث تعارض في البيانات',
+    action: 'يرجى المحاولة مرة أخرى',
+  },
+  '40P01': {
+    userMessage: 'حدث خطأ مؤقت',
+    action: 'يرجى المحاولة مرة أخرى',
+  },
+  '57014': {
+    userMessage: 'انتهت مهلة العملية',
+    action: 'يرجى المحاولة مرة أخرى',
+  },
 };
 
-// Common error patterns to user-friendly messages
-const ERROR_PATTERN_MAP: Array<{ pattern: RegExp; message: string }> = [
-  { pattern: /duplicate key/i, message: 'هذا السجل موجود بالفعل' },
-  { pattern: /foreign key/i, message: 'لا يمكن حذف هذا السجل لأنه مرتبط بسجلات أخرى' },
-  { pattern: /not-null/i, message: 'يرجى ملء جميع الحقول المطلوبة' },
-  { pattern: /permission denied/i, message: 'ليس لديك صلاحية لإجراء هذه العملية' },
-  { pattern: /network/i, message: 'حدث خطأ في الاتصال بالشبكة' },
-  { pattern: /timeout/i, message: 'انتهت مهلة العملية، يرجى المحاولة مرة أخرى' },
-  { pattern: /unauthorized/i, message: 'يرجى تسجيل الدخول أولاً' },
-  { pattern: /invalid.*token/i, message: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى' },
-  { pattern: /row-level security/i, message: 'ليس لديك صلاحية لإجراء هذه العملية' },
+// Common error patterns to contextual messages
+const ERROR_PATTERN_MAP: Array<{ pattern: RegExp; error: ContextualError }> = [
+  { 
+    pattern: /duplicate key/i, 
+    error: { 
+      userMessage: 'هذا السجل موجود بالفعل',
+      action: 'استخدم بيانات مختلفة أو عدّل السجل الموجود',
+    } 
+  },
+  { 
+    pattern: /foreign key/i, 
+    error: { 
+      userMessage: 'لا يمكن حذف هذا السجل',
+      action: 'يجب حذف السجلات المرتبطة به أولاً',
+    } 
+  },
+  { 
+    pattern: /not-null/i, 
+    error: { 
+      userMessage: 'يوجد حقل مطلوب فارغ',
+      action: 'يرجى ملء جميع الحقول المطلوبة',
+    } 
+  },
+  { 
+    pattern: /permission denied/i, 
+    error: { 
+      userMessage: 'ليس لديك صلاحية لإجراء هذه العملية',
+      action: 'تواصل مع مسؤول النظام',
+    } 
+  },
+  { 
+    pattern: /network|fetch|cors/i, 
+    error: { 
+      userMessage: 'حدث خطأ في الاتصال بالشبكة',
+      action: 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى',
+    } 
+  },
+  { 
+    pattern: /timeout/i, 
+    error: { 
+      userMessage: 'انتهت مهلة العملية',
+      action: 'يرجى المحاولة مرة أخرى',
+    } 
+  },
+  { 
+    pattern: /unauthorized|401/i, 
+    error: { 
+      userMessage: 'يرجى تسجيل الدخول أولاً',
+      action: 'انتقل لصفحة تسجيل الدخول',
+    } 
+  },
+  { 
+    pattern: /invalid.*token|jwt/i, 
+    error: { 
+      userMessage: 'انتهت صلاحية الجلسة',
+      action: 'يرجى تسجيل الدخول مرة أخرى',
+    } 
+  },
+  { 
+    pattern: /row-level security|rls/i, 
+    error: { 
+      userMessage: 'ليس لديك صلاحية لإجراء هذه العملية',
+      action: 'تواصل مع مسؤول النظام لطلب الصلاحية',
+    } 
+  },
+  { 
+    pattern: /يجب إضافة منتج/i, 
+    error: { 
+      userMessage: 'يجب إضافة منتج واحد على الأقل',
+      action: 'اضغط على "إضافة منتج" وأضف منتجًا للقائمة',
+    } 
+  },
+  { 
+    pattern: /يجب اختيار/i, 
+    error: { 
+      userMessage: 'يجب اختيار قيمة من القائمة',
+      action: 'اختر قيمة من القائمة المنسدلة',
+    } 
+  },
 ];
 
-// Default safe error message
-const DEFAULT_ERROR_MESSAGE = 'حدث خطأ، يرجى المحاولة مرة أخرى';
+// Default safe error
+const DEFAULT_ERROR: ContextualError = {
+  userMessage: 'حدث خطأ',
+  action: 'يرجى المحاولة مرة أخرى',
+};
 
 interface SupabaseError {
   code?: string;
@@ -45,12 +165,32 @@ interface SupabaseError {
 }
 
 /**
- * Converts a technical error to a user-friendly message
- * Never exposes database schema, table names, or constraint details
+ * Parse error and extract contextual information
  */
-export function getSafeErrorMessage(error: unknown): string {
+function parseError(error: unknown): ContextualError {
   if (!error) {
-    return DEFAULT_ERROR_MESSAGE;
+    return DEFAULT_ERROR;
+  }
+
+  // Handle Error instances with custom messages (from throw new Error())
+  if (error instanceof Error && error.message) {
+    // Check if it's a user-friendly message (Arabic text)
+    if (/[\u0600-\u06FF]/.test(error.message)) {
+      // Check patterns first
+      for (const { pattern, error: contextError } of ERROR_PATTERN_MAP) {
+        if (pattern.test(error.message)) {
+          return contextError;
+        }
+      }
+      // If it's Arabic but no pattern, use the message directly
+      return { userMessage: error.message, action: 'يرجى المحاولة مرة أخرى' };
+    }
+    // Check English patterns
+    for (const { pattern, error: contextError } of ERROR_PATTERN_MAP) {
+      if (pattern.test(error.message)) {
+        return contextError;
+      }
+    }
   }
 
   // Handle Supabase/PostgreSQL errors with codes
@@ -64,32 +204,53 @@ export function getSafeErrorMessage(error: unknown): string {
 
     // Check error message against patterns
     const message = supabaseError.message || '';
-    for (const { pattern, message: safeMessage } of ERROR_PATTERN_MAP) {
+    for (const { pattern, error: contextError } of ERROR_PATTERN_MAP) {
       if (pattern.test(message)) {
-        return safeMessage;
+        return contextError;
       }
     }
   }
 
   // Handle string errors
   if (typeof error === 'string') {
-    for (const { pattern, message: safeMessage } of ERROR_PATTERN_MAP) {
+    for (const { pattern, error: contextError } of ERROR_PATTERN_MAP) {
       if (pattern.test(error)) {
-        return safeMessage;
+        return contextError;
       }
+    }
+    // If it's Arabic, use directly
+    if (/[\u0600-\u06FF]/.test(error)) {
+      return { userMessage: error, action: 'يرجى المحاولة مرة أخرى' };
     }
   }
 
-  // Handle Error instances
-  if (error instanceof Error) {
-    for (const { pattern, message: safeMessage } of ERROR_PATTERN_MAP) {
-      if (pattern.test(error.message)) {
-        return safeMessage;
-      }
-    }
+  return DEFAULT_ERROR;
+}
+
+/**
+ * Converts a technical error to a user-friendly message (simple version)
+ * Never exposes database schema, table names, or constraint details
+ */
+export function getSafeErrorMessage(error: unknown): string {
+  const contextError = parseError(error);
+  return contextError.userMessage;
+}
+
+/**
+ * Get detailed error with action suggestion
+ */
+export function getDetailedErrorMessage(
+  error: unknown,
+  context?: { operation?: string; entity?: string }
+): ContextualError {
+  const baseError = parseError(error);
+
+  // Add entity context to message
+  if (context?.entity) {
+    baseError.userMessage = baseError.userMessage.replace('السجل', context.entity);
   }
 
-  return DEFAULT_ERROR_MESSAGE;
+  return baseError;
 }
 
 /**
@@ -103,18 +264,51 @@ export function logErrorSafely(context: string, error: unknown): void {
 }
 
 /**
- * Helper for handling errors in mutation handlers
- * Usage:
- * onError: (error) => handleMutationError(error, toast)
+ * Toast function type for mutation error handler
+ */
+type ToastFunction = (options: { 
+  title: string; 
+  description?: string | ReactNode; 
+  variant?: 'default' | 'destructive' 
+}) => void;
+
+/**
+ * Helper for handling errors in mutation handlers (legacy support)
+ * Usage: onError: (error) => handleMutationError(error, toast)
  */
 export function handleMutationError(
   error: unknown,
-  toast: (options: { title: string; description: string; variant: 'destructive' }) => void
+  toast: ToastFunction
 ): void {
   logErrorSafely('Mutation error', error);
+  const errorInfo = parseError(error);
+  
   toast({
     title: 'حدث خطأ',
-    description: getSafeErrorMessage(error),
+    description: errorInfo.action 
+      ? `${errorInfo.userMessage}\n💡 ${errorInfo.action}`
+      : errorInfo.userMessage,
+    variant: 'destructive',
+  });
+}
+
+/**
+ * Enhanced mutation error handler with context
+ * Usage: onError: (error) => handleMutationErrorWithContext(error, toast, { operation: 'إنشاء', entity: 'الفاتورة' })
+ */
+export function handleMutationErrorWithContext(
+  error: unknown,
+  toast: ToastFunction,
+  context: { operation: string; entity: string }
+): void {
+  logErrorSafely(`${context.operation} ${context.entity}`, error);
+  const errorInfo = getDetailedErrorMessage(error, context);
+  
+  toast({
+    title: `خطأ في ${context.operation} ${context.entity}`,
+    description: errorInfo.action 
+      ? `${errorInfo.userMessage} - ${errorInfo.action}`
+      : errorInfo.userMessage,
     variant: 'destructive',
   });
 }

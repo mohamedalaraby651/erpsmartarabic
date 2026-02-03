@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Database, 
   Download, 
@@ -15,36 +15,38 @@ import {
   Loader2, 
   Table as TableIcon,
   Upload,
+  CheckCircle,
+  XCircle,
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
+import { ImportOptionsDialog, type ImportMode } from './ImportOptionsDialog';
 
+// Table definitions with match keys for smart import
 const tables = [
-  { name: 'customers', label: 'العملاء' },
-  { name: 'suppliers', label: 'الموردين' },
-  { name: 'products', label: 'المنتجات' },
-  { name: 'invoices', label: 'الفواتير' },
-  { name: 'quotations', label: 'عروض الأسعار' },
-  { name: 'sales_orders', label: 'أوامر البيع' },
-  { name: 'purchase_orders', label: 'أوامر الشراء' },
-  { name: 'payments', label: 'المدفوعات' },
-  { name: 'employees', label: 'الموظفين' },
-  { name: 'tasks', label: 'المهام' },
+  { name: 'customers', label: 'العملاء', matchKeys: ['name', 'phone'] },
+  { name: 'suppliers', label: 'الموردين', matchKeys: ['name', 'phone'] },
+  { name: 'products', label: 'المنتجات', matchKeys: ['sku', 'name'] },
+  { name: 'invoices', label: 'الفواتير', matchKeys: ['invoice_number'] },
+  { name: 'quotations', label: 'عروض الأسعار', matchKeys: ['quotation_number'] },
+  { name: 'sales_orders', label: 'أوامر البيع', matchKeys: ['order_number'] },
+  { name: 'purchase_orders', label: 'أوامر الشراء', matchKeys: ['order_number'] },
+  { name: 'payments', label: 'المدفوعات', matchKeys: ['payment_number'] },
+  { name: 'employees', label: 'الموظفين', matchKeys: ['employee_number'] },
+  { name: 'tasks', label: 'المهام', matchKeys: ['title'] },
 ];
+
+interface ImportResult {
+  table: string;
+  tableLabel: string;
+  inserted: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+}
 
 export function BackupTab() {
   const queryClient = useQueryClient();
@@ -52,9 +54,9 @@ export function BackupTab() {
   const [exportFormat, setExportFormat] = useState<'excel' | 'json'>('excel');
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [importData, setImportData] = useState<Record<string, any[]> | null>(null);
-  const [confirmText, setConfirmText] = useState('');
+  const [importResults, setImportResults] = useState<ImportResult[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: tableCounts = {}, isLoading } = useQuery({
@@ -128,7 +130,7 @@ export function BackupTab() {
         const text = await file.text();
         const data = JSON.parse(text);
         setImportData(data);
-        setShowImportConfirm(true);
+        setShowImportDialog(true);
       } else if (file.name.endsWith('.xlsx')) {
         const buffer = await file.arrayBuffer();
         const workbook = XLSX.read(buffer, { type: 'array' });
@@ -141,7 +143,7 @@ export function BackupTab() {
         }
         
         setImportData(data);
-        setShowImportConfirm(true);
+        setShowImportDialog(true);
       } else {
         toast.error('صيغة الملف غير مدعومة. يرجى استخدام JSON أو Excel.');
       }
@@ -155,55 +157,159 @@ export function BackupTab() {
     }
   };
 
-  const handleImport = async () => {
-    if (!importData || confirmText !== 'استيراد') {
-      toast.error('يرجى كتابة "استيراد" للتأكيد');
-      return;
+  // Find matching record using composite keys
+  const findMatchingRecord = useCallback(async (
+    tableName: string, 
+    record: any, 
+    matchKeys: string[]
+  ): Promise<any | null> => {
+    // Build query conditions from match keys that have values
+    const conditions: Record<string, any> = {};
+    let hasValidCondition = false;
+    
+    for (const key of matchKeys) {
+      if (record[key] !== undefined && record[key] !== null && record[key] !== '') {
+        conditions[key] = record[key];
+        hasValidCondition = true;
+      }
     }
+    
+    if (!hasValidCondition) return null;
+    
+    let query = supabase.from(tableName as any).select('id');
+    
+    for (const [key, value] of Object.entries(conditions)) {
+      query = query.eq(key, value);
+    }
+    
+    const { data } = await query.limit(1).maybeSingle();
+    return data;
+  }, []);
+
+  const handleSmartImport = async (mode: ImportMode) => {
+    if (!importData) return;
 
     setIsImporting(true);
+    const results: ImportResult[] = [];
+
     try {
-      let successCount = 0;
-      let errorCount = 0;
-
       for (const [tableName, records] of Object.entries(importData)) {
-        if (!tables.find(t => t.name === tableName)) continue;
-        if (!records || records.length === 0) continue;
+        const tableConfig = tables.find(t => t.name === tableName);
+        if (!tableConfig || !records || records.length === 0) continue;
 
-        // Remove id and timestamps to avoid conflicts
-        const cleanedRecords = records.map((record: any) => {
-          const { id, created_at, updated_at, ...rest } = record;
-          return rest;
-        });
+        const result: ImportResult = {
+          table: tableName,
+          tableLabel: tableConfig.label,
+          inserted: 0,
+          updated: 0,
+          skipped: 0,
+          errors: 0,
+        };
 
-        const { error } = await supabase
-          .from(tableName as any)
-          .upsert(cleanedRecords, { onConflict: 'id' });
+        for (const record of records) {
+          try {
+            // Remove system fields that shouldn't be imported
+            const { id, created_at, updated_at, ...cleanRecord } = record;
+            
+            // Find matching record using composite keys
+            const existing = await findMatchingRecord(tableName, record, tableConfig.matchKeys);
 
-        if (error) {
-          logErrorSafely('BackupTab', error);
-          errorCount++;
-        } else {
-          successCount++;
+            if (existing) {
+              // Record exists
+              if (mode === 'replace') {
+                // Replace: update with new data
+                const { error } = await supabase
+                  .from(tableName as any)
+                  .update(cleanRecord)
+                  .eq('id', existing.id);
+                
+                if (error) {
+                  result.errors++;
+                } else {
+                  result.updated++;
+                }
+              } else if (mode === 'merge') {
+                // Merge: update only non-null fields
+                const mergedData = { ...cleanRecord };
+                // Keep existing values for null/empty fields
+                Object.keys(mergedData).forEach(key => {
+                  if (mergedData[key] === null || mergedData[key] === '' || mergedData[key] === undefined) {
+                    delete mergedData[key];
+                  }
+                });
+                
+                if (Object.keys(mergedData).length > 0) {
+                  const { error } = await supabase
+                    .from(tableName as any)
+                    .update(mergedData)
+                    .eq('id', existing.id);
+                  
+                  if (error) {
+                    result.errors++;
+                  } else {
+                    result.updated++;
+                  }
+                } else {
+                  result.skipped++;
+                }
+              } else {
+                // Skip duplicates
+                result.skipped++;
+              }
+            } else {
+              // No match found - insert new record
+              const { error } = await supabase
+                .from(tableName as any)
+                .insert(cleanRecord);
+              
+              if (error) {
+                result.errors++;
+              } else {
+                result.inserted++;
+              }
+            }
+          } catch (err) {
+            logErrorSafely('BackupTab import record', err);
+            result.errors++;
+          }
         }
+
+        results.push(result);
       }
 
+      setImportResults(results);
       queryClient.invalidateQueries();
-      
-      if (errorCount === 0) {
-        toast.success(`تم استيراد ${successCount} جداول بنجاح`);
+
+      // Calculate totals
+      const totalInserted = results.reduce((sum, r) => sum + r.inserted, 0);
+      const totalUpdated = results.reduce((sum, r) => sum + r.updated, 0);
+      const totalSkipped = results.reduce((sum, r) => sum + r.skipped, 0);
+      const totalErrors = results.reduce((sum, r) => sum + r.errors, 0);
+
+      if (totalErrors === 0) {
+        toast.success(`تم الاستيراد بنجاح: ${totalInserted} جديد، ${totalUpdated} محدّث، ${totalSkipped} متجاهل`);
       } else {
-        toast.warning(`تم استيراد ${successCount} جداول، فشل ${errorCount}`);
+        toast.warning(`الاستيراد: ${totalInserted} جديد، ${totalUpdated} محدّث، ${totalErrors} أخطاء`);
       }
     } catch (error) {
       logErrorSafely('BackupTab', error);
       toast.error(getSafeErrorMessage(error));
     } finally {
       setIsImporting(false);
-      setShowImportConfirm(false);
+      setShowImportDialog(false);
       setImportData(null);
-      setConfirmText('');
     }
+  };
+
+  const getImportStats = () => {
+    if (!importData) return [];
+    return Object.entries(importData)
+      .filter(([name]) => tables.find(t => t.name === name))
+      .map(([name, records]) => ({
+        tableName: name,
+        tableLabel: tables.find(t => t.name === name)?.label || name,
+        recordCount: records.length,
+      }));
   };
 
   const totalRecords = Object.values(tableCounts).reduce((sum, c) => sum + c, 0);
@@ -216,7 +322,7 @@ export function BackupTab() {
             <Database className="h-5 w-5" />
             النسخ الاحتياطي والتصدير
           </CardTitle>
-          <CardDescription>تصدير واستيراد بيانات النظام</CardDescription>
+          <CardDescription>تصدير واستيراد بيانات النظام بشكل ذكي مع المطابقة التلقائية</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
@@ -241,8 +347,8 @@ export function BackupTab() {
                 {tables.map(table => (
                   <div
                     key={table.name}
-                    className={`flex items-center justify-between p-2 rounded border cursor-pointer ${
-                      selectedTables.includes(table.name) ? 'border-primary bg-primary/5' : ''
+                    className={`flex items-center justify-between p-2 rounded border cursor-pointer transition-colors ${
+                      selectedTables.includes(table.name) ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
                     }`}
                     onClick={() => toggleTable(table.name)}
                   >
@@ -300,64 +406,59 @@ export function BackupTab() {
               استيراد نسخة احتياطية
             </Button>
           </div>
+
+          {/* Import Results Summary */}
+          {importResults && importResults.length > 0 && (
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2 mt-2">
+                  <p className="font-medium">نتائج الاستيراد:</p>
+                  {importResults.map((result) => (
+                    <div key={result.table} className="flex items-center gap-3 text-sm">
+                      <span className="min-w-24">{result.tableLabel}:</span>
+                      {result.inserted > 0 && (
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          +{result.inserted} جديد
+                        </span>
+                      )}
+                      {result.updated > 0 && (
+                        <span className="text-blue-600 dark:text-blue-400">
+                          ↻{result.updated} محدّث
+                        </span>
+                      )}
+                      {result.skipped > 0 && (
+                        <span className="text-muted-foreground">
+                          ⊘{result.skipped} متجاهل
+                        </span>
+                      )}
+                      {result.errors > 0 && (
+                        <span className="text-destructive">
+                          ✕{result.errors} خطأ
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
-      {/* Import Confirmation Dialog */}
-      <AlertDialog open={showImportConfirm} onOpenChange={setShowImportConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              تأكيد الاستيراد
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
-              <p>
-                سيتم استيراد البيانات من الملف المحدد. قد يؤدي ذلك إلى تعديل البيانات الحالية.
-              </p>
-              {importData && (
-                <div className="p-3 bg-muted rounded-lg text-sm">
-                  <p className="font-medium mb-2">الجداول المتاحة للاستيراد:</p>
-                  <ul className="list-disc list-inside">
-                    {Object.entries(importData).map(([name, records]) => (
-                      <li key={name}>
-                        {tables.find(t => t.name === name)?.label || name}: {records.length} سجل
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="pt-2">
-                <label className="text-sm font-medium">
-                  اكتب "استيراد" للتأكيد:
-                </label>
-                <Input
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  placeholder="استيراد"
-                  className="mt-1"
-                />
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setImportData(null);
-              setConfirmText('');
-            }}>
-              إلغاء
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleImport}
-              disabled={confirmText !== 'استيراد' || isImporting}
-              className="bg-warning text-warning-foreground hover:bg-warning/90"
-            >
-              {isImporting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : null}
-              تأكيد الاستيراد
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Smart Import Options Dialog */}
+      <ImportOptionsDialog
+        open={showImportDialog}
+        onOpenChange={(open) => {
+          setShowImportDialog(open);
+          if (!open) {
+            setImportData(null);
+          }
+        }}
+        importStats={getImportStats()}
+        isImporting={isImporting}
+        onConfirm={(mode) => handleSmartImport(mode)}
+      />
     </>
   );
 }

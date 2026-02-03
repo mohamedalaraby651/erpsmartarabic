@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Layers, Edit, Trash2, FolderTree, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { logErrorSafely, getSafeErrorMessage } from "@/lib/errorHandler";
 import CategoryFormDialog from "@/components/categories/CategoryFormDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -68,7 +69,8 @@ const CategoriesPage = () => {
       toast({ title: "تم حذف التصنيف بنجاح" });
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+      logErrorSafely('CategoriesPage', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 
