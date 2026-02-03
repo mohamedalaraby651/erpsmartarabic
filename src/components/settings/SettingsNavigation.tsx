@@ -21,6 +21,7 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Smartphone,
 } from 'lucide-react';
 
 export interface SettingsTab {
@@ -35,6 +36,7 @@ export interface SettingsTab {
 export const personalTabs: SettingsTab[] = [
   { id: 'profile', label: 'الملف الشخصي', icon: User, adminOnly: false, description: 'البيانات الشخصية والصورة', color: 'bg-blue-500' },
   { id: 'security', label: 'الأمان', icon: Shield, adminOnly: false, description: 'كلمة المرور وتسجيل الدخول', color: 'bg-green-500' },
+  { id: 'twofactor', label: 'المصادقة الثنائية', icon: Smartphone, adminOnly: false, description: 'تفعيل 2FA لحماية إضافية', color: 'bg-red-500' },
   { id: 'appearance', label: 'المظهر', icon: Palette, adminOnly: false, description: 'الثيم والألوان والخطوط', color: 'bg-purple-500' },
   { id: 'notifications', label: 'الإشعارات', icon: Bell, adminOnly: false, description: 'إعدادات التنبيهات', color: 'bg-orange-500' },
   { id: 'documents', label: 'مستنداتي', icon: Paperclip, adminOnly: false, description: 'المرفقات الشخصية', color: 'bg-pink-500' },
