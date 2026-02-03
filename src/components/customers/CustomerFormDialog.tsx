@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { customerSchema, type CustomerFormData } from "@/lib/validations";
+import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -143,7 +144,32 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     },
   });
 
-  const onSubmit = (data: CustomerFormData) => {
+  const onSubmit = async (data: CustomerFormData) => {
+    // Server-side permission verification
+    const action = isEditing ? 'edit' : 'create';
+    const hasPermission = await verifyPermissionOnServer('customers', action);
+    if (!hasPermission) {
+      toast({ 
+        title: "غير مصرح", 
+        description: `ليس لديك صلاحية ${isEditing ? 'تعديل' : 'إضافة'} العملاء`, 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    // Check credit limit if setting a significant amount
+    if (data.credit_limit && data.credit_limit > 0) {
+      const creditAllowed = await verifyFinancialLimit('credit', data.credit_limit);
+      if (!creditAllowed) {
+        toast({ 
+          title: "تجاوز الحد المسموح", 
+          description: `الحد الائتماني (${data.credit_limit.toLocaleString()} ج.م) يتجاوز الحد المسموح لك`, 
+          variant: "destructive" 
+        });
+        return;
+      }
+    }
+
     mutation.mutate(data);
   };
 
