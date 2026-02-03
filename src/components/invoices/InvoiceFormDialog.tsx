@@ -351,7 +351,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
               <Label>طريقة الدفع</Label>
               <Select
                 value={watch('payment_method')}
-                onValueChange={(value: any) => setValue('payment_method', value)}
+                onValueChange={(value: 'cash' | 'bank_transfer' | 'credit' | 'advance_payment' | 'installment') => setValue('payment_method', value)}
               >
                 <SelectTrigger>
                   <SelectValue />

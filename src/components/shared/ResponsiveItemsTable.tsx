@@ -40,7 +40,7 @@ export interface Product {
 interface ResponsiveItemsTableProps {
   items: ItemRow[];
   products: Product[];
-  onUpdateItem: (index: number, field: keyof ItemRow, value: any) => void;
+  onUpdateItem: (index: number, field: keyof ItemRow, value: string | number) => void;
   onRemoveItem: (index: number) => void;
   onAddItem: () => void;
   currency?: string;
@@ -59,7 +59,7 @@ const MobileItemCard = memo(function MobileItemCard({
   index: number;
   products: Product[];
   currency: string;
-  onUpdateItem: (index: number, field: keyof ItemRow, value: any) => void;
+  onUpdateItem: (index: number, field: keyof ItemRow, value: string | number) => void;
   onRemoveItem: (index: number) => void;
 }) {
   return (
@@ -149,7 +149,7 @@ const DesktopItemRow = memo(function DesktopItemRow({
   item: ItemRow;
   index: number;
   products: Product[];
-  onUpdateItem: (index: number, field: keyof ItemRow, value: any) => void;
+  onUpdateItem: (index: number, field: keyof ItemRow, value: string | number) => void;
   onRemoveItem: (index: number) => void;
 }) {
   return (

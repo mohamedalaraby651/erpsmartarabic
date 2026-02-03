@@ -46,9 +46,18 @@ const JournalDetailDialog = ({
   const queryClient = useQueryClient();
   const canPost = userRole === "admin" || userRole === "accountant";
 
+  interface JournalEntryRow {
+    id: string;
+    line_number: number;
+    debit_amount: number | null;
+    credit_amount: number | null;
+    memo: string | null;
+    chart_of_accounts: { code: string; name: string } | null;
+  }
+
   const { data: entries = [] } = useQuery({
     queryKey: ["journal-entries", journal?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<JournalEntryRow[]> => {
       if (!journal?.id) return [];
       const { data, error } = await supabase
         .from("journal_entries")
@@ -56,7 +65,7 @@ const JournalDetailDialog = ({
         .eq("journal_id", journal.id)
         .order("line_number");
       if (error) throw error;
-      return data;
+      return data as JournalEntryRow[];
     },
     enabled: !!journal?.id,
   });
@@ -145,7 +154,7 @@ const JournalDetailDialog = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {entries.map((entry: any) => (
+                {entries.map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell>
                       <span className="font-mono text-sm">

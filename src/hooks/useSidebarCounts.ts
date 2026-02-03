@@ -74,8 +74,13 @@ export function useSidebarCounts() {
       // Calculate low stock count
       let lowStockCount = 0;
       if (stockResult.data) {
-        lowStockCount = stockResult.data.filter((product: any) => {
-          const totalStock = product.product_stock?.reduce((sum: number, s: any) => sum + (s.quantity || 0), 0) || 0;
+        interface ProductWithStock {
+          id: string;
+          min_stock: number | null;
+          product_stock: { quantity: number }[] | null;
+        }
+        lowStockCount = (stockResult.data as ProductWithStock[]).filter((product) => {
+          const totalStock = product.product_stock?.reduce((sum: number, s) => sum + (s.quantity || 0), 0) || 0;
           return totalStock < (product.min_stock || 0);
         }).length;
       }
