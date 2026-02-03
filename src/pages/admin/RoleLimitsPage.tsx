@@ -130,7 +130,7 @@ const RoleLimitsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['role-limits'] });
       queryClient.invalidateQueries({ queryKey: ['all-role-limits'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('RoleLimitsPage.saveMutation', error);
       toast.error(getSafeErrorMessage(error));
     },
@@ -168,7 +168,7 @@ const RoleLimitsPage = () => {
                   <SelectValue placeholder="اختر دوراً..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {roles.map((role: any) => (
+                  {roles.map((role) => (
                     <SelectItem key={role.id} value={role.id}>
                       <div className="flex items-center gap-2">
                         <div
@@ -330,7 +330,7 @@ const RoleLimitsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {allLimits.map((limit: any) => (
+                    {allLimits.map((limit) => (
                       <TableRow key={limit.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">

@@ -41,7 +41,7 @@ const SupplierPurchasesChart = ({ purchaseOrders }: SupplierPurchasesChartProps)
     };
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value?: number; payload?: { fullMonth?: string; count?: number } }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-popover border rounded-lg shadow-lg p-3">

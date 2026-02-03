@@ -126,7 +126,7 @@ export default function CustomizationsPage() {
       queryClient.invalidateQueries({ queryKey: ['section-customizations'] });
       toast.success('تم الحفظ');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('CustomizationsPage.saveMutation', error);
       toast.error(getSafeErrorMessage(error));
     },

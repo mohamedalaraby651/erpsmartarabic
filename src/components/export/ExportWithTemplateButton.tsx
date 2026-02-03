@@ -92,7 +92,7 @@ export function ExportWithTemplateButton({
       setNewTemplateName('');
       queryClient.invalidateQueries({ queryKey: ['export-templates', section] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('ExportWithTemplateButton.saveTemplateMutation', error);
       toast.error(getSafeErrorMessage(error));
     },
@@ -101,7 +101,7 @@ export function ExportWithTemplateButton({
   // Load template settings when selected
   useEffect(() => {
     if (selectedTemplateId) {
-      const template = templates.find((t: any) => t.id === selectedTemplateId);
+      const template = templates.find((t) => t.id === selectedTemplateId);
       if (template) {
         setSelectedColumns(template.columns as string[]);
         setSelectedFormat(template.format as ExportFormat);
@@ -252,7 +252,7 @@ export function ExportWithTemplateButton({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">القالب الافتراضي</SelectItem>
-                    {templates.map((template: any) => (
+                    {templates.map((template) => (
                       <SelectItem key={template.id} value={template.id}>
                         {template.name} {template.is_default && '(افتراضي)'}
                       </SelectItem>

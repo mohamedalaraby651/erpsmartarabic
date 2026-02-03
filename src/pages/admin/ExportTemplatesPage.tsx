@@ -107,7 +107,7 @@ const ExportTemplatesPage = () => {
   };
 
   // Group templates by section
-  const groupedTemplates = templates.reduce((acc: Record<string, any[]>, template: any) => {
+  const groupedTemplates = templates.reduce((acc: Record<string, typeof templates>, template) => {
     const section = template.section;
     if (!acc[section]) acc[section] = [];
     acc[section].push(template);
@@ -148,7 +148,7 @@ const ExportTemplatesPage = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {templates.filter((t: any) => t.is_default).length}
+                  {templates.filter((t) => t.is_default).length}
                 </p>
                 <p className="text-sm text-muted-foreground">قوالب افتراضية</p>
               </div>
@@ -163,7 +163,7 @@ const ExportTemplatesPage = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {templates.filter((t: any) => t.format === 'excel').length}
+                  {templates.filter((t) => t.format === 'excel').length}
                 </p>
                 <p className="text-sm text-muted-foreground">قوالب Excel</p>
               </div>
@@ -178,7 +178,7 @@ const ExportTemplatesPage = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {templates.filter((t: any) => t.format === 'pdf').length}
+                  {templates.filter((t) => t.format === 'pdf').length}
                 </p>
                 <p className="text-sm text-muted-foreground">قوالب PDF</p>
               </div>
@@ -229,7 +229,7 @@ const ExportTemplatesPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sectionTemplates.map((template: any) => (
+                  {sectionTemplates.map((template) => (
                     <TableRow key={template.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">

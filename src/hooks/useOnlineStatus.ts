@@ -8,7 +8,9 @@ export function useOnlineStatus() {
     setIsOnline(true);
     if (wasOffline) {
       // عرض إشعار استعادة الاتصال
-      console.log('Connection restored');
+      if (import.meta.env.DEV) {
+        console.log('Connection restored');
+      }
     }
     setWasOffline(false);
   }, [wasOffline]);

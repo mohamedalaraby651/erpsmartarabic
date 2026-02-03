@@ -296,7 +296,7 @@ const AdminDashboard = () => {
           ) : (
             <ScrollArea className="h-[300px]">
               <div className="space-y-3">
-                {recentActivities.map((activity: any) => (
+                {recentActivities.map((activity) => (
                   <div
                     key={activity.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
