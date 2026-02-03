@@ -478,7 +478,7 @@ const SalesOrderDetailsPage = () => {
             <CardContent>
               {activities.length > 0 ? (
                 <div className="space-y-4">
-                  {activities.map((activity: any) => (
+                  {(activities as Array<{ id: string; action: string; created_at: string }>).map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <div className="p-2 rounded-full bg-primary/10">
                         <Activity className="h-4 w-4 text-primary" />

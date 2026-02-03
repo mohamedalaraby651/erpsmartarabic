@@ -92,7 +92,7 @@ export function CompanyInfoSection({ onDataChange }: CompanyInfoSectionProps) {
     },
   });
 
-  const updateField = (field: keyof CompanySettings, value: any) => {
+  const updateField = (field: keyof CompanySettings, value: string | null) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     onDataChange?.();
   };

@@ -335,9 +335,16 @@ export async function generateDocumentPDF(
   startY += 20;
 
   // Items table
+  interface PDFItem {
+    product?: { name: string };
+    products?: { name: string };
+    quantity?: number;
+    unit_price: number;
+    total_price: number;
+  }
   if (data.items && data.items.length > 0) {
     const tableHeaders = [processText('المنتج'), processText('الكمية'), processText('السعر'), processText('الإجمالي')];
-    const tableBody = data.items.map((item: any) => [
+    const tableBody = (data.items as PDFItem[]).map((item) => [
       processText(item.product?.name || item.products?.name || '-'),
       item.quantity?.toString() || '0',
       `${Number(item.unit_price).toLocaleString()} ${company?.currency || 'ج.م'}`,

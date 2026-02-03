@@ -85,7 +85,7 @@ export function useOfflineItem<T>(
           console.error(`Error fetching ${table} item:`, error);
           // Try cache
           const cachedData = await getCachedData(table);
-          const item = cachedData.find((item: any) => item.id === id);
+          const item = cachedData.find((cached: { id: string }) => cached.id === id);
           return (item as T) || null;
         }
 
@@ -94,7 +94,7 @@ export function useOfflineItem<T>(
 
       // Offline: get from cache
       const cachedData = await getCachedData(table);
-      const item = cachedData.find((item: any) => item.id === id);
+      const item = cachedData.find((cached: { id: string }) => cached.id === id);
       return (item as T) || null;
     },
     enabled: enabled && !!id,
