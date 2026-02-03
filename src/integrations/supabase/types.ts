@@ -220,6 +220,59 @@ export type Database = {
           },
         ]
       }
+      chart_of_accounts: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          code: string
+          created_at: string | null
+          current_balance: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_en: string | null
+          normal_balance: Database["public"]["Enums"]["balance_type"]
+          parent_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          code: string
+          created_at?: string | null
+          current_balance?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_en?: string | null
+          normal_balance: Database["public"]["Enums"]["balance_type"]
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          code?: string
+          created_at?: string | null
+          current_balance?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_en?: string | null
+          normal_balance?: Database["public"]["Enums"]["balance_type"]
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           address: string | null
@@ -677,6 +730,42 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscal_periods: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string | null
+          end_date: string
+          id: string
+          is_closed: boolean | null
+          name: string
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          end_date: string
+          id?: string
+          is_closed?: boolean | null
+          name: string
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          is_closed?: boolean | null
+          name?: string
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           created_at: string
@@ -740,6 +829,9 @@ export type Database = {
       }
       invoices: {
         Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           created_by: string | null
           customer_id: string
@@ -752,13 +844,18 @@ export type Database = {
           paid_amount: number | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"]
+          rejection_reason: string | null
           status: Database["public"]["Enums"]["document_status"]
+          submitted_at: string | null
           subtotal: number
           tax_amount: number | null
           total_amount: number
           updated_at: string
         }
         Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           created_by?: string | null
           customer_id: string
@@ -771,13 +868,18 @@ export type Database = {
           paid_amount?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["document_status"]
+          submitted_at?: string | null
           subtotal?: number
           tax_amount?: number | null
           total_amount?: number
           updated_at?: string
         }
         Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string
@@ -790,7 +892,9 @@ export type Database = {
           paid_amount?: number | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["document_status"]
+          submitted_at?: string | null
           subtotal?: number
           tax_amount?: number | null
           total_amount?: number
@@ -809,6 +913,110 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entries: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          credit_amount: number | null
+          debit_amount: number | null
+          id: string
+          journal_id: string
+          line_number: number
+          memo: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          id?: string
+          journal_id: string
+          line_number: number
+          memo?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          id?: string
+          journal_id?: string
+          line_number?: number
+          memo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journals: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          fiscal_period_id: string
+          id: string
+          is_posted: boolean | null
+          journal_date: string
+          journal_number: string
+          posted_at: string | null
+          source_id: string | null
+          source_type: string | null
+          total_credit: number | null
+          total_debit: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fiscal_period_id: string
+          id?: string
+          is_posted?: boolean | null
+          journal_date: string
+          journal_number: string
+          posted_at?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          total_credit?: number | null
+          total_debit?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fiscal_period_id?: string
+          id?: string
+          is_posted?: boolean | null
+          journal_date?: string
+          journal_number?: string
+          posted_at?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          total_credit?: number | null
+          total_debit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journals_fiscal_period_id_fkey"
+            columns: ["fiscal_period_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_periods"
             referencedColumns: ["id"]
           },
         ]
@@ -2061,6 +2269,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa_settings: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          enabled_at: string | null
+          id: string
+          is_enabled: boolean | null
+          last_used_at: string | null
+          secret_key: string | null
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_used_at?: string | null
+          secret_key?: string | null
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_used_at?: string | null
+          secret_key?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_dashboard_settings: {
         Row: {
           created_at: string
@@ -2361,7 +2602,9 @@ export type Database = {
       }
     }
     Enums: {
+      account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
       app_role: "admin" | "sales" | "warehouse" | "accountant" | "hr"
+      balance_type: "debit" | "credit"
       customer_type: "individual" | "company" | "farm"
       document_status:
         | "draft"
@@ -2505,7 +2748,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["asset", "liability", "equity", "revenue", "expense"],
       app_role: ["admin", "sales", "warehouse", "accountant", "hr"],
+      balance_type: ["debit", "credit"],
       customer_type: ["individual", "company", "farm"],
       document_status: [
         "draft",
