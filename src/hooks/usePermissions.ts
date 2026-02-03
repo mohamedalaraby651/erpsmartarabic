@@ -91,6 +91,10 @@ export function usePermissions() {
   // Admin has all permissions
   const isAdmin = userRole === 'admin';
 
+  /**
+   * Check permission locally (for UI hints only)
+   * NOTE: This is NOT authoritative - use verifyPermissionOnServer for critical operations
+   */
   const hasPermission = (section: string, action: 'view' | 'create' | 'edit' | 'delete'): boolean => {
     if (isAdmin) return true;
     
@@ -127,6 +131,10 @@ export function usePermissions() {
     return permission?.can_edit ?? true;
   };
 
+  /**
+   * Check limit locally (for UI hints only)
+   * NOTE: This is NOT authoritative - use verifyFinancialLimitOnServer for critical operations
+   */
   const checkLimit = (type: 'discount' | 'credit' | 'invoice', value: number): boolean => {
     if (isAdmin) return true;
     if (!roleLimits) return true;
@@ -143,15 +151,77 @@ export function usePermissions() {
     }
   };
 
+  /**
+   * Verify permission on server using database function
+   * This is the AUTHORITATIVE check - use for all critical operations
+   */
+  const verifyPermissionOnServer = async (
+    section: string, 
+    action: 'view' | 'create' | 'edit' | 'delete'
+  ): Promise<boolean> => {
+    if (!user?.id) return false;
+    
+    try {
+      const { data, error } = await supabase.rpc('check_section_permission', {
+        _user_id: user.id,
+        _section: section,
+        _action: action
+      });
+      
+      if (error) {
+        console.error('[usePermissions] Server permission check error:', error);
+        return false;
+      }
+      
+      return data === true;
+    } catch (err) {
+      console.error('[usePermissions] Unexpected error:', err);
+      return false;
+    }
+  };
+
+  /**
+   * Verify financial limit on server
+   * This is the AUTHORITATIVE check - use for all financial operations
+   */
+  const verifyFinancialLimitOnServer = async (
+    limitType: 'discount' | 'credit' | 'invoice',
+    value: number
+  ): Promise<boolean> => {
+    if (!user?.id) return false;
+    
+    try {
+      const { data, error } = await supabase.rpc('check_financial_limit', {
+        _user_id: user.id,
+        _limit_type: limitType,
+        _value: value
+      });
+      
+      if (error) {
+        console.error('[usePermissions] Server limit check error:', error);
+        return false;
+      }
+      
+      return data === true;
+    } catch (err) {
+      console.error('[usePermissions] Unexpected error:', err);
+      return false;
+    }
+  };
+
   return {
     isAdmin,
     customRole,
     sectionPermissions,
     fieldPermissions,
     roleLimits,
+    // Local checks (UI hints only)
     hasPermission,
     canViewField,
     canEditField,
     checkLimit,
+    // Server-side checks (authoritative)
+    verifyPermissionOnServer,
+    verifyFinancialLimitOnServer,
   };
 }
