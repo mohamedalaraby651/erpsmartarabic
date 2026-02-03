@@ -31,6 +31,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
+import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -263,7 +264,36 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     },
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    // Server-side permission verification
+    const action = isEditing ? 'edit' : 'create';
+    const hasPermission = await verifyPermissionOnServer('quotations', action);
+    if (!hasPermission) {
+      toast({ 
+        title: "غير مصرح", 
+        description: `ليس لديك صلاحية ${isEditing ? 'تعديل' : 'إنشاء'} عروض الأسعار`, 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    // Check discount limits for items
+    const maxDiscountInItems = items.length > 0 
+      ? Math.max(...items.map(i => i.discount_percentage || 0))
+      : 0;
+    
+    if (maxDiscountInItems > 0) {
+      const discountAllowed = await verifyFinancialLimit('discount', maxDiscountInItems);
+      if (!discountAllowed) {
+        toast({ 
+          title: "تجاوز الحد المسموح", 
+          description: `نسبة الخصم (${maxDiscountInItems}%) تتجاوز الحد المسموح لك`, 
+          variant: "destructive" 
+        });
+        return;
+      }
+    }
+
     mutation.mutate(data);
   };
 

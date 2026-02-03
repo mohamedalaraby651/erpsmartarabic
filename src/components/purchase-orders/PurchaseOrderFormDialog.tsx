@@ -31,6 +31,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
@@ -247,7 +248,19 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order }: PurchaseOrderFor
     },
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    // Server-side permission verification
+    const action = isEditing ? 'edit' : 'create';
+    const hasPermission = await verifyPermissionOnServer('purchase_orders', action);
+    if (!hasPermission) {
+      toast({ 
+        title: "غير مصرح", 
+        description: `ليس لديك صلاحية ${isEditing ? 'تعديل' : 'إنشاء'} أوامر الشراء`, 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     mutation.mutate(data);
   };
 
