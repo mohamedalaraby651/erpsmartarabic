@@ -33,6 +33,9 @@ import {
   Calendar,
   DollarSign,
   FileText,
+  Send,
+  XCircle,
+  Shield,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
@@ -43,6 +46,8 @@ import { WhatsAppShareButton } from "@/components/shared/WhatsAppShareButton";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
+import InvoiceApprovalDialog from "@/components/invoices/InvoiceApprovalDialog";
+import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -62,15 +67,33 @@ const paymentStatusColors: Record<string, string> = {
   overdue: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
+const approvalStatusLabels: Record<string, string> = {
+  draft: "مسودة",
+  pending: "في انتظار الموافقة",
+  approved: "معتمدة",
+  rejected: "مرفوضة",
+};
+
+const approvalStatusColors: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground border-muted",
+  pending: "bg-warning/10 text-warning border-warning/20",
+  approved: "bg-success/10 text-success border-success/20",
+  rejected: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
 const InvoiceDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { userRole } = useAuth();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+
+  const canApprove = userRole === 'admin' || userRole === 'accountant';
 
   // Fetch invoice with customer
   const { data: invoice, isLoading: loadingInvoice } = useQuery({
@@ -186,10 +209,14 @@ const InvoiceDetailsPage = () => {
                 <Receipt className="h-10 w-10 text-primary" />
               </div>
               <div>
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
                   <h1 className="text-2xl font-bold font-mono">{invoice.invoice_number}</h1>
                   <Badge className={paymentStatusColors[invoice.payment_status]}>
                     {paymentStatusLabels[invoice.payment_status]}
+                  </Badge>
+                  <Badge className={approvalStatusColors[invoice.approval_status || 'draft']}>
+                    <Shield className="h-3 w-3 ml-1" />
+                    {approvalStatusLabels[invoice.approval_status || 'draft']}
                   </Badge>
                 </div>
                 {invoice.customers && (
@@ -238,6 +265,12 @@ const InvoiceDetailsPage = () => {
                 <Button size="sm" onClick={() => setPaymentDialogOpen(true)}>
                   <CreditCard className="h-4 w-4 ml-2" />
                   تسجيل دفعة
+                </Button>
+              )}
+              {canApprove && (invoice.approval_status === 'draft' || invoice.approval_status === 'pending' || !invoice.approval_status) && (
+                <Button size="sm" variant="default" onClick={() => setApprovalDialogOpen(true)}>
+                  <Shield className="h-4 w-4 ml-2" />
+                  مراجعة الاعتماد
                 </Button>
               )}
             </div>
@@ -558,6 +591,18 @@ const InvoiceDetailsPage = () => {
           onOpenChange={setPrintDialogOpen}
         />
       )}
+
+      <InvoiceApprovalDialog
+        open={approvalDialogOpen}
+        onOpenChange={setApprovalDialogOpen}
+        invoice={invoice ? {
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          total_amount: Number(invoice.total_amount),
+          approval_status: invoice.approval_status || 'draft',
+          customers: invoice.customers,
+        } : null}
+      />
     </div>
   );
 };

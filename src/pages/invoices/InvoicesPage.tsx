@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -44,6 +44,27 @@ const paymentStatusColors: Record<string, string> = {
   pending: "bg-destructive/10 text-destructive",
   partial: "bg-warning/10 text-warning",
   paid: "bg-success/10 text-success",
+};
+
+const approvalStatusLabels: Record<string, string> = {
+  draft: "مسودة",
+  pending: "في انتظار الموافقة",
+  approved: "معتمدة",
+  rejected: "مرفوضة",
+};
+
+const approvalStatusColors: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  pending: "bg-warning/10 text-warning",
+  approved: "bg-success/10 text-success",
+  rejected: "bg-destructive/10 text-destructive",
+};
+
+const approvalStatusIcons: Record<string, React.ElementType> = {
+  draft: Clock,
+  pending: Send,
+  approved: CheckCircle,
+  rejected: XCircle,
 };
 
 const InvoicesPage = () => {
@@ -285,6 +306,19 @@ const InvoicesPage = () => {
                 filterValue={filters.payment_status as string}
                 onFilter={setFilter}
               />
+              <DataTableHeader
+                label="حالة الاعتماد"
+                filterKey="approval_status"
+                filterType="select"
+                filterOptions={[
+                  { value: 'draft', label: 'مسودة' },
+                  { value: 'pending', label: 'في انتظار الموافقة' },
+                  { value: 'approved', label: 'معتمدة' },
+                  { value: 'rejected', label: 'مرفوضة' },
+                ]}
+                filterValue={filters.approval_status as string}
+                onFilter={setFilter}
+              />
               <DataTableHeader label="إجراءات" className="text-left" />
             </TableRow>
           </TableHeader>
@@ -323,6 +357,18 @@ const InvoicesPage = () => {
                     <Badge className={paymentStatusColors[invoice.payment_status]}>
                       {paymentStatusLabels[invoice.payment_status]}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const status = invoice.approval_status || 'draft';
+                      const StatusIcon = approvalStatusIcons[status];
+                      return (
+                        <Badge className={`${approvalStatusColors[status]} gap-1`}>
+                          <StatusIcon className="h-3 w-3" />
+                          {approvalStatusLabels[status]}
+                        </Badge>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
