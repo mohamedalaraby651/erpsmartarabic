@@ -21,6 +21,8 @@ import {
   Paperclip,
   Banknote,
   CircleDollarSign,
+  BookOpen,
+  BookOpenCheck,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -211,6 +213,20 @@ export const navSections: NavSection[] = [
         roles: ['admin', 'accountant'],
         color: 'violet',
       },
+      {
+        title: 'شجرة الحسابات',
+        icon: BookOpen,
+        href: '/accounting/chart-of-accounts',
+        roles: ['admin', 'accountant'],
+        color: 'violet',
+      },
+      {
+        title: 'القيود اليومية',
+        icon: BookOpenCheck,
+        href: '/accounting/journals',
+        roles: ['admin', 'accountant'],
+        color: 'violet',
+      },
     ],
   },
   {
@@ -369,6 +385,8 @@ export const routeLabels: Record<string, string> = {
   '/treasury': 'الخزينة',
   '/expenses': 'المصروفات',
   '/expense-categories': 'تصنيفات المصروفات',
+  '/accounting/chart-of-accounts': 'شجرة الحسابات',
+  '/accounting/journals': 'القيود اليومية',
   '/admin/roles': 'إدارة الأدوار',
   '/admin/permissions': 'إدارة الصلاحيات',
   '/admin/customizations': 'تخصيص الأقسام',

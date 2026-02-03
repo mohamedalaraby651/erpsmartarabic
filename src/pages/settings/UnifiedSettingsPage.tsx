@@ -27,6 +27,7 @@ import { ReportTemplateEditor } from '@/components/reports/ReportTemplateEditor'
 import { BackupTab } from '@/components/settings/BackupTab';
 import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { OfflineSettings } from '@/components/settings/OfflineSettings';
+import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 
 // Section skeleton for loading states
 function SectionSkeleton() {
@@ -136,6 +137,8 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         );
       case 'security':
         return <SecuritySection userId={user?.id || ''} />;
+      case 'twofactor':
+        return <TwoFactorSetup />;
       case 'appearance':
         return <ThemeCustomizer onDataChange={() => setHasUnsavedChanges(true)} />;
       case 'notifications':

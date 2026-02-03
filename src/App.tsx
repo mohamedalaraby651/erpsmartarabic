@@ -55,6 +55,9 @@ const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
 const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
 const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
 const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
+// Accounting Pages
+const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
+const JournalEntriesPage = lazy(() => import("./pages/accounting/JournalEntriesPage"));
 // PWA 2025 Handler Pages
 const ShareTargetPage = lazy(() => import("./pages/share/ShareTargetPage"));
 const OpenFilePage = lazy(() => import("./pages/file/OpenFilePage"));
@@ -138,6 +141,9 @@ const App = () => (
                   <Route path="treasury/:id" element={<CashRegisterDetailsPage />} />
                   <Route path="expenses" element={<ExpensesPage />} />
                   <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
+                  {/* Accounting Routes */}
+                  <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
+                  <Route path="accounting/journals" element={<JournalEntriesPage />} />
                   {/* PWA 2025 Handler Routes */}
                   <Route path="share-target" element={<ShareTargetPage />} />
                   <Route path="open-file" element={<OpenFilePage />} />
