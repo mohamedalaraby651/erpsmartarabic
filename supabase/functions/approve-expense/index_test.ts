@@ -23,7 +23,6 @@ Deno.test("approve-expense: should return 401 for missing Authorization header",
   const data = await response.json();
   assertEquals(response.status, 401);
   assertEquals(data.code, "UNAUTHORIZED");
-  await response.text();
 });
 
 Deno.test("approve-expense: should return 401 for invalid Bearer token", async () => {
@@ -42,7 +41,6 @@ Deno.test("approve-expense: should return 401 for invalid Bearer token", async (
   const data = await response.json();
   assertEquals(response.status, 401);
   assertEquals(data.code, "INVALID_TOKEN");
-  await response.text();
 });
 
 // ============================================
@@ -125,5 +123,4 @@ Deno.test("approve-expense: error response should have correct structure", async
   const data = await response.json();
   assertExists(data.success !== undefined || data.error !== undefined);
   assertExists(data.code);
-  await response.text();
 });

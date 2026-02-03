@@ -7,12 +7,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock supabase functions
-const mockInvoke = vi.fn();
+// Mock supabase functions - must use inline function for hoisting
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: {
-      invoke: mockInvoke
+      invoke: vi.fn()
     },
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user-id' } } })
@@ -21,6 +20,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
+import { supabase } from '@/integrations/supabase/client';
 import { 
   validateInvoice, 
   processPayment, 
@@ -28,6 +28,9 @@ import {
   processStockMovement,
   getErrorMessage 
 } from '@/lib/api/secureOperations';
+
+// Get the mocked invoke function
+const mockInvoke = vi.mocked(supabase.functions.invoke);
 
 describe('Edge Function Security', () => {
   beforeEach(() => {
