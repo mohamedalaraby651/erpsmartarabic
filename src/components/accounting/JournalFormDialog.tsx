@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 
 interface JournalEntry {
@@ -102,10 +103,11 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
         { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
       ]);
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
+      logErrorSafely('JournalFormDialog.mutation', error);
       toast({
-        title: "خطأ",
-        description: error instanceof Error ? error.message : "حدث خطأ",
+        title: "خطأ في إنشاء القيد",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     },

@@ -51,6 +51,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { approveExpense, getErrorMessage } from '@/lib/api/secureOperations';
+import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 
 interface Expense {
   id: string;
@@ -175,8 +176,9 @@ export default function ExpensesPage() {
       setRejectionReason('');
       setRejectingExpenseId(null);
     },
-    onError: (error) => {
-      toast({ title: 'حدث خطأ', description: error instanceof Error ? error.message : 'خطأ غير معروف', variant: 'destructive' });
+    onError: (error: unknown) => {
+      logErrorSafely('ExpensesPage.approveMutation', error);
+      toast({ title: 'حدث خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
     },
   });
 

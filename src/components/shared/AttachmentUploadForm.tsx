@@ -238,7 +238,7 @@ export function AttachmentUploadForm({
       setCategory(defaultCategory);
       setExpiryDate(undefined);
       setNotes('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logErrorSafely('AttachmentUploadForm.handleUpload', error);
       toast.error('فشل رفع الملف: ' + getSafeErrorMessage(error));
     } finally {

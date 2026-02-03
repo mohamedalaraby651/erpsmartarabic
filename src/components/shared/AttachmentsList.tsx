@@ -173,7 +173,7 @@ export function AttachmentsList({
       toast.success('تم حذف الملف بنجاح');
       setDeleteId(null);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('AttachmentsList.deleteMutation', error);
       toast.error('فشل حذف الملف: ' + getSafeErrorMessage(error));
     },

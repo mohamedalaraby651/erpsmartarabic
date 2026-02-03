@@ -61,7 +61,7 @@ export function SecuritySection({ userId }: SecuritySectionProps) {
       toast({ title: 'تم تغيير كلمة المرور بنجاح' });
       setPasswordData({ newPassword: '', confirmPassword: '' });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('SecuritySection.changePasswordMutation', error);
       toast({ 
         title: 'خطأ في تغيير كلمة المرور', 

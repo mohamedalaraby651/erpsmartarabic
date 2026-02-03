@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import {
   Shield,
   Smartphone,
@@ -76,10 +77,11 @@ const TwoFactorSetup = () => {
       setBackupCodes(data.backup_codes);
       setStep("setup");
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
+      logErrorSafely('TwoFactorSetup.setupMutation', error);
       toast({
-        title: "خطأ",
-        description: error instanceof Error ? error.message : "حدث خطأ",
+        title: "خطأ في إعداد المصادقة الثنائية",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -99,10 +101,11 @@ const TwoFactorSetup = () => {
       toast({ title: "تم تفعيل المصادقة الثنائية بنجاح" });
       setStep("complete");
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
+      logErrorSafely('TwoFactorSetup.enableMutation', error);
       toast({
         title: "رمز غير صحيح",
-        description: error instanceof Error ? error.message : "يرجى المحاولة مرة أخرى",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -123,10 +126,11 @@ const TwoFactorSetup = () => {
       setStep("check");
       setDisableCode("");
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
+      logErrorSafely('TwoFactorSetup.disableMutation', error);
       toast({
         title: "رمز غير صحيح",
-        description: error instanceof Error ? error.message : "يرجى المحاولة مرة أخرى",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     },

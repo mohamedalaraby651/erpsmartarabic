@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { CheckCircle, XCircle, Send, AlertTriangle } from "lucide-react";
 
 interface InvoiceApprovalDialogProps {
@@ -80,10 +81,11 @@ const InvoiceApprovalDialog = ({
       setShowRejectForm(false);
       setRejectionReason("");
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
+      logErrorSafely('InvoiceApprovalDialog.approvalMutation', error);
       toast({
-        title: "خطأ",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+        title: "خطأ في معالجة الموافقة",
+        description: getSafeErrorMessage(error),
         variant: "destructive",
       });
     },

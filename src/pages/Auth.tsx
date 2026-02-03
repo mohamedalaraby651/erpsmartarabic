@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Loader2, Eye, EyeOff, Factory } from 'lucide-react';
+import { logErrorSafely } from '@/lib/errorHandler';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -44,11 +45,9 @@ export default function Auth() {
     setIsLoading(false);
     
     if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        toast.error('بيانات الدخول غير صحيحة');
-      } else {
-        toast.error('حدث خطأ أثناء تسجيل الدخول');
-      }
+      logErrorSafely('Auth.handleLogin', error);
+      // رسالة موحدة لجميع أخطاء المصادقة - لا تكشف تفاصيل الخطأ
+      toast.error('فشل تسجيل الدخول. يرجى التحقق من البيانات والمحاولة مرة أخرى');
     } else {
       toast.success('تم تسجيل الدخول بنجاح');
       navigate('/');
@@ -73,11 +72,9 @@ export default function Auth() {
     setIsLoading(false);
     
     if (error) {
-      if (error.message.includes('already registered')) {
-        toast.error('هذا البريد الإلكتروني مسجل بالفعل');
-      } else {
-        toast.error('حدث خطأ أثناء إنشاء الحساب');
-      }
+      logErrorSafely('Auth.handleSignup', error);
+      // رسالة موحدة لأخطاء التسجيل - لا تكشف تفاصيل الخطأ
+      toast.error('فشل إنشاء الحساب. يرجى التحقق من البيانات والمحاولة مرة أخرى');
     } else {
       toast.success('تم إنشاء الحساب بنجاح');
       navigate('/');
