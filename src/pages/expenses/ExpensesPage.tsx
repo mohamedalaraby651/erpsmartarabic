@@ -18,7 +18,8 @@ import {
   CheckCircle, 
   XCircle,
   Clock,
-  Filter
+  Filter,
+  ShieldCheck
 } from 'lucide-react';
 import { ExpenseFormDialog } from '@/components/expenses/ExpenseFormDialog';
 import { format } from 'date-fns';
@@ -38,6 +39,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { approveExpense, getErrorMessage } from '@/lib/api/secureOperations';
 
 interface Expense {
   id: string;
@@ -78,6 +91,10 @@ export default function ExpensesPage() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectingExpenseId, setRejectingExpenseId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Handle action parameter from URL (FAB/QuickActions)
   useEffect(() => {
@@ -129,26 +146,58 @@ export default function ExpensesPage() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'approved' | 'rejected' }) => {
-      const { error } = await supabase
-        .from('expenses')
-        .update({ 
-          status, 
-          approved_by: (await supabase.auth.getUser()).data.user?.id 
-        })
-        .eq('id', id);
-      
-      if (error) throw error;
+    mutationFn: async ({ id, action, rejection_reason }: { 
+      id: string; 
+      action: 'approve' | 'reject';
+      rejection_reason?: string;
+    }) => {
+      // Use secure Edge Function for expense approval
+      const result = await approveExpense({
+        expense_id: id,
+        action,
+        rejection_reason,
+      });
+
+      if (!result.success) {
+        throw new Error(getErrorMessage(result.code || 'APPROVAL_ERROR'));
+      }
+
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['expenses-stats'] });
-      toast({ title: 'تم تحديث حالة المصروف' });
+      toast({ 
+        title: variables.action === 'approve' ? 'تمت الموافقة على المصروف' : 'تم رفض المصروف',
+        description: 'تم التحقق من الصلاحيات وتحديث الرصيد',
+      });
+      setRejectDialogOpen(false);
+      setRejectionReason('');
+      setRejectingExpenseId(null);
     },
-    onError: () => {
-      toast({ title: 'حدث خطأ', variant: 'destructive' });
+    onError: (error) => {
+      toast({ title: 'حدث خطأ', description: error instanceof Error ? error.message : 'خطأ غير معروف', variant: 'destructive' });
     },
   });
+
+  const handleApprove = (id: string) => {
+    approveMutation.mutate({ id, action: 'approve' });
+  };
+
+  const handleRejectClick = (id: string) => {
+    setRejectingExpenseId(id);
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = () => {
+    if (rejectingExpenseId && rejectionReason.trim()) {
+      approveMutation.mutate({ 
+        id: rejectingExpenseId, 
+        action: 'reject', 
+        rejection_reason: rejectionReason.trim() 
+      });
+    }
+  };
 
   const handleEdit = (expense: Expense) => {
     setSelectedExpense(expense);
@@ -308,15 +357,21 @@ export default function ExpensesPage() {
                           size="icon" 
                           variant="ghost"
                           className="h-8 w-8 text-emerald-600 dark:text-emerald-400"
-                          onClick={() => approveMutation.mutate({ id: expense.id, status: 'approved' })}
+                          onClick={() => handleApprove(expense.id)}
+                          disabled={approveMutation.isPending}
                         >
-                          <CheckCircle className="h-4 w-4" />
+                          {approveMutation.isPending ? (
+                            <ShieldCheck className="h-4 w-4 animate-pulse" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button 
                           size="icon" 
                           variant="ghost"
                           className="h-8 w-8 text-destructive"
-                          onClick={() => approveMutation.mutate({ id: expense.id, status: 'rejected' })}
+                          onClick={() => handleRejectClick(expense.id)}
+                          disabled={approveMutation.isPending}
                         >
                           <XCircle className="h-4 w-4" />
                         </Button>
@@ -335,6 +390,39 @@ export default function ExpensesPage() {
         onOpenChange={handleDialogClose}
         expense={selectedExpense}
       />
+
+      {/* Rejection Reason Dialog */}
+      <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>رفض المصروف</AlertDialogTitle>
+            <AlertDialogDescription>
+              يرجى إدخال سبب الرفض
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="سبب الرفض..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setRejectionReason('');
+              setRejectingExpenseId(null);
+            }}>
+              إلغاء
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRejectConfirm}
+              disabled={!rejectionReason.trim() || approveMutation.isPending}
+            >
+              {approveMutation.isPending ? 'جاري الرفض...' : 'تأكيد الرفض'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 
