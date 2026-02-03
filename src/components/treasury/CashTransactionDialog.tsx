@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
 import {
   Dialog,
   DialogContent,
@@ -114,9 +115,10 @@ export function CashTransactionDialog({
       form.reset();
     },
     onError: (error) => {
+      logErrorSafely('CashTransactionDialog', error);
       toast({ 
         title: 'حدث خطأ', 
-        description: error.message, 
+        description: getSafeErrorMessage(error), 
         variant: 'destructive' 
       });
     },
