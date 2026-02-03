@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+
+// Virtual scrolling components
+import { VirtualizedTable, VirtualColumn } from "@/components/table/VirtualizedTable";
+import { VirtualizedList } from "@/components/table/VirtualizedList";
 
 // Mobile components
 import { DataCard } from "@/components/mobile/DataCard";
@@ -126,20 +130,20 @@ const CustomersPage = () => {
   // Sorting
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
-  const handleEdit = (customer: Customer) => {
+  const handleEdit = useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setSelectedCustomer(null);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     setDeletingId(id);
     deleteMutation.mutate(id);
-  };
+  }, [deleteMutation]);
 
   const handleRefresh = async () => {
     await refetch();
@@ -152,7 +156,32 @@ const CustomersPage = () => {
     vip: customers.filter(c => c.vip_level !== 'regular').length,
   };
 
-  // Render mobile list view
+  // Memoized mobile card renderer for virtual list
+  const renderCustomerCard = useCallback((customer: Customer) => {
+    const TypeIcon = typeIcons[customer.customer_type as keyof typeof typeIcons] || Users;
+    return (
+      <DataCard
+        key={customer.id}
+        title={customer.name}
+        subtitle={typeLabels[customer.customer_type as keyof typeof typeLabels]}
+        icon={<TypeIcon className="h-5 w-5" />}
+        badge={{
+          text: vipLabels[customer.vip_level as keyof typeof vipLabels],
+          variant: customer.vip_level === 'regular' ? 'secondary' : 'default',
+        }}
+        fields={[
+          ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
+          ...(customer.email ? [{ label: 'البريد', value: customer.email, icon: <Mail className="h-3 w-3" /> }] : []),
+        ]}
+        onClick={() => navigate(`/customers/${customer.id}`)}
+        onView={() => navigate(`/customers/${customer.id}`)}
+        onEdit={canEdit ? () => handleEdit(customer) : undefined}
+        onDelete={canDelete ? () => handleDelete(customer.id) : undefined}
+      />
+    );
+  }, [navigate, canEdit, canDelete, handleEdit, handleDelete]);
+
+  // Render mobile list view with virtual scrolling
   const renderMobileView = () => {
     if (isLoading) {
       return <MobileListSkeleton count={5} />;
@@ -169,32 +198,28 @@ const CustomersPage = () => {
       );
     }
 
+    // Use virtual scrolling for large lists (50+ items)
+    if (sortedData.length > 50) {
+      return (
+        <PullToRefresh onRefresh={handleRefresh}>
+          <VirtualizedList
+            data={sortedData}
+            renderItem={(customer) => renderCustomerCard(customer)}
+            getItemKey={(customer) => customer.id}
+            itemHeight={140}
+            maxHeight={window.innerHeight - 280}
+            gap={12}
+            className="px-1"
+          />
+        </PullToRefresh>
+      );
+    }
+
+    // Use regular rendering for small lists
     return (
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="space-y-3">
-          {sortedData.map((customer) => {
-            const TypeIcon = typeIcons[customer.customer_type as keyof typeof typeIcons] || Users;
-            return (
-              <DataCard
-                key={customer.id}
-                title={customer.name}
-                subtitle={typeLabels[customer.customer_type as keyof typeof typeLabels]}
-                icon={<TypeIcon className="h-5 w-5" />}
-                badge={{
-                  text: vipLabels[customer.vip_level as keyof typeof vipLabels],
-                  variant: customer.vip_level === 'regular' ? 'secondary' : 'default',
-                }}
-                fields={[
-                  ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
-                  ...(customer.email ? [{ label: 'البريد', value: customer.email, icon: <Mail className="h-3 w-3" /> }] : []),
-                ]}
-                onClick={() => navigate(`/customers/${customer.id}`)}
-                onView={() => navigate(`/customers/${customer.id}`)}
-                onEdit={canEdit ? () => handleEdit(customer) : undefined}
-                onDelete={canDelete ? () => handleDelete(customer.id) : undefined}
-              />
-            );
-          })}
+          {sortedData.map((customer) => renderCustomerCard(customer))}
         </div>
       </PullToRefresh>
     );
