@@ -8,7 +8,7 @@ import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 type TableName = 'customers' | 'products' | 'invoices' | 'quotations' | 'suppliers';
 
 interface MutationOptions {
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: Record<string, unknown> | null) => void;
   onError?: (error: Error) => void;
 }
 
@@ -26,14 +26,15 @@ export function useOfflineMutation(
       const newData = { ...data, id };
 
       if (isOnline) {
+        // Use type assertion for dynamic table operations
         const { data: result, error } = await supabase
           .from(table)
-          .insert(newData as Parameters<typeof supabase.from<typeof table>>['0'] extends string ? Record<string, unknown> : never)
+          .insert(newData as never)
           .select()
           .maybeSingle();
 
         if (error) throw error;
-        return result;
+        return result as Record<string, unknown> | null;
       }
 
       const cachedData = await getCachedData(table);
@@ -45,7 +46,7 @@ export function useOfflineMutation(
         description: 'سيتم المزامنة عند الاتصال بالإنترنت',
       });
 
-      return newData;
+      return newData as Record<string, unknown>;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [table] });
@@ -61,15 +62,16 @@ export function useOfflineMutation(
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
       if (isOnline) {
+        // Use type assertion for dynamic table operations
         const { data: result, error } = await supabase
           .from(table)
-          .update(data as Parameters<typeof supabase.from<typeof table>>['0'] extends string ? Record<string, unknown> : never)
+          .update(data as never)
           .eq('id', id)
           .select()
           .maybeSingle();
 
         if (error) throw error;
-        return result;
+        return result as Record<string, unknown> | null;
       }
 
       const cachedData = await getCachedData(table);
@@ -84,7 +86,7 @@ export function useOfflineMutation(
         description: 'سيتم المزامنة عند الاتصال بالإنترنت',
       });
 
-      return { id, ...data };
+      return { id, ...data } as Record<string, unknown>;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [table] });
