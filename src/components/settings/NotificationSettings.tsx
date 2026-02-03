@@ -243,7 +243,7 @@ export function NotificationSettings() {
               <Label className="text-destructive font-medium">عاجل</Label>
               <Select
                 value={settings.priority.high}
-                onValueChange={(value: any) => setPriority({ ...settings.priority, high: value })}
+                onValueChange={(value: 'sound_popup' | 'popup' | 'badge') => setPriority({ ...settings.priority, high: value })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -257,7 +257,7 @@ export function NotificationSettings() {
               <Label className="text-warning font-medium">عادي</Label>
               <Select
                 value={settings.priority.medium}
-                onValueChange={(value: any) => setPriority({ ...settings.priority, medium: value })}
+                onValueChange={(value: 'popup' | 'badge') => setPriority({ ...settings.priority, medium: value })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -270,7 +270,7 @@ export function NotificationSettings() {
               <Label className="text-muted-foreground font-medium">منخفض</Label>
               <Select
                 value={settings.priority.low}
-                onValueChange={(value: any) => setPriority({ ...settings.priority, low: value })}
+                onValueChange={(value: 'badge' | 'none') => setPriority({ ...settings.priority, low: value })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>

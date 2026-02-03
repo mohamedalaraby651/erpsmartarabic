@@ -25,7 +25,7 @@ interface DataTableHeaderProps {
   filterValue?: string | string[];
   filterType?: 'text' | 'select' | 'number' | 'date';
   filterOptions?: { label: string; value: string }[];
-  onFilter?: (key: string, value: any) => void;
+  onFilter?: (key: string, value: string | { min?: number; max?: number } | undefined) => void;
   className?: string;
 }
 

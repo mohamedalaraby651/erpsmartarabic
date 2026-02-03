@@ -17,7 +17,9 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
 type ProductVariant = Database['public']['Tables']['product_variants']['Row'];
-type ProductStock = Database['public']['Tables']['product_stock']['Row'];
+type ProductStock = Database['public']['Tables']['product_stock']['Row'] & {
+  warehouses?: { name: string } | null;
+};
 
 const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -288,7 +290,7 @@ const ProductDetailsPage = () => {
                 <p className="text-muted-foreground text-center py-8">لا يوجد مخزون مسجل</p>
               ) : (
                 <div className="space-y-3">
-                  {stockData.map((stock: any) => (
+                  {stockData.map((stock: ProductStock) => (
                     <div key={stock.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
                         <span className="font-medium">{stock.warehouses?.name || 'مستودع غير محدد'}</span>
