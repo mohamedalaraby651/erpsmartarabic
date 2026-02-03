@@ -1,593 +1,506 @@
 
-# خطة الإصلاح الشاملة والمستدامة
-## Comprehensive & Sustainable Fix Plan
+# خطة اكتشاف المشاكل الشاملة للنظام
+## Comprehensive System Issues Discovery Plan
 
 ---
 
-## المرحلة 1: إصلاحات البنية التحتية (Infrastructure Fixes)
-**الأولوية: P0 - حرجة | المدة: 4-5 ساعات**
+## 📊 نظرة عامة على النظام الحالي
 
-### 1.1 إصلاح نظام الاستيراد في BackupTab.tsx
-
-**المشكلة الجذرية:**
-```typescript
-// الكود الحالي (خاطئ):
-const cleanedRecords = records.map((record: any) => {
-  const { id, created_at, updated_at, ...rest } = record;
-  return rest;  // يزيل id
-});
-await supabase.from(tableName).upsert(cleanedRecords, { onConflict: 'id' }); // لا يعمل!
-```
-
-**الحل المستدام:**
-1. إنشاء آلية مطابقة ذكية باستخدام composite keys
-2. إضافة خيارات للمستخدم: "استبدال الكل" / "دمج" / "تخطي المكررات"
-3. عرض تقرير تفصيلي بعد الاستيراد
-
-**التغييرات:**
-```typescript
-// src/components/settings/BackupTab.tsx
-interface ImportOptions {
-  mode: 'replace' | 'merge' | 'skip_duplicates';
-  onConflict: string[]; // composite keys per table
-}
-
-const TABLE_MATCH_KEYS: Record<string, string[]> = {
-  customers: ['name', 'phone'],
-  products: ['sku', 'name'],
-  invoices: ['invoice_number'],
-  quotations: ['quotation_number'],
-  // ... لكل جدول
-};
-
-const handleSmartImport = async (data: ImportData, options: ImportOptions) => {
-  const results: ImportResult[] = [];
-  
-  for (const [tableName, records] of Object.entries(data)) {
-    const matchKeys = TABLE_MATCH_KEYS[tableName] || ['id'];
-    
-    for (const record of records) {
-      // البحث عن سجل مطابق
-      const existing = await findMatchingRecord(tableName, record, matchKeys);
-      
-      if (existing) {
-        if (options.mode === 'replace') {
-          await updateRecord(tableName, existing.id, record);
-          results.push({ table: tableName, action: 'updated', record });
-        } else if (options.mode === 'merge') {
-          await mergeRecord(tableName, existing.id, record);
-          results.push({ table: tableName, action: 'merged', record });
-        }
-        // skip_duplicates = لا شيء
-      } else {
-        await insertRecord(tableName, record);
-        results.push({ table: tableName, action: 'inserted', record });
-      }
-    }
-  }
-  
-  return results;
-};
-```
-
-**واجهة المستخدم الجديدة:**
-- إضافة Dialog لاختيار نمط الاستيراد
-- عرض ملخص قبل التنفيذ (سجلات جديدة / محدثة / متجاهلة)
-- عرض تقرير نهائي مفصل
+| العنصر | العدد/الحجم | الملاحظات |
+|--------|-------------|-----------|
+| **إجمالي الملفات** | ~280+ ملف | TS/TSX |
+| **المكونات (Components)** | 35 مجلد | 52 ملف UI |
+| **الصفحات (Pages)** | 27 مجلد | ~55 صفحة |
+| **Hooks** | 36 ملف | مخصصة |
+| **Edge Functions** | 7 وظائف | Supabase |
+| **جداول قاعدة البيانات** | ~56 جدول | من types.ts (2774 سطر) |
+| **عمليات الترحيل** | 26 migration | منذ 2025-12 |
+| **المكتبات المثبتة** | 79 dependency | prod + dev |
 
 ---
 
-### 1.2 تحسين نظام معالجة الأخطاء (Enhanced Error Handler)
+## 🔍 المحور الأول: مشاكل الملفات البرمجية
 
-**المشكلة:** رسالة "حدث خطأ" عامة جداً ولا تساعد المستخدم
+### 1.1 تحليل هيكل الملفات
 
-**الحل المستدام - إنشاء نظام أخطاء متعدد المستويات:**
+**الفحوصات المطلوبة:**
 
-```typescript
-// src/lib/errorHandler.ts (محسّن)
-
-interface ContextualError {
-  userMessage: string;      // رسالة للمستخدم
-  field?: string;           // الحقل المرتبط
-  action?: string;          // الإجراء المقترح
-  errorCode?: string;       // كود للتتبع
-}
-
-// خريطة أخطاء محسّنة مع سياق
-const CONTEXTUAL_ERROR_MAP: Record<string, ContextualError> = {
-  '23505': {
-    userMessage: 'هذا السجل موجود بالفعل',
-    action: 'تحقق من البيانات المدخلة أو عدّل السجل الموجود',
-  },
-  '23503': {
-    userMessage: 'لا يمكن حذف هذا السجل',
-    action: 'يجب حذف السجلات المرتبطة أولاً',
-  },
-  '23502': {
-    userMessage: 'يوجد حقل مطلوب فارغ',
-    action: 'يرجى ملء جميع الحقول المطلوبة (*)',
-  },
-  // ... المزيد
-};
-
-// دالة محسّنة مع سياق العملية
-export function getDetailedErrorMessage(
-  error: unknown, 
-  context?: { operation?: string; entity?: string }
-): ContextualError {
-  // تحليل الخطأ واستخراج تفاصيل
-  const baseError = parseError(error);
-  
-  // إضافة سياق العملية
-  if (context?.entity) {
-    baseError.userMessage = baseError.userMessage.replace(
-      'السجل', 
-      context.entity
-    );
-  }
-  
-  return baseError;
-}
-
-// دالة مساعدة للاستخدام في mutations
-export function handleMutationErrorWithContext(
-  error: unknown,
-  toast: ToastFunction,
-  context: { operation: string; entity: string }
-): void {
-  const errorInfo = getDetailedErrorMessage(error, context);
-  
-  toast({
-    title: `خطأ في ${context.operation} ${context.entity}`,
-    description: (
-      <div className="space-y-1">
-        <p>{errorInfo.userMessage}</p>
-        {errorInfo.action && (
-          <p className="text-xs text-muted-foreground">
-            💡 {errorInfo.action}
-          </p>
-        )}
-      </div>
-    ),
-    variant: 'destructive',
-  });
-}
+```text
+src/
+├── components/     # 35 مجلد - فحص التنظيم والتكرار
+│   ├── ui/        # 52 ملف - مكونات أساسية
+│   ├── shared/    # مكونات مشتركة
+│   └── [others]   # مكونات خاصة بالميزات
+├── pages/         # 27 مجلد - فحص حجم الصفحات
+├── hooks/         # 36 hook - فحص التكرار
+└── lib/           # 15 ملف - أدوات مساعدة
 ```
 
-**التطبيق في الملفات (12 ملف يحتاج تحديث):**
-| الملف | التغيير المطلوب |
-|-------|----------------|
-| ExpenseFormDialog.tsx | استخدام `handleMutationErrorWithContext` |
-| CashRegisterFormDialog.tsx | استخدام `handleMutationErrorWithContext` |
-| CashTransactionDialog.tsx | استخدام `handleMutationErrorWithContext` |
-| CategoriesPage.tsx | استخدام `getSafeErrorMessage` |
-| ExpenseCategoryFormDialog.tsx | استخدام `getSafeErrorMessage` |
-| ExpensesPage.tsx | استخدام `getSafeErrorMessage` |
-| AccountFormDialog.tsx | استخدام `getSafeErrorMessage` |
-| JournalFormDialog.tsx | استخدام `getSafeErrorMessage` |
-| JournalDetailDialog.tsx | استخدام `getSafeErrorMessage` |
-| TwoFactorSetup.tsx | استخدام `getSafeErrorMessage` |
-| InvoiceApprovalDialog.tsx | استخدام `getSafeErrorMessage` |
-| Auth.tsx | تحسين رسائل المصادقة |
+**المشاكل المحتملة للفحص:**
+
+| الفحص | الأداة/الطريقة | المعيار |
+|-------|---------------|---------|
+| ملفات كبيرة جداً | `wc -l` / قراءة الملفات | > 500 سطر |
+| تكرار الكود | بحث عن أنماط متشابهة | نفس المنطق في ملفات متعددة |
+| ملفات غير مستخدمة | تتبع الاستيرادات | ملفات بدون imports |
+| تبعيات دائرية | تحليل imports | A → B → A |
+| تسمية غير متناسقة | فحص أسماء الملفات | camelCase vs kebab-case |
+
+**النتائج الأولية المكتشفة:**
+
+1. **ملف types.ts ضخم** (2774 سطر) - يحتوي تعريفات كل الجداول
+2. **تكرار أنماط التحميل** في Form Dialogs (أكثر من 8 ملفات)
+3. **عدم وجود barrel exports** (index.ts) في معظم المجلدات
 
 ---
 
-## المرحلة 2: إصلاحات React والأداء
-**الأولوية: P0/P1 | المدة: 3-4 ساعات**
+### 1.2 تحليل حجم الملفات
 
-### 2.1 إصلاح تحذيرات forwardRef
+**الملفات الكبيرة للفحص:**
 
-**الملفات المتأثرة:**
-- `src/components/layout/MobileDrawer.tsx`
-- `src/components/ui/sheet.tsx`
-
-**الحل:**
-
-```typescript
-// MobileDrawer.tsx - تحديث
-const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(
-  function MobileDrawer({ open, onOpenChange, isDark, onThemeToggle }, ref) {
-    // ... الكود الحالي
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-[280px] p-0" ref={ref}>
-          {/* ... */}
-        </SheetContent>
-      </Sheet>
-    );
-  }
-);
-MobileDrawer.displayName = 'MobileDrawer';
-
-export default MobileDrawer;
-```
-
-### 2.2 تحسين الأداء الأولي
-
-**المشكلة:** FCP > 6 ثواني
-
-**الحلول:**
-1. **تأخير تحميل المكونات الثقيلة:**
-```typescript
-// src/App.tsx
-const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
-const ChartOfAccountsPage = lazy(() => import('./pages/accounting/ChartOfAccountsPage'));
-```
-
-2. **تحسين prefetch:**
-```typescript
-// src/lib/prefetch.ts
-export const prefetchCriticalRoutes = () => {
-  // تأخير prefetch للصفحات الثانوية
-  setTimeout(() => {
-    prefetchRoute('/customers');
-    prefetchRoute('/products');
-  }, 3000); // بعد التحميل الأولي
-};
-```
-
-3. **تحسين CSS الحرج:**
-```html
-<!-- index.html -->
-<link rel="preload" href="/fonts/Tajawal.woff2" as="font" crossorigin>
-<style>/* Critical CSS inline */</style>
-```
+| الملف | الحجم التقديري | الإجراء |
+|-------|----------------|---------|
+| `types.ts` | 2774 سطر | تقسيم حسب الموديولات |
+| `InvoiceFormDialog.tsx` | ~400+ سطر | تقسيم إلى مكونات |
+| `QuotationFormDialog.tsx` | ~350+ سطر | تقسيم إلى مكونات |
+| `AppSidebar.tsx` | ~584 سطر | استخراج منطق منفصل |
+| `MobileDrawer.tsx` | 470 سطر | تقسيم الأقسام |
 
 ---
 
-## المرحلة 3: تحسين واجهات النماذج (Responsive Forms)
-**الأولوية: P1 | المدة: 5-6 ساعات**
+## 🔍 المحور الثاني: مشاكل المكتبات المثبتة
 
-### 3.1 إنشاء مكون جدول منتجات متجاوب
+### 2.1 تحليل Dependencies
 
-**المشكلة:** جداول المنتجات في الفواتير/عروض الأسعار لا تعمل على الموبايل
+**المكتبات المثبتة (79 مكتبة):**
 
-**الحل المستدام - مكون موحد:**
-
-```typescript
-// src/components/shared/ResponsiveItemsTable.tsx
-interface ItemRow {
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  discount_percentage: number;
-  total_price: number;
-}
-
-interface ResponsiveItemsTableProps {
-  items: ItemRow[];
-  products: Product[];
-  onUpdateItem: (index: number, field: keyof ItemRow, value: any) => void;
-  onRemoveItem: (index: number) => void;
-  onAddItem: () => void;
-}
-
-export function ResponsiveItemsTable({
-  items,
-  products,
-  onUpdateItem,
-  onRemoveItem,
-  onAddItem,
-}: ResponsiveItemsTableProps) {
-  const isMobile = useIsMobile();
-
-  if (isMobile) {
-    return (
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <Label>المنتجات ({items.length})</Label>
-          <Button variant="outline" size="sm" onClick={onAddItem}>
-            <Plus className="h-4 w-4 ml-1" />
-            إضافة
-          </Button>
-        </div>
-        
-        {items.map((item, index) => (
-          <Card key={index} className="p-3">
-            <div className="space-y-3">
-              {/* Product Select - Full Width */}
-              <Select
-                value={item.product_id}
-                onValueChange={(v) => onUpdateItem(index, 'product_id', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر المنتج" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Quantity & Price Row */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">الكمية</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => onUpdateItem(index, 'quantity', +e.target.value || 1)}
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">السعر</Label>
-                  <Input
-                    type="number"
-                    value={item.unit_price}
-                    onChange={(e) => onUpdateItem(index, 'unit_price', +e.target.value || 0)}
-                  />
-                </div>
-              </div>
-
-              {/* Discount & Total Row */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs">خصم %</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    className="w-16"
-                    value={item.discount_percentage}
-                    onChange={(e) => onUpdateItem(index, 'discount_percentage', +e.target.value || 0)}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-lg">
-                    {item.total_price.toLocaleString()} ج.م
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive"
-                    onClick={() => onRemoveItem(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        {items.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            لا توجد منتجات - اضغط على "إضافة"
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Desktop: استخدام الجدول الحالي
-  return (
-    <div className="border rounded-lg overflow-x-auto">
-      <Table>
-        {/* ... الكود الحالي للجدول ... */}
-      </Table>
-    </div>
-  );
-}
+```json
+// Production Dependencies: 58
+// Dev Dependencies: 21
 ```
 
-### 3.2 تحديث نماذج الفواتير
+**الفحوصات المطلوبة:**
 
-**الملفات المتأثرة:**
-- `InvoiceFormDialog.tsx`
-- `QuotationFormDialog.tsx`
-- `SalesOrderFormDialog.tsx`
-- `PurchaseOrderFormDialog.tsx`
+| الفحص | الوصف |
+|-------|-------|
+| مكتبات غير مستخدمة | مثبتة ولكن لا تُستورد |
+| تكرار الوظائف | مكتبتان تؤديان نفس الغرض |
+| إصدارات قديمة | تحتاج تحديث أمني |
+| حجم Bundle | تأثير كل مكتبة على الحجم |
 
-**التغييرات:**
-1. استخدام `ResponsiveItemsTable` بدلاً من الجدول المباشر
-2. تحسين Dialog size للموبايل:
-```typescript
-<DialogContent className="max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-```
+**المشاكل المكتشفة:**
 
-3. إضافة scroll indicator للجداول الكبيرة
+1. **مكتبات Testing في Production:**
+   ```json
+   // هذه يجب أن تكون في devDependencies:
+   "@testing-library/dom": "^10.4.1",
+   "@testing-library/jest-dom": "^6.9.1",
+   "@testing-library/react": "^16.3.1",
+   "@testing-library/user-event": "^14.6.1",
+   "@vitest/coverage-v8": "^4.0.16",
+   "jsdom": "^27.4.0",
+   "msw": "^2.12.7",
+   "vitest": "^4.0.16"
+   ```
+   **الأثر:** زيادة حجم Bundle بـ ~500KB+
+
+2. **مكتبات ثقيلة:**
+   - `recharts` (~300KB)
+   - `xlsx` (~200KB)
+   - `jspdf` + `jspdf-autotable` (~400KB)
+
+3. **نقص مكتبات مهمة:**
+   | المكتبة الناقصة | الغرض |
+   |----------------|-------|
+   | `@tanstack/react-virtual` | Virtualization للقوائم الطويلة |
+   | `react-error-boundary` | Error handling محسّن |
+   | `swr` أو caching أفضل | تحسين الأداء |
 
 ---
 
-## المرحلة 4: إضافة Validation للبنود
-**الأولوية: P1 | المدة: 2-3 ساعات**
+### 2.2 تحليل Bundle Size
 
-### 4.1 إنشاء schema موحد للبنود
+**التقسيم الحالي (vite.config.ts):**
 
 ```typescript
-// src/lib/validations.ts (إضافات)
-
-export const documentItemSchema = z.object({
-  product_id: z.string().min(1, 'يجب اختيار منتج'),
-  quantity: z.number()
-    .min(1, 'الكمية يجب أن تكون 1 على الأقل')
-    .max(100000, 'الكمية كبيرة جداً'),
-  unit_price: z.number()
-    .min(0, 'السعر لا يمكن أن يكون سالباً')
-    .max(10000000, 'السعر كبير جداً'),
-  discount_percentage: z.number()
-    .min(0, 'الخصم لا يمكن أن يكون سالباً')
-    .max(100, 'الخصم لا يمكن أن يتجاوز 100%'),
-});
-
-export function validateDocumentItems(items: unknown[]): ValidationResult {
-  const errors: ItemValidationError[] = [];
-  
-  items.forEach((item, index) => {
-    const result = documentItemSchema.safeParse(item);
-    if (!result.success) {
-      errors.push({
-        index,
-        field: result.error.issues[0].path[0] as string,
-        message: result.error.issues[0].message,
-      });
-    }
-  });
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
+manualChunks: {
+  'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+  'vendor-query': ['@tanstack/react-query'],
+  'vendor-ui-core': [...], // Radix UI
+  'vendor-charts': ['recharts'],
+  'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+  'vendor-excel': ['xlsx'],
+  // ...
 }
 ```
 
-### 4.2 تطبيق Validation في النماذج
-
-```typescript
-// في كل نموذج (Quotation, SalesOrder, PurchaseOrder)
-const mutation = useMutation({
-  mutationFn: async (data: FormData) => {
-    // Validate items first
-    const itemsValidation = validateDocumentItems(items);
-    if (!itemsValidation.valid) {
-      const firstError = itemsValidation.errors[0];
-      throw new Error(`خطأ في الصف ${firstError.index + 1}: ${firstError.message}`);
-    }
-    
-    // ... باقي الكود
-  },
-});
-```
+**الفحص المطلوب:**
+- قياس حجم كل chunk
+- تحديد الـ chunks الكبيرة
+- فحص code splitting effectiveness
 
 ---
 
-## المرحلة 5: تحسينات إضافية (Polish)
-**الأولوية: P2 | المدة: 2-3 ساعات**
+## 🔍 المحور الثالث: مشاكل قاعدة البيانات
 
-### 5.1 إضافة تأكيد قبل حذف المفضلات
+### 3.1 نتائج فحص الأمان (Security Scan)
 
-```typescript
-// MobileDrawer.tsx
-const handleRemoveFavorite = (href: string) => {
-  if (window.confirm('هل تريد إزالة هذه الصفحة من المفضلة؟')) {
-    removeFavorite(href);
-    haptics.medium();
-  }
-};
-```
+**مشاكل خطيرة (6 ERROR):**
 
-### 5.2 توحيد تنسيق التاريخ
+| المشكلة | الجدول | الخطورة |
+|---------|--------|---------|
+| PUBLIC_EMPLOYEE_DATA | employees | ⛔ ERROR |
+| PUBLIC_CUSTOMER_DATA | customers | ⛔ ERROR |
+| PUBLIC_SUPPLIER_DATA | suppliers | ⛔ ERROR |
+| PUBLIC_USER_PROFILES | profiles | ⛔ ERROR |
+| EXPOSED_FINANCIAL_DATA | invoices, payments | ⛔ ERROR |
+| BANK_ACCOUNT_EXPOSURE | bank_accounts | ⛔ ERROR |
 
-```typescript
-// src/lib/dateFormatter.ts
-export function formatDate(date: string | Date, options?: FormatOptions): string {
-  return format(new Date(date), 'dd/MM/yyyy', { locale: ar });
-}
+**مشاكل تحذيرية (6 WARN):**
 
-export function formatDateTime(date: string | Date): string {
-  return format(new Date(date), 'dd/MM/yyyy HH:mm', { locale: ar });
-}
-```
-
-### 5.3 إضافة فحص الاتصال
-
-```typescript
-// src/hooks/useNetworkAwareSubmit.ts
-export function useNetworkAwareSubmit<T>(
-  submitFn: () => Promise<T>,
-  options?: { offlineMessage?: string }
-) {
-  const isOnline = useOnlineStatus();
-  
-  const submit = async () => {
-    if (!isOnline) {
-      toast.warning(options?.offlineMessage || 'لا يوجد اتصال بالإنترنت');
-      return null;
-    }
-    return submitFn();
-  };
-  
-  return { submit, isOnline };
-}
-```
-
----
-
-## ملخص الملفات المتأثرة
-
-### ملفات جديدة (4):
-```
-src/components/shared/ResponsiveItemsTable.tsx
-src/lib/dateFormatter.ts
-src/hooks/useNetworkAwareSubmit.ts
-src/components/settings/ImportOptionsDialog.tsx
-```
-
-### ملفات معدّلة (18):
-```
-src/components/settings/BackupTab.tsx          (إصلاح جذري)
-src/lib/errorHandler.ts                        (تحسين شامل)
-src/components/layout/MobileDrawer.tsx         (إصلاح forwardRef)
-src/components/ui/sheet.tsx                    (إصلاح forwardRef)
-src/components/invoices/InvoiceFormDialog.tsx  (responsive + validation)
-src/components/quotations/QuotationFormDialog.tsx
-src/components/sales-orders/SalesOrderFormDialog.tsx
-src/components/purchase-orders/PurchaseOrderFormDialog.tsx
-src/components/expenses/ExpenseFormDialog.tsx  (error handling)
-src/components/expenses/ExpenseCategoryFormDialog.tsx
-src/components/treasury/CashRegisterFormDialog.tsx
-src/components/treasury/CashTransactionDialog.tsx
-src/pages/categories/CategoriesPage.tsx
-src/pages/expenses/ExpensesPage.tsx
-src/components/accounting/AccountFormDialog.tsx
-src/components/accounting/JournalFormDialog.tsx
-src/components/auth/TwoFactorSetup.tsx
-src/lib/validations.ts                         (إضافات)
-```
-
----
-
-## جدول التنفيذ
-
-| المرحلة | المهام | المدة | الأولوية |
-|---------|--------|-------|----------|
-| 1.1 | إصلاح BackupTab (استيراد ذكي) | 2 ساعات | P0 |
-| 1.2 | تحسين errorHandler | 2 ساعات | P0 |
-| 2.1 | إصلاح forwardRef warnings | 1 ساعة | P0 |
-| 2.2 | تحسين الأداء الأولي | 2 ساعات | P1 |
-| 3.1 | إنشاء ResponsiveItemsTable | 2 ساعات | P1 |
-| 3.2 | تحديث 4 نماذج | 3 ساعات | P1 |
-| 4.1 | إضافة validation schema | 1 ساعة | P1 |
-| 4.2 | تطبيق validation | 1 ساعة | P1 |
-| 5.x | تحسينات إضافية | 2 ساعات | P2 |
-| **الإجمالي** | | **16-18 ساعة** | |
-
----
-
-## معايير النجاح
-
-| المعيار | الهدف |
+| المشكلة | الوصف |
 |---------|-------|
-| استيراد النسخ الاحتياطية | 0 سجلات مكررة |
-| رسائل الخطأ | تحتوي على سياق وإجراء مقترح |
-| تحذيرات React Console | 0 تحذيرات |
-| FCP (First Contentful Paint) | < 2.5 ثانية |
-| نماذج الموبايل | قابلة للاستخدام 100% |
-| أخطاء error.message المكشوفة | 0 |
+| MISSING_RLS_PROTECTION | customer_addresses |
+| ACTIVITY_LOG_EXPOSURE | activity_logs |
+| ROLE_PERMISSION_EXPOSURE | role tables |
+| SYSTEM_SETTINGS_EXPOSURE | system_settings |
+| EXPENSE_DATA_EXPOSURE | expenses |
+| NOTIFICATION_CONTENT_RISK | notifications |
+
+### 3.2 فحوصات إضافية مطلوبة
+
+| الفحص | الأداة | الغرض |
+|-------|--------|-------|
+| سلامة العلاقات | FK analysis | التحقق من العلاقات |
+| فهرسة الجداول | Index analysis | تحسين الأداء |
+| حجم البيانات | Table sizes | تخطيط التوسع |
+| تكرار البيانات | Duplicate check | data integrity |
+| Triggers | Trigger analysis | side effects |
+
+### 3.3 هيكل الجداول
+
+**الجداول الرئيسية (من types.ts):**
+
+```text
+├── activity_logs        # سجل النشاط
+├── attachments         # المرفقات
+├── bank_accounts       # الحسابات البنكية
+├── cash_registers      # صناديق النقد
+├── cash_transactions   # معاملات النقد
+├── chart_of_accounts   # دليل الحسابات
+├── customers           # العملاء
+├── employees           # الموظفين
+├── invoices           # الفواتير
+├── payments           # المدفوعات
+├── products           # المنتجات
+├── suppliers          # الموردين
+└── [+40 جدول آخر]
+```
 
 ---
 
-## الاستدامة المستقبلية
+## 🔍 المحور الرابع: مشاكل واجهة المستخدم
 
-### قواعد الكود الجديدة:
-1. **كل `onError` جديد** يجب أن يستخدم `getSafeErrorMessage` أو `handleMutationErrorWithContext`
-2. **كل نموذج بنود** يستخدم `ResponsiveItemsTable`
-3. **كل تاريخ** يستخدم `formatDate` من `dateFormatter.ts`
-4. **كل عملية شبكة حرجة** تستخدم `useNetworkAwareSubmit`
+### 4.1 مشاكل React و TypeScript
 
-### ESLint Rules المقترحة:
-```javascript
-// eslint.config.js
-rules: {
-  'no-restricted-syntax': [
-    'error',
-    {
-      selector: "MemberExpression[property.name='message'][object.name='error']",
-      message: "Use getSafeErrorMessage(error) instead of error.message",
-    },
-  ],
+**من نتائج البحث:**
+
+| المشكلة | عدد الملفات | الخطورة |
+|---------|-------------|---------|
+| استخدام `any` | 48+ ملف | ⚠️ متوسطة |
+| `error.message` مكشوف | 10 ملفات | 🔴 عالية |
+| `console.log` في Production | 10+ ملفات | ⚠️ متوسطة |
+
+**ملفات تحتاج إصلاح `any`:**
+
+```typescript
+// أمثلة من البحث:
+src/components/accounting/JournalDetailDialog.tsx: (error: any)
+src/components/accounting/AccountFormDialog.tsx: (error: any)
+src/components/suppliers/SupplierPurchasesChart.tsx: CustomTooltip = ({ active, payload, label }: any)
+```
+
+### 4.2 مشاكل forwardRef
+
+**تم إصلاح MobileDrawer.tsx** - يستخدم forwardRef صحيحاً
+
+**مكونات تستخدم forwardRef (50+ ملف):**
+- جميع مكونات UI الأساسية ✅
+- `sheet.tsx` ✅
+- `MobileDrawer.tsx` ✅
+
+### 4.3 مشاكل Accessibility
+
+**الفحوصات المطلوبة:**
+
+| الفحص | الأداة | المعيار |
+|-------|--------|---------|
+| ARIA labels | axe-core | WCAG 2.1 |
+| Keyboard navigation | Manual test | Tab order |
+| Color contrast | Lighthouse | 4.5:1 ratio |
+| Screen reader | NVDA/VoiceOver | Full support |
+| RTL support | Visual check | Arabic layout |
+
+### 4.4 مشاكل التصميم المتجاوب
+
+**من التحليل السابق:**
+
+| المشكلة | الملفات | الحل |
+|---------|---------|------|
+| جداول غير متجاوبة | Form Dialogs | ResponsiveItemsTable |
+| عرض ثابت | max-w-4xl | تعديل للموبايل |
+| overflow أفقي | Tables | scroll + cards |
+
+---
+
+## 🔍 المحور الخامس: مشاكل السرعة والأداء
+
+### 5.1 قياسات Core Web Vitals
+
+**من performanceMonitor.ts:**
+
+```typescript
+const thresholds = {
+  fcp: { good: 1800, poor: 3000 },  // First Contentful Paint
+  lcp: { good: 2500, poor: 4000 },  // Largest Contentful Paint
+  cls: { good: 0.1, poor: 0.25 },   // Cumulative Layout Shift
+  fid: { good: 100, poor: 300 },    // First Input Delay
+  ttfb: { good: 800, poor: 1800 },  // Time to First Byte
+};
+```
+
+**نتائج سابقة (من Console Logs):**
+- FCP: 6384ms ❌ (الهدف < 1800ms)
+- LCP: 6736ms ❌ (الهدف < 2500ms)
+- CLS: 36.31ms ❌
+
+### 5.2 تحسينات الأداء الموجودة
+
+**✅ موجود:**
+- Lazy loading للصفحات (55 صفحة)
+- Code splitting (manualChunks)
+- React.memo في 26 مكون
+- useMemo في التقارير والقوائم
+- staleTime 5 دقائق
+
+**❌ مطلوب:**
+| التحسين | الغرض | الأولوية |
+|---------|-------|----------|
+| Image optimization | تقليل حجم الصور | عالية |
+| Font subsetting | تحميل أحرف عربية فقط | متوسطة |
+| Critical CSS | CSS الحرج inline | عالية |
+| Prefetch optimization | تحميل مسبق ذكي | متوسطة |
+| Virtual scrolling | للقوائم الطويلة | عالية |
+
+### 5.3 فحص Bundle
+
+**الفحوصات المطلوبة:**
+
+```bash
+# تحليل حجم البناء
+vite build --mode development
+# فحص أحجام الـ chunks
+# تحديد الملفات الكبيرة
+```
+
+---
+
+## 🔍 المحور السادس: مشاكل المصادقة
+
+### 6.1 نظام المصادقة الحالي
+
+**الموجود:**
+- `useAuth.tsx` - Context للمصادقة
+- Supabase Auth integration
+- Role-based access (admin, sales, accountant, warehouse, hr)
+- Two-Factor Authentication (2FA) - `TwoFactorSetup.tsx`
+
+### 6.2 الفحوصات المطلوبة
+
+| الفحص | الملف | الغرض |
+|-------|-------|-------|
+| Session handling | useAuth.tsx | التحقق من إدارة الجلسات |
+| Token refresh | Supabase client | التحديث التلقائي |
+| Protected routes | App.tsx | حماية المسارات |
+| Password policy | Auth.tsx | قوة كلمة المرور |
+| Rate limiting | Edge functions | منع الهجمات |
+
+### 6.3 مشاكل محتملة
+
+**من الكود:**
+
+```typescript
+// Auth.tsx - معالجة الأخطاء:
+if (error.message.includes('Invalid login credentials')) {
+  toast.error('بيانات الدخول غير صحيحة');
 }
 ```
+
+**المشاكل:**
+1. كشف نوع الخطأ للمستخدم (يساعد المهاجمين)
+2. لا يوجد rate limiting واضح
+3. لا يوجد CAPTCHA
+
+---
+
+## 🔍 المحور السابع: مشاكل العرض
+
+### 7.1 RTL Support
+
+**الموجود في index.css:**
+```css
+:root { direction: rtl; }
+html { direction: rtl; }
+```
+
+**الفحص المطلوب:**
+- التحقق من كل المكونات
+- الأيقونات والأسهم
+- الـ animations
+- الـ transitions
+
+### 7.2 Theming
+
+**الموجود:**
+- Light/Dark mode ✅
+- CSS Variables ✅
+- `themeManager.ts` ✅
+
+**الفحص:**
+| الفحص | الغرض |
+|-------|-------|
+| Color consistency | تناسق الألوان |
+| Contrast ratios | نسب التباين |
+| Component themes | ثيمات المكونات |
+
+### 7.3 Print Styling
+
+**ملفات الطباعة:**
+- `InvoicePrintView.tsx`
+- `QuotationPrintView.tsx`
+- `SalesOrderPrintView.tsx`
+- `PurchaseOrderPrintView.tsx`
+
+**الفحص:** التأكد من طباعة صحيحة للوثائق
+
+---
+
+## 🔍 المحور الثامن: مشاكل الاستدامة
+
+### 8.1 جودة الكود
+
+**ESLint Rules الحالية:**
+```javascript
+rules: {
+  ...reactHooks.configs.recommended.rules,
+  "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+  "@typescript-eslint/no-unused-vars": "off", // ⚠️ معطل!
+}
+```
+
+**القواعد الناقصة:**
+| القاعدة | الغرض |
+|---------|-------|
+| `@typescript-eslint/no-explicit-any` | منع any |
+| `no-console` | منع console في production |
+| `import/no-cycle` | منع التبعيات الدائرية |
+| `react/no-array-index-key` | منع key بـ index |
+
+### 8.2 Documentation
+
+**الموجود:**
+- `docs/PROJECT_DOCUMENTATION.md`
+- `docs/PROJECT_PROGRESS.md`
+- `docs/Q1_COMPLETION_REPORT.md`
+- `docs/Q1_SECURITY_DOCUMENTATION.md`
+
+**الناقص:**
+| الوثيقة | الغرض |
+|---------|-------|
+| API Documentation | توثيق Edge Functions |
+| Component Storybook | توثيق المكونات |
+| Database Schema Diagram | رسم بياني للقاعدة |
+| Deployment Guide | دليل النشر |
+
+### 8.3 Testing
+
+**الموجود:**
+```text
+src/__tests__/
+├── integration/   # 12 ملف
+├── security/      # 5 ملفات
+└── unit/          # 17+ ملف (hooks, lib)
+```
+
+**الفحص:**
+- نسبة التغطية (Coverage)
+- اختبارات E2E
+- اختبارات الأداء
+
+---
+
+## 📋 جدول التنفيذ المقترح
+
+### المرحلة 1: الفحص الآلي (2-3 ساعات)
+
+| المهمة | الأداة | الوقت |
+|--------|--------|-------|
+| تحليل Bundle | `vite-bundle-analyzer` | 30 دقيقة |
+| فحص TypeScript | `tsc --noEmit` | 15 دقيقة |
+| فحص ESLint موسع | قواعد إضافية | 30 دقيقة |
+| فحص الأمان | Security scanner | 30 دقيقة |
+| فحص Accessibility | Lighthouse/axe | 30 دقيقة |
+| قياس الأداء | Web Vitals | 30 دقيقة |
+
+### المرحلة 2: الفحص اليدوي (3-4 ساعات)
+
+| المهمة | الوصف | الوقت |
+|--------|-------|-------|
+| مراجعة الكود | Code review للملفات الكبيرة | 1 ساعة |
+| اختبار UI | اختبار التجاوب والـ RTL | 1 ساعة |
+| اختبار المصادقة | تدفقات تسجيل الدخول | 45 دقيقة |
+| اختبار الطباعة | طباعة الوثائق | 30 دقيقة |
+| اختبار Offline | PWA offline mode | 30 دقيقة |
+
+### المرحلة 3: توثيق النتائج (1-2 ساعات)
+
+| المهمة | الناتج |
+|--------|--------|
+| تجميع المشاكل | جدول شامل |
+| تصنيف الأولويات | P0/P1/P2 |
+| تقدير الجهد | ساعات لكل إصلاح |
+| خطة العمل | Roadmap |
+
+---
+
+## 📊 ملخص المشاكل المكتشفة مبدئياً
+
+| الفئة | عدد المشاكل | الخطورة |
+|-------|-------------|---------|
+| الأمان (RLS) | 12 | 🔴 عالية |
+| الأداء | 5+ | 🟠 متوسطة |
+| TypeScript (any) | 48+ ملف | 🟡 منخفضة |
+| error.message مكشوف | 10 ملفات | 🔴 عالية |
+| console.log | 10+ ملفات | 🟡 منخفضة |
+| Testing deps في prod | 8 مكتبات | 🟠 متوسطة |
+| ملفات كبيرة | 5+ ملفات | 🟡 منخفضة |
+| التوثيق | 4 وثائق ناقصة | 🟡 منخفضة |
+
+---
+
+## 🎯 التوصيات الفورية
+
+### أولوية P0 (حرجة):
+1. إصلاح مشاكل RLS (6 ERROR)
+2. إخفاء error.message في 10 ملفات
+3. نقل Testing dependencies لـ devDependencies
+
+### أولوية P1 (عالية):
+1. تحسين أداء FCP/LCP
+2. إزالة console.log من Production
+3. إضافة قواعد ESLint صارمة
+
+### أولوية P2 (متوسطة):
+1. تقليل استخدام `any`
+2. تقسيم الملفات الكبيرة
+3. تحسين التوثيق
