@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+
+// Virtual scrolling
+import { VirtualizedList } from "@/components/table/VirtualizedList";
 
 // Mobile components
 import { DataCard } from "@/components/mobile/DataCard";
@@ -139,20 +142,20 @@ const ProductsPage = () => {
   // Sorting
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = useCallback((product: Product) => {
     setSelectedProduct(product);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setSelectedProduct(null);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     setDeletingId(id);
     deleteMutation.mutate(id);
-  };
+  }, [deleteMutation]);
 
   const handleRefresh = async () => {
     await refetch();
@@ -165,7 +168,36 @@ const ProductsPage = () => {
     categories: categories.length,
   };
 
-  // Render mobile list view
+  // Memoized product card renderer for virtual list
+  const renderProductCard = useCallback((product: Product) => {
+    const stock = getProductStock(product.id);
+    const isLowStock = stock <= (product.min_stock || 0);
+    
+    return (
+      <DataCard
+        key={product.id}
+        title={product.name}
+        subtitle={product.sku ? `كود: ${product.sku}` : getCategoryName(product.category_id)}
+        avatar={product.image_url || undefined}
+        avatarFallback={product.name.slice(0, 2)}
+        icon={<Package className="h-5 w-5" />}
+        badge={isLowStock ? {
+          text: 'مخزون منخفض',
+          variant: 'destructive',
+        } : undefined}
+        fields={[
+          { label: 'السعر', value: `${Number(product.selling_price).toLocaleString()} ج.م` },
+          { label: 'المخزون', value: stock.toString(), icon: isLowStock ? <AlertTriangle className="h-3 w-3" /> : undefined },
+        ]}
+        onClick={() => navigate(`/products/${product.id}`)}
+        onView={() => navigate(`/products/${product.id}`)}
+        onEdit={canEdit ? () => handleEdit(product) : undefined}
+        onDelete={canDelete ? () => handleDelete(product.id) : undefined}
+      />
+    );
+  }, [navigate, canEdit, canDelete, handleEdit, handleDelete, getProductStock, getCategoryName]);
+
+  // Render mobile list view with virtual scrolling
   const renderMobileView = () => {
     if (isLoading) {
       return <MobileListSkeleton count={5} />;
@@ -182,36 +214,28 @@ const ProductsPage = () => {
       );
     }
 
+    // Use virtual scrolling for large lists (50+ items)
+    if (sortedData.length > 50) {
+      return (
+        <PullToRefresh onRefresh={handleRefresh}>
+          <VirtualizedList
+            data={sortedData}
+            renderItem={(product) => renderProductCard(product)}
+            getItemKey={(product) => product.id}
+            itemHeight={140}
+            maxHeight={window.innerHeight - 280}
+            gap={12}
+            className="px-1"
+          />
+        </PullToRefresh>
+      );
+    }
+
+    // Use regular rendering for small lists
     return (
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="space-y-3">
-          {sortedData.map((product) => {
-            const stock = getProductStock(product.id);
-            const isLowStock = stock <= (product.min_stock || 0);
-            
-            return (
-              <DataCard
-                key={product.id}
-                title={product.name}
-                subtitle={product.sku ? `كود: ${product.sku}` : getCategoryName(product.category_id)}
-                avatar={product.image_url || undefined}
-                avatarFallback={product.name.slice(0, 2)}
-                icon={<Package className="h-5 w-5" />}
-                badge={isLowStock ? {
-                  text: 'مخزون منخفض',
-                  variant: 'destructive',
-                } : undefined}
-                fields={[
-                  { label: 'السعر', value: `${Number(product.selling_price).toLocaleString()} ج.م` },
-                  { label: 'المخزون', value: stock.toString(), icon: isLowStock ? <AlertTriangle className="h-3 w-3" /> : undefined },
-                ]}
-                onClick={() => navigate(`/products/${product.id}`)}
-                onView={() => navigate(`/products/${product.id}`)}
-                onEdit={canEdit ? () => handleEdit(product) : undefined}
-                onDelete={canDelete ? () => handleDelete(product.id) : undefined}
-              />
-            );
-          })}
+          {sortedData.map((product) => renderProductCard(product))}
         </div>
       </PullToRefresh>
     );
