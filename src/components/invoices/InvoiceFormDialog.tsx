@@ -28,11 +28,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/lib/validations";
+import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -197,6 +198,8 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
     return `INV-${year}${month}-${random}`;
   };
 
+  const [isValidating, setIsValidating] = useState(false);
+
   const mutation = useMutation({
     mutationFn: async (data: InvoiceFormData) => {
       if (items.length === 0) {
@@ -211,6 +214,28 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
         const result = invoiceItemSchema.safeParse(item);
         if (!result.success) {
           throw new Error(result.error.issues[0].message);
+        }
+      }
+
+      // Step 1: Server-side validation via Edge Function (for new invoices)
+      if (!isEditing) {
+        setIsValidating(true);
+        try {
+          const validation = await validateInvoice({
+            customer_id: data.customer_id,
+            total_amount: total,
+            items: items.map(item => ({
+              product_id: item.product_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+            })),
+          });
+
+          if (!validation.valid) {
+            throw new Error(getErrorMessage(validation.code || 'VALIDATION_ERROR'));
+          }
+        } finally {
+          setIsValidating(false);
         }
       }
 
@@ -269,7 +294,10 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast({ title: isEditing ? "تم تحديث الفاتورة بنجاح" : "تم إنشاء الفاتورة بنجاح" });
+      toast({ 
+        title: isEditing ? "تم تحديث الفاتورة بنجاح" : "تم إنشاء الفاتورة بنجاح",
+        description: "تم التحقق من الصلاحيات والحدود المالية",
+      });
       onOpenChange(false);
     },
     onError: (error) => {
@@ -481,8 +509,19 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إنشاء'}
+            <Button type="submit" disabled={mutation.isPending || isValidating}>
+              {isValidating ? (
+                <>
+                  <ShieldCheck className="h-4 w-4 ml-2 animate-pulse" />
+                  جاري التحقق...
+                </>
+              ) : mutation.isPending ? (
+                'جاري الحفظ...'
+              ) : isEditing ? (
+                'تحديث'
+              ) : (
+                'إنشاء'
+              )}
             </Button>
           </div>
         </form>

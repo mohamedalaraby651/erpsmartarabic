@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -20,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { paymentSchema, type PaymentFormData } from "@/lib/validations";
+import { processPayment, getErrorMessage } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -105,6 +107,8 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
     }
   }, [open, reset]);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const generatePaymentNumber = () => {
     const date = new Date();
     const year = date.getFullYear();
@@ -115,50 +119,36 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
 
   const mutation = useMutation({
     mutationFn: async (data: PaymentFormData) => {
-      const paymentData = {
-        customer_id: data.customer_id,
-        invoice_id: data.invoice_id || null,
-        payment_number: generatePaymentNumber(),
-        amount: data.amount,
-        payment_method: data.payment_method,
-        payment_date: data.payment_date,
-        reference_number: data.reference_number?.trim() || null,
-        notes: data.notes?.trim() || null,
-        created_by: user?.id || null,
-      };
+      setIsProcessing(true);
+      try {
+        // Use secure Edge Function for payment processing
+        const result = await processPayment({
+          customer_id: data.customer_id,
+          invoice_id: data.invoice_id || undefined,
+          amount: data.amount,
+          payment_method: data.payment_method as 'cash' | 'credit_card' | 'bank_transfer' | 'check',
+          payment_number: generatePaymentNumber(),
+          reference_number: data.reference_number?.trim() || undefined,
+          notes: data.notes?.trim() || undefined,
+        });
 
-      const { error } = await supabase
-        .from('payments')
-        .insert(paymentData);
-      if (error) throw error;
-
-      // Update invoice paid amount if linked
-      if (data.invoice_id) {
-        const invoice = customerInvoices.find(i => i.id === data.invoice_id);
-        if (invoice) {
-          const newPaidAmount = Number(invoice.paid_amount || 0) + data.amount;
-          const totalAmount = Number(invoice.total_amount);
-          const newPaymentStatus = newPaidAmount >= totalAmount ? 'paid' : 
-                                   newPaidAmount > 0 ? 'partial' : 'pending';
-
-          await supabase
-            .from('invoices')
-            .update({ 
-              paid_amount: newPaidAmount,
-              payment_status: newPaymentStatus 
-            })
-            .eq('id', data.invoice_id);
+        if (!result.success) {
+          throw new Error(getErrorMessage(result.code || 'PAYMENT_ERROR'));
         }
-      }
 
-      // Note: Customer balance update would need a database function
-      // For now, we just record the payment
+        return result;
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      toast({ title: "تم تسجيل الدفعة بنجاح" });
+      toast({ 
+        title: "تم تسجيل الدفعة بنجاح",
+        description: "تم تحديث رصيد العميل والفاتورة تلقائياً",
+      });
       onOpenChange(false);
     },
     onError: (error) => {
@@ -299,8 +289,17 @@ const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'جاري الحفظ...' : 'تسجيل الدفعة'}
+            <Button type="submit" disabled={mutation.isPending || isProcessing}>
+              {isProcessing ? (
+                <>
+                  <ShieldCheck className="h-4 w-4 ml-2 animate-pulse" />
+                  جاري المعالجة...
+                </>
+              ) : mutation.isPending ? (
+                'جاري الحفظ...'
+              ) : (
+                'تسجيل الدفعة'
+              )}
             </Button>
           </div>
         </form>

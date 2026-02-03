@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,9 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
+import { processStockMovement, getErrorMessage } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -91,48 +94,45 @@ const StockMovementDialog = ({ open, onOpenChange }: StockMovementDialogProps) =
 
   const movementType = watch('movement_type');
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       if (data.quantity <= 0) {
         throw new Error('الكمية يجب أن تكون أكبر من صفر');
       }
 
-      // Record the movement
-      const movementData = {
-        product_id: data.product_id,
-        movement_type: data.movement_type,
-        quantity: data.quantity,
-        from_warehouse_id: data.movement_type === 'out' || data.movement_type === 'transfer' 
-          ? data.from_warehouse_id : null,
-        to_warehouse_id: data.movement_type === 'in' || data.movement_type === 'transfer' 
-          ? data.to_warehouse_id : null,
-        notes: data.notes || null,
-        created_by: user?.id || null,
-      };
+      setIsProcessing(true);
+      try {
+        // Use secure Edge Function for stock movement
+        const result = await processStockMovement({
+          product_id: data.product_id,
+          movement_type: data.movement_type,
+          quantity: data.quantity,
+          from_warehouse_id: (data.movement_type === 'out' || data.movement_type === 'transfer')
+            ? data.from_warehouse_id : undefined,
+          to_warehouse_id: (data.movement_type === 'in' || data.movement_type === 'transfer')
+            ? data.to_warehouse_id : undefined,
+          notes: data.notes || undefined,
+        });
 
-      const { error: movementError } = await supabase
-        .from('stock_movements')
-        .insert(movementData);
-      if (movementError) throw movementError;
+        if (!result.success) {
+          throw new Error(getErrorMessage(result.code || 'MOVEMENT_ERROR'));
+        }
 
-      // Update stock based on movement type
-      if (data.movement_type === 'in' && data.to_warehouse_id) {
-        await updateStock(data.product_id, data.to_warehouse_id, data.quantity);
-      } else if (data.movement_type === 'out' && data.from_warehouse_id) {
-        await updateStock(data.product_id, data.from_warehouse_id, -data.quantity);
-      } else if (data.movement_type === 'transfer') {
-        if (data.from_warehouse_id) {
-          await updateStock(data.product_id, data.from_warehouse_id, -data.quantity);
-        }
-        if (data.to_warehouse_id) {
-          await updateStock(data.product_id, data.to_warehouse_id, data.quantity);
-        }
+        return result;
+      } finally {
+        setIsProcessing(false);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['product-stock-all'] });
       queryClient.invalidateQueries({ queryKey: ['low-stock-items'] });
-      toast({ title: "تم تسجيل حركة المخزون بنجاح" });
+      queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
+      toast({ 
+        title: "تم تسجيل حركة المخزون بنجاح",
+        description: "تم التحقق من الصلاحيات وتحديث المخزون",
+      });
       reset();
       onOpenChange(false);
     },
@@ -141,32 +141,6 @@ const StockMovementDialog = ({ open, onOpenChange }: StockMovementDialogProps) =
       toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
-
-  const updateStock = async (productId: string, warehouseId: string, quantityChange: number) => {
-    // Check if stock record exists
-    const { data: existing } = await supabase
-      .from('product_stock')
-      .select('id, quantity')
-      .eq('product_id', productId)
-      .eq('warehouse_id', warehouseId)
-      .maybeSingle();
-
-    if (existing) {
-      const newQuantity = existing.quantity + quantityChange;
-      await supabase
-        .from('product_stock')
-        .update({ quantity: Math.max(0, newQuantity) })
-        .eq('id', existing.id);
-    } else if (quantityChange > 0) {
-      await supabase
-        .from('product_stock')
-        .insert({
-          product_id: productId,
-          warehouse_id: warehouseId,
-          quantity: quantityChange,
-        });
-    }
-  };
 
   const onSubmit = (data: FormData) => {
     mutation.mutate(data);
@@ -284,8 +258,17 @@ const StockMovementDialog = ({ open, onOpenChange }: StockMovementDialogProps) =
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'جاري الحفظ...' : 'تسجيل الحركة'}
+            <Button type="submit" disabled={mutation.isPending || isProcessing}>
+              {isProcessing ? (
+                <>
+                  <ShieldCheck className="h-4 w-4 ml-2 animate-pulse" />
+                  جاري المعالجة...
+                </>
+              ) : mutation.isPending ? (
+                'جاري الحفظ...'
+              ) : (
+                'تسجيل الحركة'
+              )}
             </Button>
           </div>
         </form>
