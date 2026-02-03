@@ -123,7 +123,9 @@ const BackupPage = () => {
           .select('*');
         
         if (error) {
-          console.error(`Error fetching ${tableName}:`, error);
+          if (import.meta.env.DEV) {
+            console.error(`Error fetching ${tableName}:`, error);
+          }
           continue;
         }
         
@@ -147,7 +149,9 @@ const BackupPage = () => {
 
       toast.success('تم تصدير النسخة الاحتياطية بنجاح');
     } catch (error) {
-      console.error('Export error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Export error:', error);
+      }
       toast.error('حدث خطأ أثناء التصدير');
     } finally {
       setIsExporting(false);
@@ -254,14 +258,18 @@ const BackupPage = () => {
         const data = JSON.parse(text);
         
         toast.info('تم تحميل الملف. الاستيراد غير مفعل حالياً للحماية من فقدان البيانات.');
-        console.log('Imported data structure:', Object.keys(data));
+        if (import.meta.env.DEV) {
+          console.log('Imported data structure:', Object.keys(data));
+        }
       } else if (file.name.endsWith('.xlsx')) {
         toast.info('استيراد ملفات Excel سيكون متاحاً قريباً');
       } else {
         toast.error('صيغة الملف غير مدعومة');
       }
     } catch (error) {
-      console.error('Import error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Import error:', error);
+      }
       toast.error('حدث خطأ أثناء قراءة الملف');
     } finally {
       setIsImporting(false);

@@ -120,9 +120,9 @@ const InvoicesPage = () => {
   });
 
   // Filter by search
-  const searchFiltered = invoices.filter((inv: any) =>
+  const searchFiltered = invoices.filter((inv) =>
     inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    inv.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    (inv.customers as { name?: string } | null)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
@@ -130,11 +130,11 @@ const InvoicesPage = () => {
 
   const stats = {
     total: invoices.length,
-    unpaid: invoices.filter((i: any) => i.payment_status === 'pending').length,
-    totalValue: invoices.reduce((sum: number, i: any) => sum + Number(i.total_amount), 0),
+    unpaid: invoices.filter((i) => i.payment_status === 'pending').length,
+    totalValue: invoices.reduce((sum: number, i) => sum + Number(i.total_amount), 0),
     unpaidValue: invoices
-      .filter((i: any) => i.payment_status !== 'paid')
-      .reduce((sum: number, i: any) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
+      .filter((i) => i.payment_status !== 'paid')
+      .reduce((sum: number, i) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
   };
 
   const handleEdit = (invoice: Invoice) => {
@@ -216,7 +216,7 @@ const InvoicesPage = () => {
             />
           ) : (
             <div className="space-y-3">
-              {sortedData.map((invoice: any) => {
+              {sortedData.map((invoice) => {
                 const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
                 return (
                   <DataCard
@@ -323,7 +323,7 @@ const InvoicesPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map((invoice: any) => {
+            {sortedData.map((invoice) => {
               const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
               return (
                 <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>

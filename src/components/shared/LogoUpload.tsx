@@ -77,7 +77,7 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
 
       onUpload(urlData.signedUrl);
       toast.success('تم رفع الشعار بنجاح');
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (import.meta.env.DEV) {
         console.error('Upload error:', error);
       }

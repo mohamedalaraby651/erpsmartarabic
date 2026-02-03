@@ -127,7 +127,9 @@ export function useFileHandling() {
       }
       
       setFiles(processedFiles);
-      console.log('[File Handling] Processed files:', processedFiles);
+      if (import.meta.env.DEV) {
+        console.log('[File Handling] Processed files:', processedFiles);
+      }
       
       return processedFiles;
     } catch (err) {

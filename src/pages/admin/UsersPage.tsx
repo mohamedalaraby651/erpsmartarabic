@@ -93,7 +93,7 @@ export default function UsersPage() {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
       toast.success('تم تحديث الدور');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('UsersPage.updateRoleMutation', error);
       toast.error(getSafeErrorMessage(error));
     },

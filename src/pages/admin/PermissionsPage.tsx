@@ -123,7 +123,7 @@ export default function PermissionsPage() {
       queryClient.invalidateQueries({ queryKey: ['role-permissions'] });
       toast.success('تم حفظ الصلاحيات بنجاح');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logErrorSafely('PermissionsPage.saveMutation', error);
       toast.error(getSafeErrorMessage(error));
     },
