@@ -2320,9 +2320,37 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      security_dashboard: {
+        Row: {
+          action: string | null
+          action_count: number | null
+          entity_type: string | null
+          time_bucket: string | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
+      suspicious_activities: {
+        Row: {
+          action: string | null
+          entity_type: string | null
+          first_action: string | null
+          frequency: number | null
+          last_action: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_financial_limit: {
+        Args: { _limit_type: string; _user_id: string; _value: number }
+        Returns: boolean
+      }
+      check_section_permission: {
+        Args: { _action: string; _section: string; _user_id: string }
+        Returns: boolean
+      }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
