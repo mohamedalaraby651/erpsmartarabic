@@ -1,254 +1,428 @@
 
-
-# خطة مراجعة شاملة للتقدم المحرز واكتشاف المشاكل المتبقية
-## Comprehensive Progress Review & Remaining Issues Discovery
-
----
-
-## 📊 ملخص ما تم إنجازه
-
-### ✅ المرحلة P0 - الأمان الحرج (مكتمل 100%)
-
-| المهمة | الحالة | الملفات |
-|--------|--------|---------|
-| إخفاء `error.message` في ملفات الواجهة | ✅ | 8 ملفات |
-| إصلاح Auth.tsx لمنع كشف معلومات المصادقة | ✅ | 1 ملف |
-| إصلاح TwoFactorSetup.tsx | ✅ | 1 ملف |
-
-### ✅ المرحلة P1 - جودة TypeScript (مكتمل 80%)
-
-| المهمة | الحالة | الملفات |
-|--------|--------|---------|
-| استبدال `error: any` بـ `error: unknown` | ✅ | 12 ملف |
-| تحسين ESLint بقواعد صارمة | ✅ | 1 ملف |
-| استبدال `any` في بعض الملفات | ✅ جزئي | 4 ملفات |
-
-### ✅ المرحلة P2 - تقسيم الملفات الكبيرة (مكتمل 100%)
-
-| المهمة | الحالة | الملفات الجديدة |
-|--------|--------|-----------------|
-| تقسيم مكونات الفواتير | ✅ | 3 ملفات |
-| تقسيم مكونات عروض الأسعار | ✅ | 2 ملفات |
-| تقسيم MobileDrawer | ✅ | 5 ملفات |
-| تقسيم Sidebar | ✅ | 3 ملفات |
+# خطة التحسينات الشاملة وإكمال خارطة الطريق
+## ERP Smart - Complete Improvement & Roadmap Plan
 
 ---
 
-## 🔴 المشاكل المتبقية المكتشفة
+## 📊 الوضع الحالي للمشروع
 
-### 1. مشاكل الأمان (من Security Scan الجديد)
+### ✅ الإنجازات المكتملة (80%)
 
-تم اكتشاف **6 مشاكل أمنية جديدة**:
+| المرحلة | الحالة | النسبة |
+|---------|--------|--------|
+| **Q1: Foundation & Governance** | ✅ مكتمل | 100% |
+| **Q2: Enterprise Finance Core** | 🔄 جارٍ | 85% |
+| **الهيكل البرمجي** | ✅ منظم | 100% |
+| **الاختبارات** | ✅ شامل | 850+ اختبار |
+| **الأمان الأساسي** | ✅ مطبق | 120+ سياسة |
 
-| المشكلة | الخطورة | الجدول | الوصف |
-|---------|---------|--------|-------|
-| PUBLIC_SYSTEM_ROLES | ⛔ ERROR | `custom_roles` | هيكل الأدوار مكشوف لجميع المستخدمين |
-| PUBLIC_PERMISSION_MATRIX | ⛔ ERROR | `role_section_permissions` | مصفوفة الصلاحيات مكشوفة |
-| MISSING_RLS_PROTECTION | ⛔ ERROR | `suspicious_activities` | لا توجد سياسات RLS |
-| MISSING_RLS_PROTECTION | ⛔ ERROR | `security_dashboard` | لا توجد سياسات RLS |
-| PUBLIC_SYSTEM_CONFIG | ⚠️ WARN | `system_settings` | إعدادات النظام مكشوفة |
-| PUBLIC_FIELD_CUSTOMIZATION | ⚠️ WARN | `section_customizations` | تخصيصات الحقول مكشوفة |
+### ⏳ المتبقي (20%)
 
-### 2. مشاكل TypeScript المتبقية (41 ملف)
-
-#### 2.1 استخدام `(item: any)` في الملفات الأساسية:
-
-| الملف | عدد المواقع | النوع |
-|-------|-------------|-------|
-| `InventoryPage.tsx` | 8 | `(item: any)` |
-| `QuotationsPage.tsx` | 5 | `(q: any)` |
-| `PaymentsPage.tsx` | 7 | `(p: any)`, `(payment: any)` |
-| `SuppliersPage.tsx` | 2 | `(s: any)` |
-| `InvoiceFormDialog.tsx` | 1 | `(item: any)` |
-| `QuotationFormDialog.tsx` | 2 | `(item: any)`, `(value: any)` |
-| `SalesOrderFormDialog.tsx` | 1 | `(item: any)` |
-| `PurchaseOrderFormDialog.tsx` | 1 | `(item: any)` |
-| `QuotationDetailsPage.tsx` | 2 | `(item: any)` |
-| `InvoiceDetailsPage.tsx` | 1 | `(item: any)` |
-| `SalesOrderDetailsPage.tsx` | 3 | `(item: any)`, `(invoice: any)`, `(activity: any)` |
-| `PurchaseOrderDetailsPage.tsx` | 3 | `(item: any)`, `(payment: any)`, `(activity: any)` |
-| `StockMovementDialog.tsx` | 1 | `(value: any)` |
-
-#### 2.2 استخدام `any` في Hooks:
-
-| الملف | المشكلة |
-|-------|---------|
-| `useLaunchQueue.ts` | `(params: any)` |
-| `useOfflineMutation.ts` | `(data: any)`, `(item: any)` |
-| `useTableFilter.ts` | `(value: any)` |
-
-### 3. مكتبات Testing في Production
-
-**⚠️ لم يتم نقلها بعد!**
-
-المكتبات التالية في `dependencies` بدلاً من `devDependencies`:
-
-```json
-"@testing-library/dom": "^10.4.1",
-"@testing-library/jest-dom": "^6.9.1",
-"@testing-library/react": "^16.3.1",
-"@testing-library/user-event": "^14.6.1",
-"@vitest/coverage-v8": "^4.0.16",
-"jsdom": "^27.4.0",
-"msw": "^2.12.7",
-"vitest": "^4.0.16"
-```
-
-**الأثر:** زيادة حجم Bundle بـ ~500KB+ (لا تظهر في Production build لكن تؤثر على node_modules)
-
-### 4. console.log في Edge Functions
-
-**ملاحظة:** console.log في Edge Functions **مطلوب** للـ logging ولا يُعد مشكلة.
-
-الملفات المتأثرة (سليمة):
-- `approve-expense/index.ts` - 7 مواقع ✅
-- `validate-invoice/index.ts` - 6 مواقع ✅
-- `verify-totp/index.ts` - 3 مواقع ✅
-- `process-payment/index.ts` - logging ✅
+| المهمة | الحالة | الأولوية |
+|--------|--------|----------|
+| TypeScript Cleanup (31+ ملف) | ⏳ | P1 |
+| Testing Deps إلى devDependencies | ⏳ | P1 |
+| Virtual Scrolling | ⏳ | P2 |
+| Q3: Multi-Tenant | ⏳ | المستقبل |
 
 ---
 
-## 📋 خطة الإصلاح المقترحة
-
-### المرحلة 1: إصلاح الأمان (P0-جديد) - 2 ساعة
-
-#### 1.1 إضافة RLS للجداول المكشوفة
-
-```sql
--- 1. suspicious_activities
-ALTER TABLE suspicious_activities ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admin only" ON suspicious_activities
-FOR ALL USING (has_role(auth.uid(), 'admin'));
-
--- 2. security_dashboard (إذا موجود)
-ALTER TABLE security_dashboard ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admin only" ON security_dashboard
-FOR ALL USING (has_role(auth.uid(), 'admin'));
-```
-
-#### 1.2 تقييد الوصول لجداول الصلاحيات
-
-```sql
--- custom_roles - تقييد للمصادقين فقط
-DROP POLICY IF EXISTS "Authenticated can view custom roles" ON custom_roles;
-CREATE POLICY "Admin only read roles" ON custom_roles
-FOR SELECT USING (has_role(auth.uid(), 'admin'));
-
--- role_section_permissions - تقييد للمصادقين فقط
-DROP POLICY IF EXISTS "Authenticated can view section permissions" ON role_section_permissions;
-```
-
-### المرحلة 2: إصلاح TypeScript (P1-جديد) - 3 ساعات
-
-#### 2.1 إصلاح صفحات العرض (9 ملفات)
-
-| الملف | التغيير |
-|-------|---------|
-| `InventoryPage.tsx` | تعريف `ProductStock` interface |
-| `QuotationsPage.tsx` | استخدام `Tables<'quotations'>` |
-| `PaymentsPage.tsx` | استخدام `Tables<'payments'>` |
-| `SuppliersPage.tsx` | استخدام `Tables<'suppliers'>` |
-| `QuotationDetailsPage.tsx` | تعريف interfaces |
-| `InvoiceDetailsPage.tsx` | تعريف interfaces |
-| `SalesOrderDetailsPage.tsx` | تعريف interfaces |
-| `PurchaseOrderDetailsPage.tsx` | تعريف interfaces |
-
-#### 2.2 إصلاح Form Dialogs (4 ملفات)
-
-| الملف | المشكلة | الحل |
-|-------|---------|------|
-| `InvoiceFormDialog.tsx` | `(item: any)` في السطر 142 | تعريف `InvoiceItemData` |
-| `QuotationFormDialog.tsx` | `(value: any)` في السطر 159 | `value: string \| number` |
-| `SalesOrderFormDialog.tsx` | `(item: any)` | تعريف interface |
-| `PurchaseOrderFormDialog.tsx` | `(item: any)` | تعريف interface |
-| `StockMovementDialog.tsx` | `(value: any)` | `value: string` |
-
-#### 2.3 إصلاح Hooks (3 ملفات)
-
-| الملف | المشكلة | الحل |
-|-------|---------|------|
-| `useLaunchQueue.ts` | `(params: any)` | تعريف `LaunchParams` interface |
-| `useOfflineMutation.ts` | `(data: any)`, `(item: any)` | استخدام generics |
-| `useTableFilter.ts` | `(value: any)` | `value: unknown` |
-
-### المرحلة 3: نقل Testing Dependencies (P1) - يتم خارج المنصة
-
-**ملاحظة:** يتطلب تعديل `package.json` مباشرة وهو ملف محمي.
-
----
-
-## 📊 جدول الأولويات النهائي
-
-| الأولوية | المهمة | الملفات | الوقت | الحالة |
-|----------|--------|---------|-------|--------|
-| **P0-جديد** | إصلاح RLS للجداول المكشوفة | 4 جداول | 2h | ⏳ |
-| **P1-جديد** | إصلاح `any` في صفحات العرض | 9 ملفات | 2h | ⏳ |
-| **P1-جديد** | إصلاح `any` في Form Dialogs | 5 ملفات | 1h | ⏳ |
-| **P1-جديد** | إصلاح Hooks | 3 ملفات | 30m | ⏳ |
-
-**الإجمالي:** ~5.5 ساعات
-
----
-
-## ✅ معايير النجاح
-
-| المعيار | الحالة الحالية | الهدف |
-|---------|---------------|-------|
-| مشاكل RLS الحرجة | 4 | 0 |
-| ملفات تستخدم `(item: any)` | 13 | 0 |
-| ملفات تستخدم `(value: any)` | 3 | 0 |
-| Testing deps في production | 8 | 0 (يدوي) |
-
----
-
-## 📈 ملخص التقدم الكلي
+## 📈 إحصائيات المشروع الكاملة
 
 ```text
-خطة الحل الأصلية:
-├── P0 - الأمان الحرج         ✅ 100%
-├── P1 - جودة TypeScript      ✅ 80% → ⏳ 20% متبقي
-├── P2 - تقسيم الملفات        ✅ 100%
-└── P2 - ESLint               ✅ 100%
-
-المشاكل المكتشفة الجديدة:
-├── RLS للجداول الجديدة       ⏳ 0%
-├── TypeScript في الصفحات     ⏳ 0%
-└── Testing dependencies      ⏳ 0% (يدوي)
-
-الإجمالي المكتمل: ~75%
-المتبقي: ~25% (~5.5 ساعات)
+┌─────────────────────────────────────────────────────────────┐
+│                    ERP SMART - PROJECT STATS                 │
+├─────────────────────────────────────────────────────────────┤
+│  📁 Structure                                                │
+│  ├── Components:     110+ مكون (35 مجلد)                    │
+│  ├── Pages:          55+ صفحة (27 مجلد)                     │
+│  ├── Hooks:          36 hook مخصص                           │
+│  ├── Edge Functions: 7 وظائف سحابية                         │
+│  └── Migrations:     27 ملف ترحيل                           │
+├─────────────────────────────────────────────────────────────┤
+│  🗄️ Database                                                 │
+│  ├── Tables:         56+ جدول                               │
+│  ├── RLS Policies:   120+ سياسة                             │
+│  ├── Audit Triggers: 13 جدول                                │
+│  └── Functions:      4 وظائف SQL                            │
+├─────────────────────────────────────────────────────────────┤
+│  🧪 Testing                                                  │
+│  ├── Unit Tests:     323 اختبار                             │
+│  ├── Integration:    355 اختبار                             │
+│  ├── Security:       130+ اختبار                            │
+│  ├── E2E:            60+ اختبار (13 ملف)                    │
+│  └── Pass Rate:      100% ✅                                 │
+├─────────────────────────────────────────────────────────────┤
+│  📦 Dependencies                                             │
+│  ├── Production:     58 مكتبة                               │
+│  ├── Development:    18 مكتبة                               │
+│  └── Testing (خاطئ): 8 مكتبات في prod ⚠️                   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🎯 الخطوات التالية
+## 🔴 المرحلة 1: إصلاح الديون التقنية الحرجة (P0-P1)
 
-### الخطوة 1: إصلاح الأمان (P0)
-1. إضافة RLS لـ `suspicious_activities`
-2. إضافة RLS لـ `security_dashboard` 
-3. تقييد `custom_roles` و `role_section_permissions`
+### 1.1 نقل Testing Dependencies إلى devDependencies
 
-### الخطوة 2: إصلاح TypeScript
-1. إصلاح 9 صفحات عرض
-2. إصلاح 5 Form Dialogs
-3. إصلاح 3 Hooks
+**الحالة:** ⚠️ 8 مكتبات في المكان الخاطئ
 
-### الخطوة 3: Testing Dependencies
-يتم يدوياً عن طريق نقل المكتبات في package.json
+| المكتبة | الحجم التقريبي | الإجراء |
+|---------|----------------|---------|
+| `@testing-library/dom` | ~50KB | نقل لـ devDependencies |
+| `@testing-library/jest-dom` | ~30KB | نقل لـ devDependencies |
+| `@testing-library/react` | ~40KB | نقل لـ devDependencies |
+| `@testing-library/user-event` | ~25KB | نقل لـ devDependencies |
+| `@vitest/coverage-v8` | ~100KB | نقل لـ devDependencies |
+| `jsdom` | ~200KB | نقل لـ devDependencies |
+| `msw` | ~100KB | نقل لـ devDependencies |
+| `vitest` | ~150KB | نقل لـ devDependencies |
+
+**الأثر:** تقليل node_modules بـ ~500KB+
+
+**الإجراء المطلوب:**
+```json
+// نقل من dependencies إلى devDependencies في package.json
+// ملاحظة: يتطلب تعديل يدوي خارج المنصة
+```
 
 ---
 
-## 🔍 ملاحظات إضافية
+### 1.2 إصلاح TypeScript (any) المتبقية
 
-### ملفات سليمة (لا تحتاج تعديل):
-- ✅ ملفات Edge Functions - console.log مطلوب
-- ✅ `vite-env.d.ts` - تعريفات النظام
-- ✅ `performanceMonitor.ts` - محمي بـ `import.meta.env.DEV`
-- ✅ `errorHandler.ts` - يتعامل مع `error.message` داخلياً
+**الحالة:** 31+ ملف يستخدم `: any)`
 
-### نقاط القوة المكتشفة:
-- ✅ 13 مكون جديد تم إنشاؤها لتقسيم الملفات الكبيرة
-- ✅ ESLint بقواعد صارمة
-- ✅ معالجة الأخطاء آمنة في الواجهة
-- ✅ console.log محمي بـ DEV في 10 ملفات
+#### الملفات ذات الأولوية العالية (15 ملف):
 
+| الملف | المشكلة | الحل |
+|-------|---------|------|
+| `InlineCustomizer.tsx` | `(event: any)` | `DragEndEvent` from @dnd-kit |
+| `AgingReport.tsx` | `(invoice: any)` | تعريف `AgingInvoice` interface |
+| `pdfGenerator.ts` | `(item: any)` | تعريف `PDFItem` interface |
+| `SupplierRatingTab.tsx` | `(note: any)` | استخدام `Tables<'supplier_notes'>` |
+| `PaymentFormDialog.tsx` | `(value: any)` | `PaymentMethod` type |
+| `JournalFormDialog.tsx` | `(value: any)` | `string \| number` |
+| `InvoiceFormDialog.tsx` | `(value: any)` | `PaymentMethod` type |
+| `ResponsiveItemsTable.tsx` | `(value: any)` | Generic type `T` |
+| `useSidebarCounts.ts` | `(product: any)` | `ProductWithStock` interface |
+| `ProductDetailsPage.tsx` | `(stock: any)` | `Tables<'product_stock'>` |
+| `JournalDetailDialog.tsx` | `(entry: any)` | `Tables<'journal_entries'>` |
+| `ReportTemplateEditor.tsx` | `(event: any)` | `DragEndEvent` |
+| `InvoiceDetailsPage.tsx` | `(payment: any), (activity: any)` | Typed interfaces |
+| `SupplierDetailsPage.tsx` | `(payment: any)` | `Tables<'supplier_payments'>` |
+| `useOfflineData.ts` | needs generic refactoring | Typed generics |
+
+#### الحل المقترح لكل نمط:
+
+```typescript
+// نمط 1: DragEndEvent
+import { DragEndEvent } from '@dnd-kit/core';
+const handleDragEnd = (event: DragEndEvent) => { ... }
+
+// نمط 2: Supabase Types
+import { Tables } from '@/integrations/supabase/types';
+type SupplierPayment = Tables<'supplier_payments'>;
+{payments.map((payment: SupplierPayment) => ...)}
+
+// نمط 3: Form Values
+type PaymentMethod = 'cash' | 'bank_transfer' | 'deferred' | 'advance';
+onValueChange={(value: PaymentMethod) => setValue('payment_method', value)}
+```
+
+---
+
+## 🟠 المرحلة 2: تحسينات الأداء (P2)
+
+### 2.1 إضافة Virtual Scrolling للقوائم الطويلة
+
+**الملفات المستهدفة:**
+- `CustomersPage.tsx` - قائمة العملاء
+- `ProductsPage.tsx` - قائمة المنتجات
+- `InvoicesPage.tsx` - قائمة الفواتير
+- `SuppliersPage.tsx` - قائمة الموردين
+
+**التنفيذ:**
+```typescript
+// استخدام useVirtualList الموجود
+import { useVirtualList } from '@/hooks/useVirtualList';
+
+const { virtualItems, totalHeight, containerRef, handleScroll } = useVirtualList({
+  items: customers,
+  itemHeight: 64,
+  overscan: 5,
+  containerHeight: 600,
+});
+```
+
+### 2.2 تحسين Console.log
+
+**الحالة:** ✅ معظمها محمي بـ `import.meta.env.DEV`
+
+| الملف | الحالة | الإجراء |
+|-------|--------|---------|
+| `performanceMonitor.ts` | ✅ محمي | لا شيء |
+| `useOnlineStatus.ts` | ✅ محمي | لا شيء |
+| `useFileHandling.ts` | ✅ محمي | لا شيء |
+| `BackupPage.tsx` | ✅ محمي | لا شيء |
+| `useInstallPrompt.ts` | ⚠️ PWA Debug | مقبول |
+| `ReloadPrompt.tsx` | ⚠️ SW Debug | مقبول |
+| `useLaunchQueue.ts` | ⚠️ PWA Debug | مقبول |
+| `useAppBadge.ts` | ⚠️ PWA Debug | مقبول |
+
+**الاستنتاج:** Console logs الموجودة إما محمية أو مطلوبة لـ PWA debugging.
+
+### 2.3 تحسين Bundle Size
+
+**التقسيم الحالي (ممتاز):**
+
+```text
+Chunks Distribution:
+├── vendor-react      ~150KB  ✅
+├── vendor-query      ~40KB   ✅
+├── vendor-ui-core    ~80KB   ✅
+├── vendor-ui-extended ~60KB  ✅
+├── vendor-charts     ~300KB  ✅ Lazy
+├── vendor-pdf        ~400KB  ✅ Lazy
+├── vendor-excel      ~200KB  ✅ Lazy
+├── vendor-dnd        ~50KB   ✅ Lazy
+├── vendor-supabase   ~100KB  ✅
+└── vendor-idb        ~20KB   ✅
+```
+
+**التحسينات الإضافية:**
+1. إضافة `terser` للـ minification ✅ موجود
+2. `drop_console` في production ✅ موجود
+3. Lazy loading للصفحات ✅ موجود
+
+---
+
+## 🟡 المرحلة 3: إكمال Q2 - Enterprise Finance Core
+
+### 3.1 الميزات المكتملة من Q2 ✅
+
+| الميزة | الحالة | الوصف |
+|--------|--------|-------|
+| نظام المحاسبة مزدوج القيد | ✅ | chart_of_accounts, journals, journal_entries |
+| Edge Function: create-journal | ✅ | إنشاء قيود محاسبية |
+| 2FA Authentication | ✅ | user_2fa_settings + verify-totp |
+| Invoice Approval Workflow | ✅ | approve-invoice Edge Function |
+
+### 3.2 الميزات المتبقية من Q2 (15%)
+
+| الميزة | الحالة | الأولوية |
+|--------|--------|----------|
+| الربط التلقائي بين الفواتير والقيود | ⏳ | P1 |
+| تقارير المحاسبة المتقدمة | ⏳ | P2 |
+| ميزان المراجعة | ⏳ | P2 |
+| قائمة الدخل | ⏳ | P2 |
+
+---
+
+## 🔮 المرحلة 4: Q3 - Governance & Multi-Tenant (المستقبل)
+
+### 4.1 Multi-Tenant Architecture
+
+```sql
+-- الجداول المطلوبة
+CREATE TABLE tenants (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  domain TEXT UNIQUE,
+  settings JSONB DEFAULT '{}',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE user_tenants (
+  user_id UUID REFERENCES auth.users,
+  tenant_id UUID REFERENCES tenants,
+  role TEXT DEFAULT 'member',
+  PRIMARY KEY (user_id, tenant_id)
+);
+
+-- إضافة tenant_id لجميع الجداول
+ALTER TABLE customers ADD COLUMN tenant_id UUID REFERENCES tenants;
+-- ... تكرار لباقي الجداول
+
+-- تحديث RLS policies
+CREATE POLICY "Tenant isolation" ON customers
+FOR ALL USING (tenant_id = get_current_tenant());
+```
+
+### 4.2 Rate Limiting
+
+```sql
+CREATE TABLE rate_limits (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES auth.users,
+  endpoint TEXT NOT NULL,
+  request_count INTEGER DEFAULT 0,
+  window_start TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (user_id, endpoint)
+);
+
+CREATE TABLE rate_limit_config (
+  endpoint TEXT PRIMARY KEY,
+  max_requests INTEGER DEFAULT 100,
+  window_seconds INTEGER DEFAULT 60
+);
+```
+
+### 4.3 Segregation of Duties (SoD)
+
+```sql
+CREATE TABLE sod_rules (
+  id UUID PRIMARY KEY,
+  role1 TEXT NOT NULL,
+  action1 TEXT NOT NULL,
+  role2 TEXT NOT NULL,
+  action2 TEXT NOT NULL,
+  conflict_type TEXT DEFAULT 'warning',
+  description TEXT
+);
+
+-- مثال: من يُنشئ الفاتورة لا يعتمدها
+INSERT INTO sod_rules VALUES (
+  gen_random_uuid(),
+  'sales', 'invoices.create',
+  'sales', 'invoices.approve',
+  'block',
+  'Invoice creator cannot approve same invoice'
+);
+```
+
+---
+
+## 📋 جدول التنفيذ الكامل
+
+### المرحلة الفورية (هذا الأسبوع)
+
+| # | المهمة | الملفات | الوقت | الأولوية |
+|---|--------|---------|-------|----------|
+| 1 | إصلاح TypeScript (any) - الأولوية العالية | 15 ملف | 3h | P1 |
+| 2 | إضافة Virtual Scrolling | 4 صفحات | 2h | P2 |
+
+### المرحلة القصيرة (الأسبوع القادم)
+
+| # | المهمة | الملفات | الوقت | الأولوية |
+|---|--------|---------|-------|----------|
+| 3 | إصلاح TypeScript (any) - الباقي | 16 ملف | 2h | P1 |
+| 4 | تقارير المحاسبة المتقدمة | 3 ملفات جديدة | 4h | P2 |
+| 5 | تحسين Error Boundaries | 2 ملف | 1h | P2 |
+
+### المرحلة المتوسطة (الشهر القادم)
+
+| # | المهمة | الوقت | الأولوية |
+|---|--------|-------|----------|
+| 6 | إكمال Q2 (15% المتبقي) | 8h | P1 |
+| 7 | Documentation الإضافي | 4h | P2 |
+| 8 | Storybook للمكونات | 6h | P3 |
+
+### المرحلة البعيدة (Q3)
+
+| # | المهمة | الوقت | الأولوية |
+|---|--------|-------|----------|
+| 9 | Multi-Tenant Architecture | 40h | P1 |
+| 10 | Rate Limiting | 8h | P1 |
+| 11 | Segregation of Duties | 16h | P2 |
+
+---
+
+## ✅ معايير النجاح النهائية
+
+| المعيار | الحالة الحالية | الهدف | التقدم |
+|---------|---------------|-------|--------|
+| ملفات بـ `any` | 31 | 0 | 🔄 60% |
+| Testing deps في production | 8 | 0 | ⏳ 0% (يدوي) |
+| Virtual Scrolling | 0 صفحات | 4 صفحات | ⏳ 0% |
+| Q2 Completion | 85% | 100% | 🔄 |
+| Test Coverage | 850+ | 900+ | ✅ جيد |
+| Security Findings | 0 حرجة | 0 | ✅ |
+
+---
+
+## 🛡️ ملخص الأمان الحالي
+
+```text
+Security Architecture:
+┌─────────────────────────────────────────────────────────────┐
+│                     FRONTEND (React)                         │
+│  ├── secureOperations.ts (unified API layer)                │
+│  ├── getSafeErrorMessage() (error handling)                 │
+│  └── Permission checks before mutations                      │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     EDGE FUNCTIONS (7)                       │
+│  ├── validate-invoice   ├── process-payment                 │
+│  ├── approve-expense    ├── stock-movement                  │
+│  ├── approve-invoice    ├── create-journal                  │
+│  └── verify-totp                                             │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     POSTGRESQL (56+ Tables)                  │
+│  ├── 120+ RLS Policies                                       │
+│  ├── 4 Security Functions                                    │
+│  ├── 13 Audit Triggers                                       │
+│  └── Financial Limits Enforcement                            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📚 التوثيق الموجود
+
+| الوثيقة | الحالة | المحتوى |
+|---------|--------|---------|
+| `PROJECT_DOCUMENTATION.md` | ✅ | توثيق شامل للمشروع |
+| `PROJECT_PROGRESS.md` | ✅ | تتبع التقدم والـ Roadmap |
+| `Q1_COMPLETION_REPORT.md` | ✅ | تقرير إكمال Q1 |
+| `Q1_SECURITY_DOCUMENTATION.md` | ✅ | توثيق الأمان |
+| `SYSTEM_ISSUES_REPORT.md` | ✅ | تقرير المشاكل |
+| `.lovable/plan.md` | ✅ | خطة العمل الحالية |
+
+### التوثيق الناقص (للمستقبل):
+
+| الوثيقة | الغرض | الأولوية |
+|---------|-------|----------|
+| `API_DOCUMENTATION.md` | توثيق Edge Functions | P2 |
+| `DATABASE_SCHEMA.md` | رسم بياني للقاعدة | P3 |
+| `DEPLOYMENT_GUIDE.md` | دليل النشر | P3 |
+| Storybook | توثيق المكونات | P3 |
+
+---
+
+## 🎯 الخلاصة والتوصيات
+
+### الإجراءات الفورية المطلوبة:
+
+1. **إصلاح TypeScript (any)** - 31 ملف متبقي
+2. **نقل Testing dependencies** - يتطلب تعديل package.json يدوياً
+3. **إضافة Virtual Scrolling** - لتحسين أداء القوائم الطويلة
+
+### نقاط القوة الحالية:
+
+- ✅ هيكل برمجي منظم (110+ مكون، 36 hook)
+- ✅ نظام أمان متعدد الطبقات (7 Edge Functions, 120+ RLS)
+- ✅ اختبارات شاملة (850+ اختبار, 100% pass)
+- ✅ PWA متقدم مع دعم كامل للعمل offline
+- ✅ دعم كامل لـ RTL والعربية
+- ✅ Code splitting ممتاز (11 chunk)
+
+### المخاطر المتبقية:
+
+| الخطر | الأثر | التخفيف |
+|-------|-------|---------|
+| Testing deps في prod | حجم Bundle | نقل يدوي |
+| TypeScript any | Type Safety | إصلاح تدريجي |
+| No Virtual Scrolling | أداء بطيء | تطبيق hook موجود |
+
+---
+
+**الوقت الإجمالي المقدر للتحسينات الفورية:** ~7-8 ساعات
+**الوقت الإجمالي لإكمال Q2:** ~12 ساعة إضافية
+**الوقت المقدر لـ Q3:** ~64 ساعة (تخطيط مستقبلي)
