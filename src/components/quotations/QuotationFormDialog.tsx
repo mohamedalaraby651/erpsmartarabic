@@ -134,7 +134,15 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       .eq('quotation_id', quotationId);
     
     if (!error && data) {
-      setItems(data.map((item: any) => ({
+      type LoadedItem = {
+        product_id: string;
+        quantity: number;
+        unit_price: number;
+        discount_percentage: number | null;
+        total_price: number;
+        products: { name: string } | null;
+      };
+      setItems((data as LoadedItem[]).map((item) => ({
         product_id: item.product_id,
         product_name: item.products?.name || '',
         quantity: item.quantity,
@@ -156,7 +164,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     }]);
   };
 
-  const updateItem = (index: number, field: keyof QuotationItem, value: any) => {
+  const updateItem = (index: number, field: keyof QuotationItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     

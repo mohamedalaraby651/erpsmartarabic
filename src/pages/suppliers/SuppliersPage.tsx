@@ -37,6 +37,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import type { Database } from "@/integrations/supabase/types";
+
+type Supplier = Database['public']['Tables']['suppliers']['Row'];
+type PurchaseOrderStats = {
+  supplier_id: string;
+  total_amount: number | null;
+  status: string;
+};
+
 const SuppliersPage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -45,7 +54,7 @@ const SuppliersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
@@ -115,22 +124,22 @@ const SuppliersPage = () => {
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
   // Calculate stats
-  const activeSuppliers = suppliers.filter((s: any) => s.is_active).length;
-  const totalBalance = suppliers.reduce(
-    (sum: number, s: any) => sum + (s.current_balance || 0),
+  const activeSuppliers = (suppliers as Supplier[]).filter((s) => s.is_active).length;
+  const totalBalance = (suppliers as Supplier[]).reduce(
+    (sum: number, s) => sum + (s.current_balance || 0),
     0
   );
-  const totalPurchases = purchaseOrders.reduce(
-    (sum: number, o: any) => sum + (o.total_amount || 0),
+  const totalPurchases = (purchaseOrders as PurchaseOrderStats[]).reduce(
+    (sum: number, o) => sum + (o.total_amount || 0),
     0
   );
 
   // Get supplier purchase stats
   const getSupplierStats = (supplierId: string) => {
-    const orders = purchaseOrders.filter((o: any) => o.supplier_id === supplierId);
+    const orders = (purchaseOrders as PurchaseOrderStats[]).filter((o) => o.supplier_id === supplierId);
     return {
       orderCount: orders.length,
-      totalAmount: orders.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0),
+      totalAmount: orders.reduce((sum: number, o) => sum + (o.total_amount || 0), 0),
     };
   };
 
@@ -218,7 +227,7 @@ const SuppliersPage = () => {
             />
           ) : (
             <div className="space-y-3">
-              {sortedData.map((supplier: any) => {
+              {(sortedData as Supplier[]).map((supplier) => {
                 const stats = getSupplierStats(supplier.id);
                 return (
                   <DataCard
@@ -307,7 +316,7 @@ const SuppliersPage = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedData.map((supplier: any) => {
+          {(sortedData as Supplier[]).map((supplier) => {
             const stats = getSupplierStats(supplier.id);
             return (
               <TableRow key={supplier.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/suppliers/${supplier.id}`)}>

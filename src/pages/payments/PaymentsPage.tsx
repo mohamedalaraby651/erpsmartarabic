@@ -28,6 +28,12 @@ import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
+import type { Database } from "@/integrations/supabase/types";
+
+type PaymentWithRelations = Database['public']['Tables']['payments']['Row'] & {
+  customers: { name: string } | null;
+  invoices: { invoice_number: string } | null;
+};
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "نقدي",
@@ -89,7 +95,7 @@ const PaymentsPage = () => {
   }, [refetch]);
 
   // Filter by search
-  const searchFiltered = payments.filter((p: any) =>
+  const searchFiltered = (payments as PaymentWithRelations[]).filter((p) =>
     p.payment_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -99,13 +105,13 @@ const PaymentsPage = () => {
 
   const stats = {
     total: payments.length,
-    totalAmount: payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0),
-    cash: payments.filter((p: any) => p.payment_method === 'cash').reduce((sum: number, p: any) => sum + Number(p.amount), 0),
-    bank: payments.filter((p: any) => p.payment_method === 'bank_transfer').reduce((sum: number, p: any) => sum + Number(p.amount), 0),
+    totalAmount: (payments as PaymentWithRelations[]).reduce((sum: number, p) => sum + Number(p.amount), 0),
+    cash: (payments as PaymentWithRelations[]).filter((p) => p.payment_method === 'cash').reduce((sum: number, p) => sum + Number(p.amount), 0),
+    bank: (payments as PaymentWithRelations[]).filter((p) => p.payment_method === 'bank_transfer').reduce((sum: number, p) => sum + Number(p.amount), 0),
   };
 
   // Mobile Payment Card
-  const renderPaymentCard = (payment: any) => (
+  const renderPaymentCard = (payment: PaymentWithRelations) => (
     <DataCard
       key={payment.id}
       title={payment.customers?.name || "عميل غير معروف"}
@@ -295,7 +301,7 @@ const PaymentsPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedData.map((payment: any) => (
+                  {(sortedData as PaymentWithRelations[]).map((payment) => (
                     <TableRow key={payment.id}>
                       <TableCell>
                         <code className="text-sm bg-muted px-2 py-1 rounded">

@@ -158,7 +158,7 @@ const StockMovementDialog = ({ open, onOpenChange }: StockMovementDialogProps) =
             <Label>نوع الحركة</Label>
             <Select
               value={watch('movement_type')}
-              onValueChange={(value: any) => setValue('movement_type', value)}
+              onValueChange={(value: 'in' | 'out' | 'transfer' | 'adjustment') => setValue('movement_type', value)}
             >
               <SelectTrigger>
                 <SelectValue />

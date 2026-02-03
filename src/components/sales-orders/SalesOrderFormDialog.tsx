@@ -137,7 +137,15 @@ const SalesOrderFormDialog = ({ open, onOpenChange, order }: SalesOrderFormDialo
       .eq('order_id', orderId);
     
     if (!error && data) {
-      setItems(data.map((item: any) => ({
+      type LoadedItem = {
+        product_id: string;
+        quantity: number;
+        unit_price: number;
+        discount_percentage: number | null;
+        total_price: number;
+        products: { name: string } | null;
+      };
+      setItems((data as LoadedItem[]).map((item) => ({
         product_id: item.product_id,
         product_name: item.products?.name || '',
         quantity: item.quantity,
@@ -159,7 +167,7 @@ const SalesOrderFormDialog = ({ open, onOpenChange, order }: SalesOrderFormDialo
     }]);
   };
 
-  const updateItem = (index: number, field: keyof OrderItem, value: any) => {
+  const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     

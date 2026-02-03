@@ -21,14 +21,14 @@ export function useOfflineMutation(
   const { toast } = useToast();
 
   const insertMutation = useMutation({
-    mutationFn: async (data: Record<string, any>) => {
+    mutationFn: async (data: Record<string, unknown>) => {
       const id = crypto.randomUUID();
       const newData = { ...data, id };
 
       if (isOnline) {
         const { data: result, error } = await supabase
           .from(table)
-          .insert(newData as any)
+          .insert(newData as Parameters<typeof supabase.from<typeof table>>['0'] extends string ? Record<string, unknown> : never)
           .select()
           .maybeSingle();
 
@@ -59,11 +59,11 @@ export function useOfflineMutation(
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Record<string, any> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
       if (isOnline) {
         const { data: result, error } = await supabase
           .from(table)
-          .update(data as any)
+          .update(data as Parameters<typeof supabase.from<typeof table>>['0'] extends string ? Record<string, unknown> : never)
           .eq('id', id)
           .select()
           .maybeSingle();
@@ -73,7 +73,7 @@ export function useOfflineMutation(
       }
 
       const cachedData = await getCachedData(table);
-      const updatedData = cachedData.map((item: any) =>
+      const updatedData = cachedData.map((item: Record<string, unknown>) =>
         item.id === id ? { ...item, ...data } : item
       );
       await cacheData(table, updatedData);
@@ -106,7 +106,7 @@ export function useOfflineMutation(
       }
 
       const cachedData = await getCachedData(table);
-      const filteredData = cachedData.filter((item: any) => item.id !== id);
+      const filteredData = cachedData.filter((item: Record<string, unknown>) => item.id !== id);
       await cacheData(table, filteredData);
       await addToSyncQueue(table, 'delete', { id });
 

@@ -401,7 +401,7 @@ const InvoiceDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoiceItems.map((item: any) => (
+                    {(invoiceItems as Array<{id: string; product_id: string; quantity: number; unit_price: number; discount_percentage: number | null; total_price: number; products: {id: string; name: string} | null; product_variants: {id: string; name: string} | null}>).map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>
                           <div className="flex flex-col">

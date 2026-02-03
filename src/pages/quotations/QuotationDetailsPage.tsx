@@ -169,7 +169,21 @@ const QuotationDetailsPage = () => {
       
       // Copy quotation items
       if (quotationItems.length > 0) {
-        const newItems = quotationItems.map((item: any) => ({
+        type QuotationItemWithProduct = {
+          id: string;
+          quotation_id: string;
+          product_id: string;
+          variant_id: string | null;
+          quantity: number;
+          unit_price: number;
+          discount_percentage: number | null;
+          total_price: number;
+          notes: string | null;
+          products: { id: string; name: string; sku: string | null } | null;
+          product_variants: { id: string; name: string } | null;
+        };
+        
+        const newItems = (quotationItems as QuotationItemWithProduct[]).map((item) => ({
           quotation_id: newQuotation.id,
           product_id: item.product_id,
           variant_id: item.variant_id,
@@ -447,7 +461,7 @@ const QuotationDetailsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {quotationItems.map((item: any) => (
+                    {(quotationItems as Array<{id: string; product_id: string; quantity: number; unit_price: number; discount_percentage: number | null; total_price: number; products: {id: string; name: string} | null; product_variants: {id: string; name: string} | null}>).map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>
                           <div className="flex flex-col">

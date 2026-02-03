@@ -102,8 +102,10 @@ const QuotationsPage = () => {
     },
   });
 
+  type QuotationWithCustomer = Quotation & { customers: { name: string } | null };
+
   // Filter by search
-  const searchFiltered = quotations.filter((q: any) =>
+  const searchFiltered = (quotations as QuotationWithCustomer[]).filter((q) =>
     q.quotation_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
     q.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -113,9 +115,9 @@ const QuotationsPage = () => {
 
   const stats = {
     total: quotations.length,
-    pending: quotations.filter((q: any) => q.status === 'pending').length,
-    approved: quotations.filter((q: any) => q.status === 'approved').length,
-    totalValue: quotations.reduce((sum: number, q: any) => sum + Number(q.total_amount), 0),
+    pending: (quotations as QuotationWithCustomer[]).filter((q) => q.status === 'pending').length,
+    approved: (quotations as QuotationWithCustomer[]).filter((q) => q.status === 'approved').length,
+    totalValue: (quotations as QuotationWithCustomer[]).reduce((sum: number, q) => sum + Number(q.total_amount), 0),
   };
 
   const handleEdit = (quotation: Quotation) => {
@@ -197,7 +199,7 @@ const QuotationsPage = () => {
             />
           ) : (
             <div className="space-y-3">
-              {sortedData.map((quotation: any) => (
+              {(sortedData as QuotationWithCustomer[]).map((quotation) => (
                 <DataCard
                   key={quotation.id}
                   title={quotation.quotation_number}
@@ -287,7 +289,7 @@ const QuotationsPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map((quotation: any) => (
+            {(sortedData as QuotationWithCustomer[]).map((quotation) => (
               <TableRow key={quotation.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/quotations/${quotation.id}`)}>
                 <TableCell>
                   <EntityLink type="quotation" id={quotation.id}>
