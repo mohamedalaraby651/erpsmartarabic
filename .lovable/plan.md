@@ -1,392 +1,766 @@
 
-# 🚀 خطة تحديث PWA إلى أحدث إصدار
-## PWA Enhancement Plan - Version 2.0.0
+# 🏗️ خطة التحول المؤسسي - Q1: Foundation & Governance
+## Enterprise Transformation Plan - Supabase Hardening
 
 ---
 
-## 📊 تحليل الوضع الحالي
+## 📊 تقييم الوضع الحالي (Current State Assessment)
 
-### الإصدار الحالي
-| العنصر | الحالة |
-|--------|--------|
-| vite-plugin-pwa | ^1.2.0 ✅ أحدث إصدار |
-| Workbox | 7.3.0 (تلقائي) |
-| registerType | autoUpdate ✅ |
-| Service Worker Strategy | generateSW |
+### ✅ نقاط القوة الموجودة
 
-### الميزات الموجودة
-- ✅ manifest أساسي مع shortcuts
-- ✅ أيقونات بجميع الأحجام
-- ✅ صفحة offline.html
-- ✅ ReloadPrompt للتحديثات
-- ✅ useInstallPrompt hook
-- ✅ صفحة /install للتثبيت
+| العنصر | الحالة | التقييم |
+|--------|--------|---------|
+| RLS مفعّل | ✅ جميع الجداول (44 جدول) | جيد |
+| `has_role()` function | ✅ SECURITY DEFINER | ممتاز |
+| `has_any_role()` function | ✅ موجودة | جيد |
+| جدول `user_roles` منفصل | ✅ لا يوجد دور في profiles | ممتاز |
+| Enums للأدوار | ✅ `app_role` enum | صحيح |
+| Activity Logs | ✅ جدول موجود | جيد |
+| Supabase Linter | ✅ لا أخطاء | ممتاز |
 
-### الميزات المفقودة (PWA 2025)
-- ❌ `display_override` للتحكم بوضع العرض
-- ❌ `share_target` لاستقبال المشاركات
-- ❌ `file_handlers` لفتح الملفات
-- ❌ `launch_handler` للتحكم بالتشغيل
-- ❌ `protocol_handlers` للبروتوكولات المخصصة
-- ❌ `handle_links` لمعالجة الروابط
-- ❌ `edge_side_panel` لـ Edge
-- ❌ Screenshots بجميع الأحجام
-- ❌ `related_applications` للتطبيقات المرتبطة
-- ❌ `scope_extensions` للنطاقات
+### ⚠️ الثغرات الأمنية والمعمارية المكتشفة
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. عدم وجود Tenant Isolation (tenant_id غير موجود)             │
+│    → خطر: بيانات مختلطة إذا تم التوسع لشركات متعددة            │
+├─────────────────────────────────────────────────────────────────┤
+│ 2. Edge Functions فارغة (supabase/functions/)                  │
+│    → خطر: جميع العمليات الحساسة في Frontend                   │
+├─────────────────────────────────────────────────────────────────┤
+│ 3. فحص الأذونات في Frontend فقط (usePermissions.ts)           │
+│    → خطر: يمكن تجاوزها عبر API مباشرة                          │
+├─────────────────────────────────────────────────────────────────┤
+│ 4. عدم وجود Audit Trail للعمليات الحساسة                       │
+│    → خطر: لا تتبع للتغييرات على البيانات المالية               │
+├─────────────────────────────────────────────────────────────────┤
+│ 5. RLS Policies تعتمد على role فقط بدون custom permissions    │
+│    → خطر: role_section_permissions لا تُفرض في DB             │
+├─────────────────────────────────────────────────────────────────┤
+│ 6. لا يوجد Rate Limiting                                        │
+│    → خطر: إمكانية DoS أو brute force                           │
+├─────────────────────────────────────────────────────────────────┤
+│ 7. Financial operations بدون transactions                      │
+│    → خطر: بيانات غير متسقة                                     │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🎯 المهام المطلوبة
+## 🎯 أهداف Q1 (Foundation & Governance)
 
-### المرحلة 1: تحديث Manifest المتقدم
-**الملف**: `vite.config.ts`
+### الهدف الرئيسي
+**تحويل النظام من "يعمل" إلى "آمن ومحكم"**
 
-#### 1.1 إضافة display_override
-```typescript
-display_override: ['standalone', 'minimal-ui', 'window-controls-overlay'],
+### الأهداف الفرعية
+1. ✅ سد جميع الثغرات الأمنية في RLS
+2. ✅ نقل فحص الأذونات من Frontend إلى Database
+3. ✅ إنشاء Edge Functions للعمليات الحساسة
+4. ✅ تفعيل Audit Trail الشامل
+5. ✅ توحيد Access Patterns في الكود
+6. ❌ **لا ميزات جديدة** - تثبيت فقط
+
+---
+
+## 📋 خطة التنفيذ المفصلة
+
+### المرحلة 1: Security Functions Enhancement
+**المدة: 2 ساعة | الأولوية: P0 - Critical**
+
+#### 1.1 إنشاء وظائف أمان إضافية
+
+```sql
+-- وظيفة فحص permission من role_section_permissions
+CREATE OR REPLACE FUNCTION public.check_section_permission(
+    _user_id UUID,
+    _section TEXT,
+    _action TEXT -- 'view' | 'create' | 'edit' | 'delete'
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    _role app_role;
+    _custom_role_id UUID;
+    _has_permission BOOLEAN := false;
+BEGIN
+    -- Admin has all permissions
+    IF has_role(_user_id, 'admin') THEN
+        RETURN true;
+    END IF;
+    
+    -- Get user's custom role
+    SELECT custom_role_id INTO _custom_role_id
+    FROM user_roles
+    WHERE user_id = _user_id
+    LIMIT 1;
+    
+    IF _custom_role_id IS NULL THEN
+        RETURN false;
+    END IF;
+    
+    -- Check section permission
+    SELECT 
+        CASE _action
+            WHEN 'view' THEN can_view
+            WHEN 'create' THEN can_create
+            WHEN 'edit' THEN can_edit
+            WHEN 'delete' THEN can_delete
+            ELSE false
+        END INTO _has_permission
+    FROM role_section_permissions
+    WHERE role_id = _custom_role_id 
+    AND section = _section;
+    
+    RETURN COALESCE(_has_permission, false);
+END;
+$$;
 ```
-هذا يسمح للتطبيق باستخدام أوضاع عرض متعددة حسب دعم المتصفح.
 
-#### 1.2 إضافة launch_handler
-```typescript
-launch_handler: {
-  client_mode: ['navigate-existing', 'auto']
-},
+```sql
+-- وظيفة فحص الحد المالي
+CREATE OR REPLACE FUNCTION public.check_financial_limit(
+    _user_id UUID,
+    _limit_type TEXT, -- 'discount' | 'credit' | 'invoice'
+    _value DECIMAL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    _custom_role_id UUID;
+    _max_value DECIMAL;
+BEGIN
+    -- Admin has no limits
+    IF has_role(_user_id, 'admin') THEN
+        RETURN true;
+    END IF;
+    
+    -- Get custom role
+    SELECT custom_role_id INTO _custom_role_id
+    FROM user_roles
+    WHERE user_id = _user_id
+    LIMIT 1;
+    
+    IF _custom_role_id IS NULL THEN
+        RETURN false;
+    END IF;
+    
+    -- Get limit
+    SELECT 
+        CASE _limit_type
+            WHEN 'discount' THEN max_discount_percentage
+            WHEN 'credit' THEN max_credit_limit
+            WHEN 'invoice' THEN max_invoice_amount
+            ELSE 999999999
+        END INTO _max_value
+    FROM role_limits
+    WHERE role_id = _custom_role_id;
+    
+    RETURN _value <= COALESCE(_max_value, 999999999);
+END;
+$$;
 ```
-يتحكم في كيفية تشغيل التطبيق عند النقر على إشعار أو رابط.
 
-#### 1.3 إضافة share_target
+#### 1.2 وظيفة تسجيل النشاط التلقائي
+
+```sql
+-- وظيفة Audit Log التلقائية
+CREATE OR REPLACE FUNCTION public.log_activity()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    _user_id UUID;
+    _action TEXT;
+    _old_values JSONB;
+    _new_values JSONB;
+BEGIN
+    _user_id := auth.uid();
+    
+    IF TG_OP = 'INSERT' THEN
+        _action := 'create';
+        _new_values := to_jsonb(NEW);
+        _old_values := NULL;
+    ELSIF TG_OP = 'UPDATE' THEN
+        _action := 'update';
+        _old_values := to_jsonb(OLD);
+        _new_values := to_jsonb(NEW);
+    ELSIF TG_OP = 'DELETE' THEN
+        _action := 'delete';
+        _old_values := to_jsonb(OLD);
+        _new_values := NULL;
+    END IF;
+    
+    INSERT INTO activity_logs (
+        user_id,
+        action,
+        entity_type,
+        entity_id,
+        entity_name,
+        old_values,
+        new_values,
+        ip_address
+    ) VALUES (
+        COALESCE(_user_id, '00000000-0000-0000-0000-000000000000'::UUID),
+        _action,
+        TG_TABLE_NAME,
+        COALESCE(NEW.id, OLD.id)::TEXT,
+        COALESCE(NEW.name, OLD.name, NEW.invoice_number, OLD.invoice_number, 
+                 NEW.order_number, OLD.order_number, 'N/A'),
+        _old_values,
+        _new_values,
+        current_setting('request.headers', true)::json->>'x-forwarded-for'
+    );
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$$;
+```
+
+---
+
+### المرحلة 2: تحديث RLS Policies
+**المدة: 3 ساعات | الأولوية: P0 - Critical**
+
+#### 2.1 مصفوفة RLS الجديدة
+
+| الجدول | SELECT | INSERT | UPDATE | DELETE |
+|--------|--------|--------|--------|--------|
+| `invoices` | role-based | check_section_permission + check_financial_limit | check_section_permission | admin only |
+| `payments` | role-based | check_section_permission | check_section_permission | admin only |
+| `customers` | role-based | check_section_permission | check_section_permission | check_section_permission |
+| `products` | all authenticated | check_section_permission | check_section_permission | check_section_permission |
+| `employees` | admin/hr + own | admin/hr | admin/hr | admin only |
+| `bank_accounts` | admin/accountant | admin/accountant | admin/accountant | admin only |
+
+#### 2.2 تحديث سياسات الفواتير (مثال)
+
+```sql
+-- حذف السياسات القديمة
+DROP POLICY IF EXISTS "Admin or sales or accountant can manage invoices" ON invoices;
+DROP POLICY IF EXISTS "Authenticated can view invoices" ON invoices;
+
+-- سياسة العرض المحسّنة
+CREATE POLICY "invoices_select_policy" ON invoices
+FOR SELECT TO authenticated
+USING (
+    has_role(auth.uid(), 'admin') 
+    OR check_section_permission(auth.uid(), 'invoices', 'view')
+);
+
+-- سياسة الإنشاء مع فحص الحد المالي
+CREATE POLICY "invoices_insert_policy" ON invoices
+FOR INSERT TO authenticated
+WITH CHECK (
+    (has_role(auth.uid(), 'admin') OR check_section_permission(auth.uid(), 'invoices', 'create'))
+    AND check_financial_limit(auth.uid(), 'invoice', total_amount)
+);
+
+-- سياسة التحديث
+CREATE POLICY "invoices_update_policy" ON invoices
+FOR UPDATE TO authenticated
+USING (
+    has_role(auth.uid(), 'admin') 
+    OR check_section_permission(auth.uid(), 'invoices', 'edit')
+)
+WITH CHECK (
+    check_financial_limit(auth.uid(), 'invoice', total_amount)
+);
+
+-- سياسة الحذف
+CREATE POLICY "invoices_delete_policy" ON invoices
+FOR DELETE TO authenticated
+USING (has_role(auth.uid(), 'admin'));
+```
+
+---
+
+### المرحلة 3: إنشاء Edge Functions للعمليات الحساسة
+**المدة: 4 ساعات | الأولوية: P1 - High**
+
+#### 3.1 قائمة Edge Functions المطلوبة
+
+| Function | الغرض | التحقق |
+|----------|-------|--------|
+| `validate-invoice` | فحص بيانات الفاتورة قبل الإنشاء | limits + permissions |
+| `process-payment` | معالجة الدفعات بـ transaction | balance update |
+| `approve-expense` | الموافقة على المصروفات | approval workflow |
+| `stock-movement` | حركات المخزون الآمنة | quantity checks |
+| `audit-export` | تصدير سجلات النشاط | admin only |
+
+#### 3.2 مثال: validate-invoice
+
 ```typescript
-share_target: {
-  action: '/share-target',
-  method: 'POST',
-  enctype: 'multipart/form-data',
-  params: {
-    title: 'title',
-    text: 'text',
-    url: 'url',
-    files: [
-      {
-        name: 'files',
-        accept: ['image/*', 'application/pdf', '.xlsx', '.csv']
-      }
-    ]
+// supabase/functions/validate-invoice/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
-},
-```
-يسمح للمستخدمين بمشاركة الملفات والنصوص مع التطبيق مباشرة.
 
-#### 1.4 إضافة file_handlers
-```typescript
-file_handlers: [
-  {
-    action: '/open-file',
-    accept: {
-      'application/pdf': ['.pdf'],
-      'application/vnd.ms-excel': ['.xls', '.xlsx'],
-      'text/csv': ['.csv'],
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Get user from JWT
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-  }
-],
-```
-يسمح للتطبيق بفتح أنواع معينة من الملفات.
 
-#### 1.5 إضافة protocol_handlers
-```typescript
-protocol_handlers: [
-  {
-    protocol: 'web+erp',
-    url: '/protocol?action=%s'
-  },
-  {
-    protocol: 'web+invoice',
-    url: '/invoices?number=%s'
-  },
-  {
-    protocol: 'web+customer',
-    url: '/customers?id=%s'
-  }
-],
-```
-يسمح بفتح التطبيق عبر روابط مخصصة مثل `web+invoice://INV-001`.
+    const { invoice_data } = await req.json();
 
-#### 1.6 إضافة handle_links
-```typescript
-handle_links: 'preferred',
-```
-يجعل التطبيق المثبت يفتح الروابط تلقائياً.
-
-#### 1.7 تحسين Screenshots
-```typescript
-screenshots: [
-  {
-    src: '/screenshots/dashboard-wide.png',
-    sizes: '1280x720',
-    type: 'image/png',
-    form_factor: 'wide',
-    label: 'لوحة التحكم الرئيسية'
-  },
-  {
-    src: '/screenshots/dashboard-narrow.png',
-    sizes: '750x1334',
-    type: 'image/png',
-    form_factor: 'narrow',
-    label: 'التطبيق على الهاتف'
-  }
-],
-```
-
-#### 1.8 إضافة edge_side_panel
-```typescript
-edge_side_panel: {
-  preferred_width: 400
-},
-```
-يتيح فتح التطبيق في اللوحة الجانبية لـ Microsoft Edge.
-
----
-
-### المرحلة 2: إنشاء صفحات معالجة جديدة
-**ملفات جديدة**:
-
-#### 2.1 صفحة Share Target
-**الملف**: `src/pages/share/ShareTargetPage.tsx`
-- استقبال الملفات والنصوص المشاركة
-- معالجة المرفقات تلقائياً
-- توجيه المستخدم للصفحة المناسبة
-
-#### 2.2 صفحة File Handler
-**الملف**: `src/pages/file/OpenFilePage.tsx`
-- فتح الملفات المدعومة
-- عرض محتوى الملفات
-- استيراد البيانات من Excel/CSV
-
-#### 2.3 صفحة Protocol Handler
-**الملف**: `src/pages/protocol/ProtocolHandlerPage.tsx`
-- معالجة البروتوكولات المخصصة
-- التوجيه للصفحة المناسبة حسب البروتوكول
-
----
-
-### المرحلة 3: تحسين Service Worker
-**الملف**: `vite.config.ts` → workbox
-
-#### 3.1 إضافة Background Sync
-```typescript
-workbox: {
-  // ... الإعدادات الحالية
-  skipWaiting: true,
-  clientsClaim: true,
-  // تحسين التخزين المؤقت
-  runtimeCaching: [
-    // ... الإعدادات الحالية
-    {
-      // تخزين الخطوط المحلية
-      urlPattern: /\.(?:woff2?)$/,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'fonts-cache-v2',
-        expiration: {
-          maxAgeSeconds: 365 * 24 * 60 * 60
-        }
-      }
-    },
-    {
-      // تخزين الـ API بشكل أذكى
-      urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'api-cache-v2',
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 10 * 60
-        },
-        networkTimeoutSeconds: 10,
-        cacheableResponse: {
-          statuses: [0, 200]
-        }
-      }
-    }
-  ],
-  navigateFallback: '/offline.html',
-  navigateFallbackDenylist: [/^\/api/, /^\/auth/]
-}
-```
-
----
-
-### المرحلة 4: تحديث Hooks
-**الملف**: `src/hooks/useInstallPrompt.ts`
-
-#### 4.1 إضافة دعم Launch Queue API
-```typescript
-// دعم Launch Queue للتطبيقات المثبتة
-useEffect(() => {
-  if ('launchQueue' in window) {
-    window.launchQueue.setConsumer((launchParams) => {
-      if (launchParams.files?.length) {
-        // معالجة الملفات المفتوحة
-        handleLaunchFiles(launchParams.files);
-      }
-      if (launchParams.targetURL) {
-        // التوجيه للرابط المطلوب
-        navigate(launchParams.targetURL);
-      }
+    // Check permission using DB function
+    const { data: hasPermission } = await supabase.rpc('check_section_permission', {
+      _user_id: user.id,
+      _section: 'invoices',
+      _action: 'create'
     });
+
+    if (!hasPermission) {
+      return new Response(
+        JSON.stringify({ error: 'Permission denied', code: 'NO_PERMISSION' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check financial limit
+    const { data: withinLimit } = await supabase.rpc('check_financial_limit', {
+      _user_id: user.id,
+      _limit_type: 'invoice',
+      _value: invoice_data.total_amount
+    });
+
+    if (!withinLimit) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invoice amount exceeds your limit', 
+          code: 'LIMIT_EXCEEDED' 
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate customer credit limit
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('credit_limit, current_balance')
+      .eq('id', invoice_data.customer_id)
+      .single();
+
+    if (customer) {
+      const newBalance = (customer.current_balance || 0) + invoice_data.total_amount;
+      if (newBalance > (customer.credit_limit || 0)) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Customer credit limit exceeded',
+            code: 'CREDIT_LIMIT_EXCEEDED',
+            details: {
+              current_balance: customer.current_balance,
+              credit_limit: customer.credit_limit,
+              requested: invoice_data.total_amount
+            }
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ valid: true, message: 'Invoice validation passed' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-}, []);
+});
 ```
 
-#### 4.2 إنشاء hook جديد للـ File Handling
-**الملف الجديد**: `src/hooks/useFileHandling.ts`
+---
+
+### المرحلة 4: Audit Triggers
+**المدة: 1 ساعة | الأولوية: P1 - High**
+
+#### 4.1 الجداول التي تحتاج Audit
+
+```sql
+-- إضافة Triggers للجداول الحساسة
+CREATE TRIGGER audit_invoices
+    AFTER INSERT OR UPDATE OR DELETE ON invoices
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_payments
+    AFTER INSERT OR UPDATE OR DELETE ON payments
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_customers
+    AFTER INSERT OR UPDATE OR DELETE ON customers
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_products
+    AFTER INSERT OR UPDATE OR DELETE ON products
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_purchase_orders
+    AFTER INSERT OR UPDATE OR DELETE ON purchase_orders
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_expenses
+    AFTER INSERT OR UPDATE OR DELETE ON expenses
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_cash_transactions
+    AFTER INSERT OR UPDATE OR DELETE ON cash_transactions
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_stock_movements
+    AFTER INSERT OR UPDATE OR DELETE ON stock_movements
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+
+CREATE TRIGGER audit_user_roles
+    AFTER INSERT OR UPDATE OR DELETE ON user_roles
+    FOR EACH ROW EXECUTE FUNCTION log_activity();
+```
+
+---
+
+### المرحلة 5: توحيد Access Patterns في Frontend
+**المدة: 3 ساعات | الأولوية: P2 - Medium**
+
+#### 5.1 إنشاء Centralized API Layer
+
 ```typescript
-export function useFileHandling() {
-  // التعامل مع الملفات المفتوحة
-  // دعم Launch Queue API
-  // معالجة share_target
+// src/lib/api/secureOperations.ts
+import { supabase } from '@/integrations/supabase/client';
+
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
+  code?: string;
+  details?: Record<string, any>;
+}
+
+export async function validateBeforeInsert(
+  table: string,
+  data: Record<string, any>
+): Promise<ValidationResult> {
+  // Map table to section
+  const sectionMap: Record<string, string> = {
+    invoices: 'invoices',
+    quotations: 'quotations',
+    sales_orders: 'sales_orders',
+    payments: 'payments',
+    customers: 'customers',
+    products: 'products',
+  };
+
+  const section = sectionMap[table];
+  if (!section) {
+    return { valid: true }; // No validation needed
+  }
+
+  // For invoices, use edge function
+  if (table === 'invoices') {
+    const { data: result, error } = await supabase.functions.invoke('validate-invoice', {
+      body: { invoice_data: data }
+    });
+    
+    if (error) {
+      return { valid: false, error: error.message };
+    }
+    
+    return result;
+  }
+
+  return { valid: true };
+}
+
+export async function secureInsert<T>(
+  table: string,
+  data: Record<string, any>
+): Promise<{ data: T | null; error: Error | null }> {
+  // Validate first
+  const validation = await validateBeforeInsert(table, data);
+  
+  if (!validation.valid) {
+    return { 
+      data: null, 
+      error: new Error(validation.error || 'Validation failed') 
+    };
+  }
+
+  // Proceed with insert
+  const { data: result, error } = await supabase
+    .from(table as any)
+    .insert(data)
+    .select()
+    .single();
+
+  return { data: result as T, error };
+}
+```
+
+#### 5.2 تحديث usePermissions Hook
+
+```typescript
+// إضافة server-side permission check
+export function usePermissions() {
+  // ... existing code ...
+
+  const verifyPermissionOnServer = async (
+    section: string, 
+    action: 'view' | 'create' | 'edit' | 'delete'
+  ): Promise<boolean> => {
+    if (!user?.id) return false;
+    
+    const { data } = await supabase.rpc('check_section_permission', {
+      _user_id: user.id,
+      _section: section,
+      _action: action
+    });
+    
+    return data === true;
+  };
+
+  return {
+    // ... existing returns ...
+    verifyPermissionOnServer,
+  };
 }
 ```
 
 ---
 
-### المرحلة 5: تحديث offline.html
-**الملف**: `public/offline.html`
+### المرحلة 6: Observability & Monitoring
+**المدة: 1 ساعة | الأولوية: P2 - Medium**
 
-#### التحسينات:
-- إضافة Service Worker status check
-- عرض البيانات المخزنة محلياً
-- زر للعمل في وضع offline
-- تحسين التصميم
+#### 6.1 إضافة Logging View
 
----
+```sql
+-- View للوحة مراقبة الأمان
+CREATE OR REPLACE VIEW security_dashboard AS
+SELECT 
+    DATE_TRUNC('hour', created_at) as time_bucket,
+    action,
+    entity_type,
+    COUNT(*) as action_count,
+    COUNT(DISTINCT user_id) as unique_users
+FROM activity_logs
+WHERE created_at > NOW() - INTERVAL '24 hours'
+GROUP BY 1, 2, 3
+ORDER BY 1 DESC;
 
-### المرحلة 6: تحديث ReloadPrompt
-**الملف**: `src/components/offline/ReloadPrompt.tsx`
-
-#### التحسينات:
-- إضافة تفاصيل التحديث (رقم الإصدار)
-- دعم Background Update
-- إشعار ذكي عند وجود تحديث
-- تحسين UX للتحديث
-
----
-
-### المرحلة 7: إضافة App Badge API
-**الملف الجديد**: `src/hooks/useAppBadge.ts`
-
-```typescript
-export function useAppBadge() {
-  const setBadge = async (count: number) => {
-    if ('setAppBadge' in navigator) {
-      await navigator.setAppBadge(count);
-    }
-  };
-  
-  const clearBadge = async () => {
-    if ('clearAppBadge' in navigator) {
-      await navigator.clearAppBadge();
-    }
-  };
-  
-  return { setBadge, clearBadge };
-}
+-- View للعمليات المشبوهة
+CREATE OR REPLACE VIEW suspicious_activities AS
+SELECT 
+    user_id,
+    entity_type,
+    action,
+    COUNT(*) as frequency,
+    MIN(created_at) as first_action,
+    MAX(created_at) as last_action
+FROM activity_logs
+WHERE created_at > NOW() - INTERVAL '1 hour'
+GROUP BY 1, 2, 3
+HAVING COUNT(*) > 50 -- أكثر من 50 عملية في الساعة
+ORDER BY frequency DESC;
 ```
-يسمح بعرض عداد الإشعارات على أيقونة التطبيق.
-
----
-
-### المرحلة 8: تحسين صفحة التثبيت
-**الملف**: `src/pages/install/InstallPage.tsx`
-
-#### التحسينات:
-- عرض حجم التطبيق التقريبي
-- معلومات عن الأذونات المطلوبة
-- شرح ميزات PWA 2025 الجديدة
-- تحسين تعليمات iOS 17+
 
 ---
 
 ## 📁 ملخص الملفات
 
-### ملفات تحتاج تعديل
-| الملف | نوع التغيير |
-|-------|-------------|
-| `vite.config.ts` | تحديث manifest شامل |
-| `public/offline.html` | تحسين التصميم والوظائف |
-| `src/hooks/useInstallPrompt.ts` | إضافة Launch Queue |
-| `src/components/offline/ReloadPrompt.tsx` | تحسين UX |
-| `src/pages/install/InstallPage.tsx` | تحديث المعلومات |
-| `src/App.tsx` | إضافة routes جديدة |
-
 ### ملفات جديدة
-| الملف | الوصف |
+
+| الملف | الغرض |
 |-------|-------|
-| `src/pages/share/ShareTargetPage.tsx` | معالجة المشاركات |
-| `src/pages/file/OpenFilePage.tsx` | فتح الملفات |
-| `src/pages/protocol/ProtocolHandlerPage.tsx` | البروتوكولات |
-| `src/hooks/useFileHandling.ts` | التعامل مع الملفات |
-| `src/hooks/useAppBadge.ts` | App Badge API |
-| `src/hooks/useLaunchQueue.ts` | Launch Queue API |
+| `supabase/functions/validate-invoice/index.ts` | تحقق من الفواتير |
+| `supabase/functions/process-payment/index.ts` | معالجة الدفعات |
+| `supabase/functions/approve-expense/index.ts` | الموافقة على المصروفات |
+| `supabase/functions/stock-movement/index.ts` | حركات المخزون |
+| `src/lib/api/secureOperations.ts` | طبقة API الموحدة |
+
+### ملفات تحتاج تعديل
+
+| الملف | التغيير |
+|-------|---------|
+| `src/hooks/usePermissions.ts` | إضافة server-side verification |
+| `src/pages/invoices/InvoicesPage.tsx` | استخدام secureInsert |
+| `src/pages/payments/PaymentsPage.tsx` | استخدام Edge Function |
+| `src/components/invoices/InvoiceFormDialog.tsx` | validation قبل الإرسال |
+
+### تغييرات قاعدة البيانات
+
+| التغيير | النوع |
+|---------|-------|
+| `check_section_permission()` | Function جديدة |
+| `check_financial_limit()` | Function جديدة |
+| `log_activity()` | Function جديدة |
+| 9 Audit Triggers | Triggers جديدة |
+| تحديث 20+ RLS Policy | تحديث |
+| `security_dashboard` View | View جديدة |
+| `suspicious_activities` View | View جديدة |
 
 ---
 
-## 📋 ترتيب التنفيذ
+## 📊 المخرجات المطلوبة (Q1 Deliverables)
 
-```text
-1. تحديث manifest في vite.config.ts        [15 دقيقة]
-2. إنشاء ShareTargetPage.tsx               [10 دقائق]
-3. إنشاء OpenFilePage.tsx                  [10 دقائق]
-4. إنشاء ProtocolHandlerPage.tsx           [5 دقائق]
-5. إنشاء useFileHandling.ts                [10 دقائق]
-6. إنشاء useAppBadge.ts                    [5 دقائق]
-7. إنشاء useLaunchQueue.ts                 [5 دقائق]
-8. تحديث useInstallPrompt.ts               [5 دقائق]
-9. تحديث ReloadPrompt.tsx                  [10 دقائق]
-10. تحديث offline.html                     [10 دقائق]
-11. تحديث InstallPage.tsx                  [10 دقائق]
-12. تحديث App.tsx (routes)                 [5 دقائق]
+### 1. RLS Matrix Document
+
+| الجدول | SELECT | INSERT | UPDATE | DELETE | Notes |
+|--------|--------|--------|--------|--------|-------|
+| invoices | ✅ | ✅+limit | ✅+limit | admin | financial |
+| payments | ✅ | ✅ | ✅ | admin | financial |
+| ... | ... | ... | ... | ... | ... |
+
+### 2. Security Functions Documentation
+
+```markdown
+## has_role(_user_id, _role)
+- Purpose: Check if user has specific role
+- Returns: BOOLEAN
+- Security: DEFINER
+
+## check_section_permission(_user_id, _section, _action)
+- Purpose: Check section-level permission from custom roles
+- Returns: BOOLEAN
+- Security: DEFINER
+
+## check_financial_limit(_user_id, _limit_type, _value)
+- Purpose: Validate financial operations against role limits
+- Returns: BOOLEAN
+- Security: DEFINER
 ```
 
-**إجمالي الوقت المقدر: ~100 دقيقة**
+### 3. Architecture Notes
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                      FRONTEND (React)                       │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ usePermissions (UI hints only - NOT authoritative)  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                            │                                │
+│                            ▼                                │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ secureOperations.ts (validation layer)              │   │
+│  └─────────────────────────────────────────────────────┘   │
+└────────────────────────────│────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    EDGE FUNCTIONS                           │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐   │
+│  │validate-invoice│  │process-payment│  │approve-expense│   │
+│  └───────────────┘  └───────────────┘  └───────────────┘   │
+│  - Permission check via RPC                                 │
+│  - Limit validation                                         │
+│  - Business rules                                           │
+└────────────────────────────│────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    POSTGRESQL                               │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                  RLS POLICIES                        │   │
+│  │  - Uses check_section_permission()                   │   │
+│  │  - Uses check_financial_limit()                      │   │
+│  │  - Uses has_role()                                   │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                 AUDIT TRIGGERS                       │   │
+│  │  - log_activity() on all sensitive tables           │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## ✅ معايير القبول
+## ✅ معايير القبول (Acceptance Criteria)
 
-| المعيار | الهدف |
-|---------|-------|
-| Lighthouse PWA | 100/100 |
-| share_target | يعمل على Chrome/Edge |
-| file_handlers | مسجل في النظام |
-| protocol_handlers | يفتح الروابط المخصصة |
-| App Badge | يعرض العداد |
-| Background Sync | يعمل |
-| Offline | كامل الوظائف |
-
----
-
-## 🆕 ميزات PWA 2025 المضافة
-
-| الميزة | الدعم | الوصف |
-|--------|-------|-------|
-| `display_override` | Chrome/Edge | أوضاع عرض متعددة |
-| `share_target` | Chrome/Edge/Samsung | استقبال المشاركات |
-| `file_handlers` | Chrome/Edge | فتح الملفات |
-| `protocol_handlers` | Chrome/Edge | روابط مخصصة |
-| `launch_handler` | Chrome/Edge | تحكم بالتشغيل |
-| `handle_links` | Chrome | فتح الروابط تلقائياً |
-| `edge_side_panel` | Edge | اللوحة الجانبية |
-| App Badge API | Chrome/Edge | عداد الأيقونة |
-| Launch Queue API | Chrome/Edge | معالجة الملفات |
+| المعيار | الاختبار | الهدف |
+|---------|---------|-------|
+| RLS Enforcement | محاولة الوصول بدون permission | رفض مع 403 |
+| Financial Limits | إنشاء فاتورة فوق الحد | رفض مع رسالة واضحة |
+| Audit Trail | أي عملية على invoices | سجل في activity_logs |
+| Edge Function Auth | استدعاء بدون token | رفض مع 401 |
+| Permission Check | non-admin يحاول delete | رفض |
+| Rate Limit View | عمليات مكثفة | تظهر في suspicious_activities |
 
 ---
 
-## 🧪 خطة الاختبار
+## ⏱️ الجدول الزمني
 
-1. **اختبار التثبيت**: التحقق من ظهور جميع الميزات في Chrome DevTools
-2. **اختبار share_target**: مشاركة صورة/نص من تطبيق آخر
-3. **اختبار file_handlers**: فتح ملف Excel من مدير الملفات
-4. **اختبار protocol_handlers**: فتح رابط `web+invoice://INV-001`
-5. **اختبار App Badge**: عرض عداد الإشعارات
-6. **اختبار Offline**: التحقق من العمل بدون اتصال
+```text
+الأسبوع 1:
+├── اليوم 1-2: Security Functions (check_section_permission, check_financial_limit)
+├── اليوم 3-4: تحديث RLS Policies (جميع الجداول)
+└── اليوم 5: اختبار وتوثيق
+
+الأسبوع 2:
+├── اليوم 1-2: Edge Functions (validate-invoice, process-payment)
+├── اليوم 3: Edge Functions (approve-expense, stock-movement)
+└── اليوم 4-5: Audit Triggers + Views
+
+الأسبوع 3:
+├── اليوم 1-2: تحديث Frontend (secureOperations.ts)
+├── اليوم 3-4: تحديث usePermissions + الصفحات
+└── اليوم 5: اختبار شامل
+
+الأسبوع 4:
+├── اليوم 1-2: توثيق RLS Matrix
+├── اليوم 3: Architecture Notes
+└── اليوم 4-5: مراجعة أمنية + إصلاحات
+```
+
+**إجمالي: 4 أسابيع (Q1)**
+
+---
+
+## ⚠️ المخاطر والتحديات
+
+| المخاطر | الاحتمال | التأثير | الحل |
+|---------|---------|---------|------|
+| تعطل RLS الحالي | متوسط | عالي | اختبار في staging أولاً |
+| أداء Security Functions | منخفض | متوسط | استخدام STABLE |
+| تعارض مع الكود الحالي | متوسط | متوسط | تحديث تدريجي |
+| Edge Function latency | منخفض | منخفض | تحسين queries |
+
+---
+
+## 🚫 ممنوع في Q1
+
+- ❌ إضافة ميزات جديدة
+- ❌ تغيير UI/UX
+- ❌ إضافة جداول جديدة (ما عدا views)
+- ❌ تعديل business logic
+- ❌ Multi-tenant (Q3)
+- ❌ Financial accounting (Q2)
