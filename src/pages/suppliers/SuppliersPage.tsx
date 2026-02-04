@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +29,8 @@ import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { VirtualizedTable, VirtualColumn } from "@/components/table/VirtualizedTable";
+import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList";
 import {
   Select,
   SelectContent,
@@ -45,6 +47,8 @@ type PurchaseOrderStats = {
   total_amount: number | null;
   status: string;
 };
+
+const VIRTUALIZATION_THRESHOLD = 50;
 
 const SuppliersPage = () => {
   const queryClient = useQueryClient();
@@ -134,40 +138,67 @@ const SuppliersPage = () => {
     0
   );
 
-  // Get supplier purchase stats
-  const getSupplierStats = (supplierId: string) => {
+  // Get supplier purchase stats - memoized
+  const getSupplierStats = useCallback((supplierId: string) => {
     const orders = (purchaseOrders as PurchaseOrderStats[]).filter((o) => o.supplier_id === supplierId);
     return {
       orderCount: orders.length,
       totalAmount: orders.reduce((sum: number, o) => sum + (o.total_amount || 0), 0),
     };
-  };
+  }, [purchaseOrders]);
 
-  const handleEdit = (supplier: Supplier) => {
+  const handleEdit = useCallback((supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setSelectedSupplier(null);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     setDeletingId(id);
     deleteSupplierMutation.mutate(id);
-  };
+  }, [deleteSupplierMutation]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     await refetch();
-  };
+  }, [refetch]);
 
-  const statItems = [
+  const statItems = useMemo(() => [
     { label: 'إجمالي الموردين', value: suppliers.length, icon: Users, color: 'text-primary', bgColor: 'bg-primary/10' },
     { label: 'النشطين', value: activeSuppliers, icon: Users, color: 'text-success', bgColor: 'bg-success/10' },
     { label: 'إجمالي المشتريات', value: `${totalPurchases.toLocaleString()}`, icon: CreditCard, color: 'text-info', bgColor: 'bg-info/10' },
     { label: 'إجمالي الأرصدة', value: `${totalBalance.toLocaleString()}`, icon: CreditCard, color: 'text-warning', bgColor: 'bg-warning/10' },
-  ];
+  ], [suppliers.length, activeSuppliers, totalPurchases, totalBalance]);
+
+  const shouldVirtualize = sortedData.length > VIRTUALIZATION_THRESHOLD;
+
+  // Memoized mobile item renderer
+  const renderMobileSupplierItem = useCallback((supplier: Supplier) => {
+    const supplierStats = getSupplierStats(supplier.id);
+    return (
+      <DataCard
+        title={supplier.name}
+        subtitle={supplier.contact_person || 'بدون جهة اتصال'}
+        badge={{
+          text: supplier.is_active ? 'نشط' : 'غير نشط',
+          variant: supplier.is_active ? 'default' : 'secondary',
+        }}
+        icon={<Building2 className="h-5 w-5" />}
+        fields={[
+          { label: 'الهاتف', value: supplier.phone || '-', icon: <Phone className="h-4 w-4" /> },
+          { label: 'الطلبات', value: supplierStats.orderCount.toString() },
+          { label: 'الرصيد', value: `${(supplier.current_balance || 0).toLocaleString()} ج.م` },
+        ]}
+        onClick={() => navigate(`/suppliers/${supplier.id}`)}
+        onView={() => navigate(`/suppliers/${supplier.id}`)}
+        onEdit={canEdit ? () => handleEdit(supplier) : undefined}
+        onDelete={canDelete ? () => handleDelete(supplier.id) : undefined}
+      />
+    );
+  }, [navigate, canEdit, canDelete, handleEdit, handleDelete, getSupplierStats]);
 
   // Mobile View
   const renderMobileView = () => {
@@ -225,32 +256,18 @@ const SuppliersPage = () => {
                 icon: Plus,
               }}
             />
+          ) : shouldVirtualize ? (
+            <VirtualizedMobileList
+              data={sortedData as Supplier[]}
+              renderItem={renderMobileSupplierItem}
+              getItemKey={(supplier) => supplier.id}
+              itemHeight={150}
+            />
           ) : (
             <div className="space-y-3">
-              {(sortedData as Supplier[]).map((supplier) => {
-                const stats = getSupplierStats(supplier.id);
-                return (
-                  <DataCard
-                    key={supplier.id}
-                    title={supplier.name}
-                    subtitle={supplier.contact_person || 'بدون جهة اتصال'}
-                    badge={{
-                      text: supplier.is_active ? 'نشط' : 'غير نشط',
-                      variant: supplier.is_active ? 'default' : 'secondary',
-                    }}
-                    icon={<Building2 className="h-5 w-5" />}
-                    fields={[
-                      { label: 'الهاتف', value: supplier.phone || '-', icon: <Phone className="h-4 w-4" /> },
-                      { label: 'الطلبات', value: stats.orderCount.toString() },
-                      { label: 'الرصيد', value: `${(supplier.current_balance || 0).toLocaleString()} ج.م` },
-                    ]}
-                    onClick={() => navigate(`/suppliers/${supplier.id}`)}
-                    onView={() => navigate(`/suppliers/${supplier.id}`)}
-                    onEdit={canEdit ? () => handleEdit(supplier) : undefined}
-                    onDelete={canDelete ? () => handleDelete(supplier.id) : undefined}
-                  />
-                );
-              })}
+              {(sortedData as Supplier[]).map((supplier) => (
+                <div key={supplier.id}>{renderMobileSupplierItem(supplier)}</div>
+              ))}
             </div>
           )}
         </div>

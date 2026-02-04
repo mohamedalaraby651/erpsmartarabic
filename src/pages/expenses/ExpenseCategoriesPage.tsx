@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import PageHeader from '@/components/navigation/PageHeader';
@@ -11,6 +11,8 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { MobileListSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { DataCard } from '@/components/mobile/DataCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
+import { VirtualizedTable, VirtualColumn } from '@/components/table/VirtualizedTable';
 import { Plus, FolderTree, Pencil, Trash2 } from 'lucide-react';
 import { ExpenseCategoryFormDialog } from '@/components/expenses/ExpenseCategoryFormDialog';
 import {
@@ -40,6 +42,8 @@ interface ExpenseCategory {
   parent_id: string | null;
   created_at: string;
 }
+
+const VIRTUALIZATION_THRESHOLD = 50;
 
 export default function ExpenseCategoriesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -81,19 +85,34 @@ export default function ExpenseCategoriesPage() {
     },
   });
 
-  const handleEdit = (category: ExpenseCategory) => {
+  const handleEdit = useCallback((category: ExpenseCategory) => {
     setSelectedCategory(category);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleDialogClose = () => {
+  const handleDialogClose = useCallback(() => {
     setIsDialogOpen(false);
     setSelectedCategory(null);
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     await refetch();
-  };
+  }, [refetch]);
+
+  const shouldVirtualize = (categories?.length ?? 0) > VIRTUALIZATION_THRESHOLD;
+
+  // Memoized mobile item renderer
+  const renderMobileCategoryItem = useCallback((category: ExpenseCategory) => (
+    <DataCard
+      title={category.name}
+      subtitle={category.description || 'بدون وصف'}
+      badge={{
+        text: category.is_active ? 'نشط' : 'غير نشط',
+        variant: category.is_active ? 'default' : 'secondary',
+      }}
+      onClick={() => handleEdit(category)}
+    />
+  ), [handleEdit]);
 
   const content = (
     <div className="space-y-6">
@@ -122,20 +141,20 @@ export default function ExpenseCategoriesPage() {
           }}
         />
       ) : isMobile ? (
-        <div className="space-y-3">
-          {categories?.map((category) => (
-            <DataCard
-              key={category.id}
-              title={category.name}
-              subtitle={category.description || 'بدون وصف'}
-              badge={{
-                text: category.is_active ? 'نشط' : 'غير نشط',
-                variant: category.is_active ? 'default' : 'secondary',
-              }}
-              onClick={() => handleEdit(category)}
-            />
-          ))}
-        </div>
+        shouldVirtualize && categories ? (
+          <VirtualizedMobileList
+            data={categories}
+            renderItem={renderMobileCategoryItem}
+            getItemKey={(cat) => cat.id}
+            itemHeight={100}
+          />
+        ) : (
+          <div className="space-y-3">
+            {categories?.map((category) => (
+              <div key={category.id}>{renderMobileCategoryItem(category)}</div>
+            ))}
+          </div>
+        )
       ) : (
         <Card>
           <Table>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +40,8 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MobileListSkeleton, MobileStatSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { VirtualizedTable, VirtualColumn } from '@/components/table/VirtualizedTable';
+import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
 
 interface Employee {
   id: string;
@@ -61,6 +63,8 @@ const statusLabels: Record<string, { label: string; variant: 'default' | 'second
   on_leave: { label: 'في إجازة', variant: 'secondary' },
   terminated: { label: 'منتهي', variant: 'destructive' },
 };
+
+const VIRTUALIZATION_THRESHOLD = 50;
 
 export default function EmployeesPage() {
   const navigate = useNavigate();
@@ -139,39 +143,39 @@ export default function EmployeesPage() {
     return hireDate.getMonth() === now.getMonth() && hireDate.getFullYear() === now.getFullYear();
   }).length;
 
-  const handleEdit = (employee: Employee) => {
+  const handleEdit = useCallback((employee: Employee) => {
     setSelectedEmployee(employee);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     setEmployeeToDelete(id);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (employeeToDelete) {
       deleteMutation.mutate(employeeToDelete);
     }
-  };
+  }, [employeeToDelete, deleteMutation]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setSelectedEmployee(null);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     await refetch();
-  };
+  }, [refetch]);
 
-  const statItems = [
+  const statItems = useMemo(() => [
     { label: 'الإجمالي', value: totalEmployees, icon: Users, color: 'text-primary', bgColor: 'bg-primary/10' },
     { label: 'النشطين', value: activeEmployees, icon: UserCheck, color: 'text-success', bgColor: 'bg-success/10' },
     { label: 'في إجازة', value: onLeaveEmployees, icon: UserX, color: 'text-warning', bgColor: 'bg-warning/10' },
     { label: 'هذا الشهر', value: thisMonthHires, icon: Calendar, color: 'text-info', bgColor: 'bg-info/10' },
-  ];
+  ], [totalEmployees, activeEmployees, onLeaveEmployees, thisMonthHires]);
 
-  const exportColumns = [
+  const exportColumns = useMemo(() => [
     { key: 'employee_number', label: 'رقم الموظف' },
     { key: 'full_name', label: 'الاسم الكامل' },
     { key: 'email', label: 'البريد الإلكتروني' },
@@ -181,7 +185,31 @@ export default function EmployeesPage() {
     { key: 'employment_status', label: 'الحالة' },
     { key: 'hire_date', label: 'تاريخ التعيين' },
     { key: 'base_salary', label: 'الراتب الأساسي' },
-  ];
+  ], []);
+
+  const shouldVirtualize = filteredEmployees.length > VIRTUALIZATION_THRESHOLD;
+
+  // Memoized mobile item renderer
+  const renderMobileEmployeeItem = useCallback((employee: Employee) => (
+    <DataCard
+      title={employee.full_name}
+      subtitle={employee.job_title || employee.department || 'بدون منصب'}
+      badge={{
+        text: statusLabels[employee.employment_status || 'active']?.label || employee.employment_status || 'نشط',
+        variant: statusLabels[employee.employment_status || 'active']?.variant || 'secondary',
+      }}
+      avatar={employee.image_url || undefined}
+      avatarFallback={employee.full_name.charAt(0)}
+      fields={[
+        { label: 'رقم الموظف', value: employee.employee_number },
+        { label: 'القسم', value: employee.department || '-', icon: <Briefcase className="h-4 w-4" /> },
+      ]}
+      onClick={() => navigate(`/employees/${employee.id}`)}
+      onView={() => navigate(`/employees/${employee.id}`)}
+      onEdit={() => handleEdit(employee)}
+      onDelete={() => handleDelete(employee.id)}
+    />
+  ), [navigate, handleEdit, handleDelete]);
 
   // Mobile View
   const renderMobileView = () => {
@@ -239,28 +267,17 @@ export default function EmployeesPage() {
                 icon: Plus,
               }}
             />
+          ) : shouldVirtualize ? (
+            <VirtualizedMobileList
+              data={filteredEmployees}
+              renderItem={renderMobileEmployeeItem}
+              getItemKey={(emp) => emp.id}
+              itemHeight={140}
+            />
           ) : (
             <div className="space-y-3">
               {filteredEmployees.map((employee) => (
-                <DataCard
-                  key={employee.id}
-                  title={employee.full_name}
-                  subtitle={employee.job_title || employee.department || 'بدون منصب'}
-                  badge={{
-                    text: statusLabels[employee.employment_status || 'active']?.label || employee.employment_status || 'نشط',
-                    variant: statusLabels[employee.employment_status || 'active']?.variant || 'secondary',
-                  }}
-                  avatar={employee.image_url || undefined}
-                  avatarFallback={employee.full_name.charAt(0)}
-                  fields={[
-                    { label: 'رقم الموظف', value: employee.employee_number },
-                    { label: 'القسم', value: employee.department || '-', icon: <Briefcase className="h-4 w-4" /> },
-                  ]}
-                  onClick={() => navigate(`/employees/${employee.id}`)}
-                  onView={() => navigate(`/employees/${employee.id}`)}
-                  onEdit={() => handleEdit(employee)}
-                  onDelete={() => handleDelete(employee.id)}
-                />
+                <div key={employee.id}>{renderMobileEmployeeItem(employee)}</div>
               ))}
             </div>
           )}
