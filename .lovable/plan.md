@@ -13,6 +13,8 @@
 | **P0** | إصلاح console.log في secureOperations.ts | ✅ مكتمل |
 | **P1** | تحسين secureOperations.ts لاستخدام getSafeErrorMessage | ✅ مكتمل |
 | **P2** | تقسيم الملفات الكبيرة (4 ملفات) | ✅ مكتمل |
+| **P2** | إعادة هيكلة AppSidebar.tsx لاستخدام SidebarNavSections | ✅ مكتمل |
+| **P2** | إعادة هيكلة QuotationFormDialog.tsx لاستخدام useQuotationItems | ✅ مكتمل |
 | **P2** | إنشاء API_DOCUMENTATION.md | ✅ مكتمل |
 | **P2** | إنشاء DATABASE_SCHEMA.md | ✅ مكتمل |
 | **P2** | إنشاء DEPLOYMENT_GUIDE.md | ✅ مكتمل |

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,19 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
+import { QuotationItemsTable } from "./QuotationItemsTable";
+import { useQuotationItems } from "./useQuotationItems";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -42,15 +36,6 @@ interface QuotationFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   quotation?: Quotation | null;
-}
-
-interface QuotationItem {
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  discount_percentage: number;
-  total_price: number;
 }
 
 interface FormData {
@@ -66,7 +51,6 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isEditing = !!quotation;
-  const [items, setItems] = useState<QuotationItem[]>([]);
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -94,7 +78,17 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     },
   });
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
+  const {
+    items,
+    subtotal,
+    addItem,
+    updateItem,
+    removeItem,
+    loadItems,
+    resetItems,
+  } = useQuotationItems({ products });
+
+  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({
     defaultValues: {
       customer_id: '',
       valid_until: '',
@@ -113,8 +107,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         discount_amount: Number(quotation.discount_amount) || 0,
         tax_amount: Number(quotation.tax_amount) || 0,
       });
-      // Load existing items
-      loadQuotationItems(quotation.id);
+      loadItems(quotation.id);
     } else {
       reset({
         customer_id: '',
@@ -123,73 +116,10 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         discount_amount: 0,
         tax_amount: 0,
       });
-      setItems([]);
+      resetItems();
     }
-  }, [quotation, reset]);
+  }, [quotation, reset, loadItems, resetItems]);
 
-  const loadQuotationItems = async (quotationId: string) => {
-    const { data, error } = await supabase
-      .from('quotation_items')
-      .select('*, products(name)')
-      .eq('quotation_id', quotationId);
-    
-    if (!error && data) {
-      type LoadedItem = {
-        product_id: string;
-        quantity: number;
-        unit_price: number;
-        discount_percentage: number | null;
-        total_price: number;
-        products: { name: string } | null;
-      };
-      setItems((data as LoadedItem[]).map((item) => ({
-        product_id: item.product_id,
-        product_name: item.products?.name || '',
-        quantity: item.quantity,
-        unit_price: Number(item.unit_price),
-        discount_percentage: Number(item.discount_percentage) || 0,
-        total_price: Number(item.total_price),
-      })));
-    }
-  };
-
-  const addItem = () => {
-    setItems([...items, {
-      product_id: '',
-      product_name: '',
-      quantity: 1,
-      unit_price: 0,
-      discount_percentage: 0,
-      total_price: 0,
-    }]);
-  };
-
-  const updateItem = (index: number, field: keyof QuotationItem, value: string | number) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    
-    if (field === 'product_id') {
-      const product = products.find(p => p.id === value);
-      if (product) {
-        newItems[index].product_name = product.name;
-        newItems[index].unit_price = Number(product.selling_price);
-      }
-    }
-    
-    // Recalculate total
-    const item = newItems[index];
-    const subtotal = item.quantity * item.unit_price;
-    const discount = subtotal * (item.discount_percentage / 100);
-    item.total_price = subtotal - discount;
-    
-    setItems(newItems);
-  };
-
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
-
-  const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
   const discountAmount = watch('discount_amount') || 0;
   const taxAmount = watch('tax_amount') || 0;
   const total = subtotal - discountAmount + taxAmount;
@@ -231,7 +161,6 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         if (error) throw error;
         quotationId = quotation.id;
 
-        // Delete existing items
         await supabase
           .from('quotation_items')
           .delete()
@@ -246,7 +175,6 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         quotationId = newQuotation.id;
       }
 
-      // Insert items
       const itemsData = items.map(item => ({
         quotation_id: quotationId,
         product_id: item.product_id,
@@ -273,7 +201,6 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   });
 
   const onSubmit = async (data: FormData) => {
-    // Server-side permission verification
     const action = isEditing ? 'edit' : 'create';
     const hasPermission = await verifyPermissionOnServer('quotations', action);
     if (!hasPermission) {
@@ -285,7 +212,6 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       return;
     }
 
-    // Check discount limits for items
     const maxDiscountInItems = items.length > 0 
       ? Math.max(...items.map(i => i.discount_percentage || 0))
       : 0;
@@ -313,6 +239,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Customer & Date Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>العميل *</Label>
@@ -353,89 +280,13 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
               </Button>
             </div>
             
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>المنتج</TableHead>
-                    <TableHead className="w-24">الكمية</TableHead>
-                    <TableHead className="w-32">السعر</TableHead>
-                    <TableHead className="w-24">الخصم %</TableHead>
-                    <TableHead className="w-32">الإجمالي</TableHead>
-                    <TableHead className="w-16"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                        لا توجد منتجات - اضغط على "إضافة منتج"
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    items.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Select
-                            value={item.product_id}
-                            onValueChange={(value) => updateItem(index, 'product_id', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر المنتج" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {products.map((product) => (
-                                <SelectItem key={product.id} value={product.id}>
-                                  {product.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={item.unit_price}
-                            onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={item.discount_percentage}
-                            onChange={(e) => updateItem(index, 'discount_percentage', parseFloat(e.target.value) || 0)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold">{item.total_price.toLocaleString()}</span>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeItem(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <QuotationItemsTable
+              items={items}
+              products={products}
+              onAddItem={addItem}
+              onUpdateItem={updateItem}
+              onRemoveItem={removeItem}
+            />
           </div>
 
           {/* Totals */}
