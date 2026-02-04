@@ -73,6 +73,23 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
     console.log('[stock-movement] User authenticated:', userId);
 
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate Limit Check
+    console.log('[stock-movement] Checking rate limit...');
+    const { data: rateLimitAllowed } = await supabaseAdmin.rpc('check_rate_limit', {
+      _user_id: userId,
+      _endpoint: 'stock-movement'
+    });
+
+    if (rateLimitAllowed === false) {
+      console.log('[stock-movement] Rate limit exceeded for user:', userId);
+      return new Response(
+        JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await req.json();
     const movementData: StockMovementData = body.movement_data;
 
@@ -114,8 +131,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Check permission
     console.log('[stock-movement] Checking permission...');

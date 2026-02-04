@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface ApproveInvoiceRequest {
@@ -34,6 +34,12 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    // Create admin client for rate limit check
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
     // Verify user
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
@@ -45,6 +51,21 @@ Deno.serve(async (req) => {
     }
 
     const userId = claimsData.claims.sub as string;
+
+    // Rate Limit Check
+    console.log('[approve-invoice] Checking rate limit...');
+    const { data: rateLimitAllowed } = await supabaseAdmin.rpc('check_rate_limit', {
+      _user_id: userId,
+      _endpoint: 'approve-invoice'
+    });
+
+    if (rateLimitAllowed === false) {
+      console.log('[approve-invoice] Rate limit exceeded for user:', userId);
+      return new Response(
+        JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Parse request body
     const body: ApproveInvoiceRequest = await req.json();

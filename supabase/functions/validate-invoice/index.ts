@@ -75,6 +75,24 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
     console.log('[validate-invoice] User authenticated:', userId);
 
+    // Create admin client for DB operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate Limit Check
+    console.log('[validate-invoice] Checking rate limit...');
+    const { data: rateLimitAllowed } = await supabaseAdmin.rpc('check_rate_limit', {
+      _user_id: userId,
+      _endpoint: 'validate-invoice'
+    });
+
+    if (rateLimitAllowed === false) {
+      console.log('[validate-invoice] Rate limit exceeded for user:', userId);
+      return new Response(
+        JSON.stringify({ valid: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Parse request body
     const body = await req.json();
     const invoiceData: InvoiceData = body.invoice_data;
@@ -85,9 +103,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Create admin client for DB operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Check permission using DB function
     console.log('[validate-invoice] Checking section permission...');
