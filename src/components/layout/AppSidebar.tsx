@@ -1,8 +1,7 @@
-import { useState, memo, useMemo, useEffect } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
-import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import { useSidebarSearch } from '@/hooks/useSidebarSearch';
 import { useSidebarSettings } from '@/hooks/useSidebarSettings';
 import { cn } from '@/lib/utils';
@@ -13,138 +12,22 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import ClickableSearchButton from '@/components/sidebar/ClickableSearchButton';
 import QuickActions from '@/components/sidebar/QuickActions';
 import FavoritesSection from '@/components/sidebar/FavoritesSection';
-import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
-import DraggableNavSection from '@/components/sidebar/DraggableNavSection';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { arrayMove } from '@dnd-kit/sortable';
+import { DragEndEvent } from '@dnd-kit/core';
 import {
   LayoutDashboard,
-  Users,
-  Package,
-  FileText,
-  ShoppingCart,
-  Warehouse,
-  Truck,
   Settings,
   LogOut,
   ChevronRight,
   ChevronLeft,
   Factory,
-  Receipt,
-  CreditCard,
-  FolderTree,
-  ClipboardList,
   Moon,
   Sun,
-  BarChart3,
-  Bell,
-  CheckSquare,
   Shield,
   Search,
-  Wallet,
-  Briefcase,
-  RefreshCw,
   RotateCcw,
-  DollarSign,
 } from 'lucide-react';
-
-interface NavItem {
-  title: string;
-  icon: React.ElementType;
-  href: string;
-  roles?: string[];
-  countKey?: keyof ReturnType<typeof useSidebarCounts>['data'];
-  countColor?: 'default' | 'destructive' | 'warning' | 'success' | 'info';
-}
-
-interface NavSection {
-  id: string;
-  title: string;
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-  items: NavItem[];
-}
-
-// Section icon colors for visual distinction
-const sectionIconColors = {
-  sales: { icon: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', hover: 'hover:bg-blue-500/20' },
-  inventory: { icon: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10', hover: 'hover:bg-emerald-500/20' },
-  finance: { icon: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10', hover: 'hover:bg-orange-500/20' },
-  system: { icon: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-500/10', hover: 'hover:bg-slate-500/20' },
-};
-
-// الهيكل الجديد: 4 أقسام رئيسية
-const defaultNavSections: NavSection[] = [
-  {
-    id: 'sales',
-    title: 'المبيعات والعملاء',
-    icon: ShoppingCart,
-    color: sectionIconColors.sales.icon,
-    bgColor: sectionIconColors.sales.bg,
-    items: [
-      { title: 'العملاء', icon: Users, href: '/customers', roles: ['admin', 'sales'] },
-      { title: 'عروض الأسعار', icon: FileText, href: '/quotations', roles: ['admin', 'sales'], countKey: 'pendingQuotations', countColor: 'info' },
-      { title: 'أوامر البيع', icon: ShoppingCart, href: '/sales-orders', roles: ['admin', 'sales'], countKey: 'pendingSalesOrders', countColor: 'warning' },
-      { title: 'الفواتير', icon: Receipt, href: '/invoices', roles: ['admin', 'sales', 'accountant'], countKey: 'pendingInvoices', countColor: 'destructive' },
-      { title: 'التحصيل', icon: CreditCard, href: '/payments', roles: ['admin', 'accountant'] },
-    ],
-  },
-  {
-    id: 'inventory',
-    title: 'المخزون والمشتريات',
-    icon: Warehouse,
-    color: sectionIconColors.inventory.icon,
-    bgColor: sectionIconColors.inventory.bg,
-    items: [
-      { title: 'المنتجات', icon: Package, href: '/products', roles: ['admin', 'warehouse'] },
-      { title: 'التصنيفات', icon: FolderTree, href: '/categories', roles: ['admin', 'warehouse'] },
-      { title: 'المخزون', icon: Warehouse, href: '/inventory', roles: ['admin', 'warehouse'], countKey: 'lowStockAlerts', countColor: 'warning' },
-      { title: 'الموردين', icon: Truck, href: '/suppliers', roles: ['admin', 'warehouse'] },
-      { title: 'أوامر الشراء', icon: ClipboardList, href: '/purchase-orders', roles: ['admin', 'warehouse'], countKey: 'pendingPurchaseOrders', countColor: 'info' },
-    ],
-  },
-  {
-    id: 'finance',
-    title: 'المالية',
-    icon: DollarSign,
-    color: sectionIconColors.finance.icon,
-    bgColor: sectionIconColors.finance.bg,
-    items: [
-      { title: 'الخزينة', icon: Wallet, href: '/treasury', roles: ['admin', 'accountant'] },
-      { title: 'المصروفات', icon: Receipt, href: '/expenses', roles: ['admin', 'accountant'] },
-      { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
-      { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
-    ],
-  },
-  {
-    id: 'system',
-    title: 'النظام',
-    icon: Settings,
-    color: sectionIconColors.system.icon,
-    bgColor: sectionIconColors.system.bg,
-    items: [
-      { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
-      { title: 'المهام', icon: CheckSquare, href: '/tasks', countKey: 'openTasks', countColor: 'success' },
-      { title: 'الإشعارات', icon: Bell, href: '/notifications', countKey: 'unreadNotifications', countColor: 'info' },
-      { title: 'حالة المزامنة', icon: RefreshCw, href: '/sync' },
-      { title: 'الإعدادات', icon: Settings, href: '/settings' },
-    ],
-  },
-];
+import SidebarNavSections, { defaultNavSections, type NavSection } from './sidebar/SidebarNavSections';
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -158,8 +41,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
   const navigate = useNavigate();
   const { signOut, userRole } = useAuth();
   const { favorites, removeFavorite, isFavorite, toggleFavorite, reorderFavorites } = useFavoritePages();
-  const { data: counts } = useSidebarCounts();
-  const { settings, updateSectionOrder, toggleSectionCollapsed, isSectionCollapsed, resetSettings } = useSidebarSettings();
+  const { settings, updateSectionOrder, resetSettings } = useSidebarSettings();
   const [openSections, setOpenSections] = useState<string[]>(['sales', 'inventory']);
 
   // Order sections based on saved settings
@@ -167,7 +49,6 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
     const sectionMap = new Map(defaultNavSections.map(s => [s.id, s]));
     const ordered: NavSection[] = [];
     
-    // Add sections in saved order
     settings.sectionOrder.forEach(id => {
       const section = sectionMap.get(id);
       if (section) {
@@ -176,7 +57,6 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
       }
     });
     
-    // Add any remaining sections
     sectionMap.forEach(section => ordered.push(section));
     
     return ordered;
@@ -199,16 +79,9 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
 
   const { searchQuery, setSearchQuery, clearSearch, isSearching, filteredItems } = useSidebarSearch(allItems);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
   const toggleSection = (id: string) => {
     setOpenSections(prev =>
-      prev.includes(id)
-        ? prev.filter(t => t !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
     );
   };
 
@@ -221,16 +94,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
     navigate('/auth');
   };
 
-  const filterItems = (items: NavItem[]) => {
-    return items.filter(item => {
-      if (!item.roles) return true;
-      if (!userRole) return false;
-      return item.roles.includes(userRole);
-    });
-  };
-
   const isItemActive = (href: string) => location.pathname === href;
-  const isSectionActive = (items: NavItem[]) => items.some(item => isItemActive(item.href));
 
   const handleSectionDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -245,11 +109,6 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
   const handleResetOrder = () => {
     resetSettings();
     setOpenSections(['sales', 'inventory']);
-  };
-
-  const getCount = (item: NavItem) => {
-    if (!item.countKey || !counts) return undefined;
-    return counts[item.countKey as keyof typeof counts];
   };
 
   // Filter sections based on search
@@ -380,81 +239,20 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
 
           {!isSearching && !collapsed && <Separator className="mx-3 mt-3" />}
 
-          {/* Navigation */}
+          {/* Navigation Sections */}
           <ScrollArea className="flex-1 px-3 py-3">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleSectionDragEnd}
-            >
-              <SortableContext
-                items={visibleSections.map(s => s.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <nav className="space-y-2">
-                  {visibleSections.map((section) => {
-                    const filteredSectionItems = filterItems(section.items);
-                    if (filteredSectionItems.length === 0) return null;
-
-                    const isOpen = openSections.includes(section.id);
-                    const hasActiveItem = isSectionActive(filteredSectionItems);
-
-                    if (collapsed) {
-                      return (
-                        <div key={section.id} className="space-y-1">
-                          {filteredSectionItems.map((item) => (
-                            <NavItemWithBadge
-                              key={item.href}
-                              title={item.title}
-                              href={item.href}
-                              icon={item.icon}
-                              count={getCount(item)}
-                              countColor={item.countColor}
-                              sectionColor={section.color}
-                              sectionBgColor={section.bgColor}
-                              collapsed={collapsed}
-                              isFavorite={isFavorite(item.href)}
-                              onToggleFavorite={toggleFavorite}
-                            />
-                          ))}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <DraggableNavSection
-                        key={section.id}
-                        id={section.id}
-                        title={section.title}
-                        icon={section.icon}
-                        color={section.color}
-                        bgColor={section.bgColor}
-                        isOpen={isOpen}
-                        onToggle={() => toggleSection(section.id)}
-                        hasActiveItem={hasActiveItem}
-                        isDraggable={!isSearching}
-                      >
-                        {filteredSectionItems.map((item) => (
-                          <NavItemWithBadge
-                            key={item.href}
-                            title={item.title}
-                            href={item.href}
-                            icon={item.icon}
-                            count={getCount(item)}
-                            countColor={item.countColor}
-                            sectionColor={section.color}
-                            sectionBgColor={section.bgColor}
-                            collapsed={collapsed}
-                            isFavorite={isFavorite(item.href)}
-                            onToggleFavorite={toggleFavorite}
-                          />
-                        ))}
-                      </DraggableNavSection>
-                    );
-                  })}
-                </nav>
-              </SortableContext>
-            </DndContext>
+            <SidebarNavSections
+              orderedSections={orderedSections}
+              visibleSections={visibleSections}
+              openSections={openSections}
+              collapsed={collapsed}
+              userRole={userRole}
+              isSearching={isSearching}
+              isFavorite={isFavorite}
+              toggleFavorite={toggleFavorite}
+              toggleSection={toggleSection}
+              onSectionDragEnd={handleSectionDragEnd}
+            />
 
             {/* Admin Link */}
             {!collapsed && !isSearching && isAdmin && (
@@ -521,7 +319,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
               </Button>
             )}
 
-            {/* Collapse Toggle - Enhanced */}
+            {/* Collapse Toggle */}
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
