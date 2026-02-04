@@ -1,216 +1,385 @@
 
-# الخطة الشاملة لتحويل النظام إلى Enterprise-Grade
-## Complete Enterprise Transformation Plan - Q3 2026
+# الخطة الشاملة لتحديث واجهة المستخدم وصفحة الهبوط
+## Enterprise UI Refresh & Landing Page Plan
 
 ---
 
-## 🎯 حالة التنفيذ الحالية
+## 📋 ملخص المهام
 
-### ✅ المراحل المكتملة
-
-| المرحلة | الحالة | تاريخ الإكمال |
-|---------|--------|---------------|
-| **1. Multi-Tenant Architecture** | ✅ مكتمل | 2026-02-04 |
-| **2. Rate Limiting** | ✅ مكتمل | 2026-02-04 |
-| **3. Financial Governance** | ✅ مكتمل | 2026-02-04 |
-| **4. Segregation of Duties** | ✅ مكتمل | 2026-02-04 |
-| **5. Observability Layer** | ✅ مكتمل | 2026-02-04 |
+| # | المهمة | الأولوية | الوقت المتوقع |
+|---|--------|----------|---------------|
+| 1 | تغيير اسم النظام من "معدات الدواجن" إلى اسم مؤسسي | 🔴 P0 | 1 ساعة |
+| 2 | إنشاء صفحة هبوط (Landing Page) احترافية | 🔴 P0 | 3 ساعات |
+| 3 | تحديث واجهة المصادقة (Auth) | 🟠 P1 | 1 ساعة |
+| 4 | إضافة Tenant Selector للواجهة | 🟠 P1 | 2 ساعة |
+| 5 | تحديث Dashboard ليعكس النموذج الجديد | 🟡 P2 | 2 ساعة |
 
 ---
 
-## 📋 تفاصيل التنفيذ
+## 1️⃣ تغيير اسم النظام (Branding Update)
 
-### ✅ المرحلة 1: Multi-Tenant Architecture - مكتمل
+### الاسم الجديد المقترح
 
-**الجداول المنشأة:**
-- `tenants` - جدول المستأجرين الرئيسي
-- `user_tenants` - ربط المستخدمين بالمستأجرين
-
-**الدوال المنشأة:**
-- `get_current_tenant()` - استرداد tenant_id للمستخدم الحالي
-- `is_tenant_member()` - التحقق من عضوية المستخدم في مستأجر
-- `get_user_tenants()` - الحصول على جميع مستأجري المستخدم
-
-**تحديثات قاعدة البيانات:**
-- ✅ إضافة `tenant_id` لـ 56 جدول
-- ✅ إنشاء فهارس للأداء
-- ✅ تحديث 100+ سياسة RLS لفرض عزل المستأجرين
-
-**ملفات الكود المنشأة:**
-- `src/lib/tenantContext.ts` - منطق إدارة المستأجرين
-- `src/hooks/useTenant.ts` - React Hook للمستأجرين
-- `src/components/tenant/TenantSelector.tsx` - مكون اختيار الشركة
-- `src/components/tenant/TenantSettings.tsx` - إعدادات الشركة
-
----
-
-### ✅ المرحلة 2: Rate Limiting - مكتمل
-
-**الجداول المنشأة:**
-- `rate_limit_config` - تكوين حدود المعدل
-- `rate_limits` - تتبع الطلبات (Token Bucket)
-
-**الدوال المنشأة:**
-- `check_rate_limit()` - التحقق من حدود المعدل
-
-**تحديثات Edge Functions:**
-- ✅ `validate-invoice` - مع Rate Limiting
-- ✅ `process-payment` - مع Rate Limiting
-- ✅ `stock-movement` - مع Rate Limiting
-- ✅ `approve-invoice` - مع Rate Limiting
-- ✅ `approve-expense` - مع Rate Limiting
-- ✅ `verify-totp` - مع Rate Limiting
-- ✅ `create-journal` - مع Rate Limiting
-
-**ملفات الكود المنشأة:**
-- `src/hooks/useRateLimit.ts` - React Hook لتحديد المعدل
-
----
-
-### ✅ المرحلة 3: Financial Governance - مكتمل
-
-**الجداول المنشأة:**
-- `approval_chains` - سلاسل الموافقات
-- `approval_records` - سجلات الموافقات
-
-**الدوال المنشأة:**
-- `get_approval_chain()` - الحصول على سلسلة الموافقة المناسبة
-- `needs_approval()` - التحقق من الحاجة للموافقة
-
-**ملفات الكود المنشأة:**
-- `src/hooks/useApprovalChain.ts` - React Hook لسلسلة الموافقات
-
----
-
-### ✅ المرحلة 4: Segregation of Duties (SoD) - مكتمل
-
-**الجداول المنشأة:**
-- `sod_rules` - قواعد فصل المهام
-
-**الدوال المنشأة:**
-- `check_sod_violation()` - التحقق من انتهاكات SoD
-
-**القواعد الافتراضية المضافة (5 قواعد):**
-1. منع إنشاء واعتماد نفس الفاتورة
-2. منع إنشاء واعتماد نفس المصروف
-3. منع إنشاء وترحيل نفس القيد
-4. منع إنشاء واعتماد نفس أمر الشراء
-5. منع إنشاء وتحويل نفس عرض السعر
-
----
-
-### ✅ المرحلة 5: Observability Layer - مكتمل
-
-**الجداول المنشأة:**
-- `performance_metrics` - مقاييس الأداء
-
-**الدوال المنشأة:**
-- `record_metric()` - تسجيل مقياس
-- `cleanup_old_metrics()` - تنظيف المقاييس القديمة
-
-**ملفات الكود المنشأة:**
-- `src/lib/observability.ts` - نظام التسجيل المنظم
-
----
-
-## 📊 ملخص التحقق من الادعاءات
-
-### ✅ التحقق من الادعاءات الأصلية
-| الادعاء | النتيجة | الدليل |
-|---------|---------|--------|
-| RLS على جميع الجداول | ✅ مؤكد | 58 جدول مع 120+ سياسة + tenant isolation |
-| Edge Functions للعمليات المالية | ✅ مؤكد | 7 وظائف مع Rate Limiting |
-| Security Functions | ✅ مؤكد | check_section_permission, check_financial_limit, log_activity, has_role, check_rate_limit, check_sod_violation |
-| Error Handling آمن | ✅ مؤكد | getSafeErrorMessage + logErrorSafely |
-| Virtual Scrolling | ✅ مؤكد | VirtualizedTable, VirtualizedList, VirtualizedMobileList |
-| TypeScript صارم | ⚠️ جزئي | بعض استخدامات `any` متبقية |
-
-### ✅ الفجوات المغلقة
-| الفجوة | الحالة السابقة | الحالة الحالية |
-|--------|---------------|----------------|
-| **Multi-Tenant Architecture** | ❌ غير موجود | ✅ مكتمل |
-| **Rate Limiting** | ❌ غير موجود | ✅ مكتمل |
-| **Tenant Isolation** | ❌ غير موجود | ✅ مكتمل |
-| **Financial Governance** | ❌ غير موجود | ✅ مكتمل |
-| **Observability Layer** | ❌ غير موجود | ✅ مكتمل |
-| **Segregation of Duties** | ❌ غير موجود | ✅ مكتمل |
-
----
-
-## 📁 الملفات المنشأة/المحدثة
-
-### ملفات جديدة (12 ملف):
 ```text
-src/
-├── lib/
-│   ├── observability.ts ✅
-│   └── tenantContext.ts ✅
-├── hooks/
-│   ├── useTenant.ts ✅
-│   ├── useRateLimit.ts ✅
-│   └── useApprovalChain.ts ✅
-├── components/
-│   └── tenant/
-│       ├── index.ts ✅
-│       ├── TenantSelector.tsx ✅
-│       └── TenantSettings.tsx ✅
-supabase/
-└── migrations/
-    ├── 20260204_tenants_and_user_tenants.sql ✅
-    ├── 20260204_add_tenant_id_to_tables.sql ✅
-    ├── 20260204_rate_limiting.sql ✅
-    ├── 20260204_approval_chains.sql ✅
-    ├── 20260204_sod_rules.sql ✅
-    └── 20260204_observability.sql ✅
+الاسم الحالي: "معدات الدواجن" / "نظام إدارة معدات الدواجن"
+
+الاسم الجديد: "نظرة" (Nazra) - نظام إدارة الأعمال
+             أو
+             "رواد" (Rowad) - منصة إدارة المؤسسات
+             أو  
+             "إدارة برو" (Edara Pro) - نظام ERP الذكي
 ```
 
-### Edge Functions المحدثة (7 ملفات):
+**التوصية:** "نظرة" (Nazra) - لأنه:
+- اسم عربي أصيل يعني "رؤية واضحة"
+- قصير وسهل التذكر
+- يناسب نظام ERP يعطي "نظرة شاملة" على الأعمال
+- يعمل باللغتين العربية والإنجليزية
+
+### الملفات المتأثرة (12 ملف)
+
+| الملف | التغيير |
+|-------|---------|
+| `index.html` | title, meta tags, og:title |
+| `vite.config.ts` | PWA manifest name, short_name |
+| `src/pages/Auth.tsx` | عنوان الصفحة والوصف |
+| `src/pages/Index.tsx` | رسالة الترحيب |
+| `src/pages/Dashboard.tsx` | عنوان لوحة التحكم |
+| `src/components/layout/AppSidebar.tsx` | شعار القائمة الجانبية |
+| `src/components/layout/sidebar/SidebarHeader.tsx` | عنوان الـ Header |
+| `src/components/layout/MobileHeader.tsx` | عنوان الـ Header |
+| `src/components/layout/MobileDrawer.tsx` | عنوان الـ Drawer |
+| `src/components/layout/mobile/MobileDrawerHeader.tsx` | عنوان الـ Header |
+| `src/components/shared/AppInitSkeleton.tsx` | شاشة التحميل |
+| `public/offline.html` | صفحة عدم الاتصال |
+
+### التغييرات
+
 ```text
-supabase/functions/
-├── validate-invoice/index.ts ✅ (+ Rate Limiting)
-├── process-payment/index.ts ✅ (+ Rate Limiting)
-├── stock-movement/index.ts ✅ (+ Rate Limiting)
-├── approve-invoice/index.ts ✅ (+ Rate Limiting)
-├── approve-expense/index.ts ✅ (+ Rate Limiting)
-├── verify-totp/index.ts ✅ (+ Rate Limiting)
-└── create-journal/index.ts ✅ (+ Rate Limiting)
+قبل: "معدات الدواجن" | "نظام إدارة معدات الدواجن"
+بعد: "نظرة" | "نظرة - نظام إدارة الأعمال"
+
+قبل: Factory icon (مصنع)
+بعد: Layers أو LayoutDashboard أو Building2 (أكثر ملاءمة لـ ERP)
 ```
 
 ---
 
-## ✅ معايير النجاح - الحالة
+## 2️⃣ صفحة الهبوط (Landing Page)
 
-| المعيار | القيمة المستهدفة | الحالة |
-|---------|-----------------|--------|
-| Tenant Isolation | 100% - لا يوجد تسرب بيانات | ✅ مكتمل |
-| Rate Limiting Coverage | 100% من Edge Functions | ✅ مكتمل (7/7) |
-| SoD Rules | 5+ قواعد أساسية | ✅ مكتمل (5 قواعد) |
-| Approval Chains | جداول + دوال | ✅ مكتمل |
-| Observability | Metrics + Structured Logs | ✅ مكتمل |
+### البنية المقترحة
+
+```text
+src/pages/
+└── landing/
+    └── LandingPage.tsx
+
+src/components/landing/
+├── HeroSection.tsx        # القسم الرئيسي
+├── FeaturesSection.tsx    # المميزات
+├── PricingSection.tsx     # الأسعار (للـ SaaS)
+├── TestimonialsSection.tsx # آراء العملاء
+├── CTASection.tsx         # Call to Action
+├── LandingNavbar.tsx      # شريط التنقل
+└── LandingFooter.tsx      # التذييل
+```
+
+### أقسام الصفحة
+
+#### 2.1 Hero Section
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                     [شريط التنقل]                                │
+│  الشعار    المميزات    الأسعار    تواصل معنا    [تسجيل الدخول]  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│        نظرة                                                     │
+│        ─────                                                    │
+│        نظام إدارة الأعمال الذكي                                 │
+│                                                                 │
+│        إدارة شاملة لمؤسستك:                                     │
+│        العملاء • المبيعات • المخزون • المحاسبة                   │
+│                                                                 │
+│        ✓ يعمل بدون إنترنت                                       │
+│        ✓ متعدد المستأجرين                                       │
+│        ✓ تقارير لحظية                                           │
+│                                                                 │
+│        [ابدأ مجاناً]     [اطلب عرض توضيحي]                       │
+│                                                                 │
+│        ────────────────────────────────                         │
+│        [صورة/Animation للوحة التحكم]                             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 2.2 Features Section
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                    لماذا نظرة؟                                  │
+│                                                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │  📊         │  │  🔒         │  │  📱         │              │
+│  │  تقارير     │  │  أمان       │  │  PWA        │              │
+│  │  لحظية      │  │  مؤسسي      │  │  متجاوب     │              │
+│  │             │  │             │  │             │              │
+│  │  لوحة تحكم  │  │  RLS +      │  │  يعمل على   │              │
+│  │  تفاعلية    │  │  2FA +      │  │  جميع       │              │
+│  │             │  │  Rate Limit │  │  الأجهزة    │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│                                                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │  🏢         │  │  ☁️         │  │  🔄         │              │
+│  │  Multi      │  │  Offline    │  │  مزامنة     │              │
+│  │  Tenant     │  │  First      │  │  ذكية       │              │
+│  │             │  │             │  │             │              │
+│  │  عزل تام    │  │  يعمل بدون  │  │  بيانات     │              │
+│  │  للبيانات   │  │  إنترنت     │  │  محدثة      │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 2.3 Pricing Section (للنموذج SaaS)
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                      الباقات والأسعار                           │
+│                                                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │   أساسي     │  │  احترافي   │  │  مؤسسي     │              │
+│  │   ───────   │  │  ─────────  │  │  ───────   │              │
+│  │   مجاني     │  │  299 ج.م   │  │  تواصل معنا │              │
+│  │             │  │  /شهرياً    │  │             │              │
+│  │  5 مستخدمين │  │  25 مستخدم  │  │  غير محدود  │              │
+│  │  1000 فاتورة│  │  غير محدود  │  │  + SLA      │              │
+│  │  دعم بريدي │  │  دعم فوري   │  │  + مدير حساب │              │
+│  │             │  │             │  │             │              │
+│  │  [ابدأ الآن]│  │ [اشترك الآن]│  │ [تواصل معنا]│              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 2.4 CTA Section
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│        هل أنت جاهز لإدارة أعمالك بذكاء؟                         │
+│                                                                 │
+│        [ابدأ تجربتك المجانية اليوم]                              │
+│                                                                 │
+│        لا حاجة لبطاقة ائتمان • إعداد خلال دقائق                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🎯 النتيجة
+## 3️⃣ تحديث واجهة المصادقة (Auth)
 
-بعد إكمال هذه الخطة:
-- ✅ **Go** لـ SaaS متعدد العملاء
-- ✅ **Go** للشركات الخاضعة لتدقيق مالي
-- ✅ **Go** لبيئات عالية الامتثال
-- ✅ **Enterprise-Grade** وفق معايير ISO-like Governance
+### التغييرات
+
+```text
+قبل:
+┌─────────────────────────────────────┐
+│        [Factory Icon]               │
+│   نظام إدارة معدات الدواجن          │
+│   ─────────────────────────         │
+│   [تسجيل الدخول / إنشاء حساب]        │
+└─────────────────────────────────────┘
+
+بعد:
+┌─────────────────────────────────────┐
+│        [Layers Icon + Gradient]     │
+│        نظرة                         │
+│   نظام إدارة الأعمال الذكي          │
+│   ─────────────────────────         │
+│                                     │
+│   [تسجيل الدخول / إنشاء حساب]        │
+│                                     │
+│   أو سجل باستخدام:                   │
+│   [Google] [GitHub]  (اختياري)       │
+│                                     │
+│   ─────────────────────────         │
+│   [العودة للصفحة الرئيسية]           │
+└─────────────────────────────────────┘
+```
 
 ---
 
-## 📌 ملاحظات للمتابعة
+## 4️⃣ إضافة Tenant Selector للواجهة
 
-### مهام متبقية (اختيارية):
-1. **Testing**: إضافة اختبارات E2E للميزات الجديدة
-2. **UI Integration**: دمج TenantSelector في الـ Header/Sidebar
-3. **Period Locking UI**: واجهة لقفل الفترات المالية
-4. **SoD Dashboard**: لوحة تحكم لمراقبة انتهاكات SoD
-5. **Metrics Dashboard**: لوحة لعرض مقاييس الأداء
+### المواقع
 
-### توصيات للنشر:
-1. تنفيذ الـ Migrations بالترتيب
-2. إعداد مستأجر افتراضي للمستخدمين الحاليين
-3. مراقبة سجلات Rate Limiting للأسبوع الأول
-4. تفعيل SoD تدريجياً مع مراقبة False Positives
+1. **Desktop Sidebar** (`AppSidebar.tsx`):
+```text
+┌─────────────────────────────────────┐
+│  [Logo] نظرة                        │
+│  ───────────────────────────────    │
+│  ▼ [اسم الشركة الحالية]             │  ← TenantSelector
+│  ───────────────────────────────    │
+│  [Navigation Items...]              │
+└─────────────────────────────────────┘
+```
+
+2. **Mobile Drawer** (`MobileDrawer.tsx`):
+```text
+┌─────────────────────────────────────┐
+│  [Logo] نظرة                        │
+│  ▼ [اسم الشركة]                     │  ← TenantSelector
+│  ───────────────────────────────    │
+│  [Navigation Items...]              │
+└─────────────────────────────────────┘
+```
+
+3. **Header (Desktop)** (`AppHeader.tsx`):
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  [بحث...]    [Breadcrumbs]         [Tenant Badge] [الإشعارات] [الحساب] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 5️⃣ تحديث Dashboard
+
+### التغييرات الجديدة
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   صباح الخير، أحمد 👋                                           │
+│   ──────────────────                                            │
+│   [Badge: اسم الشركة] [Badge: الباقة الاحترافية]                 │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ┌──────────────────────────────────────────────────────┐      │
+│   │  🎉 مرحباً بك في نظرة!                                │      │
+│   │                                                       │      │
+│   │  تم تفعيل الميزات الجديدة:                            │      │
+│   │  ✓ عزل البيانات متعدد المستأجرين                      │      │
+│   │  ✓ سلسلة الموافقات المالية                            │      │
+│   │  ✓ Rate Limiting للحماية                              │      │
+│   │                                                       │      │
+│   │  [اكتشف المزيد]              [إغلاق]                  │      │
+│   └──────────────────────────────────────────────────────┘      │
+│                                                                 │
+│   [Widgets: الإحصائيات، الإجراءات السريعة، المخطط...]            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 الملفات المتأثرة
+
+### ملفات جديدة (8 ملفات)
+```text
+src/pages/landing/LandingPage.tsx
+src/components/landing/HeroSection.tsx
+src/components/landing/FeaturesSection.tsx
+src/components/landing/PricingSection.tsx
+src/components/landing/CTASection.tsx
+src/components/landing/LandingNavbar.tsx
+src/components/landing/LandingFooter.tsx
+src/components/landing/index.ts
+```
+
+### ملفات معدلة (15 ملف)
+```text
+# Branding (12 ملف)
+index.html
+vite.config.ts
+src/pages/Auth.tsx
+src/pages/Index.tsx
+src/pages/Dashboard.tsx
+src/components/layout/AppSidebar.tsx
+src/components/layout/sidebar/SidebarHeader.tsx
+src/components/layout/MobileHeader.tsx
+src/components/layout/MobileDrawer.tsx
+src/components/layout/mobile/MobileDrawerHeader.tsx
+src/components/shared/AppInitSkeleton.tsx
+public/offline.html
+
+# Tenant Integration (3 ملفات)
+src/components/layout/AppSidebar.tsx
+src/components/layout/MobileDrawer.tsx
+src/components/layout/AppHeader.tsx
+
+# Routing
+src/App.tsx (إضافة route للـ Landing Page)
+```
+
+---
+
+## 🎨 التصميم والألوان
+
+### الهوية البصرية الجديدة
+
+```css
+/* Primary Brand Colors */
+--brand-primary: #3b82f6;     /* Blue 500 - الأساسي */
+--brand-secondary: #8b5cf6;   /* Violet 500 - الثانوي */
+--brand-accent: #06b6d4;      /* Cyan 500 - التأكيد */
+
+/* Gradient */
+--brand-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+
+/* Logo Icon */
+الأيقونة الجديدة: Layers أو LayoutDashboard
+بدلاً من: Factory
+```
+
+### الأيقونة الجديدة
+
+```typescript
+// قبل
+import { Factory } from 'lucide-react';
+<Factory className="h-5 w-5 text-primary" />
+
+// بعد
+import { Layers } from 'lucide-react';
+<Layers className="h-5 w-5 text-primary" />
+```
+
+---
+
+## 📊 جدول التنفيذ
+
+| # | المهمة | الملفات | الوقت |
+|---|--------|---------|-------|
+| 1 | تحديث index.html + vite.config.ts | 2 | 15 دقيقة |
+| 2 | تحديث جميع ملفات Branding | 10 | 45 دقيقة |
+| 3 | إنشاء مكونات Landing Page | 7 | 2 ساعة |
+| 4 | إنشاء صفحة LandingPage.tsx | 1 | 30 دقيقة |
+| 5 | تحديث App.tsx للـ Routing | 1 | 15 دقيقة |
+| 6 | دمج TenantSelector في الواجهات | 3 | 1 ساعة |
+| 7 | تحديث Dashboard بالميزات الجديدة | 1 | 30 دقيقة |
+
+**الإجمالي:** ~5 ساعات
+
+---
+
+## ✅ معايير النجاح
+
+| المعيار | الهدف |
+|---------|-------|
+| الاسم الجديد | موحد في جميع الأماكن (12+ ملف) |
+| Landing Page | تحميل < 2 ثانية، Lighthouse > 90 |
+| Responsive | يعمل على Desktop + Mobile |
+| RTL Support | 100% متوافق مع العربية |
+| Tenant Selector | يظهر للمستخدمين متعددي الشركات |
+| Animations | Smooth transitions (300ms) |
+
+---
+
+## 🎯 النتيجة المتوقعة
+
+بعد التنفيذ:
+- ✅ هوية بصرية مؤسسية احترافية
+- ✅ صفحة هبوط جاذبة للعملاء الجدد
+- ✅ تجربة Onboarding سلسة
+- ✅ دعم كامل للـ Multi-Tenancy في الواجهة
+- ✅ نظام جاهز للتسويق كـ SaaS
