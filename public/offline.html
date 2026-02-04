@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#3b82f6">
-  <title>غير متصل بالإنترنت - ERP Smart</title>
+  <title>غير متصل بالإنترنت - نظرة</title>
   <style>
     * {
       margin: 0;
@@ -15,6 +15,7 @@
     :root {
       --primary: #3b82f6;
       --primary-dark: #2563eb;
+      --violet: #8b5cf6;
       --bg-dark: #0f172a;
       --bg-light: #1e293b;
       --text-primary: #f8fafc;
@@ -46,7 +47,7 @@
     .logo {
       width: 80px;
       height: 80px;
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--violet) 100%);
       border-radius: 20px;
       display: flex;
       align-items: center;
@@ -55,10 +56,26 @@
       box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.5);
     }
     
-    .logo span {
-      font-size: 24px;
-      font-weight: 700;
+    .logo svg {
+      width: 40px;
+      height: 40px;
       color: white;
+    }
+    
+    .brand-name {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    
+    .brand-tagline {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
     }
     
     .icon {
@@ -155,12 +172,11 @@
     }
     
     .btn-primary {
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--violet) 100%);
       color: white;
     }
     
     .btn-primary:hover {
-      background: var(--primary-dark);
       transform: translateY(-2px);
       box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.5);
     }
@@ -219,7 +235,7 @@
       content: "";
       width: 6px;
       height: 6px;
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--violet) 100%);
       border-radius: 50%;
       flex-shrink: 0;
     }
@@ -240,8 +256,15 @@
 <body>
   <div class="container">
     <div class="logo">
-      <span>ERP</span>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
     </div>
+    
+    <div class="brand-name">نظرة</div>
+    <p class="brand-tagline">نظام إدارة الأعمال الذكي</p>
     
     <div class="icon">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -325,7 +348,7 @@
       </ul>
     </div>
     
-    <p class="version">ERP Smart v2.0.0 - PWA 2025</p>
+    <p class="version">نظرة v2.0.0 - نظام إدارة الأعمال</p>
   </div>
 
   <script>

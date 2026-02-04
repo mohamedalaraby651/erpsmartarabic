@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  Factory,
+  Layers,
   LogOut,
   Moon,
   Sun,
@@ -46,6 +46,7 @@ import {
   ChevronLeft,
   DollarSign,
 } from 'lucide-react';
+import { TenantSelector } from '@/components/tenant';
 
 interface NavItem {
   title: string;
@@ -203,15 +204,20 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
       <SheetContent side="right" className="w-[280px] p-0">
         <SheetHeader className="p-3 border-b bg-gradient-to-l from-primary/5 to-transparent">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-              <Factory className="h-4 w-4 text-primary" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-violet-500 shadow-md shadow-primary/20">
+              <Layers className="h-4 w-4 text-white" />
             </div>
             <div>
-              <SheetTitle className="text-right text-sm">معدات الدواجن</SheetTitle>
-              <p className="text-[10px] text-muted-foreground">نظام الإدارة</p>
+              <SheetTitle className="text-right text-sm bg-gradient-to-l from-primary to-violet-500 bg-clip-text text-transparent">نظرة</SheetTitle>
+              <p className="text-[10px] text-muted-foreground">نظام إدارة الأعمال</p>
             </div>
           </div>
         </SheetHeader>
+
+        {/* Tenant Selector */}
+        <div className="p-3 border-b">
+          <TenantSelector />
+        </div>
 
         <ScrollArea className="h-[calc(100vh-180px)]">
           <div className="p-3 space-y-3">

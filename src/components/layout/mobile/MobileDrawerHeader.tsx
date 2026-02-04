@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Factory, Search, X } from 'lucide-react';
+import { Layers, Search, X } from 'lucide-react';
 import { SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,12 +25,12 @@ function MobileDrawerHeader({
     <>
       <SheetHeader className="p-3 border-b bg-gradient-to-l from-primary/5 to-transparent">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-            <Factory className="h-4 w-4 text-primary" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-violet-500 shadow-md shadow-primary/20">
+            <Layers className="h-4 w-4 text-white" />
           </div>
           <div>
-            <SheetTitle className="text-right text-sm">معدات الدواجن</SheetTitle>
-            <p className="text-[10px] text-muted-foreground">نظام الإدارة</p>
+            <SheetTitle className="text-right text-sm bg-gradient-to-l from-primary to-violet-500 bg-clip-text text-transparent">نظرة</SheetTitle>
+            <p className="text-[10px] text-muted-foreground">نظام إدارة الأعمال</p>
           </div>
         </div>
       </SheetHeader>

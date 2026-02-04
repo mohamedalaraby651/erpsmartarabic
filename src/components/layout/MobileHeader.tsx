@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Factory, Search, Bell, LayoutGrid } from 'lucide-react';
+import { Layers, Search, Bell, LayoutGrid } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
@@ -98,11 +98,11 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
         )}
         
         {/* Company Name */}
-        <span className="font-bold text-xs hidden xs:inline">معدات الدواجن</span>
+        <span className="font-bold text-xs hidden xs:inline bg-gradient-to-l from-primary to-violet-500 bg-clip-text text-transparent">نظرة</span>
         
         {/* Logo */}
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-          <Factory className="h-3.5 w-3.5 text-primary" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-violet-500 shadow-sm shadow-primary/20">
+          <Layers className="h-3.5 w-3.5 text-white" />
         </div>
         
         {/* User Avatar */}
