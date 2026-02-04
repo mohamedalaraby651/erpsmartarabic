@@ -72,6 +72,23 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
     console.log('[process-payment] User authenticated:', userId);
 
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate Limit Check
+    console.log('[process-payment] Checking rate limit...');
+    const { data: rateLimitAllowed } = await supabaseAdmin.rpc('check_rate_limit', {
+      _user_id: userId,
+      _endpoint: 'process-payment'
+    });
+
+    if (rateLimitAllowed === false) {
+      console.log('[process-payment] Rate limit exceeded for user:', userId);
+      return new Response(
+        JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await req.json();
     const paymentData: PaymentData = body.payment_data;
 
@@ -81,8 +98,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Check permission
     console.log('[process-payment] Checking section permission...');

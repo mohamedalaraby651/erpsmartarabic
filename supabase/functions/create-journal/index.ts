@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface JournalEntry {
@@ -43,6 +43,12 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    // Create admin client for operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
     // Verify user
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
@@ -55,9 +61,24 @@ Deno.serve(async (req) => {
 
     const userId = claimsData.claims.sub as string;
 
+    // Rate Limit Check
+    console.log('[create-journal] Checking rate limit...');
+    const { data: rateLimitAllowed } = await supabaseAdmin.rpc('check_rate_limit', {
+      _user_id: userId,
+      _endpoint: 'create-journal'
+    });
+
+    if (rateLimitAllowed === false) {
+      console.log('[create-journal] Rate limit exceeded for user:', userId);
+      return new Response(
+        JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Check permission - only admin or accountant
-    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
-    const { data: isAccountant } = await supabase.rpc('has_role', { _user_id: userId, _role: 'accountant' });
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'admin' });
+    const { data: isAccountant } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'accountant' });
 
     if (!isAdmin && !isAccountant) {
       return new Response(
@@ -107,7 +128,7 @@ Deno.serve(async (req) => {
     }
 
     // Find open fiscal period
-    const { data: period, error: periodError } = await supabase
+    const { data: period, error: periodError } = await supabaseAdmin
       .from('fiscal_periods')
       .select('id, name')
       .eq('is_closed', false)
@@ -128,7 +149,7 @@ Deno.serve(async (req) => {
 
     // Validate all accounts exist and are active
     const accountIds = [...new Set(entries.map(e => e.account_id))];
-    const { data: accounts, error: accountsError } = await supabase
+    const { data: accounts, error: accountsError } = await supabaseAdmin
       .from('chart_of_accounts')
       .select('id, code, name, is_active')
       .in('id', accountIds);
@@ -158,7 +179,7 @@ Deno.serve(async (req) => {
     }
 
     // Create journal
-    const { data: journal, error: journalError } = await supabase
+    const { data: journal, error: journalError } = await supabaseAdmin
       .from('journals')
       .insert({
         fiscal_period_id: period.id,
@@ -187,14 +208,14 @@ Deno.serve(async (req) => {
       memo: entry.memo || null
     }));
 
-    const { error: entriesError } = await supabase
+    const { error: entriesError } = await supabaseAdmin
       .from('journal_entries')
       .insert(entriesData);
 
     if (entriesError) {
       console.error('[create-journal] Entries insert error:', entriesError);
       // Try to clean up the journal
-      await supabase.from('journals').delete().eq('id', journal.id);
+      await supabaseAdmin.from('journals').delete().eq('id', journal.id);
       throw entriesError;
     }
 
