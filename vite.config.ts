@@ -70,9 +70,9 @@ export default defineConfig(({ mode }) => ({
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png', 'screenshots/*.png'],
       manifest: {
-        name: 'ERP Smart العربي',
-        short_name: 'ERP Smart',
-        description: 'نظام إدارة موارد المؤسسات الذكي - يعمل دون اتصال بالإنترنت مع دعم كامل للعربية',
+        name: 'نظرة - نظام إدارة الأعمال',
+        short_name: 'نظرة',
+        description: 'نظام ERP متكامل لإدارة العملاء والمبيعات والمخزون والمحاسبة - يعمل بدون إنترنت مع دعم تعدد الشركات',
         theme_color: '#3b82f6',
         background_color: '#0f172a',
         display: 'standalone',

@@ -10,6 +10,7 @@ import { ReloadPrompt } from "@/components/offline/ReloadPrompt";
 import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
 
 // Lazy load pages for better performance
+const LandingPage = lazy(() => import("./pages/landing/LandingPage"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AppLayout = lazy(() => import("./components/layout/AppLayout"));
@@ -96,6 +97,7 @@ const App = () => (
           <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
               <Routes>
+                <Route path="/landing" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/" element={<AppLayout />}>
                   <Route index element={<Dashboard />} />

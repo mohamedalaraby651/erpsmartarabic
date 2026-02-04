@@ -20,13 +20,14 @@ import {
   LogOut,
   ChevronRight,
   ChevronLeft,
-  Factory,
+  Layers,
   Moon,
   Sun,
   Shield,
   Search,
   RotateCcw,
 } from 'lucide-react';
+import { TenantSelector } from '@/components/tenant';
 import SidebarNavSections, { defaultNavSections, type NavSection } from './sidebar/SidebarNavSections';
 
 interface AppSidebarProps {
@@ -141,21 +142,28 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
           )}>
             {!collapsed && (
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-                  <Factory className="h-5 w-5 text-primary" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-violet-500 shadow-md shadow-primary/20">
+                  <Layers className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-sidebar-foreground">معدات الدواجن</h1>
-                  <p className="text-xs text-muted-foreground">نظام الإدارة</p>
+                  <h1 className="font-bold bg-gradient-to-l from-primary to-violet-500 bg-clip-text text-transparent">نظرة</h1>
+                  <p className="text-xs text-muted-foreground">نظام إدارة الأعمال</p>
                 </div>
               </div>
             )}
             {collapsed && (
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-                <Factory className="h-5 w-5 text-primary" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-violet-500 shadow-md shadow-primary/20">
+                <Layers className="h-5 w-5 text-white" />
               </div>
             )}
           </div>
+
+          {/* Tenant Selector */}
+          {!collapsed && (
+            <div className="px-3 pt-3">
+              <TenantSelector />
+            </div>
+          )}
 
           {/* Search */}
           <div className="px-3 pt-3">

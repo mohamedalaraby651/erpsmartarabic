@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Eye, EyeOff, Factory } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Layers, ArrowRight } from 'lucide-react';
 import { logErrorSafely } from '@/lib/errorHandler';
 
 export default function Auth() {
@@ -94,11 +94,11 @@ export default function Auth() {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-            <Factory className="h-8 w-8 text-primary" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-violet-500 mb-4 shadow-lg shadow-primary/25">
+            <Layers className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">نظام إدارة معدات الدواجن</h1>
-          <p className="text-muted-foreground mt-2">مرحباً بك في نظام الإدارة المتكامل</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-l from-primary to-violet-500 bg-clip-text text-transparent">نظرة</h1>
+          <p className="text-muted-foreground mt-2">نظام إدارة الأعمال الذكي</p>
         </div>
 
         <Card className="border-0 shadow-xl glass">
@@ -229,9 +229,20 @@ export default function Auth() {
           </CardContent>
         </Card>
         
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          نظام إدارة متكامل لشركات معدات الدواجن
-        </p>
+        <div className="text-center mt-6 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            نظام ERP متكامل لإدارة الأعمال
+          </p>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/landing')}
+            className="text-primary hover:text-primary/80"
+          >
+            <ArrowRight className="ml-2 h-4 w-4" />
+            العودة للصفحة الرئيسية
+          </Button>
+        </div>
       </div>
     </div>
   );
