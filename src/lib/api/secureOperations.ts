@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
 
 // ============================================
 // Types
@@ -83,17 +84,17 @@ export async function validateInvoice(
     });
 
     if (error) {
-      console.error('[secureOperations] Invoice validation error:', error);
+      logErrorSafely('secureOperations.validateInvoice', error);
       return {
         valid: false,
-        error: error.message || 'فشل التحقق من الفاتورة',
+        error: getSafeErrorMessage(error) || 'فشل التحقق من الفاتورة',
         code: 'VALIDATION_ERROR'
       };
     }
 
     return data as ValidationResult;
   } catch (err) {
-    console.error('[secureOperations] Unexpected error in validateInvoice:', err);
+    logErrorSafely('secureOperations.validateInvoice.unexpected', err);
     return {
       valid: false,
       error: 'خطأ غير متوقع أثناء التحقق',
@@ -115,10 +116,10 @@ export async function processPayment(
     });
 
     if (error) {
-      console.error('[secureOperations] Payment processing error:', error);
+      logErrorSafely('secureOperations.processPayment', error);
       return {
         success: false,
-        error: error.message || 'فشل معالجة الدفعة',
+        error: getSafeErrorMessage(error) || 'فشل معالجة الدفعة',
         code: 'PAYMENT_ERROR'
       };
     }
@@ -138,7 +139,7 @@ export async function processPayment(
       details: data.details
     };
   } catch (err) {
-    console.error('[secureOperations] Unexpected error in processPayment:', err);
+    logErrorSafely('secureOperations.processPayment.unexpected', err);
     return {
       success: false,
       error: 'خطأ غير متوقع أثناء معالجة الدفعة',
@@ -160,10 +161,10 @@ export async function approveExpense(
     });
 
     if (error) {
-      console.error('[secureOperations] Expense approval error:', error);
+      logErrorSafely('secureOperations.approveExpense', error);
       return {
         success: false,
-        error: error.message || 'فشل معالجة المصروف',
+        error: getSafeErrorMessage(error) || 'فشل معالجة المصروف',
         code: 'APPROVAL_ERROR'
       };
     }
@@ -182,7 +183,7 @@ export async function approveExpense(
       details: data.details
     };
   } catch (err) {
-    console.error('[secureOperations] Unexpected error in approveExpense:', err);
+    logErrorSafely('secureOperations.approveExpense.unexpected', err);
     return {
       success: false,
       error: 'خطأ غير متوقع أثناء معالجة المصروف',
@@ -204,10 +205,10 @@ export async function processStockMovement(
     });
 
     if (error) {
-      console.error('[secureOperations] Stock movement error:', error);
+      logErrorSafely('secureOperations.processStockMovement', error);
       return {
         success: false,
-        error: error.message || 'فشل تنفيذ حركة المخزون',
+        error: getSafeErrorMessage(error) || 'فشل تنفيذ حركة المخزون',
         code: 'MOVEMENT_ERROR'
       };
     }
@@ -227,7 +228,7 @@ export async function processStockMovement(
       details: data.details
     };
   } catch (err) {
-    console.error('[secureOperations] Unexpected error in processStockMovement:', err);
+    logErrorSafely('secureOperations.processStockMovement.unexpected', err);
     return {
       success: false,
       error: 'خطأ غير متوقع أثناء تنفيذ حركة المخزون',
@@ -259,13 +260,13 @@ export async function verifyPermissionOnServer(
     });
 
     if (error) {
-      console.error('[secureOperations] Permission check error:', error);
+      logErrorSafely('secureOperations.verifyPermissionOnServer', error);
       return false;
     }
 
     return data === true;
   } catch (err) {
-    console.error('[secureOperations] Unexpected error in verifyPermissionOnServer:', err);
+    logErrorSafely('secureOperations.verifyPermissionOnServer.unexpected', err);
     return false;
   }
 }
@@ -288,13 +289,13 @@ export async function verifyFinancialLimit(
     });
 
     if (error) {
-      console.error('[secureOperations] Limit check error:', error);
+      logErrorSafely('secureOperations.verifyFinancialLimit', error);
       return false;
     }
 
     return data === true;
   } catch (err) {
-    console.error('[secureOperations] Unexpected error in verifyFinancialLimit:', err);
+    logErrorSafely('secureOperations.verifyFinancialLimit.unexpected', err);
     return false;
   }
 }
