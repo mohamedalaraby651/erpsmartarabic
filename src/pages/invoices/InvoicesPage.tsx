@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,9 +30,14 @@ import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { VirtualizedTable, VirtualColumn } from "@/components/table/VirtualizedTable";
+import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
+type InvoiceWithCustomer = Invoice & { customers: { name: string } | null };
+
+const VIRTUALIZATION_THRESHOLD = 50;
 
 const paymentStatusLabels: Record<string, string> = {
   pending: "غير مدفوع",
@@ -137,26 +142,53 @@ const InvoicesPage = () => {
       .reduce((sum: number, i) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
   };
 
-  const handleEdit = (invoice: Invoice) => {
+  const handleEdit = useCallback((invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setSelectedInvoice(null);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     await refetch();
-  };
+  }, [refetch]);
 
-  const statItems = [
+  const statItems = useMemo(() => [
     { label: 'إجمالي الفواتير', value: stats.total, icon: Receipt, color: 'text-primary', bgColor: 'bg-primary/10' },
     { label: 'غير مدفوعة', value: stats.unpaid, icon: Receipt, color: 'text-destructive', bgColor: 'bg-destructive/10' },
     { label: 'إجمالي المبيعات', value: `${stats.totalValue.toLocaleString()}`, icon: CreditCard, color: 'text-success', bgColor: 'bg-success/10' },
     { label: 'مستحق التحصيل', value: `${stats.unpaidValue.toLocaleString()}`, icon: CreditCard, color: 'text-warning', bgColor: 'bg-warning/10' },
-  ];
+  ], [stats]);
+
+  const shouldVirtualize = sortedData.length > VIRTUALIZATION_THRESHOLD;
+
+  // Memoized mobile item renderer
+  const renderMobileInvoiceItem = useCallback((invoice: InvoiceWithCustomer) => {
+    const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
+    return (
+      <DataCard
+        title={invoice.invoice_number}
+        subtitle={invoice.customers?.name || 'بدون عميل'}
+        badge={{
+          text: paymentStatusLabels[invoice.payment_status],
+          variant: invoice.payment_status === 'paid' ? 'default' : invoice.payment_status === 'partial' ? 'secondary' : 'destructive',
+        }}
+        icon={<Receipt className="h-5 w-5" />}
+        fields={[
+          { label: 'الإجمالي', value: `${Number(invoice.total_amount).toLocaleString()} ج.م` },
+          { label: 'المتبقي', value: `${remaining.toLocaleString()} ج.م`, icon: remaining > 0 ? <CreditCard className="h-4 w-4" /> : undefined },
+          { label: 'التاريخ', value: new Date(invoice.created_at).toLocaleDateString('ar-EG'), icon: <Calendar className="h-4 w-4" /> },
+        ]}
+        onClick={() => navigate(`/invoices/${invoice.id}`)}
+        onView={() => navigate(`/invoices/${invoice.id}`)}
+        onEdit={canEdit ? () => handleEdit(invoice) : undefined}
+        onDelete={canDelete ? () => deleteMutation.mutate(invoice.id) : undefined}
+      />
+    );
+  }, [navigate, canEdit, canDelete, handleEdit, deleteMutation]);
 
   // Mobile View
   const renderMobileView = () => {
@@ -214,32 +246,18 @@ const InvoicesPage = () => {
                 icon: Plus,
               }}
             />
+          ) : shouldVirtualize ? (
+            <VirtualizedMobileList
+              data={sortedData as InvoiceWithCustomer[]}
+              renderItem={renderMobileInvoiceItem}
+              getItemKey={(invoice) => invoice.id}
+              itemHeight={160}
+            />
           ) : (
             <div className="space-y-3">
-              {sortedData.map((invoice) => {
-                const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
-                return (
-                  <DataCard
-                    key={invoice.id}
-                    title={invoice.invoice_number}
-                    subtitle={invoice.customers?.name || 'بدون عميل'}
-                    badge={{
-                      text: paymentStatusLabels[invoice.payment_status],
-                      variant: invoice.payment_status === 'paid' ? 'default' : invoice.payment_status === 'partial' ? 'secondary' : 'destructive',
-                    }}
-                    icon={<Receipt className="h-5 w-5" />}
-                    fields={[
-                      { label: 'الإجمالي', value: `${Number(invoice.total_amount).toLocaleString()} ج.م` },
-                      { label: 'المتبقي', value: `${remaining.toLocaleString()} ج.م`, icon: remaining > 0 ? <CreditCard className="h-4 w-4" /> : undefined },
-                      { label: 'التاريخ', value: new Date(invoice.created_at).toLocaleDateString('ar-EG'), icon: <Calendar className="h-4 w-4" /> },
-                    ]}
-                    onClick={() => navigate(`/invoices/${invoice.id}`)}
-                    onView={() => navigate(`/invoices/${invoice.id}`)}
-                    onEdit={canEdit ? () => handleEdit(invoice) : undefined}
-                    onDelete={canDelete ? () => deleteMutation.mutate(invoice.id) : undefined}
-                  />
-                );
-              })}
+              {(sortedData as InvoiceWithCustomer[]).map((invoice) => (
+                <div key={invoice.id}>{renderMobileInvoiceItem(invoice)}</div>
+              ))}
             </div>
           )}
         </div>

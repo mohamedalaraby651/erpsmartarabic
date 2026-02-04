@@ -145,31 +145,41 @@ onValueChange={(value: PaymentMethod) => setValue('payment_method', value)}
 
 ### 2.1 إضافة Virtual Scrolling للقوائم الطويلة ✅
 
-**الحالة:** ✅ تم التنفيذ باستخدام `@tanstack/react-virtual`
+**الحالة:** ✅ تم التنفيذ الشامل باستخدام `@tanstack/react-virtual`
 
 **الملفات المنشأة:**
 - `src/components/table/VirtualizedTable.tsx` - جدول افتراضي للـ Desktop
 - `src/components/table/VirtualizedList.tsx` - قائمة افتراضية للـ Mobile
+- `src/components/table/VirtualizedMobileList.tsx` - قائمة موبايل محسنة
+- `src/components/table/index.ts` - تصدير موحد للمكونات
 - `src/hooks/useVirtualScroll.ts` - Hook موحد للـ Virtual Scrolling
+- `src/hooks/useMemoizedFilters.ts` - Hook للفلترة المحسنة
+- `src/components/shared/VirtualizedDataSection.tsx` - مكون موحد ذكي
 
 **الملفات المحدثة:**
 - `CustomersPage.tsx` ✅ - Virtual scrolling للموبايل (50+ عنصر)
 - `ProductsPage.tsx` ✅ - Virtual scrolling للموبايل (50+ عنصر)
+- `InvoicesPage.tsx` ✅ - Virtual scrolling + useCallback optimizations
+- `SuppliersPage.tsx` ✅ - Virtual scrolling + memoized callbacks
+- `EmployeesPage.tsx` ✅ - Virtual scrolling + useMemo optimizations
+- `ExpenseCategoriesPage.tsx` ✅ - Virtual scrolling للموبايل
 
 **التنفيذ الجديد:**
 ```typescript
 // استخدام @tanstack/react-virtual
-import { VirtualizedList } from '@/components/table/VirtualizedList';
+import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
 
 // تفعيل تلقائي للقوائم الكبيرة (50+ عنصر)
-if (sortedData.length > 50) {
+const VIRTUALIZATION_THRESHOLD = 50;
+const shouldVirtualize = sortedData.length > VIRTUALIZATION_THRESHOLD;
+
+if (shouldVirtualize) {
   return (
-    <VirtualizedList
+    <VirtualizedMobileList
       data={sortedData}
-      renderItem={(item) => <DataCard {...} />}
+      renderItem={renderMobileItem}
       getItemKey={(item) => item.id}
       itemHeight={140}
-      maxHeight={window.innerHeight - 280}
     />
   );
 }
@@ -373,11 +383,12 @@ INSERT INTO sod_rules VALUES (
 |---------|---------------|-------|--------|
 | ملفات بـ `any` | ~5 | 0 | ✅ 98% |
 | Testing deps في production | 8 | 0 | ⏳ 0% (يدوي) |
-| Virtual Scrolling | 0 صفحات | 4 صفحات | ⏳ مؤجل |
+| Virtual Scrolling | 6 صفحات | 4 صفحات | ✅ 150% (أكثر من المطلوب) |
 | Q2 Completion | 100% | 100% | ✅ مكتمل |
 | Test Coverage | 850+ | 900+ | ✅ جيد |
 | Security Findings | 0 حرجة | 0 | ✅ |
 | تقارير المحاسبة | 2/2 | 2/2 | ✅ مكتمل |
+| Memoized Components | 6+ | 4+ | ✅ مكتمل |
 
 ---
 
