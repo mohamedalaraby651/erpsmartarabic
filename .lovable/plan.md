@@ -1,478 +1,388 @@
 
-# خطة التحسينات الشاملة وإكمال خارطة الطريق
-## ERP Smart - Complete Improvement & Roadmap Plan
+# الخطة الشاملة لإكمال جميع المهام غير المكتملة
+## Complete Implementation Plan for All Pending Tasks
 
 ---
 
-## 📊 الوضع الحالي للمشروع (تحديث: 2026-02-03)
+## ملخص المهام المتبقية
 
-### ✅ الإنجازات المكتملة (100%)
+بناءً على مراجعة شاملة لملفات المشروع (`plan.md`، `SYSTEM_ISSUES_REPORT.md`، `PROJECT_PROGRESS.md`)، تم تحديد المهام التالية:
 
-| المرحلة | الحالة | النسبة |
-|---------|--------|--------|
-| **Q1: Foundation & Governance** | ✅ مكتمل | 100% |
-| **Q2: Enterprise Finance Core** | ✅ مكتمل | 100% |
-| **الهيكل البرمجي** | ✅ منظم | 100% |
-| **الاختبارات** | ✅ شامل | 850+ اختبار |
-| **الأمان الأساسي** | ✅ مطبق | 120+ سياسة |
-| **TypeScript Cleanup** | ✅ مكتمل | 30+ ملف |
-| **تقارير المحاسبة المتقدمة** | ✅ مكتمل | ميزان مراجعة + قائمة دخل |
-| **Virtual Scrolling** | ✅ مكتمل | @tanstack/react-virtual |
-
-### ⏳ المتبقي (تحسينات مستقبلية)
-
-| المهمة | الحالة | الأولوية |
-|--------|--------|----------|
-| Testing Deps إلى devDependencies | ⏳ يدوي | P1 |
-| Q3: Multi-Tenant | ⏳ المستقبل | Q3 |
+| الأولوية | المهمة | الحالة الحالية |
+|----------|--------|---------------|
+| **P0** | إصلاح console.log في secureOperations.ts | متبقي |
+| **P1** | تحسين secureOperations.ts لاستخدام getSafeErrorMessage | متبقي |
+| **P2** | تقسيم الملفات الكبيرة (4 ملفات) | متبقي |
+| **P2** | إنشاء API_DOCUMENTATION.md | متبقي |
+| **P2** | إنشاء DATABASE_SCHEMA.md | متبقي |
+| **P2** | إنشاء DEPLOYMENT_GUIDE.md | متبقي |
 
 ---
 
-## 📈 إحصائيات المشروع الكاملة
+## المرحلة 1: إصلاحات الأمان والكود (P0-P1)
 
+### 1.1 تحسين secureOperations.ts
+
+**الملف:** `src/lib/api/secureOperations.ts`
+
+**المشكلة:** استخدام `console.error` في الـ production يكشف تفاصيل تقنية، واستخدام `error.message` بشكل مباشر.
+
+**التغييرات:**
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                    ERP SMART - PROJECT STATS                 │
-├─────────────────────────────────────────────────────────────┤
-│  📁 Structure                                                │
-│  ├── Components:     115+ مكون (35 مجلد)                    │
-│  ├── Pages:          55+ صفحة (27 مجلد)                     │
-│  ├── Hooks:          40 hook مخصص                           │
-│  ├── Edge Functions: 7 وظائف سحابية                         │
-│  └── Migrations:     27 ملف ترحيل                           │
-├─────────────────────────────────────────────────────────────┤
-│  🗄️ Database                                                 │
-│  ├── Tables:         56+ جدول                               │
-│  ├── RLS Policies:   120+ سياسة                             │
-│  ├── Audit Triggers: 13 جدول                                │
-│  └── Functions:      4 وظائف SQL                            │
-├─────────────────────────────────────────────────────────────┤
-│  🧪 Testing                                                  │
-│  ├── Unit Tests:     323 اختبار                             │
-│  ├── Integration:    355 اختبار                             │
-│  ├── Security:       130+ اختبار                            │
-│  ├── E2E:            60+ اختبار (13 ملف)                    │
-│  └── Pass Rate:      100% ✅                                 │
-├─────────────────────────────────────────────────────────────┤
-│  📦 Dependencies                                             │
-│  ├── Production:     59 مكتبة                               │
-│  ├── Development:    18 مكتبة                               │
-│  └── Testing (خاطئ): 8 مكتبات في prod ⚠️                   │
-│  ├── NEW: @tanstack/react-virtual                           │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  قبل التعديل                                                    │
+├─────────────────────────────────────────────────────────────────┤
+│  console.error('[secureOperations] ...', error);                │
+│  error: error.message || 'فشل...'                               │
+├─────────────────────────────────────────────────────────────────┤
+│  بعد التعديل                                                    │
+├─────────────────────────────────────────────────────────────────┤
+│  logErrorSafely('secureOperations.validateInvoice', error);     │
+│  error: getSafeErrorMessage(error) || 'فشل...'                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**الإجراءات:**
+1. استيراد `logErrorSafely` و `getSafeErrorMessage` من `errorHandler.ts`
+2. استبدال 6 instances من `console.error` بـ `logErrorSafely`
+3. استبدال 4 instances من `error.message` بـ `getSafeErrorMessage(error)`
+
+---
+
+## المرحلة 2: تقسيم الملفات الكبيرة (P2)
+
+### 2.1 تقسيم AppSidebar.tsx (586 سطر)
+
+**الملفات الجديدة:**
+```text
+src/components/layout/sidebar/
+├── SidebarHeader.tsx      # شعار + زر الطي (موجود)
+├── SidebarFooter.tsx      # أزرار الإعدادات والخروج (موجود)
+├── SidebarNavSections.tsx # 🆕 الأقسام الأربعة الرئيسية
+└── index.ts               # تصدير موحد (موجود)
+```
+
+**التغييرات:**
+1. إنشاء `SidebarNavSections.tsx` لاحتواء الأقسام الأربعة (المبيعات، المخزون، المالية، النظام)
+2. نقل `defaultNavSections` و `sectionIconColors` للملف الجديد
+3. تبسيط `AppSidebar.tsx` لاستخدام المكونات الفرعية
+
+**الحجم المتوقع بعد التقسيم:** ~300 سطر
+
+---
+
+### 2.2 تقسيم MobileDrawer.tsx (470 سطر)
+
+**الملفات الموجودة:**
+```text
+src/components/layout/mobile/
+├── MobileFavoritesSection.tsx  # ✅ موجود
+├── MobileFooter.tsx            # ✅ موجود
+├── MobileNavSection.tsx        # ✅ موجود
+├── MobileQuickActions.tsx      # ✅ موجود
+└── index.ts                    # ✅ موجود
+```
+
+**التغييرات:**
+1. إنشاء `MobileDrawerHeader.tsx` لاحتواء الشعار والبحث
+2. إنشاء `MobileNavSections.tsx` لاحتواء الأقسام الأربعة
+3. تبسيط `MobileDrawer.tsx` لاستخدام المكونات الفرعية
+
+**الحجم المتوقع بعد التقسيم:** ~250 سطر
+
+---
+
+### 2.3 تقسيم InvoiceFormDialog.tsx (541 سطر)
+
+**الملفات الموجودة والجديدة:**
+```text
+src/components/invoices/
+├── InvoiceFormDialog.tsx       # الملف الرئيسي
+├── InvoiceItemsTable.tsx       # ✅ موجود
+├── InvoiceTotalsSection.tsx    # ✅ موجود
+├── useInvoiceItems.ts          # ✅ موجود
+├── InvoiceFormHeader.tsx       # 🆕 حقول الفاتورة الأساسية
+└── InvoiceValidation.tsx       # 🆕 شارة التحقق والرسائل
+```
+
+**التغييرات:**
+1. إنشاء `InvoiceFormHeader.tsx` لحقول العميل والتاريخ والحالة
+2. إنشاء `InvoiceValidation.tsx` لعرض حالة التحقق من Edge Function
+3. تبسيط `InvoiceFormDialog.tsx` لاستخدام المكونات الفرعية
+
+**الحجم المتوقع بعد التقسيم:** ~300 سطر
+
+---
+
+### 2.4 تقسيم QuotationFormDialog.tsx (497 سطر)
+
+**الملفات الموجودة والجديدة:**
+```text
+src/components/quotations/
+├── QuotationFormDialog.tsx       # الملف الرئيسي
+├── QuotationItemsTable.tsx       # ✅ موجود
+├── QuotationTotalsSection.tsx    # ✅ موجود
+├── QuotationFormHeader.tsx       # 🆕 حقول عرض السعر الأساسية
+└── useQuotationItems.ts          # 🆕 Hook لإدارة البنود
+```
+
+**التغييرات:**
+1. إنشاء `QuotationFormHeader.tsx` لحقول العميل والتاريخ والصلاحية
+2. إنشاء `useQuotationItems.ts` لإدارة منطق البنود (مشابه لـ useInvoiceItems)
+3. تبسيط `QuotationFormDialog.tsx` لاستخدام المكونات الفرعية
+
+**الحجم المتوقع بعد التقسيم:** ~280 سطر
+
+---
+
+## المرحلة 3: إنشاء التوثيق (P2)
+
+### 3.1 API_DOCUMENTATION.md
+
+**المحتوى:**
+```markdown
+# توثيق واجهات البرمجة (API Documentation)
+
+## Edge Functions
+
+### 1. validate-invoice
+- **الوظيفة:** التحقق من صلاحية بيانات الفاتورة
+- **المدخلات:** invoice_data (customer_id, total_amount, items[])
+- **المخرجات:** ValidationResult
+- **رموز الخطأ:** UNAUTHORIZED, NO_PERMISSION, LIMIT_EXCEEDED, etc.
+
+### 2. process-payment
+- **الوظيفة:** معالجة الدفعات وتحديث الأرصدة
+- **المدخلات:** payment_data (customer_id, invoice_id, amount, payment_method)
+- **المخرجات:** OperationResult<payment_id>
+
+### 3. approve-expense
+- **الوظيفة:** الموافقة أو رفض المصروفات
+- **المدخلات:** expense_id, action, rejection_reason?
+- **المخرجات:** OperationResult
+
+### 4. stock-movement
+- **الوظيفة:** تنفيذ حركات المخزون
+- **المدخلات:** movement_data (product_id, movement_type, quantity, etc.)
+- **المخرجات:** OperationResult<movement_id>
+
+### 5. approve-invoice
+- **الوظيفة:** سير عمل الموافقة على الفواتير
+- **المدخلات:** invoice_id, action, rejection_reason?
+- **المخرجات:** OperationResult
+
+### 6. create-journal
+- **الوظيفة:** إنشاء قيود محاسبية مزدوجة القيد
+- **المدخلات:** journal_date, description, entries[]
+- **المخرجات:** OperationResult<journal_id>
+
+### 7. verify-totp
+- **الوظيفة:** إعداد وتحقق المصادقة الثنائية
+- **المدخلات:** action (setup|enable|disable|verify), totp_code?
+- **المخرجات:** varies by action
+
+## SQL Functions (RPC)
+
+### check_section_permission
+### check_financial_limit
+### log_activity
+### has_role
 ```
 
 ---
 
-## 🔴 المرحلة 1: إصلاح الديون التقنية الحرجة (P0-P1)
+### 3.2 DATABASE_SCHEMA.md
 
-### 1.1 نقل Testing Dependencies إلى devDependencies
+**المحتوى:**
+```markdown
+# مخطط قاعدة البيانات (Database Schema)
 
-**الحالة:** ⚠️ 8 مكتبات في المكان الخاطئ
+## الجداول الرئيسية (56 جدول)
 
-| المكتبة | الحجم التقريبي | الإجراء |
-|---------|----------------|---------|
-| `@testing-library/dom` | ~50KB | نقل لـ devDependencies |
-| `@testing-library/jest-dom` | ~30KB | نقل لـ devDependencies |
-| `@testing-library/react` | ~40KB | نقل لـ devDependencies |
-| `@testing-library/user-event` | ~25KB | نقل لـ devDependencies |
-| `@vitest/coverage-v8` | ~100KB | نقل لـ devDependencies |
-| `jsdom` | ~200KB | نقل لـ devDependencies |
-| `msw` | ~100KB | نقل لـ devDependencies |
-| `vitest` | ~150KB | نقل لـ devDependencies |
+### المبيعات والعملاء
+| الجدول | الوصف | RLS |
+|--------|-------|-----|
+| customers | بيانات العملاء | ✅ |
+| quotations | عروض الأسعار | ✅ |
+| quotation_items | بنود العروض | ✅ |
+| invoices | الفواتير | ✅ |
+| invoice_items | بنود الفواتير | ✅ |
+| sales_orders | أوامر البيع | ✅ |
+| payments | الدفعات | ✅ |
 
-**الأثر:** تقليل node_modules بـ ~500KB+
+### المخزون والمشتريات
+| الجدول | الوصف | RLS |
+|--------|-------|-----|
+| products | المنتجات | ✅ |
+| product_variants | متغيرات المنتجات | ✅ |
+| categories | التصنيفات | ✅ |
+| inventory | المخزون | ✅ |
+| stock_movements | حركات المخزون | ✅ |
+| suppliers | الموردين | ✅ |
+| purchase_orders | أوامر الشراء | ✅ |
 
-**الإجراء المطلوب:**
-```json
-// نقل من dependencies إلى devDependencies في package.json
-// ملاحظة: يتطلب تعديل يدوي خارج المنصة
+### المحاسبة
+| الجدول | الوصف | RLS |
+|--------|-------|-----|
+| chart_of_accounts | دليل الحسابات | ✅ |
+| journals | قيود اليومية | ✅ |
+| journal_entries | بنود القيود | ✅ |
+| fiscal_periods | الفترات المالية | ✅ |
+| bank_accounts | الحسابات البنكية | ✅ (admin/accountant) |
+
+### الأمان والتدقيق
+| الجدول | الوصف | RLS |
+|--------|-------|-----|
+| user_roles | أدوار المستخدمين | ✅ |
+| custom_roles | الأدوار المخصصة | ✅ (admin only) |
+| role_section_permissions | صلاحيات الأقسام | ✅ (admin only) |
+| role_limits | الحدود المالية | ✅ (admin only) |
+| activity_logs | سجل النشاطات | ✅ |
+| user_2fa_settings | إعدادات 2FA | ✅ |
+
+## Audit Triggers (13 جدول)
+invoices, payments, expenses, stock_movements, customers, 
+suppliers, products, purchase_orders, sales_orders, 
+journal_entries, bank_accounts, quotations, employees
 ```
 
 ---
 
-### 1.2 إصلاح TypeScript (any) ✅ مكتمل
+### 3.3 DEPLOYMENT_GUIDE.md
 
-**الحالة:** ✅ تم إصلاح 22+ ملف
+**المحتوى:**
+```markdown
+# دليل النشر (Deployment Guide)
 
-#### الملفات التي تم إصلاحها:
+## متطلبات النظام
+- Node.js 18+
+- Lovable Cloud (Supabase)
 
-| # | الملف | الإصلاح |
-|---|-------|---------|
-| 1 | `InlineCustomizer.tsx` | `DragEndEvent` from @dnd-kit |
-| 2 | `AgingReport.tsx` | `AgingInvoice` interface |
-| 3 | `SupplierRatingTab.tsx` | Fixed profile query |
-| 4 | `PaymentFormDialog.tsx` | `PaymentMethod` type |
-| 5 | `JournalFormDialog.tsx` | `string \| number` |
-| 6 | `InvoiceFormDialog.tsx` | `PaymentMethod` type |
-| 7 | `ResponsiveItemsTable.tsx` | Generic type `T` |
-| 8 | `useSidebarCounts.ts` | `ProductWithStock` interface |
-| 9 | `JournalDetailDialog.tsx` | `JournalEntryRow` interface |
-| 10 | `ReportTemplateEditor.tsx` | `DragEndEvent` |
-| 11 | `InvoiceDetailsPage.tsx` | `PaymentRow`, `ActivityRow` |
-| 12 | `SupplierDetailsPage.tsx` | `SupplierPaymentRow` |
-| 13 | `useOfflineData.ts` | `cached: { id: string }` |
-| 14 | `ActivityLogPage.tsx` | `ActivityLog` interface |
-| 15 | `ThemeCustomizer.tsx` | Generic `handleChange<K>` |
-| 16 | `useUserPreferences.ts` | `parseJson` typed functions |
-| 17 | `SuppliersPage.tsx` | `Supplier` type |
-| 18 | `CompanyInfoSection.tsx` | `string \| null` |
-| 19 | `pdfGenerator.ts` | `PDFItem` interface |
-| 20 | `QuotationDetailsPage.tsx` | Typed arrays |
-| 21 | `SalesOrderDetailsPage.tsx` | Typed activities |
-| 22 | `SupplierActivityTab.tsx` | Removed invalid join |
+## إعداد البيئة
 
-#### الحل المقترح لكل نمط:
+### 1. المتغيرات البيئية
+```env
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_PUBLISHABLE_KEY=...
+VITE_SUPABASE_PROJECT_ID=...
+```
 
+### 2. Edge Functions
+يتم نشرها تلقائياً عبر Lovable Cloud:
+- validate-invoice
+- process-payment
+- approve-expense
+- stock-movement
+- approve-invoice
+- create-journal
+- verify-totp
+
+## النشر للإنتاج
+
+### خطوات النشر
+1. التحقق من جميع الاختبارات: `npm run test`
+2. البناء: `npm run build`
+3. النشر: زر "Publish" في Lovable
+
+### قائمة التحقق قبل النشر
+- [ ] جميع الاختبارات ناجحة (850+)
+- [ ] لا توجد أخطاء TypeScript
+- [ ] RLS مفعّل على جميع الجداول
+- [ ] Edge Functions تعمل بشكل صحيح
+
+## النسخ الاحتياطي والاسترداد
+- النسخ: Cloud View > Database > Backup
+- الاسترداد: Cloud View > Database > Restore
+```
+
+---
+
+## جدول التنفيذ
+
+| # | المهمة | الوقت المتوقع | الأولوية |
+|---|--------|--------------|----------|
+| 1 | تحسين secureOperations.ts | 30 دقيقة | P0 |
+| 2 | تقسيم AppSidebar.tsx | 45 دقيقة | P2 |
+| 3 | تقسيم MobileDrawer.tsx | 45 دقيقة | P2 |
+| 4 | تقسيم InvoiceFormDialog.tsx | 45 دقيقة | P2 |
+| 5 | تقسيم QuotationFormDialog.tsx | 45 دقيقة | P2 |
+| 6 | إنشاء API_DOCUMENTATION.md | 30 دقيقة | P2 |
+| 7 | إنشاء DATABASE_SCHEMA.md | 30 دقيقة | P2 |
+| 8 | إنشاء DEPLOYMENT_GUIDE.md | 20 دقيقة | P2 |
+
+**الإجمالي:** ~4.5 ساعة عمل
+
+---
+
+## الملفات المتأثرة
+
+### ملفات سيتم تعديلها:
+1. `src/lib/api/secureOperations.ts`
+2. `src/components/layout/AppSidebar.tsx`
+3. `src/components/layout/MobileDrawer.tsx`
+4. `src/components/invoices/InvoiceFormDialog.tsx`
+5. `src/components/quotations/QuotationFormDialog.tsx`
+6. `.lovable/plan.md` (تحديث الحالة)
+
+### ملفات جديدة:
+1. `src/components/layout/sidebar/SidebarNavSections.tsx`
+2. `src/components/layout/mobile/MobileDrawerHeader.tsx`
+3. `src/components/layout/mobile/MobileNavSections.tsx`
+4. `src/components/invoices/InvoiceFormHeader.tsx`
+5. `src/components/invoices/InvoiceValidation.tsx`
+6. `src/components/quotations/QuotationFormHeader.tsx`
+7. `src/components/quotations/useQuotationItems.ts`
+8. `docs/API_DOCUMENTATION.md`
+9. `docs/DATABASE_SCHEMA.md`
+10. `docs/DEPLOYMENT_GUIDE.md`
+
+---
+
+## معايير النجاح
+
+| المعيار | الهدف |
+|---------|-------|
+| console.error في Production | 0 |
+| error.message مكشوف | 0 |
+| ملفات > 400 سطر | 0 |
+| توثيق API | 100% |
+| توثيق Database | 100% |
+| توثيق Deployment | 100% |
+
+---
+
+## ملاحظات تقنية
+
+### نمط تقسيم الملفات
 ```typescript
-// نمط 1: DragEndEvent
-import { DragEndEvent } from '@dnd-kit/core';
-const handleDragEnd = (event: DragEndEvent) => { ... }
+// الملف الرئيسي (بعد التقسيم)
+import { SidebarNavSections } from './sidebar/SidebarNavSections';
+import { SidebarHeader } from './sidebar';
+import { SidebarFooter } from './sidebar';
 
-// نمط 2: Supabase Types
-import { Tables } from '@/integrations/supabase/types';
-type SupplierPayment = Tables<'supplier_payments'>;
-{payments.map((payment: SupplierPayment) => ...)}
-
-// نمط 3: Form Values
-type PaymentMethod = 'cash' | 'bank_transfer' | 'deferred' | 'advance';
-onValueChange={(value: PaymentMethod) => setValue('payment_method', value)}
-```
-
----
-
-## 🟠 المرحلة 2: تحسينات الأداء (P2) ✅ مكتمل
-
-### 2.1 إضافة Virtual Scrolling للقوائم الطويلة ✅
-
-**الحالة:** ✅ تم التنفيذ الشامل باستخدام `@tanstack/react-virtual`
-
-**الملفات المنشأة:**
-- `src/components/table/VirtualizedTable.tsx` - جدول افتراضي للـ Desktop
-- `src/components/table/VirtualizedList.tsx` - قائمة افتراضية للـ Mobile
-- `src/components/table/VirtualizedMobileList.tsx` - قائمة موبايل محسنة
-- `src/components/table/index.ts` - تصدير موحد للمكونات
-- `src/hooks/useVirtualScroll.ts` - Hook موحد للـ Virtual Scrolling
-- `src/hooks/useMemoizedFilters.ts` - Hook للفلترة المحسنة
-- `src/components/shared/VirtualizedDataSection.tsx` - مكون موحد ذكي
-
-**الملفات المحدثة:**
-- `CustomersPage.tsx` ✅ - Virtual scrolling للموبايل (50+ عنصر)
-- `ProductsPage.tsx` ✅ - Virtual scrolling للموبايل (50+ عنصر)
-- `InvoicesPage.tsx` ✅ - Virtual scrolling + useCallback optimizations
-- `SuppliersPage.tsx` ✅ - Virtual scrolling + memoized callbacks
-- `EmployeesPage.tsx` ✅ - Virtual scrolling + useMemo optimizations
-- `ExpenseCategoriesPage.tsx` ✅ - Virtual scrolling للموبايل
-
-**التنفيذ الجديد:**
-```typescript
-// استخدام @tanstack/react-virtual
-import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
-
-// تفعيل تلقائي للقوائم الكبيرة (50+ عنصر)
-const VIRTUALIZATION_THRESHOLD = 50;
-const shouldVirtualize = sortedData.length > VIRTUALIZATION_THRESHOLD;
-
-if (shouldVirtualize) {
+export function AppSidebar() {
+  // منطق الحالة فقط
   return (
-    <VirtualizedMobileList
-      data={sortedData}
-      renderItem={renderMobileItem}
-      getItemKey={(item) => item.id}
-      itemHeight={140}
-    />
+    <aside>
+      <SidebarHeader />
+      <SidebarNavSections />
+      <SidebarFooter />
+    </aside>
   );
 }
 ```
 
-### 2.2 Performance Hooks الجديدة ✅
-
-| Hook | الغرض |
-|------|-------|
-| `useStableCallback` | Stable callback references |
-| `useDebouncedCallback` | Debounce for inputs |
-| `useThrottledCallback` | Throttle for scroll/resize |
-| `useIntersectionObserver` | Lazy loading |
-| `useVirtualScroll` | Virtual scrolling wrapper |
-
-### 2.3 Optimized Components ✅
-
-| Component | الغرض |
-|-----------|-------|
-| `StatsGrid` | Grid إحصائيات موحد مع memo |
-| `MobileStatsScroll` | Stats أفقية للموبايل مع memo |
-| `OptimizedSkeletons` | Skeletons محسنة (Table, Card, Stats, List) |
-
-### 2.2 تحسين Console.log
-
-**الحالة:** ✅ معظمها محمي بـ `import.meta.env.DEV`
-
-| الملف | الحالة | الإجراء |
-|-------|--------|---------|
-| `performanceMonitor.ts` | ✅ محمي | لا شيء |
-| `useOnlineStatus.ts` | ✅ محمي | لا شيء |
-| `useFileHandling.ts` | ✅ محمي | لا شيء |
-| `BackupPage.tsx` | ✅ محمي | لا شيء |
-| `useInstallPrompt.ts` | ⚠️ PWA Debug | مقبول |
-| `ReloadPrompt.tsx` | ⚠️ SW Debug | مقبول |
-| `useLaunchQueue.ts` | ⚠️ PWA Debug | مقبول |
-| `useAppBadge.ts` | ⚠️ PWA Debug | مقبول |
-
-**الاستنتاج:** Console logs الموجودة إما محمية أو مطلوبة لـ PWA debugging.
-
-### 2.3 تحسين Bundle Size
-
-**التقسيم الحالي (ممتاز):**
-
-```text
-Chunks Distribution:
-├── vendor-react      ~150KB  ✅
-├── vendor-query      ~40KB   ✅
-├── vendor-ui-core    ~80KB   ✅
-├── vendor-ui-extended ~60KB  ✅
-├── vendor-charts     ~300KB  ✅ Lazy
-├── vendor-pdf        ~400KB  ✅ Lazy
-├── vendor-excel      ~200KB  ✅ Lazy
-├── vendor-dnd        ~50KB   ✅ Lazy
-├── vendor-supabase   ~100KB  ✅
-└── vendor-idb        ~20KB   ✅
+### نمط Hooks المنفصلة
+```typescript
+// useQuotationItems.ts
+export function useQuotationItems(initialItems = []) {
+  const [items, setItems] = useState(initialItems);
+  
+  const addItem = useCallback(() => {...}, []);
+  const removeItem = useCallback((index) => {...}, []);
+  const updateItem = useCallback((index, field, value) => {...}, []);
+  const calculateTotals = useMemo(() => {...}, [items]);
+  
+  return { items, addItem, removeItem, updateItem, ...calculateTotals };
+}
 ```
-
-**التحسينات الإضافية:**
-1. إضافة `terser` للـ minification ✅ موجود
-2. `drop_console` في production ✅ موجود
-3. Lazy loading للصفحات ✅ موجود
-
----
-
-## 🟡 المرحلة 3: إكمال Q2 - Enterprise Finance Core ✅
-
-### 3.1 الميزات المكتملة من Q2 ✅
-
-| الميزة | الحالة | الوصف |
-|--------|--------|-------|
-| نظام المحاسبة مزدوج القيد | ✅ | chart_of_accounts, journals, journal_entries |
-| Edge Function: create-journal | ✅ | إنشاء قيود محاسبية |
-| 2FA Authentication | ✅ | user_2fa_settings + verify-totp |
-| Invoice Approval Workflow | ✅ | approve-invoice Edge Function |
-| ميزان المراجعة | ✅ | TrialBalanceReport component |
-| قائمة الدخل | ✅ | IncomeStatementReport component |
-
-### 3.2 تقارير المحاسبة المتقدمة ✅
-
-| التقرير | الملف | الوصف |
-|---------|-------|-------|
-| ميزان المراجعة | `TrialBalanceReport.tsx` | عرض أرصدة جميع الحسابات، التحقق من التوازن |
-| قائمة الدخل | `IncomeStatementReport.tsx` | الإيرادات، تكلفة المبيعات، المصروفات، صافي الربح |
-
----
-
-## 🔮 المرحلة 4: Q3 - Governance & Multi-Tenant (المستقبل)
-
-### 4.1 Multi-Tenant Architecture
-
-```sql
--- الجداول المطلوبة
-CREATE TABLE tenants (
-  id UUID PRIMARY KEY,
-  name TEXT NOT NULL,
-  domain TEXT UNIQUE,
-  settings JSONB DEFAULT '{}',
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE user_tenants (
-  user_id UUID REFERENCES auth.users,
-  tenant_id UUID REFERENCES tenants,
-  role TEXT DEFAULT 'member',
-  PRIMARY KEY (user_id, tenant_id)
-);
-
--- إضافة tenant_id لجميع الجداول
-ALTER TABLE customers ADD COLUMN tenant_id UUID REFERENCES tenants;
--- ... تكرار لباقي الجداول
-
--- تحديث RLS policies
-CREATE POLICY "Tenant isolation" ON customers
-FOR ALL USING (tenant_id = get_current_tenant());
-```
-
-### 4.2 Rate Limiting
-
-```sql
-CREATE TABLE rate_limits (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES auth.users,
-  endpoint TEXT NOT NULL,
-  request_count INTEGER DEFAULT 0,
-  window_start TIMESTAMPTZ DEFAULT now(),
-  UNIQUE (user_id, endpoint)
-);
-
-CREATE TABLE rate_limit_config (
-  endpoint TEXT PRIMARY KEY,
-  max_requests INTEGER DEFAULT 100,
-  window_seconds INTEGER DEFAULT 60
-);
-```
-
-### 4.3 Segregation of Duties (SoD)
-
-```sql
-CREATE TABLE sod_rules (
-  id UUID PRIMARY KEY,
-  role1 TEXT NOT NULL,
-  action1 TEXT NOT NULL,
-  role2 TEXT NOT NULL,
-  action2 TEXT NOT NULL,
-  conflict_type TEXT DEFAULT 'warning',
-  description TEXT
-);
-
--- مثال: من يُنشئ الفاتورة لا يعتمدها
-INSERT INTO sod_rules VALUES (
-  gen_random_uuid(),
-  'sales', 'invoices.create',
-  'sales', 'invoices.approve',
-  'block',
-  'Invoice creator cannot approve same invoice'
-);
-```
-
----
-
-## 📋 جدول التنفيذ الكامل
-
-### المرحلة الفورية (هذا الأسبوع)
-
-| # | المهمة | الملفات | الوقت | الأولوية |
-|---|--------|---------|-------|----------|
-| 1 | إصلاح TypeScript (any) - الأولوية العالية | 15 ملف | 3h | P1 |
-| 2 | إضافة Virtual Scrolling | 4 صفحات | 2h | P2 |
-
-### المرحلة القصيرة (الأسبوع القادم)
-
-| # | المهمة | الملفات | الوقت | الأولوية |
-|---|--------|---------|-------|----------|
-| 3 | إصلاح TypeScript (any) - الباقي | 16 ملف | 2h | P1 |
-| 4 | تقارير المحاسبة المتقدمة | 3 ملفات جديدة | 4h | P2 |
-| 5 | تحسين Error Boundaries | 2 ملف | 1h | P2 |
-
-### المرحلة المتوسطة (الشهر القادم)
-
-| # | المهمة | الوقت | الأولوية |
-|---|--------|-------|----------|
-| 6 | إكمال Q2 (15% المتبقي) | 8h | P1 |
-| 7 | Documentation الإضافي | 4h | P2 |
-| 8 | Storybook للمكونات | 6h | P3 |
-
-### المرحلة البعيدة (Q3)
-
-| # | المهمة | الوقت | الأولوية |
-|---|--------|-------|----------|
-| 9 | Multi-Tenant Architecture | 40h | P1 |
-| 10 | Rate Limiting | 8h | P1 |
-| 11 | Segregation of Duties | 16h | P2 |
-
----
-
-## ✅ معايير النجاح النهائية
-
-| المعيار | الحالة الحالية | الهدف | التقدم |
-|---------|---------------|-------|--------|
-| ملفات بـ `any` | ~5 | 0 | ✅ 98% |
-| Testing deps في production | 8 | 0 | ⏳ 0% (يدوي) |
-| Virtual Scrolling | 6 صفحات | 4 صفحات | ✅ 150% (أكثر من المطلوب) |
-| Q2 Completion | 100% | 100% | ✅ مكتمل |
-| Test Coverage | 850+ | 900+ | ✅ جيد |
-| Security Findings | 0 حرجة | 0 | ✅ |
-| تقارير المحاسبة | 2/2 | 2/2 | ✅ مكتمل |
-| Memoized Components | 6+ | 4+ | ✅ مكتمل |
-
----
-
-## 🛡️ ملخص الأمان الحالي
-
-```text
-Security Architecture:
-┌─────────────────────────────────────────────────────────────┐
-│                     FRONTEND (React)                         │
-│  ├── secureOperations.ts (unified API layer)                │
-│  ├── getSafeErrorMessage() (error handling)                 │
-│  └── Permission checks before mutations                      │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     EDGE FUNCTIONS (7)                       │
-│  ├── validate-invoice   ├── process-payment                 │
-│  ├── approve-expense    ├── stock-movement                  │
-│  ├── approve-invoice    ├── create-journal                  │
-│  └── verify-totp                                             │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     POSTGRESQL (56+ Tables)                  │
-│  ├── 120+ RLS Policies                                       │
-│  ├── 4 Security Functions                                    │
-│  ├── 13 Audit Triggers                                       │
-│  └── Financial Limits Enforcement                            │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 📚 التوثيق الموجود
-
-| الوثيقة | الحالة | المحتوى |
-|---------|--------|---------|
-| `PROJECT_DOCUMENTATION.md` | ✅ | توثيق شامل للمشروع |
-| `PROJECT_PROGRESS.md` | ✅ | تتبع التقدم والـ Roadmap |
-| `Q1_COMPLETION_REPORT.md` | ✅ | تقرير إكمال Q1 |
-| `Q1_SECURITY_DOCUMENTATION.md` | ✅ | توثيق الأمان |
-| `SYSTEM_ISSUES_REPORT.md` | ✅ | تقرير المشاكل |
-| `.lovable/plan.md` | ✅ | خطة العمل الحالية |
-
-### التوثيق الناقص (للمستقبل):
-
-| الوثيقة | الغرض | الأولوية |
-|---------|-------|----------|
-| `API_DOCUMENTATION.md` | توثيق Edge Functions | P2 |
-| `DATABASE_SCHEMA.md` | رسم بياني للقاعدة | P3 |
-| `DEPLOYMENT_GUIDE.md` | دليل النشر | P3 |
-| Storybook | توثيق المكونات | P3 |
-
----
-
-## 🎯 الخلاصة والتوصيات
-
-### الإجراءات الفورية المطلوبة:
-
-1. **إصلاح TypeScript (any)** - 31 ملف متبقي
-2. **نقل Testing dependencies** - يتطلب تعديل package.json يدوياً
-3. **إضافة Virtual Scrolling** - لتحسين أداء القوائم الطويلة
-
-### نقاط القوة الحالية:
-
-- ✅ هيكل برمجي منظم (110+ مكون، 36 hook)
-- ✅ نظام أمان متعدد الطبقات (7 Edge Functions, 120+ RLS)
-- ✅ اختبارات شاملة (850+ اختبار, 100% pass)
-- ✅ PWA متقدم مع دعم كامل للعمل offline
-- ✅ دعم كامل لـ RTL والعربية
-- ✅ Code splitting ممتاز (11 chunk)
-
-### المخاطر المتبقية:
-
-| الخطر | الأثر | التخفيف |
-|-------|-------|---------|
-| Testing deps في prod | حجم Bundle | نقل يدوي |
-| TypeScript any | Type Safety | إصلاح تدريجي |
-| No Virtual Scrolling | أداء بطيء | تطبيق hook موجود |
-
----
-
-**الوقت الإجمالي المقدر للتحسينات الفورية:** ~7-8 ساعات
-**الوقت الإجمالي لإكمال Q2:** ~12 ساعة إضافية
-**الوقت المقدر لـ Q3:** ~64 ساعة (تخطيط مستقبلي)
