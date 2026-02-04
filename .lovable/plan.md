@@ -1,391 +1,481 @@
 
-# الخطة الشاملة لإكمال جميع المهام غير المكتملة
-## Complete Implementation Plan for All Pending Tasks
+# الخطة الشاملة لتحويل النظام إلى Enterprise-Grade
+## Complete Enterprise Transformation Plan - Q3 2026
 
 ---
 
-## ملخص المهام المتبقية
+## 📊 ملخص التقييم والتحقق
 
-بناءً على مراجعة شاملة لملفات المشروع (`plan.md`، `SYSTEM_ISSUES_REPORT.md`، `PROJECT_PROGRESS.md`)، تم تحديد المهام التالية:
+### ✅ التحقق من الادعاءات
+بعد مراجعة شاملة للكود، تم التحقق من التالي:
 
-| الأولوية | المهمة | الحالة الحالية |
-|----------|--------|---------------|
-| **P0** | إصلاح console.log في secureOperations.ts | ✅ مكتمل |
-| **P1** | تحسين secureOperations.ts لاستخدام getSafeErrorMessage | ✅ مكتمل |
-| **P2** | تقسيم الملفات الكبيرة (4 ملفات) | ✅ مكتمل |
-| **P2** | إعادة هيكلة AppSidebar.tsx لاستخدام SidebarNavSections | ✅ مكتمل |
-| **P2** | إعادة هيكلة QuotationFormDialog.tsx لاستخدام useQuotationItems | ✅ مكتمل |
-| **P2** | إعادة هيكلة InvoiceFormDialog.tsx | ✅ مكتمل |
-| **P2** | إنشاء API_DOCUMENTATION.md | ✅ مكتمل |
-| **P2** | إنشاء DATABASE_SCHEMA.md | ✅ مكتمل |
-| **P2** | إنشاء DEPLOYMENT_GUIDE.md | ✅ مكتمل |
+| الادعاء | النتيجة | الدليل |
+|---------|---------|--------|
+| RLS على جميع الجداول | ✅ مؤكد | 58 جدول مع 120+ سياسة |
+| Edge Functions للعمليات المالية | ✅ مؤكد | 7 وظائف: validate-invoice, process-payment, etc. |
+| Security Functions | ✅ مؤكد | check_section_permission, check_financial_limit, log_activity, has_role |
+| Error Handling آمن | ✅ تم إصلاحه | getSafeErrorMessage + logErrorSafely في جميع الملفات |
+| Virtual Scrolling | ✅ موجود | VirtualizedTable, VirtualizedList, VirtualizedMobileList في 6+ صفحات |
+| TypeScript صارم | ⚠️ جزئي | بعض استخدامات `any` متبقية |
+
+### ❌ الفجوات المؤكدة (غير موجودة في الكود الحالي)
+| الفجوة | الخطورة | التأثير |
+|--------|---------|---------|
+| **Multi-Tenant Architecture** | 🔴 حرج | يمنع SaaS متعدد العملاء |
+| **Rate Limiting** | 🟠 عالي | خطر Abuse/DoS |
+| **Tenant Isolation** | 🔴 حرج | لا يوجد `tenant_id` في أي جدول |
+| **Financial Governance Automation** | 🟠 متوسط | لا يوجد Period Locking أو Auto-Reconciliation |
+| **Observability Layer** | 🟡 منخفض | لا يوجد Metrics/Structured Logs |
 
 ---
 
-## المرحلة 1: إصلاحات الأمان والكود (P0-P1)
+## 🎯 الخطة الاستراتيجية (Q3 2026)
 
-### 1.1 تحسين secureOperations.ts
+### المرحلة 1: Multi-Tenant Architecture (الأسبوع 1-2)
 
-**الملف:** `src/lib/api/secureOperations.ts`
+#### 1.1 إنشاء جداول Tenant
 
-**المشكلة:** استخدام `console.error` في الـ production يكشف تفاصيل تقنية، واستخدام `error.message` بشكل مباشر.
+```sql
+-- 1. إنشاء جدول المستأجرين
+CREATE TABLE public.tenants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    domain TEXT UNIQUE,
+    settings JSONB DEFAULT '{}',
+    subscription_tier TEXT DEFAULT 'free',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-**التغييرات:**
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  قبل التعديل                                                    │
-├─────────────────────────────────────────────────────────────────┤
-│  console.error('[secureOperations] ...', error);                │
-│  error: error.message || 'فشل...'                               │
-├─────────────────────────────────────────────────────────────────┤
-│  بعد التعديل                                                    │
-├─────────────────────────────────────────────────────────────────┤
-│  logErrorSafely('secureOperations.validateInvoice', error);     │
-│  error: getSafeErrorMessage(error) || 'فشل...'                  │
-└─────────────────────────────────────────────────────────────────┘
+-- 2. جدول ربط المستخدمين بالمستأجرين
+CREATE TABLE public.user_tenants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE NOT NULL,
+    is_default BOOLEAN DEFAULT false,
+    joined_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(user_id, tenant_id)
+);
 ```
 
-**الإجراءات:**
-1. استيراد `logErrorSafely` و `getSafeErrorMessage` من `errorHandler.ts`
-2. استبدال 6 instances من `console.error` بـ `logErrorSafely`
-3. استبدال 4 instances من `error.message` بـ `getSafeErrorMessage(error)`
+#### 1.2 إضافة `tenant_id` لجميع الجداول (56 جدول)
 
----
-
-## المرحلة 2: تقسيم الملفات الكبيرة (P2)
-
-### 2.1 تقسيم AppSidebar.tsx (586 سطر)
-
-**الملفات الجديدة:**
-```text
-src/components/layout/sidebar/
-├── SidebarHeader.tsx      # شعار + زر الطي (موجود)
-├── SidebarFooter.tsx      # أزرار الإعدادات والخروج (موجود)
-├── SidebarNavSections.tsx # 🆕 الأقسام الأربعة الرئيسية
-└── index.ts               # تصدير موحد (موجود)
+```sql
+-- إضافة العمود لكل جدول
+ALTER TABLE customers ADD COLUMN tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE invoices ADD COLUMN tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE products ADD COLUMN tenant_id UUID REFERENCES tenants(id);
+-- ... باقي الجداول
 ```
 
-**التغييرات:**
-1. إنشاء `SidebarNavSections.tsx` لاحتواء الأقسام الأربعة (المبيعات، المخزون، المالية، النظام)
-2. نقل `defaultNavSections` و `sectionIconColors` للملف الجديد
-3. تبسيط `AppSidebar.tsx` لاستخدام المكونات الفرعية
+#### 1.3 إنشاء دالة `get_current_tenant()`
 
-**الحجم المتوقع بعد التقسيم:** ~300 سطر
-
----
-
-### 2.2 تقسيم MobileDrawer.tsx (470 سطر)
-
-**الملفات الموجودة:**
-```text
-src/components/layout/mobile/
-├── MobileFavoritesSection.tsx  # ✅ موجود
-├── MobileFooter.tsx            # ✅ موجود
-├── MobileNavSection.tsx        # ✅ موجود
-├── MobileQuickActions.tsx      # ✅ موجود
-└── index.ts                    # ✅ موجود
+```sql
+CREATE OR REPLACE FUNCTION public.get_current_tenant()
+RETURNS UUID
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT ut.tenant_id
+    FROM user_tenants ut
+    WHERE ut.user_id = auth.uid()
+    AND ut.is_default = true
+    LIMIT 1
+$$;
 ```
 
-**التغييرات:**
-1. إنشاء `MobileDrawerHeader.tsx` لاحتواء الشعار والبحث
-2. إنشاء `MobileNavSections.tsx` لاحتواء الأقسام الأربعة
-3. تبسيط `MobileDrawer.tsx` لاستخدام المكونات الفرعية
+#### 1.4 تحديث جميع سياسات RLS
 
-**الحجم المتوقع بعد التقسيم:** ~250 سطر
-
----
-
-### 2.3 تقسيم InvoiceFormDialog.tsx (541 سطر)
-
-**الملفات الموجودة والجديدة:**
-```text
-src/components/invoices/
-├── InvoiceFormDialog.tsx       # الملف الرئيسي
-├── InvoiceItemsTable.tsx       # ✅ موجود
-├── InvoiceTotalsSection.tsx    # ✅ موجود
-├── useInvoiceItems.ts          # ✅ موجود
-├── InvoiceFormHeader.tsx       # 🆕 حقول الفاتورة الأساسية
-└── InvoiceValidation.tsx       # 🆕 شارة التحقق والرسائل
-```
-
-**التغييرات:**
-1. إنشاء `InvoiceFormHeader.tsx` لحقول العميل والتاريخ والحالة
-2. إنشاء `InvoiceValidation.tsx` لعرض حالة التحقق من Edge Function
-3. تبسيط `InvoiceFormDialog.tsx` لاستخدام المكونات الفرعية
-
-**الحجم المتوقع بعد التقسيم:** ~300 سطر
-
----
-
-### 2.4 تقسيم QuotationFormDialog.tsx (497 سطر)
-
-**الملفات الموجودة والجديدة:**
-```text
-src/components/quotations/
-├── QuotationFormDialog.tsx       # الملف الرئيسي
-├── QuotationItemsTable.tsx       # ✅ موجود
-├── QuotationTotalsSection.tsx    # ✅ موجود
-├── QuotationFormHeader.tsx       # 🆕 حقول عرض السعر الأساسية
-└── useQuotationItems.ts          # 🆕 Hook لإدارة البنود
-```
-
-**التغييرات:**
-1. إنشاء `QuotationFormHeader.tsx` لحقول العميل والتاريخ والصلاحية
-2. إنشاء `useQuotationItems.ts` لإدارة منطق البنود (مشابه لـ useInvoiceItems)
-3. تبسيط `QuotationFormDialog.tsx` لاستخدام المكونات الفرعية
-
-**الحجم المتوقع بعد التقسيم:** ~280 سطر
-
----
-
-## المرحلة 3: إنشاء التوثيق (P2)
-
-### 3.1 API_DOCUMENTATION.md
-
-**المحتوى:**
-```markdown
-# توثيق واجهات البرمجة (API Documentation)
-
-## Edge Functions
-
-### 1. validate-invoice
-- **الوظيفة:** التحقق من صلاحية بيانات الفاتورة
-- **المدخلات:** invoice_data (customer_id, total_amount, items[])
-- **المخرجات:** ValidationResult
-- **رموز الخطأ:** UNAUTHORIZED, NO_PERMISSION, LIMIT_EXCEEDED, etc.
-
-### 2. process-payment
-- **الوظيفة:** معالجة الدفعات وتحديث الأرصدة
-- **المدخلات:** payment_data (customer_id, invoice_id, amount, payment_method)
-- **المخرجات:** OperationResult<payment_id>
-
-### 3. approve-expense
-- **الوظيفة:** الموافقة أو رفض المصروفات
-- **المدخلات:** expense_id, action, rejection_reason?
-- **المخرجات:** OperationResult
-
-### 4. stock-movement
-- **الوظيفة:** تنفيذ حركات المخزون
-- **المدخلات:** movement_data (product_id, movement_type, quantity, etc.)
-- **المخرجات:** OperationResult<movement_id>
-
-### 5. approve-invoice
-- **الوظيفة:** سير عمل الموافقة على الفواتير
-- **المدخلات:** invoice_id, action, rejection_reason?
-- **المخرجات:** OperationResult
-
-### 6. create-journal
-- **الوظيفة:** إنشاء قيود محاسبية مزدوجة القيد
-- **المدخلات:** journal_date, description, entries[]
-- **المخرجات:** OperationResult<journal_id>
-
-### 7. verify-totp
-- **الوظيفة:** إعداد وتحقق المصادقة الثنائية
-- **المدخلات:** action (setup|enable|disable|verify), totp_code?
-- **المخرجات:** varies by action
-
-## SQL Functions (RPC)
-
-### check_section_permission
-### check_financial_limit
-### log_activity
-### has_role
+```sql
+-- مثال على تحديث سياسة customers
+DROP POLICY IF EXISTS "customers_select_policy" ON customers;
+CREATE POLICY "customers_select_policy" ON customers
+    FOR SELECT TO authenticated
+    USING (
+        tenant_id = get_current_tenant()
+        AND check_section_permission(auth.uid(), 'customers', 'view')
+    );
 ```
 
 ---
 
-### 3.2 DATABASE_SCHEMA.md
+### المرحلة 2: Rate Limiting (الأسبوع 3)
 
-**المحتوى:**
-```markdown
-# مخطط قاعدة البيانات (Database Schema)
+#### 2.1 جداول Rate Limiting
 
-## الجداول الرئيسية (56 جدول)
+```sql
+-- جدول تكوين حدود المعدل
+CREATE TABLE public.rate_limit_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    endpoint TEXT NOT NULL,
+    tier TEXT NOT NULL DEFAULT 'default',
+    max_requests INTEGER NOT NULL DEFAULT 100,
+    window_seconds INTEGER NOT NULL DEFAULT 60,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
 
-### المبيعات والعملاء
-| الجدول | الوصف | RLS |
-|--------|-------|-----|
-| customers | بيانات العملاء | ✅ |
-| quotations | عروض الأسعار | ✅ |
-| quotation_items | بنود العروض | ✅ |
-| invoices | الفواتير | ✅ |
-| invoice_items | بنود الفواتير | ✅ |
-| sales_orders | أوامر البيع | ✅ |
-| payments | الدفعات | ✅ |
-
-### المخزون والمشتريات
-| الجدول | الوصف | RLS |
-|--------|-------|-----|
-| products | المنتجات | ✅ |
-| product_variants | متغيرات المنتجات | ✅ |
-| categories | التصنيفات | ✅ |
-| inventory | المخزون | ✅ |
-| stock_movements | حركات المخزون | ✅ |
-| suppliers | الموردين | ✅ |
-| purchase_orders | أوامر الشراء | ✅ |
-
-### المحاسبة
-| الجدول | الوصف | RLS |
-|--------|-------|-----|
-| chart_of_accounts | دليل الحسابات | ✅ |
-| journals | قيود اليومية | ✅ |
-| journal_entries | بنود القيود | ✅ |
-| fiscal_periods | الفترات المالية | ✅ |
-| bank_accounts | الحسابات البنكية | ✅ (admin/accountant) |
-
-### الأمان والتدقيق
-| الجدول | الوصف | RLS |
-|--------|-------|-----|
-| user_roles | أدوار المستخدمين | ✅ |
-| custom_roles | الأدوار المخصصة | ✅ (admin only) |
-| role_section_permissions | صلاحيات الأقسام | ✅ (admin only) |
-| role_limits | الحدود المالية | ✅ (admin only) |
-| activity_logs | سجل النشاطات | ✅ |
-| user_2fa_settings | إعدادات 2FA | ✅ |
-
-## Audit Triggers (13 جدول)
-invoices, payments, expenses, stock_movements, customers, 
-suppliers, products, purchase_orders, sales_orders, 
-journal_entries, bank_accounts, quotations, employees
+-- جدول تتبع الطلبات (Token Bucket)
+CREATE TABLE public.rate_limits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    tenant_id UUID REFERENCES tenants(id),
+    endpoint TEXT NOT NULL,
+    tokens_remaining INTEGER NOT NULL,
+    last_refill TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(user_id, endpoint)
+);
 ```
 
----
+#### 2.2 دالة التحقق من Rate Limit
 
-### 3.3 DEPLOYMENT_GUIDE.md
-
-**المحتوى:**
-```markdown
-# دليل النشر (Deployment Guide)
-
-## متطلبات النظام
-- Node.js 18+
-- Lovable Cloud (Supabase)
-
-## إعداد البيئة
-
-### 1. المتغيرات البيئية
-```env
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_PUBLISHABLE_KEY=...
-VITE_SUPABASE_PROJECT_ID=...
+```sql
+CREATE OR REPLACE FUNCTION public.check_rate_limit(
+    _user_id UUID,
+    _endpoint TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    _config RECORD;
+    _current RECORD;
+    _now TIMESTAMPTZ := now();
+    _tokens_to_add INTEGER;
+BEGIN
+    -- الحصول على التكوين
+    SELECT * INTO _config
+    FROM rate_limit_config
+    WHERE endpoint = _endpoint
+    LIMIT 1;
+    
+    IF NOT FOUND THEN
+        RETURN true; -- لا حد محدد
+    END IF;
+    
+    -- الحصول على الحالة الحالية أو إنشاء جديد
+    SELECT * INTO _current
+    FROM rate_limits
+    WHERE user_id = _user_id AND endpoint = _endpoint;
+    
+    IF NOT FOUND THEN
+        INSERT INTO rate_limits (user_id, endpoint, tokens_remaining, last_refill)
+        VALUES (_user_id, _endpoint, _config.max_requests - 1, _now);
+        RETURN true;
+    END IF;
+    
+    -- حساب الـ tokens المضافة
+    _tokens_to_add := FLOOR(
+        EXTRACT(EPOCH FROM (_now - _current.last_refill)) / 
+        _config.window_seconds * _config.max_requests
+    );
+    
+    -- تحديث الـ tokens
+    UPDATE rate_limits
+    SET 
+        tokens_remaining = LEAST(
+            _config.max_requests,
+            _current.tokens_remaining + _tokens_to_add
+        ) - 1,
+        last_refill = CASE 
+            WHEN _tokens_to_add > 0 THEN _now 
+            ELSE last_refill 
+        END
+    WHERE user_id = _user_id AND endpoint = _endpoint
+    AND tokens_remaining + _tokens_to_add > 0;
+    
+    RETURN FOUND;
+END;
+$$;
 ```
 
-### 2. Edge Functions
-يتم نشرها تلقائياً عبر Lovable Cloud:
-- validate-invoice
-- process-payment
-- approve-expense
-- stock-movement
-- approve-invoice
-- create-journal
-- verify-totp
+#### 2.3 تحديث Edge Functions
 
-## النشر للإنتاج
-
-### خطوات النشر
-1. التحقق من جميع الاختبارات: `npm run test`
-2. البناء: `npm run build`
-3. النشر: زر "Publish" في Lovable
-
-### قائمة التحقق قبل النشر
-- [ ] جميع الاختبارات ناجحة (850+)
-- [ ] لا توجد أخطاء TypeScript
-- [ ] RLS مفعّل على جميع الجداول
-- [ ] Edge Functions تعمل بشكل صحيح
-
-## النسخ الاحتياطي والاسترداد
-- النسخ: Cloud View > Database > Backup
-- الاسترداد: Cloud View > Database > Restore
-```
-
----
-
-## جدول التنفيذ
-
-| # | المهمة | الوقت المتوقع | الأولوية |
-|---|--------|--------------|----------|
-| 1 | تحسين secureOperations.ts | 30 دقيقة | P0 |
-| 2 | تقسيم AppSidebar.tsx | 45 دقيقة | P2 |
-| 3 | تقسيم MobileDrawer.tsx | 45 دقيقة | P2 |
-| 4 | تقسيم InvoiceFormDialog.tsx | 45 دقيقة | P2 |
-| 5 | تقسيم QuotationFormDialog.tsx | 45 دقيقة | P2 |
-| 6 | إنشاء API_DOCUMENTATION.md | 30 دقيقة | P2 |
-| 7 | إنشاء DATABASE_SCHEMA.md | 30 دقيقة | P2 |
-| 8 | إنشاء DEPLOYMENT_GUIDE.md | 20 دقيقة | P2 |
-
-**الإجمالي:** ~4.5 ساعة عمل
-
----
-
-## الملفات المتأثرة
-
-### ملفات سيتم تعديلها:
-1. `src/lib/api/secureOperations.ts`
-2. `src/components/layout/AppSidebar.tsx`
-3. `src/components/layout/MobileDrawer.tsx`
-4. `src/components/invoices/InvoiceFormDialog.tsx`
-5. `src/components/quotations/QuotationFormDialog.tsx`
-6. `.lovable/plan.md` (تحديث الحالة)
-
-### ملفات جديدة:
-1. `src/components/layout/sidebar/SidebarNavSections.tsx`
-2. `src/components/layout/mobile/MobileDrawerHeader.tsx`
-3. `src/components/layout/mobile/MobileNavSections.tsx`
-4. `src/components/invoices/InvoiceFormHeader.tsx`
-5. `src/components/invoices/InvoiceValidation.tsx`
-6. `src/components/quotations/QuotationFormHeader.tsx`
-7. `src/components/quotations/useQuotationItems.ts`
-8. `docs/API_DOCUMENTATION.md`
-9. `docs/DATABASE_SCHEMA.md`
-10. `docs/DEPLOYMENT_GUIDE.md`
-
----
-
-## معايير النجاح
-
-| المعيار | الهدف |
-|---------|-------|
-| console.error في Production | 0 |
-| error.message مكشوف | 0 |
-| ملفات > 400 سطر | 0 |
-| توثيق API | 100% |
-| توثيق Database | 100% |
-| توثيق Deployment | 100% |
-
----
-
-## ملاحظات تقنية
-
-### نمط تقسيم الملفات
 ```typescript
-// الملف الرئيسي (بعد التقسيم)
-import { SidebarNavSections } from './sidebar/SidebarNavSections';
-import { SidebarHeader } from './sidebar';
-import { SidebarFooter } from './sidebar';
+// إضافة Rate Limit Check في بداية كل Edge Function
+const userId = claimsData.claims.sub as string;
+const { data: allowed } = await supabase.rpc('check_rate_limit', {
+    _user_id: userId,
+    _endpoint: 'validate-invoice'
+});
 
-export function AppSidebar() {
-  // منطق الحالة فقط
-  return (
-    <aside>
-      <SidebarHeader />
-      <SidebarNavSections />
-      <SidebarFooter />
-    </aside>
-  );
+if (!allowed) {
+    return new Response(
+        JSON.stringify({ 
+            success: false, 
+            error: 'تم تجاوز حد الطلبات المسموح',
+            code: 'RATE_LIMITED' 
+        }),
+        { status: 429, headers: corsHeaders }
+    );
 }
 ```
 
-### نمط Hooks المنفصلة
+---
+
+### المرحلة 3: Financial Governance Automation (الأسبوع 4)
+
+#### 3.1 Period Locking
+
+```sql
+-- إضافة عمود القفل للفترات المالية
+ALTER TABLE fiscal_periods ADD COLUMN locked_at TIMESTAMPTZ;
+ALTER TABLE fiscal_periods ADD COLUMN locked_by UUID;
+
+-- دالة التحقق من قفل الفترة
+CREATE OR REPLACE FUNCTION public.check_period_unlocked(_date DATE)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+AS $$
+    SELECT NOT EXISTS (
+        SELECT 1 FROM fiscal_periods
+        WHERE is_closed = true
+        AND locked_at IS NOT NULL
+        AND _date BETWEEN start_date AND end_date
+    )
+$$;
+```
+
+#### 3.2 Approval Escalation Chains
+
+```sql
+-- جدول سلسلة الموافقات
+CREATE TABLE public.approval_chains (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type TEXT NOT NULL, -- invoice, expense, journal
+    amount_threshold DECIMAL NOT NULL,
+    required_approvers INTEGER DEFAULT 1,
+    approver_roles TEXT[] NOT NULL, -- ['accountant', 'admin']
+    escalation_hours INTEGER DEFAULT 24,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- جدول الموافقات
+CREATE TABLE public.approval_records (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type TEXT NOT NULL,
+    entity_id UUID NOT NULL,
+    chain_id UUID REFERENCES approval_chains(id),
+    current_level INTEGER DEFAULT 1,
+    status TEXT DEFAULT 'pending', -- pending, approved, rejected, escalated
+    approved_by UUID[],
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+#### 3.3 Auto-Reconciliation (مرحلة لاحقة)
+
+```sql
+-- View للمطابقة التلقائية
+CREATE VIEW public.reconciliation_candidates AS
+SELECT 
+    p.id as payment_id,
+    p.amount,
+    p.payment_date,
+    i.id as invoice_id,
+    i.invoice_number,
+    i.total_amount,
+    ABS(p.amount - i.total_amount) as difference
+FROM payments p
+CROSS JOIN invoices i
+WHERE p.invoice_id IS NULL
+AND p.customer_id = i.customer_id
+AND ABS(p.amount - i.total_amount) < 0.01
+AND p.tenant_id = get_current_tenant();
+```
+
+---
+
+### المرحلة 4: Segregation of Duties (SoD) (الأسبوع 5)
+
+#### 4.1 جدول قواعد SoD
+
+```sql
+CREATE TABLE public.sod_rules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT,
+    conflicting_actions JSONB NOT NULL, 
+    -- مثال: [{"section": "invoices", "action": "create"}, {"section": "invoices", "action": "approve"}]
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+#### 4.2 دالة التحقق من SoD
+
+```sql
+CREATE OR REPLACE FUNCTION public.check_sod_violation(
+    _user_id UUID,
+    _section TEXT,
+    _action TEXT,
+    _entity_id UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    _violation RECORD;
+BEGIN
+    -- فحص إذا كان المستخدم قام بإجراء متعارض على نفس الكيان
+    SELECT sr.* INTO _violation
+    FROM sod_rules sr
+    WHERE sr.is_active = true
+    AND EXISTS (
+        SELECT 1 FROM jsonb_array_elements(sr.conflicting_actions) ca
+        WHERE ca->>'section' = _section AND ca->>'action' = _action
+    )
+    AND EXISTS (
+        SELECT 1 FROM activity_logs al
+        CROSS JOIN jsonb_array_elements(sr.conflicting_actions) ca
+        WHERE al.user_id = _user_id
+        AND al.entity_id = _entity_id::TEXT
+        AND al.entity_type = ca->>'section'
+        AND al.action = ca->>'action'
+    );
+    
+    IF FOUND THEN
+        RETURN jsonb_build_object(
+            'violated', true,
+            'rule_name', _violation.name,
+            'message', 'لا يمكنك تنفيذ هذا الإجراء بسبب فصل المهام'
+        );
+    END IF;
+    
+    RETURN jsonb_build_object('violated', false);
+END;
+$$;
+```
+
+---
+
+### المرحلة 5: Observability Layer (الأسبوع 6)
+
+#### 5.1 جدول Performance Metrics
+
+```sql
+CREATE TABLE public.performance_metrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    metric_name TEXT NOT NULL,
+    metric_value DECIMAL NOT NULL,
+    labels JSONB DEFAULT '{}',
+    tenant_id UUID REFERENCES tenants(id),
+    recorded_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Index للاستعلامات السريعة
+CREATE INDEX idx_metrics_name_time ON performance_metrics(metric_name, recorded_at DESC);
+```
+
+#### 5.2 Structured Logging Enhancement
+
 ```typescript
-// useQuotationItems.ts
-export function useQuotationItems(initialItems = []) {
-  const [items, setItems] = useState(initialItems);
-  
-  const addItem = useCallback(() => {...}, []);
-  const removeItem = useCallback((index) => {...}, []);
-  const updateItem = useCallback((index, field, value) => {...}, []);
-  const calculateTotals = useMemo(() => {...}, [items]);
-  
-  return { items, addItem, removeItem, updateItem, ...calculateTotals };
+// src/lib/observability.ts
+export interface StructuredLog {
+    level: 'debug' | 'info' | 'warn' | 'error';
+    message: string;
+    context: {
+        userId?: string;
+        tenantId?: string;
+        endpoint?: string;
+        duration_ms?: number;
+        error_code?: string;
+    };
+    timestamp: string;
+}
+
+export function logStructured(log: StructuredLog): void {
+    // في Production - إرسال للـ backend
+    if (!import.meta.env.DEV) {
+        // يمكن إرسالها لـ Edge Function مخصص
+        supabase.functions.invoke('log-event', { body: log });
+    } else {
+        console.log(JSON.stringify(log, null, 2));
+    }
 }
 ```
+
+---
+
+## 📁 الملفات المتأثرة
+
+### ملفات جديدة (15 ملف):
+```text
+src/
+├── lib/
+│   ├── observability.ts
+│   └── tenantContext.ts
+├── hooks/
+│   ├── useTenant.ts
+│   ├── useRateLimit.ts
+│   └── useApprovalChain.ts
+├── components/
+│   └── tenant/
+│       ├── TenantSelector.tsx
+│       └── TenantSettings.tsx
+supabase/
+└── functions/
+    ├── rate-limit-check/index.ts
+    └── log-event/index.ts
+```
+
+### ملفات معدلة (جميع ملفات الصفحات لإضافة Tenant Context):
+- جميع الـ 27 صفحة لإضافة `tenant_id` filter
+- جميع الـ 7 Edge Functions لإضافة Rate Limiting
+- `src/integrations/supabase/types.ts` (تحديث تلقائي)
+
+---
+
+## 📊 جدول التنفيذ
+
+| # | المرحلة | المهام | الوقت | الأولوية |
+|---|---------|--------|-------|----------|
+| 1 | Multi-Tenant DB | إنشاء جداول + تحديث 56 جدول | 3 أيام | 🔴 P0 |
+| 2 | Multi-Tenant RLS | تحديث 120+ سياسة | 2 أيام | 🔴 P0 |
+| 3 | Rate Limiting | جداول + دوال + Edge Functions | 2 أيام | 🟠 P1 |
+| 4 | Financial Governance | Period Locking + Approval Chains | 3 أيام | 🟠 P1 |
+| 5 | SoD Rules | جداول + دوال + UI | 2 أيام | 🟡 P2 |
+| 6 | Observability | Metrics + Structured Logs | 2 أيام | 🟡 P2 |
+| 7 | Testing | Integration + E2E للميزات الجديدة | 3 أيام | 🔴 P0 |
+| 8 | Documentation | تحديث جميع الوثائق | 1 يوم | 🟡 P2 |
+
+**الإجمالي:** ~18 يوم عمل (3-4 أسابيع)
+
+---
+
+## ✅ معايير النجاح
+
+| المعيار | القيمة المستهدفة |
+|---------|-----------------|
+| Tenant Isolation | 100% - لا يوجد تسرب بيانات |
+| Rate Limiting Coverage | 100% من Edge Functions |
+| SoD Rules | 5+ قواعد أساسية |
+| Period Locking | Enforced في جميع القيود |
+| Metrics Collection | LCP, FID, CLS, API Latency |
+| Documentation Coverage | 100% للميزات الجديدة |
+
+---
+
+## 🔒 ملاحظات أمنية
+
+1. **Tenant Isolation**: يجب اختبار جميع الاستعلامات للتأكد من عدم تسرب بيانات بين المستأجرين
+2. **Rate Limiting**: يجب تطبيقه على مستوى Edge Functions لمنع الـ Bypass
+3. **SoD**: يجب تفعيله تدريجياً مع مراقبة الـ False Positives
+4. **Migration**: يجب تنفيذ Migrations بشكل تدريجي مع Rollback Plan
+
+---
+
+## 🎯 النتيجة المتوقعة
+
+بعد إكمال هذه الخطة:
+- ✅ **Go** لـ SaaS متعدد العملاء
+- ✅ **Go** للشركات الخاضعة لتدقيق مالي
+- ✅ **Go** لبيئات عالية الامتثال
+- ✅ **Enterprise-Grade** وفق معايير ISO-like Governance
