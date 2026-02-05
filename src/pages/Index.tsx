@@ -354,7 +354,7 @@ const Index = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">لوحة التحكم</h1>
-          <p className="text-muted-foreground">مرحباً بك في نظام إدارة معدات الدواجن</p>
+           <p className="text-muted-foreground">مرحباً بك في نظرة - نظام إدارة الأعمال</p>
         </div>
       </div>
 
