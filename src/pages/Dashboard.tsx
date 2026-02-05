@@ -21,6 +21,7 @@ import {
   CreditCard,
   Briefcase,
   ListChecks,
+   Building2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -31,6 +32,8 @@ import { MobileDashboard } from '@/components/dashboard/MobileDashboard';
 import { useDashboardSettings } from '@/hooks/useDashboardSettings';
 import { WidgetConfig } from '@/components/dashboard/DraggableWidget';
 import { useToast } from '@/hooks/use-toast';
+ import { useTenant } from '@/hooks/useTenant';
+ import { WelcomeBanner } from '@/components/dashboard/WelcomeBanner';
 import { TodayPerformanceWidget } from '@/components/dashboard/TodayPerformanceWidget';
 import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
@@ -80,6 +83,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
+   const { currentTenantName, tenant } = useTenant();
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Batch fetch all counts in one query for better performance
@@ -424,6 +428,9 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 
   return (
     <div ref={ref} className="space-y-6 animate-fade-in" {...props}>
+       {/* Welcome Banner */}
+       <WelcomeBanner />
+ 
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -432,6 +439,12 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
           </h1>
           <div className="text-muted-foreground mt-1 flex items-center gap-2">
             <span>مرحباً بك في لوحة التحكم</span>
+             {currentTenantName && (
+               <Badge variant="outline" className="gap-1">
+                 <Building2 className="h-3 w-3" />
+                 {currentTenantName}
+               </Badge>
+             )}
             {userRole && (
               <Badge variant="secondary">
                 {roleLabels[userRole]}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+ import { useTenant } from '@/hooks/useTenant';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
+ import { Bell, Search, User, Settings, LogOut, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AdminMenu from './AdminMenu';
 import QuickActions from '@/components/navigation/QuickActions';
@@ -29,6 +30,7 @@ const roleLabels: Record<string, string> = {
 
 export default function AppHeader() {
   const { user, userRole, signOut } = useAuth();
+   const { currentTenantName } = useTenant();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -74,6 +76,14 @@ export default function AppHeader() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+           {/* Tenant Badge */}
+           {currentTenantName && (
+             <Badge variant="outline" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 border-primary/30 bg-primary/5">
+               <Building2 className="h-3.5 w-3.5 text-primary" />
+               <span className="truncate max-w-[120px] text-sm">{currentTenantName}</span>
+             </Badge>
+           )}
+ 
           {/* Offline Indicator */}
           <OfflineIndicator />
 
