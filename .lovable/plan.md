@@ -1,364 +1,231 @@
 
-# الخطة الشاملة لتحديث واجهة المستخدم وصفحة الهبوط
-## Enterprise UI Refresh & Landing Page Plan
-### ✅ تم الإنجاز بالكامل
----
-
-## 📋 ملخص المهام
-
-| # | المهمة | الأولوية | الوقت المتوقع |
-|---|--------|----------|---------------|
-| 1 | تغيير اسم النظام من "معدات الدواجن" إلى اسم مؤسسي | 🔴 P0 | 1 ساعة |
-| 2 | إنشاء صفحة هبوط (Landing Page) احترافية | 🔴 P0 | 3 ساعات |
-| 3 | تحديث واجهة المصادقة (Auth) | 🟠 P1 | 1 ساعة |
-| 4 | إضافة Tenant Selector للواجهة | 🟠 P1 | 2 ساعة |
-| 5 | تحديث Dashboard ليعكس النموذج الجديد | 🟡 P2 | 2 ساعة |
+# خطة الإصلاح والتطوير الشاملة
+## Complete Review, Fix & Enhancement Plan
 
 ---
 
-## 1️⃣ تغيير اسم النظام (Branding Update)
+## 🔴 المشاكل المكتشفة (Bugs Found)
 
-### الاسم الجديد المقترح
+### 1. تحذيرات React Console
+**الملف:** `src/components/layout/MobileDrawer.tsx`
+**المشكلة:** تحذير "Function components cannot be given refs"
+- السبب: مكون `TenantSelector` لا يستخدم `forwardRef`
+- التأثير: تحذيرات في Console وعدم دعم refs بشكل صحيح
 
-```text
-الاسم الحالي: "معدات الدواجن" / "نظام إدارة معدات الدواجن"
+**الحل:** إضافة `forwardRef` لمكون `TenantSelector`
 
-الاسم الجديد: "نظرة" (Nazra) - نظام إدارة الأعمال
-             أو
-             "رواد" (Rowad) - منصة إدارة المؤسسات
-             أو  
-             "إدارة برو" (Edara Pro) - نظام ERP الذكي
+### 2. اسم قديم في Index.tsx
+**الملف:** `src/pages/Index.tsx` (السطر 357)
+**المشكلة:** لا يزال يعرض "نظام إدارة معدات الدواجن"
+```typescript
+<p className="text-muted-foreground">مرحباً بك في نظام إدارة معدات الدواجن</p>
 ```
+**الحل:** تغييره إلى "نظرة - نظام إدارة الأعمال"
 
-**التوصية:** "نظرة" (Nazra) - لأنه:
-- اسم عربي أصيل يعني "رؤية واضحة"
-- قصير وسهل التذكر
-- يناسب نظام ERP يعطي "نظرة شاملة" على الأعمال
-- يعمل باللغتين العربية والإنجليزية
+### 3. عدم إضافة TenantSelector في AppHeader
+**الملف:** `src/components/layout/AppHeader.tsx`
+**المشكلة:** لا يوجد عرض لاسم الشركة الحالية في Header
+**الحل:** إضافة Badge لعرض اسم المستأجر الحالي
 
-### الملفات المتأثرة (12 ملف)
-
-| الملف | التغيير |
-|-------|---------|
-| `index.html` | title, meta tags, og:title |
-| `vite.config.ts` | PWA manifest name, short_name |
-| `src/pages/Auth.tsx` | عنوان الصفحة والوصف |
-| `src/pages/Index.tsx` | رسالة الترحيب |
-| `src/pages/Dashboard.tsx` | عنوان لوحة التحكم |
-| `src/components/layout/AppSidebar.tsx` | شعار القائمة الجانبية |
-| `src/components/layout/sidebar/SidebarHeader.tsx` | عنوان الـ Header |
-| `src/components/layout/MobileHeader.tsx` | عنوان الـ Header |
-| `src/components/layout/MobileDrawer.tsx` | عنوان الـ Drawer |
-| `src/components/layout/mobile/MobileDrawerHeader.tsx` | عنوان الـ Header |
-| `src/components/shared/AppInitSkeleton.tsx` | شاشة التحميل |
-| `public/offline.html` | صفحة عدم الاتصال |
-
-### التغييرات
-
-```text
-قبل: "معدات الدواجن" | "نظام إدارة معدات الدواجن"
-بعد: "نظرة" | "نظرة - نظام إدارة الأعمال"
-
-قبل: Factory icon (مصنع)
-بعد: Layers أو LayoutDashboard أو Building2 (أكثر ملاءمة لـ ERP)
-```
+### 4. Dashboard لا يعكس Tenant الحالي
+**الملف:** `src/pages/Dashboard.tsx`
+**المشكلة:** لا يعرض اسم الشركة أو معلومات الـ Tenant
+**الحل:** إضافة عرض لمعلومات المستأجر الحالي
 
 ---
 
-## 2️⃣ صفحة الهبوط (Landing Page)
+## 🟠 تحسينات مطلوبة (Enhancements)
 
-### البنية المقترحة
+### 5. إضافة صفحة Onboarding للمستخدم الجديد
+**المشكلة:** عند إنشاء حساب جديد لا يوجد Tenant افتراضي
+**الحل:** 
+- إنشاء flow لإنشاء أول شركة بعد التسجيل
+- إضافة wizard لإعداد الشركة الأولى
 
-```text
-src/pages/
-└── landing/
-    └── LandingPage.tsx
+### 6. Dashboard Welcome Banner
+**الحل:** إضافة Banner ترحيبي بالميزات الجديدة قابل للإخفاء
 
-src/components/landing/
-├── HeroSection.tsx        # القسم الرئيسي
-├── FeaturesSection.tsx    # المميزات
-├── PricingSection.tsx     # الأسعار (للـ SaaS)
-├── TestimonialsSection.tsx # آراء العملاء
-├── CTASection.tsx         # Call to Action
-├── LandingNavbar.tsx      # شريط التنقل
-└── LandingFooter.tsx      # التذييل
-```
+### 7. تحسين صفحة الهبوط - Dashboard Preview
+**المشكلة:** في `HeroSection.tsx` يعرض placeholder فارغ للـ Dashboard
+**الحل:** إضافة mockup تفاعلي أو screenshot للـ Dashboard
 
-### أقسام الصفحة
-
-#### 2.1 Hero Section
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                     [شريط التنقل]                                │
-│  الشعار    المميزات    الأسعار    تواصل معنا    [تسجيل الدخول]  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│        نظرة                                                     │
-│        ─────                                                    │
-│        نظام إدارة الأعمال الذكي                                 │
-│                                                                 │
-│        إدارة شاملة لمؤسستك:                                     │
-│        العملاء • المبيعات • المخزون • المحاسبة                   │
-│                                                                 │
-│        ✓ يعمل بدون إنترنت                                       │
-│        ✓ متعدد المستأجرين                                       │
-│        ✓ تقارير لحظية                                           │
-│                                                                 │
-│        [ابدأ مجاناً]     [اطلب عرض توضيحي]                       │
-│                                                                 │
-│        ────────────────────────────────                         │
-│        [صورة/Animation للوحة التحكم]                             │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-#### 2.2 Features Section
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│                    لماذا نظرة؟                                  │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │  📊         │  │  🔒         │  │  📱         │              │
-│  │  تقارير     │  │  أمان       │  │  PWA        │              │
-│  │  لحظية      │  │  مؤسسي      │  │  متجاوب     │              │
-│  │             │  │             │  │             │              │
-│  │  لوحة تحكم  │  │  RLS +      │  │  يعمل على   │              │
-│  │  تفاعلية    │  │  2FA +      │  │  جميع       │              │
-│  │             │  │  Rate Limit │  │  الأجهزة    │              │
-│  └─────────────┘  └─────────────┘  └─────────────┘              │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │  🏢         │  │  ☁️         │  │  🔄         │              │
-│  │  Multi      │  │  Offline    │  │  مزامنة     │              │
-│  │  Tenant     │  │  First      │  │  ذكية       │              │
-│  │             │  │             │  │             │              │
-│  │  عزل تام    │  │  يعمل بدون  │  │  بيانات     │              │
-│  │  للبيانات   │  │  إنترنت     │  │  محدثة      │              │
-│  └─────────────┘  └─────────────┘  └─────────────┘              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-#### 2.3 Pricing Section (للنموذج SaaS)
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│                      الباقات والأسعار                           │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │   أساسي     │  │  احترافي   │  │  مؤسسي     │              │
-│  │   ───────   │  │  ─────────  │  │  ───────   │              │
-│  │   مجاني     │  │  299 ج.م   │  │  تواصل معنا │              │
-│  │             │  │  /شهرياً    │  │             │              │
-│  │  5 مستخدمين │  │  25 مستخدم  │  │  غير محدود  │              │
-│  │  1000 فاتورة│  │  غير محدود  │  │  + SLA      │              │
-│  │  دعم بريدي │  │  دعم فوري   │  │  + مدير حساب │              │
-│  │             │  │             │  │             │              │
-│  │  [ابدأ الآن]│  │ [اشترك الآن]│  │ [تواصل معنا]│              │
-│  └─────────────┘  └─────────────┘  └─────────────┘              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-#### 2.4 CTA Section
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│        هل أنت جاهز لإدارة أعمالك بذكاء؟                         │
-│                                                                 │
-│        [ابدأ تجربتك المجانية اليوم]                              │
-│                                                                 │
-│        لا حاجة لبطاقة ائتمان • إعداد خلال دقائق                  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 3️⃣ تحديث واجهة المصادقة (Auth)
-
-### التغييرات
-
-```text
-قبل:
-┌─────────────────────────────────────┐
-│        [Factory Icon]               │
-│   نظام إدارة معدات الدواجن          │
-│   ─────────────────────────         │
-│   [تسجيل الدخول / إنشاء حساب]        │
-└─────────────────────────────────────┘
-
-بعد:
-┌─────────────────────────────────────┐
-│        [Layers Icon + Gradient]     │
-│        نظرة                         │
-│   نظام إدارة الأعمال الذكي          │
-│   ─────────────────────────         │
-│                                     │
-│   [تسجيل الدخول / إنشاء حساب]        │
-│                                     │
-│   أو سجل باستخدام:                   │
-│   [Google] [GitHub]  (اختياري)       │
-│                                     │
-│   ─────────────────────────         │
-│   [العودة للصفحة الرئيسية]           │
-└─────────────────────────────────────┘
-```
-
----
-
-## 4️⃣ إضافة Tenant Selector للواجهة
-
-### المواقع
-
-1. **Desktop Sidebar** (`AppSidebar.tsx`):
-```text
-┌─────────────────────────────────────┐
-│  [Logo] نظرة                        │
-│  ───────────────────────────────    │
-│  ▼ [اسم الشركة الحالية]             │  ← TenantSelector
-│  ───────────────────────────────    │
-│  [Navigation Items...]              │
-└─────────────────────────────────────┘
-```
-
-2. **Mobile Drawer** (`MobileDrawer.tsx`):
-```text
-┌─────────────────────────────────────┐
-│  [Logo] نظرة                        │
-│  ▼ [اسم الشركة]                     │  ← TenantSelector
-│  ───────────────────────────────    │
-│  [Navigation Items...]              │
-└─────────────────────────────────────┘
-```
-
-3. **Header (Desktop)** (`AppHeader.tsx`):
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  [بحث...]    [Breadcrumbs]         [Tenant Badge] [الإشعارات] [الحساب] │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 5️⃣ تحديث Dashboard
-
-### التغييرات الجديدة
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│   صباح الخير، أحمد 👋                                           │
-│   ──────────────────                                            │
-│   [Badge: اسم الشركة] [Badge: الباقة الاحترافية]                 │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   ┌──────────────────────────────────────────────────────┐      │
-│   │  🎉 مرحباً بك في نظرة!                                │      │
-│   │                                                       │      │
-│   │  تم تفعيل الميزات الجديدة:                            │      │
-│   │  ✓ عزل البيانات متعدد المستأجرين                      │      │
-│   │  ✓ سلسلة الموافقات المالية                            │      │
-│   │  ✓ Rate Limiting للحماية                              │      │
-│   │                                                       │      │
-│   │  [اكتشف المزيد]              [إغلاق]                  │      │
-│   └──────────────────────────────────────────────────────┘      │
-│                                                                 │
-│   [Widgets: الإحصائيات، الإجراءات السريعة، المخطط...]            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+### 8. إضافة صفحة إدارة المستأجرين للمسؤولين
+**الحل:** صفحة لإنشاء وإدارة الشركات الجديدة
 
 ---
 
 ## 📁 الملفات المتأثرة
 
-### ملفات جديدة (8 ملفات)
-```text
-src/pages/landing/LandingPage.tsx
-src/components/landing/HeroSection.tsx
-src/components/landing/FeaturesSection.tsx
-src/components/landing/PricingSection.tsx
-src/components/landing/CTASection.tsx
-src/components/landing/LandingNavbar.tsx
-src/components/landing/LandingFooter.tsx
-src/components/landing/index.ts
-```
+### ملفات تحتاج إصلاح:
+| الملف | التغيير | الأولوية |
+|-------|---------|----------|
+| `src/components/tenant/TenantSelector.tsx` | إضافة forwardRef | 🔴 P0 |
+| `src/pages/Index.tsx` | تحديث الاسم القديم | 🔴 P0 |
+| `src/components/layout/AppHeader.tsx` | إضافة Tenant Badge | 🟠 P1 |
+| `src/pages/Dashboard.tsx` | إضافة Tenant info + Welcome banner | 🟠 P1 |
 
-### ملفات معدلة (15 ملف)
-```text
-# Branding (12 ملف)
-index.html
-vite.config.ts
-src/pages/Auth.tsx
-src/pages/Index.tsx
-src/pages/Dashboard.tsx
-src/components/layout/AppSidebar.tsx
-src/components/layout/sidebar/SidebarHeader.tsx
-src/components/layout/MobileHeader.tsx
-src/components/layout/MobileDrawer.tsx
-src/components/layout/mobile/MobileDrawerHeader.tsx
-src/components/shared/AppInitSkeleton.tsx
-public/offline.html
-
-# Tenant Integration (3 ملفات)
-src/components/layout/AppSidebar.tsx
-src/components/layout/MobileDrawer.tsx
-src/components/layout/AppHeader.tsx
-
-# Routing
-src/App.tsx (إضافة route للـ Landing Page)
-```
+### ملفات جديدة:
+| الملف | الغرض | الأولوية |
+|-------|-------|----------|
+| `src/components/dashboard/WelcomeBanner.tsx` | بانر ترحيبي بالميزات الجديدة | 🟡 P2 |
+| `src/pages/onboarding/SetupPage.tsx` | إعداد الشركة الأولى | 🟡 P2 |
 
 ---
 
-## 🎨 التصميم والألوان
+## 🛠️ التغييرات التفصيلية
 
-### الهوية البصرية الجديدة
-
-```css
-/* Primary Brand Colors */
---brand-primary: #3b82f6;     /* Blue 500 - الأساسي */
---brand-secondary: #8b5cf6;   /* Violet 500 - الثانوي */
---brand-accent: #06b6d4;      /* Cyan 500 - التأكيد */
-
-/* Gradient */
---brand-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-
-/* Logo Icon */
-الأيقونة الجديدة: Layers أو LayoutDashboard
-بدلاً من: Factory
-```
-
-### الأيقونة الجديدة
+### 1. إصلاح TenantSelector (forwardRef)
 
 ```typescript
-// قبل
-import { Factory } from 'lucide-react';
-<Factory className="h-5 w-5 text-primary" />
+// src/components/tenant/TenantSelector.tsx
+import React, { forwardRef } from 'react';
+// ... existing imports
 
-// بعد
-import { Layers } from 'lucide-react';
-<Layers className="h-5 w-5 text-primary" />
+export const TenantSelector = forwardRef<HTMLButtonElement, Record<string, never>>(
+  function TenantSelector(props, ref) {
+    const { tenant, userTenants, isLoading, hasManyTenants, switchToTenant, isLoadingTenants } = useTenant();
+    
+    // ... existing logic
+    
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button ref={ref} variant="outline" className="w-full justify-between gap-2" dir="rtl">
+            {/* ... existing content */}
+          </Button>
+        </DropdownMenuTrigger>
+        {/* ... existing content */}
+      </DropdownMenu>
+    );
+  }
+);
+
+TenantSelector.displayName = 'TenantSelector';
+export default TenantSelector;
+```
+
+### 2. إصلاح Index.tsx
+
+```typescript
+// src/pages/Index.tsx (السطر 357)
+<p className="text-muted-foreground">مرحباً بك في نظرة - نظام إدارة الأعمال</p>
+```
+
+### 3. إضافة Tenant Badge في AppHeader
+
+```typescript
+// src/components/layout/AppHeader.tsx
+import { useTenant } from '@/hooks/useTenant';
+import { Building2 } from 'lucide-react';
+
+// داخل المكون:
+const { tenant, currentTenantName } = useTenant();
+
+// في JSX قبل الإشعارات:
+{currentTenantName && (
+  <Badge variant="outline" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5">
+    <Building2 className="h-3.5 w-3.5 text-primary" />
+    <span className="truncate max-w-[120px]">{currentTenantName}</span>
+  </Badge>
+)}
+```
+
+### 4. إضافة Welcome Banner في Dashboard
+
+```typescript
+// src/components/dashboard/WelcomeBanner.tsx
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { X, Sparkles, Check, Building2, Shield, Zap } from 'lucide-react';
+
+export function WelcomeBanner() {
+  const [dismissed, setDismissed] = useState(() => {
+    return localStorage.getItem('nazra-welcome-dismissed') === 'true';
+  });
+
+  if (dismissed) return null;
+
+  const handleDismiss = () => {
+    localStorage.setItem('nazra-welcome-dismissed', 'true');
+    setDismissed(true);
+  };
+
+  return (
+    <Card className="bg-gradient-to-l from-primary/10 via-violet-500/5 to-transparent border-primary/20 mb-6">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center shadow-lg">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">مرحباً بك في نظرة 2.0!</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                تم تفعيل الميزات المؤسسية الجديدة
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleDismiss}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4 mt-6">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+            <Check className="h-5 w-5 text-emerald-500" />
+            <span className="text-sm">عزل البيانات متعدد الشركات</span>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+            <Check className="h-5 w-5 text-emerald-500" />
+            <span className="text-sm">سلسلة الموافقات المالية</span>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+            <Check className="h-5 w-5 text-emerald-500" />
+            <span className="text-sm">حماية Rate Limiting</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### 5. تحديث Dashboard لعرض Tenant
+
+```typescript
+// src/pages/Dashboard.tsx - إضافة في Welcome Section
+import { useTenant } from '@/hooks/useTenant';
+import { WelcomeBanner } from '@/components/dashboard/WelcomeBanner';
+
+// داخل المكون:
+const { tenant, currentTenantName } = useTenant();
+
+// في JSX بعد Welcome Section:
+<WelcomeBanner />
+
+// وإضافة Badge للشركة:
+{currentTenantName && (
+  <Badge variant="outline" className="ml-2">
+    <Building2 className="h-3 w-3 ml-1" />
+    {currentTenantName}
+  </Badge>
+)}
 ```
 
 ---
 
 ## 📊 جدول التنفيذ
 
-| # | المهمة | الملفات | الوقت |
-|---|--------|---------|-------|
-| 1 | تحديث index.html + vite.config.ts | 2 | 15 دقيقة |
-| 2 | تحديث جميع ملفات Branding | 10 | 45 دقيقة |
-| 3 | إنشاء مكونات Landing Page | 7 | 2 ساعة |
-| 4 | إنشاء صفحة LandingPage.tsx | 1 | 30 دقيقة |
-| 5 | تحديث App.tsx للـ Routing | 1 | 15 دقيقة |
-| 6 | دمج TenantSelector في الواجهات | 3 | 1 ساعة |
-| 7 | تحديث Dashboard بالميزات الجديدة | 1 | 30 دقيقة |
+| # | المهمة | الأولوية | الوقت |
+|---|--------|----------|-------|
+| 1 | إصلاح forwardRef في TenantSelector | 🔴 P0 | 10 دقائق |
+| 2 | إصلاح الاسم القديم في Index.tsx | 🔴 P0 | 5 دقائق |
+| 3 | إضافة Tenant Badge في AppHeader | 🟠 P1 | 15 دقيقة |
+| 4 | إنشاء WelcomeBanner component | 🟠 P1 | 20 دقيقة |
+| 5 | تحديث Dashboard بالمعلومات الجديدة | 🟠 P1 | 15 دقيقة |
+| 6 | تحديث ملف الخطة plan.md | 🟡 P2 | 5 دقائق |
 
-**الإجمالي:** ~5 ساعات
+**الإجمالي:** ~70 دقيقة
 
 ---
 
@@ -366,20 +233,19 @@ import { Layers } from 'lucide-react';
 
 | المعيار | الهدف |
 |---------|-------|
-| الاسم الجديد | موحد في جميع الأماكن (12+ ملف) |
-| Landing Page | تحميل < 2 ثانية، Lighthouse > 90 |
-| Responsive | يعمل على Desktop + Mobile |
-| RTL Support | 100% متوافق مع العربية |
-| Tenant Selector | يظهر للمستخدمين متعددي الشركات |
-| Animations | Smooth transitions (300ms) |
+| Console Warnings | صفر تحذيرات React |
+| Branding | اسم "نظرة" موحد في كل مكان |
+| Tenant Display | يظهر اسم الشركة في Header + Dashboard |
+| Welcome Banner | يظهر للمستخدمين الجدد ويمكن إخفاؤه |
+| Code Quality | جميع المكونات تستخدم forwardRef عند الحاجة |
 
 ---
 
 ## 🎯 النتيجة المتوقعة
 
 بعد التنفيذ:
-- ✅ هوية بصرية مؤسسية احترافية
-- ✅ صفحة هبوط جاذبة للعملاء الجدد
-- ✅ تجربة Onboarding سلسة
-- ✅ دعم كامل للـ Multi-Tenancy في الواجهة
-- ✅ نظام جاهز للتسويق كـ SaaS
+- ✅ إزالة جميع تحذيرات React Console
+- ✅ توحيد الهوية البصرية "نظرة" في كل مكان
+- ✅ عرض معلومات المستأجر بشكل واضح
+- ✅ تجربة Onboarding محسنة للمستخدمين الجدد
+- ✅ جاهزية كاملة للنشر كـ SaaS
