@@ -23,6 +23,11 @@ import {
   CircleDollarSign,
   BookOpen,
   BookOpenCheck,
+  Building2,
+  CheckCircle,
+  Activity,
+  AlertTriangle,
+  ClipboardCheck,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -227,6 +232,13 @@ export const navSections: NavSection[] = [
         roles: ['admin', 'accountant'],
         color: 'violet',
       },
+      {
+        title: 'طلبات الموافقة',
+        icon: ClipboardCheck,
+        href: '/approvals',
+        roles: ['admin', 'accountant'],
+        color: 'violet',
+      },
     ],
   },
   {
@@ -358,6 +370,30 @@ export const adminNavItems: NavItem[] = [
     href: '/settings?tab=company',
     roles: ['admin'],
   },
+  {
+    title: 'إدارة الشركات',
+    icon: Building2,
+    href: '/admin/tenants',
+    roles: ['admin'],
+  },
+  {
+    title: 'سلسلة الموافقات',
+    icon: CheckCircle,
+    href: '/admin/approval-chains',
+    roles: ['admin'],
+  },
+  {
+    title: 'مقاييس الأداء',
+    icon: Activity,
+    href: '/admin/metrics',
+    roles: ['admin'],
+  },
+  {
+    title: 'قواعد فصل المهام',
+    icon: AlertTriangle,
+    href: '/admin/sod-rules',
+    roles: ['admin'],
+  },
 ];
 
 // خريطة المسارات للـ Breadcrumb
@@ -396,6 +432,11 @@ export const routeLabels: Record<string, string> = {
   '/admin/role-limits': 'الحدود المالية',
   '/admin/backup': 'النسخ الاحتياطي',
   '/admin/export-templates': 'قوالب التصدير',
+  '/admin/approval-chains': 'سلسلة الموافقات',
+  '/admin/metrics': 'مقاييس الأداء',
+  '/admin/sod-rules': 'قواعد فصل المهام',
+  '/admin/tenants': 'إدارة الشركات',
+  '/approvals': 'طلبات الموافقة',
 };
 
 export function getRouteLabel(path: string): string {

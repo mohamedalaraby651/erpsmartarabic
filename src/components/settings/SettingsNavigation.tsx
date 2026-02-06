@@ -44,6 +44,7 @@ export const personalTabs: SettingsTab[] = [
 
 export const systemTabs: SettingsTab[] = [
   { id: 'company', label: 'الشركة', icon: Building2, adminOnly: true, description: 'معلومات وشعار الشركة', color: 'bg-indigo-500' },
+  { id: 'tenant', label: 'إعدادات المستأجر', icon: Building2, adminOnly: true, description: 'اسم الشركة والنطاق والباقة', color: 'bg-violet-500' },
   { id: 'invoices', label: 'الفواتير', icon: Receipt, adminOnly: true, description: 'العملة وإعدادات الفواتير', color: 'bg-teal-500' },
   { id: 'templates', label: 'القوالب', icon: FileBox, adminOnly: true, description: 'قوالب التقارير والطباعة', color: 'bg-cyan-500' },
   { id: 'backup', label: 'النسخ الاحتياطي', icon: Database, adminOnly: true, description: 'تصدير واستيراد البيانات', color: 'bg-amber-500' },

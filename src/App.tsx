@@ -47,6 +47,11 @@ const ActivityLogPage = lazy(() => import("./pages/admin/ActivityLogPage"));
 const RoleLimitsPage = lazy(() => import("./pages/admin/RoleLimitsPage"));
 const BackupPage = lazy(() => import("./pages/admin/BackupPage"));
 const ExportTemplatesPage = lazy(() => import("./pages/admin/ExportTemplatesPage"));
+const ApprovalChainsPage = lazy(() => import("./pages/admin/ApprovalChainsPage"));
+const MetricsPage = lazy(() => import("./pages/admin/MetricsPage"));
+const SodRulesPage = lazy(() => import("./pages/admin/SodRulesPage"));
+const TenantsPage = lazy(() => import("./pages/admin/TenantsPage"));
+const ApprovalsPage = lazy(() => import("./pages/approvals/ApprovalsPage"));
 const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
 const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetailsPage"));
 const SyncStatusPage = lazy(() => import("./pages/sync/SyncStatusPage"));
@@ -133,6 +138,11 @@ const App = () => (
                   <Route path="admin/role-limits" element={<RoleLimitsPage />} />
                   <Route path="admin/backup" element={<BackupPage />} />
                   <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
+                  <Route path="admin/approval-chains" element={<ApprovalChainsPage />} />
+                  <Route path="admin/metrics" element={<MetricsPage />} />
+                  <Route path="admin/sod-rules" element={<SodRulesPage />} />
+                  <Route path="admin/tenants" element={<TenantsPage />} />
+                  <Route path="approvals" element={<ApprovalsPage />} />
                   <Route path="employees" element={<EmployeesPage />} />
                   <Route path="employees/:id" element={<EmployeeDetailsPage />} />
                   <Route path="profile" element={<UnifiedSettingsPage />} />
