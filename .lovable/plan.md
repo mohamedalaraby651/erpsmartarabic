@@ -1,251 +1,151 @@
 
-# خطة الإصلاح والتطوير الشاملة
-## Complete Review, Fix & Enhancement Plan
+# خطة تنفيذ ربط الميزات المؤسسية بواجهة المستخدم
+## Phase 1: Enterprise Features UI Accessibility
 
 ---
 
-## 🔴 المشاكل المكتشفة (Bugs Found)
+## ملخص المرحلة
 
-### 1. تحذيرات React Console
-**الملف:** `src/components/layout/MobileDrawer.tsx`
-**المشكلة:** تحذير "Function components cannot be given refs"
-- السبب: مكون `TenantSelector` لا يستخدم `forwardRef`
-- التأثير: تحذيرات في Console وعدم دعم refs بشكل صحيح
+هذه المرحلة تركز على ربط الميزات المؤسسية المبنية فعليا في قاعدة البيانات والـ Hooks بواجهات مستخدم فعلية يمكن الوصول إليها. الميزات التالية موجودة في الكود ولكن بدون UI:
 
-**الحل:** إضافة `forwardRef` لمكون `TenantSelector`
-
-### 2. اسم قديم في Index.tsx
-**الملف:** `src/pages/Index.tsx` (السطر 357)
-**المشكلة:** لا يزال يعرض "نظام إدارة معدات الدواجن"
-```typescript
-<p className="text-muted-foreground">مرحباً بك في نظام إدارة معدات الدواجن</p>
-```
-**الحل:** تغييره إلى "نظرة - نظام إدارة الأعمال"
-
-### 3. عدم إضافة TenantSelector في AppHeader
-**الملف:** `src/components/layout/AppHeader.tsx`
-**المشكلة:** لا يوجد عرض لاسم الشركة الحالية في Header
-**الحل:** إضافة Badge لعرض اسم المستأجر الحالي
-
-### 4. Dashboard لا يعكس Tenant الحالي
-**الملف:** `src/pages/Dashboard.tsx`
-**المشكلة:** لا يعرض اسم الشركة أو معلومات الـ Tenant
-**الحل:** إضافة عرض لمعلومات المستأجر الحالي
+| الميزة | Backend | Hook | UI |
+|--------|---------|------|----|
+| سلسلة الموافقات | `approval_chains` + `approval_records` | `useApprovalChain` | مفقود |
+| قواعد فصل المهام | `sod_rules` + `check_sod_violation` | -- | مفقود |
+| مقاييس الاداء | `performance_metrics` + `observability.ts` | -- | مفقود |
+| اعدادات المستاجر | `TenantSettings.tsx` موجود | `useTenant` | مفقود من الاعدادات |
+| طلبات الموافقة | `approval_records` جدول موجود | `useApprovalChain` | مفقود |
 
 ---
 
-## 🟠 تحسينات مطلوبة (Enhancements)
+## التغييرات المطلوبة
 
-### 5. إضافة صفحة Onboarding للمستخدم الجديد
-**المشكلة:** عند إنشاء حساب جديد لا يوجد Tenant افتراضي
-**الحل:** 
-- إنشاء flow لإنشاء أول شركة بعد التسجيل
-- إضافة wizard لإعداد الشركة الأولى
+### 1. انشاء 5 صفحات جديدة
 
-### 6. Dashboard Welcome Banner
-**الحل:** إضافة Banner ترحيبي بالميزات الجديدة قابل للإخفاء
+#### 1.1 صفحة سلسلة الموافقات (Admin)
+**الملف:** `src/pages/admin/ApprovalChainsPage.tsx`
+- عرض قائمة بقواعد الموافقات من جدول `approval_chains`
+- امكانية اضافة قاعدة جديدة (نوع الكيان، الحد المالي، عدد الموافقين، ادوار الموافقين)
+- تعديل وحذف القواعد
+- استخدام Supabase مباشرة مع جدول `approval_chains`
 
-### 7. تحسين صفحة الهبوط - Dashboard Preview
-**المشكلة:** في `HeroSection.tsx` يعرض placeholder فارغ للـ Dashboard
-**الحل:** إضافة mockup تفاعلي أو screenshot للـ Dashboard
+#### 1.2 صفحة طلبات الموافقة (للمستخدمين)
+**الملف:** `src/pages/approvals/ApprovalsPage.tsx`
+- عرض الطلبات المعلقة من جدول `approval_records`
+- Tabs: معلقة / موافق عليها / مرفوضة
+- ازرار موافقة ورفض (مع سبب الرفض)
+- استخدام `useApprovalChain` hook الموجود
 
-### 8. إضافة صفحة إدارة المستأجرين للمسؤولين
-**الحل:** صفحة لإنشاء وإدارة الشركات الجديدة
+#### 1.3 صفحة مقاييس الاداء (Admin)
+**الملف:** `src/pages/admin/MetricsPage.tsx`
+- عرض Web Vitals (LCP, FID, CLS) باستخدام `reportWebVitals` من `observability.ts`
+- عرض بيانات من جدول `performance_metrics`
+- عرض احصائيات Rate Limit
+- رسوم بيانية باستخدام Recharts الموجود بالفعل
 
----
+#### 1.4 صفحة قواعد فصل المهام (Admin)
+**الملف:** `src/pages/admin/SodRulesPage.tsx`
+- عرض قواعد SoD من جدول `sod_rules`
+- اضافة/تعديل/حذف القواعد
+- كل قاعدة تحتوي: اسم، وصف، الاجراءات المتعارضة، حالة التفعيل
 
-## 📁 الملفات المتأثرة
+#### 1.5 صفحة ادارة الشركات (Admin)
+**الملف:** `src/pages/admin/TenantsPage.tsx`
+- عرض جميع الشركات من جدول `tenants` + `user_tenants`
+- اضافة شركة جديدة
+- تعليق/تفعيل شركة
+- عرض عدد المستخدمين لكل شركة
 
-### ملفات تحتاج إصلاح:
-| الملف | التغيير | الأولوية |
-|-------|---------|----------|
-| `src/components/tenant/TenantSelector.tsx` | إضافة forwardRef | 🔴 P0 |
-| `src/pages/Index.tsx` | تحديث الاسم القديم | 🔴 P0 |
-| `src/components/layout/AppHeader.tsx` | إضافة Tenant Badge | 🟠 P1 |
-| `src/pages/Dashboard.tsx` | إضافة Tenant info + Welcome banner | 🟠 P1 |
+### 2. تحديث الملفات الموجودة
 
-### ملفات جديدة:
-| الملف | الغرض | الأولوية |
-|-------|-------|----------|
-| `src/components/dashboard/WelcomeBanner.tsx` | بانر ترحيبي بالميزات الجديدة | 🟡 P2 |
-| `src/pages/onboarding/SetupPage.tsx` | إعداد الشركة الأولى | 🟡 P2 |
+#### 2.1 تحديث `src/App.tsx`
+- اضافة 5 Routes جديدة:
+  - `/admin/approval-chains` -> `ApprovalChainsPage`
+  - `/approvals` -> `ApprovalsPage`
+  - `/admin/metrics` -> `MetricsPage`
+  - `/admin/sod-rules` -> `SodRulesPage`
+  - `/admin/tenants` -> `TenantsPage`
 
----
+#### 2.2 تحديث `src/lib/navigation.ts`
+- اضافة 4 عناصر جديدة في `adminNavItems`:
+  - ادارة الشركات (`/admin/tenants`)
+  - سلسلة الموافقات (`/admin/approval-chains`)
+  - مقاييس الاداء (`/admin/metrics`)
+  - قواعد فصل المهام (`/admin/sod-rules`)
+- اضافة عنصر "طلبات الموافقة" (`/approvals`) في قسم المالية في `navSections`
+- تحديث `routeLabels` بالمسارات الجديدة
 
-## 🛠️ التغييرات التفصيلية
+#### 2.3 تحديث `src/components/settings/SettingsNavigation.tsx`
+- اضافة تبويب "اعدادات الشركة" في `systemTabs` بايقونة `Building2`
 
-### 1. إصلاح TenantSelector (forwardRef)
+#### 2.4 تحديث `src/pages/settings/UnifiedSettingsPage.tsx`
+- اضافة `import { TenantSettings } from '@/components/tenant/TenantSettings'`
+- اضافة case `'tenant'` في `renderContent()` يعرض `TenantSettings`
 
-```typescript
-// src/components/tenant/TenantSelector.tsx
-import React, { forwardRef } from 'react';
-// ... existing imports
+#### 2.5 تحديث `src/pages/admin/AdminDashboard.tsx`
+- اضافة 4 ازرار وصول سريع للصفحات الجديدة في `adminSections`
 
-export const TenantSelector = forwardRef<HTMLButtonElement, Record<string, never>>(
-  function TenantSelector(props, ref) {
-    const { tenant, userTenants, isLoading, hasManyTenants, switchToTenant, isLoadingTenants } = useTenant();
-    
-    // ... existing logic
-    
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button ref={ref} variant="outline" className="w-full justify-between gap-2" dir="rtl">
-            {/* ... existing content */}
-          </Button>
-        </DropdownMenuTrigger>
-        {/* ... existing content */}
-      </DropdownMenu>
-    );
-  }
-);
-
-TenantSelector.displayName = 'TenantSelector';
-export default TenantSelector;
-```
-
-### 2. إصلاح Index.tsx
-
-```typescript
-// src/pages/Index.tsx (السطر 357)
-<p className="text-muted-foreground">مرحباً بك في نظرة - نظام إدارة الأعمال</p>
-```
-
-### 3. إضافة Tenant Badge في AppHeader
-
-```typescript
-// src/components/layout/AppHeader.tsx
-import { useTenant } from '@/hooks/useTenant';
-import { Building2 } from 'lucide-react';
-
-// داخل المكون:
-const { tenant, currentTenantName } = useTenant();
-
-// في JSX قبل الإشعارات:
-{currentTenantName && (
-  <Badge variant="outline" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5">
-    <Building2 className="h-3.5 w-3.5 text-primary" />
-    <span className="truncate max-w-[120px]">{currentTenantName}</span>
-  </Badge>
-)}
-```
-
-### 4. إضافة Welcome Banner في Dashboard
-
-```typescript
-// src/components/dashboard/WelcomeBanner.tsx
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { X, Sparkles, Check, Building2, Shield, Zap } from 'lucide-react';
-
-export function WelcomeBanner() {
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem('nazra-welcome-dismissed') === 'true';
-  });
-
-  if (dismissed) return null;
-
-  const handleDismiss = () => {
-    localStorage.setItem('nazra-welcome-dismissed', 'true');
-    setDismissed(true);
-  };
-
-  return (
-    <Card className="bg-gradient-to-l from-primary/10 via-violet-500/5 to-transparent border-primary/20 mb-6">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-violet-500 flex items-center justify-center shadow-lg">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">مرحباً بك في نظرة 2.0!</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                تم تفعيل الميزات المؤسسية الجديدة
-              </p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={handleDismiss}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-4 mt-6">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
-            <Check className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm">عزل البيانات متعدد الشركات</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
-            <Check className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm">سلسلة الموافقات المالية</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
-            <Check className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm">حماية Rate Limiting</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-```
-
-### 5. تحديث Dashboard لعرض Tenant
-
-```typescript
-// src/pages/Dashboard.tsx - إضافة في Welcome Section
-import { useTenant } from '@/hooks/useTenant';
-import { WelcomeBanner } from '@/components/dashboard/WelcomeBanner';
-
-// داخل المكون:
-const { tenant, currentTenantName } = useTenant();
-
-// في JSX بعد Welcome Section:
-<WelcomeBanner />
-
-// وإضافة Badge للشركة:
-{currentTenantName && (
-  <Badge variant="outline" className="ml-2">
-    <Building2 className="h-3 w-3 ml-1" />
-    {currentTenantName}
-  </Badge>
-)}
-```
+#### 2.6 تحسين `src/components/landing/HeroSection.tsx`
+- استبدال الـ placeholder الفارغ بمعاينة تفاعلية للوحة التحكم (mockup بسيط بارقام وهمية)
 
 ---
 
-## 📊 جدول التنفيذ
+## قائمة الملفات
 
-| # | المهمة | الأولوية | الوقت |
-|---|--------|----------|-------|
-| 1 | إصلاح forwardRef في TenantSelector | 🔴 P0 | 10 دقائق |
-| 2 | إصلاح الاسم القديم في Index.tsx | 🔴 P0 | 5 دقائق |
-| 3 | إضافة Tenant Badge في AppHeader | 🟠 P1 | 15 دقيقة |
-| 4 | إنشاء WelcomeBanner component | 🟠 P1 | 20 دقيقة |
-| 5 | تحديث Dashboard بالمعلومات الجديدة | 🟠 P1 | 15 دقيقة |
-| 6 | تحديث ملف الخطة plan.md | 🟡 P2 | 5 دقائق |
+### ملفات جديدة (5):
+| الملف | الغرض |
+|-------|-------|
+| `src/pages/admin/ApprovalChainsPage.tsx` | ادارة قواعد الموافقات |
+| `src/pages/approvals/ApprovalsPage.tsx` | طلبات الموافقة |
+| `src/pages/admin/MetricsPage.tsx` | مقاييس الاداء |
+| `src/pages/admin/SodRulesPage.tsx` | قواعد فصل المهام |
+| `src/pages/admin/TenantsPage.tsx` | ادارة الشركات |
 
-**الإجمالي:** ~70 دقيقة
-
----
-
-## ✅ معايير النجاح
-
-| المعيار | الهدف |
-|---------|-------|
-| Console Warnings | صفر تحذيرات React |
-| Branding | اسم "نظرة" موحد في كل مكان |
-| Tenant Display | يظهر اسم الشركة في Header + Dashboard |
-| Welcome Banner | يظهر للمستخدمين الجدد ويمكن إخفاؤه |
-| Code Quality | جميع المكونات تستخدم forwardRef عند الحاجة |
+### ملفات معدلة (6):
+| الملف | التغيير |
+|-------|---------|
+| `src/App.tsx` | اضافة 5 Routes |
+| `src/lib/navigation.ts` | اضافة عناصر Navigation |
+| `src/components/settings/SettingsNavigation.tsx` | اضافة تبويب Tenant |
+| `src/pages/settings/UnifiedSettingsPage.tsx` | اضافة case tenant |
+| `src/pages/admin/AdminDashboard.tsx` | اضافة روابط سريعة |
+| `src/components/landing/HeroSection.tsx` | تحسين المعاينة |
 
 ---
 
-## 🎯 النتيجة المتوقعة
+## التفاصيل التقنية
 
-بعد التنفيذ:
-- ✅ إزالة جميع تحذيرات React Console
-- ✅ توحيد الهوية البصرية "نظرة" في كل مكان
-- ✅ عرض معلومات المستأجر بشكل واضح
-- ✅ تجربة Onboarding محسنة للمستخدمين الجدد
-- ✅ جاهزية كاملة للنشر كـ SaaS
+### الجداول المستخدمة (موجودة فعليا):
+- `approval_chains`: قواعد الموافقات (entity_type, amount_threshold, required_approvers, approver_roles)
+- `approval_records`: سجلات الموافقات (entity_type, entity_id, status, approved_by, rejection_reason)
+- `sod_rules`: قواعد فصل المهام (name, description, conflicting_actions, is_active)
+- `tenants`: الشركات (name, slug, domain, subscription_tier, is_active)
+- `user_tenants`: ربط المستخدمين بالشركات (user_id, tenant_id, role)
+- `performance_metrics`: مقاييس الاداء (metric_name, metric_value, labels)
+
+### الـ Hooks المستخدمة:
+- `useApprovalChain`: للموافقات (chains, needsApproval, createApprovalRequest, approveRequest, rejectRequest, getPendingApprovals)
+- `useRateLimit`: لفحص Rate Limit (checkRateLimit, isRateLimited)
+- `useTenant`: لادارة المستاجرين (tenant, userTenants, switchToTenant)
+
+### الـ RPCs المستخدمة:
+- `check_sod_violation`: فحص تعارض المهام
+- `needs_approval`: فحص الحاجة للموافقة
+- `check_rate_limit`: فحص حد الاستخدام
+- `get_current_tenant`: الحصول على المستاجر الحالي
+
+### المكتبات المستخدمة (متوفرة):
+- `recharts` للرسوم البيانية في صفحة المقاييس
+- `@tanstack/react-query` لجلب البيانات
+- `sonner` للاشعارات
+- `lucide-react` للايقونات
+
+---
+
+## ترتيب التنفيذ
+
+1. تحديث `navigation.ts` + `App.tsx` (اضافة Routes والعناصر)
+2. انشاء الصفحات الخمس بالتوازي
+3. تحديث Settings (اضافة تبويب Tenant)
+4. تحديث AdminDashboard (اضافة الروابط السريعة)
+5. تحسين HeroSection (المعاينة التفاعلية)
