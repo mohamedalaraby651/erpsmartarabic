@@ -28,6 +28,7 @@ import { BackupTab } from '@/components/settings/BackupTab';
 import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { OfflineSettings } from '@/components/settings/OfflineSettings';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
+import { TenantSettings } from '@/components/tenant/TenantSettings';
 
 // Section skeleton for loading states
 function SectionSkeleton() {
@@ -147,6 +148,8 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         return <DocumentsSection userId={user?.id || ''} />;
       case 'company':
         return isAdmin ? <CompanyInfoSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
+      case 'tenant':
+        return isAdmin ? <TenantSettings /> : null;
       case 'invoices':
         return isAdmin ? <InvoiceSettingsSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
       case 'templates':

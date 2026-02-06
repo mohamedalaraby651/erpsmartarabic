@@ -19,6 +19,9 @@ import {
   Package,
   Receipt,
   Clock,
+  Building2,
+  CheckCircle,
+  Gauge,
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -119,6 +122,10 @@ const AdminDashboard = () => {
     { title: 'الحدود المالية', icon: DollarSign, href: '/admin/role-limits', color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' },
     { title: 'قوالب التصدير', icon: Download, href: '/admin/export-templates', color: 'text-cyan-500', bgColor: 'bg-cyan-500/10' },
     { title: 'النسخ الاحتياطي', icon: Database, href: '/admin/backup', color: 'text-red-500', bgColor: 'bg-red-500/10' },
+    { title: 'إدارة الشركات', icon: Building2, href: '/admin/tenants', color: 'text-violet-500', bgColor: 'bg-violet-500/10' },
+    { title: 'سلسلة الموافقات', icon: CheckCircle, href: '/admin/approval-chains', color: 'text-green-500', bgColor: 'bg-green-500/10' },
+    { title: 'مقاييس الأداء', icon: Gauge, href: '/admin/metrics', color: 'text-sky-500', bgColor: 'bg-sky-500/10' },
+    { title: 'قواعد فصل المهام', icon: AlertTriangle, href: '/admin/sod-rules', color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
   ];
 
   const actionLabels: Record<string, string> = {

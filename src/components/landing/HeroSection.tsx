@@ -95,11 +95,33 @@ export function HeroSection() {
         <div className="mt-16 max-w-5xl mx-auto">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
-            <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl border shadow-2xl p-4 md:p-8">
-              <div className="aspect-video bg-gradient-to-br from-primary/5 to-violet-500/5 rounded-xl flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <Layers className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p>معاينة لوحة التحكم</p>
+            <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl border shadow-2xl p-4 md:p-6">
+              <div className="grid grid-cols-4 gap-3 mb-4">
+                {[
+                  { label: 'العملاء', value: '1,250', color: 'text-blue-500' },
+                  { label: 'الفواتير', value: '3,480', color: 'text-emerald-500' },
+                  { label: 'المنتجات', value: '890', color: 'text-violet-500' },
+                  { label: 'الإيرادات', value: '٤٥٠ ألف', color: 'text-amber-500' },
+                ].map((stat) => (
+                  <div key={stat.label} className="bg-background/60 rounded-xl p-3 text-center border">
+                    <p className={`text-lg md:text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2 bg-background/60 rounded-xl p-4 border h-32 flex items-end gap-1">
+                  {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 95, 80].map((h, i) => (
+                    <div key={i} className="flex-1 bg-primary/20 rounded-t" style={{ height: `${h}%` }}>
+                      <div className="w-full bg-primary rounded-t" style={{ height: '60%' }} />
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-background/60 rounded-xl p-3 border flex flex-col justify-center items-center gap-2">
+                  <div className="w-16 h-16 rounded-full border-4 border-primary flex items-center justify-center">
+                    <span className="text-sm font-bold">87%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">نسبة التحصيل</p>
                 </div>
               </div>
             </div>
