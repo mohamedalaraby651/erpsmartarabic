@@ -1449,6 +1449,72 @@ export type Database = {
           },
         ]
       }
+      platform_admins: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          permissions: Json | null
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permissions?: Json | null
+          role?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permissions?: Json | null
+          role?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      platform_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           created_at: string
@@ -3329,11 +3395,27 @@ export type Database = {
         }
         Returns: Json
       }
+      get_all_tenants_admin: {
+        Args: never
+        Returns: {
+          created_at: string
+          domain: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          subscription_tier: string
+          updated_at: string
+          user_count: number
+        }[]
+      }
       get_approval_chain: {
         Args: { _amount: number; _entity_type: string }
         Returns: string
       }
       get_current_tenant: { Args: never; Returns: string }
+      get_platform_role: { Args: { _user_id?: string }; Returns: string }
+      get_platform_stats: { Args: never; Returns: Json }
       get_user_tenants: { Args: { _user_id: string }; Returns: string[] }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
@@ -3343,12 +3425,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_tenant_member: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
       needs_approval: {
         Args: { _amount: number; _entity_type: string }
+        Returns: boolean
+      }
+      toggle_tenant_status: {
+        Args: { _is_active: boolean; _tenant_id: string }
+        Returns: boolean
+      }
+      update_tenant_subscription: {
+        Args: { _tenant_id: string; _tier: string }
         Returns: boolean
       }
     }

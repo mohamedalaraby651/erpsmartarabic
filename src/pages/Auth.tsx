@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Eye, EyeOff, Layers, ArrowRight } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Layers, ArrowRight, Shield } from 'lucide-react';
 import { logErrorSafely } from '@/lib/errorHandler';
 
 export default function Auth() {
@@ -233,15 +233,26 @@ export default function Auth() {
           <p className="text-sm text-muted-foreground">
             نظام ERP متكامل لإدارة الأعمال
           </p>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate('/landing')}
-            className="text-primary hover:text-primary/80"
-          >
-            <ArrowRight className="ml-2 h-4 w-4" />
-            العودة للصفحة الرئيسية
-          </Button>
+          <div className="flex items-center justify-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/landing')}
+              className="text-primary hover:text-primary/80"
+            >
+              <ArrowRight className="ml-2 h-4 w-4" />
+              العودة للصفحة الرئيسية
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/platform/auth')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Shield className="ml-2 h-4 w-4" />
+              دخول المنصة
+            </Button>
+          </div>
         </div>
       </div>
     </div>
