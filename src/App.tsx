@@ -68,6 +68,16 @@ const JournalEntriesPage = lazy(() => import("./pages/accounting/JournalEntriesP
 const ShareTargetPage = lazy(() => import("./pages/share/ShareTargetPage"));
 const OpenFilePage = lazy(() => import("./pages/file/OpenFilePage"));
 const ProtocolHandlerPage = lazy(() => import("./pages/protocol/ProtocolHandlerPage"));
+// Platform Owner Pages
+const PlatformLayout = lazy(() => import("./components/platform/PlatformLayout"));
+const PlatformAuth = lazy(() => import("./pages/platform/PlatformAuth"));
+const PlatformDashboard = lazy(() => import("./pages/platform/PlatformDashboard"));
+const TenantsManagementPage = lazy(() => import("./pages/platform/TenantsManagementPage"));
+const TenantDetailsPage = lazy(() => import("./pages/platform/TenantDetailsPage"));
+const PlatformAdminsPage = lazy(() => import("./pages/platform/PlatformAdminsPage"));
+const PlatformBillingPage = lazy(() => import("./pages/platform/PlatformBillingPage"));
+const PlatformReportsPage = lazy(() => import("./pages/platform/PlatformReportsPage"));
+const PlatformSettingsPage = lazy(() => import("./pages/platform/PlatformSettingsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -160,6 +170,17 @@ const App = () => (
                   <Route path="share-target" element={<ShareTargetPage />} />
                   <Route path="open-file" element={<OpenFilePage />} />
                   <Route path="protocol" element={<ProtocolHandlerPage />} />
+                </Route>
+                {/* Platform Owner Routes */}
+                <Route path="/platform/auth" element={<PlatformAuth />} />
+                <Route path="/platform" element={<PlatformLayout />}>
+                  <Route index element={<PlatformDashboard />} />
+                  <Route path="tenants" element={<TenantsManagementPage />} />
+                  <Route path="tenants/:id" element={<TenantDetailsPage />} />
+                  <Route path="admins" element={<PlatformAdminsPage />} />
+                  <Route path="billing" element={<PlatformBillingPage />} />
+                  <Route path="reports" element={<PlatformReportsPage />} />
+                  <Route path="settings" element={<PlatformSettingsPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
