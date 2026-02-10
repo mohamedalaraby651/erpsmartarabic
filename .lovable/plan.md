@@ -1,151 +1,208 @@
 
-# خطة تنفيذ ربط الميزات المؤسسية بواجهة المستخدم
-## Phase 1: Enterprise Features UI Accessibility
+
+# خطة تطوير قسم العملاء الشاملة
+## Customer Module Complete Enhancement Plan
 
 ---
 
-## ملخص المرحلة
+## المرحلة الاولى: الاساسيات (النموذج + القائمة + التفاصيل)
 
-هذه المرحلة تركز على ربط الميزات المؤسسية المبنية فعليا في قاعدة البيانات والـ Hooks بواجهات مستخدم فعلية يمكن الوصول إليها. الميزات التالية موجودة في الكود ولكن بدون UI:
+### 1. اضافة حقول جديدة لقاعدة البيانات
 
-| الميزة | Backend | Hook | UI |
-|--------|---------|------|----|
-| سلسلة الموافقات | `approval_chains` + `approval_records` | `useApprovalChain` | مفقود |
-| قواعد فصل المهام | `sod_rules` + `check_sod_violation` | -- | مفقود |
-| مقاييس الاداء | `performance_metrics` + `observability.ts` | -- | مفقود |
-| اعدادات المستاجر | `TenantSettings.tsx` موجود | `useTenant` | مفقود من الاعدادات |
-| طلبات الموافقة | `approval_records` جدول موجود | `useApprovalChain` | مفقود |
+**Migration SQL** لاضافة الحقول التالية لجدول `customers`:
 
----
-
-## التغييرات المطلوبة
-
-### 1. انشاء 5 صفحات جديدة
-
-#### 1.1 صفحة سلسلة الموافقات (Admin)
-**الملف:** `src/pages/admin/ApprovalChainsPage.tsx`
-- عرض قائمة بقواعد الموافقات من جدول `approval_chains`
-- امكانية اضافة قاعدة جديدة (نوع الكيان، الحد المالي، عدد الموافقين، ادوار الموافقين)
-- تعديل وحذف القواعد
-- استخدام Supabase مباشرة مع جدول `approval_chains`
-
-#### 1.2 صفحة طلبات الموافقة (للمستخدمين)
-**الملف:** `src/pages/approvals/ApprovalsPage.tsx`
-- عرض الطلبات المعلقة من جدول `approval_records`
-- Tabs: معلقة / موافق عليها / مرفوضة
-- ازرار موافقة ورفض (مع سبب الرفض)
-- استخدام `useApprovalChain` hook الموجود
-
-#### 1.3 صفحة مقاييس الاداء (Admin)
-**الملف:** `src/pages/admin/MetricsPage.tsx`
-- عرض Web Vitals (LCP, FID, CLS) باستخدام `reportWebVitals` من `observability.ts`
-- عرض بيانات من جدول `performance_metrics`
-- عرض احصائيات Rate Limit
-- رسوم بيانية باستخدام Recharts الموجود بالفعل
-
-#### 1.4 صفحة قواعد فصل المهام (Admin)
-**الملف:** `src/pages/admin/SodRulesPage.tsx`
-- عرض قواعد SoD من جدول `sod_rules`
-- اضافة/تعديل/حذف القواعد
-- كل قاعدة تحتوي: اسم، وصف، الاجراءات المتعارضة، حالة التفعيل
-
-#### 1.5 صفحة ادارة الشركات (Admin)
-**الملف:** `src/pages/admin/TenantsPage.tsx`
-- عرض جميع الشركات من جدول `tenants` + `user_tenants`
-- اضافة شركة جديدة
-- تعليق/تفعيل شركة
-- عرض عدد المستخدمين لكل شركة
-
-### 2. تحديث الملفات الموجودة
-
-#### 2.1 تحديث `src/App.tsx`
-- اضافة 5 Routes جديدة:
-  - `/admin/approval-chains` -> `ApprovalChainsPage`
-  - `/approvals` -> `ApprovalsPage`
-  - `/admin/metrics` -> `MetricsPage`
-  - `/admin/sod-rules` -> `SodRulesPage`
-  - `/admin/tenants` -> `TenantsPage`
-
-#### 2.2 تحديث `src/lib/navigation.ts`
-- اضافة 4 عناصر جديدة في `adminNavItems`:
-  - ادارة الشركات (`/admin/tenants`)
-  - سلسلة الموافقات (`/admin/approval-chains`)
-  - مقاييس الاداء (`/admin/metrics`)
-  - قواعد فصل المهام (`/admin/sod-rules`)
-- اضافة عنصر "طلبات الموافقة" (`/approvals`) في قسم المالية في `navSections`
-- تحديث `routeLabels` بالمسارات الجديدة
-
-#### 2.3 تحديث `src/components/settings/SettingsNavigation.tsx`
-- اضافة تبويب "اعدادات الشركة" في `systemTabs` بايقونة `Building2`
-
-#### 2.4 تحديث `src/pages/settings/UnifiedSettingsPage.tsx`
-- اضافة `import { TenantSettings } from '@/components/tenant/TenantSettings'`
-- اضافة case `'tenant'` في `renderContent()` يعرض `TenantSettings`
-
-#### 2.5 تحديث `src/pages/admin/AdminDashboard.tsx`
-- اضافة 4 ازرار وصول سريع للصفحات الجديدة في `adminSections`
-
-#### 2.6 تحسين `src/components/landing/HeroSection.tsx`
-- استبدال الـ placeholder الفارغ بمعاينة تفاعلية للوحة التحكم (mockup بسيط بارقام وهمية)
+| الحقل | النوع | الغرض |
+|-------|-------|-------|
+| `governorate` | text | المحافظة |
+| `city` | text | المدينة/المركز |
+| `discount_percentage` | numeric DEFAULT 0 | نسبة الخصم المخصصة |
+| `contact_person` | text | اسم الشخص المسؤول |
+| `contact_person_role` | text | منصب الشخص المسؤول |
+| `payment_terms_days` | integer DEFAULT 0 | مدة السداد بالايام |
+| `preferred_payment_method` | text | طريقة الدفع المفضلة |
+| `facebook_url` | text | حساب فيسبوك |
+| `website_url` | text | الموقع الالكتروني |
+| `last_transaction_date` | timestamptz | تاريخ اخر معاملة (يحدث تلقائيا) |
 
 ---
 
-## قائمة الملفات
+### 2. تطوير نموذج اضافة/تعديل العميل (`CustomerFormDialog.tsx`)
 
-### ملفات جديدة (5):
+**الوضع الحالي:** نموذج بسيط بحقول مسطحة بدون تنظيم
+**المطلوب:** اعادة هيكلة النموذج الى اقسام واضحة:
+
+```text
+┌──────────────────────────────────────────────────────┐
+│  اضافة عميل جديد                                     │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  ▎ المعلومات الاساسية                                │
+│  ├── اسم العميل *                                    │
+│  ├── نوع العميل (فرد/شركة/مزرعة)                     │
+│  ├── التصنيف                                         │
+│  └── مستوى VIP                                       │
+│                                                      │
+│  ▎ الشخص المسؤول (يظهر عند اختيار "شركة")            │
+│  ├── اسم المسؤول                                     │
+│  └── المنصب                                          │
+│                                                      │
+│  ▎ معلومات الاتصال                                   │
+│  ├── الهاتف 1       │  الهاتف 2                      │
+│  ├── البريد الالكتروني                                │
+│  ├── فيسبوك         │  الموقع الالكتروني              │
+│  └── واتساب (نفس رقم الهاتف 1)                       │
+│                                                      │
+│  ▎ الموقع الجغرافي                                   │
+│  ├── المحافظة (قائمة 27 محافظة)                       │
+│  └── المدينة/المركز (قائمة تتغير حسب المحافظة)       │
+│                                                      │
+│  ▎ المعلومات المالية                                  │
+│  ├── حد الائتمان     │  نسبة الخصم (%)                │
+│  ├── مدة السداد (ايام)                                │
+│  ├── طريقة الدفع المفضلة                              │
+│  └── الرقم الضريبي                                   │
+│                                                      │
+│  ▎ ملاحظات                                           │
+│  ├── ملاحظات اضافية                                  │
+│  └── [✓] عميل نشط                                   │
+│                                                      │
+│              [الغاء]  [حفظ]                            │
+└──────────────────────────────────────────────────────┘
+```
+
+**التفاصيل:**
+- تقسيم النموذج الى 6 اقسام بعناوين ملونة باستخدام `Separator`
+- المحافظات: قائمة ثابتة بالـ 27 محافظة مصرية
+- المدن/المراكز: قائمة ديناميكية تتغير عند اختيار المحافظة
+- حقل "الشخص المسؤول" يظهر فقط عند اختيار نوع "شركة"
+- تحديث `customerSchema` في `validations.ts` بالحقول الجديدة
+
+---
+
+### 3. تطوير صفحة قائمة العملاء (`CustomersPage.tsx`)
+
+**التحسينات:**
+
+**3.1 فلاتر جديدة:**
+- فلتر **الحالة** (نشط / غير نشط) - مفقود حاليا
+- فلتر **المحافظة** - جديد
+- فلتر **الرصيد** (له رصيد مستحق / بدون رصيد / تجاوز الحد)
+
+**3.2 اعمدة جديدة في الجدول:**
+- عمود **المحافظة** بعد الهاتف
+- تلوين الرصيد بثلاث درجات:
+  - اخضر: رصيد صفر او دائن
+  - برتقالي: رصيد اقل من 50% من حد الائتمان
+  - احمر: رصيد تجاوز 50% من حد الائتمان
+
+**3.3 بطاقة احصائيات جديدة:**
+- اضافة بطاقة "اجمالي الارصدة المستحقة" مع المبلغ الاجمالي
+
+**3.4 تحسين البحث:**
+- توسيع البحث ليشمل المحافظة والمدينة واسم المسؤول
+
+---
+
+### 4. تطوير صفحة تفاصيل العميل (`CustomerDetailsPage.tsx`)
+
+**4.1 اصلاح تبويب عروض الاسعار (مفقود!):**
+- البيانات تُجلب فعلا (سطر 141-153) لكن **لا يوجد TabsTrigger او TabsContent**
+- اضافة تبويب "عروض الاسعار" بنفس تنسيق تبويب الفواتير
+
+**4.2 تبويب جديد: الملخص المالي**
+- مكون جديد `CustomerFinancialSummary.tsx` يعرض:
+  - اجمالي المشتريات
+  - اجمالي المدفوعات
+  - الرصيد المستحق
+  - نسبة السداد (Progress bar)
+  - حد الائتمان vs الاستخدام (Progress bar)
+  - مدة السداد الفعلية المتوسطة
+  - نسبة الخصم المخصصة
+
+**4.3 رسم بياني للمشتريات الشهرية**
+- مكون جديد `CustomerPurchaseChart.tsx` باستخدام `recharts`
+- رسم بياني اعمدة (BarChart) يعرض اخر 12 شهر:
+  - المشتريات (ازرق)
+  - المدفوعات (اخضر)
+- يوضع كتبويب جديد "التحليلات"
+
+**4.4 تحسين Hero Header:**
+- اضافة المحافظة/المدينة في معلومات الاتصال
+- اضافة اسم المسؤول (للشركات)
+- اضافة تاريخ اخر تعامل مع مؤشر نشاط ملون
+
+---
+
+## المرحلة الثانية: المتقدمة (تقارير + تنبيهات) - لاحقا
+
+هذه المرحلة سيتم تنفيذها بعد اكتمال المرحلة الاولى وتشمل:
+
+| الميزة | الوصف |
+|--------|-------|
+| تقرير اعمار الديون | تصنيف حسب 30/60/90/120 يوم |
+| تقرير اكثر العملاء شراء | ترتيب حسب حجم المشتريات |
+| تقرير العملاء غير النشطين | لم يتعاملوا منذ فترة محددة |
+| تقرير المحافظات | توزيع العملاء والمبيعات جغرافيا |
+| تنبيه تجاوز الائتمان | اشعار عند اقتراب/تجاوز الحد |
+| تنبيه تاخر السداد | اشعار عند تاخر عن الموعد |
+| تنبيه عدم النشاط | اشعار عند عدم تعامل لفترة |
+
+---
+
+## الملفات المتاثرة - المرحلة الاولى
+
+### ملف Migration (جديد):
 | الملف | الغرض |
 |-------|-------|
-| `src/pages/admin/ApprovalChainsPage.tsx` | ادارة قواعد الموافقات |
-| `src/pages/approvals/ApprovalsPage.tsx` | طلبات الموافقة |
-| `src/pages/admin/MetricsPage.tsx` | مقاييس الاداء |
-| `src/pages/admin/SodRulesPage.tsx` | قواعد فصل المهام |
-| `src/pages/admin/TenantsPage.tsx` | ادارة الشركات |
+| SQL Migration | اضافة 10 اعمدة جديدة لجدول customers |
 
-### ملفات معدلة (6):
+### ملفات معدلة (4):
 | الملف | التغيير |
 |-------|---------|
-| `src/App.tsx` | اضافة 5 Routes |
-| `src/lib/navigation.ts` | اضافة عناصر Navigation |
-| `src/components/settings/SettingsNavigation.tsx` | اضافة تبويب Tenant |
-| `src/pages/settings/UnifiedSettingsPage.tsx` | اضافة case tenant |
-| `src/pages/admin/AdminDashboard.tsx` | اضافة روابط سريعة |
-| `src/components/landing/HeroSection.tsx` | تحسين المعاينة |
+| `src/lib/validations.ts` | اضافة الحقول الجديدة في customerSchema |
+| `src/components/customers/CustomerFormDialog.tsx` | اعادة هيكلة كاملة + حقول جديدة + اقسام + محافظات/مدن |
+| `src/pages/customers/CustomersPage.tsx` | فلاتر جديدة + عمود محافظة + تلوين رصيد + احصائية ارصدة + توسيع بحث |
+| `src/pages/customers/CustomerDetailsPage.tsx` | تبويب عروض اسعار + ملخص مالي + تحليلات + تحسين Hero |
+
+### ملفات جديدة (3):
+| الملف | الغرض |
+|-------|-------|
+| `src/components/customers/CustomerPurchaseChart.tsx` | رسم بياني شهري (recharts BarChart) |
+| `src/components/customers/CustomerFinancialSummary.tsx` | تبويب الملخص المالي |
+| `src/lib/egyptLocations.ts` | بيانات المحافظات والمدن المصرية |
 
 ---
 
 ## التفاصيل التقنية
 
-### الجداول المستخدمة (موجودة فعليا):
-- `approval_chains`: قواعد الموافقات (entity_type, amount_threshold, required_approvers, approver_roles)
-- `approval_records`: سجلات الموافقات (entity_type, entity_id, status, approved_by, rejection_reason)
-- `sod_rules`: قواعد فصل المهام (name, description, conflicting_actions, is_active)
-- `tenants`: الشركات (name, slug, domain, subscription_tier, is_active)
-- `user_tenants`: ربط المستخدمين بالشركات (user_id, tenant_id, role)
-- `performance_metrics`: مقاييس الاداء (metric_name, metric_value, labels)
+### محافظات مصر (27 محافظة):
+القاهرة، الجيزة، الاسكندرية، الدقهلية، الشرقية، المنوفية، القليوبية، البحيرة، الغربية، كفر الشيخ، دمياط، بورسعيد، الاسماعيلية، السويس، شمال سيناء، جنوب سيناء، بني سويف، الفيوم، المنيا، اسيوط، سوهاج، قنا، الاقصر، اسوان، البحر الاحمر، الوادي الجديد، مطروح
 
-### الـ Hooks المستخدمة:
-- `useApprovalChain`: للموافقات (chains, needsApproval, createApprovalRequest, approveRequest, rejectRequest, getPendingApprovals)
-- `useRateLimit`: لفحص Rate Limit (checkRateLimit, isRateLimited)
-- `useTenant`: لادارة المستاجرين (tenant, userTenants, switchToTenant)
+### تلوين الرصيد:
+```text
+balance <= 0                              -> اخضر  (text-emerald-600)
+balance > 0 && balance < credit_limit*50% -> برتقالي (text-amber-600)
+balance >= credit_limit * 50%             -> احمر  (text-destructive)
+```
 
-### الـ RPCs المستخدمة:
-- `check_sod_violation`: فحص تعارض المهام
-- `needs_approval`: فحص الحاجة للموافقة
-- `check_rate_limit`: فحص حد الاستخدام
-- `get_current_tenant`: الحصول على المستاجر الحالي
-
-### المكتبات المستخدمة (متوفرة):
-- `recharts` للرسوم البيانية في صفحة المقاييس
-- `@tanstack/react-query` لجلب البيانات
-- `sonner` للاشعارات
-- `lucide-react` للايقونات
+### الرسم البياني:
+- `BarChart` من recharts (مثبت فعلا)
+- محور X: الاشهر (اخر 12)
+- محور Y: المبلغ بالجنيه
+- عمودين: مشتريات (ازرق) + مدفوعات (اخضر)
+- البيانات من `invoices` و `payments` مجمعة حسب الشهر
 
 ---
 
 ## ترتيب التنفيذ
 
-1. تحديث `navigation.ts` + `App.tsx` (اضافة Routes والعناصر)
-2. انشاء الصفحات الخمس بالتوازي
-3. تحديث Settings (اضافة تبويب Tenant)
-4. تحديث AdminDashboard (اضافة الروابط السريعة)
-5. تحسين HeroSection (المعاينة التفاعلية)
+| # | المهمة |
+|---|--------|
+| 1 | Migration: اضافة الحقول الجديدة |
+| 2 | انشاء `egyptLocations.ts` (بيانات المحافظات والمدن) |
+| 3 | تحديث `validations.ts` (اضافة الحقول في schema) |
+| 4 | اعادة هيكلة `CustomerFormDialog.tsx` |
+| 5 | تطوير `CustomersPage.tsx` (فلاتر + اعمدة + الوان) |
+| 6 | انشاء `CustomerPurchaseChart.tsx` + `CustomerFinancialSummary.tsx` |
+| 7 | تطوير `CustomerDetailsPage.tsx` (تبويبات جديدة + Hero) |
+
