@@ -27,12 +27,17 @@ import {
   Calendar,
   Printer,
   MessageSquare,
+  BarChart3,
+  Wallet,
+  Globe,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { generatePDF } from "@/lib/pdfGenerator";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
+import CustomerPurchaseChart from "@/components/customers/CustomerPurchaseChart";
+import CustomerFinancialSummary from "@/components/customers/CustomerFinancialSummary";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import ImageUpload from "@/components/shared/ImageUpload";
@@ -360,6 +365,19 @@ const CustomerDetailsPage = () => {
                     {customer.email}
                   </a>
                 )}
+                {(customer as any).governorate && (
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {[(customer as any).governorate, (customer as any).city].filter(Boolean).join(' - ')}
+                  </span>
+                )}
+                {(customer as any).contact_person && (
+                  <span className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    {(customer as any).contact_person}
+                    {(customer as any).contact_person_role && ` (${(customer as any).contact_person_role})`}
+                  </span>
+                )}
                 {customer.tax_number && (
                   <span className="flex items-center gap-1">
                     <Building2 className="h-4 w-4" />
@@ -493,6 +511,10 @@ const CustomerDetailsPage = () => {
             <FileText className="h-4 w-4" />
             الفواتير ({invoices.length})
           </TabsTrigger>
+          <TabsTrigger value="quotations" className="gap-2">
+            <Globe className="h-4 w-4" />
+            عروض الأسعار ({quotations.length})
+          </TabsTrigger>
           <TabsTrigger value="orders" className="gap-2">
             <ShoppingCart className="h-4 w-4" />
             أوامر البيع ({salesOrders.length})
@@ -500,6 +522,14 @@ const CustomerDetailsPage = () => {
           <TabsTrigger value="payments" className="gap-2">
             <CreditCard className="h-4 w-4" />
             المدفوعات ({payments.length})
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="gap-2">
+            <Wallet className="h-4 w-4" />
+            الملخص المالي
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            التحليلات
           </TabsTrigger>
           <TabsTrigger value="activity" className="gap-2">
             <Activity className="h-4 w-4" />
@@ -611,6 +641,45 @@ const CustomerDetailsPage = () => {
           </Card>
         </TabsContent>
 
+        {/* Quotations Tab */}
+        <TabsContent value="quotations" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>عروض الأسعار</CardTitle>
+              <CardDescription>سجل عروض الأسعار للعميل</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {quotations.length === 0 ? (
+                <div className="text-center py-8">
+                  <Globe className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">لا توجد عروض أسعار</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {quotations.slice(0, 15).map((quotation) => (
+                    <div key={quotation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div>
+                        <EntityLink type="quotation" id={quotation.id}>
+                          {quotation.quotation_number}
+                        </EntityLink>
+                        <span className="text-muted-foreground mr-4 text-sm">
+                          {new Date(quotation.created_at).toLocaleDateString('ar-EG')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant={quotation.status === 'completed' ? 'default' : 'secondary'}>
+                          {quotation.status === 'completed' ? 'مكتمل' : quotation.status === 'pending' ? 'معلق' : quotation.status === 'draft' ? 'مسودة' : quotation.status}
+                        </Badge>
+                        <span className="font-bold">{Number(quotation.total_amount).toLocaleString()} ج.م</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Sales Orders Tab */}
         <TabsContent value="orders" className="mt-6">
           <Card>
@@ -680,6 +749,25 @@ const CustomerDetailsPage = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+
+        {/* Financial Summary Tab */}
+        <TabsContent value="financial" className="mt-6">
+          <CustomerFinancialSummary
+            totalPurchases={totalPurchases}
+            totalPayments={totalPayments}
+            currentBalance={Number(customer.current_balance || 0)}
+            creditLimit={Number(customer.credit_limit || 0)}
+            discountPercentage={Number((customer as any).discount_percentage || 0)}
+            paymentTermsDays={Number((customer as any).payment_terms_days || 0)}
+            invoiceCount={invoices.length}
+          />
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="mt-6">
+          <CustomerPurchaseChart invoices={invoices} payments={payments} />
         </TabsContent>
 
         {/* Activity Tab */}

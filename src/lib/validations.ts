@@ -19,6 +19,15 @@ export const customerSchema = z.object({
   category_id: z.string().uuid().optional().or(z.literal('')),
   notes: z.string().max(2000, 'الملاحظات طويلة جداً').optional().or(z.literal('')),
   is_active: z.boolean().optional().default(true),
+  governorate: optionalString,
+  city: optionalString,
+  discount_percentage: z.number().min(0, 'نسبة الخصم يجب أن تكون 0 أو أكثر').max(100, 'نسبة الخصم لا تتجاوز 100%').optional().default(0),
+  contact_person: optionalString,
+  contact_person_role: optionalString,
+  payment_terms_days: z.number().int().min(0).max(365).optional().default(0),
+  preferred_payment_method: z.string().optional().or(z.literal('')),
+  facebook_url: z.string().max(500).optional().or(z.literal('')),
+  website_url: z.string().max(500).optional().or(z.literal('')),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
