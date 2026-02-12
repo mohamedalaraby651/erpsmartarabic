@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Phone, Mail } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -99,7 +99,7 @@ const CustomersPage = () => {
         .order('created_at', { ascending: false });
 
       if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
+        query = query.or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,governorate.ilike.%${searchQuery}%,contact_person.ilike.%${searchQuery}%`);
       }
 
       const { data, error } = await query;
@@ -154,6 +154,14 @@ const CustomersPage = () => {
     individuals: customers.filter(c => c.customer_type === 'individual').length,
     companies: customers.filter(c => c.customer_type === 'company').length,
     vip: customers.filter(c => c.vip_level !== 'regular').length,
+    totalBalance: customers.reduce((sum, c) => sum + Number(c.current_balance || 0), 0),
+  };
+
+  const getBalanceColor = (balance: number, creditLimit: number) => {
+    if (balance <= 0) return 'text-emerald-600';
+    if (creditLimit > 0 && balance >= creditLimit * 0.5) return 'text-destructive';
+    if (balance > 0) return 'text-amber-600';
+    return 'text-emerald-600';
   };
 
   // Memoized mobile card renderer for virtual list
@@ -270,6 +278,7 @@ const CustomersPage = () => {
                 />
               </TableHead>
               <TableHead>الهاتف</TableHead>
+              <TableHead>المحافظة</TableHead>
               <TableHead>
                 <DataTableHeader
                   label="مستوى VIP"
@@ -321,13 +330,16 @@ const CustomersPage = () => {
                 </TableCell>
                 <TableCell>{customer.phone || '-'}</TableCell>
                 <TableCell>
+                  <span className="text-sm text-muted-foreground">{(customer as any).governorate || '-'}</span>
+                </TableCell>
+                <TableCell>
                   <Badge className={vipColors[customer.vip_level as keyof typeof vipColors]}>
                     <Crown className="h-3 w-3 ml-1" />
                     {vipLabels[customer.vip_level as keyof typeof vipLabels]}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <span className={Number(customer.current_balance) > 0 ? 'text-destructive' : 'text-success'}>
+                  <span className={getBalanceColor(Number(customer.current_balance), Number(customer.credit_limit))}>
                     {Number(customer.current_balance).toLocaleString()} ج.م
                   </span>
                 </TableCell>
@@ -398,6 +410,7 @@ const CustomersPage = () => {
               { icon: Users, value: stats.individuals, label: 'أفراد', color: 'text-info' },
               { icon: Building2, value: stats.companies, label: 'شركات', color: 'text-secondary-foreground' },
               { icon: Crown, value: stats.vip, label: 'VIP', color: 'text-warning' },
+              { icon: DollarSign, value: `${stats.totalBalance.toLocaleString()}`, label: 'الأرصدة المستحقة', color: stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600' },
             ].map((stat, i) => (
               <Card key={i} className="min-w-[110px] shrink-0">
                 <CardContent className="p-3">
@@ -415,7 +428,7 @@ const CustomersPage = () => {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -468,6 +481,19 @@ const CustomersPage = () => {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${stats.totalBalance > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10'}`}>
+                  <DollarSign className={`h-5 w-5 ${stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`} />
+                </div>
+                <div>
+                  <p className={`text-2xl font-bold ${stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>{stats.totalBalance.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">الأرصدة المستحقة</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -478,7 +504,7 @@ const CustomersPage = () => {
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="بحث بالاسم أو الهاتف..."
+                placeholder="بحث بالاسم، الهاتف، المحافظة..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-10"

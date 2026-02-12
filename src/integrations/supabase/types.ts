@@ -636,60 +636,90 @@ export type Database = {
       customers: {
         Row: {
           category_id: string | null
+          city: string | null
+          contact_person: string | null
+          contact_person_role: string | null
           created_at: string
           credit_limit: number | null
           current_balance: number | null
           customer_type: Database["public"]["Enums"]["customer_type"]
+          discount_percentage: number | null
           email: string | null
+          facebook_url: string | null
+          governorate: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
+          last_transaction_date: string | null
           name: string
           notes: string | null
+          payment_terms_days: number | null
           phone: string | null
           phone2: string | null
+          preferred_payment_method: string | null
           tax_number: string | null
           tenant_id: string | null
           updated_at: string
           vip_level: Database["public"]["Enums"]["vip_level"]
+          website_url: string | null
         }
         Insert: {
           category_id?: string | null
+          city?: string | null
+          contact_person?: string | null
+          contact_person_role?: string | null
           created_at?: string
           credit_limit?: number | null
           current_balance?: number | null
           customer_type?: Database["public"]["Enums"]["customer_type"]
+          discount_percentage?: number | null
           email?: string | null
+          facebook_url?: string | null
+          governorate?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_transaction_date?: string | null
           name: string
           notes?: string | null
+          payment_terms_days?: number | null
           phone?: string | null
           phone2?: string | null
+          preferred_payment_method?: string | null
           tax_number?: string | null
           tenant_id?: string | null
           updated_at?: string
           vip_level?: Database["public"]["Enums"]["vip_level"]
+          website_url?: string | null
         }
         Update: {
           category_id?: string | null
+          city?: string | null
+          contact_person?: string | null
+          contact_person_role?: string | null
           created_at?: string
           credit_limit?: number | null
           current_balance?: number | null
           customer_type?: Database["public"]["Enums"]["customer_type"]
+          discount_percentage?: number | null
           email?: string | null
+          facebook_url?: string | null
+          governorate?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_transaction_date?: string | null
           name?: string
           notes?: string | null
+          payment_terms_days?: number | null
           phone?: string | null
           phone2?: string | null
+          preferred_payment_method?: string | null
           tax_number?: string | null
           tenant_id?: string | null
           updated_at?: string
           vip_level?: Database["public"]["Enums"]["vip_level"]
+          website_url?: string | null
         }
         Relationships: [
           {
