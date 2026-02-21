@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Shield, Save, Loader2, Users, Package, Receipt, FileText, Truck, Warehouse, CreditCard, BarChart3 } from 'lucide-react';
+import { Shield, Save, Loader2, Users, Package, Receipt, FileText, Truck, Warehouse, CreditCard, BarChart3, Settings, ShieldCheck, Paperclip, Banknote, UserCog, Copy } from 'lucide-react';
 
 const sections = [
   { id: 'customers', name: 'العملاء', icon: Users, color: 'text-blue-600' },
@@ -30,12 +30,20 @@ const sections = [
   { id: 'categories', name: 'التصنيفات', icon: Package, color: 'text-emerald-600' },
   { id: 'inventory', name: 'المخزون', icon: Warehouse, color: 'text-emerald-600' },
   { id: 'suppliers', name: 'الموردين', icon: Truck, color: 'text-emerald-600' },
+  { id: 'supplier_payments', name: 'مدفوعات الموردين', icon: Banknote, color: 'text-emerald-600' },
   { id: 'purchase_orders', name: 'أوامر الشراء', icon: FileText, color: 'text-emerald-600' },
   { id: 'quotations', name: 'عروض الأسعار', icon: FileText, color: 'text-blue-600' },
   { id: 'sales_orders', name: 'أوامر البيع', icon: FileText, color: 'text-blue-600' },
   { id: 'invoices', name: 'الفواتير', icon: Receipt, color: 'text-blue-600' },
   { id: 'payments', name: 'التحصيل', icon: CreditCard, color: 'text-blue-600' },
+  { id: 'expenses', name: 'المصروفات', icon: Banknote, color: 'text-red-600' },
+  { id: 'employees', name: 'الموظفين', icon: Users, color: 'text-purple-600' },
+  { id: 'treasury', name: 'الخزينة', icon: CreditCard, color: 'text-amber-600' },
+  { id: 'accounting', name: 'المحاسبة', icon: BarChart3, color: 'text-slate-600' },
   { id: 'reports', name: 'التقارير', icon: BarChart3, color: 'text-slate-600' },
+  { id: 'attachments', name: 'المرفقات', icon: Paperclip, color: 'text-slate-600' },
+  { id: 'settings', name: 'الإعدادات', icon: Settings, color: 'text-slate-600' },
+  { id: 'admin', name: 'لوحة المدير', icon: ShieldCheck, color: 'text-red-600' },
 ];
 
 const actions = [
@@ -49,7 +57,7 @@ export default function PermissionsPage() {
   const queryClient = useQueryClient();
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({});
-
+  const [copyFromRoleId, setCopyFromRoleId] = useState<string>('');
   const { data: roles } = useQuery({
     queryKey: ['custom-roles'],
     queryFn: async () => {
@@ -132,23 +140,27 @@ export default function PermissionsPage() {
   const togglePermission = (section: string, action: string) => {
     setPermissions(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [action]: !(prev[section]?.[action] || false),
-      },
+      [section]: { ...prev[section], [action]: !(prev[section]?.[action] || false) },
     }));
   };
 
   const toggleAllForSection = (section: string, value: boolean) => {
     setPermissions(prev => ({
       ...prev,
-      [section]: {
-        can_view: value,
-        can_create: value,
-        can_edit: value,
-        can_delete: value,
-      },
+      [section]: { can_view: value, can_create: value, can_edit: value, can_delete: value },
     }));
+  };
+
+  const copyPermissionsFrom = async (sourceRoleId: string) => {
+    if (!sourceRoleId) return;
+    const { data, error } = await supabase.from('role_section_permissions').select('*').eq('role_id', sourceRoleId);
+    if (error) { toast.error('خطأ في نسخ الصلاحيات'); return; }
+    const permMap: Record<string, Record<string, boolean>> = {};
+    data?.forEach(p => {
+      permMap[p.section] = { can_view: p.can_view, can_create: p.can_create, can_edit: p.can_edit, can_delete: p.can_delete };
+    });
+    setPermissions(permMap);
+    toast.success('تم نسخ الصلاحيات - اضغط حفظ لتطبيقها');
   };
 
   const selectedRole = roles?.find(r => r.id === selectedRoleId);
