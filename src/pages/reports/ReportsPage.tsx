@@ -19,6 +19,8 @@ import { AgingReport } from "@/components/reports/AgingReport";
 import { InventoryFlowReport } from "@/components/reports/InventoryFlowReport";
 import { TrialBalanceReport } from "@/components/reports/TrialBalanceReport";
 import { IncomeStatementReport } from "@/components/reports/IncomeStatementReport";
+import { GeographicReport } from "@/components/reports/GeographicReport";
+import { InactiveCustomersReport } from "@/components/reports/InactiveCustomersReport";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -444,7 +446,7 @@ export default function ReportsPage() {
       )}
 
       <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList className={isMobile ? "grid grid-cols-3 w-full" : "grid w-full grid-cols-9 lg:w-auto lg:inline-grid"}>
+        <TabsList className={isMobile ? "grid grid-cols-3 w-full" : "grid w-full grid-cols-11 lg:w-auto lg:inline-grid"}>
           <TabsTrigger value="sales" className="text-xs sm:text-sm">المبيعات</TabsTrigger>
           <TabsTrigger value="products" className="text-xs sm:text-sm">المنتجات</TabsTrigger>
           <TabsTrigger value="customers" className="text-xs sm:text-sm">العملاء</TabsTrigger>
@@ -452,6 +454,8 @@ export default function ReportsPage() {
           <TabsTrigger value="profitability" className="text-xs sm:text-sm">الربحية</TabsTrigger>
           <TabsTrigger value="aging" className="text-xs sm:text-sm">أعمار الديون</TabsTrigger>
           <TabsTrigger value="flow" className="text-xs sm:text-sm">حركة المخزون</TabsTrigger>
+          <TabsTrigger value="geographic" className="text-xs sm:text-sm">التوزيع الجغرافي</TabsTrigger>
+          <TabsTrigger value="inactive" className="text-xs sm:text-sm">غير النشطين</TabsTrigger>
           <TabsTrigger value="trial-balance" className="text-xs sm:text-sm">ميزان المراجعة</TabsTrigger>
           <TabsTrigger value="income-statement" className="text-xs sm:text-sm">قائمة الدخل</TabsTrigger>
         </TabsList>
@@ -649,6 +653,16 @@ export default function ReportsPage() {
         {/* Inventory Flow Tab */}
         <TabsContent value="flow" className="space-y-4">
           <InventoryFlowReport startDate={startDate} endDate={endDate} />
+        </TabsContent>
+
+        {/* Geographic Report Tab */}
+        <TabsContent value="geographic" className="space-y-4">
+          <GeographicReport />
+        </TabsContent>
+
+        {/* Inactive Customers Tab */}
+        <TabsContent value="inactive" className="space-y-4">
+          <InactiveCustomersReport />
         </TabsContent>
 
         {/* Trial Balance Tab */}

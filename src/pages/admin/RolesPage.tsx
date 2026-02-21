@@ -17,6 +17,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -25,7 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
-import { Plus, Pencil, Trash2, Shield, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Shield, Loader2, Copy, Users } from 'lucide-react';
 import { AdminPageSkeleton } from '@/components/shared/AdminPageSkeleton';
 
 interface CustomRole {
@@ -41,6 +51,7 @@ export default function RolesPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<CustomRole | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CustomRole | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -57,6 +68,25 @@ export default function RolesPage() {
       
       if (error) throw error;
       return data as CustomRole[];
+    },
+  });
+
+  // Fetch user counts per role
+  const { data: userCounts } = useQuery({
+    queryKey: ['role-user-counts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('custom_role_id');
+      
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      data?.forEach(ur => {
+        if (ur.custom_role_id) {
+          counts[ur.custom_role_id] = (counts[ur.custom_role_id] || 0) + 1;
+        }
+      });
+      return counts;
     },
   });
 
@@ -127,11 +157,14 @@ export default function RolesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-roles'] });
+      queryClient.invalidateQueries({ queryKey: ['role-user-counts'] });
       toast.success('تم حذف الدور بنجاح');
+      setDeleteTarget(null);
     },
     onError: (error: unknown) => {
       logErrorSafely('RolesPage.deleteMutation', error);
       toast.error(getSafeErrorMessage(error));
+      setDeleteTarget(null);
     },
   });
 
@@ -148,6 +181,20 @@ export default function RolesPage() {
       color: role.color,
     });
     setDialogOpen(true);
+  };
+
+  const handleCopyRole = (role: CustomRole) => {
+    setEditingRole(null);
+    setFormData({
+      name: `${role.name} (نسخة)`,
+      description: role.description || '',
+      color: role.color,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDeleteClick = (role: CustomRole) => {
+    setDeleteTarget(role);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -253,69 +300,114 @@ export default function RolesPage() {
               <TableRow>
                 <TableHead>الدور</TableHead>
                 <TableHead>الوصف</TableHead>
+                <TableHead>المستخدمون</TableHead>
                 <TableHead>الحالة</TableHead>
                 <TableHead>النوع</TableHead>
-                <TableHead className="w-[120px]">الإجراءات</TableHead>
+                <TableHead className="w-[160px]">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {roles?.map((role) => (
-                <TableRow key={role.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-4 w-4 rounded-full"
-                        style={{ backgroundColor: role.color }}
-                      />
-                      <span className="font-medium">{role.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {role.description || '-'}
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={role.is_active}
-                      onCheckedChange={(checked) => 
-                        toggleActiveMutation.mutate({ id: role.id, is_active: checked })
-                      }
-                      disabled={role.is_system}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {role.is_system ? (
-                      <Badge variant="secondary">نظامي</Badge>
-                    ) : (
-                      <Badge variant="outline">مخصص</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditDialog(role)}
+              {roles?.map((role) => {
+                const count = userCounts?.[role.id] || 0;
+                return (
+                  <TableRow key={role.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-4 w-4 rounded-full"
+                          style={{ backgroundColor: role.color }}
+                        />
+                        <span className="font-medium">{role.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {role.description || '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="gap-1">
+                        <Users className="h-3 w-3" />
+                        {count}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={role.is_active}
+                        onCheckedChange={(checked) => 
+                          toggleActiveMutation.mutate({ id: role.id, is_active: checked })
+                        }
                         disabled={role.is_system}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteMutation.mutate(role.id)}
-                        disabled={role.is_system || deleteMutation.isPending}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {role.is_system ? (
+                        <Badge variant="secondary">نظامي</Badge>
+                      ) : (
+                        <Badge variant="outline">مخصص</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="نسخ الدور"
+                          onClick={() => handleCopyRole(role)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(role)}
+                          disabled={role.is_system}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(role)}
+                          disabled={role.is_system || deleteMutation.isPending}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف الدور "{deleteTarget?.name}"</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(userCounts?.[deleteTarget?.id || ''] || 0) > 0 ? (
+                <span className="text-destructive font-medium">
+                  ⚠️ هذا الدور مرتبط بـ {userCounts?.[deleteTarget?.id || '']} مستخدم(ين). سيتم إزالة الدور من هؤلاء المستخدمين.
+                </span>
+              ) : (
+                'هل أنت متأكد من حذف هذا الدور؟ لا يمكن التراجع عن هذا الإجراء.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+            >
+              حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
