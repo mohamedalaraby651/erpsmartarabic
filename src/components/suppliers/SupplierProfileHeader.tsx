@@ -116,6 +116,12 @@ const SupplierProfileHeader = ({
 
             {/* Contact Info */}
             <div className="flex items-center gap-4 mt-3 flex-wrap text-sm text-muted-foreground">
+              {supplier.contact_person && (
+                <span className="flex items-center gap-1">
+                  <Building2 className="h-4 w-4" />
+                  {supplier.contact_person}
+                </span>
+              )}
               {supplier.phone && (
                 <a href={`tel:${supplier.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
                   <Phone className="h-4 w-4" />
@@ -134,7 +140,13 @@ const SupplierProfileHeader = ({
                   الموقع الإلكتروني
                 </a>
               )}
-              {supplier.address && (
+              {(supplier.governorate || supplier.city) && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {[supplier.governorate, supplier.city].filter(Boolean).join(' - ')}
+                </span>
+              )}
+              {!supplier.governorate && supplier.address && (
                 <span className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   {supplier.address.slice(0, 30)}...

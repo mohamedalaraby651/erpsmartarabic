@@ -38,3 +38,7 @@ export const egyptCities: Record<string, string[]> = {
 };
 
 export type Governorate = typeof egyptGovernorates[number];
+
+export function getCitiesByGovernorate(governorate: string): string[] {
+  return egyptCities[governorate] || [];
+}

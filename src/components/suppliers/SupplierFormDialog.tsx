@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -23,24 +24,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import ImageUpload from "@/components/shared/ImageUpload";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Phone, Building2, CreditCard, FileText } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-
-type Supplier = Database['public']['Tables']['suppliers']['Row'];
+import { User, Phone, Building2, CreditCard, MapPin, DollarSign } from "lucide-react";
+import { egyptGovernorates, getCitiesByGovernorate } from "@/lib/egyptLocations";
 
 interface SupplierFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  supplier?: (Supplier & {
-    supplier_type?: string | null;
-    category?: string | null;
-    bank_name?: string | null;
-    bank_account?: string | null;
-    iban?: string | null;
-    rating?: number | null;
-    website?: string | null;
-  }) | null;
+  supplier?: any;
 }
 
 interface FormData {
@@ -60,6 +50,12 @@ interface FormData {
   bank_account: string;
   iban: string;
   website: string;
+  governorate: string;
+  city: string;
+  discount_percentage: number;
+  payment_terms_days: number;
+  preferred_payment_method: string;
+  credit_limit: number;
 }
 
 const supplierTypes = [
@@ -77,6 +73,21 @@ const categories = [
   { value: 'other', label: 'أخرى' },
 ];
 
+const paymentMethods = [
+  { value: 'cash', label: 'نقدي' },
+  { value: 'bank_transfer', label: 'تحويل بنكي' },
+  { value: 'check', label: 'شيك' },
+  { value: 'credit', label: 'آجل' },
+];
+
+const SectionHeader = ({ icon: Icon, title, color }: { icon: any; title: string; color: string }) => (
+  <div className="flex items-center gap-2 pt-4 pb-2">
+    <Icon className={`h-5 w-5 ${color}`} />
+    <h3 className="font-semibold text-base">{title}</h3>
+    <Separator className="flex-1" />
+  </div>
+);
+
 const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -84,98 +95,68 @@ const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialog
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
     defaultValues: {
-      name: '',
-      contact_person: '',
-      phone: '',
-      phone2: '',
-      email: '',
-      address: '',
-      tax_number: '',
-      notes: '',
-      is_active: true,
-      image_url: '',
-      supplier_type: 'local',
-      category: 'other',
-      bank_name: '',
-      bank_account: '',
-      iban: '',
-      website: '',
+      name: '', contact_person: '', phone: '', phone2: '', email: '', address: '',
+      tax_number: '', notes: '', is_active: true, image_url: '', supplier_type: 'local',
+      category: 'other', bank_name: '', bank_account: '', iban: '', website: '',
+      governorate: '', city: '', discount_percentage: 0, payment_terms_days: 0,
+      preferred_payment_method: '', credit_limit: 0,
     },
   });
+
+  const selectedGovernorate = watch('governorate');
+  const cities = selectedGovernorate ? getCitiesByGovernorate(selectedGovernorate) : [];
 
   useEffect(() => {
     if (supplier) {
       reset({
-        name: supplier.name,
-        contact_person: supplier.contact_person || '',
-        phone: supplier.phone || '',
-        phone2: supplier.phone2 || '',
-        email: supplier.email || '',
-        address: supplier.address || '',
-        tax_number: supplier.tax_number || '',
-        notes: supplier.notes || '',
-        is_active: supplier.is_active ?? true,
-        image_url: supplier.image_url || '',
-        supplier_type: supplier.supplier_type || 'local',
-        category: supplier.category || 'other',
-        bank_name: supplier.bank_name || '',
-        bank_account: supplier.bank_account || '',
-        iban: supplier.iban || '',
-        website: supplier.website || '',
+        name: supplier.name, contact_person: supplier.contact_person || '',
+        phone: supplier.phone || '', phone2: supplier.phone2 || '',
+        email: supplier.email || '', address: supplier.address || '',
+        tax_number: supplier.tax_number || '', notes: supplier.notes || '',
+        is_active: supplier.is_active ?? true, image_url: supplier.image_url || '',
+        supplier_type: supplier.supplier_type || 'local', category: supplier.category || 'other',
+        bank_name: supplier.bank_name || '', bank_account: supplier.bank_account || '',
+        iban: supplier.iban || '', website: supplier.website || '',
+        governorate: supplier.governorate || '', city: supplier.city || '',
+        discount_percentage: supplier.discount_percentage || 0,
+        payment_terms_days: supplier.payment_terms_days || 0,
+        preferred_payment_method: supplier.preferred_payment_method || '',
+        credit_limit: supplier.credit_limit || 0,
       });
     } else {
       reset({
-        name: '',
-        contact_person: '',
-        phone: '',
-        phone2: '',
-        email: '',
-        address: '',
-        tax_number: '',
-        notes: '',
-        is_active: true,
-        image_url: '',
-        supplier_type: 'local',
-        category: 'other',
-        bank_name: '',
-        bank_account: '',
-        iban: '',
-        website: '',
+        name: '', contact_person: '', phone: '', phone2: '', email: '', address: '',
+        tax_number: '', notes: '', is_active: true, image_url: '', supplier_type: 'local',
+        category: 'other', bank_name: '', bank_account: '', iban: '', website: '',
+        governorate: '', city: '', discount_percentage: 0, payment_terms_days: 0,
+        preferred_payment_method: '', credit_limit: 0,
       });
     }
   }, [supplier, reset]);
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const payload = {
-        name: data.name,
-        contact_person: data.contact_person || null,
-        phone: data.phone || null,
-        phone2: data.phone2 || null,
-        email: data.email || null,
-        address: data.address || null,
-        tax_number: data.tax_number || null,
-        notes: data.notes || null,
-        is_active: data.is_active,
-        image_url: data.image_url || null,
-        supplier_type: data.supplier_type || null,
-        category: data.category || null,
-        bank_name: data.bank_name || null,
-        bank_account: data.bank_account || null,
-        iban: data.iban || null,
-        website: data.website || null,
+      const payload: any = {
+        name: data.name, contact_person: data.contact_person || null,
+        phone: data.phone || null, phone2: data.phone2 || null,
+        email: data.email || null, address: data.address || null,
+        tax_number: data.tax_number || null, notes: data.notes || null,
+        is_active: data.is_active, image_url: data.image_url || null,
+        supplier_type: data.supplier_type || null, category: data.category || null,
+        bank_name: data.bank_name || null, bank_account: data.bank_account || null,
+        iban: data.iban || null, website: data.website || null,
+        governorate: data.governorate || null, city: data.city || null,
+        discount_percentage: data.discount_percentage || 0,
+        payment_terms_days: data.payment_terms_days || 0,
+        preferred_payment_method: data.preferred_payment_method || null,
+        credit_limit: data.credit_limit || 0,
       };
 
       if (isEditing) {
-        const { error } = await supabase
-          .from('suppliers')
-          .update(payload)
-          .eq('id', supplier.id);
+        const { error } = await supabase.from('suppliers').update(payload).eq('id', supplier.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('suppliers')
-          .insert(payload);
+        const { error } = await supabase.from('suppliers').insert(payload);
         if (error) throw error;
       }
     },
@@ -191,10 +172,6 @@ const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialog
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
-  };
-
   const imageUrl = watch('image_url');
 
   return (
@@ -204,8 +181,8 @@ const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialog
           <DialogTitle>{isEditing ? 'تعديل المورد' : 'إضافة مورد جديد'}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Image Upload Section */}
+        <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-2">
+          {/* Image */}
           <div className="flex justify-center py-4 border-b">
             <ImageUpload
               currentImageUrl={imageUrl}
@@ -218,207 +195,120 @@ const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialog
             />
           </div>
 
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basic" className="gap-2">
-                <User className="h-4 w-4" />
-                أساسي
-              </TabsTrigger>
-              <TabsTrigger value="contact" className="gap-2">
-                <Phone className="h-4 w-4" />
-                الاتصال
-              </TabsTrigger>
-              <TabsTrigger value="business" className="gap-2">
-                <Building2 className="h-4 w-4" />
-                العمل
-              </TabsTrigger>
-              <TabsTrigger value="bank" className="gap-2">
-                <CreditCard className="h-4 w-4" />
-                البنك
-              </TabsTrigger>
-            </TabsList>
+          {/* المعلومات الأساسية */}
+          <SectionHeader icon={User} title="المعلومات الأساسية" color="text-primary" />
+          <div>
+            <Label htmlFor="name">اسم المورد *</Label>
+            <Input id="name" {...register('name', { required: 'اسم المورد مطلوب' })} placeholder="اسم الشركة أو المورد" />
+            {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>نوع المورد</Label>
+              <Select value={watch('supplier_type')} onValueChange={(v) => setValue('supplier_type', v)}>
+                <SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger>
+                <SelectContent>
+                  {supplierTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>التصنيف</Label>
+              <Select value={watch('category')} onValueChange={(v) => setValue('category', v)}>
+                <SelectTrigger><SelectValue placeholder="اختر التصنيف" /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-            {/* Basic Info Tab */}
-            <TabsContent value="basic" className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="name">اسم المورد *</Label>
-                <Input
-                  id="name"
-                  {...register('name', { required: 'اسم المورد مطلوب' })}
-                  placeholder="اسم الشركة أو المورد"
-                />
-                {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
-              </div>
+          {/* معلومات الاتصال */}
+          <SectionHeader icon={Phone} title="معلومات الاتصال" color="text-info" />
+          <div>
+            <Label>جهة الاتصال</Label>
+            <Input {...register('contact_person')} placeholder="اسم المسؤول" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><Label>الهاتف</Label><Input {...register('phone')} placeholder="رقم الهاتف" /></div>
+            <div><Label>هاتف إضافي</Label><Input {...register('phone2')} placeholder="رقم هاتف إضافي" /></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><Label>البريد الإلكتروني</Label><Input type="email" {...register('email')} placeholder="البريد الإلكتروني" /></div>
+            <div><Label>الموقع الإلكتروني</Label><Input {...register('website')} placeholder="https://example.com" /></div>
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="supplier_type">نوع المورد</Label>
-                  <Select
-                    value={watch('supplier_type')}
-                    onValueChange={(value) => setValue('supplier_type', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر النوع" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supplierTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* الموقع الجغرافي */}
+          <SectionHeader icon={MapPin} title="الموقع الجغرافي" color="text-success" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>المحافظة</Label>
+              <Select value={watch('governorate')} onValueChange={(v) => { setValue('governorate', v); setValue('city', ''); }}>
+                <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
+                <SelectContent>
+                  {egyptGovernorates.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>المدينة / المركز</Label>
+              <Select value={watch('city')} onValueChange={(v) => setValue('city', v)} disabled={!selectedGovernorate}>
+                <SelectTrigger><SelectValue placeholder={selectedGovernorate ? "اختر المدينة" : "اختر المحافظة أولاً"} /></SelectTrigger>
+                <SelectContent>
+                  {cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>العنوان التفصيلي</Label>
+            <Textarea {...register('address')} placeholder="العنوان الكامل" rows={2} />
+          </div>
 
-                <div>
-                  <Label htmlFor="category">التصنيف</Label>
-                  <Select
-                    value={watch('category')}
-                    onValueChange={(value) => setValue('category', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر التصنيف" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+          {/* المعلومات المالية */}
+          <SectionHeader icon={DollarSign} title="المعلومات المالية" color="text-warning" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><Label>حد الائتمان</Label><Input type="number" {...register('credit_limit', { valueAsNumber: true })} placeholder="0" /></div>
+            <div><Label>نسبة الخصم (%)</Label><Input type="number" step="0.1" {...register('discount_percentage', { valueAsNumber: true })} placeholder="0" /></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><Label>مدة السداد (أيام)</Label><Input type="number" {...register('payment_terms_days', { valueAsNumber: true })} placeholder="0" /></div>
+            <div>
+              <Label>طريقة الدفع المفضلة</Label>
+              <Select value={watch('preferred_payment_method')} onValueChange={(v) => setValue('preferred_payment_method', v)}>
+                <SelectTrigger><SelectValue placeholder="اختر طريقة الدفع" /></SelectTrigger>
+                <SelectContent>
+                  {paymentMethods.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>الرقم الضريبي</Label>
+            <Input {...register('tax_number')} placeholder="الرقم الضريبي" />
+          </div>
 
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="is_active"
-                  checked={watch('is_active')}
-                  onCheckedChange={(checked) => setValue('is_active', checked)}
-                />
-                <Label htmlFor="is_active">مورد نشط</Label>
-              </div>
-            </TabsContent>
+          {/* البيانات البنكية */}
+          <SectionHeader icon={CreditCard} title="البيانات البنكية" color="text-muted-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><Label>اسم البنك</Label><Input {...register('bank_name')} placeholder="مثال: البنك الأهلي" /></div>
+            <div><Label>رقم الحساب</Label><Input {...register('bank_account')} placeholder="رقم الحساب البنكي" /></div>
+          </div>
+          <div>
+            <Label>IBAN</Label>
+            <Input {...register('iban')} placeholder="EG..." className="font-mono" />
+          </div>
 
-            {/* Contact Info Tab */}
-            <TabsContent value="contact" className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="contact_person">جهة الاتصال</Label>
-                <Input
-                  id="contact_person"
-                  {...register('contact_person')}
-                  placeholder="اسم المسؤول"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="phone">الهاتف</Label>
-                  <Input
-                    id="phone"
-                    {...register('phone')}
-                    placeholder="رقم الهاتف"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="phone2">هاتف إضافي</Label>
-                  <Input
-                    id="phone2"
-                    {...register('phone2')}
-                    placeholder="رقم هاتف إضافي"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="email">البريد الإلكتروني</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...register('email')}
-                  placeholder="البريد الإلكتروني"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="website">الموقع الإلكتروني</Label>
-                <Input
-                  id="website"
-                  {...register('website')}
-                  placeholder="https://example.com"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="address">العنوان</Label>
-                <Textarea
-                  id="address"
-                  {...register('address')}
-                  placeholder="العنوان الكامل"
-                  rows={2}
-                />
-              </div>
-            </TabsContent>
-
-            {/* Business Info Tab */}
-            <TabsContent value="business" className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="tax_number">الرقم الضريبي</Label>
-                <Input
-                  id="tax_number"
-                  {...register('tax_number')}
-                  placeholder="الرقم الضريبي"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="notes">ملاحظات</Label>
-                <Textarea
-                  id="notes"
-                  {...register('notes')}
-                  placeholder="ملاحظات إضافية..."
-                  rows={4}
-                />
-              </div>
-            </TabsContent>
-
-            {/* Bank Info Tab */}
-            <TabsContent value="bank" className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="bank_name">اسم البنك</Label>
-                <Input
-                  id="bank_name"
-                  {...register('bank_name')}
-                  placeholder="مثال: البنك الأهلي"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="bank_account">رقم الحساب</Label>
-                <Input
-                  id="bank_account"
-                  {...register('bank_account')}
-                  placeholder="رقم الحساب البنكي"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="iban">IBAN</Label>
-                <Input
-                  id="iban"
-                  {...register('iban')}
-                  placeholder="EG..."
-                  className="font-mono"
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
+          {/* ملاحظات */}
+          <SectionHeader icon={Building2} title="ملاحظات" color="text-muted-foreground" />
+          <Textarea {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} />
+          <div className="flex items-center gap-3">
+            <Switch id="is_active" checked={watch('is_active')} onCheckedChange={(c) => setValue('is_active', c)} />
+            <Label htmlFor="is_active">مورد نشط</Label>
+          </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              إلغاء
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
             </Button>

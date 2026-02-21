@@ -56,7 +56,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       try {
         const registration = await navigator.serviceWorker.ready;
-        const existingSub = await registration.pushManager.getSubscription();
+        const existingSub = await (registration as any).pushManager?.getSubscription();
         setSubscription(existingSub);
       } catch (error) {
         console.error('Error getting push subscription:', error);
@@ -111,12 +111,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const registration = await navigator.serviceWorker.ready;
 
       // Check if already subscribed
-      let pushSubscription = await registration.pushManager.getSubscription();
+      let pushSubscription = await (registration as any).pushManager?.getSubscription();
 
       if (!pushSubscription && VAPID_PUBLIC_KEY) {
         // Create new subscription
         const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        pushSubscription = await registration.pushManager.subscribe({
+        pushSubscription = await (registration as any).pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
         });

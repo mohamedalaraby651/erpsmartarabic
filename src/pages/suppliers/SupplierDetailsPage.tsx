@@ -44,6 +44,7 @@ import SupplierRatingTab from "@/components/suppliers/SupplierRatingTab";
 import SupplierActivityTab from "@/components/suppliers/SupplierActivityTab";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
 import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog";
+import SupplierFinancialSummary from "@/components/suppliers/SupplierFinancialSummary";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -329,6 +330,10 @@ const SupplierDetailsPage = () => {
             <Info className="h-4 w-4" />
             معلومات المورد
           </TabsTrigger>
+          <TabsTrigger value="financial" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            الملخص المالي
+          </TabsTrigger>
           <TabsTrigger value="orders" className="gap-2">
             <ShoppingCart className="h-4 w-4" />
             أوامر الشراء ({totalOrders})
@@ -355,9 +360,19 @@ const SupplierDetailsPage = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Supplier Info Tab */}
         <TabsContent value="info" className="mt-6">
           <SupplierInfoTab supplier={supplier} />
+        </TabsContent>
+
+        <TabsContent value="financial" className="mt-6">
+          <SupplierFinancialSummary
+            totalPurchases={totalPurchases}
+            totalPayments={totalPurchases - currentBalance}
+            currentBalance={currentBalance}
+            creditLimit={(supplier as any).credit_limit || 0}
+            paymentTermsDays={(supplier as any).payment_terms_days || 0}
+            discountPercentage={(supplier as any).discount_percentage || 0}
+          />
         </TabsContent>
 
         {/* Purchase Orders Tab */}

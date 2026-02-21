@@ -2803,18 +2803,25 @@ export type Database = {
           bank_account: string | null
           bank_name: string | null
           category: string | null
+          city: string | null
           contact_person: string | null
           created_at: string
+          credit_limit: number | null
           current_balance: number | null
+          discount_percentage: number | null
           email: string | null
+          governorate: string | null
           iban: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
+          last_transaction_date: string | null
           name: string
           notes: string | null
+          payment_terms_days: number | null
           phone: string | null
           phone2: string | null
+          preferred_payment_method: string | null
           rating: number | null
           supplier_type: string | null
           tax_number: string | null
@@ -2827,18 +2834,25 @@ export type Database = {
           bank_account?: string | null
           bank_name?: string | null
           category?: string | null
+          city?: string | null
           contact_person?: string | null
           created_at?: string
+          credit_limit?: number | null
           current_balance?: number | null
+          discount_percentage?: number | null
           email?: string | null
+          governorate?: string | null
           iban?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_transaction_date?: string | null
           name: string
           notes?: string | null
+          payment_terms_days?: number | null
           phone?: string | null
           phone2?: string | null
+          preferred_payment_method?: string | null
           rating?: number | null
           supplier_type?: string | null
           tax_number?: string | null
@@ -2851,18 +2865,25 @@ export type Database = {
           bank_account?: string | null
           bank_name?: string | null
           category?: string | null
+          city?: string | null
           contact_person?: string | null
           created_at?: string
+          credit_limit?: number | null
           current_balance?: number | null
+          discount_percentage?: number | null
           email?: string | null
+          governorate?: string | null
           iban?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          last_transaction_date?: string | null
           name?: string
           notes?: string | null
+          payment_terms_days?: number | null
           phone?: string | null
           phone2?: string | null
+          preferred_payment_method?: string | null
           rating?: number | null
           supplier_type?: string | null
           tax_number?: string | null
