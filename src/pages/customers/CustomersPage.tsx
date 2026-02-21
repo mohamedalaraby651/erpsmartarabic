@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -26,6 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
 
 // Virtual scrolling components
 import { VirtualizedTable, VirtualColumn } from "@/components/table/VirtualizedTable";
@@ -72,6 +73,7 @@ const CustomersPage = () => {
   const queryClient = useQueryClient();
   const { userRole } = useAuth();
   const { isMobile, isTableView } = useResponsiveView();
+  const { errorAlerts, warningAlerts, totalAlerts } = useCustomerAlerts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -495,6 +497,26 @@ const CustomersPage = () => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Customer Alerts */}
+      {totalAlerts > 0 && (
+        <Card className="border-warning/50 bg-warning/5">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <span className="font-medium text-sm">تنبيهات ({totalAlerts})</span>
+            </div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {errorAlerts.slice(0, 3).map((alert, i) => (
+                <p key={`e-${i}`} className="text-xs text-destructive">⚠️ {alert.message}</p>
+              ))}
+              {warningAlerts.slice(0, 3).map((alert, i) => (
+                <p key={`w-${i}`} className="text-xs text-amber-600">⏰ {alert.message}</p>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Filters */}
