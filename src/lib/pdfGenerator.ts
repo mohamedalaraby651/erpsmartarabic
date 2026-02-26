@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
-import { loadArabicFont, ARABIC_FONT_NAME } from './arabicFont';
+import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, loadImageAsBase64 } from './arabicFont';
 
 interface CompanySettings {
   company_name: string;
@@ -48,19 +48,7 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16),
       }
-    : { r: 37, g: 99, b: 235 }; // Default blue
-}
-
-// Helper to reverse Arabic text for proper RTL display
-function processArabicText(text: string): string {
-  if (!text) return '';
-  // Check if text contains Arabic characters
-  const arabicPattern = /[\u0600-\u06FF]/;
-  if (arabicPattern.test(text)) {
-    // Reverse the text for proper RTL display in PDF
-    return text.split('').reverse().join('');
-  }
-  return text;
+    : { r: 37, g: 99, b: 235 };
 }
 
 // Cache for loaded font
@@ -68,7 +56,6 @@ let cachedFont: string | null = null;
 
 async function setupArabicFont(doc: jsPDF): Promise<boolean> {
   try {
-    // Load font if not cached
     if (!cachedFont) {
       cachedFont = await loadArabicFont();
     }
@@ -81,10 +68,16 @@ async function setupArabicFont(doc: jsPDF): Promise<boolean> {
     }
     return false;
   } catch (error) {
-    console.warn('Could not load Arabic font, falling back to helvetica:', error);
-    doc.setFont('helvetica');
+    console.warn('Could not load Arabic font:', error);
     return false;
   }
+}
+
+// Process text for PDF - reshape Arabic text for correct rendering
+function processText(text: string, hasArabicFont: boolean): string {
+  if (!text) return '';
+  if (!hasArabicFont) return text; // Without Arabic font, can't render Arabic anyway
+  return reshapeArabicText(text);
 }
 
 export async function generatePDF(options: ExportOptions): Promise<void> {
@@ -106,92 +99,90 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
     format: 'a4',
   });
 
-  // Setup Arabic font
   const hasArabicFont = await setupArabicFont(doc);
-
-  // Set RTL direction
   doc.setR2L(true);
 
   let startY = 15;
+  const pageWidth = doc.internal.pageSize.width;
+  const margin = 15;
+
+  // Logo
+  if (includeLogo && company?.logo_url) {
+    try {
+      const logoBase64 = await loadImageAsBase64(company.logo_url);
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', pageWidth - margin - 25, startY - 5, 25, 25);
+      }
+    } catch { /* skip logo */ }
+  }
 
   // Header with company info
   if (includeCompanyInfo && company) {
-    // Company name
+    const textX = includeLogo && company.logo_url ? pageWidth - margin - 30 : pageWidth - margin;
+    
     doc.setFontSize(18);
     doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-    const companyName = hasArabicFont ? company.company_name : processArabicText(company.company_name || 'شركتي');
-    doc.text(companyName, doc.internal.pageSize.width - 15, startY, { align: 'right' });
+    doc.text(processText(company.company_name, hasArabicFont), textX, startY, { align: 'right' });
     startY += 8;
 
-    // Contact info
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
     
     if (company.address) {
-      const address = hasArabicFont ? company.address : processArabicText(company.address);
-      doc.text(address, doc.internal.pageSize.width - 15, startY, { align: 'right' });
+      doc.text(processText(company.address, hasArabicFont), textX, startY, { align: 'right' });
       startY += 5;
     }
     
     const contactInfo = [company.phone, company.email].filter(Boolean).join(' | ');
     if (contactInfo) {
-      doc.text(contactInfo, doc.internal.pageSize.width - 15, startY, { align: 'right' });
+      doc.text(contactInfo, textX, startY, { align: 'right' });
       startY += 5;
     }
 
     if (company.tax_number) {
-      const taxLabel = hasArabicFont ? 'الرقم الضريبي: ' : processArabicText('الرقم الضريبي: ');
-      doc.text(`${taxLabel}${company.tax_number}`, doc.internal.pageSize.width - 15, startY, { align: 'right' });
+      doc.text(`${processText('الرقم الضريبي: ', hasArabicFont)}${company.tax_number}`, textX, startY, { align: 'right' });
       startY += 5;
     }
 
-    // Divider line
+    // Divider
     doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b);
     doc.setLineWidth(0.5);
-    doc.line(15, startY + 2, doc.internal.pageSize.width - 15, startY + 2);
+    doc.line(margin, startY + 2, pageWidth - margin, startY + 2);
     startY += 10;
   }
 
   // Report title
   doc.setFontSize(14);
   doc.setTextColor(0, 0, 0);
-  const titleText = hasArabicFont ? title : processArabicText(title);
-  doc.text(titleText, doc.internal.pageSize.width - 15, startY, { align: 'right' });
+  doc.text(processText(title, hasArabicFont), pageWidth - margin, startY, { align: 'right' });
   startY += 5;
 
   // Date
   doc.setFontSize(9);
   doc.setTextColor(100, 100, 100);
-  const today = new Date().toLocaleDateString('ar-EG', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-  const dateLabel = hasArabicFont ? 'تاريخ التصدير: ' : processArabicText('تاريخ التصدير: ');
-  doc.text(`${dateLabel}${today}`, doc.internal.pageSize.width - 15, startY, { align: 'right' });
+  const today = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+  doc.text(`${processText('تاريخ التصدير: ', hasArabicFont)}${today}`, pageWidth - margin, startY, { align: 'right' });
   startY += 10;
 
-  // Prepare table data
-  const tableHeaders = columns.map(col => hasArabicFont ? col.label : processArabicText(col.label));
+  // Table
+  const tableHeaders = columns.map(col => processText(col.label, hasArabicFont));
   const tableBody = data.map(row => 
     columns.map(col => {
       const value = row[col.key];
       if (value === null || value === undefined) return '-';
-      if (typeof value === 'boolean') return hasArabicFont ? (value ? 'نعم' : 'لا') : processArabicText(value ? 'نعم' : 'لا');
+      if (typeof value === 'boolean') return processText(value ? 'نعم' : 'لا', hasArabicFont);
       if (typeof value === 'number') return value.toLocaleString('ar-EG');
-      const strValue = String(value);
-      return hasArabicFont ? strValue : processArabicText(strValue);
+      return processText(String(value), hasArabicFont);
     })
   );
 
-  // Generate table
   autoTable(doc, {
     head: [tableHeaders],
     body: tableBody,
     startY,
     theme: 'grid',
     styles: {
-      font: hasArabicFont ? 'Amiri' : 'helvetica',
+      font: hasArabicFont ? ARABIC_FONT_NAME : 'helvetica',
       fontSize: 9,
       cellPadding: 3,
       halign: 'right',
@@ -209,42 +200,26 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
     tableLineColor: [226, 232, 240],
     tableLineWidth: 0.1,
     didDrawPage: (data) => {
-      // Footer on each page
       const pageCount = doc.getNumberOfPages();
       doc.setFontSize(8);
       doc.setTextColor(128, 128, 128);
       
-      // Page number
-      const pageText = hasArabicFont ? `صفحة ${data.pageNumber} من ${pageCount}` : processArabicText(`صفحة ${data.pageNumber} من ${pageCount}`);
-      doc.text(
-        pageText,
-        doc.internal.pageSize.width / 2,
-        doc.internal.pageSize.height - 10,
-        { align: 'center' }
-      );
+      const pageText = processText(`صفحة ${data.pageNumber} من ${pageCount}`, hasArabicFont);
+      doc.text(pageText, pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
 
-      // Company name in footer
       if (company) {
-        const footerCompanyName = hasArabicFont ? company.company_name : processArabicText(company.company_name || '');
         doc.text(
-          footerCompanyName,
-          doc.internal.pageSize.width - 15,
+          processText(company.company_name, hasArabicFont),
+          pageWidth - margin,
           doc.internal.pageSize.height - 10,
           { align: 'right' }
         );
       }
 
-      // Date in footer
-      doc.text(
-        today,
-        15,
-        doc.internal.pageSize.height - 10,
-        { align: 'left' }
-      );
+      doc.text(today, margin, doc.internal.pageSize.height - 10, { align: 'left' });
     },
   });
 
-  // Save the PDF
   const fileName = `${title}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fileName);
 }
@@ -262,16 +237,13 @@ export async function generateDocumentPDF(
     format: 'a4',
   });
 
-  // Setup Arabic font
   const hasArabicFont = await setupArabicFont(doc);
-
   doc.setR2L(true);
 
   let startY = 15;
   const pageWidth = doc.internal.pageSize.width;
   const margin = 15;
 
-  // Document type titles
   const titles: Record<string, string> = {
     invoice: 'فاتورة مبيعات',
     quotation: 'عرض سعر',
@@ -279,30 +251,43 @@ export async function generateDocumentPDF(
     purchase_order: 'أمر شراء',
   };
 
-  const processText = (text: string) => hasArabicFont ? text : processArabicText(text);
+  const p = (text: string) => processText(text, hasArabicFont);
+
+  // Logo
+  if (company?.logo_url) {
+    try {
+      const logoBase64 = await loadImageAsBase64(company.logo_url);
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', pageWidth - margin - 25, startY - 5, 25, 25);
+        // Adjust text position to avoid overlap
+      }
+    } catch { /* skip logo */ }
+  }
 
   // Company Header
   if (company) {
+    const textX = company.logo_url ? pageWidth - margin - 30 : pageWidth - margin;
+    
     doc.setFontSize(20);
     doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-    doc.text(processText(company.company_name), pageWidth - margin, startY, { align: 'right' });
+    doc.text(p(company.company_name), textX, startY, { align: 'right' });
     startY += 8;
 
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
     
     if (company.address) {
-      doc.text(processText(company.address), pageWidth - margin, startY, { align: 'right' });
+      doc.text(p(company.address), textX, startY, { align: 'right' });
       startY += 5;
     }
     
     if (company.phone) {
-      doc.text(`${processText('هاتف: ')}${company.phone}`, pageWidth - margin, startY, { align: 'right' });
+      doc.text(`${p('هاتف: ')}${company.phone}`, textX, startY, { align: 'right' });
       startY += 5;
     }
     
     if (company.tax_number) {
-      doc.text(`${processText('الرقم الضريبي: ')}${company.tax_number}`, pageWidth - margin, startY, { align: 'right' });
+      doc.text(`${p('الرقم الضريبي: ')}${company.tax_number}`, textX, startY, { align: 'right' });
       startY += 5;
     }
   }
@@ -316,14 +301,14 @@ export async function generateDocumentPDF(
   // Document Title
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
-  doc.text(processText(titles[type]), pageWidth / 2, startY, { align: 'center' });
+  doc.text(p(titles[type]), pageWidth / 2, startY, { align: 'center' });
   startY += 10;
 
   // Document number and date
   doc.setFontSize(11);
   const docNumber = data.invoice_number || data.quotation_number || data.order_number || '';
-  doc.text(`${processText('رقم: ')}${docNumber}`, pageWidth - margin, startY, { align: 'right' });
-  doc.text(`${processText('التاريخ: ')}${new Date(data.created_at).toLocaleDateString('ar-EG')}`, margin, startY, { align: 'left' });
+  doc.text(`${p('رقم: ')}${docNumber}`, pageWidth - margin, startY, { align: 'right' });
+  doc.text(`${p('التاريخ: ')}${new Date(data.created_at).toLocaleDateString('ar-EG')}`, margin, startY, { align: 'left' });
   startY += 10;
 
   // Customer/Supplier info
@@ -331,7 +316,7 @@ export async function generateDocumentPDF(
   doc.setFillColor(248, 250, 252);
   doc.rect(margin, startY - 5, pageWidth - margin * 2, 15, 'F');
   const entityLabel = type === 'purchase_order' ? 'المورد' : 'العميل';
-  doc.text(`${processText(entityLabel)}: ${processText(entityName)}`, pageWidth - margin - 5, startY + 3, { align: 'right' });
+  doc.text(`${p(entityLabel)}: ${p(entityName)}`, pageWidth - margin - 5, startY + 3, { align: 'right' });
   startY += 20;
 
   // Items table
@@ -343,9 +328,9 @@ export async function generateDocumentPDF(
     total_price: number;
   }
   if (data.items && data.items.length > 0) {
-    const tableHeaders = [processText('المنتج'), processText('الكمية'), processText('السعر'), processText('الإجمالي')];
+    const tableHeaders = [p('المنتج'), p('الكمية'), p('السعر'), p('الإجمالي')];
     const tableBody = (data.items as PDFItem[]).map((item) => [
-      processText(item.product?.name || item.products?.name || '-'),
+      p(item.product?.name || item.products?.name || '-'),
       item.quantity?.toString() || '0',
       `${Number(item.unit_price).toLocaleString()} ${company?.currency || 'ج.م'}`,
       `${Number(item.total_price).toLocaleString()} ${company?.currency || 'ج.م'}`,
@@ -357,7 +342,7 @@ export async function generateDocumentPDF(
       startY,
       theme: 'grid',
       styles: {
-        font: hasArabicFont ? 'Amiri' : 'helvetica',
+        font: hasArabicFont ? ARABIC_FONT_NAME : 'helvetica',
         fontSize: 10,
         cellPadding: 4,
         halign: 'right',
@@ -383,7 +368,7 @@ export async function generateDocumentPDF(
   doc.setFontSize(11);
   totals.forEach((item) => {
     if (item.value) {
-      doc.text(processText(item.label), pageWidth - margin, startY, { align: 'right' });
+      doc.text(p(item.label), pageWidth - margin, startY, { align: 'right' });
       doc.text(`${Number(item.value).toLocaleString()} ${company?.currency || 'ج.م'}`, margin + 50, startY, { align: 'left' });
       startY += 7;
     }
@@ -394,22 +379,21 @@ export async function generateDocumentPDF(
     startY += 10;
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text(processText('ملاحظات:'), pageWidth - margin, startY, { align: 'right' });
+    doc.text(p('ملاحظات:'), pageWidth - margin, startY, { align: 'right' });
     startY += 6;
-    doc.text(processText(data.notes), pageWidth - margin, startY, { align: 'right', maxWidth: pageWidth - margin * 2 });
+    doc.text(p(data.notes), pageWidth - margin, startY, { align: 'right', maxWidth: pageWidth - margin * 2 });
   }
 
   // Footer
   doc.setFontSize(8);
   doc.setTextColor(128, 128, 128);
   doc.text(
-    processText(`تم إنشاء هذا المستند بواسطة ${company?.company_name || 'النظام'}`),
+    p(`تم إنشاء هذا المستند بواسطة ${company?.company_name || 'النظام'}`),
     pageWidth / 2,
     doc.internal.pageSize.height - 10,
     { align: 'center' }
   );
 
-  // Save
   const fileName = `${titles[type]}_${docNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fileName);
 }
