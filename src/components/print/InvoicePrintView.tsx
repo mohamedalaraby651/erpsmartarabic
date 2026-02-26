@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
-import { Printer, X } from "lucide-react";
+import { Printer, Download, Loader2 } from "lucide-react";
+import { generateDocumentPDF } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,8 @@ const paymentStatusLabels: Record<string, string> = {
 };
 
 export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrintViewProps) {
+  const [downloading, setDownloading] = useState(false);
+
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
     queryFn: async () => {
@@ -50,10 +54,7 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select(`
-          *,
-          customers (name, phone, email)
-        `)
+        .select(`*, customers (name, phone, email)`)
         .eq("id", invoiceId)
         .single();
       if (error) throw error;
@@ -67,10 +68,7 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoice_items")
-        .select(`
-          *,
-          products (name)
-        `)
+        .select(`*, products (name)`)
         .eq("invoice_id", invoiceId);
       if (error) throw error;
       return data;
@@ -82,6 +80,23 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
     window.print();
   };
 
+  const handleDownloadPDF = async () => {
+    if (!invoice || !items) return;
+    setDownloading(true);
+    try {
+      await generateDocumentPDF('invoice', {
+        ...invoice,
+        items,
+      });
+      toast.success("تم تحميل ملف PDF بنجاح");
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error("فشل في إنشاء ملف PDF");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (!invoice || !items) return null;
 
   return (
@@ -91,6 +106,10 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
           <DialogTitle className="flex items-center justify-between">
             <span>معاينة الفاتورة</span>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={handleDownloadPDF} disabled={downloading}>
+                {downloading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
+                تحميل PDF
+              </Button>
               <Button onClick={handlePrint}>
                 <Printer className="h-4 w-4 ml-2" />
                 طباعة

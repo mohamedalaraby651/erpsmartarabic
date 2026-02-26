@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, Download, Loader2 } from "lucide-react";
+import { generateDocumentPDF } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +20,12 @@ interface QuotationPrintViewProps {
 }
 
 export function QuotationPrintView({ quotationId, open, onOpenChange }: QuotationPrintViewProps) {
+  const [downloading, setDownloading] = useState(false);
+
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("company_settings")
-        .select("*")
-        .maybeSingle();
+      const { data, error } = await supabase.from("company_settings").select("*").maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -32,14 +34,7 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
   const { data: quotation } = useQuery({
     queryKey: ["quotation-print", quotationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("quotations")
-        .select(`
-          *,
-          customers (name, phone, email)
-        `)
-        .eq("id", quotationId)
-        .single();
+      const { data, error } = await supabase.from("quotations").select(`*, customers (name, phone, email)`).eq("id", quotationId).single();
       if (error) throw error;
       return data;
     },
@@ -49,21 +44,27 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
   const { data: items } = useQuery({
     queryKey: ["quotation-items-print", quotationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("quotation_items")
-        .select(`
-          *,
-          products (name)
-        `)
-        .eq("quotation_id", quotationId);
+      const { data, error } = await supabase.from("quotation_items").select(`*, products (name)`).eq("quotation_id", quotationId);
       if (error) throw error;
       return data;
     },
     enabled: !!quotationId && open,
   });
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = () => window.print();
+
+  const handleDownloadPDF = async () => {
+    if (!quotation || !items) return;
+    setDownloading(true);
+    try {
+      await generateDocumentPDF('quotation', { ...quotation, items });
+      toast.success("تم تحميل ملف PDF بنجاح");
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error("فشل في إنشاء ملف PDF");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (!quotation || !items) return null;
@@ -75,6 +76,10 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
           <DialogTitle className="flex items-center justify-between">
             <span>معاينة عرض السعر</span>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={handleDownloadPDF} disabled={downloading}>
+                {downloading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
+                تحميل PDF
+              </Button>
               <Button onClick={handlePrint}>
                 <Printer className="h-4 w-4 ml-2" />
                 طباعة

@@ -76,148 +76,231 @@ export function PrintTemplate({
   };
 
   return (
-    <div className="print-template bg-white p-8 max-w-4xl mx-auto" dir="rtl">
+    <div className="print-template" dir="rtl" style={{
+      backgroundColor: '#ffffff',
+      color: '#000000',
+      padding: '2rem',
+      maxWidth: '56rem',
+      margin: '0 auto',
+      fontFamily: 'Arial, Tahoma, sans-serif',
+    }}>
       <style>
         {`
           @media print {
-            body * {
-              visibility: hidden;
+            /* Hide everything */
+            body > * {
+              display: none !important;
             }
-            .print-template, .print-template * {
-              visibility: visible;
+            /* Show only the dialog overlay */
+            [role="dialog"],
+            [data-radix-dialog-overlay],
+            [data-radix-dialog-content] {
+              display: block !important;
             }
+            /* Hide dialog chrome */
+            .print\\:hidden,
+            [data-radix-dialog-overlay] {
+              display: none !important;
+            }
+            /* Make the print template fill the page */
             .print-template {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              padding: 20px;
+              position: fixed !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              height: auto !important;
+              padding: 15mm !important;
+              margin: 0 !important;
+              background: #ffffff !important;
+              color: #000000 !important;
+              z-index: 999999 !important;
+              display: block !important;
+              overflow: visible !important;
+            }
+            .print-template * {
+              color-adjust: exact !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            /* Override any dialog styling */
+            [data-radix-dialog-content] {
+              position: fixed !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              max-height: none !important;
+              height: auto !important;
+              transform: none !important;
+              border: none !important;
+              box-shadow: none !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: transparent !important;
+              overflow: visible !important;
             }
             @page {
               size: A4;
-              margin: 15mm;
+              margin: 10mm;
+            }
+            /* Print-specific table styles */
+            .print-template table {
+              border-collapse: collapse !important;
+            }
+            .print-template th {
+              background-color: #1e40af !important;
+              color: #ffffff !important;
+            }
+            .print-template .alt-row {
+              background-color: #f8fafc !important;
+            }
+            .print-template .info-box {
+              background-color: #f1f5f9 !important;
+            }
+            .print-template .total-line {
+              border-top: 2px solid #1e40af !important;
+            }
+            .print-template .header-border {
+              border-bottom: 2px solid #1e40af !important;
+            }
+            .print-template .footer-border {
+              border-top: 1px solid #e2e8f0 !important;
             }
           }
         `}
       </style>
 
       {/* Header */}
-      <div className="flex justify-between items-start border-b-2 border-primary pb-4 mb-6">
-        <div className="flex-1">
+      <div className="header-border" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        borderBottom: '2px solid #1e40af',
+        paddingBottom: '1rem',
+        marginBottom: '1.5rem',
+      }}>
+        <div style={{ flex: 1 }}>
           {logoUrl && (
-            <img src={logoUrl} alt="Logo" className="h-16 mb-2" />
+            <img src={logoUrl} alt="Logo" style={{ height: '4rem', marginBottom: '0.5rem' }} />
           )}
-          <h1 className="text-2xl font-bold text-primary">{companyName}</h1>
-          {companyAddress && <p className="text-sm text-muted-foreground">{companyAddress}</p>}
-          {companyPhone && <p className="text-sm text-muted-foreground">هاتف: {companyPhone}</p>}
-          {companyEmail && <p className="text-sm text-muted-foreground">بريد: {companyEmail}</p>}
-          {taxNumber && <p className="text-sm text-muted-foreground">الرقم الضريبي: {taxNumber}</p>}
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e40af', margin: 0 }}>{companyName}</h1>
+          {companyAddress && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>{companyAddress}</p>}
+          {companyPhone && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>هاتف: {companyPhone}</p>}
+          {companyEmail && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>بريد: {companyEmail}</p>}
+          {taxNumber && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>الرقم الضريبي: {taxNumber}</p>}
         </div>
-        <div className="text-left">
-          <h2 className="text-3xl font-bold text-primary">{documentTitle}</h2>
-          <p className="text-lg font-semibold mt-2">رقم: {documentNumber}</p>
-          <p className="text-sm text-muted-foreground">التاريخ: {formatDate(documentDate)}</p>
+        <div style={{ textAlign: 'left' }}>
+          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1e40af', margin: 0 }}>{documentTitle}</h2>
+          <p style={{ fontSize: '1.125rem', fontWeight: 600, marginTop: '0.5rem' }}>رقم: {documentNumber}</p>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>التاريخ: {formatDate(documentDate)}</p>
           {dueDate && (
-            <p className="text-sm text-muted-foreground">تاريخ الاستحقاق: {formatDate(dueDate)}</p>
+            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>تاريخ الاستحقاق: {formatDate(dueDate)}</p>
           )}
         </div>
       </div>
 
       {/* Customer/Supplier Info */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         {customerName && (
-          <div className="bg-muted/30 p-4 rounded-lg">
-            <h3 className="font-semibold text-primary mb-2">بيانات العميل</h3>
-            <p className="font-medium">{customerName}</p>
-            {customerAddress && <p className="text-sm text-muted-foreground">{customerAddress}</p>}
-            {customerPhone && <p className="text-sm text-muted-foreground">هاتف: {customerPhone}</p>}
+          <div className="info-box" style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '0.5rem' }}>
+            <h3 style={{ fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>بيانات العميل</h3>
+            <p style={{ fontWeight: 500, margin: '2px 0' }}>{customerName}</p>
+            {customerAddress && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>{customerAddress}</p>}
+            {customerPhone && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>هاتف: {customerPhone}</p>}
           </div>
         )}
         {supplierName && (
-          <div className="bg-muted/30 p-4 rounded-lg">
-            <h3 className="font-semibold text-primary mb-2">بيانات المورد</h3>
-            <p className="font-medium">{supplierName}</p>
-            {supplierAddress && <p className="text-sm text-muted-foreground">{supplierAddress}</p>}
-            {supplierPhone && <p className="text-sm text-muted-foreground">هاتف: {supplierPhone}</p>}
+          <div className="info-box" style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '0.5rem' }}>
+            <h3 style={{ fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>بيانات المورد</h3>
+            <p style={{ fontWeight: 500, margin: '2px 0' }}>{supplierName}</p>
+            {supplierAddress && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>{supplierAddress}</p>}
+            {supplierPhone && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>هاتف: {supplierPhone}</p>}
           </div>
         )}
         {(paymentMethod || paymentStatus) && (
-          <div className="bg-muted/30 p-4 rounded-lg">
-            <h3 className="font-semibold text-primary mb-2">معلومات الدفع</h3>
-            {paymentMethod && <p className="text-sm">طريقة الدفع: {paymentMethod}</p>}
-            {paymentStatus && <p className="text-sm">حالة الدفع: {paymentStatus}</p>}
+          <div className="info-box" style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '0.5rem' }}>
+            <h3 style={{ fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>معلومات الدفع</h3>
+            {paymentMethod && <p style={{ fontSize: '0.875rem', margin: '2px 0' }}>طريقة الدفع: {paymentMethod}</p>}
+            {paymentStatus && <p style={{ fontSize: '0.875rem', margin: '2px 0' }}>حالة الدفع: {paymentStatus}</p>}
           </div>
         )}
       </div>
 
       {/* Items Table */}
-      <table className="w-full border-collapse mb-6">
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem' }}>
         <thead>
-          <tr className="bg-primary text-primary-foreground">
-            <th className="border border-border p-2 text-right">#</th>
-            <th className="border border-border p-2 text-right">المنتج</th>
-            <th className="border border-border p-2 text-center">الكمية</th>
-            <th className="border border-border p-2 text-left">سعر الوحدة</th>
+          <tr>
+            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>#</th>
+            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>المنتج</th>
+            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الكمية</th>
+            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>سعر الوحدة</th>
             {items.some(i => i.discount && i.discount > 0) && (
-              <th className="border border-border p-2 text-center">الخصم %</th>
+              <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الخصم %</th>
             )}
-            <th className="border border-border p-2 text-left">الإجمالي</th>
+            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>الإجمالي</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item, index) => (
-            <tr key={index} className={index % 2 === 0 ? "bg-muted/20" : ""}>
-              <td className="border border-border p-2 text-right">{index + 1}</td>
-              <td className="border border-border p-2 text-right">{item.name}</td>
-              <td className="border border-border p-2 text-center">{item.quantity}</td>
-              <td className="border border-border p-2 text-left">{formatCurrency(item.unitPrice)}</td>
+            <tr key={index} className={index % 2 === 0 ? "alt-row" : ""} style={{ backgroundColor: index % 2 === 0 ? '#f8fafc' : '#ffffff' }}>
+              <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>{index + 1}</td>
+              <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>{item.name}</td>
+              <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>{item.quantity}</td>
+              <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>{formatCurrency(item.unitPrice)}</td>
               {items.some(i => i.discount && i.discount > 0) && (
-                <td className="border border-border p-2 text-center">{item.discount || 0}%</td>
+                <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>{item.discount || 0}%</td>
               )}
-              <td className="border border-border p-2 text-left font-medium">{formatCurrency(item.total)}</td>
+              <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left', fontWeight: 500 }}>{formatCurrency(item.total)}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
       {/* Totals */}
-      <div className="flex justify-end mb-6">
-        <div className="w-64 space-y-2">
-          <div className="flex justify-between">
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+        <div style={{ width: '16rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
             <span>المجموع الفرعي:</span>
             <span>{formatCurrency(subtotal)}</span>
           </div>
           {discount && discount > 0 && (
-            <div className="flex justify-between text-destructive">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#dc2626' }}>
               <span>الخصم:</span>
               <span>-{formatCurrency(discount)}</span>
             </div>
           )}
           {tax && tax > 0 && (
-            <div className="flex justify-between">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <span>الضريبة:</span>
               <span>{formatCurrency(tax)}</span>
             </div>
           )}
-          <div className="flex justify-between font-bold text-lg border-t-2 border-primary pt-2">
+          <div className="total-line" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontWeight: 'bold',
+            fontSize: '1.125rem',
+            borderTop: '2px solid #1e40af',
+            paddingTop: '0.5rem',
+          }}>
             <span>الإجمالي:</span>
-            <span className="text-primary">{formatCurrency(total)}</span>
+            <span style={{ color: '#1e40af' }}>{formatCurrency(total)}</span>
           </div>
         </div>
       </div>
 
       {/* Notes */}
       {notes && (
-        <div className="bg-muted/30 p-4 rounded-lg mb-6">
-          <h3 className="font-semibold mb-2">ملاحظات</h3>
-          <p className="text-sm whitespace-pre-wrap">{notes}</p>
+        <div className="info-box" style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontWeight: 600, marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>ملاحظات</h3>
+          <p style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap', margin: 0 }}>{notes}</p>
         </div>
       )}
 
       {/* Footer */}
-      <div className="border-t pt-4 text-center text-sm text-muted-foreground">
-        <p>شكراً لتعاملكم معنا</p>
-        <p className="mt-1">{companyName} - {companyPhone}</p>
+      <div className="footer-border" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem', textAlign: 'center', fontSize: '0.875rem', color: '#6b7280' }}>
+        <p style={{ margin: '2px 0' }}>شكراً لتعاملكم معنا</p>
+        <p style={{ margin: '2px 0' }}>{companyName} - {companyPhone}</p>
       </div>
     </div>
   );
