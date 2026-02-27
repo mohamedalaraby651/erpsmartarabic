@@ -1,85 +1,49 @@
 
 
-# خطة اصلاح شاملة للخطوط والطباعة وتصدير PDF العربي
+# خطة استبدال الخط بـ Cairo واصلاح مشكلة الرموز نهائيا
 
 ---
 
-## المشاكل المكتشفة
+## المشكلة الجذرية
 
-### مشكلة 1: عكس مزدوج للنص العربي في PDF (السبب الرئيسي للرموز الغريبة)
-في ملف `arabicFont.ts` السطر 190، الدالة `reshapeArabicText` تعكس النص يدويا:
-```text
-return result.join('').split('').reverse().join('')
-```
-وفي نفس الوقت في `pdfGenerator.ts` السطر 103:
-```text
-doc.setR2L(true)
-```
-`setR2L(true)` يقوم ايضا بعكس النص -- فيحدث عكس مزدوج ينتج عنه نص مشوه ورموز غير مفهومة خاصة في رؤوس الاعمدة.
-
-### مشكلة 2: `.split('')` يدمر بعض الحروف Unicode
-استخدام `.split('')` لعكس النص قد يفصل اجزاء بعض الحروف المركبة (diacritics + base). الحل هو `Array.from()`.
-
-### مشكلة 3: رابط خط Amiri غير مستقر
-الرابط المستخدم (`fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf`) يشير الى ملف محدد قد لا يحتوي على جميع الحروف العربية المطلوبة (مثل الحركات والاشكال الخاصة). يجب استخدام رابط اكثر شمولا.
-
-### مشكلة 4: خط الطباعة (PrintTemplate) غير مناسب
-`fontFamily: 'Arial, Tahoma, sans-serif'` - خط Arial لا يعرض الحروف العربية المتصلة بشكل مثالي في بعض الانظمة. يفضل استخدام خطوط عربية اصلية مثل `'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif`.
-
-### مشكلة 5: CSS الطباعة لا يخفي عناصر الحوار بالكامل
-زر الاغلاق (X) وعنوان الحوار يظهران عند الطباعة لان `print:hidden` في Tailwind لا يعمل دائما مع عناصر Radix Dialog.
+خط Amiri مسجل بنمط `'normal'` فقط في `setupArabicFont`. عندما يطلب `autoTable` نمط `'bold'` لرؤوس الاعمدة، يفشل jsPDF في ايجاد `Amiri-Bold` فيرجع لخط `helvetica` الذي لا يدعم حروف Arabic Presentation Forms B، فتظهر رموز غريبة.
 
 ---
 
-## خطة الحل
+## الحل
 
-### الخطوة 1: اصلاح `arabicFont.ts` - ازالة العكس المزدوج
-- **ازالة** السطر 190 الذي يعكس النص (`split('').reverse().join('')`)
-- الاعتماد على `setR2L(true)` في jsPDF فقط لمعالجة اتجاه النص
-- استبدال `.split('')` بـ `Array.from()` في اي عمليات على النص للحفاظ على سلامة حروف Unicode
-- ابقاء منطق الـ reshaping كما هو (تحويل الحروف للاشكال السياقية الصحيحة)
+### الخطوة 1: تحديث `src/lib/arabicFont.ts` - استبدال Amiri بـ Cairo
+- تغيير `ARABIC_FONT_NAME` من `'Amiri'` الى `'Cairo'`
+- تحديث روابط تحميل الخط لاستخدام Cairo TTF من Google Fonts CDN
+- Cairo خط حديث وواضح ومصمم للشاشات والطباعة معا
 
-### الخطوة 2: اصلاح `pdfGenerator.ts` - تصحيح معالجة النص
-- التاكد من ان `processText` يستدعي `reshapeArabicText` بدون اي عكس اضافي
-- اصلاح معالجة النصوص المختلطة (عربي + ارقام + انجليزي) في الجداول
-- تحسين خيار `font` في اعدادات `autoTable` لضمان استخدام خط Amiri في كل الخلايا
+### الخطوة 2: تحديث `src/lib/pdfGenerator.ts` - تسجيل الخط لجميع الانماط
+- تسجيل خط Cairo لانماط `'normal'` و `'bold'` و `'italic'` و `'bolditalic'` باستخدام نفس ملف الخط
+- هذا يمنع jsPDF من الرجوع لخط helvetica عند طلب اي نمط
+- اعادة تسمية ملف VFS من `Amiri-Regular.ttf` الى `Cairo-Regular.ttf`
 
-### الخطوة 3: تحسين رابط تحميل خط Amiri
-- استخدام رابط Google Fonts API الرسمي للحصول على ملف TTF الكامل الذي يدعم جميع حروف العربية
-- اضافة fallback ثاني (رابط احتياطي) في حال فشل الرابط الاول
-- تحسين رسالة الخطأ عند فشل التحميل
-
-### الخطوة 4: تحسين `PrintTemplate.tsx` - الخطوط والطباعة
-- تغيير `fontFamily` لاستخدام خطوط عربية افضل: `'Noto Sans Arabic', 'Segoe UI', Tahoma, 'Arial', sans-serif`
-- اضافة `@import` لخط Noto Sans Arabic من Google Fonts في كتلة `<style>`
-- تحسين CSS الطباعة لاخفاء جميع عناصر Dialog بشكل اكيد (بما في ذلك زر X والعنوان)
-- اضافة font-family للطباعة ايضا لضمان نفس الخط
+### الخطوة 3: تحديث `src/components/print/PrintTemplate.tsx` - Cairo للطباعة
+- استبدال `Noto Sans Arabic` بـ `Cairo` في `fontFamily` و `@import`
+- تحديث Google Fonts URL لتحميل Cairo بجميع الاوزان (400-700)
 
 ---
 
 ## التفاصيل التقنية
 
-### اصلاح العكس المزدوج (الاهم):
+### تسجيل الخط (الاصلاح الجذري لمشكلة الرموز):
 ```text
-قبل الاصلاح:
-1. reshapeArabicText يحول الحروف للاشكال الصحيحة
-2. reshapeArabicText يعكس النص (سطر 190)
-3. jsPDF setR2L(true) يعكس النص مرة ثانية
-النتيجة: نص مشوه / رموز غريبة
-
-بعد الاصلاح:
-1. reshapeArabicText يحول الحروف للاشكال الصحيحة فقط
-2. jsPDF setR2L(true) يتولى عكس النص للعرض الصحيح
-النتيجة: نص عربي سليم ومقروء
+// في setupArabicFont:
+doc.addFileToVFS('Cairo-Regular.ttf', cachedFont);
+doc.addFont('Cairo-Regular.ttf', 'Cairo', 'normal');
+doc.addFont('Cairo-Regular.ttf', 'Cairo', 'bold');
+doc.addFont('Cairo-Regular.ttf', 'Cairo', 'italic');
+doc.addFont('Cairo-Regular.ttf', 'Cairo', 'bolditalic');
 ```
 
-### تحسين الخط:
+### روابط خط Cairo:
 ```text
-الرابط الحالي: fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf
-(ملف محدد - قد لا يشمل كل الحروف)
-
-الرابط الجديد: استخدام Google Fonts CSS API لاستخراج رابط TTF الكامل
-مع fallback لرابط ثانوي
+الرابط الاساسي: cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/Cairo[wght].ttf
+الرابط الاحتياطي: fonts.gstatic.com (Cairo Regular)
 ```
 
 ---
@@ -88,14 +52,7 @@ doc.setR2L(true)
 
 | الملف | التغيير |
 |-------|---------|
-| `src/lib/arabicFont.ts` | ازالة عكس النص + تحسين رابط الخط + استخدام Array.from |
-| `src/lib/pdfGenerator.ts` | تصحيح processText + ضمان اتساق الخط في الجداول |
-| `src/components/print/PrintTemplate.tsx` | تحسين fontFamily + اضافة Google Font + تحسين print CSS |
-
-### ترتيب التنفيذ:
-| # | المهمة |
-|---|--------|
-| 1 | اصلاح `arabicFont.ts` (ازالة العكس + تحسين الخط) |
-| 2 | اصلاح `pdfGenerator.ts` (معالجة النص + الجداول) |
-| 3 | تحسين `PrintTemplate.tsx` (الخط + الطباعة CSS) |
+| `src/lib/arabicFont.ts` | تغيير اسم الخط + تحديث روابط التحميل لـ Cairo |
+| `src/lib/pdfGenerator.ts` | تسجيل Cairo لجميع الانماط (normal/bold/italic/bolditalic) |
+| `src/components/print/PrintTemplate.tsx` | استبدال Noto Sans Arabic بـ Cairo في fontFamily و import |
 
