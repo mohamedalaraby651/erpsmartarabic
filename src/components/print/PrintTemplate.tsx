@@ -82,11 +82,11 @@ export function PrintTemplate({
       padding: '2rem',
       maxWidth: '56rem',
       margin: '0 auto',
-      fontFamily: "'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif",
+      fontFamily: "'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif",
     }}>
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
           
           @media print {
             /* Hide EVERYTHING first */
@@ -131,7 +131,7 @@ export function PrintTemplate({
               display: block !important;
               visibility: visible !important;
               overflow: visible !important;
-              font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+              font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important;
             }
             .print-template * {
               color-adjust: exact !important;

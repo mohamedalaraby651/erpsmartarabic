@@ -1,13 +1,13 @@
 // Arabic font support for PDF generation
 // Using Amiri font (Open Source Arabic font)
 
-export const ARABIC_FONT_NAME = 'Amiri';
+export const ARABIC_FONT_NAME = 'Cairo';
 
 // Function to add Arabic font to jsPDF
 export async function loadArabicFont(): Promise<string | null> {
   const fontUrls = [
-    'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf',
-    'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf',
+    'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf',
+    'https://fonts.gstatic.com/s/cairo/v28/SLXvx02YPrSQgBkQUnusBhJOrYQ.ttf',
   ];
   
   for (const url of fontUrls) {
