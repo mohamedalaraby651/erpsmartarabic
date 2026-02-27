@@ -176,23 +176,28 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
     })
   );
 
+  const fontName = hasArabicFont ? ARABIC_FONT_NAME : 'helvetica';
   autoTable(doc, {
     head: [tableHeaders],
     body: tableBody,
     startY,
     theme: 'grid',
     styles: {
-      font: hasArabicFont ? ARABIC_FONT_NAME : 'helvetica',
+      font: fontName,
       fontSize: 9,
       cellPadding: 3,
       halign: 'right',
       valign: 'middle',
     },
     headStyles: {
+      font: fontName,
       fillColor: [primaryColor.r, primaryColor.g, primaryColor.b],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'right',
+    },
+    bodyStyles: {
+      font: fontName,
     },
     alternateRowStyles: {
       fillColor: [248, 250, 252],
@@ -201,6 +206,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
     tableLineWidth: 0.1,
     didDrawPage: (data) => {
       const pageCount = doc.getNumberOfPages();
+      doc.setFont(fontName);
       doc.setFontSize(8);
       doc.setTextColor(128, 128, 128);
       
@@ -336,21 +342,27 @@ export async function generateDocumentPDF(
       `${Number(item.total_price).toLocaleString()} ${company?.currency || 'ج.م'}`,
     ]);
 
+    const fontName = hasArabicFont ? ARABIC_FONT_NAME : 'helvetica';
     autoTable(doc, {
       head: [tableHeaders],
       body: tableBody,
       startY,
       theme: 'grid',
       styles: {
-        font: hasArabicFont ? ARABIC_FONT_NAME : 'helvetica',
+        font: fontName,
         fontSize: 10,
         cellPadding: 4,
         halign: 'right',
       },
       headStyles: {
+        font: fontName,
         fillColor: [primaryColor.r, primaryColor.g, primaryColor.b],
         textColor: [255, 255, 255],
+        fontStyle: 'bold',
         halign: 'right',
+      },
+      bodyStyles: {
+        font: fontName,
       },
     });
 

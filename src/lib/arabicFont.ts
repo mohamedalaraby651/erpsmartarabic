@@ -5,24 +5,34 @@ export const ARABIC_FONT_NAME = 'Amiri';
 
 // Function to add Arabic font to jsPDF
 export async function loadArabicFont(): Promise<string | null> {
-  try {
-    const response = await fetch('https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf');
-    if (!response.ok) {
-      console.error('Failed to load Arabic font');
-      return null;
+  const fontUrls = [
+    'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf',
+    'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf',
+  ];
+  
+  for (const url of fontUrls) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) continue;
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      
+      console.log('Arabic font loaded successfully');
+      return base64;
+    } catch (error) {
+      console.warn('Failed to load font from:', url, error);
+      continue;
     }
-    
-    const arrayBuffer = await response.arrayBuffer();
-    const base64 = btoa(
-      new Uint8Array(arrayBuffer)
-        .reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
-    
-    return base64;
-  } catch (error) {
-    console.error('Error loading Arabic font:', error);
-    return null;
   }
+  
+  console.error('Failed to load Arabic font from all sources');
+  return null;
 }
 
 // ===== Arabic Text Reshaping =====
@@ -161,18 +171,19 @@ export function reshapeArabicText(text: string): string {
   let currentSegment = '';
   let currentIsArabic = false;
 
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
+  const chars = Array.from(text);
+  for (let i = 0; i < chars.length; i++) {
+    const code = chars[i].codePointAt(0) || 0;
     const charIsArabic = isArabicChar(code) || isArabicDiacritic(code);
     
     if (i === 0) {
       currentIsArabic = charIsArabic;
-      currentSegment = text[i];
+      currentSegment = chars[i];
     } else if (charIsArabic === currentIsArabic) {
-      currentSegment += text[i];
+      currentSegment += chars[i];
     } else {
       segments.push({ text: currentSegment, isArabic: currentIsArabic });
-      currentSegment = text[i];
+      currentSegment = chars[i];
       currentIsArabic = charIsArabic;
     }
   }
@@ -180,14 +191,14 @@ export function reshapeArabicText(text: string): string {
     segments.push({ text: currentSegment, isArabic: currentIsArabic });
   }
 
-  // Process each Arabic segment
+  // Process each Arabic segment - reshape only, NO reversal
+  // jsPDF's setR2L(true) handles the visual RTL ordering
   const result = segments.map(seg => {
     if (!seg.isArabic) return seg.text;
     return reshapeArabicSegment(seg.text);
   });
 
-  // For RTL: reverse the entire output so jsPDF renders it correctly
-  return result.join('').split('').reverse().join('');
+  return result.join('');
 }
 
 function reshapeArabicSegment(text: string): string {

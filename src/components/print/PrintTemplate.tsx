@@ -82,26 +82,40 @@ export function PrintTemplate({
       padding: '2rem',
       maxWidth: '56rem',
       margin: '0 auto',
-      fontFamily: 'Arial, Tahoma, sans-serif',
+      fontFamily: "'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif",
     }}>
       <style>
         {`
+          @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+          
           @media print {
-            /* Hide everything */
+            /* Hide EVERYTHING first */
             body > * {
               display: none !important;
+              visibility: hidden !important;
             }
-            /* Show only the dialog overlay */
+            
+            /* Show dialog content */
             [role="dialog"],
-            [data-radix-dialog-overlay],
             [data-radix-dialog-content] {
               display: block !important;
+              visibility: visible !important;
             }
-            /* Hide dialog chrome */
+            
+            /* Hide ALL dialog UI chrome */
+            [data-radix-dialog-overlay],
+            [data-radix-dialog-close],
             .print\\:hidden,
-            [data-radix-dialog-overlay] {
+            button[class*="absolute"][class*="right"],
+            [data-radix-dialog-content] > button:first-child,
+            [data-radix-dialog-content] > div:first-child:not(.print-template) {
               display: none !important;
+              visibility: hidden !important;
+              width: 0 !important;
+              height: 0 !important;
+              overflow: hidden !important;
             }
+            
             /* Make the print template fill the page */
             .print-template {
               position: fixed !important;
@@ -115,12 +129,15 @@ export function PrintTemplate({
               color: #000000 !important;
               z-index: 999999 !important;
               display: block !important;
+              visibility: visible !important;
               overflow: visible !important;
+              font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif !important;
             }
             .print-template * {
               color-adjust: exact !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
+              visibility: visible !important;
             }
             /* Override any dialog styling */
             [data-radix-dialog-content] {
