@@ -61,8 +61,11 @@ async function setupArabicFont(doc: jsPDF): Promise<boolean> {
     }
     
     if (cachedFont) {
-      doc.addFileToVFS('Amiri-Regular.ttf', cachedFont);
-      doc.addFont('Amiri-Regular.ttf', ARABIC_FONT_NAME, 'normal');
+      doc.addFileToVFS('Cairo-Regular.ttf', cachedFont);
+      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'normal');
+      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'bold');
+      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'italic');
+      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'bolditalic');
       doc.setFont(ARABIC_FONT_NAME);
       return true;
     }
