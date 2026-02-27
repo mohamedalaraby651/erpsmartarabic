@@ -1,119 +1,101 @@
 
 
-# خطة اصلاح تصدير PDF العربي والطباعة
-## Arabic PDF Export & Print Complete Fix Plan
+# خطة اصلاح شاملة للخطوط والطباعة وتصدير PDF العربي
 
 ---
 
 ## المشاكل المكتشفة
 
-### مشكلة 1: النص العربي مشوه في ملفات PDF (خطيرة)
-- دالة `processArabicText` في `pdfGenerator.ts` تعكس الحروف (`text.split('').reverse().join('')`) وهذا يدمر النص العربي بالكامل لان الحروف العربية لها اشكال مختلفة (اول - وسط - اخر - منفصل)
-- كلمة "محمد" تصبح "دمحم" بدلا من عرضها بشكل صحيح
-- دالة `reverseArabicText` في `arabicFont.ts` تعكس ترتيب الكلمات وهو غير ضروري عند استخدام `setR2L(true)`
+### مشكلة 1: عكس مزدوج للنص العربي في PDF (السبب الرئيسي للرموز الغريبة)
+في ملف `arabicFont.ts` السطر 190، الدالة `reshapeArabicText` تعكس النص يدويا:
+```text
+return result.join('').split('').reverse().join('')
+```
+وفي نفس الوقت في `pdfGenerator.ts` السطر 103:
+```text
+doc.setR2L(true)
+```
+`setR2L(true)` يقوم ايضا بعكس النص -- فيحدث عكس مزدوج ينتج عنه نص مشوه ورموز غير مفهومة خاصة في رؤوس الاعمدة.
 
-### مشكلة 2: تحميل الخط العربي غير موثوق
-- يتم تحميل خط Amiri من Google Fonts CDN والرابط قد يتغير او يتعطل
-- عند فشل التحميل يتم استخدام خط `helvetica` الذي لا يدعم العربية اطلاقا مع عكس الحروف كحل بديل مكسور
+### مشكلة 2: `.split('')` يدمر بعض الحروف Unicode
+استخدام `.split('')` لعكس النص قد يفصل اجزاء بعض الحروف المركبة (diacritics + base). الحل هو `Array.from()`.
 
-### مشكلة 3: شعار الشركة لا يظهر في PDF
-- خيار `includeLogo` موجود في الكود لكن لا يتم فعليا تضمين الشعار في ملف PDF - يتم تجاهله تماما
+### مشكلة 3: رابط خط Amiri غير مستقر
+الرابط المستخدم (`fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf`) يشير الى ملف محدد قد لا يحتوي على جميع الحروف العربية المطلوبة (مثل الحركات والاشكال الخاصة). يجب استخدام رابط اكثر شمولا.
 
-### مشكلة 4: طباعة المستندات (Print) مشاكل متعددة
-- `window.print()` يطبع محتوى الـ Dialog كاملا بما فيه الازرار والعناصر الاضافية
-- CSS الخاص بالطباعة يستخدم `position: absolute` مما يسبب مشاكل في الصفحات الطويلة
-- الالوان تستخدم متغيرات CSS (`text-primary`, `bg-muted`) قد لا تعمل عند الطباعة خاصة في الوضع الداكن
-- لا يوجد خيار تحميل PDF مباشرة من نوافذ المعاينة (فقط طباعة المتصفح)
+### مشكلة 4: خط الطباعة (PrintTemplate) غير مناسب
+`fontFamily: 'Arial, Tahoma, sans-serif'` - خط Arial لا يعرض الحروف العربية المتصلة بشكل مثالي في بعض الانظمة. يفضل استخدام خطوط عربية اصلية مثل `'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif`.
 
-### مشكلة 5: لا يوجد Arabic Text Shaping
-- مكتبة jsPDF لا تدعم Arabic text shaping بشكل مدمج
-- الحروف العربية تحتاج لمعالجة خاصة لعرض الاشكال الصحيحة (متصلة/منفصلة)
-- يجب استخدام مكتبة مثل `arabic-reshaper` لاعادة تشكيل النص قبل ارساله للـ PDF
+### مشكلة 5: CSS الطباعة لا يخفي عناصر الحوار بالكامل
+زر الاغلاق (X) وعنوان الحوار يظهران عند الطباعة لان `print:hidden` في Tailwind لا يعمل دائما مع عناصر Radix Dialog.
 
 ---
 
-## الحل المقترح
+## خطة الحل
 
-### الخطوة 1: اصلاح `arabicFont.ts` - معالجة النص العربي
-- ازالة دوال عكس النص المكسورة (`reverseArabicText`, `processArabicText`)
-- اضافة منطق Arabic text reshaping يدوي (بدون مكتبة خارجية) لربط الحروف العربية بشكل صحيح
-- اضافة دالة `reshapeArabicText` تتعامل مع اشكال الحروف الاربعة (isolated, initial, medial, final)
-- اضافة معالجة للنصوص المختلطة (عربي + انجليزي + ارقام)
+### الخطوة 1: اصلاح `arabicFont.ts` - ازالة العكس المزدوج
+- **ازالة** السطر 190 الذي يعكس النص (`split('').reverse().join('')`)
+- الاعتماد على `setR2L(true)` في jsPDF فقط لمعالجة اتجاه النص
+- استبدال `.split('')` بـ `Array.from()` في اي عمليات على النص للحفاظ على سلامة حروف Unicode
+- ابقاء منطق الـ reshaping كما هو (تحويل الحروف للاشكال السياقية الصحيحة)
 
-### الخطوة 2: اصلاح `pdfGenerator.ts` - محرك توليد PDF
-- ازالة دالة `processArabicText` المكسورة واستبدالها بالمعالج الجديد
-- اضافة تضمين شعار الشركة فعليا (تحويل الصورة من URL الى base64 وادراجها)
-- تحسين عرض الجداول مع النص العربي المشكل
-- اضافة معالجة الاخطاء عند فشل تحميل الخط مع رسالة واضحة للمستخدم
+### الخطوة 2: اصلاح `pdfGenerator.ts` - تصحيح معالجة النص
+- التاكد من ان `processText` يستدعي `reshapeArabicText` بدون اي عكس اضافي
+- اصلاح معالجة النصوص المختلطة (عربي + ارقام + انجليزي) في الجداول
+- تحسين خيار `font` في اعدادات `autoTable` لضمان استخدام خط Amiri في كل الخلايا
 
-### الخطوة 3: اصلاح `PrintTemplate.tsx` - قالب الطباعة
-- تحسين CSS الطباعة لاخفاء عناصر الـ Dialog بالكامل
-- استبدال `position: absolute` بنهج اكثر موثوقية
-- تثبيت الالوان بقيم ثابتة عند الطباعة بدلا من متغيرات CSS
-- اضافة `-webkit-print-color-adjust: exact` و `print-color-adjust: exact`
+### الخطوة 3: تحسين رابط تحميل خط Amiri
+- استخدام رابط Google Fonts API الرسمي للحصول على ملف TTF الكامل الذي يدعم جميع حروف العربية
+- اضافة fallback ثاني (رابط احتياطي) في حال فشل الرابط الاول
+- تحسين رسالة الخطأ عند فشل التحميل
 
-### الخطوة 4: تحسين مكونات المعاينة (Print Views)
-- اضافة زر "تحميل PDF" بجانب زر "طباعة" في جميع نوافذ المعاينة:
-  - `InvoicePrintView.tsx`
-  - `QuotationPrintView.tsx`
-  - `SalesOrderPrintView.tsx`
-  - `PurchaseOrderPrintView.tsx`
-- ربط زر التحميل بدالة `generateDocumentPDF` الموجودة
-- تحسين اخفاء العناصر عند الطباعة
+### الخطوة 4: تحسين `PrintTemplate.tsx` - الخطوط والطباعة
+- تغيير `fontFamily` لاستخدام خطوط عربية افضل: `'Noto Sans Arabic', 'Segoe UI', Tahoma, 'Arial', sans-serif`
+- اضافة `@import` لخط Noto Sans Arabic من Google Fonts في كتلة `<style>`
+- تحسين CSS الطباعة لاخفاء جميع عناصر Dialog بشكل اكيد (بما في ذلك زر X والعنوان)
+- اضافة font-family للطباعة ايضا لضمان نفس الخط
 
 ---
 
 ## التفاصيل التقنية
 
-### Arabic Text Reshaping:
-النهج المستخدم: بناء جدول اشكال الحروف العربية الاربعة يدويا في الكود:
+### اصلاح العكس المزدوج (الاهم):
 ```text
-مثال: حرف "ب"
-- منفصل: ب (U+0628)
-- اول: بـ (U+FE91)
-- وسط: ـبـ (U+FE92)
-- اخر: ـب (U+FE90)
-```
-يتم تحليل كل حرف وتحديد موقعه (اول/وسط/اخر/منفصل) واستبداله بالشكل الصحيح من Unicode Presentation Forms B (U+FE70-U+FEFF)
+قبل الاصلاح:
+1. reshapeArabicText يحول الحروف للاشكال الصحيحة
+2. reshapeArabicText يعكس النص (سطر 190)
+3. jsPDF setR2L(true) يعكس النص مرة ثانية
+النتيجة: نص مشوه / رموز غريبة
 
-### تضمين الشعار في PDF:
-```text
-1. جلب الصورة من URL
-2. تحويلها الى base64 عبر Canvas
-3. ادراجها باستخدام doc.addImage()
-4. التعامل مع CORS عبر crossOrigin attribute
+بعد الاصلاح:
+1. reshapeArabicText يحول الحروف للاشكال الصحيحة فقط
+2. jsPDF setR2L(true) يتولى عكس النص للعرض الصحيح
+النتيجة: نص عربي سليم ومقروء
 ```
 
-### تحسين الطباعة CSS:
+### تحسين الخط:
 ```text
-@media print:
-- اخفاء كل شيء خارج .print-template
-- استخدام الوان ثابتة (لا CSS variables)
-- اجبار طباعة الخلفيات والالوان
-- ازالة هوامش Dialog
-- تعيين حجم A4 صحيح
+الرابط الحالي: fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf
+(ملف محدد - قد لا يشمل كل الحروف)
+
+الرابط الجديد: استخدام Google Fonts CSS API لاستخراج رابط TTF الكامل
+مع fallback لرابط ثانوي
 ```
 
 ---
 
 ## الملفات المتاثرة
 
-### معدلة (7):
 | الملف | التغيير |
 |-------|---------|
-| `src/lib/arabicFont.ts` | اعادة كتابة كاملة - اضافة Arabic reshaping + ازالة الدوال المكسورة |
-| `src/lib/pdfGenerator.ts` | استبدال processArabicText + اضافة تضمين الشعار + تحسين الجداول |
-| `src/components/print/PrintTemplate.tsx` | اصلاح CSS الطباعة + الوان ثابتة |
-| `src/components/print/InvoicePrintView.tsx` | اضافة زر تحميل PDF |
-| `src/components/print/QuotationPrintView.tsx` | اضافة زر تحميل PDF |
-| `src/components/print/SalesOrderPrintView.tsx` | اضافة زر تحميل PDF |
-| `src/components/print/PurchaseOrderPrintView.tsx` | اضافة زر تحميل PDF |
+| `src/lib/arabicFont.ts` | ازالة عكس النص + تحسين رابط الخط + استخدام Array.from |
+| `src/lib/pdfGenerator.ts` | تصحيح processText + ضمان اتساق الخط في الجداول |
+| `src/components/print/PrintTemplate.tsx` | تحسين fontFamily + اضافة Google Font + تحسين print CSS |
 
 ### ترتيب التنفيذ:
 | # | المهمة |
 |---|--------|
-| 1 | اعادة كتابة `arabicFont.ts` مع Arabic reshaping |
-| 2 | اصلاح `pdfGenerator.ts` (معالج نص + شعار) |
-| 3 | اصلاح `PrintTemplate.tsx` (CSS طباعة) |
-| 4 | تحسين ملفات PrintView الاربعة (زر تحميل PDF) |
+| 1 | اصلاح `arabicFont.ts` (ازالة العكس + تحسين الخط) |
+| 2 | اصلاح `pdfGenerator.ts` (معالجة النص + الجداول) |
+| 3 | تحسين `PrintTemplate.tsx` (الخط + الطباعة CSS) |
 
