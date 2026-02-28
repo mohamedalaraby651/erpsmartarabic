@@ -320,21 +320,104 @@ function reshapeArabicSegment(text: string): string {
  * the character order so it appears correct visually.
  * Numbers and Latin text within the string are kept in LTR order.
  */
+/**
+ * Convert reshaped Arabic text from logical order to visual order for jsPDF.
+ * Uses a simplified Bidi algorithm:
+ * 1. Split text into directional "runs" (RTL, LTR, Neutral)
+ * 2. Resolve neutral runs based on surrounding strong types
+ * 3. Reverse the order of runs (base direction is RTL)
+ * 4. Reverse characters inside RTL runs only
+ * 5. Keep LTR runs (numbers, Latin) in their original character order
+ */
 export function toVisualOrder(text: string): string {
   if (!text) return text;
   
-  // Check if text contains any RTL characters
   const hasRtl = /[\u0600-\u06FF\uFE70-\uFEFF\uFB50-\uFDFF]/.test(text);
   if (!hasRtl) return text;
+
+  // Classify each character
+  const enum DirType { RTL, LTR, NEUTRAL }
   
-  // Reverse the entire string
-  const reversed = [...text].reverse().join('');
-  
-  // Un-reverse LTR sequences (numbers, Latin text, emails, etc.)
-  // This keeps numbers like "123" readable and not "321"
-  return reversed.replace(/([0-9A-Za-z@._\-\+]+(\s+[0-9A-Za-z@._\-\+]+)*)/g, (match) => {
-    return [...match].reverse().join('');
-  });
+  function charDir(code: number): DirType {
+    // Arabic ranges (including presentation forms from reshaping)
+    if ((code >= 0x0600 && code <= 0x06FF) ||
+        (code >= 0xFE70 && code <= 0xFEFF) ||
+        (code >= 0xFB50 && code <= 0xFDFF)) {
+      // Diacritics are neutral-ish but belong to RTL
+      return DirType.RTL;
+    }
+    // Latin letters and digits are LTR
+    if ((code >= 0x0030 && code <= 0x0039) || // 0-9
+        (code >= 0x0041 && code <= 0x005A) || // A-Z
+        (code >= 0x0061 && code <= 0x007A) || // a-z
+        (code >= 0x0660 && code <= 0x0669) || // Arabic-Indic digits
+        (code >= 0x06F0 && code <= 0x06F9)) { // Extended Arabic-Indic digits
+      return DirType.LTR;
+    }
+    return DirType.NEUTRAL;
+  }
+
+  const chars = [...text];
+  const dirs = chars.map(ch => charDir(ch.codePointAt(0) || 0));
+
+  // Build runs of consecutive same-direction characters
+  interface Run { type: DirType; start: number; end: number; }
+  const runs: Run[] = [];
+  let runStart = 0;
+  for (let i = 1; i <= dirs.length; i++) {
+    if (i === dirs.length || dirs[i] !== dirs[runStart]) {
+      runs.push({ type: dirs[runStart], start: runStart, end: i });
+      runStart = i;
+    }
+  }
+
+  // Resolve NEUTRAL runs: inherit direction from surrounding strong runs
+  // In RTL base direction, isolated neutrals become RTL
+  for (let i = 0; i < runs.length; i++) {
+    if (runs[i].type !== DirType.NEUTRAL) continue;
+    
+    // Find previous and next strong types
+    let prevType: DirType = DirType.RTL; // base direction
+    for (let j = i - 1; j >= 0; j--) {
+      if (runs[j].type !== DirType.NEUTRAL) { prevType = runs[j].type; break; }
+    }
+    let nextType: DirType = DirType.RTL; // base direction
+    for (let j = i + 1; j < runs.length; j++) {
+      if (runs[j].type !== DirType.NEUTRAL) { nextType = runs[j].type; break; }
+    }
+    
+    // If both neighbors agree, neutral takes that direction
+    // If they disagree, neutral takes the base direction (RTL)
+    runs[i].type = (prevType === nextType) ? prevType : DirType.RTL;
+  }
+
+  // Merge adjacent runs of the same resolved type
+  const merged: Run[] = [runs[0]];
+  for (let i = 1; i < runs.length; i++) {
+    const last = merged[merged.length - 1];
+    if (runs[i].type === last.type) {
+      last.end = runs[i].end;
+    } else {
+      merged.push({ ...runs[i] });
+    }
+  }
+
+  // Reverse the order of runs (RTL base direction)
+  merged.reverse();
+
+  // Build result: reverse characters inside RTL runs, keep LTR runs as-is
+  const result: string[] = [];
+  for (const run of merged) {
+    const segment = chars.slice(run.start, run.end);
+    if (run.type === DirType.RTL) {
+      result.push(segment.reverse().join(''));
+    } else {
+      // LTR: keep original order
+      result.push(segment.join(''));
+    }
+  }
+
+  return result.join('');
 }
 
 export function toArabicNumerals(num: number | string): string {
