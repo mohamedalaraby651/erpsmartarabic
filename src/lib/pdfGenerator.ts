@@ -1,7 +1,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
-import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, loadImageAsBase64 } from './arabicFont';
+import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, loadImageAsBase64, getFontConfig } from './arabicFont';
+import type { PdfFontKey } from './arabicFont';
 
 interface CompanySettings {
   company_name: string;
@@ -14,6 +15,7 @@ interface CompanySettings {
   primary_color?: string | null;
   secondary_color?: string | null;
   currency: string;
+  pdf_font?: string | null;
 }
 
 interface ExportOptions {
@@ -37,7 +39,8 @@ export async function getCompanySettings(): Promise<CompanySettings | null> {
     return null;
   }
   
-  return data;
+  // pdf_font may not be in the generated types yet, so cast
+  return data as unknown as CompanySettings;
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -51,21 +54,32 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
     : { r: 37, g: 99, b: 235 };
 }
 
-// Cache for loaded font
+// Cache for loaded font - keyed by font name
 let cachedFont: string | null = null;
+let cachedFontKey: PdfFontKey | null = null;
 
-async function setupArabicFont(doc: jsPDF): Promise<boolean> {
+async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promise<boolean> {
   try {
+    // Clear cache if font changed
+    if (cachedFontKey !== fontKey) {
+      cachedFont = null;
+      cachedFontKey = null;
+    }
+
     if (!cachedFont) {
-      cachedFont = await loadArabicFont();
+      cachedFont = await loadArabicFont(fontKey);
+      if (cachedFont) cachedFontKey = fontKey;
     }
     
     if (cachedFont) {
-      doc.addFileToVFS('Cairo-Regular.ttf', cachedFont);
-      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'normal');
-      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'bold');
-      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'italic');
-      doc.addFont('Cairo-Regular.ttf', ARABIC_FONT_NAME, 'bolditalic');
+      const config = getFontConfig(fontKey);
+      const vfsName = `${config.name}-Regular.ttf`;
+      
+      doc.addFileToVFS(vfsName, cachedFont);
+      doc.addFont(vfsName, ARABIC_FONT_NAME, 'normal');
+      doc.addFont(vfsName, ARABIC_FONT_NAME, 'bold');
+      doc.addFont(vfsName, ARABIC_FONT_NAME, 'italic');
+      doc.addFont(vfsName, ARABIC_FONT_NAME, 'bolditalic');
       doc.setFont(ARABIC_FONT_NAME);
       return true;
     }
@@ -79,7 +93,7 @@ async function setupArabicFont(doc: jsPDF): Promise<boolean> {
 // Process text for PDF - reshape Arabic text for correct rendering
 function processText(text: string, hasArabicFont: boolean): string {
   if (!text) return '';
-  if (!hasArabicFont) return text; // Without Arabic font, can't render Arabic anyway
+  if (!hasArabicFont) return text;
   return reshapeArabicText(text);
 }
 
@@ -95,6 +109,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
 
   const company = includeCompanyInfo ? await getCompanySettings() : null;
   const primaryColor = company?.primary_color ? hexToRgb(company.primary_color) : { r: 37, g: 99, b: 235 };
+  const fontKey = (company?.pdf_font as PdfFontKey) || 'cairo';
 
   const doc = new jsPDF({
     orientation,
@@ -102,7 +117,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
     format: 'a4',
   });
 
-  const hasArabicFont = await setupArabicFont(doc);
+  const hasArabicFont = await setupArabicFont(doc, fontKey);
   doc.setR2L(true);
 
   let startY = 15;
@@ -239,6 +254,7 @@ export async function generateDocumentPDF(
 ): Promise<void> {
   const company = await getCompanySettings();
   const primaryColor = company?.primary_color ? hexToRgb(company.primary_color) : { r: 37, g: 99, b: 235 };
+  const fontKey = (company?.pdf_font as PdfFontKey) || 'cairo';
 
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -246,7 +262,7 @@ export async function generateDocumentPDF(
     format: 'a4',
   });
 
-  const hasArabicFont = await setupArabicFont(doc);
+  const hasArabicFont = await setupArabicFont(doc, fontKey);
   doc.setR2L(true);
 
   let startY = 15;
@@ -268,7 +284,6 @@ export async function generateDocumentPDF(
       const logoBase64 = await loadImageAsBase64(company.logo_url);
       if (logoBase64) {
         doc.addImage(logoBase64, 'PNG', pageWidth - margin - 25, startY - 5, 25, 25);
-        // Adjust text position to avoid overlap
       }
     } catch { /* skip logo */ }
   }

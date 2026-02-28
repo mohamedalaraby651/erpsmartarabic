@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Receipt, Save, Loader2, Info } from 'lucide-react';
+import { Receipt, Save, Loader2, Info, Type } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AVAILABLE_FONTS } from '@/lib/arabicFont';
+import type { PdfFontKey } from '@/lib/arabicFont';
 
 interface InvoiceSettingsSectionProps {
   onDataChange?: () => void;
@@ -17,6 +19,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currency, setCurrency] = useState('ج.م');
+  const [pdfFont, setPdfFont] = useState<PdfFontKey>('cairo');
 
   // Fetch settings
   const { data: settings, isLoading } = useQuery({
@@ -28,7 +31,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 
@@ -36,6 +39,9 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
   useEffect(() => {
     if (settings?.currency) {
       setCurrency(settings.currency);
+    }
+    if (settings?.pdf_font) {
+      setPdfFont(settings.pdf_font as PdfFontKey);
     }
   }, [settings]);
 
@@ -45,13 +51,13 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
       if (settings?.id) {
         const { error } = await supabase
           .from('company_settings')
-          .update({ currency })
+          .update({ currency, pdf_font: pdfFont } as any)
           .eq('id', settings.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('company_settings')
-          .insert({ company_name: 'شركتي', currency });
+          .insert({ company_name: 'شركتي', currency, pdf_font: pdfFont } as any);
         if (error) throw error;
       }
     },
@@ -163,6 +169,91 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* PDF Font Selection */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Type className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle>خط PDF والمطبوعات</CardTitle>
+              <CardDescription>اختر الخط المستخدم في ملفات PDF والمستندات المصدّرة</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {AVAILABLE_FONTS.map((font) => {
+              const isSelected = pdfFont === font.key;
+              return (
+                <button
+                  key={font.key}
+                  onClick={() => {
+                    setPdfFont(font.key);
+                    onDataChange?.();
+                  }}
+                  className={`p-4 border-2 rounded-xl text-right transition-all ${
+                    isSelected
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                      : 'border-border hover:border-primary/40 hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {font.displayName}
+                    </span>
+                    {isSelected && (
+                      <span className="text-primary text-sm font-bold">✓</span>
+                    )}
+                  </div>
+                  <p
+                    className="text-lg font-medium mb-1"
+                    style={{ fontFamily: `'${font.displayName}', sans-serif` }}
+                  >
+                    {font.arabicName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{font.description}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Font Preview */}
+          <div className="p-4 border rounded-lg bg-muted/30 space-y-2">
+            <Label className="block">معاينة الخط المختار</Label>
+            <div className="bg-background border rounded-lg p-4 space-y-2">
+              <link
+                rel="stylesheet"
+                href={`https://fonts.googleapis.com/css2?family=${AVAILABLE_FONTS.find(f => f.key === pdfFont)?.googleFontFamily || 'Cairo:wght@400;700'}&display=swap`}
+              />
+              <p
+                className="text-lg"
+                style={{ fontFamily: `'${AVAILABLE_FONTS.find(f => f.key === pdfFont)?.displayName || 'Cairo'}', sans-serif` }}
+              >
+                بسم الله الرحمن الرحيم - فاتورة رقم ١٢٣٤
+              </p>
+              <p
+                className="text-sm text-muted-foreground"
+                style={{ fontFamily: `'${AVAILABLE_FONTS.find(f => f.key === pdfFont)?.displayName || 'Cairo'}', sans-serif` }}
+              >
+                هذا النص يوضح شكل الخط المختار في المستندات المطبوعة وملفات PDF
+              </p>
+            </div>
+          </div>
+
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              سيتم تطبيق الخط المختار على جميع ملفات PDF والمستندات المصدّرة من النظام.
+              تأكد من الضغط على "حفظ" لتطبيق التغييرات.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </div>

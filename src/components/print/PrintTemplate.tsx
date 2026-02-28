@@ -1,5 +1,9 @@
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { AVAILABLE_FONTS } from "@/lib/arabicFont";
+import type { PdfFontKey } from "@/lib/arabicFont";
 
 interface PrintTemplateProps {
   companyName: string;
@@ -34,32 +38,33 @@ interface PrintTemplateProps {
   paymentStatus?: string;
 }
 
-export function PrintTemplate({
-  companyName,
-  companyAddress,
-  companyPhone,
-  companyEmail,
-  taxNumber,
-  logoUrl,
-  documentTitle,
-  documentNumber,
-  documentDate,
-  dueDate,
-  customerName,
-  customerAddress,
-  customerPhone,
-  supplierName,
-  supplierAddress,
-  supplierPhone,
-  items,
-  subtotal,
-  discount,
-  tax,
-  total,
-  notes,
-  paymentMethod,
-  paymentStatus,
-}: PrintTemplateProps) {
+export function PrintTemplate(props: PrintTemplateProps) {
+  const {
+    companyName, companyAddress, companyPhone, companyEmail, taxNumber, logoUrl,
+    documentTitle, documentNumber, documentDate, dueDate,
+    customerName, customerAddress, customerPhone,
+    supplierName, supplierAddress, supplierPhone,
+    items, subtotal, discount, tax, total, notes, paymentMethod, paymentStatus,
+  } = props;
+
+  // Fetch the selected font from settings
+  const { data: settings } = useQuery({
+    queryKey: ['company-settings-font'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      return data as any;
+    },
+    staleTime: 60000,
+  });
+
+  const fontKey: PdfFontKey = (settings?.pdf_font as PdfFontKey) || 'cairo';
+  const fontConfig = AVAILABLE_FONTS.find(f => f.key === fontKey) || AVAILABLE_FONTS[0];
+  const fontFamily = `'${fontConfig.displayName}', 'Segoe UI', Tahoma, Arial, sans-serif`;
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("ar-EG", {
       minimumFractionDigits: 2,
@@ -82,27 +87,24 @@ export function PrintTemplate({
       padding: '2rem',
       maxWidth: '56rem',
       margin: '0 auto',
-      fontFamily: "'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif",
+      fontFamily,
     }}>
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=${fontConfig.googleFontFamily}&display=swap');
           
           @media print {
-            /* Hide EVERYTHING first */
             body > * {
               display: none !important;
               visibility: hidden !important;
             }
             
-            /* Show dialog content */
             [role="dialog"],
             [data-radix-dialog-content] {
               display: block !important;
               visibility: visible !important;
             }
             
-            /* Hide ALL dialog UI chrome */
             [data-radix-dialog-overlay],
             [data-radix-dialog-close],
             .print\\:hidden,
@@ -116,7 +118,6 @@ export function PrintTemplate({
               overflow: hidden !important;
             }
             
-            /* Make the print template fill the page */
             .print-template {
               position: fixed !important;
               left: 0 !important;
@@ -131,7 +132,7 @@ export function PrintTemplate({
               display: block !important;
               visibility: visible !important;
               overflow: visible !important;
-              font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+              font-family: ${fontFamily} !important;
             }
             .print-template * {
               color-adjust: exact !important;
@@ -139,7 +140,6 @@ export function PrintTemplate({
               print-color-adjust: exact !important;
               visibility: visible !important;
             }
-            /* Override any dialog styling */
             [data-radix-dialog-content] {
               position: fixed !important;
               left: 0 !important;
@@ -160,7 +160,6 @@ export function PrintTemplate({
               size: A4;
               margin: 10mm;
             }
-            /* Print-specific table styles */
             .print-template table {
               border-collapse: collapse !important;
             }
