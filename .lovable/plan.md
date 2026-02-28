@@ -1,130 +1,91 @@
 
-# خطة اصلاح جذري ونهائي لجميع مشاكل الخطوط والطباعة والالوان والشعار
+
+# خطة اصلاح انعكاس النص العربي في PDF
 
 ---
 
-## تشخيص المشاكل المكتشفة
+## تشخيص المشكلة
 
-### المشكلة 1: روابط خط Cairo معطلة بالكامل (السبب الرئيسي)
-بعد فحص كل الروابط الموجودة في `arabicFont.ts`:
+هناك مشكلتان تسببان انعكاس بعض الكلمات:
 
-| الرابط | النتيجة |
-|--------|---------|
-| `cdn.jsdelivr.net/.../cairo/static/Cairo-Regular.ttf` | فشل - jsDelivr يرفض المستودعات اكبر من 50MB |
-| `fonts.gstatic.com/s/cairo/v28/SLXGc1nY...ttf` | فشل - خطا 404 (الرابط منتهي الصلاحية) |
+### المشكلة 1: دالة `toVisualOrder()` بدائية جدا
 
-**خط Cairo لا يتم تحميله ابدا.** الدالة `setupArabicFont` تعيد `false`، فيتم استخدام خط `helvetica` الذي لا يدعم العربية. هذا يفسر كل الرموز الغريبة في رؤوس الاعمدة والنصوص.
+الدالة الحالية تعكس **كل** النص ثم تحاول اعادة الارقام والنصوص اللاتينية لترتيبها الصحيح بـ regex. هذا النهج يفشل مع:
+- نص مختلط مثل `"هاتف: 01234567"` -- النقطتان والمسافة تتحرك لمكان خاطئ
+- مسافات بين كلمات عربية قد يلتقطها regex كفاصل لنص LTR
+- ارقام عربية-هندية (٠١٢) لا يتعرف عليها regex كـ LTR
 
-بالاضافة لذلك: خط Cairo على GitHub (Gue3bara/Cairo) لا يحتوي على نسخة Static TTF -- فقط Variable Font، و **jsPDF لا يدعم Variable Fonts**.
+### المشكلة 2: معالجة النص المجزأة في `pdfGenerator.ts`
 
-### المشكلة 2: خط Cairo لا يحتوي على Presentation Forms B
-حتى لو نجح تحميل خط Cairo الثابت، فان محرك الـ reshaping في النظام يحول الحروف العربية الى نطاق Unicode Presentation Forms B (U+FE70-U+FEFF). خط Cairo لا يحتوي على glyphs لهذا النطاق (مؤكد من issue #3867 على GitHub jsPDF). هذا يعني ان الحروف لن تظهر حتى مع الخط الصحيح.
+اسطر مثل:
+```text
+`${p('هاتف: ')}${company.phone}`
+`${p('الرقم الضريبي: ')}${company.tax_number}`
+```
 
-### المشكلة 3: روابط خطوط اخرى معطلة
-| الخط | cdn.jsdelivr.net | fonts.gstatic.com |
-|------|-----------------|-------------------|
-| Amiri | يعمل | يعمل |
-| NotoSansArabic | فشل (50MB limit) | يعمل |
-| Tajawal | يعمل | يعمل |
+تعالج الجزء العربي منفردا (فينعكس) ثم تلصق القيمة بعده. النتيجة: نص عربي معكوس + رقم بترتيب صحيح = فوضى بصرية.
 
-### المشكلة 4: شعار الشركة ينتهي بعد 7 ايام
-الشعار يُخزن برابط موقع مؤقت (Signed URL) صلاحيته 7 ايام فقط. بعد ذلك يتوقف عن الظهور في PDF والمطبوعات.
-
-### المشكلة 5: الالوان ثابتة في قالب الطباعة
-`PrintTemplate.tsx` يستخدم لون ثابت `#1e40af` بدلا من اللون الاساسي المحفوظ في اعدادات الشركة (`primary_color`).
+**الصواب**: معالجة النص الكامل كوحدة واحدة: `p('هاتف: ' + company.phone)`
 
 ---
 
-## الحل الشامل
+## الحل
 
-### الخطوة 1: استراتيجية خط مزدوجة في `arabicFont.ts`
+### الخطوة 1: اعادة كتابة `toVisualOrder()` في `arabicFont.ts`
 
-**النهج**: استخدام **Amiri** كخط PDF (مثبت انه يعمل مع jsPDF + يدعم Presentation Forms B) مع عرض اسم "Cairo" للمستخدم كخيار. خط Cairo يُستخدم فقط في طباعة المتصفح (المتصفح يدعم GSUB تلقائيا).
+استبدال النهج الحالي (عكس كامل + regex) بخوارزمية Bidi مبسطة:
 
-التغييرات:
-- تحديث `AVAILABLE_FONTS` لتشمل رابط `pdfFallbackFont` (Amiri) لكل خط لا يملك Static TTF متوافقة مع jsPDF
-- اصلاح جميع الروابط المعطلة واستبدالها بروابط مؤكدة تعمل
-- اضافة خاصية `pdfFontKey` لكل خط تشير للخط البديل في PDF
-- Cairo يستخدم Amiri في PDF (كلاهما عربي واضح)
-- اضافة معالجة خطا محسنة مع رسائل واضحة في console
+1. تقسيم النص الى "runs" حسب الاتجاه (RTL / LTR / محايد)
+2. المحايدات (مسافات، نقاط، فواصل) تتبع اتجاه الحروف المجاورة
+3. عكس ترتيب الـ runs (لان الاتجاه الاساسي RTL)
+4. عكس الحروف داخل كل run عربي فقط
+5. ابقاء الارقام والنص اللاتيني بترتيبهم الاصلي
 
-### الخطوة 2: تحديث `pdfGenerator.ts`
-
-- عند اختيار Cairo، يتم تحميل Amiri تلقائيا لـ PDF (لانه الخط الوحيد المضمون للعمل مع jsPDF + reshaping)
-- ازالة `fontStyle: 'bold'` من `headStyles` في autoTable واستبدالها بـ `fontStyle: 'normal'` -- لان الخط مسجل كـ normal فقط حقيقيا (ملف واحد لكل الانماط)، وعندما يطلب autoTable نمط bold يبحث عن ملف منفصل
-- اضافة logging تفصيلي لتشخيص مشاكل الخط مستقبلا
-
-### الخطوة 3: اصلاح الشعار المنتهي الصلاحية
-
-في `LogoUpload.tsx` و `pdfGenerator.ts`:
-- تغيير صلاحية Signed URL من 7 ايام الى 365 يوم (سنة)
-- اضافة دالة تجديد الرابط تلقائيا عند الفشل في `loadImageAsBase64`
-- تحويل مسار الشعار ليكون Public URL بدلا من Signed URL (تغيير bucket `logos` الى public)
-
-### الخطوة 4: الالوان الديناميكية في `PrintTemplate.tsx`
-
-- تمرير `primaryColor` و `secondaryColor` كـ props جديدة
-- استبدال كل `#1e40af` الثابت باللون الديناميكي من الاعدادات
-- تحديث كل PrintView components (Invoice, Quotation, SalesOrder, PurchaseOrder) لتمرير الالوان
-
-### الخطوة 5: تحديث كل ملفات PrintView
-
-تمرير `primaryColor` و `secondaryColor` من `company_settings` الى `PrintTemplate` في:
-- `InvoicePrintView.tsx`
-- `QuotationPrintView.tsx`
-- `SalesOrderPrintView.tsx`
-- `PurchaseOrderPrintView.tsx`
-
----
-
-## التفاصيل التقنية
-
-### روابط الخطوط المعتمدة (مؤكدة تعمل)
-
+مثال:
 ```text
-Amiri: https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf
-       https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf
-
-Tajawal: https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/tajawal/Tajawal-Regular.ttf
-         https://fonts.gstatic.com/s/tajawal/v9/Iura6YBj_oCad4k1rzaLCr5IlLA.ttf
-
-NotoSansArabic: https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGr...ttf (يعمل)
+Input:  "الرقم الضريبي: 12345"
+Runs:   ["الرقم الضريبي"] [": "] ["12345"]
+Types:  [RTL]              [Neutral->RTL] [LTR]
+Reverse order: ["12345"] [" :"] ["يبيرضلا مقرلا"]
+          (but RTL chars are reversed with presentation forms)
+Result: "12345 :يبيرضلا مقرلا" -- renders correctly RTL in jsPDF
 ```
 
-### اصلاح headStyles في autoTable
+### الخطوة 2: اصلاح المعالجة المجزأة في `pdfGenerator.ts`
+
+تغيير كل الاسطر التي تعالج النص مجزأ لتعالجه كوحدة واحدة:
 
 ```text
-قبل (يسبب المشكلة):
-  headStyles: { fontStyle: 'bold' }
+قبل: `${p('هاتف: ')}${company.phone}`
+بعد: p('هاتف: ' + company.phone)
 
-بعد (يستخدم نفس النمط المسجل):
-  headStyles: { fontStyle: 'normal' }
+قبل: `${p('الرقم الضريبي: ')}${company.tax_number}`
+بعد: p('الرقم الضريبي: ' + company.tax_number)
+
+قبل: `${p('رقم: ')}${docNumber}`
+بعد: p('رقم: ' + docNumber)
+
+قبل: `${p('التاريخ: ')}${date}`
+بعد: p('التاريخ: ' + date)
+
+قبل: `${p('تاريخ التصدير: ')}${today}`
+بعد: p('تاريخ التصدير: ' + today)
 ```
 
-### تغيير bucket الشعار الى عام
-
+وكذلك اسطر العملة في الجدول:
 ```text
--- Migration SQL
-UPDATE storage.buckets SET public = true WHERE id = 'logos';
+قبل: `${Number(item.unit_price).toLocaleString()} ${company?.currency || 'ج.م'}`
+بعد: p(Number(item.unit_price).toLocaleString() + ' ' + (company?.currency || 'ج.م'))
 ```
-
-ثم في LogoUpload.tsx استخدام `getPublicUrl` بدلا من `createSignedUrl`.
 
 ---
 
 ## الملفات المتاثرة
 
-| # | الملف | التغيير |
-|---|-------|---------|
-| 1 | `src/lib/arabicFont.ts` | اصلاح الروابط + اضافة pdfFontKey لكل خط |
-| 2 | `src/lib/pdfGenerator.ts` | استخدام خط Amiri فعليا للـ PDF + اصلاح headStyles |
-| 3 | `src/components/print/PrintTemplate.tsx` | اضافة props للالوان + استبدال الالوان الثابتة |
-| 4 | `src/components/print/InvoicePrintView.tsx` | تمرير الالوان من الاعدادات |
-| 5 | `src/components/print/QuotationPrintView.tsx` | تمرير الالوان من الاعدادات |
-| 6 | `src/components/print/SalesOrderPrintView.tsx` | تمرير الالوان من الاعدادات |
-| 7 | `src/components/print/PurchaseOrderPrintView.tsx` | تمرير الالوان من الاعدادات |
-| 8 | `src/components/shared/LogoUpload.tsx` | استخدام Public URL بدلا من Signed URL |
-| 9 | Migration SQL | تحويل bucket logos الى عام |
+| الملف | التغيير |
+|-------|---------|
+| `src/lib/arabicFont.ts` | اعادة كتابة `toVisualOrder()` بخوارزمية Bidi صحيحة |
+| `src/lib/pdfGenerator.ts` | توحيد معالجة النص المختلط (عربي + ارقام) |
 
 ---
 
@@ -132,8 +93,6 @@ UPDATE storage.buckets SET public = true WHERE id = 'logos';
 
 | # | المهمة |
 |---|--------|
-| 1 | تحويل bucket logos الى عام (Migration) |
-| 2 | اصلاح arabicFont.ts (روابط + pdfFontKey) |
-| 3 | اصلاح pdfGenerator.ts (Amiri fallback + headStyles fix) |
-| 4 | اصلاح LogoUpload.tsx (Public URL) |
-| 5 | اضافة الالوان الديناميكية لـ PrintTemplate + كل PrintViews |
+| 1 | اعادة كتابة `toVisualOrder()` بخوارزمية Bidi مبسطة |
+| 2 | اصلاح كل استدعاءات `processText` المجزأة في `pdfGenerator.ts` |
+
