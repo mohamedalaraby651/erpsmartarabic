@@ -36,6 +36,8 @@ interface PrintTemplateProps {
   notes?: string;
   paymentMethod?: string;
   paymentStatus?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export function PrintTemplate(props: PrintTemplateProps) {
@@ -45,7 +47,11 @@ export function PrintTemplate(props: PrintTemplateProps) {
     customerName, customerAddress, customerPhone,
     supplierName, supplierAddress, supplierPhone,
     items, subtotal, discount, tax, total, notes, paymentMethod, paymentStatus,
+    primaryColor: propPrimaryColor, secondaryColor: propSecondaryColor,
   } = props;
+
+  // Use prop colors or fallback to default
+  const brandColor = propPrimaryColor || '#1e40af';
 
   // Fetch the selected font from settings
   const { data: settings } = useQuery({
@@ -164,7 +170,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
               border-collapse: collapse !important;
             }
             .print-template th {
-              background-color: #1e40af !important;
+              background-color: ${brandColor} !important;
               color: #ffffff !important;
             }
             .print-template .alt-row {
@@ -174,10 +180,10 @@ export function PrintTemplate(props: PrintTemplateProps) {
               background-color: #f1f5f9 !important;
             }
             .print-template .total-line {
-              border-top: 2px solid #1e40af !important;
+              border-top: 2px solid ${brandColor} !important;
             }
             .print-template .header-border {
-              border-bottom: 2px solid #1e40af !important;
+              border-bottom: 2px solid ${brandColor} !important;
             }
             .print-template .footer-border {
               border-top: 1px solid #e2e8f0 !important;
@@ -191,7 +197,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        borderBottom: '2px solid #1e40af',
+        borderBottom: `2px solid ${brandColor}`,
         paddingBottom: '1rem',
         marginBottom: '1.5rem',
       }}>
@@ -199,14 +205,14 @@ export function PrintTemplate(props: PrintTemplateProps) {
           {logoUrl && (
             <img src={logoUrl} alt="Logo" style={{ height: '4rem', marginBottom: '0.5rem' }} />
           )}
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e40af', margin: 0 }}>{companyName}</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: brandColor, margin: 0 }}>{companyName}</h1>
           {companyAddress && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>{companyAddress}</p>}
           {companyPhone && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>هاتف: {companyPhone}</p>}
           {companyEmail && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>بريد: {companyEmail}</p>}
           {taxNumber && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>الرقم الضريبي: {taxNumber}</p>}
         </div>
         <div style={{ textAlign: 'left' }}>
-          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1e40af', margin: 0 }}>{documentTitle}</h2>
+          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: brandColor, margin: 0 }}>{documentTitle}</h2>
           <p style={{ fontSize: '1.125rem', fontWeight: 600, marginTop: '0.5rem' }}>رقم: {documentNumber}</p>
           <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>التاريخ: {formatDate(documentDate)}</p>
           {dueDate && (
@@ -219,7 +225,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         {customerName && (
           <div className="info-box" style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '0.5rem' }}>
-            <h3 style={{ fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>بيانات العميل</h3>
+            <h3 style={{ fontWeight: 600, color: brandColor, marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>بيانات العميل</h3>
             <p style={{ fontWeight: 500, margin: '2px 0' }}>{customerName}</p>
             {customerAddress && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>{customerAddress}</p>}
             {customerPhone && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>هاتف: {customerPhone}</p>}
@@ -227,7 +233,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
         )}
         {supplierName && (
           <div className="info-box" style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '0.5rem' }}>
-            <h3 style={{ fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>بيانات المورد</h3>
+            <h3 style={{ fontWeight: 600, color: brandColor, marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>بيانات المورد</h3>
             <p style={{ fontWeight: 500, margin: '2px 0' }}>{supplierName}</p>
             {supplierAddress && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>{supplierAddress}</p>}
             {supplierPhone && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>هاتف: {supplierPhone}</p>}
@@ -235,7 +241,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
         )}
         {(paymentMethod || paymentStatus) && (
           <div className="info-box" style={{ backgroundColor: '#f1f5f9', padding: '1rem', borderRadius: '0.5rem' }}>
-            <h3 style={{ fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>معلومات الدفع</h3>
+            <h3 style={{ fontWeight: 600, color: brandColor, marginBottom: '0.5rem', margin: '0 0 0.5rem 0' }}>معلومات الدفع</h3>
             {paymentMethod && <p style={{ fontSize: '0.875rem', margin: '2px 0' }}>طريقة الدفع: {paymentMethod}</p>}
             {paymentStatus && <p style={{ fontSize: '0.875rem', margin: '2px 0' }}>حالة الدفع: {paymentStatus}</p>}
           </div>
@@ -246,14 +252,14 @@ export function PrintTemplate(props: PrintTemplateProps) {
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem' }}>
         <thead>
           <tr>
-            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>#</th>
-            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>المنتج</th>
-            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الكمية</th>
-            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>سعر الوحدة</th>
+            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>#</th>
+            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>المنتج</th>
+            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الكمية</th>
+            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>سعر الوحدة</th>
             {items.some(i => i.discount && i.discount > 0) && (
-              <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الخصم %</th>
+              <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الخصم %</th>
             )}
-            <th style={{ backgroundColor: '#1e40af', color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>الإجمالي</th>
+            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>الإجمالي</th>
           </tr>
         </thead>
         <tbody>
@@ -296,11 +302,11 @@ export function PrintTemplate(props: PrintTemplateProps) {
             justifyContent: 'space-between',
             fontWeight: 'bold',
             fontSize: '1.125rem',
-            borderTop: '2px solid #1e40af',
+            borderTop: `2px solid ${brandColor}`,
             paddingTop: '0.5rem',
           }}>
             <span>الإجمالي:</span>
-            <span style={{ color: '#1e40af' }}>{formatCurrency(total)}</span>
+            <span style={{ color: brandColor }}>{formatCurrency(total)}</span>
           </div>
         </div>
       </div>

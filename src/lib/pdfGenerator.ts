@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
-import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, loadImageAsBase64, getFontConfig } from './arabicFont';
+import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, loadImageAsBase64, getPdfFontConfig } from './arabicFont';
 import type { PdfFontKey } from './arabicFont';
 
 interface CompanySettings {
@@ -39,7 +39,6 @@ export async function getCompanySettings(): Promise<CompanySettings | null> {
     return null;
   }
   
-  // pdf_font may not be in the generated types yet, so cast
   return data as unknown as CompanySettings;
 }
 
@@ -60,32 +59,39 @@ let cachedFontKey: PdfFontKey | null = null;
 
 async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promise<boolean> {
   try {
+    // Resolve to actual PDF font (e.g. cairo -> amiri)
+    const pdfConfig = getPdfFontConfig(fontKey);
+    const actualKey = pdfConfig.key;
+
     // Clear cache if font changed
-    if (cachedFontKey !== fontKey) {
+    if (cachedFontKey !== actualKey) {
       cachedFont = null;
       cachedFontKey = null;
     }
 
     if (!cachedFont) {
+      console.log(`[PDF] Setting up font: requested="${fontKey}", actual PDF font="${pdfConfig.name}"`);
       cachedFont = await loadArabicFont(fontKey);
-      if (cachedFont) cachedFontKey = fontKey;
+      if (cachedFont) cachedFontKey = actualKey;
     }
     
     if (cachedFont) {
-      const config = getFontConfig(fontKey);
-      const vfsName = `${config.name}-Regular.ttf`;
+      const vfsName = `${pdfConfig.name}-Regular.ttf`;
       
       doc.addFileToVFS(vfsName, cachedFont);
+      // Register for all styles so autoTable never falls back to helvetica
       doc.addFont(vfsName, ARABIC_FONT_NAME, 'normal');
       doc.addFont(vfsName, ARABIC_FONT_NAME, 'bold');
       doc.addFont(vfsName, ARABIC_FONT_NAME, 'italic');
       doc.addFont(vfsName, ARABIC_FONT_NAME, 'bolditalic');
       doc.setFont(ARABIC_FONT_NAME);
+      console.log(`[PDF] ✅ Font "${ARABIC_FONT_NAME}" registered for all styles`);
       return true;
     }
+    console.error('[PDF] ❌ Font loading returned null');
     return false;
   } catch (error) {
-    console.warn('Could not load Arabic font:', error);
+    console.error('[PDF] ❌ Could not load Arabic font:', error);
     return false;
   }
 }
@@ -211,7 +217,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
       font: fontName,
       fillColor: [primaryColor.r, primaryColor.g, primaryColor.b],
       textColor: [255, 255, 255],
-      fontStyle: 'bold',
+      fontStyle: 'normal',
       halign: 'right',
     },
     bodyStyles: {
@@ -376,7 +382,7 @@ export async function generateDocumentPDF(
         font: fontName,
         fillColor: [primaryColor.r, primaryColor.g, primaryColor.b],
         textColor: [255, 255, 255],
-        fontStyle: 'bold',
+        fontStyle: 'normal',
         halign: 'right',
       },
       bodyStyles: {

@@ -125,6 +125,8 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
           companyEmail={settings?.email || undefined}
           taxNumber={settings?.tax_number || undefined}
           logoUrl={settings?.logo_url || undefined}
+          primaryColor={settings?.primary_color || undefined}
+          secondaryColor={settings?.secondary_color || undefined}
           documentTitle="فاتورة"
           documentNumber={invoice.invoice_number}
           documentDate={invoice.created_at}
