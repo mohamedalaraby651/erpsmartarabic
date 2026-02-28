@@ -56,7 +56,7 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
       const fileExt = file.name.split('.').pop();
       const fileName = `company-logo-${Date.now()}.${fileExt}`;
 
-      // Upload to Supabase Storage
+      // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from('logos')
         .upload(fileName, file, {
@@ -68,14 +68,12 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
         throw uploadError;
       }
 
-      // Use signed URL for private bucket (7 day expiry for logos)
-      const { data: urlData, error: urlError } = await supabase.storage
+      // Use public URL (bucket is now public - no expiry)
+      const { data: urlData } = supabase.storage
         .from('logos')
-        .createSignedUrl(fileName, 60 * 60 * 24 * 7);
+        .getPublicUrl(fileName);
 
-      if (urlError) throw urlError;
-
-      onUpload(urlData.signedUrl);
+      onUpload(urlData.publicUrl);
       toast.success('تم رفع الشعار بنجاح');
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
@@ -107,7 +105,6 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
   const handleRemove = async () => {
     if (previewUrl && previewUrl.includes('logos')) {
       try {
-        // Extract filename from URL
         const urlParts = previewUrl.split('/');
         const fileName = urlParts[urlParts.length - 1];
         

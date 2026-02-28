@@ -11,6 +11,8 @@ export interface FontConfig {
   description: string;
   urls: string[];
   googleFontFamily: string;
+  // The actual font to use in PDF (some fonts don't work with jsPDF)
+  pdfFontKey?: PdfFontKey;
 }
 
 export const AVAILABLE_FONTS: FontConfig[] = [
@@ -20,11 +22,11 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     displayName: 'Cairo',
     arabicName: 'القاهرة',
     description: 'خط حديث وواضح - مناسب للاستخدام العام',
-    urls: [
-      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/static/Cairo-Regular.ttf',
-      'https://fonts.gstatic.com/s/cairo/v28/SLXGc1nY6HkvalIhTp2mxdt0UXg.ttf',
-    ],
+    // Cairo has NO static TTF and lacks Presentation Forms B glyphs
+    // So we proxy to Amiri for PDF generation
+    urls: [],
     googleFontFamily: 'Cairo:wght@400;500;600;700',
+    pdfFontKey: 'amiri',
   },
   {
     key: 'amiri',
@@ -33,8 +35,8 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'أميري',
     description: 'خط كلاسيكي نسخي - مناسب للمستندات الرسمية',
     urls: [
-      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf',
       'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf',
+      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf',
     ],
     googleFontFamily: 'Amiri:wght@400;700',
   },
@@ -45,7 +47,6 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'نوتو سانس',
     description: 'خط Google الشامل - توافقية قصوى',
     urls: [
-      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansarabic/static/NotoSansArabic-Regular.ttf',
       'https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyG2vu3CBFQLaig.ttf',
     ],
     googleFontFamily: 'Noto+Sans+Arabic:wght@400;500;600;700',
@@ -57,34 +58,64 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'تجوال',
     description: 'خط عصري خفيف - مناسب للعروض التقديمية',
     urls: [
-      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/tajawal/Tajawal-Regular.ttf',
       'https://fonts.gstatic.com/s/tajawal/v9/Iura6YBj_oCad4k1rzaLCr5IlLA.ttf',
+      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/tajawal/Tajawal-Regular.ttf',
     ],
     googleFontFamily: 'Tajawal:wght@400;500;700',
   },
 ];
 
 // Default font name used in jsPDF
-export let ARABIC_FONT_NAME = 'Cairo';
+export let ARABIC_FONT_NAME = 'Amiri';
 
 export function getFontConfig(key: PdfFontKey): FontConfig {
   return AVAILABLE_FONTS.find(f => f.key === key) || AVAILABLE_FONTS[0];
 }
 
+/**
+ * Get the actual font config to use for PDF generation.
+ * Some fonts (like Cairo) proxy to another font (Amiri) for PDF.
+ */
+export function getPdfFontConfig(key: PdfFontKey): FontConfig {
+  const config = getFontConfig(key);
+  if (config.pdfFontKey) {
+    return getFontConfig(config.pdfFontKey);
+  }
+  return config;
+}
+
 // Load font from URL and return base64
 export async function loadArabicFont(fontKey: PdfFontKey = 'cairo'): Promise<string | null> {
-  const config = getFontConfig(fontKey);
+  // Resolve to the actual PDF font (e.g. cairo -> amiri)
+  const config = getPdfFontConfig(fontKey);
+  
+  if (config.urls.length === 0) {
+    console.error(`Font "${config.name}" has no URLs configured`);
+    return null;
+  }
   
   for (const url of config.urls) {
     try {
+      console.log(`[Font] Trying to load "${config.name}" from: ${url}`);
       const response = await fetch(url);
-      if (!response.ok) continue;
+      if (!response.ok) {
+        console.warn(`[Font] HTTP ${response.status} for: ${url}`);
+        continue;
+      }
       
       const arrayBuffer = await response.arrayBuffer();
       
       // Validate file size (must be > 50KB to be a real font file)
       if (arrayBuffer.byteLength < 50000) {
-        console.warn(`Font file too small (${arrayBuffer.byteLength} bytes), likely not a valid font:`, url);
+        console.warn(`[Font] File too small (${arrayBuffer.byteLength} bytes), likely not a valid font:`, url);
+        continue;
+      }
+      
+      // Validate it starts with TTF magic bytes
+      const header = new Uint8Array(arrayBuffer.slice(0, 4));
+      const magic = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
+      if (magic !== 0x00010000 && magic !== 0x4F54544F) {
+        console.warn(`[Font] Invalid TTF header (magic: 0x${magic.toString(16)}), skipping:`, url);
         continue;
       }
       
@@ -95,16 +126,16 @@ export async function loadArabicFont(fontKey: PdfFontKey = 'cairo'): Promise<str
       }
       const base64 = btoa(binary);
       
-      console.log(`Arabic font "${config.name}" loaded successfully (${Math.round(arrayBuffer.byteLength / 1024)}KB)`);
+      console.log(`[Font] ✅ "${config.name}" loaded successfully (${Math.round(arrayBuffer.byteLength / 1024)}KB)`);
       ARABIC_FONT_NAME = config.name;
       return base64;
     } catch (error) {
-      console.warn('Failed to load font from:', url, error);
+      console.warn('[Font] Failed to load from:', url, error);
       continue;
     }
   }
   
-  console.error(`Failed to load Arabic font "${config.name}" from all sources`);
+  console.error(`[Font] ❌ Failed to load "${config.name}" from all ${config.urls.length} sources`);
   return null;
 }
 

@@ -95,6 +95,8 @@ export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: Purchase
           companyEmail={settings?.email || undefined}
           taxNumber={settings?.tax_number || undefined}
           logoUrl={settings?.logo_url || undefined}
+          primaryColor={settings?.primary_color || undefined}
+          secondaryColor={settings?.secondary_color || undefined}
           documentTitle="أمر شراء"
           documentNumber={order.order_number}
           documentDate={order.created_at}

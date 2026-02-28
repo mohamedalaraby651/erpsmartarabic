@@ -95,6 +95,8 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
           companyEmail={settings?.email || undefined}
           taxNumber={settings?.tax_number || undefined}
           logoUrl={settings?.logo_url || undefined}
+          primaryColor={settings?.primary_color || undefined}
+          secondaryColor={settings?.secondary_color || undefined}
           documentTitle="عرض سعر"
           documentNumber={quotation.quotation_number}
           documentDate={quotation.created_at}
