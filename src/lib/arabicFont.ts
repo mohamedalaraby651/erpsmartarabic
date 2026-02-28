@@ -1,21 +1,93 @@
 // Arabic font support for PDF generation
-// Using Amiri font (Open Source Arabic font)
+// Supports multiple fonts: Cairo, Amiri, Noto Sans Arabic, Tajawal
 
-export const ARABIC_FONT_NAME = 'Cairo';
+export type PdfFontKey = 'cairo' | 'amiri' | 'noto-sans-arabic' | 'tajawal';
 
-// Function to add Arabic font to jsPDF
-export async function loadArabicFont(): Promise<string | null> {
-  const fontUrls = [
-    'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf',
-    'https://fonts.gstatic.com/s/cairo/v28/SLXvx02YPrSQgBkQUnusBhJOrYQ.ttf',
-  ];
+export interface FontConfig {
+  key: PdfFontKey;
+  name: string;
+  displayName: string;
+  arabicName: string;
+  description: string;
+  urls: string[];
+  googleFontFamily: string;
+}
+
+export const AVAILABLE_FONTS: FontConfig[] = [
+  {
+    key: 'cairo',
+    name: 'Cairo',
+    displayName: 'Cairo',
+    arabicName: 'القاهرة',
+    description: 'خط حديث وواضح - مناسب للاستخدام العام',
+    urls: [
+      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/static/Cairo-Regular.ttf',
+      'https://fonts.gstatic.com/s/cairo/v28/SLXGc1nY6HkvalIhTp2mxdt0UXg.ttf',
+    ],
+    googleFontFamily: 'Cairo:wght@400;500;600;700',
+  },
+  {
+    key: 'amiri',
+    name: 'Amiri',
+    displayName: 'Amiri',
+    arabicName: 'أميري',
+    description: 'خط كلاسيكي نسخي - مناسب للمستندات الرسمية',
+    urls: [
+      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf',
+      'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf',
+    ],
+    googleFontFamily: 'Amiri:wght@400;700',
+  },
+  {
+    key: 'noto-sans-arabic',
+    name: 'NotoSansArabic',
+    displayName: 'Noto Sans Arabic',
+    arabicName: 'نوتو سانس',
+    description: 'خط Google الشامل - توافقية قصوى',
+    urls: [
+      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosansarabic/static/NotoSansArabic-Regular.ttf',
+      'https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyG2vu3CBFQLaig.ttf',
+    ],
+    googleFontFamily: 'Noto+Sans+Arabic:wght@400;500;600;700',
+  },
+  {
+    key: 'tajawal',
+    name: 'Tajawal',
+    displayName: 'Tajawal',
+    arabicName: 'تجوال',
+    description: 'خط عصري خفيف - مناسب للعروض التقديمية',
+    urls: [
+      'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/tajawal/Tajawal-Regular.ttf',
+      'https://fonts.gstatic.com/s/tajawal/v9/Iura6YBj_oCad4k1rzaLCr5IlLA.ttf',
+    ],
+    googleFontFamily: 'Tajawal:wght@400;500;700',
+  },
+];
+
+// Default font name used in jsPDF
+export let ARABIC_FONT_NAME = 'Cairo';
+
+export function getFontConfig(key: PdfFontKey): FontConfig {
+  return AVAILABLE_FONTS.find(f => f.key === key) || AVAILABLE_FONTS[0];
+}
+
+// Load font from URL and return base64
+export async function loadArabicFont(fontKey: PdfFontKey = 'cairo'): Promise<string | null> {
+  const config = getFontConfig(fontKey);
   
-  for (const url of fontUrls) {
+  for (const url of config.urls) {
     try {
       const response = await fetch(url);
       if (!response.ok) continue;
       
       const arrayBuffer = await response.arrayBuffer();
+      
+      // Validate file size (must be > 50KB to be a real font file)
+      if (arrayBuffer.byteLength < 50000) {
+        console.warn(`Font file too small (${arrayBuffer.byteLength} bytes), likely not a valid font:`, url);
+        continue;
+      }
+      
       const bytes = new Uint8Array(arrayBuffer);
       let binary = '';
       for (let i = 0; i < bytes.length; i++) {
@@ -23,7 +95,8 @@ export async function loadArabicFont(): Promise<string | null> {
       }
       const base64 = btoa(binary);
       
-      console.log('Arabic font loaded successfully');
+      console.log(`Arabic font "${config.name}" loaded successfully (${Math.round(arrayBuffer.byteLength / 1024)}KB)`);
+      ARABIC_FONT_NAME = config.name;
       return base64;
     } catch (error) {
       console.warn('Failed to load font from:', url, error);
@@ -31,7 +104,7 @@ export async function loadArabicFont(): Promise<string | null> {
     }
   }
   
-  console.error('Failed to load Arabic font from all sources');
+  console.error(`Failed to load Arabic font "${config.name}" from all sources`);
   return null;
 }
 
@@ -41,106 +114,55 @@ export async function loadArabicFont(): Promise<string | null> {
 
 // [isolated, final, initial, medial] - 0 means the form doesn't exist (use isolated)
 const ARABIC_FORMS: Record<number, [number, number, number, number]> = {
-  // Hamza
-  0x0621: [0xFE80, 0, 0, 0], // ء - only isolated
-  // Alef with Madda
-  0x0622: [0xFE81, 0xFE82, 0, 0], // آ
-  // Alef with Hamza Above
-  0x0623: [0xFE83, 0xFE84, 0, 0], // أ
-  // Waw with Hamza
-  0x0624: [0xFE85, 0xFE86, 0, 0], // ؤ
-  // Alef with Hamza Below
-  0x0625: [0xFE87, 0xFE88, 0, 0], // إ
-  // Yeh with Hamza
-  0x0626: [0xFE89, 0xFE8A, 0xFE8B, 0xFE8C], // ئ
-  // Alef
-  0x0627: [0xFE8D, 0xFE8E, 0, 0], // ا
-  // Beh
-  0x0628: [0xFE8F, 0xFE90, 0xFE91, 0xFE92], // ب
-  // Teh Marbuta
-  0x0629: [0xFE93, 0xFE94, 0, 0], // ة
-  // Teh
-  0x062A: [0xFE95, 0xFE96, 0xFE97, 0xFE98], // ت
-  // Theh
-  0x062B: [0xFE99, 0xFE9A, 0xFE9B, 0xFE9C], // ث
-  // Jeem
-  0x062C: [0xFE9D, 0xFE9E, 0xFE9F, 0xFEA0], // ج
-  // Hah
-  0x062D: [0xFEA1, 0xFEA2, 0xFEA3, 0xFEA4], // ح
-  // Khah
-  0x062E: [0xFEA5, 0xFEA6, 0xFEA7, 0xFEA8], // خ
-  // Dal
-  0x062F: [0xFEA9, 0xFEAA, 0, 0], // د
-  // Thal
-  0x0630: [0xFEAB, 0xFEAC, 0, 0], // ذ
-  // Reh
-  0x0631: [0xFEAD, 0xFEAE, 0, 0], // ر
-  // Zain
-  0x0632: [0xFEAF, 0xFEB0, 0, 0], // ز
-  // Seen
-  0x0633: [0xFEB1, 0xFEB2, 0xFEB3, 0xFEB4], // س
-  // Sheen
-  0x0634: [0xFEB5, 0xFEB6, 0xFEB7, 0xFEB8], // ش
-  // Sad
-  0x0635: [0xFEB9, 0xFEBA, 0xFEBB, 0xFEBC], // ص
-  // Dad
-  0x0636: [0xFEBD, 0xFEBE, 0xFEBF, 0xFEC0], // ض
-  // Tah
-  0x0637: [0xFEC1, 0xFEC2, 0xFEC3, 0xFEC4], // ط
-  // Zah
-  0x0638: [0xFEC5, 0xFEC6, 0xFEC7, 0xFEC8], // ظ
-  // Ain
-  0x0639: [0xFEC9, 0xFECA, 0xFECB, 0xFECC], // ع
-  // Ghain
-  0x063A: [0xFECD, 0xFECE, 0xFECF, 0xFED0], // غ
-  // Feh
-  0x0641: [0xFED1, 0xFED2, 0xFED3, 0xFED4], // ف
-  // Qaf
-  0x0642: [0xFED5, 0xFED6, 0xFED7, 0xFED8], // ق
-  // Kaf
-  0x0643: [0xFED9, 0xFEDA, 0xFEDB, 0xFEDC], // ك
-  // Lam
-  0x0644: [0xFEDD, 0xFEDE, 0xFEDF, 0xFEE0], // ل
-  // Meem
-  0x0645: [0xFEE1, 0xFEE2, 0xFEE3, 0xFEE4], // م
-  // Noon
-  0x0646: [0xFEE5, 0xFEE6, 0xFEE7, 0xFEE8], // ن
-  // Heh
-  0x0647: [0xFEE9, 0xFEEA, 0xFEEB, 0xFEEC], // ه
-  // Waw
-  0x0648: [0xFEED, 0xFEEE, 0, 0], // و
-  // Alef Maksura
-  0x0649: [0xFEEF, 0xFEF0, 0, 0], // ى
-  // Yeh
-  0x064A: [0xFEF1, 0xFEF2, 0xFEF3, 0xFEF4], // ي
-  // Tatweel (kashida)
-  0x0640: [0x0640, 0x0640, 0x0640, 0x0640], // ـ
+  0x0621: [0xFE80, 0, 0, 0],
+  0x0622: [0xFE81, 0xFE82, 0, 0],
+  0x0623: [0xFE83, 0xFE84, 0, 0],
+  0x0624: [0xFE85, 0xFE86, 0, 0],
+  0x0625: [0xFE87, 0xFE88, 0, 0],
+  0x0626: [0xFE89, 0xFE8A, 0xFE8B, 0xFE8C],
+  0x0627: [0xFE8D, 0xFE8E, 0, 0],
+  0x0628: [0xFE8F, 0xFE90, 0xFE91, 0xFE92],
+  0x0629: [0xFE93, 0xFE94, 0, 0],
+  0x062A: [0xFE95, 0xFE96, 0xFE97, 0xFE98],
+  0x062B: [0xFE99, 0xFE9A, 0xFE9B, 0xFE9C],
+  0x062C: [0xFE9D, 0xFE9E, 0xFE9F, 0xFEA0],
+  0x062D: [0xFEA1, 0xFEA2, 0xFEA3, 0xFEA4],
+  0x062E: [0xFEA5, 0xFEA6, 0xFEA7, 0xFEA8],
+  0x062F: [0xFEA9, 0xFEAA, 0, 0],
+  0x0630: [0xFEAB, 0xFEAC, 0, 0],
+  0x0631: [0xFEAD, 0xFEAE, 0, 0],
+  0x0632: [0xFEAF, 0xFEB0, 0, 0],
+  0x0633: [0xFEB1, 0xFEB2, 0xFEB3, 0xFEB4],
+  0x0634: [0xFEB5, 0xFEB6, 0xFEB7, 0xFEB8],
+  0x0635: [0xFEB9, 0xFEBA, 0xFEBB, 0xFEBC],
+  0x0636: [0xFEBD, 0xFEBE, 0xFEBF, 0xFEC0],
+  0x0637: [0xFEC1, 0xFEC2, 0xFEC3, 0xFEC4],
+  0x0638: [0xFEC5, 0xFEC6, 0xFEC7, 0xFEC8],
+  0x0639: [0xFEC9, 0xFECA, 0xFECB, 0xFECC],
+  0x063A: [0xFECD, 0xFECE, 0xFECF, 0xFED0],
+  0x0641: [0xFED1, 0xFED2, 0xFED3, 0xFED4],
+  0x0642: [0xFED5, 0xFED6, 0xFED7, 0xFED8],
+  0x0643: [0xFED9, 0xFEDA, 0xFEDB, 0xFEDC],
+  0x0644: [0xFEDD, 0xFEDE, 0xFEDF, 0xFEE0],
+  0x0645: [0xFEE1, 0xFEE2, 0xFEE3, 0xFEE4],
+  0x0646: [0xFEE5, 0xFEE6, 0xFEE7, 0xFEE8],
+  0x0647: [0xFEE9, 0xFEEA, 0xFEEB, 0xFEEC],
+  0x0648: [0xFEED, 0xFEEE, 0, 0],
+  0x0649: [0xFEEF, 0xFEF0, 0, 0],
+  0x064A: [0xFEF1, 0xFEF2, 0xFEF3, 0xFEF4],
+  0x0640: [0x0640, 0x0640, 0x0640, 0x0640],
 };
 
-// Lam-Alef ligatures
 const LAM_ALEF_LIGATURES: Record<number, [number, number]> = {
-  // [isolated, final]
-  0x0622: [0xFEF5, 0xFEF6], // لآ
-  0x0623: [0xFEF7, 0xFEF8], // لأ
-  0x0625: [0xFEF9, 0xFEFA], // لإ
-  0x0627: [0xFEFB, 0xFEFC], // لا
+  0x0622: [0xFEF5, 0xFEF6],
+  0x0623: [0xFEF7, 0xFEF8],
+  0x0625: [0xFEF9, 0xFEFA],
+  0x0627: [0xFEFB, 0xFEFC],
 };
 
-// Letters that DON'T connect to the next letter (right-joiners only)
 const RIGHT_JOIN_ONLY = new Set([
-  0x0621, // ء Hamza
-  0x0622, // آ
-  0x0623, // أ
-  0x0624, // ؤ
-  0x0625, // إ
-  0x0627, // ا
-  0x062F, // د
-  0x0630, // ذ
-  0x0631, // ر
-  0x0632, // ز
-  0x0648, // و
-  0x0649, // ى
-  0x0629, // ة Teh Marbuta
+  0x0621, 0x0622, 0x0623, 0x0624, 0x0625, 0x0627,
+  0x062F, 0x0630, 0x0631, 0x0632, 0x0648, 0x0649, 0x0629,
 ]);
 
 function isArabicLetter(code: number): boolean {
@@ -155,18 +177,10 @@ function isArabicChar(code: number): boolean {
   return (code >= 0x0600 && code <= 0x06FF) || (code >= 0xFE70 && code <= 0xFEFF);
 }
 
-/**
- * Reshape Arabic text by replacing each letter with its correct contextual form.
- * Also handles Lam-Alef ligatures.
- * For jsPDF: after reshaping, the text needs to be reversed for correct RTL rendering.
- */
 export function reshapeArabicText(text: string): string {
   if (!text) return text;
-  
-  // Check if text contains Arabic characters
   if (!/[\u0600-\u06FF]/.test(text)) return text;
 
-  // Process the text: split into segments (Arabic vs non-Arabic)
   const segments: { text: string; isArabic: boolean }[] = [];
   let currentSegment = '';
   let currentIsArabic = false;
@@ -191,8 +205,6 @@ export function reshapeArabicText(text: string): string {
     segments.push({ text: currentSegment, isArabic: currentIsArabic });
   }
 
-  // Process each Arabic segment - reshape only, NO reversal
-  // jsPDF's setR2L(true) handles the visual RTL ordering
   const result = segments.map(seg => {
     if (!seg.isArabic) return seg.text;
     return reshapeArabicSegment(seg.text);
@@ -202,14 +214,12 @@ export function reshapeArabicText(text: string): string {
 }
 
 function reshapeArabicSegment(text: string): string {
-  // Strip diacritics for joining analysis but keep them for output
   const chars: number[] = [];
   const diacritics: Map<number, number[]> = new Map();
   
   for (let i = 0; i < text.length; i++) {
     const code = text.charCodeAt(i);
     if (isArabicDiacritic(code)) {
-      // Attach to previous letter
       if (chars.length > 0) {
         const lastIdx = chars.length - 1;
         if (!diacritics.has(lastIdx)) diacritics.set(lastIdx, []);
@@ -227,34 +237,25 @@ function reshapeArabicSegment(text: string): string {
     
     if (!isArabicLetter(code)) {
       result.push(String.fromCharCode(code));
-      // Add any diacritics
       if (diacritics.has(i)) {
         result.push(...diacritics.get(i)!.map(d => String.fromCharCode(d)));
       }
       continue;
     }
 
-    // Check for Lam-Alef ligature
     if (code === 0x0644 && i + 1 < chars.length && LAM_ALEF_LIGATURES[chars[i + 1]]) {
       const alefCode = chars[i + 1];
       const ligature = LAM_ALEF_LIGATURES[alefCode];
-      
-      // Determine if previous char connects to this Lam
       const prevConnects = i > 0 && isArabicLetter(chars[i - 1]) && !RIGHT_JOIN_ONLY.has(chars[i - 1]);
-      
-      // Use final form if previous connects, otherwise isolated
       const form = prevConnects ? ligature[1] : ligature[0];
       result.push(String.fromCharCode(form));
-      
-      // Add diacritics for both lam and alef positions
       if (diacritics.has(i)) {
         result.push(...diacritics.get(i)!.map(d => String.fromCharCode(d)));
       }
       if (diacritics.has(i + 1)) {
         result.push(...diacritics.get(i + 1)!.map(d => String.fromCharCode(d)));
       }
-      
-      i++; // Skip the Alef
+      i++;
       continue;
     }
 
@@ -267,26 +268,23 @@ function reshapeArabicSegment(text: string): string {
       continue;
     }
 
-    // Determine context
     const prevConnects = i > 0 && isArabicLetter(chars[i - 1]) && !RIGHT_JOIN_ONLY.has(chars[i - 1]);
     const nextExists = i + 1 < chars.length && isArabicLetter(chars[i + 1]);
-    const canConnectNext = forms[2] !== 0; // Has initial form = can connect forward
+    const canConnectNext = forms[2] !== 0;
 
     let formIndex: number;
     if (prevConnects && nextExists && canConnectNext) {
-      formIndex = 3; // medial
+      formIndex = 3;
     } else if (prevConnects) {
-      formIndex = 1; // final
+      formIndex = 1;
     } else if (nextExists && canConnectNext) {
-      formIndex = 2; // initial
+      formIndex = 2;
     } else {
-      formIndex = 0; // isolated
+      formIndex = 0;
     }
 
     const selectedForm = forms[formIndex] || forms[0];
     result.push(String.fromCharCode(selectedForm));
-    
-    // Add diacritics
     if (diacritics.has(i)) {
       result.push(...diacritics.get(i)!.map(d => String.fromCharCode(d)));
     }
@@ -295,18 +293,15 @@ function reshapeArabicSegment(text: string): string {
   return result.join('');
 }
 
-// Convert Arabic numerals to Eastern Arabic numerals (optional)
 export function toArabicNumerals(num: number | string): string {
   const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
   return String(num).replace(/[0-9]/g, (d) => arabicNumerals[parseInt(d)]);
 }
 
-// Format number with Arabic locale
 export function formatArabicNumber(num: number): string {
   return num.toLocaleString('ar-EG');
 }
 
-// Format date in Arabic
 export function formatArabicDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('ar-EG', {
@@ -316,7 +311,6 @@ export function formatArabicDate(date: Date | string): string {
   });
 }
 
-// Load image from URL and convert to base64 for PDF embedding
 export async function loadImageAsBase64(url: string): Promise<string | null> {
   try {
     return new Promise((resolve) => {

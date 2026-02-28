@@ -453,6 +453,7 @@ export type Database = {
           email: string | null
           id: string
           logo_url: string | null
+          pdf_font: string | null
           phone: string | null
           phone2: string | null
           primary_color: string | null
@@ -469,6 +470,7 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          pdf_font?: string | null
           phone?: string | null
           phone2?: string | null
           primary_color?: string | null
@@ -485,6 +487,7 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          pdf_font?: string | null
           phone?: string | null
           phone2?: string | null
           primary_color?: string | null
