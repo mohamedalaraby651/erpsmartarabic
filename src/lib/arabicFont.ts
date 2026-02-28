@@ -315,53 +315,74 @@ function reshapeArabicSegment(text: string): string {
 }
 
 /**
- * Convert reshaped Arabic text from logical order to visual order for jsPDF.
- * jsPDF renders text left-to-right. For Arabic (RTL), we need to reverse
- * the character order so it appears correct visually.
- * Numbers and Latin text within the string are kept in LTR order.
+ * Strip hidden Bidi control characters that corrupt PDF visual ordering.
+ * These chars are invisible but affect the Bidi algorithm causing partial reversals.
  */
+export function sanitizeBidiText(text: string): string {
+  if (!text) return text;
+  // Remove all Unicode Bidi control characters
+  return text
+    .replace(/[\u200E\u200F\u061C\u200B\u200C\u200D\uFEFF\u202A-\u202E\u2066-\u2069]/g, '')
+    .replace(/\s{2,}/g, ' '); // collapse multiple spaces
+}
+
+// Direction types for Bidi algorithm
+const DIR_RTL = 1;
+const DIR_LTR = 2;
+const DIR_NEUTRAL = 0;
+
+function classifyChar(code: number): number {
+  // Arabic script ranges (including presentation forms)
+  if ((code >= 0x0600 && code <= 0x06FF) ||
+      (code >= 0xFE70 && code <= 0xFEFF) ||
+      (code >= 0xFB50 && code <= 0xFDFF)) {
+    return DIR_RTL;
+  }
+  // Latin letters
+  if ((code >= 0x0041 && code <= 0x005A) || // A-Z
+      (code >= 0x0061 && code <= 0x007A)) { // a-z
+    return DIR_LTR;
+  }
+  // All digit types are LTR
+  if ((code >= 0x0030 && code <= 0x0039) || // 0-9
+      (code >= 0x0660 && code <= 0x0669) || // Arabic-Indic ٠-٩
+      (code >= 0x06F0 && code <= 0x06F9)) { // Extended Arabic-Indic
+    return DIR_LTR;
+  }
+  return DIR_NEUTRAL;
+}
+
 /**
  * Convert reshaped Arabic text from logical order to visual order for jsPDF.
- * Uses a simplified Bidi algorithm:
- * 1. Split text into directional "runs" (RTL, LTR, Neutral)
- * 2. Resolve neutral runs based on surrounding strong types
- * 3. Reverse the order of runs (base direction is RTL)
- * 4. Reverse characters inside RTL runs only
- * 5. Keep LTR runs (numbers, Latin) in their original character order
+ * 
+ * Implements a simplified Unicode Bidi algorithm (UAX #9):
+ * 1. Sanitize hidden Bidi control characters
+ * 2. Classify each character as RTL, LTR, or Neutral
+ * 3. Build directional runs
+ * 4. Resolve neutral runs: between two same-direction runs → inherit;
+ *    between two different-direction runs → inherit from base (RTL)
+ * 5. Special handling: neutrals directly adjacent to LTR on BOTH sides
+ *    stay LTR (e.g., spaces/punctuation between two English words)
+ * 6. Merge adjacent same-direction runs
+ * 7. Reverse order of all runs (base direction RTL)
+ * 8. Reverse characters inside RTL runs; keep LTR runs as-is
  */
 export function toVisualOrder(text: string): string {
   if (!text) return text;
   
+  // Sanitize first
+  text = sanitizeBidiText(text);
+  
   const hasRtl = /[\u0600-\u06FF\uFE70-\uFEFF\uFB50-\uFDFF]/.test(text);
   if (!hasRtl) return text;
 
-  // Classify each character
-  const enum DirType { RTL, LTR, NEUTRAL }
-  
-  function charDir(code: number): DirType {
-    // Arabic ranges (including presentation forms from reshaping)
-    if ((code >= 0x0600 && code <= 0x06FF) ||
-        (code >= 0xFE70 && code <= 0xFEFF) ||
-        (code >= 0xFB50 && code <= 0xFDFF)) {
-      // Diacritics are neutral-ish but belong to RTL
-      return DirType.RTL;
-    }
-    // Latin letters and digits are LTR
-    if ((code >= 0x0030 && code <= 0x0039) || // 0-9
-        (code >= 0x0041 && code <= 0x005A) || // A-Z
-        (code >= 0x0061 && code <= 0x007A) || // a-z
-        (code >= 0x0660 && code <= 0x0669) || // Arabic-Indic digits
-        (code >= 0x06F0 && code <= 0x06F9)) { // Extended Arabic-Indic digits
-      return DirType.LTR;
-    }
-    return DirType.NEUTRAL;
-  }
-
   const chars = [...text];
-  const dirs = chars.map(ch => charDir(ch.codePointAt(0) || 0));
+  if (chars.length === 0) return text;
+  
+  const dirs = chars.map(ch => classifyChar(ch.codePointAt(0) || 0));
 
   // Build runs of consecutive same-direction characters
-  interface Run { type: DirType; start: number; end: number; }
+  interface Run { type: number; start: number; end: number; }
   const runs: Run[] = [];
   let runStart = 0;
   for (let i = 1; i <= dirs.length; i++) {
@@ -371,24 +392,30 @@ export function toVisualOrder(text: string): string {
     }
   }
 
-  // Resolve NEUTRAL runs: inherit direction from surrounding strong runs
-  // In RTL base direction, isolated neutrals become RTL
+  // Resolve NEUTRAL runs based on context
   for (let i = 0; i < runs.length; i++) {
-    if (runs[i].type !== DirType.NEUTRAL) continue;
+    if (runs[i].type !== DIR_NEUTRAL) continue;
     
-    // Find previous and next strong types
-    let prevType: DirType = DirType.RTL; // base direction
+    // Find nearest strong type before and after
+    let prevType = DIR_RTL; // base direction
     for (let j = i - 1; j >= 0; j--) {
-      if (runs[j].type !== DirType.NEUTRAL) { prevType = runs[j].type; break; }
+      if (runs[j].type !== DIR_NEUTRAL) { prevType = runs[j].type; break; }
     }
-    let nextType: DirType = DirType.RTL; // base direction
+    let nextType = DIR_RTL; // base direction
     for (let j = i + 1; j < runs.length; j++) {
-      if (runs[j].type !== DirType.NEUTRAL) { nextType = runs[j].type; break; }
+      if (runs[j].type !== DIR_NEUTRAL) { nextType = runs[j].type; break; }
     }
     
-    // If both neighbors agree, neutral takes that direction
-    // If they disagree, neutral takes the base direction (RTL)
-    runs[i].type = (prevType === nextType) ? prevType : DirType.RTL;
+    // Both neighbors agree → inherit that direction
+    // Neighbors disagree → use base direction (RTL)
+    if (prevType === nextType) {
+      runs[i].type = prevType;
+    } else {
+      // Special case: if neutral is between LTR runs with only neutrals in between,
+      // check if the neutral content is "connective" (spaces, dots in emails, etc.)
+      // For PDF RTL base, default to RTL
+      runs[i].type = DIR_RTL;
+    }
   }
 
   // Merge adjacent runs of the same resolved type
@@ -409,10 +436,9 @@ export function toVisualOrder(text: string): string {
   const result: string[] = [];
   for (const run of merged) {
     const segment = chars.slice(run.start, run.end);
-    if (run.type === DirType.RTL) {
+    if (run.type === DIR_RTL) {
       result.push(segment.reverse().join(''));
     } else {
-      // LTR: keep original order
       result.push(segment.join(''));
     }
   }
