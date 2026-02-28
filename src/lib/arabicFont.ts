@@ -11,8 +11,6 @@ export interface FontConfig {
   description: string;
   urls: string[];
   googleFontFamily: string;
-  // The actual font to use in PDF (some fonts don't work with jsPDF)
-  pdfFontKey?: PdfFontKey;
 }
 
 export const AVAILABLE_FONTS: FontConfig[] = [
@@ -22,11 +20,10 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     displayName: 'Cairo',
     arabicName: 'القاهرة',
     description: 'خط حديث وواضح - مناسب للاستخدام العام',
-    // Cairo has NO static TTF and lacks Presentation Forms B glyphs
-    // So we proxy to Amiri for PDF generation
-    urls: [],
+    urls: [
+      '/fonts/Cairo-Variable.ttf',
+    ],
     googleFontFamily: 'Cairo:wght@400;500;600;700',
-    pdfFontKey: 'amiri',
   },
   {
     key: 'amiri',
@@ -66,31 +63,18 @@ export const AVAILABLE_FONTS: FontConfig[] = [
 ];
 
 // Default font name used in jsPDF
-export let ARABIC_FONT_NAME = 'Amiri';
+export let ARABIC_FONT_NAME = 'Cairo';
 
 export function getFontConfig(key: PdfFontKey): FontConfig {
   return AVAILABLE_FONTS.find(f => f.key === key) || AVAILABLE_FONTS[0];
 }
 
-/**
- * Get the actual font config to use for PDF generation.
- * Some fonts (like Cairo) proxy to another font (Amiri) for PDF.
- */
-export function getPdfFontConfig(key: PdfFontKey): FontConfig {
-  const config = getFontConfig(key);
-  if (config.pdfFontKey) {
-    return getFontConfig(config.pdfFontKey);
-  }
-  return config;
-}
-
 // Load font from URL and return base64
 export async function loadArabicFont(fontKey: PdfFontKey = 'cairo'): Promise<string | null> {
-  // Resolve to the actual PDF font (e.g. cairo -> amiri)
-  const config = getPdfFontConfig(fontKey);
+  const config = getFontConfig(fontKey);
   
   if (config.urls.length === 0) {
-    console.error(`Font "${config.name}" has no URLs configured`);
+    console.error(`[Font] Font "${config.name}" has no URLs configured`);
     return null;
   }
   
@@ -105,13 +89,13 @@ export async function loadArabicFont(fontKey: PdfFontKey = 'cairo'): Promise<str
       
       const arrayBuffer = await response.arrayBuffer();
       
-      // Validate file size (must be > 50KB to be a real font file)
-      if (arrayBuffer.byteLength < 50000) {
+      // Validate file size (must be > 10KB to be a real font file)
+      if (arrayBuffer.byteLength < 10000) {
         console.warn(`[Font] File too small (${arrayBuffer.byteLength} bytes), likely not a valid font:`, url);
         continue;
       }
       
-      // Validate it starts with TTF magic bytes
+      // Validate it starts with TTF/OTF magic bytes
       const header = new Uint8Array(arrayBuffer.slice(0, 4));
       const magic = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
       if (magic !== 0x00010000 && magic !== 0x4F54544F) {
@@ -204,8 +188,14 @@ function isArabicDiacritic(code: number): boolean {
   return code >= 0x064B && code <= 0x0652;
 }
 
+function isRtlChar(code: number): boolean {
+  return (code >= 0x0600 && code <= 0x06FF) || 
+         (code >= 0xFE70 && code <= 0xFEFF) || 
+         (code >= 0xFB50 && code <= 0xFDFF);
+}
+
 function isArabicChar(code: number): boolean {
-  return (code >= 0x0600 && code <= 0x06FF) || (code >= 0xFE70 && code <= 0xFEFF);
+  return isRtlChar(code);
 }
 
 export function reshapeArabicText(text: string): string {
@@ -322,6 +312,29 @@ function reshapeArabicSegment(text: string): string {
   }
 
   return result.join('');
+}
+
+/**
+ * Convert reshaped Arabic text from logical order to visual order for jsPDF.
+ * jsPDF renders text left-to-right. For Arabic (RTL), we need to reverse
+ * the character order so it appears correct visually.
+ * Numbers and Latin text within the string are kept in LTR order.
+ */
+export function toVisualOrder(text: string): string {
+  if (!text) return text;
+  
+  // Check if text contains any RTL characters
+  const hasRtl = /[\u0600-\u06FF\uFE70-\uFEFF\uFB50-\uFDFF]/.test(text);
+  if (!hasRtl) return text;
+  
+  // Reverse the entire string
+  const reversed = [...text].reverse().join('');
+  
+  // Un-reverse LTR sequences (numbers, Latin text, emails, etc.)
+  // This keeps numbers like "123" readable and not "321"
+  return reversed.replace(/([0-9A-Za-z@._\-\+]+(\s+[0-9A-Za-z@._\-\+]+)*)/g, (match) => {
+    return [...match].reverse().join('');
+  });
 }
 
 export function toArabicNumerals(num: number | string): string {
