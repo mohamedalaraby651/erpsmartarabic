@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
-import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, loadImageAsBase64, getPdfFontConfig } from './arabicFont';
+import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, toVisualOrder, loadImageAsBase64 } from './arabicFont';
 import type { PdfFontKey } from './arabicFont';
 
 interface CompanySettings {
@@ -53,30 +53,26 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
     : { r: 37, g: 99, b: 235 };
 }
 
-// Cache for loaded font - keyed by font name
+// Cache for loaded font
 let cachedFont: string | null = null;
 let cachedFontKey: PdfFontKey | null = null;
 
 async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promise<boolean> {
   try {
-    // Resolve to actual PDF font (e.g. cairo -> amiri)
-    const pdfConfig = getPdfFontConfig(fontKey);
-    const actualKey = pdfConfig.key;
-
     // Clear cache if font changed
-    if (cachedFontKey !== actualKey) {
+    if (cachedFontKey !== fontKey) {
       cachedFont = null;
       cachedFontKey = null;
     }
 
     if (!cachedFont) {
-      console.log(`[PDF] Setting up font: requested="${fontKey}", actual PDF font="${pdfConfig.name}"`);
+      console.log(`[PDF] Setting up font: "${fontKey}"`);
       cachedFont = await loadArabicFont(fontKey);
-      if (cachedFont) cachedFontKey = actualKey;
+      if (cachedFont) cachedFontKey = fontKey;
     }
     
     if (cachedFont) {
-      const vfsName = `${pdfConfig.name}-Regular.ttf`;
+      const vfsName = `${ARABIC_FONT_NAME}-Regular.ttf`;
       
       doc.addFileToVFS(vfsName, cachedFont);
       // Register for all styles so autoTable never falls back to helvetica
@@ -96,11 +92,12 @@ async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promi
   }
 }
 
-// Process text for PDF - reshape Arabic text for correct rendering
+// Process text for PDF - reshape Arabic then convert to visual order
 function processText(text: string, hasArabicFont: boolean): string {
   if (!text) return '';
   if (!hasArabicFont) return text;
-  return reshapeArabicText(text);
+  // First reshape (contextual forms), then convert to visual LTR order
+  return toVisualOrder(reshapeArabicText(text));
 }
 
 export async function generatePDF(options: ExportOptions): Promise<void> {
@@ -124,7 +121,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
   });
 
   const hasArabicFont = await setupArabicFont(doc, fontKey);
-  doc.setR2L(true);
+  // Do NOT use doc.setR2L(true) - we handle visual ordering manually
 
   let startY = 15;
   const pageWidth = doc.internal.pageSize.width;
@@ -269,7 +266,7 @@ export async function generateDocumentPDF(
   });
 
   const hasArabicFont = await setupArabicFont(doc, fontKey);
-  doc.setR2L(true);
+  // Do NOT use doc.setR2L(true) - we handle visual ordering manually
 
   let startY = 15;
   const pageWidth = doc.internal.pageSize.width;
