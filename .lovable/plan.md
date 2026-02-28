@@ -1,50 +1,68 @@
 
 
-# خطة استبدال الخط بـ Cairo واصلاح مشكلة الرموز نهائيا
+# خطة اصلاح نهائي للخط العربي Cairo في PDF مع اضافة اعداد تغيير الخط
 
 ---
 
-## المشكلة الجذرية
+## المشكلة الجذرية (لماذا لا تزال الرموز تظهر)
 
-خط Amiri مسجل بنمط `'normal'` فقط في `setupArabicFont`. عندما يطلب `autoTable` نمط `'bold'` لرؤوس الاعمدة، يفشل jsPDF في ايجاد `Amiri-Bold` فيرجع لخط `helvetica` الذي لا يدعم حروف Arabic Presentation Forms B، فتظهر رموز غريبة.
+الروابط الحالية في `arabicFont.ts` تشير الى ملفات **Variable Font**:
+```text
+Cairo[slnt,wght].ttf   (خط متغير)
+```
+
+**مكتبة jsPDF لا تدعم الخطوط المتغيرة (Variable Fonts)**. عند محاولة قراءة الملف، تفشل بصمت وترجع لخط `helvetica` الافتراضي الذي لا يحتوي على حروف Arabic Presentation Forms B (U+FE70-U+FEFF)، فتظهر رموز غريبة.
+
+**هذا هو السبب الحقيقي لفشل كل المحاولات السابقة** -- المشكلة ليست في تسجيل الانماط بل في ان ملف الخط نفسه غير قابل للقراءة بواسطة jsPDF.
 
 ---
 
 ## الحل
 
-### الخطوة 1: تحديث `src/lib/arabicFont.ts` - استبدال Amiri بـ Cairo
-- تغيير `ARABIC_FONT_NAME` من `'Amiri'` الى `'Cairo'`
-- تحديث روابط تحميل الخط لاستخدام Cairo TTF من Google Fonts CDN
-- Cairo خط حديث وواضح ومصمم للشاشات والطباعة معا
+### الخطوة 1: اصلاح `arabicFont.ts` - استخدام Cairo Static TTF
 
-### الخطوة 2: تحديث `src/lib/pdfGenerator.ts` - تسجيل الخط لجميع الانماط
-- تسجيل خط Cairo لانماط `'normal'` و `'bold'` و `'italic'` و `'bolditalic'` باستخدام نفس ملف الخط
-- هذا يمنع jsPDF من الرجوع لخط helvetica عند طلب اي نمط
-- اعادة تسمية ملف VFS من `Amiri-Regular.ttf` الى `Cairo-Regular.ttf`
+استبدال روابط Variable Font بروابط **Static TTF** من Google Fonts:
 
-### الخطوة 3: تحديث `src/components/print/PrintTemplate.tsx` - Cairo للطباعة
-- استبدال `Noto Sans Arabic` بـ `Cairo` في `fontFamily` و `@import`
-- تحديث Google Fonts URL لتحميل Cairo بجميع الاوزان (400-700)
-
----
-
-## التفاصيل التقنية
-
-### تسجيل الخط (الاصلاح الجذري لمشكلة الرموز):
 ```text
-// في setupArabicFont:
-doc.addFileToVFS('Cairo-Regular.ttf', cachedFont);
-doc.addFont('Cairo-Regular.ttf', 'Cairo', 'normal');
-doc.addFont('Cairo-Regular.ttf', 'Cairo', 'bold');
-doc.addFont('Cairo-Regular.ttf', 'Cairo', 'italic');
-doc.addFont('Cairo-Regular.ttf', 'Cairo', 'bolditalic');
+قبل (Variable Font - لا تعمل مع jsPDF):
+  Cairo%5Bslnt%2Cwght%5D.ttf
+  SLXvx02YPrSQgBkQUnusBhJOrYQ.ttf
+
+بعد (Static TTF - تعمل مع jsPDF):
+  https://fonts.gstatic.com/s/cairo/v28/SLXGc1nY6HkvalIhTp2mxdt0UXg.ttf (Cairo Regular 400)
+  https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/static/Cairo-Regular.ttf
 ```
 
-### روابط خط Cairo:
+اضافة تحقق من حجم الملف (اكبر من 50KB) لضمان انه ملف خط حقيقي وليس صفحة خطا HTML.
+
+كذلك اضافة دعم لخطوط متعددة: Cairo و Amiri و Noto Sans Arabic و Tajawal، كل منها مع روابط Static TTF الخاصة به.
+
+### الخطوة 2: اضافة عمود `pdf_font` الى جدول `company_settings`
+
+اضافة migration لعمود جديد:
 ```text
-الرابط الاساسي: cdn.jsdelivr.net/gh/google/fonts@main/ofl/cairo/Cairo[wght].ttf
-الرابط الاحتياطي: fonts.gstatic.com (Cairo Regular)
+ALTER TABLE company_settings ADD COLUMN pdf_font TEXT DEFAULT 'cairo';
 ```
+
+القيم المتاحة: `cairo`, `amiri`, `noto-sans-arabic`, `tajawal`
+
+### الخطوة 3: تحديث `pdfGenerator.ts` - قراءة اعداد الخط
+
+- قراءة `pdf_font` من `company_settings`
+- تمرير اسم الخط المختار الى `loadArabicFont()` و `setupArabicFont()`
+- مسح cache الخط عند تغيير نوع الخط
+
+### الخطوة 4: تحديث `InvoiceSettingsSection.tsx` - واجهة اختيار الخط
+
+اضافة قسم جديد في اعدادات الفواتير لاختيار خط PDF:
+- عرض 4 خطوط متاحة (Cairo, Amiri, Noto Sans Arabic, Tajawal)
+- معاينة حية لكل خط باسمه العربي
+- حفظ الاختيار في `company_settings.pdf_font`
+- القيمة الافتراضية: Cairo
+
+### الخطوة 5: تحديث `PrintTemplate.tsx` - قراءة الخط من الاعدادات
+
+تحديث طباعة المتصفح لاستخدام الخط المختار من الاعدادات (بدلا من Cairo الثابت).
 
 ---
 
@@ -52,7 +70,32 @@ doc.addFont('Cairo-Regular.ttf', 'Cairo', 'bolditalic');
 
 | الملف | التغيير |
 |-------|---------|
-| `src/lib/arabicFont.ts` | تغيير اسم الخط + تحديث روابط التحميل لـ Cairo |
-| `src/lib/pdfGenerator.ts` | تسجيل Cairo لجميع الانماط (normal/bold/italic/bolditalic) |
-| `src/components/print/PrintTemplate.tsx` | استبدال Noto Sans Arabic بـ Cairo في fontFamily و import |
+| `src/lib/arabicFont.ts` | استبدال روابط Variable Font بـ Static TTF + دعم خطوط متعددة + تحقق من حجم الملف |
+| `src/lib/pdfGenerator.ts` | قراءة اعداد الخط من company_settings + تمريره لدوال الخط |
+| `src/components/settings/InvoiceSettingsSection.tsx` | اضافة واجهة اختيار خط PDF مع معاينة |
+| `src/components/print/PrintTemplate.tsx` | استخدام الخط المختار بدلا من Cairo الثابت |
+| `supabase/migrations/` | اضافة عمود pdf_font الى company_settings |
+
+---
+
+## الخطوط المتاحة للمستخدم
+
+| الخط | الوصف | مناسب لـ |
+|------|-------|---------|
+| Cairo | خط حديث وواضح | الاستخدام العام والتقارير |
+| Amiri | خط كلاسيكي (نسخي) | المستندات الرسمية |
+| Noto Sans Arabic | خط Google الشامل | التوافقية القصوى |
+| Tajawal | خط عصري خفيف | العروض التقديمية |
+
+---
+
+## ترتيب التنفيذ
+
+| # | المهمة |
+|---|--------|
+| 1 | اضافة migration لعمود pdf_font |
+| 2 | اصلاح arabicFont.ts (Static TTF + خطوط متعددة) |
+| 3 | تحديث pdfGenerator.ts (قراءة اعداد الخط) |
+| 4 | تحديث InvoiceSettingsSection.tsx (واجهة الاختيار) |
+| 5 | تحديث PrintTemplate.tsx (الخط الديناميكي) |
 
