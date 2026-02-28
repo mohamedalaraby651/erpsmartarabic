@@ -156,7 +156,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
     
     const contactInfo = [company.phone, company.email].filter(Boolean).join(' | ');
     if (contactInfo) {
-      doc.text(contactInfo, textX, startY, { align: 'right' });
+      doc.text(processText(contactInfo, hasArabicFont), textX, startY, { align: 'right' });
       startY += 5;
     }
 
@@ -243,7 +243,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
         );
       }
 
-      doc.text(today, margin, doc.internal.pageSize.height - 10, { align: 'left' });
+      doc.text(processText(today, hasArabicFont), margin, doc.internal.pageSize.height - 10, { align: 'left' });
     },
   });
 
