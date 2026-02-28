@@ -119,27 +119,31 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
+      // Sanitize text fields to remove hidden Bidi control chars
+      const sanitize = (val: string | undefined | null) => 
+        val?.trim().replace(/[\u200E\u200F\u061C\u200B\u200C\u200D\uFEFF\u202A-\u202E\u2066-\u2069]/g, '') || null;
+      
       const payload: any = {
-        name: data.name.trim(),
+        name: sanitize(data.name) || data.name.trim(),
         customer_type: data.customer_type,
         vip_level: data.vip_level,
-        phone: data.phone?.trim() || null,
-        phone2: data.phone2?.trim() || null,
+        phone: sanitize(data.phone),
+        phone2: sanitize(data.phone2),
         email: data.email?.trim().toLowerCase() || null,
-        tax_number: data.tax_number?.trim() || null,
+        tax_number: sanitize(data.tax_number),
         credit_limit: data.credit_limit,
         category_id: data.category_id || null,
-        notes: data.notes?.trim() || null,
+        notes: sanitize(data.notes),
         is_active: data.is_active,
-        governorate: data.governorate?.trim() || null,
-        city: data.city?.trim() || null,
+        governorate: sanitize(data.governorate),
+        city: sanitize(data.city),
         discount_percentage: data.discount_percentage || 0,
-        contact_person: data.contact_person?.trim() || null,
-        contact_person_role: data.contact_person_role?.trim() || null,
+        contact_person: sanitize(data.contact_person),
+        contact_person_role: sanitize(data.contact_person_role),
         payment_terms_days: data.payment_terms_days || 0,
         preferred_payment_method: data.preferred_payment_method || null,
-        facebook_url: data.facebook_url?.trim() || null,
-        website_url: data.website_url?.trim() || null,
+        facebook_url: sanitize(data.facebook_url),
+        website_url: sanitize(data.website_url),
       };
 
       if (isEditing) {

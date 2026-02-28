@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
-import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, toVisualOrder, loadImageAsBase64 } from './arabicFont';
+import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, toVisualOrder, sanitizeBidiText, loadImageAsBase64 } from './arabicFont';
 import type { PdfFontKey } from './arabicFont';
 
 interface CompanySettings {
@@ -95,9 +95,11 @@ async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promi
 // Process text for PDF - reshape Arabic then convert to visual order
 function processText(text: string, hasArabicFont: boolean): string {
   if (!text) return '';
-  if (!hasArabicFont) return text;
-  // First reshape (contextual forms), then convert to visual LTR order
-  return toVisualOrder(reshapeArabicText(text));
+  // Always sanitize hidden Bidi control chars, even without Arabic font
+  const clean = sanitizeBidiText(String(text));
+  if (!hasArabicFont) return clean;
+  // Reshape Arabic contextual forms, then convert to visual LTR order for jsPDF
+  return toVisualOrder(reshapeArabicText(clean));
 }
 
 export async function generatePDF(options: ExportOptions): Promise<void> {
