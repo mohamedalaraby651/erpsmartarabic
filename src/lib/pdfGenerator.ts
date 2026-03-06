@@ -149,10 +149,10 @@ async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promi
       return true;
     }
     console.error('[PDF] ❌ Font loading returned null');
-    return false;
+    throw new Error('FONT_LOAD_FAILED');
   } catch (error) {
     console.error('[PDF] ❌ Could not load Arabic font:', error);
-    return false;
+    throw new Error('FONT_LOAD_FAILED');
   }
 }
 

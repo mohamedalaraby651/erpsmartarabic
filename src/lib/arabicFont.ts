@@ -21,7 +21,8 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'القاهرة',
     description: 'خط حديث وواضح - مناسب للاستخدام العام',
     urls: [
-      '/fonts/Cairo-Variable.ttf',
+      '/fonts/Cairo-Regular.ttf',
+      'https://cdn.jsdelivr.net/gh/Gue3bara/Cairo@7030db78/fonts/ttf/Cairo-Regular.ttf',
     ],
     googleFontFamily: 'Cairo:wght@400;500;600;700',
   },
@@ -103,6 +104,11 @@ export async function loadArabicFont(fontKey: PdfFontKey = 'cairo'): Promise<str
         continue;
       }
       
+      // Warn if this is a Variable Font (has 'fvar' table) - jsPDF doesn't fully support them
+      if (isVariableFont(arrayBuffer)) {
+        console.warn(`[Font] ⚠️ "${config.name}" from ${url} is a Variable Font. jsPDF may render missing glyphs. Prefer static TTF.`);
+      }
+      
       const bytes = new Uint8Array(arrayBuffer);
       let binary = '';
       for (let i = 0; i < bytes.length; i++) {
@@ -179,6 +185,26 @@ const RIGHT_JOIN_ONLY = new Set([
   0x0621, 0x0622, 0x0623, 0x0624, 0x0625, 0x0627,
   0x062F, 0x0630, 0x0631, 0x0632, 0x0648, 0x0649, 0x0629,
 ]);
+
+/**
+ * Check if a font file is a Variable Font by looking for the 'fvar' table.
+ */
+function isVariableFont(buffer: ArrayBuffer): boolean {
+  try {
+    const view = new DataView(buffer);
+    const numTables = view.getUint16(4);
+    for (let i = 0; i < numTables && i < 100; i++) {
+      const offset = 12 + i * 16;
+      if (offset + 4 > buffer.byteLength) break;
+      const tag = String.fromCharCode(
+        view.getUint8(offset), view.getUint8(offset + 1),
+        view.getUint8(offset + 2), view.getUint8(offset + 3)
+      );
+      if (tag === 'fvar') return true;
+    }
+  } catch { /* ignore parse errors */ }
+  return false;
+}
 
 function isArabicLetter(code: number): boolean {
   return code >= 0x0621 && code <= 0x064A && ARABIC_FORMS[code] !== undefined;
