@@ -53,6 +53,70 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
     : { r: 37, g: 99, b: 235 };
 }
 
+// ============================================================
+// CRITICAL FIX: Disable jsPDF's internal Arabic reshaping + Bidi
+// jsPDF registers two event handlers that conflict with our manual
+// processing (reshapeArabicText + toVisualOrder):
+//   1. preProcessText → processArabic (reshapes Arabic again)
+//   2. postProcessText → bidiEngineFunction (reorders visually)
+// We remove BOTH so our manual pipeline is the single Bidi authority.
+// ============================================================
+let _jspdfPatched = false;
+
+function disableJsPdfInternalArabicProcessing(): void {
+  if (_jspdfPatched) return;
+  
+  const api = (jsPDF as any).API;
+  if (!api || !Array.isArray(api.events)) {
+    console.warn('[PDF] Could not access jsPDF.API.events to patch');
+    return;
+  }
+
+  // Remove preProcessText (processArabic) and postProcessText (bidiEngine)
+  // Keep utf8EscapeFunction (postProcessText) which handles encoding
+  const originalLength = api.events.length;
+  
+  // Filter: remove processArabic (preProcessText) entirely
+  // For postProcessText, remove only the bidi engine (which references doBidiReorder)
+  api.events = api.events.filter((entry: any[]) => {
+    const [eventName, handler] = entry;
+    
+    // Remove ALL preProcessText handlers (processArabic)
+    if (eventName === 'preProcessText') {
+      return false;
+    }
+    
+    // Remove bidiEngine postProcessText handler
+    // The bidi handler references __bidiEngine__ or doBidiReorder
+    // The utf8Escape handler references "codePoint" or "toHex"
+    if (eventName === 'postProcessText' && handler) {
+      const fnStr = handler.toString();
+      if (fnStr.includes('bidiEngine') || fnStr.includes('doBidiReorder') || fnStr.includes('isInputVisual')) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+
+  // Also neutralize processArabic on the API itself so getStringUnitWidth doesn't call it
+  if (api.processArabic) {
+    api.processArabic = function () {
+      if (typeof arguments[0] === 'string') return arguments[0];
+      return arguments[0];
+    };
+  }
+  if (api.__arabicParser__) {
+    api.__arabicParser__.processArabic = api.processArabic;
+  }
+
+  _jspdfPatched = true;
+  console.log(`[PDF] ✅ Disabled jsPDF internal Arabic/Bidi processing (removed ${originalLength - api.events.length} handlers)`);
+}
+
+// Call this at module load time
+disableJsPdfInternalArabicProcessing();
+
 // Cache for loaded font
 let cachedFont: string | null = null;
 let cachedFontKey: PdfFontKey | null = null;
@@ -123,7 +187,6 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
   });
 
   const hasArabicFont = await setupArabicFont(doc, fontKey);
-  // Do NOT use doc.setR2L(true) - we handle visual ordering manually
 
   let startY = 15;
   const pageWidth = doc.internal.pageSize.width;
@@ -268,7 +331,6 @@ export async function generateDocumentPDF(
   });
 
   const hasArabicFont = await setupArabicFont(doc, fontKey);
-  // Do NOT use doc.setR2L(true) - we handle visual ordering manually
 
   let startY = 15;
   const pageWidth = doc.internal.pageSize.width;
