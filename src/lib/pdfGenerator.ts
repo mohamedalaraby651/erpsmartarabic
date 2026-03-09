@@ -178,7 +178,7 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
 
   const company = includeCompanyInfo ? await getCompanySettings() : null;
   const primaryColor = company?.primary_color ? hexToRgb(company.primary_color) : { r: 37, g: 99, b: 235 };
-  const fontKey = (company?.pdf_font as PdfFontKey) || 'cairo';
+  const fontKey = (company?.pdf_font as PdfFontKey) || 'amiri';
 
   const doc = new jsPDF({
     orientation,
