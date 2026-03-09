@@ -70,7 +70,7 @@ export function getFontConfig(key: PdfFontKey): FontConfig {
 }
 
 // Load font from URL and return base64
-export async function loadArabicFont(fontKey: PdfFontKey = 'cairo'): Promise<string | null> {
+export async function loadArabicFont(fontKey: PdfFontKey = 'amiri'): Promise<string | null> {
   const config = getFontConfig(fontKey);
   
   if (config.urls.length === 0) {
