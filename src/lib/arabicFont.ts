@@ -15,28 +15,27 @@ export interface FontConfig {
 
 export const AVAILABLE_FONTS: FontConfig[] = [
   {
-    key: 'cairo',
-    name: 'Cairo',
-    displayName: 'Cairo',
-    arabicName: 'القاهرة',
-    description: 'خط حديث وواضح - مناسب للاستخدام العام',
-    urls: [
-      '/fonts/Cairo-Regular.ttf',
-      'https://cdn.jsdelivr.net/gh/Gue3bara/Cairo@7030db78/fonts/ttf/Cairo-Regular.ttf',
-    ],
-    googleFontFamily: 'Cairo:wght@400;500;600;700',
-  },
-  {
     key: 'amiri',
     name: 'Amiri',
     displayName: 'Amiri',
     arabicName: 'أميري',
-    description: 'خط كلاسيكي نسخي - مناسب للمستندات الرسمية',
+    description: 'خط كلاسيكي نسخي - الأفضل لتصدير PDF (يدعم كل الحروف)',
     urls: [
       'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf',
       'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf',
     ],
     googleFontFamily: 'Amiri:wght@400;700',
+  },
+  {
+    key: 'cairo',
+    name: 'Cairo',
+    displayName: 'Cairo',
+    arabicName: 'القاهرة',
+    description: 'خط حديث وواضح - قد لا يعرض بعض الحروف في PDF',
+    urls: [
+      'https://cdn.jsdelivr.net/gh/Gue3bara/Cairo@7030db78/fonts/ttf/Cairo-Regular.ttf',
+    ],
+    googleFontFamily: 'Cairo:wght@400;500;600;700',
   },
   {
     key: 'noto-sans-arabic',
@@ -64,7 +63,7 @@ export const AVAILABLE_FONTS: FontConfig[] = [
 ];
 
 // Default font name used in jsPDF
-export let ARABIC_FONT_NAME = 'Cairo';
+export let ARABIC_FONT_NAME = 'Amiri';
 
 export function getFontConfig(key: PdfFontKey): FontConfig {
   return AVAILABLE_FONTS.find(f => f.key === key) || AVAILABLE_FONTS[0];
