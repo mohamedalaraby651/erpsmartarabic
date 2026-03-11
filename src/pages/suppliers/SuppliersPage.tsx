@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type Supplier = Database['public']['Tables']['suppliers']['Row'];
+type PurchaseOrderStats = Pick<Database['public']['Tables']['purchase_orders']['Row'], 'supplier_id' | 'total_amount' | 'status'>;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,16 +112,16 @@ const SuppliersPage = () => {
   const { filteredData, filters, setFilter } = useTableFilter(suppliers);
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
-  const activeSuppliers = suppliers.filter((s: any) => s.is_active).length;
-  const totalBalance = suppliers.reduce((sum: number, s: any) => sum + (s.current_balance || 0), 0);
-  const totalPurchases = (purchaseOrders as any[]).reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0);
+  const activeSuppliers = suppliers.filter((s) => s.is_active).length;
+  const totalBalance = suppliers.reduce((sum, s) => sum + (s.current_balance || 0), 0);
+  const totalPurchases = (purchaseOrders as PurchaseOrderStats[]).reduce((sum, o) => sum + (o.total_amount || 0), 0);
 
   const getSupplierStats = useCallback((supplierId: string) => {
-    const orders = (purchaseOrders as any[]).filter((o) => o.supplier_id === supplierId);
-    return { orderCount: orders.length, totalAmount: orders.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0) };
+    const orders = (purchaseOrders as PurchaseOrderStats[]).filter((o) => o.supplier_id === supplierId);
+    return { orderCount: orders.length, totalAmount: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) };
   }, [purchaseOrders]);
 
-  const handleEdit = useCallback((supplier: any) => { setSelectedSupplier(supplier); setDialogOpen(true); }, []);
+  const handleEdit = useCallback((supplier: Supplier) => { setSelectedSupplier(supplier); setDialogOpen(true); }, []);
   const handleAdd = useCallback(() => { setSelectedSupplier(null); setDialogOpen(true); }, []);
   const handleDelete = useCallback((id: string) => { setDeletingId(id); deleteSupplierMutation.mutate(id); }, [deleteSupplierMutation]);
   const handleRefresh = useCallback(async () => { await refetch(); }, [refetch]);
@@ -131,7 +135,7 @@ const SuppliersPage = () => {
 
   const shouldVirtualize = sortedData.length > VIRTUALIZATION_THRESHOLD;
 
-  const renderMobileSupplierItem = useCallback((supplier: any) => {
+  const renderMobileSupplierItem = useCallback((supplier: Supplier) => {
     const supplierStats = getSupplierStats(supplier.id);
     return (
       <DataCard
@@ -176,9 +180,9 @@ const SuppliersPage = () => {
           {sortedData.length === 0 ? (
             <EmptyState icon={Users} title="لا يوجد موردين" description="ابدأ بإضافة مورد جديد" action={{ label: "مورد جديد", onClick: handleAdd, icon: Plus }} />
           ) : shouldVirtualize ? (
-            <VirtualizedMobileList data={sortedData as any[]} renderItem={renderMobileSupplierItem} getItemKey={(s: any) => s.id} itemHeight={150} />
+            <VirtualizedMobileList data={sortedData as Supplier[]} renderItem={renderMobileSupplierItem} getItemKey={(s: Supplier) => s.id} itemHeight={150} />
           ) : (
-            <div className="space-y-3">{(sortedData as any[]).map((s) => <div key={s.id}>{renderMobileSupplierItem(s)}</div>)}</div>
+            <div className="space-y-3">{(sortedData as Supplier[]).map((s) => <div key={s.id}>{renderMobileSupplierItem(s)}</div>)}</div>
           )}
         </div>
       </PullToRefresh>

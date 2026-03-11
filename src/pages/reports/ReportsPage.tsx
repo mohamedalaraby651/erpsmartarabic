@@ -286,7 +286,7 @@ export default function ReportsPage() {
   );
 
   // Mobile Top Items List
-  const MobileTopItemsList = ({ items, type }: { items: any[]; type: 'products' | 'customers' }) => (
+  const MobileTopItemsList = ({ items, type }: { items: Array<{ name: string; revenue?: number; total?: number }>; type: 'products' | 'customers' }) => (
     <div className="space-y-2">
       {items?.map((item, index) => (
         <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -305,7 +305,7 @@ export default function ReportsPage() {
   );
 
   // Mobile Low Stock List
-  const MobileLowStockList = ({ items }: { items: any[] }) => (
+  const MobileLowStockList = ({ items }: { items: Array<{ name: string; minStock: number; currentStock: number }> }) => (
     <div className="space-y-2">
       {items?.map((item, index) => (
         <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">

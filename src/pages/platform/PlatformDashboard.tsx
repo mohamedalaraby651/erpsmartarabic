@@ -221,7 +221,7 @@ export default function PlatformDashboard() {
         </CardHeader>
         <CardContent>
           <div className="divide-y">
-            {recentTenants?.map((tenant: any) => (
+            {recentTenants?.map((tenant) => (
               <div key={tenant.id} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">

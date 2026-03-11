@@ -1,8 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart3 } from 'lucide-react';
+
+type AuditLog = Database['public']['Tables']['platform_audit_logs']['Row'];
 
 export default function PlatformReportsPage() {
   const { data: auditLogs, isLoading } = useQuery({
@@ -49,7 +52,7 @@ export default function PlatformReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="divide-y">
-            {auditLogs?.map((log: any) => (
+            {auditLogs?.map((log: AuditLog) => (
               <div key={log.id} className="flex items-center justify-between py-3">
                 <div>
                   <p className="text-sm font-medium">

@@ -217,7 +217,7 @@ const CustomerDetailsPage = () => {
     
     setIsPrintingStatement(true);
     try {
-      const statementData: any[] = [];
+      const statementData: Array<{ date: string; type: string; reference: string; debit: number; credit: number; status: string }> = [];
       
       // Add invoices
       invoices.forEach(invoice => {
