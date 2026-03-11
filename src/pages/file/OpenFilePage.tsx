@@ -203,7 +203,7 @@ export default function OpenFilePage() {
                           <tr key={rowIndex}>
                             {row.slice(0, 5).map((cell: unknown, cellIndex: number) => (
                               <td key={cellIndex} className="p-2 border">
-                                {cell || '-'}
+                                {String(cell) || '-'}
                               </td>
                             ))}
                             {row.length > 5 && (
