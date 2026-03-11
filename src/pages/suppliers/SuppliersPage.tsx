@@ -112,16 +112,16 @@ const SuppliersPage = () => {
   const { filteredData, filters, setFilter } = useTableFilter(suppliers);
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
-  const activeSuppliers = suppliers.filter((s: any) => s.is_active).length;
-  const totalBalance = suppliers.reduce((sum: number, s: any) => sum + (s.current_balance || 0), 0);
-  const totalPurchases = (purchaseOrders as any[]).reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0);
+  const activeSuppliers = suppliers.filter((s) => s.is_active).length;
+  const totalBalance = suppliers.reduce((sum, s) => sum + (s.current_balance || 0), 0);
+  const totalPurchases = (purchaseOrders as PurchaseOrderStats[]).reduce((sum, o) => sum + (o.total_amount || 0), 0);
 
   const getSupplierStats = useCallback((supplierId: string) => {
-    const orders = (purchaseOrders as any[]).filter((o) => o.supplier_id === supplierId);
-    return { orderCount: orders.length, totalAmount: orders.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0) };
+    const orders = (purchaseOrders as PurchaseOrderStats[]).filter((o) => o.supplier_id === supplierId);
+    return { orderCount: orders.length, totalAmount: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) };
   }, [purchaseOrders]);
 
-  const handleEdit = useCallback((supplier: any) => { setSelectedSupplier(supplier); setDialogOpen(true); }, []);
+  const handleEdit = useCallback((supplier: Supplier) => { setSelectedSupplier(supplier); setDialogOpen(true); }, []);
   const handleAdd = useCallback(() => { setSelectedSupplier(null); setDialogOpen(true); }, []);
   const handleDelete = useCallback((id: string) => { setDeletingId(id); deleteSupplierMutation.mutate(id); }, [deleteSupplierMutation]);
   const handleRefresh = useCallback(async () => { await refetch(); }, [refetch]);
