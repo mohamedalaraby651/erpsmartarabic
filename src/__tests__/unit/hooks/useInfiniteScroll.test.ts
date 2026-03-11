@@ -13,7 +13,7 @@ describe('useInfiniteScroll', () => {
     mockUnobserve = vi.fn();
     
     // Store original
-    originalIntersectionObserver = global.IntersectionObserver;
+    originalIntersectionObserver = globalThis.IntersectionObserver;
     
     // Create a proper class that can be instantiated with new
     class MockIntersectionObserver {
