@@ -180,9 +180,9 @@ const SuppliersPage = () => {
           {sortedData.length === 0 ? (
             <EmptyState icon={Users} title="لا يوجد موردين" description="ابدأ بإضافة مورد جديد" action={{ label: "مورد جديد", onClick: handleAdd, icon: Plus }} />
           ) : shouldVirtualize ? (
-            <VirtualizedMobileList data={sortedData as any[]} renderItem={renderMobileSupplierItem} getItemKey={(s: any) => s.id} itemHeight={150} />
+            <VirtualizedMobileList data={sortedData as Supplier[]} renderItem={renderMobileSupplierItem} getItemKey={(s: Supplier) => s.id} itemHeight={150} />
           ) : (
-            <div className="space-y-3">{(sortedData as any[]).map((s) => <div key={s.id}>{renderMobileSupplierItem(s)}</div>)}</div>
+            <div className="space-y-3">{(sortedData as Supplier[]).map((s) => <div key={s.id}>{renderMobileSupplierItem(s)}</div>)}</div>
           )}
         </div>
       </PullToRefresh>

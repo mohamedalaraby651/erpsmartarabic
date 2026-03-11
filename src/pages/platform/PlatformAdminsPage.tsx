@@ -75,7 +75,7 @@ export default function PlatformAdminsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {admins?.map((admin: any) => (
+              {admins?.map((admin: PlatformAdmin) => (
                 <TableRow key={admin.id}>
                   <TableCell>
                     <code className="text-xs bg-muted px-2 py-1 rounded">

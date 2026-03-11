@@ -188,9 +188,9 @@ export default function OpenFilePage() {
                     <table className="w-full text-sm border-collapse">
                       <thead>
                         <tr className="bg-muted">
-                          {file.data[0]?.slice(0, 5).map((header: any, i: number) => (
+                          {file.data[0]?.slice(0, 5).map((header: unknown, i: number) => (
                             <th key={i} className="p-2 text-right border">
-                              {header || `عمود ${i + 1}`}
+                              {String(header) || `عمود ${i + 1}`}
                             </th>
                           ))}
                           {file.data[0]?.length > 5 && (
@@ -199,9 +199,9 @@ export default function OpenFilePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {file.data.slice(1, 4).map((row: any[], rowIndex: number) => (
+                        {file.data.slice(1, 4).map((row: unknown[], rowIndex: number) => (
                           <tr key={rowIndex}>
-                            {row.slice(0, 5).map((cell: any, cellIndex: number) => (
+                            {row.slice(0, 5).map((cell: unknown, cellIndex: number) => (
                               <td key={cellIndex} className="p-2 border">
                                 {cell || '-'}
                               </td>

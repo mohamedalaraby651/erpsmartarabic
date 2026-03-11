@@ -52,7 +52,7 @@ export default function PlatformReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="divide-y">
-            {auditLogs?.map((log: any) => (
+            {auditLogs?.map((log: AuditLog) => (
               <div key={log.id} className="flex items-center justify-between py-3">
                 <div>
                   <p className="text-sm font-medium">
