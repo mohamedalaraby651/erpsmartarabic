@@ -12,7 +12,7 @@ export function useDoubleTap({
   delay = 300,
 }: UseDoubleTapOptions) {
   const lastTapRef = useRef<number>(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleTap = useCallback(() => {
     const now = Date.now();

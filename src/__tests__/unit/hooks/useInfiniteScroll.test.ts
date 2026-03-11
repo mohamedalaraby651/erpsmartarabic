@@ -13,7 +13,7 @@ describe('useInfiniteScroll', () => {
     mockUnobserve = vi.fn();
     
     // Store original
-    originalIntersectionObserver = global.IntersectionObserver;
+    originalIntersectionObserver = globalThis.IntersectionObserver;
     
     // Create a proper class that can be instantiated with new
     class MockIntersectionObserver {
@@ -42,13 +42,13 @@ describe('useInfiniteScroll', () => {
       }
     }
     
-    global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+    globalThis.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
   });
 
   afterEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
-    global.IntersectionObserver = originalIntersectionObserver;
+    globalThis.IntersectionObserver = originalIntersectionObserver;
   });
 
   it('should be defined', async () => {

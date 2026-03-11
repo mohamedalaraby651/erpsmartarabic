@@ -968,6 +968,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "expenses_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "expenses_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -1949,6 +1956,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "purchase_orders_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -2731,6 +2745,13 @@ export type Database = {
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "supplier_notes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       supplier_payments: {
@@ -2789,6 +2810,13 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -3405,6 +3433,104 @@ export type Database = {
       }
     }
     Views: {
+      employees_safe: {
+        Row: {
+          address: string | null
+          bank_account: string | null
+          base_salary: number | null
+          birth_date: string | null
+          contract_type: string | null
+          created_at: string | null
+          created_by: string | null
+          department: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_number: string | null
+          employment_status: string | null
+          full_name: string | null
+          gender: string | null
+          hire_date: string | null
+          id: string | null
+          image_url: string | null
+          job_title: string | null
+          marital_status: string | null
+          national_id: string | null
+          notes: string | null
+          phone: string | null
+          phone2: string | null
+          tenant_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: never
+          bank_account?: never
+          base_salary?: never
+          birth_date?: never
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: never
+          emergency_contact_phone?: never
+          employee_number?: string | null
+          employment_status?: string | null
+          full_name?: string | null
+          gender?: string | null
+          hire_date?: string | null
+          id?: string | null
+          image_url?: string | null
+          job_title?: string | null
+          marital_status?: string | null
+          national_id?: never
+          notes?: string | null
+          phone?: string | null
+          phone2?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: never
+          bank_account?: never
+          base_salary?: never
+          birth_date?: never
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          emergency_contact_name?: never
+          emergency_contact_phone?: never
+          employee_number?: string | null
+          employment_status?: string | null
+          full_name?: string | null
+          gender?: string | null
+          hire_date?: string | null
+          id?: string | null
+          image_url?: string | null
+          job_title?: string | null
+          marital_status?: string | null
+          national_id?: never
+          notes?: string | null
+          phone?: string | null
+          phone2?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_dashboard: {
         Row: {
           action: string | null
@@ -3414,6 +3540,110 @@ export type Database = {
           unique_users: number | null
         }
         Relationships: []
+      }
+      suppliers_safe: {
+        Row: {
+          address: string | null
+          bank_account: string | null
+          bank_name: string | null
+          category: string | null
+          city: string | null
+          contact_person: string | null
+          created_at: string | null
+          credit_limit: number | null
+          current_balance: number | null
+          discount_percentage: number | null
+          email: string | null
+          governorate: string | null
+          iban: string | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          last_transaction_date: string | null
+          name: string | null
+          notes: string | null
+          payment_terms_days: number | null
+          phone: string | null
+          phone2: string | null
+          preferred_payment_method: string | null
+          rating: number | null
+          supplier_type: string | null
+          tax_number: string | null
+          tenant_id: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          bank_account?: never
+          bank_name?: never
+          category?: string | null
+          city?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          credit_limit?: number | null
+          current_balance?: number | null
+          discount_percentage?: number | null
+          email?: string | null
+          governorate?: string | null
+          iban?: never
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          last_transaction_date?: string | null
+          name?: string | null
+          notes?: string | null
+          payment_terms_days?: number | null
+          phone?: string | null
+          phone2?: string | null
+          preferred_payment_method?: string | null
+          rating?: number | null
+          supplier_type?: string | null
+          tax_number?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          bank_account?: never
+          bank_name?: never
+          category?: string | null
+          city?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          credit_limit?: number | null
+          current_balance?: number | null
+          discount_percentage?: number | null
+          email?: string | null
+          governorate?: string | null
+          iban?: never
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          last_transaction_date?: string | null
+          name?: string | null
+          notes?: string | null
+          payment_terms_days?: number | null
+          phone?: string | null
+          phone2?: string | null
+          preferred_payment_method?: string | null
+          rating?: number | null
+          supplier_type?: string | null
+          tax_number?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suspicious_activities: {
         Row: {
