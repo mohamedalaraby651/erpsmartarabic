@@ -135,7 +135,7 @@ const SuppliersPage = () => {
 
   const shouldVirtualize = sortedData.length > VIRTUALIZATION_THRESHOLD;
 
-  const renderMobileSupplierItem = useCallback((supplier: any) => {
+  const renderMobileSupplierItem = useCallback((supplier: Supplier) => {
     const supplierStats = getSupplierStats(supplier.id);
     return (
       <DataCard
