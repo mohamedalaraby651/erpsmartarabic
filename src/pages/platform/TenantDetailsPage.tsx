@@ -26,16 +26,28 @@ export default function TenantDetailsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  interface TenantRow {
+    id: string;
+    name: string;
+    slug: string;
+    domain: string;
+    subscription_tier: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    user_count: number;
+  }
+
   const { data: allTenants, isLoading } = useQuery({
     queryKey: ['platform-tenants'],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_all_tenants_admin');
       if (error) throw error;
-      return data as any[];
+      return data as TenantRow[];
     },
   });
 
-  const tenant = allTenants?.find((t: any) => t.id === id);
+  const tenant = allTenants?.find((t) => t.id === id);
 
   const toggleStatusMutation = useMutation({
     mutationFn: async (isActive: boolean) => {
