@@ -48,7 +48,7 @@ describe('useInfiniteScroll', () => {
   afterEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
-    global.IntersectionObserver = originalIntersectionObserver;
+    globalThis.IntersectionObserver = originalIntersectionObserver;
   });
 
   it('should be defined', async () => {

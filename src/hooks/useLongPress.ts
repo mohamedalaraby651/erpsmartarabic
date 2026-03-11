@@ -16,7 +16,7 @@ export function useLongPress({
   delay = 500,
 }: UseLongPressOptions) {
   const [isPressed, setIsPressed] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const targetRef = useRef<EventTarget | null>(null);
 
   const start = useCallback(

@@ -24,7 +24,7 @@ export function useDebouncedCallback<T extends AnyFunction>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const callbackRef = useRef<T>(callback);
   callbackRef.current = callback;
 
