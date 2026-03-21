@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+import { useConvertDocument } from "@/hooks/useConvertDocument";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
@@ -28,6 +29,7 @@ import {
   Calendar,
   DollarSign,
   ShoppingCart,
+  Receipt,
   AlertTriangle,
   Clock,
   Copy,
@@ -66,6 +68,7 @@ const QuotationDetailsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { convert, isConverting } = useConvertDocument();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
@@ -136,7 +139,11 @@ const QuotationDetailsPage = () => {
   });
 
   const handleCreateSalesOrder = () => {
-    navigate('/sales-orders', { state: { prefillQuotationId: id } });
+    if (id) convert('quotation-to-order', id);
+  };
+
+  const handleCreateInvoice = () => {
+    if (id) convert('quotation-to-invoice', id);
   };
 
   // Duplicate quotation mutation
@@ -331,10 +338,16 @@ const QuotationDetailsPage = () => {
                 نسخ
               </Button>
               {quotation.status === 'approved' && !isExpired && (
-                <Button size="sm" onClick={handleCreateSalesOrder}>
-                  <ShoppingCart className="h-4 w-4 ml-2" />
-                  تحويل لأمر بيع
-                </Button>
+                <>
+                  <Button size="sm" onClick={handleCreateSalesOrder} disabled={isConverting}>
+                    <ShoppingCart className="h-4 w-4 ml-2" />
+                    تحويل لأمر بيع
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleCreateInvoice} disabled={isConverting}>
+                    <Receipt className="h-4 w-4 ml-2" />
+                    تحويل لفاتورة
+                  </Button>
+                </>
               )}
             </div>
           </div>

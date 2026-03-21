@@ -31,6 +31,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useConvertDocument } from "@/hooks/useConvertDocument";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
@@ -64,6 +65,7 @@ const SalesOrderDetailsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { convert, isConverting } = useConvertDocument();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
@@ -137,7 +139,7 @@ const SalesOrderDetailsPage = () => {
   });
 
   const handleCreateInvoice = () => {
-    navigate('/invoices', { state: { prefillOrderId: id } });
+    if (id) convert('order-to-invoice', id);
   };
 
   if (isLoading) {
@@ -234,7 +236,7 @@ const SalesOrderDetailsPage = () => {
                 تعديل
               </Button>
               {order.status === 'approved' && (
-                <Button size="sm" onClick={handleCreateInvoice}>
+                <Button size="sm" onClick={handleCreateInvoice} disabled={isConverting}>
                   <Receipt className="h-4 w-4 ml-2" />
                   إنشاء فاتورة
                 </Button>
