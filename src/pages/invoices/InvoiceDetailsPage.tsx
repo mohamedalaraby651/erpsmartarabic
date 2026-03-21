@@ -36,6 +36,7 @@ import {
   Send,
   XCircle,
   Shield,
+  Copy,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
@@ -48,6 +49,7 @@ import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import InvoiceApprovalDialog from "@/components/invoices/InvoiceApprovalDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
