@@ -139,7 +139,7 @@ const SalesOrderDetailsPage = () => {
   });
 
   const handleCreateInvoice = () => {
-    navigate('/invoices', { state: { prefillOrderId: id } });
+    if (id) convert('order-to-invoice', id);
   };
 
   if (isLoading) {

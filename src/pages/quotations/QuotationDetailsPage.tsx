@@ -139,7 +139,12 @@ const QuotationDetailsPage = () => {
   });
 
   const handleCreateSalesOrder = () => {
-    navigate('/sales-orders', { state: { prefillQuotationId: id } });
+    if (id) convert('quotation-to-order', id);
+  };
+
+  const handleCreateInvoice = () => {
+    if (id) convert('quotation-to-invoice', id);
+  };
   };
 
   // Duplicate quotation mutation
