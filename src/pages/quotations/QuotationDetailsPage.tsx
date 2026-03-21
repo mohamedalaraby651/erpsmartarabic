@@ -145,7 +145,6 @@ const QuotationDetailsPage = () => {
   const handleCreateInvoice = () => {
     if (id) convert('quotation-to-invoice', id);
   };
-  };
 
   // Duplicate quotation mutation
   const duplicateMutation = useMutation({
