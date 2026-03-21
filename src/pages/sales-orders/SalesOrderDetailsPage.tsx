@@ -236,7 +236,7 @@ const SalesOrderDetailsPage = () => {
                 تعديل
               </Button>
               {order.status === 'approved' && (
-                <Button size="sm" onClick={handleCreateInvoice}>
+                <Button size="sm" onClick={handleCreateInvoice} disabled={isConverting}>
                   <Receipt className="h-4 w-4 ml-2" />
                   إنشاء فاتورة
                 </Button>
