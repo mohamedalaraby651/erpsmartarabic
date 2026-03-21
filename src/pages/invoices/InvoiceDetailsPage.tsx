@@ -275,6 +275,10 @@ const InvoiceDetailsPage = () => {
                 dueDate={invoice.due_date}
                 size="sm"
               />
+              <Button variant="outline" size="sm" onClick={() => duplicate(invoice.id)} disabled={isDuplicating}>
+                <Copy className="h-4 w-4 ml-2" />
+                نسخ
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 ml-2" />
                 تعديل
