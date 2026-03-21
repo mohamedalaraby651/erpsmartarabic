@@ -94,6 +94,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
         payment_method: invoice.payment_method as InvoiceFormData['payment_method'],
         due_date: invoice.due_date || '',
         notes: invoice.notes || '',
+        internal_notes: (invoice as Record<string, unknown>).internal_notes as string || '',
         discount_amount: Number(invoice.discount_amount) || 0,
         tax_amount: Number(invoice.tax_amount) || 0,
       });
