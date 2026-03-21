@@ -57,6 +57,7 @@ export const invoiceFormSchema = z.object({
   payment_method: z.enum(['cash', 'bank_transfer', 'credit', 'advance_payment', 'installment']),
   due_date: z.string().optional().or(z.literal('')),
   notes: z.string().max(2000).optional().or(z.literal('')),
+  internal_notes: z.string().max(2000).optional().or(z.literal('')),
   discount_amount: z.number().min(0, 'الخصم يجب أن يكون 0 أو أكثر').max(1000000000).optional().default(0),
   tax_amount: z.number().min(0, 'الضريبة يجب أن تكون 0 أو أكثر').max(1000000000).optional().default(0),
 });
