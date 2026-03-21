@@ -29,6 +29,7 @@ import {
   Calendar,
   DollarSign,
   ShoppingCart,
+  Receipt,
   AlertTriangle,
   Clock,
   Copy,
