@@ -68,6 +68,7 @@ const QuotationDetailsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { convert, isConverting } = useConvertDocument();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
