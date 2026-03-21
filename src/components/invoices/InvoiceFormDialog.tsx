@@ -105,6 +105,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
         payment_method: 'cash',
         due_date: '',
         notes: '',
+        internal_notes: '',
         discount_amount: 0,
         tax_amount: 0,
       });
