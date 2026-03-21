@@ -89,6 +89,7 @@ const InvoiceDetailsPage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { userRole } = useAuth();
+  const { duplicate, isDuplicating } = useDuplicateInvoice();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
