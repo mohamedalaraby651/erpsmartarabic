@@ -338,10 +338,16 @@ const QuotationDetailsPage = () => {
                 نسخ
               </Button>
               {quotation.status === 'approved' && !isExpired && (
-                <Button size="sm" onClick={handleCreateSalesOrder}>
-                  <ShoppingCart className="h-4 w-4 ml-2" />
-                  تحويل لأمر بيع
-                </Button>
+                <>
+                  <Button size="sm" onClick={handleCreateSalesOrder} disabled={isConverting}>
+                    <ShoppingCart className="h-4 w-4 ml-2" />
+                    تحويل لأمر بيع
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleCreateInvoice} disabled={isConverting}>
+                    <Receipt className="h-4 w-4 ml-2" />
+                    تحويل لفاتورة
+                  </Button>
+                </>
               )}
             </div>
           </div>
