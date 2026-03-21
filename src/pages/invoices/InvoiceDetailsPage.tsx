@@ -36,6 +36,7 @@ import {
   Send,
   XCircle,
   Shield,
+  Copy,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
@@ -48,6 +49,7 @@ import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import InvoiceApprovalDialog from "@/components/invoices/InvoiceApprovalDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -87,6 +89,7 @@ const InvoiceDetailsPage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { userRole } = useAuth();
+  const { duplicate, isDuplicating } = useDuplicateInvoice();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -272,6 +275,10 @@ const InvoiceDetailsPage = () => {
                 dueDate={invoice.due_date}
                 size="sm"
               />
+              <Button variant="outline" size="sm" onClick={() => duplicate(invoice.id)} disabled={isDuplicating}>
+                <Copy className="h-4 w-4 ml-2" />
+                نسخ
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 ml-2" />
                 تعديل

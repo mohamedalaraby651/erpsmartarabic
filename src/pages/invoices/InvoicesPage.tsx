@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, Copy } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -30,14 +30,18 @@ import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { VirtualizedTable, VirtualColumn } from "@/components/table/VirtualizedTable";
 import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList";
+import { ServerPagination } from "@/components/shared/ServerPagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useServerPagination } from "@/hooks/useServerPagination";
+import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type InvoiceWithCustomer = Invoice & { customers: { name: string } | null };
 
-const VIRTUALIZATION_THRESHOLD = 50;
+const PAGE_SIZE = 25;
 
 const paymentStatusLabels: Record<string, string> = {
   pending: "غير مدفوع",
@@ -75,6 +79,7 @@ const approvalStatusIcons: Record<string, React.ElementType> = {
 const InvoicesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
@@ -84,6 +89,7 @@ const InvoicesPage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { duplicate, isDuplicating } = useDuplicateInvoice();
 
   const canEdit = userRole === 'admin' || userRole === 'sales' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
@@ -97,17 +103,69 @@ const InvoicesPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: invoices = [], isLoading, refetch } = useQuery({
-    queryKey: ['invoices'],
+  // Server-side count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['invoices-count', debouncedSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('invoices').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) {
+        query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      }
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  // Reset page when search changes
+  useEffect(() => {
+    pagination.resetPage();
+  }, [debouncedSearch]);
+
+  // Server-side paginated data query
+  const { data: invoices = [], isLoading, refetch } = useQuery({
+    queryKey: ['invoices', debouncedSearch, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('invoices')
         .select('*, customers(name)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+
+      if (debouncedSearch) {
+        query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
+
+  // Stats query (separate, lightweight)
+  const { data: stats } = useQuery({
+    queryKey: ['invoices-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('total_amount, paid_amount, payment_status');
+      if (error) throw error;
+      const all = data || [];
+      return {
+        total: all.length,
+        unpaid: all.filter((i) => i.payment_status === 'pending').length,
+        totalValue: all.reduce((sum, i) => sum + Number(i.total_amount), 0),
+        unpaidValue: all
+          .filter((i) => i.payment_status !== 'paid')
+          .reduce((sum, i) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
+      };
+    },
+    staleTime: 30000,
+  });
+
+  const invoiceStats = stats || { total: 0, unpaid: 0, totalValue: 0, unpaidValue: 0 };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -117,6 +175,8 @@ const InvoicesPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices-count'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices-stats'] });
       toast({ title: "تم حذف الفاتورة بنجاح" });
     },
     onError: () => {
@@ -124,23 +184,8 @@ const InvoicesPage = () => {
     },
   });
 
-  // Filter by search
-  const searchFiltered = invoices.filter((inv) =>
-    inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (inv.customers as { name?: string } | null)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
+  const { filteredData, filters, setFilter } = useTableFilter(invoices);
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
-
-  const stats = {
-    total: invoices.length,
-    unpaid: invoices.filter((i) => i.payment_status === 'pending').length,
-    totalValue: invoices.reduce((sum: number, i) => sum + Number(i.total_amount), 0),
-    unpaidValue: invoices
-      .filter((i) => i.payment_status !== 'paid')
-      .reduce((sum: number, i) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
-  };
 
   const handleEdit = useCallback((invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -157,13 +202,11 @@ const InvoicesPage = () => {
   }, [refetch]);
 
   const statItems = useMemo(() => [
-    { label: 'إجمالي الفواتير', value: stats.total, icon: Receipt, color: 'text-primary', bgColor: 'bg-primary/10' },
-    { label: 'غير مدفوعة', value: stats.unpaid, icon: Receipt, color: 'text-destructive', bgColor: 'bg-destructive/10' },
-    { label: 'إجمالي المبيعات', value: `${stats.totalValue.toLocaleString()}`, icon: CreditCard, color: 'text-success', bgColor: 'bg-success/10' },
-    { label: 'مستحق التحصيل', value: `${stats.unpaidValue.toLocaleString()}`, icon: CreditCard, color: 'text-warning', bgColor: 'bg-warning/10' },
-  ], [stats]);
-
-  const shouldVirtualize = sortedData.length > VIRTUALIZATION_THRESHOLD;
+    { label: 'إجمالي الفواتير', value: invoiceStats.total, icon: Receipt, color: 'text-primary', bgColor: 'bg-primary/10' },
+    { label: 'غير مدفوعة', value: invoiceStats.unpaid, icon: Receipt, color: 'text-destructive', bgColor: 'bg-destructive/10' },
+    { label: 'إجمالي المبيعات', value: `${invoiceStats.totalValue.toLocaleString()}`, icon: CreditCard, color: 'text-success', bgColor: 'bg-success/10' },
+    { label: 'مستحق التحصيل', value: `${invoiceStats.unpaidValue.toLocaleString()}`, icon: CreditCard, color: 'text-warning', bgColor: 'bg-warning/10' },
+  ], [invoiceStats]);
 
   // Memoized mobile item renderer
   const renderMobileInvoiceItem = useCallback((invoice: InvoiceWithCustomer) => {
@@ -246,19 +289,24 @@ const InvoicesPage = () => {
                 icon: Plus,
               }}
             />
-          ) : shouldVirtualize ? (
-            <VirtualizedMobileList
-              data={sortedData as InvoiceWithCustomer[]}
-              renderItem={renderMobileInvoiceItem}
-              getItemKey={(invoice) => invoice.id}
-              itemHeight={160}
-            />
           ) : (
-            <div className="space-y-3">
-              {(sortedData as InvoiceWithCustomer[]).map((invoice) => (
-                <div key={invoice.id}>{renderMobileInvoiceItem(invoice)}</div>
-              ))}
-            </div>
+            <>
+              <VirtualizedMobileList
+                data={sortedData as InvoiceWithCustomer[]}
+                renderItem={renderMobileInvoiceItem}
+                getItemKey={(invoice) => invoice.id}
+                itemHeight={160}
+              />
+              <ServerPagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalCount={totalCount}
+                pageSize={PAGE_SIZE}
+                onPageChange={pagination.goToPage}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+              />
+            </>
           )}
         </div>
       </PullToRefresh>
@@ -287,130 +335,149 @@ const InvoicesPage = () => {
     }
 
     return (
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <DataTableHeader
-                label="رقم الفاتورة"
-                sortKey="invoice_number"
-                sortConfig={sortConfig}
-                onSort={requestSort}
-              />
-              <DataTableHeader label="العميل" />
-              <DataTableHeader
-                label="التاريخ"
-                sortKey="created_at"
-                sortConfig={sortConfig}
-                onSort={requestSort}
-              />
-              <DataTableHeader
-                label="الإجمالي"
-                sortKey="total_amount"
-                sortConfig={sortConfig}
-                onSort={requestSort}
-              />
-              <DataTableHeader label="المدفوع" />
-              <DataTableHeader label="المتبقي" />
-              <DataTableHeader
-                label="حالة الدفع"
-                filterKey="payment_status"
-                filterType="select"
-                filterOptions={[
-                  { value: 'pending', label: 'غير مدفوع' },
-                  { value: 'partial', label: 'جزئي' },
-                  { value: 'paid', label: 'مدفوع' },
-                ]}
-                filterValue={filters.payment_status as string}
-                onFilter={setFilter}
-              />
-              <DataTableHeader
-                label="حالة الاعتماد"
-                filterKey="approval_status"
-                filterType="select"
-                filterOptions={[
-                  { value: 'draft', label: 'مسودة' },
-                  { value: 'pending', label: 'في انتظار الموافقة' },
-                  { value: 'approved', label: 'معتمدة' },
-                  { value: 'rejected', label: 'مرفوضة' },
-                ]}
-                filterValue={filters.approval_status as string}
-                onFilter={setFilter}
-              />
-              <DataTableHeader label="إجراءات" className="text-left" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedData.map((invoice) => {
-              const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
-              return (
-                <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
-                  <TableCell>
-                    <EntityLink type="invoice" id={invoice.id}>
-                      {invoice.invoice_number}
-                    </EntityLink>
-                  </TableCell>
-                  <TableCell>
-                    {invoice.customers?.name ? (
-                      <EntityLink type="customer" id={invoice.customer_id}>
-                        {invoice.customers.name}
+      <>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <DataTableHeader
+                  label="رقم الفاتورة"
+                  sortKey="invoice_number"
+                  sortConfig={sortConfig}
+                  onSort={requestSort}
+                />
+                <DataTableHeader label="العميل" />
+                <DataTableHeader
+                  label="التاريخ"
+                  sortKey="created_at"
+                  sortConfig={sortConfig}
+                  onSort={requestSort}
+                />
+                <DataTableHeader
+                  label="الإجمالي"
+                  sortKey="total_amount"
+                  sortConfig={sortConfig}
+                  onSort={requestSort}
+                />
+                <DataTableHeader label="المدفوع" />
+                <DataTableHeader label="المتبقي" />
+                <DataTableHeader
+                  label="حالة الدفع"
+                  filterKey="payment_status"
+                  filterType="select"
+                  filterOptions={[
+                    { value: 'pending', label: 'غير مدفوع' },
+                    { value: 'partial', label: 'جزئي' },
+                    { value: 'paid', label: 'مدفوع' },
+                  ]}
+                  filterValue={filters.payment_status as string}
+                  onFilter={setFilter}
+                />
+                <DataTableHeader
+                  label="حالة الاعتماد"
+                  filterKey="approval_status"
+                  filterType="select"
+                  filterOptions={[
+                    { value: 'draft', label: 'مسودة' },
+                    { value: 'pending', label: 'في انتظار الموافقة' },
+                    { value: 'approved', label: 'معتمدة' },
+                    { value: 'rejected', label: 'مرفوضة' },
+                  ]}
+                  filterValue={filters.approval_status as string}
+                  onFilter={setFilter}
+                />
+                <DataTableHeader label="إجراءات" className="text-left" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedData.map((invoice) => {
+                const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
+                return (
+                  <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                    <TableCell>
+                      <EntityLink type="invoice" id={invoice.id}>
+                        {invoice.invoice_number}
                       </EntityLink>
-                    ) : '-'}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-bold">
-                      {Number(invoice.total_amount).toLocaleString()} ج.م
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-success">
-                    {Number(invoice.paid_amount || 0).toLocaleString()} ج.م
-                  </TableCell>
-                  <TableCell className={remaining > 0 ? 'text-destructive' : ''}>
-                    {remaining.toLocaleString()} ج.م
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={paymentStatusColors[invoice.payment_status]}>
-                      {paymentStatusLabels[invoice.payment_status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {(() => {
-                      const status = invoice.approval_status || 'draft';
-                      const StatusIcon = approvalStatusIcons[status];
-                      return (
-                        <Badge className={`${approvalStatusColors[status]} gap-1`}>
-                          <StatusIcon className="h-3 w-3" />
-                          {approvalStatusLabels[status]}
-                        </Badge>
-                      );
-                    })()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => { setPrintInvoiceId(invoice.id); setPrintDialogOpen(true); }}>
-                        <Printer className="h-4 w-4" />
-                      </Button>
-                      <DataTableActions
-                        onEdit={() => handleEdit(invoice)}
-                        onDelete={() => deleteMutation.mutate(invoice.id)}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                        deleteDescription="سيتم حذف هذه الفاتورة وجميع بنودها نهائياً."
-                      />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+                    </TableCell>
+                    <TableCell>
+                      {invoice.customers?.name ? (
+                        <EntityLink type="customer" id={invoice.customer_id}>
+                          {invoice.customers.name}
+                        </EntityLink>
+                      ) : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-bold">
+                        {Number(invoice.total_amount).toLocaleString()} ج.م
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-success">
+                      {Number(invoice.paid_amount || 0).toLocaleString()} ج.م
+                    </TableCell>
+                    <TableCell className={remaining > 0 ? 'text-destructive' : ''}>
+                      {remaining.toLocaleString()} ج.م
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={paymentStatusColors[invoice.payment_status]}>
+                        {paymentStatusLabels[invoice.payment_status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const status = invoice.approval_status || 'draft';
+                        const StatusIcon = approvalStatusIcons[status];
+                        return (
+                          <Badge className={`${approvalStatusColors[status]} gap-1`}>
+                            <StatusIcon className="h-3 w-3" />
+                            {approvalStatusLabels[status]}
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => { setPrintInvoiceId(invoice.id); setPrintDialogOpen(true); }}>
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => duplicate(invoice.id)} disabled={isDuplicating}>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>نسخ الفاتورة</TooltipContent>
+                        </Tooltip>
+                        <DataTableActions
+                          onEdit={() => handleEdit(invoice)}
+                          onDelete={() => deleteMutation.mutate(invoice.id)}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                          deleteDescription="سيتم حذف هذه الفاتورة وجميع بنودها نهائياً."
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+        <ServerPagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={totalCount}
+          pageSize={PAGE_SIZE}
+          onPageChange={pagination.goToPage}
+          hasNextPage={pagination.hasNextPage}
+          hasPrevPage={pagination.hasPrevPage}
+        />
+      </>
     );
   };
 
