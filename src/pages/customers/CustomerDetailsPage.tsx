@@ -38,6 +38,8 @@ import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog"
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerPurchaseChart from "@/components/customers/CustomerPurchaseChart";
 import CustomerFinancialSummary from "@/components/customers/CustomerFinancialSummary";
+import StatementOfAccount from "@/components/customers/StatementOfAccount";
+import CommunicationLogTab from "@/components/customers/CommunicationLogTab";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import ImageUpload from "@/components/shared/ImageUpload";
