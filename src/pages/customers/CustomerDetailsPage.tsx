@@ -371,17 +371,17 @@ const CustomerDetailsPage = () => {
                     {customer.email}
                   </a>
                 )}
-                {(customer as any).governorate && (
+                {customer.governorate && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    {[(customer as any).governorate, (customer as any).city].filter(Boolean).join(' - ')}
+                    {[customer.governorate, customer.city].filter(Boolean).join(' - ')}
                   </span>
                 )}
-                {(customer as any).contact_person && (
+                {customer.contact_person && (
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" />
-                    {(customer as any).contact_person}
-                    {(customer as any).contact_person_role && ` (${(customer as any).contact_person_role})`}
+                    {customer.contact_person}
+                    {customer.contact_person_role && ` (${customer.contact_person_role})`}
                   </span>
                 )}
                 {customer.tax_number && (
