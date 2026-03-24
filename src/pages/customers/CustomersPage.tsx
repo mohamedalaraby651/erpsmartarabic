@@ -122,8 +122,8 @@ const CustomersPage = () => {
       if (debouncedSearch) {
         query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
       }
-      if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter);
-      if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter);
+      if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
+      if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
       const { data, error } = await query;
       if (error) throw error;
       return data as Customer[];
