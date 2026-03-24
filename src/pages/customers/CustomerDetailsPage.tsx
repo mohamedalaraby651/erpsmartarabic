@@ -38,6 +38,8 @@ import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog"
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerPurchaseChart from "@/components/customers/CustomerPurchaseChart";
 import CustomerFinancialSummary from "@/components/customers/CustomerFinancialSummary";
+import StatementOfAccount from "@/components/customers/StatementOfAccount";
+import CommunicationLogTab from "@/components/customers/CommunicationLogTab";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import ImageUpload from "@/components/shared/ImageUpload";
@@ -71,7 +73,7 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  const [isPrintingStatement, setIsPrintingStatement] = useState(false);
+  
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
@@ -113,6 +115,7 @@ const CustomerDetailsPage = () => {
       return data;
     },
     enabled: !!id,
+    staleTime: 30000,
   });
 
   const { data: payments = [] } = useQuery({
@@ -127,6 +130,7 @@ const CustomerDetailsPage = () => {
       return data;
     },
     enabled: !!id,
+    staleTime: 30000,
   });
 
   const { data: salesOrders = [] } = useQuery({
@@ -141,6 +145,7 @@ const CustomerDetailsPage = () => {
       return data;
     },
     enabled: !!id,
+    staleTime: 30000,
   });
 
   const { data: quotations = [] } = useQuery({
@@ -155,6 +160,7 @@ const CustomerDetailsPage = () => {
       return data;
     },
     enabled: !!id,
+    staleTime: 30000,
   });
 
   const { data: activities = [] } = useQuery({
@@ -211,72 +217,6 @@ const CustomerDetailsPage = () => {
   const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
   const avgInvoiceValue = invoices.length > 0 ? totalPurchases / invoices.length : 0;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
-
-  const handlePrintStatement = async () => {
-    if (!customer) return;
-    
-    setIsPrintingStatement(true);
-    try {
-      const statementData: Array<{ date: string; type: string; reference: string; debit: number; credit: number; status: string }> = [];
-      
-      // Add invoices
-      invoices.forEach(invoice => {
-        statementData.push({
-          date: invoice.created_at,
-          type: 'فاتورة',
-          reference: invoice.invoice_number,
-          debit: Number(invoice.total_amount),
-          credit: 0,
-          status: invoice.payment_status === 'paid' ? 'مسدد' : invoice.payment_status === 'partial' ? 'جزئي' : 'معلق',
-        });
-      });
-      
-      // Add payments
-      payments.forEach(payment => {
-        statementData.push({
-          date: payment.payment_date,
-          type: 'دفعة',
-          reference: payment.payment_number,
-          debit: 0,
-          credit: Number(payment.amount),
-          status: 'مسدد',
-        });
-      });
-      
-      // Sort by date
-      statementData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
-      // Format for display
-      const formattedData = statementData.map(item => ({
-        ...item,
-        date: new Date(item.date).toLocaleDateString('ar-EG'),
-        debit: item.debit > 0 ? item.debit.toLocaleString() : '-',
-        credit: item.credit > 0 ? item.credit.toLocaleString() : '-',
-      }));
-      
-      await generatePDF({
-        title: `كشف حساب العميل: ${customer.name}`,
-        data: formattedData,
-        columns: [
-          { key: 'date', label: 'التاريخ' },
-          { key: 'type', label: 'النوع' },
-          { key: 'reference', label: 'المرجع' },
-          { key: 'debit', label: 'مدين' },
-          { key: 'credit', label: 'دائن' },
-          { key: 'status', label: 'الحالة' },
-        ],
-        includeCompanyInfo: true,
-        orientation: 'landscape',
-      });
-      
-      toast({ title: "تم تصدير كشف الحساب بنجاح" });
-    } catch (error) {
-      logErrorSafely('CustomerDetailsPage', error);
-      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
-    } finally {
-      setIsPrintingStatement(false);
-    }
-  };
 
   const handleWhatsApp = () => {
     if (customer?.phone) {
@@ -365,17 +305,17 @@ const CustomerDetailsPage = () => {
                     {customer.email}
                   </a>
                 )}
-                {(customer as any).governorate && (
+                {customer.governorate && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    {[(customer as any).governorate, (customer as any).city].filter(Boolean).join(' - ')}
+                    {[customer.governorate, customer.city].filter(Boolean).join(' - ')}
                   </span>
                 )}
-                {(customer as any).contact_person && (
+                {customer.contact_person && (
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" />
-                    {(customer as any).contact_person}
-                    {(customer as any).contact_person_role && ` (${(customer as any).contact_person_role})`}
+                    {customer.contact_person}
+                    {customer.contact_person_role && ` (${customer.contact_person_role})`}
                   </span>
                 )}
                 {customer.tax_number && (
@@ -393,12 +333,11 @@ const CustomerDetailsPage = () => {
                 <FileText className="h-4 w-4 ml-2" />
                 فاتورة جديدة
               </Button>
-              <Button variant="outline" size="sm" onClick={handlePrintStatement} disabled={isPrintingStatement}>
-                {isPrintingStatement ? (
-                  <span className="h-4 w-4 ml-2 animate-spin border-2 border-current border-t-transparent rounded-full" />
-                ) : (
-                  <Printer className="h-4 w-4 ml-2" />
-                )}
+              <Button variant="outline" size="sm" onClick={() => {
+                const tabsTrigger = document.querySelector('[value="statement"]') as HTMLElement;
+                tabsTrigger?.click();
+              }}>
+                <Printer className="h-4 w-4 ml-2" />
                 كشف حساب
               </Button>
               {customer.phone && (
@@ -526,6 +465,14 @@ const CustomerDetailsPage = () => {
           <TabsTrigger value="financial" className="gap-2">
             <Wallet className="h-4 w-4" />
             الملخص المالي
+          </TabsTrigger>
+          <TabsTrigger value="statement" className="gap-2">
+            <Printer className="h-4 w-4" />
+            كشف الحساب
+          </TabsTrigger>
+          <TabsTrigger value="communications" className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            التواصل
           </TabsTrigger>
           <TabsTrigger value="analytics" className="gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -759,10 +706,20 @@ const CustomerDetailsPage = () => {
             totalPayments={totalPayments}
             currentBalance={Number(customer.current_balance || 0)}
             creditLimit={Number(customer.credit_limit || 0)}
-            discountPercentage={Number((customer as any).discount_percentage || 0)}
-            paymentTermsDays={Number((customer as any).payment_terms_days || 0)}
+            discountPercentage={Number(customer.discount_percentage || 0)}
+            paymentTermsDays={Number(customer.payment_terms_days || 0)}
             invoiceCount={invoices.length}
           />
+        </TabsContent>
+
+        {/* Statement of Account Tab */}
+        <TabsContent value="statement" className="mt-6">
+          <StatementOfAccount customerName={customer.name} invoices={invoices} payments={payments} />
+        </TabsContent>
+
+        {/* Communication Log Tab */}
+        <TabsContent value="communications" className="mt-6">
+          <CommunicationLogTab customerId={id!} />
         </TabsContent>
 
         {/* Analytics Tab */}

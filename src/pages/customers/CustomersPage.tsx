@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,14 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -24,21 +19,20 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useServerPagination } from "@/hooks/useServerPagination";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
-
-// Virtual scrolling components
-import { VirtualizedTable, VirtualColumn } from "@/components/table/VirtualizedTable";
+import { ServerPagination } from "@/components/shared/ServerPagination";
 import { VirtualizedList } from "@/components/table/VirtualizedList";
-
-// Mobile components
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 
@@ -72,18 +66,22 @@ const CustomersPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { userRole } = useAuth();
-  const { isMobile, isTableView } = useResponsiveView();
+  const { isMobile } = useResponsiveView();
   const { errorAlerts, warningAlerts, totalAlerts } = useCustomerAlerts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [vipFilter, setVipFilter] = useState<string>("all");
 
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
 
-  // Handle action parameter from URL (FAB/QuickActions)
+  // Handle action parameter from URL
   useEffect(() => {
     const action = searchParams.get('action');
     if (action === 'new' || action === 'create') {
@@ -92,23 +90,65 @@ const CustomersPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: customers = [], isLoading, refetch } = useQuery({
-    queryKey: ['customers', searchQuery],
+  // Server-side count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['customers-count', debouncedSearch, typeFilter, vipFilter],
     queryFn: async () => {
-      let query = supabase
-        .from('customers')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,governorate.ilike.%${searchQuery}%,contact_person.ilike.%${searchQuery}%`);
+      let query = supabase.from('customers').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) {
+        query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
       }
+      if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
+      if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+    staleTime: 30000,
+  });
 
+  const pagination = useServerPagination({ pageSize: 25, totalCount });
+
+  // Reset page on filter change
+  useEffect(() => {
+    pagination.resetPage();
+  }, [debouncedSearch, typeFilter, vipFilter]);
+
+  // Server-side paginated data query
+  const { data: customers = [], isLoading, refetch } = useQuery({
+    queryKey: ['customers', debouncedSearch, typeFilter, vipFilter, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase.from('customers').select('*').order('created_at', { ascending: false }).range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) {
+        query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
+      }
+      if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
+      if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
       const { data, error } = await query;
       if (error) throw error;
       return data as Customer[];
     },
   });
+
+  // Stats query (separate, cached)
+  const { data: stats } = useQuery({
+    queryKey: ['customers-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('customer_type, vip_level, current_balance');
+      if (error) throw error;
+      const all = data || [];
+      return {
+        total: all.length,
+        individuals: all.filter(c => c.customer_type === 'individual').length,
+        companies: all.filter(c => c.customer_type === 'company').length,
+        vip: all.filter(c => c.vip_level !== 'regular').length,
+        totalBalance: all.reduce((sum, c) => sum + Number(c.current_balance || 0), 0),
+      };
+    },
+    staleTime: 30000,
+  });
+
+  const displayStats = stats || { total: 0, individuals: 0, companies: 0, vip: 0, totalBalance: 0 };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -117,6 +157,8 @@ const CustomersPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customers-count'] });
+      queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       toast.success('تم حذف العميل بنجاح');
       setDeletingId(null);
     },
@@ -126,11 +168,8 @@ const CustomersPage = () => {
     },
   });
 
-  // Filtering
-  const { filteredData, filters, setFilter } = useTableFilter(customers);
-
-  // Sorting
-  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
+  // Sorting (client-side on current page)
+  const { sortedData, sortConfig, requestSort } = useTableSort(customers);
 
   const handleEdit = useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
@@ -147,17 +186,7 @@ const CustomersPage = () => {
     deleteMutation.mutate(id);
   }, [deleteMutation]);
 
-  const handleRefresh = async () => {
-    await refetch();
-  };
-
-  const stats = {
-    total: customers.length,
-    individuals: customers.filter(c => c.customer_type === 'individual').length,
-    companies: customers.filter(c => c.customer_type === 'company').length,
-    vip: customers.filter(c => c.vip_level !== 'regular').length,
-    totalBalance: customers.reduce((sum, c) => sum + Number(c.current_balance || 0), 0),
-  };
+  const handleRefresh = async () => { await refetch(); };
 
   const getBalanceColor = (balance: number, creditLimit: number) => {
     if (balance <= 0) return 'text-emerald-600';
@@ -166,7 +195,6 @@ const CustomersPage = () => {
     return 'text-emerald-600';
   };
 
-  // Memoized mobile card renderer for virtual list
   const renderCustomerCard = useCallback((customer: Customer) => {
     const TypeIcon = typeIcons[customer.customer_type as keyof typeof typeIcons] || Users;
     return (
@@ -175,10 +203,7 @@ const CustomersPage = () => {
         title={customer.name}
         subtitle={typeLabels[customer.customer_type as keyof typeof typeLabels]}
         icon={<TypeIcon className="h-5 w-5" />}
-        badge={{
-          text: vipLabels[customer.vip_level as keyof typeof vipLabels],
-          variant: customer.vip_level === 'regular' ? 'secondary' : 'default',
-        }}
+        badge={{ text: vipLabels[customer.vip_level as keyof typeof vipLabels], variant: customer.vip_level === 'regular' ? 'secondary' : 'default' }}
         fields={[
           ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
           ...(customer.email ? [{ label: 'البريد', value: customer.email, icon: <Mail className="h-3 w-3" /> }] : []),
@@ -191,119 +216,41 @@ const CustomersPage = () => {
     );
   }, [navigate, canEdit, canDelete, handleEdit, handleDelete]);
 
-  // Render mobile list view with virtual scrolling
   const renderMobileView = () => {
-    if (isLoading) {
-      return <MobileListSkeleton count={5} />;
-    }
-
+    if (isLoading) return <MobileListSkeleton count={5} />;
     if (sortedData.length === 0) {
-      return (
-        <EmptyState
-          icon={Users}
-          title="لا يوجد عملاء"
-          description="ابدأ بإضافة عميلك الأول"
-          action={canEdit ? { label: 'إضافة عميل', onClick: handleAdd, icon: Plus } : undefined}
-        />
-      );
+      return <EmptyState icon={Users} title="لا يوجد عملاء" description="ابدأ بإضافة عميلك الأول" action={canEdit ? { label: 'إضافة عميل', onClick: handleAdd, icon: Plus } : undefined} />;
     }
-
-    // Use virtual scrolling for large lists (50+ items)
     if (sortedData.length > 50) {
       return (
         <PullToRefresh onRefresh={handleRefresh}>
-          <VirtualizedList
-            data={sortedData}
-            renderItem={(customer) => renderCustomerCard(customer)}
-            getItemKey={(customer) => customer.id}
-            itemHeight={140}
-            maxHeight={window.innerHeight - 280}
-            gap={12}
-            className="px-1"
-          />
+          <VirtualizedList data={sortedData} renderItem={renderCustomerCard} getItemKey={(c) => c.id} itemHeight={140} maxHeight={window.innerHeight - 280} gap={12} className="px-1" />
         </PullToRefresh>
       );
     }
-
-    // Use regular rendering for small lists
     return (
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="space-y-3">
-          {sortedData.map((customer) => renderCustomerCard(customer))}
-        </div>
+        <div className="space-y-3">{sortedData.map(renderCustomerCard)}</div>
       </PullToRefresh>
     );
   };
 
-  // Render desktop table view
   const renderTableView = () => {
-    if (isLoading) {
-      return <TableSkeleton rows={5} columns={7} />;
-    }
-
+    if (isLoading) return <TableSkeleton rows={5} columns={7} />;
     if (sortedData.length === 0) {
-      return (
-        <EmptyState
-          icon={Users}
-          title="لا يوجد عملاء"
-          description="ابدأ بإضافة عميلك الأول"
-          action={canEdit ? { label: 'إضافة عميل جديد', onClick: handleAdd, icon: Plus } : undefined}
-        />
-      );
+      return <EmptyState icon={Users} title="لا يوجد عملاء" description="ابدأ بإضافة عميلك الأول" action={canEdit ? { label: 'إضافة عميل جديد', onClick: handleAdd, icon: Plus } : undefined} />;
     }
-
     return (
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <DataTableHeader
-                  label="الاسم"
-                  sortKey="name"
-                  sortConfig={sortConfig}
-                  onSort={requestSort}
-                />
-              </TableHead>
-              <TableHead>
-                <DataTableHeader
-                  label="النوع"
-                  filterKey="customer_type"
-                  filterValue={filters.customer_type as string}
-                  filterType="select"
-                  filterOptions={[
-                    { label: 'فرد', value: 'individual' },
-                    { label: 'شركة', value: 'company' },
-                    { label: 'مزرعة', value: 'farm' },
-                  ]}
-                  onFilter={setFilter}
-                />
-              </TableHead>
+              <TableHead><DataTableHeader label="الاسم" sortKey="name" sortConfig={sortConfig} onSort={requestSort} /></TableHead>
+              <TableHead>النوع</TableHead>
               <TableHead>الهاتف</TableHead>
               <TableHead>المحافظة</TableHead>
-              <TableHead>
-                <DataTableHeader
-                  label="مستوى VIP"
-                  filterKey="vip_level"
-                  filterValue={filters.vip_level as string}
-                  filterType="select"
-                  filterOptions={[
-                    { label: 'عادي', value: 'regular' },
-                    { label: 'فضي', value: 'silver' },
-                    { label: 'ذهبي', value: 'gold' },
-                    { label: 'بلاتيني', value: 'platinum' },
-                  ]}
-                  onFilter={setFilter}
-                />
-              </TableHead>
-              <TableHead>
-                <DataTableHeader
-                  label="الرصيد"
-                  sortKey="current_balance"
-                  sortConfig={sortConfig}
-                  onSort={requestSort}
-                />
-              </TableHead>
+              <TableHead>مستوى VIP</TableHead>
+              <TableHead><DataTableHeader label="الرصيد" sortKey="current_balance" sortConfig={sortConfig} onSort={requestSort} /></TableHead>
               <TableHead>الحالة</TableHead>
               <TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
@@ -314,26 +261,16 @@ const CustomersPage = () => {
                 <TableCell>
                   <div>
                     <p className="font-medium">{customer.name}</p>
-                    {customer.email && (
-                      <p className="text-sm text-muted-foreground">{customer.email}</p>
-                    )}
+                    {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">
-                    {customer.customer_type === 'company' ? (
-                      <><Building2 className="h-3 w-3 ml-1" /> شركة</>
-                    ) : customer.customer_type === 'farm' ? (
-                      <>مزرعة</>
-                    ) : (
-                      <><Users className="h-3 w-3 ml-1" /> فرد</>
-                    )}
+                    {customer.customer_type === 'company' ? <><Building2 className="h-3 w-3 ml-1" /> شركة</> : customer.customer_type === 'farm' ? <>مزرعة</> : <><Users className="h-3 w-3 ml-1" /> فرد</>}
                   </Badge>
                 </TableCell>
                 <TableCell>{customer.phone || '-'}</TableCell>
-                <TableCell>
-                  <span className="text-sm text-muted-foreground">{(customer as any).governorate || '-'}</span>
-                </TableCell>
+                <TableCell><span className="text-sm text-muted-foreground">{customer.governorate || '-'}</span></TableCell>
                 <TableCell>
                   <Badge className={vipColors[customer.vip_level as keyof typeof vipColors]}>
                     <Crown className="h-3 w-3 ml-1" />
@@ -346,9 +283,7 @@ const CustomersPage = () => {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={customer.is_active ? "default" : "secondary"}>
-                    {customer.is_active ? "نشط" : "غير نشط"}
-                  </Badge>
+                  <Badge variant={customer.is_active ? "default" : "secondary"}>{customer.is_active ? "نشط" : "غير نشط"}</Badge>
                 </TableCell>
                 <TableCell>
                   <DataTableActions
@@ -379,23 +314,29 @@ const CustomersPage = () => {
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isMobile && (
-            <ExportWithTemplateButton
-              section="customers"
-              sectionLabel="العملاء"
-              data={customers}
-              columns={[
-                { key: 'name', label: 'الاسم' },
-                { key: 'phone', label: 'الهاتف' },
-                { key: 'email', label: 'البريد الإلكتروني' },
-                { key: 'customer_type', label: 'النوع' },
-                { key: 'vip_level', label: 'مستوى VIP' },
-                { key: 'current_balance', label: 'الرصيد' },
-                { key: 'credit_limit', label: 'حد الائتمان' },
-              ]}
-            />
+            <>
+              <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
+                <Upload className="h-4 w-4 ml-2" />
+                استيراد
+              </Button>
+              <ExportWithTemplateButton
+                section="customers"
+                sectionLabel="العملاء"
+                data={customers}
+                columns={[
+                  { key: 'name', label: 'الاسم' },
+                  { key: 'phone', label: 'الهاتف' },
+                  { key: 'email', label: 'البريد الإلكتروني' },
+                  { key: 'customer_type', label: 'النوع' },
+                  { key: 'vip_level', label: 'مستوى VIP' },
+                  { key: 'current_balance', label: 'الرصيد' },
+                  { key: 'credit_limit', label: 'حد الائتمان' },
+                ]}
+              />
+            </>
           )}
           {canEdit && (
-            <Button onClick={handleAdd} size={isMobile ? "default" : "default"} className="flex-1 sm:flex-none">
+            <Button onClick={handleAdd} className="flex-1 sm:flex-none">
               <Plus className="h-4 w-4 ml-2" />
               إضافة عميل
             </Button>
@@ -403,16 +344,16 @@ const CustomersPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Horizontal scroll on mobile */}
+      {/* Stats Cards */}
       {isMobile ? (
         <ScrollArea className="w-full">
           <div className="flex gap-3 pb-2">
             {[
-              { icon: Users, value: stats.total, label: 'الإجمالي', color: 'text-primary' },
-              { icon: Users, value: stats.individuals, label: 'أفراد', color: 'text-info' },
-              { icon: Building2, value: stats.companies, label: 'شركات', color: 'text-secondary-foreground' },
-              { icon: Crown, value: stats.vip, label: 'VIP', color: 'text-warning' },
-              { icon: DollarSign, value: `${stats.totalBalance.toLocaleString()}`, label: 'الأرصدة المستحقة', color: stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600' },
+              { icon: Users, value: displayStats.total, label: 'الإجمالي', color: 'text-primary' },
+              { icon: Users, value: displayStats.individuals, label: 'أفراد', color: 'text-info' },
+              { icon: Building2, value: displayStats.companies, label: 'شركات', color: 'text-secondary-foreground' },
+              { icon: Crown, value: displayStats.vip, label: 'VIP', color: 'text-warning' },
+              { icon: DollarSign, value: `${displayStats.totalBalance.toLocaleString()}`, label: 'الأرصدة', color: displayStats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600' },
             ].map((stat, i) => (
               <Card key={i} className="min-w-[110px] shrink-0">
                 <CardContent className="p-3">
@@ -431,75 +372,29 @@ const CustomersPage = () => {
         </ScrollArea>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Users className="h-5 w-5 text-primary" />
+          {[
+            { icon: Users, value: displayStats.total, label: 'إجمالي العملاء', color: 'text-primary', bg: 'bg-primary/10' },
+            { icon: Users, value: displayStats.individuals, label: 'أفراد', color: 'text-info', bg: 'bg-info/10' },
+            { icon: Building2, value: displayStats.companies, label: 'شركات', color: 'text-secondary-foreground', bg: 'bg-secondary' },
+            { icon: Crown, value: displayStats.vip, label: 'عملاء VIP', color: 'text-warning', bg: 'bg-warning/10' },
+            { icon: DollarSign, value: displayStats.totalBalance.toLocaleString(), label: 'الأرصدة المستحقة', color: displayStats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600', bg: displayStats.totalBalance > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10' },
+          ].map((stat, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${stat.bg}`}><stat.icon className={`h-5 w-5 ${stat.color}`} /></div>
+                  <div>
+                    <p className={`text-2xl font-bold ${i === 4 ? stat.color : ''}`}>{stat.value}</p>
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-muted-foreground">إجمالي العملاء</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-info/10">
-                  <Users className="h-5 w-5 text-info" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.individuals}</p>
-                  <p className="text-sm text-muted-foreground">أفراد</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-secondary">
-                  <Building2 className="h-5 w-5 text-secondary-foreground" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.companies}</p>
-                  <p className="text-sm text-muted-foreground">شركات</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-warning/10">
-                  <Crown className="h-5 w-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.vip}</p>
-                  <p className="text-sm text-muted-foreground">عملاء VIP</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${stats.totalBalance > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10'}`}>
-                  <DollarSign className={`h-5 w-5 ${stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`} />
-                </div>
-                <div>
-                  <p className={`text-2xl font-bold ${stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>{stats.totalBalance.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">الأرصدة المستحقة</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Customer Alerts */}
+      {/* Alerts */}
       {totalAlerts > 0 && (
         <Card className="border-warning/50 bg-warning/5">
           <CardContent className="p-3">
@@ -525,22 +420,12 @@ const CustomersPage = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="بحث بالاسم، الهاتف، المحافظة..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10"
-              />
+              <Input placeholder="بحث بالاسم، الهاتف، المحافظة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10" />
             </div>
             {!isMobile && (
               <>
-                <Select 
-                  value={(filters.customer_type as string) || 'all'} 
-                  onValueChange={(v) => setFilter('customer_type', v === 'all' ? undefined : v)}
-                >
-                  <SelectTrigger className="w-full sm:w-40">
-                    <SelectValue placeholder="نوع العميل" />
-                  </SelectTrigger>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="نوع العميل" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">الكل</SelectItem>
                     <SelectItem value="individual">فرد</SelectItem>
@@ -548,13 +433,8 @@ const CustomersPage = () => {
                     <SelectItem value="farm">مزرعة</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select 
-                  value={(filters.vip_level as string) || 'all'} 
-                  onValueChange={(v) => setFilter('vip_level', v === 'all' ? undefined : v)}
-                >
-                  <SelectTrigger className="w-full sm:w-40">
-                    <SelectValue placeholder="مستوى VIP" />
-                  </SelectTrigger>
+                <Select value={vipFilter} onValueChange={setVipFilter}>
+                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="مستوى VIP" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">الكل</SelectItem>
                     <SelectItem value="regular">عادي</SelectItem>
@@ -569,28 +449,36 @@ const CustomersPage = () => {
         </CardContent>
       </Card>
 
-      {/* Content - Mobile or Desktop */}
+      {/* Content */}
       {isMobile ? (
-        <div className="pb-20">
-          {renderMobileView()}
-        </div>
+        <div className="pb-20">{renderMobileView()}</div>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>قائمة العملاء ({sortedData.length})</CardTitle>
+            <CardTitle>قائمة العملاء ({totalCount})</CardTitle>
           </CardHeader>
           <CardContent>
             {renderTableView()}
+            {totalCount > 25 && (
+              <div className="mt-4">
+                <ServerPagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  totalCount={totalCount}
+                  pageSize={pagination.pageSize}
+                  onPageChange={pagination.goToPage}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Add/Edit Customer Dialog */}
-      <CustomerFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        customer={selectedCustomer}
-      />
+      {/* Dialogs */}
+      <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />
+      <CustomerImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
     </div>
   );
 };
