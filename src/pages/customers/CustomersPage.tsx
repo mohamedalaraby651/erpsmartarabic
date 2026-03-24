@@ -464,11 +464,11 @@ const CustomersPage = () => {
                 <ServerPagination
                   currentPage={pagination.currentPage}
                   totalPages={pagination.totalPages}
+                  totalCount={totalCount}
+                  pageSize={pagination.pageSize}
                   onPageChange={pagination.goToPage}
                   hasNextPage={pagination.hasNextPage}
                   hasPrevPage={pagination.hasPrevPage}
-                  onNextPage={pagination.nextPage}
-                  onPrevPage={pagination.prevPage}
                 />
               </div>
             )}
