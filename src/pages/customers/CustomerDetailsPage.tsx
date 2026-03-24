@@ -712,6 +712,16 @@ const CustomerDetailsPage = () => {
           />
         </TabsContent>
 
+        {/* Statement of Account Tab */}
+        <TabsContent value="statement" className="mt-6">
+          <StatementOfAccount customerName={customer.name} invoices={invoices} payments={payments} />
+        </TabsContent>
+
+        {/* Communication Log Tab */}
+        <TabsContent value="communications" className="mt-6">
+          <CommunicationLogTab customerId={id!} />
+        </TabsContent>
+
         {/* Analytics Tab */}
         <TabsContent value="analytics" className="mt-6">
           <CustomerPurchaseChart invoices={invoices} payments={payments} />
