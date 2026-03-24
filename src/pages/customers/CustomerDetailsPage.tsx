@@ -765,8 +765,8 @@ const CustomerDetailsPage = () => {
             totalPayments={totalPayments}
             currentBalance={Number(customer.current_balance || 0)}
             creditLimit={Number(customer.credit_limit || 0)}
-            discountPercentage={Number((customer as any).discount_percentage || 0)}
-            paymentTermsDays={Number((customer as any).payment_terms_days || 0)}
+            discountPercentage={Number(customer.discount_percentage || 0)}
+            paymentTermsDays={Number(customer.payment_terms_days || 0)}
             invoiceCount={invoices.length}
           />
         </TabsContent>
