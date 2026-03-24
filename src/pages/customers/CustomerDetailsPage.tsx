@@ -333,12 +333,11 @@ const CustomerDetailsPage = () => {
                 <FileText className="h-4 w-4 ml-2" />
                 فاتورة جديدة
               </Button>
-              <Button variant="outline" size="sm" onClick={handlePrintStatement} disabled={isPrintingStatement}>
-                {isPrintingStatement ? (
-                  <span className="h-4 w-4 ml-2 animate-spin border-2 border-current border-t-transparent rounded-full" />
-                ) : (
-                  <Printer className="h-4 w-4 ml-2" />
-                )}
+              <Button variant="outline" size="sm" onClick={() => {
+                const tabsTrigger = document.querySelector('[value="statement"]') as HTMLElement;
+                tabsTrigger?.click();
+              }}>
+                <Printer className="h-4 w-4 ml-2" />
                 كشف حساب
               </Button>
               {customer.phone && (
