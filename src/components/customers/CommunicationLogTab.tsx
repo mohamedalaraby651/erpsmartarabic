@@ -16,6 +16,17 @@ interface CommunicationLogTabProps {
   customerId: string;
 }
 
+interface CommunicationRecord {
+  id: string;
+  customer_id: string;
+  type: string;
+  subject: string | null;
+  note: string;
+  communication_date: string;
+  created_by: string;
+  created_at: string;
+}
+
 const typeConfig = {
   call: { label: 'مكالمة', icon: Phone, color: 'bg-info/10 text-info' },
   visit: { label: 'زيارة', icon: MapPin, color: 'bg-warning/10 text-warning' },
@@ -38,25 +49,25 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
     queryKey: ['customer-communications', customerId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('customer_communications')
+        .from('customer_communications' as never)
         .select('*')
         .eq('customer_id', customerId)
         .order('communication_date', { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []) as unknown as CommunicationRecord[];
     },
     staleTime: 30000,
   });
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('customer_communications').insert({
+      const { error } = await supabase.from('customer_communications' as never).insert({
         customer_id: customerId,
         type: commType,
         subject: subject.trim() || null,
         note: note.trim(),
         created_by: user?.id || '',
-      });
+      } as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -92,23 +103,23 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
           </div>
         ) : (
           <div className="space-y-3">
-            {communications.map((comm: Record<string, unknown>) => {
+            {communications.map((comm) => {
               const type = (comm.type as CommType) || 'other';
               const config = typeConfig[type] || typeConfig.other;
               const Icon = config.icon;
               return (
-                <div key={comm.id as string} className="flex items-start gap-3 p-3 border rounded-lg">
+                <div key={comm.id} className="flex items-start gap-3 p-3 border rounded-lg">
                   <div className={`p-2 rounded-full ${config.color}`}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge variant="outline">{config.label}</Badge>
-                      {comm.subject && <span className="font-medium text-sm">{comm.subject as string}</span>}
+                      {comm.subject && <span className="font-medium text-sm">{comm.subject}</span>}
                     </div>
-                    <p className="text-sm text-muted-foreground">{comm.note as string}</p>
+                    <p className="text-sm text-muted-foreground">{comm.note}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(comm.communication_date as string).toLocaleString('ar-EG')}
+                      {new Date(comm.communication_date).toLocaleString('ar-EG')}
                     </p>
                   </div>
                 </div>
