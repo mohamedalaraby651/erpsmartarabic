@@ -466,6 +466,14 @@ const CustomerDetailsPage = () => {
             <Wallet className="h-4 w-4" />
             الملخص المالي
           </TabsTrigger>
+          <TabsTrigger value="statement" className="gap-2">
+            <Printer className="h-4 w-4" />
+            كشف الحساب
+          </TabsTrigger>
+          <TabsTrigger value="communications" className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            التواصل
+          </TabsTrigger>
           <TabsTrigger value="analytics" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             التحليلات
