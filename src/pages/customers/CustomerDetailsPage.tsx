@@ -73,7 +73,7 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  const [isPrintingStatement, setIsPrintingStatement] = useState(false);
+  
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
