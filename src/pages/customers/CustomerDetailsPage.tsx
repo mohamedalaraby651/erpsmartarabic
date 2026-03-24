@@ -145,6 +145,7 @@ const CustomerDetailsPage = () => {
       return data;
     },
     enabled: !!id,
+    staleTime: 30000,
   });
 
   const { data: quotations = [] } = useQuery({
@@ -159,6 +160,7 @@ const CustomerDetailsPage = () => {
       return data;
     },
     enabled: !!id,
+    staleTime: 30000,
   });
 
   const { data: activities = [] } = useQuery({
