@@ -76,6 +76,7 @@ const CustomersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [vipFilter, setVipFilter] = useState<string>("all");
