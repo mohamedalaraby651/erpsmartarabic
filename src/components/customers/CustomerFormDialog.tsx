@@ -92,8 +92,8 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     if (customer) {
       reset({
         name: customer.name,
-        customer_type: customer.customer_type as any,
-        vip_level: customer.vip_level as any,
+        customer_type: customer.customer_type,
+        vip_level: customer.vip_level,
         phone: customer.phone || '',
         phone2: customer.phone2 || '',
         email: customer.email || '',
@@ -102,15 +102,15 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
         category_id: customer.category_id || '',
         notes: customer.notes || '',
         is_active: customer.is_active ?? true,
-        governorate: (customer as any).governorate || '',
-        city: (customer as any).city || '',
-        discount_percentage: Number((customer as any).discount_percentage) || 0,
-        contact_person: (customer as any).contact_person || '',
-        contact_person_role: (customer as any).contact_person_role || '',
-        payment_terms_days: Number((customer as any).payment_terms_days) || 0,
-        preferred_payment_method: (customer as any).preferred_payment_method || '',
-        facebook_url: (customer as any).facebook_url || '',
-        website_url: (customer as any).website_url || '',
+        governorate: customer.governorate || '',
+        city: customer.city || '',
+        discount_percentage: Number(customer.discount_percentage) || 0,
+        contact_person: customer.contact_person || '',
+        contact_person_role: customer.contact_person_role || '',
+        payment_terms_days: Number(customer.payment_terms_days) || 0,
+        preferred_payment_method: customer.preferred_payment_method || '',
+        facebook_url: customer.facebook_url || '',
+        website_url: customer.website_url || '',
       });
     } else {
       reset(defaultValues);
