@@ -223,7 +223,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
             </div>
             <div>
               <Label>مستوى VIP</Label>
-              <Select value={watch('vip_level')} onValueChange={(v: any) => setValue('vip_level', v)}>
+              <Select value={watch('vip_level')} onValueChange={(v) => setValue('vip_level', v as CustomerFormData['vip_level'])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="regular">عادي</SelectItem>
