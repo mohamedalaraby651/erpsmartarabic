@@ -201,6 +201,8 @@ const CustomersPage = () => {
     deleteMutation.mutate(id);
   }, [deleteMutation]);
 
+  const activeFiltersCount = [typeFilter, vipFilter, governorateFilter, statusFilter].filter(f => f !== 'all').length;
+
   const handleRefresh = async () => { await refetch(); };
 
   const getBalanceColor = (balance: number, creditLimit: number) => {
