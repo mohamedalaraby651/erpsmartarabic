@@ -9,14 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload, Filter, X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { useTableSort } from "@/hooks/useTableSort";
-import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -33,6 +32,9 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
+import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
+import { FilterChips } from "@/components/filters/FilterChips";
+import { egyptGovernorates } from "@/lib/egyptLocations";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 
