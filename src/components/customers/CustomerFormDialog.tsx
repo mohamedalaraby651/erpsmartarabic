@@ -201,7 +201,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
             </div>
             <div>
               <Label>نوع العميل</Label>
-              <Select value={watch('customer_type')} onValueChange={(v: any) => setValue('customer_type', v)}>
+              <Select value={watch('customer_type')} onValueChange={(v) => setValue('customer_type', v as CustomerFormData['customer_type'])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="individual">فرد</SelectItem>
