@@ -641,6 +641,7 @@ const CustomersPage = () => {
       {/* Dialogs */}
       <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />
       <CustomerImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
+      <CustomerMergeDialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen} />
     </div>
   );
 };
