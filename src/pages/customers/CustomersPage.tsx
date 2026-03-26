@@ -129,7 +129,7 @@ const CustomersPage = () => {
 
   // Server-side paginated data query
   const { data: customers = [], isLoading, refetch } = useQuery({
-    queryKey: ['customers', debouncedSearch, typeFilter, vipFilter, pagination.currentPage],
+    queryKey: ['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage],
     queryFn: async () => {
       let query = supabase.from('customers').select('*').order('created_at', { ascending: false }).range(pagination.range.from, pagination.range.to);
       if (debouncedSearch) {
@@ -137,6 +137,8 @@ const CustomersPage = () => {
       }
       if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
       if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (statusFilter !== 'all') query = query.eq('is_active', statusFilter === 'active');
       const { data, error } = await query;
       if (error) throw error;
       return data as Customer[];
