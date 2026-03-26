@@ -500,12 +500,23 @@ const CustomersPage = () => {
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               <FilterChips
-                filters={activeFilterChips}
-                onRemove={(key) => {
-                  if (key === 'type') setTypeFilter('all');
-                  if (key === 'vip') setVipFilter('all');
-                  if (key === 'governorate') setGovernorateFilter('all');
-                  if (key === 'status') setStatusFilter('all');
+                chips={[
+                  ...(typeFilter !== 'all' ? [{ id: 'type', label: `النوع: ${typeLabels[typeFilter as keyof typeof typeLabels] || typeFilter}`, value: typeFilter }] : []),
+                  ...(vipFilter !== 'all' ? [{ id: 'vip', label: `VIP: ${vipLabels[vipFilter as keyof typeof vipLabels] || vipFilter}`, value: vipFilter }] : []),
+                  ...(governorateFilter !== 'all' ? [{ id: 'governorate', label: `المحافظة: ${governorateFilter}`, value: governorateFilter }] : []),
+                  ...(statusFilter !== 'all' ? [{ id: 'status', label: statusFilter === 'active' ? 'نشط' : 'غير نشط', value: statusFilter }] : []),
+                ]}
+                activeChips={[
+                  ...(typeFilter !== 'all' ? ['type'] : []),
+                  ...(vipFilter !== 'all' ? ['vip'] : []),
+                  ...(governorateFilter !== 'all' ? ['governorate'] : []),
+                  ...(statusFilter !== 'all' ? ['status'] : []),
+                ]}
+                onToggle={(chipId) => {
+                  if (chipId === 'type') setTypeFilter('all');
+                  if (chipId === 'vip') setVipFilter('all');
+                  if (chipId === 'governorate') setGovernorateFilter('all');
+                  if (chipId === 'status') setStatusFilter('all');
                 }}
                 onClearAll={() => { setTypeFilter('all'); setVipFilter('all'); setGovernorateFilter('all'); setStatusFilter('all'); }}
               />
