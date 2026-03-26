@@ -78,6 +78,15 @@ const CustomersPage = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [vipFilter, setVipFilter] = useState<string>("all");
+  const [governorateFilter, setGovernorateFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  // Temporary filter state for drawer
+  const [tempType, setTempType] = useState("all");
+  const [tempVip, setTempVip] = useState("all");
+  const [tempGovernorate, setTempGovernorate] = useState("all");
+  const [tempStatus, setTempStatus] = useState("all");
 
   const debouncedSearch = useDebounce(searchQuery, 300);
   const canEdit = userRole === 'admin' || userRole === 'sales';
