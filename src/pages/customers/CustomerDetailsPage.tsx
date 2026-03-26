@@ -6,30 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import { 
-  ArrowRight, 
-  Edit, 
-  Trash2, 
-  Plus, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Building2, 
-  User, 
-  Crown, 
-  CreditCard, 
-  Paperclip,
-  ShoppingCart,
-  Activity,
-  FileText,
-  TrendingUp,
-  Calendar,
-  Printer,
-  MessageSquare,
-  BarChart3,
-  Wallet,
-  Globe,
+  ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User,
+  Crown, CreditCard, Paperclip, ShoppingCart, Activity, FileText,
+  TrendingUp, TrendingDown, Calendar, Printer, MessageSquare, BarChart3,
+  Wallet, Globe, ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
@@ -40,6 +22,8 @@ import CustomerPurchaseChart from "@/components/customers/CustomerPurchaseChart"
 import CustomerFinancialSummary from "@/components/customers/CustomerFinancialSummary";
 import StatementOfAccount from "@/components/customers/StatementOfAccount";
 import CommunicationLogTab from "@/components/customers/CommunicationLogTab";
+import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import ImageUpload from "@/components/shared/ImageUpload";
@@ -73,16 +57,11 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('id', id!)
-        .single();
+      const { data, error } = await supabase.from('customers').select('*').eq('id', id!).single();
       if (error) throw error;
       return data as Customer;
     },
@@ -92,11 +71,7 @@ const CustomerDetailsPage = () => {
   const { data: addresses = [] } = useQuery({
     queryKey: ['customer-addresses', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customer_addresses')
-        .select('*')
-        .eq('customer_id', id!)
-        .order('is_default', { ascending: false });
+      const { data, error } = await supabase.from('customer_addresses').select('*').eq('customer_id', id!).order('is_default', { ascending: false });
       if (error) throw error;
       return data as CustomerAddress[];
     },
@@ -106,11 +81,7 @@ const CustomerDetailsPage = () => {
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('customer_id', id!)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('invoices').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -121,11 +92,7 @@ const CustomerDetailsPage = () => {
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('customer_id', id!)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('payments').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -136,11 +103,7 @@ const CustomerDetailsPage = () => {
   const { data: salesOrders = [] } = useQuery({
     queryKey: ['customer-sales-orders', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('sales_orders')
-        .select('*')
-        .eq('customer_id', id!)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('sales_orders').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -151,11 +114,7 @@ const CustomerDetailsPage = () => {
   const { data: quotations = [] } = useQuery({
     queryKey: ['customer-quotations', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quotations')
-        .select('*')
-        .eq('customer_id', id!)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('quotations').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -166,13 +125,7 @@ const CustomerDetailsPage = () => {
   const { data: activities = [] } = useQuery({
     queryKey: ['customer-activities', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .eq('entity_type', 'customer')
-        .eq('entity_id', id!)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const { data, error } = await supabase.from('activity_logs').select('*').eq('entity_type', 'customer').eq('entity_id', id!).order('created_at', { ascending: false }).limit(20);
       if (error) throw error;
       return data;
     },
@@ -181,10 +134,7 @@ const CustomerDetailsPage = () => {
 
   const updateImageMutation = useMutation({
     mutationFn: async (imageUrl: string | null) => {
-      const { error } = await supabase
-        .from('customers')
-        .update({ image_url: imageUrl })
-        .eq('id', id!);
+      const { error } = await supabase.from('customers').update({ image_url: imageUrl }).eq('id', id!);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -199,10 +149,7 @@ const CustomerDetailsPage = () => {
 
   const deleteAddressMutation = useMutation({
     mutationFn: async (addressId: string) => {
-      const { error } = await supabase
-        .from('customer_addresses')
-        .delete()
-        .eq('id', addressId);
+      const { error } = await supabase.from('customer_addresses').delete().eq('id', addressId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -233,19 +180,15 @@ const CustomerDetailsPage = () => {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">العميل غير موجود</p>
-        <Button variant="link" onClick={() => navigate('/customers')}>
-          العودة للعملاء
-        </Button>
+        <Button variant="link" onClick={() => navigate('/customers')}>العودة للعملاء</Button>
       </div>
     );
   }
 
-  const initials = customer.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const creditLimit = Number(customer.credit_limit || 0);
+  const currentBalance = Number(customer.current_balance || 0);
+  const creditUsagePercent = creditLimit > 0 ? Math.min((currentBalance / creditLimit) * 100, 100) : 0;
+  const balanceIsDebit = currentBalance > 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -255,24 +198,30 @@ const CustomerDetailsPage = () => {
         العودة للعملاء
       </Button>
 
-      {/* Hero Header */}
+      {/* Enhanced Hero Header */}
       <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-primary/5 via-background to-primary/10">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Avatar with upload */}
-            <div className="flex flex-col items-center gap-3">
-              <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
-                <AvatarImage src={customer.image_url || ''} alt={customer.name} />
-                <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <ImageUpload
-                currentImageUrl={customer.image_url}
-                onImageUploaded={(url) => updateImageMutation.mutate(url)}
-                bucket="customer-images"
-                folder={id!}
-              />
+            {/* Avatar with upload overlay */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="relative">
+                <CustomerAvatar
+                  name={customer.name}
+                  imageUrl={customer.image_url}
+                  customerType={customer.customer_type}
+                  size="xl"
+                />
+                <div className="absolute -bottom-1 -left-1">
+                  <ImageUpload
+                    currentImageUrl={customer.image_url}
+                    onImageUploaded={(url) => updateImageMutation.mutate(url)}
+                    onImageRemoved={() => updateImageMutation.mutate(null)}
+                    bucket="customer-images"
+                    folder={id!}
+                    showAvatar={false}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Customer Info */}
@@ -289,46 +238,57 @@ const CustomerDetailsPage = () => {
               </div>
               <p className="text-muted-foreground mb-3">
                 {customer.customer_type === 'company' ? 'شركة' : customer.customer_type === 'farm' ? 'مزرعة' : 'فرد'}
+                {customer.governorate && ` • ${customer.governorate}`}
+                {customer.city && ` - ${customer.city}`}
               </p>
               
-              {/* Contact Info */}
-              <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
+              {/* Interactive Contact Buttons */}
+              <div className="flex flex-wrap gap-2 mb-4">
                 {customer.phone && (
-                  <a href={`tel:${customer.phone}`} className="flex items-center gap-1 hover:text-primary transition-colors">
-                    <Phone className="h-4 w-4" />
-                    {customer.phone}
-                  </a>
+                  <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+                    <a href={`tel:${customer.phone}`}>
+                      <Phone className="h-3.5 w-3.5 ml-1.5 text-emerald-600" />
+                      {customer.phone}
+                    </a>
+                  </Button>
+                )}
+                {customer.phone && (
+                  <Button variant="outline" size="sm" className="h-8 text-xs border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950" onClick={handleWhatsApp}>
+                    <MessageSquare className="h-3.5 w-3.5 ml-1.5 text-emerald-600" />
+                    واتساب
+                  </Button>
                 )}
                 {customer.email && (
-                  <a href={`mailto:${customer.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
-                    <Mail className="h-4 w-4" />
-                    {customer.email}
-                  </a>
+                  <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+                    <a href={`mailto:${customer.email}`}>
+                      <Mail className="h-3.5 w-3.5 ml-1.5 text-info" />
+                      {customer.email}
+                    </a>
+                  </Button>
                 )}
-                {customer.governorate && (
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {[customer.governorate, customer.city].filter(Boolean).join(' - ')}
-                  </span>
+                {customer.facebook_url && (
+                  <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+                    <a href={customer.facebook_url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                      فيسبوك
+                    </a>
+                  </Button>
                 )}
                 {customer.contact_person && (
-                  <span className="flex items-center gap-1">
-                    <User className="h-4 w-4" />
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-1 bg-muted rounded-md">
+                    <User className="h-3.5 w-3.5" />
                     {customer.contact_person}
                     {customer.contact_person_role && ` (${customer.contact_person_role})`}
                   </span>
                 )}
-                {customer.tax_number && (
-                  <span className="flex items-center gap-1">
-                    <Building2 className="h-4 w-4" />
-                    {customer.tax_number}
-                  </span>
-                )}
               </div>
+
+              {/* Quick History Strip */}
+              <CustomerQuickHistory invoices={invoices} payments={payments} />
             </div>
 
             {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2 lg:self-start">
+            <div className="flex flex-wrap gap-2 lg:self-start lg:flex-col">
               <Button size="sm" onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })}>
                 <FileText className="h-4 w-4 ml-2" />
                 فاتورة جديدة
@@ -340,12 +300,6 @@ const CustomerDetailsPage = () => {
                 <Printer className="h-4 w-4 ml-2" />
                 كشف حساب
               </Button>
-              {customer.phone && (
-                <Button variant="outline" size="sm" onClick={handleWhatsApp}>
-                  <MessageSquare className="h-4 w-4 ml-2" />
-                  واتساب
-                </Button>
-              )}
               <Button variant="ghost" size="sm" onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 ml-2" />
                 تعديل
@@ -355,26 +309,39 @@ const CustomerDetailsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Balance Card with Credit Progress */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`p-2 rounded-lg ${balanceIsDebit ? 'bg-destructive/10' : 'bg-emerald-500/10'}`}>
+                <CreditCard className={`h-5 w-5 ${balanceIsDebit ? 'text-destructive' : 'text-emerald-600'}`} />
+              </div>
+              <div>
+                <p className={`text-lg font-bold ${balanceIsDebit ? 'text-destructive' : 'text-emerald-600'}`}>
+                  {currentBalance.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">الرصيد الحالي</p>
+              </div>
+            </div>
+            {creditLimit > 0 && (
+              <div className="space-y-1">
+                <Progress value={creditUsagePercent} className="h-1.5" />
+                <p className="text-[10px] text-muted-foreground">
+                  {creditUsagePercent.toFixed(0)}% من {creditLimit.toLocaleString()}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Total Purchases */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
-                <CreditCard className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-lg font-bold">{Number(customer.current_balance).toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">الرصيد الحالي</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <TrendingUp className="h-5 w-5 text-success" />
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-lg font-bold">{totalPurchases.toLocaleString()}</p>
@@ -383,6 +350,24 @@ const CustomerDetailsPage = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Payment Ratio with Progress */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`p-2 rounded-lg ${paymentRatio >= 80 ? 'bg-emerald-500/10' : paymentRatio >= 50 ? 'bg-warning/10' : 'bg-destructive/10'}`}>
+                <Wallet className={`h-5 w-5 ${paymentRatio >= 80 ? 'text-emerald-600' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'}`} />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{paymentRatio.toFixed(0)}%</p>
+                <p className="text-xs text-muted-foreground">نسبة السداد</p>
+              </div>
+            </div>
+            <Progress value={paymentRatio} className="h-1.5" />
+          </CardContent>
+        </Card>
+
+        {/* Invoice Count */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -396,11 +381,13 @@ const CustomerDetailsPage = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Average Invoice */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-warning/10">
-                <CreditCard className="h-5 w-5 text-warning" />
+                <BarChart3 className="h-5 w-5 text-warning" />
               </div>
               <div>
                 <p className="text-lg font-bold">{avgInvoiceValue.toLocaleString()}</p>
@@ -409,19 +396,8 @@ const CustomerDetailsPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-accent/50">
-                <TrendingUp className="h-5 w-5 text-accent-foreground" />
-              </div>
-              <div>
-                <p className="text-lg font-bold">{paymentRatio.toFixed(0)}%</p>
-                <p className="text-xs text-muted-foreground">نسبة السداد</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
+        {/* Last Purchase */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -514,9 +490,7 @@ const CustomerDetailsPage = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{address.label}</span>
-                          {address.is_default && (
-                            <Badge variant="secondary">افتراضي</Badge>
-                          )}
+                          {address.is_default && <Badge variant="secondary">افتراضي</Badge>}
                         </div>
                         <p className="text-muted-foreground mt-1">{address.address}</p>
                         {(address.city || address.governorate) && (
@@ -526,18 +500,10 @@ const CustomerDetailsPage = () => {
                         )}
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => { setSelectedAddress(address); setAddressDialogOpen(true); }}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => { setSelectedAddress(address); setAddressDialogOpen(true); }}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => deleteAddressMutation.mutate(address.id)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => deleteAddressMutation.mutate(address.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -567,9 +533,7 @@ const CustomerDetailsPage = () => {
                   {invoices.slice(0, 15).map((invoice) => (
                     <div key={invoice.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
-                        <EntityLink type="invoice" id={invoice.id}>
-                          {invoice.invoice_number}
-                        </EntityLink>
+                        <EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink>
                         <span className="text-muted-foreground mr-4 text-sm">
                           {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
                         </span>
@@ -606,9 +570,7 @@ const CustomerDetailsPage = () => {
                   {quotations.slice(0, 15).map((quotation) => (
                     <div key={quotation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
-                        <EntityLink type="quotation" id={quotation.id}>
-                          {quotation.quotation_number}
-                        </EntityLink>
+                        <EntityLink type="quotation" id={quotation.id}>{quotation.quotation_number}</EntityLink>
                         <span className="text-muted-foreground mr-4 text-sm">
                           {new Date(quotation.created_at).toLocaleDateString('ar-EG')}
                         </span>
@@ -645,9 +607,7 @@ const CustomerDetailsPage = () => {
                   {salesOrders.slice(0, 15).map((order) => (
                     <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
-                        <EntityLink type="sales-order" id={order.id}>
-                          {order.order_number}
-                        </EntityLink>
+                        <EntityLink type="sales-order" id={order.id}>{order.order_number}</EntityLink>
                         <span className="text-muted-foreground mr-4 text-sm">
                           {new Date(order.created_at).toLocaleDateString('ar-EG')}
                         </span>
@@ -689,7 +649,7 @@ const CustomerDetailsPage = () => {
                           {new Date(payment.payment_date).toLocaleDateString('ar-EG')}
                         </span>
                       </div>
-                      <span className="font-bold text-success">{Number(payment.amount).toLocaleString()} ج.م</span>
+                      <span className="font-bold text-emerald-600">{Number(payment.amount).toLocaleString()} ج.م</span>
                     </div>
                   ))}
                 </div>
@@ -698,14 +658,13 @@ const CustomerDetailsPage = () => {
           </Card>
         </TabsContent>
 
-
         {/* Financial Summary Tab */}
         <TabsContent value="financial" className="mt-6">
           <CustomerFinancialSummary
             totalPurchases={totalPurchases}
             totalPayments={totalPayments}
-            currentBalance={Number(customer.current_balance || 0)}
-            creditLimit={Number(customer.credit_limit || 0)}
+            currentBalance={currentBalance}
+            creditLimit={creditLimit}
             discountPercentage={Number(customer.discount_percentage || 0)}
             paymentTermsDays={Number(customer.payment_terms_days || 0)}
             invoiceCount={invoices.length}
@@ -783,17 +742,8 @@ const CustomerDetailsPage = () => {
       </Tabs>
 
       {/* Dialogs */}
-      <CustomerFormDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        customer={customer}
-      />
-      <CustomerAddressDialog
-        open={addressDialogOpen}
-        onOpenChange={setAddressDialogOpen}
-        customerId={id!}
-        address={selectedAddress}
-      />
+      <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
+      <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
     </div>
   );
 };

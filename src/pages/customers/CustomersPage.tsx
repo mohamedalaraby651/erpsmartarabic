@@ -9,14 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload, Filter, X, Merge } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { useTableSort } from "@/hooks/useTableSort";
-import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -33,6 +32,10 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
+import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
+import { FilterChips } from "@/components/filters/FilterChips";
+import { egyptGovernorates } from "@/lib/egyptLocations";
+import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 
@@ -73,9 +76,19 @@ const CustomersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [vipFilter, setVipFilter] = useState<string>("all");
+  const [governorateFilter, setGovernorateFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  // Temporary filter state for drawer
+  const [tempType, setTempType] = useState("all");
+  const [tempVip, setTempVip] = useState("all");
+  const [tempGovernorate, setTempGovernorate] = useState("all");
+  const [tempStatus, setTempStatus] = useState("all");
 
   const debouncedSearch = useDebounce(searchQuery, 300);
   const canEdit = userRole === 'admin' || userRole === 'sales';
@@ -92,7 +105,7 @@ const CustomersPage = () => {
 
   // Server-side count query
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ['customers-count', debouncedSearch, typeFilter, vipFilter],
+    queryKey: ['customers-count', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter],
     queryFn: async () => {
       let query = supabase.from('customers').select('*', { count: 'exact', head: true });
       if (debouncedSearch) {
@@ -100,6 +113,8 @@ const CustomersPage = () => {
       }
       if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
       if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (statusFilter !== 'all') query = query.eq('is_active', statusFilter === 'active');
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
@@ -112,11 +127,11 @@ const CustomersPage = () => {
   // Reset page on filter change
   useEffect(() => {
     pagination.resetPage();
-  }, [debouncedSearch, typeFilter, vipFilter]);
+  }, [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter]);
 
   // Server-side paginated data query
   const { data: customers = [], isLoading, refetch } = useQuery({
-    queryKey: ['customers', debouncedSearch, typeFilter, vipFilter, pagination.currentPage],
+    queryKey: ['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage],
     queryFn: async () => {
       let query = supabase.from('customers').select('*').order('created_at', { ascending: false }).range(pagination.range.from, pagination.range.to);
       if (debouncedSearch) {
@@ -124,6 +139,8 @@ const CustomersPage = () => {
       }
       if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
       if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (statusFilter !== 'all') query = query.eq('is_active', statusFilter === 'active');
       const { data, error } = await query;
       if (error) throw error;
       return data as Customer[];
@@ -185,6 +202,8 @@ const CustomersPage = () => {
     setDeletingId(id);
     deleteMutation.mutate(id);
   }, [deleteMutation]);
+
+  const activeFiltersCount = [typeFilter, vipFilter, governorateFilter, statusFilter].filter(f => f !== 'all').length;
 
   const handleRefresh = async () => { await refetch(); };
 
@@ -315,6 +334,10 @@ const CustomersPage = () => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isMobile && (
             <>
+              <Button variant="outline" size="sm" onClick={() => setMergeDialogOpen(true)}>
+                <Merge className="h-4 w-4 ml-2" />
+                دمج
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
                 <Upload className="h-4 w-4 ml-2" />
                 استيراد
@@ -422,7 +445,23 @@ const CustomersPage = () => {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="بحث بالاسم، الهاتف، المحافظة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10" />
             </div>
-            {!isMobile && (
+            {isMobile ? (
+              <Button variant="outline" size="sm" onClick={() => {
+                setTempType(typeFilter);
+                setTempVip(vipFilter);
+                setTempGovernorate(governorateFilter);
+                setTempStatus(statusFilter);
+                setFilterDrawerOpen(true);
+              }} className="relative">
+                <Filter className="h-4 w-4 ml-2" />
+                الفلاتر
+                {activeFiltersCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-2 -left-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+                    {activeFiltersCount}
+                  </Badge>
+                )}
+              </Button>
+            ) : (
               <>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="نوع العميل" /></SelectTrigger>
@@ -443,15 +482,73 @@ const CustomersPage = () => {
                     <SelectItem value="platinum">بلاتيني</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={governorateFilter} onValueChange={setGovernorateFilter}>
+                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="المحافظة" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل المحافظات</SelectItem>
+                    {egyptGovernorates.map((gov) => (
+                      <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-32"><SelectValue placeholder="الحالة" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="active">نشط</SelectItem>
+                    <SelectItem value="inactive">غير نشط</SelectItem>
+                  </SelectContent>
+                </Select>
               </>
             )}
           </div>
+          {/* Active Filter Chips */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              <FilterChips
+                chips={[
+                  ...(typeFilter !== 'all' ? [{ id: 'type', label: `النوع: ${typeLabels[typeFilter as keyof typeof typeLabels] || typeFilter}`, value: typeFilter }] : []),
+                  ...(vipFilter !== 'all' ? [{ id: 'vip', label: `VIP: ${vipLabels[vipFilter as keyof typeof vipLabels] || vipFilter}`, value: vipFilter }] : []),
+                  ...(governorateFilter !== 'all' ? [{ id: 'governorate', label: `المحافظة: ${governorateFilter}`, value: governorateFilter }] : []),
+                  ...(statusFilter !== 'all' ? [{ id: 'status', label: statusFilter === 'active' ? 'نشط' : 'غير نشط', value: statusFilter }] : []),
+                ]}
+                activeChips={[
+                  ...(typeFilter !== 'all' ? ['type'] : []),
+                  ...(vipFilter !== 'all' ? ['vip'] : []),
+                  ...(governorateFilter !== 'all' ? ['governorate'] : []),
+                  ...(statusFilter !== 'all' ? ['status'] : []),
+                ]}
+                onToggle={(chipId) => {
+                  if (chipId === 'type') setTypeFilter('all');
+                  if (chipId === 'vip') setVipFilter('all');
+                  if (chipId === 'governorate') setGovernorateFilter('all');
+                  if (chipId === 'status') setStatusFilter('all');
+                }}
+                onClearAll={() => { setTypeFilter('all'); setVipFilter('all'); setGovernorateFilter('all'); setStatusFilter('all'); }}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Content */}
       {isMobile ? (
-        <div className="pb-20">{renderMobileView()}</div>
+        <div className="pb-20">
+          {renderMobileView()}
+          {totalCount > 25 && (
+            <div className="mt-4">
+              <ServerPagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalCount={totalCount}
+                pageSize={pagination.pageSize}
+                onPageChange={pagination.goToPage}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+              />
+            </div>
+          )}
+        </div>
       ) : (
         <Card>
           <CardHeader>
@@ -476,9 +573,75 @@ const CustomersPage = () => {
         </Card>
       )}
 
+      {/* Mobile Filter Drawer */}
+      <FilterDrawer
+        open={filterDrawerOpen}
+        onOpenChange={setFilterDrawerOpen}
+        title="فلاتر العملاء"
+        activeFiltersCount={activeFiltersCount}
+        onApply={() => {
+          setTypeFilter(tempType);
+          setVipFilter(tempVip);
+          setGovernorateFilter(tempGovernorate);
+          setStatusFilter(tempStatus);
+        }}
+        onReset={() => {
+          setTempType('all');
+          setTempVip('all');
+          setTempGovernorate('all');
+          setTempStatus('all');
+        }}
+      >
+        <FilterSection title="نوع العميل">
+          <Select value={tempType} onValueChange={setTempType}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="individual">فرد</SelectItem>
+              <SelectItem value="company">شركة</SelectItem>
+              <SelectItem value="farm">مزرعة</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterSection>
+        <FilterSection title="مستوى VIP">
+          <Select value={tempVip} onValueChange={setTempVip}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="regular">عادي</SelectItem>
+              <SelectItem value="silver">فضي</SelectItem>
+              <SelectItem value="gold">ذهبي</SelectItem>
+              <SelectItem value="platinum">بلاتيني</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterSection>
+        <FilterSection title="المحافظة">
+          <Select value={tempGovernorate} onValueChange={setTempGovernorate}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل المحافظات</SelectItem>
+              {egyptGovernorates.map((gov) => (
+                <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterSection>
+        <FilterSection title="الحالة">
+          <Select value={tempStatus} onValueChange={setTempStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterSection>
+      </FilterDrawer>
+
       {/* Dialogs */}
       <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />
       <CustomerImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
+      <CustomerMergeDialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen} />
     </div>
   );
 };

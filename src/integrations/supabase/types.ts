@@ -636,6 +636,57 @@ export type Database = {
           },
         ]
       }
+      customer_communications: {
+        Row: {
+          communication_date: string
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          note: string
+          subject: string | null
+          tenant_id: string | null
+          type: string
+        }
+        Insert: {
+          communication_date?: string
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          note: string
+          subject?: string | null
+          tenant_id?: string | null
+          type?: string
+        }
+        Update: {
+          communication_date?: string
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          note?: string
+          subject?: string | null
+          tenant_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_communications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_communications_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           category_id: string | null

@@ -16,17 +16,6 @@ interface CommunicationLogTabProps {
   customerId: string;
 }
 
-interface CommunicationRecord {
-  id: string;
-  customer_id: string;
-  type: string;
-  subject: string | null;
-  note: string;
-  communication_date: string;
-  created_by: string;
-  created_at: string;
-}
-
 const typeConfig = {
   call: { label: 'مكالمة', icon: Phone, color: 'bg-info/10 text-info' },
   visit: { label: 'زيارة', icon: MapPin, color: 'bg-warning/10 text-warning' },
@@ -49,25 +38,25 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
     queryKey: ['customer-communications', customerId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('customer_communications' as never)
+        .from('customer_communications')
         .select('*')
         .eq('customer_id', customerId)
         .order('communication_date', { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as CommunicationRecord[];
+      return data || [];
     },
     staleTime: 30000,
   });
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('customer_communications' as never).insert({
+      const { error } = await supabase.from('customer_communications').insert({
         customer_id: customerId,
         type: commType,
         subject: subject.trim() || null,
         note: note.trim(),
         created_by: user?.id || '',
-      } as never);
+      });
       if (error) throw error;
     },
     onSuccess: () => {
