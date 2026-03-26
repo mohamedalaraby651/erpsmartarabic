@@ -35,6 +35,7 @@ import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
 import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
 import { FilterChips } from "@/components/filters/FilterChips";
 import { egyptGovernorates } from "@/lib/egyptLocations";
+import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 
