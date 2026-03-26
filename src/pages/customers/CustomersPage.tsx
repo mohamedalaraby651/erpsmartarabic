@@ -103,7 +103,7 @@ const CustomersPage = () => {
 
   // Server-side count query
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ['customers-count', debouncedSearch, typeFilter, vipFilter],
+    queryKey: ['customers-count', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter],
     queryFn: async () => {
       let query = supabase.from('customers').select('*', { count: 'exact', head: true });
       if (debouncedSearch) {
@@ -111,6 +111,8 @@ const CustomersPage = () => {
       }
       if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm');
       if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum');
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (statusFilter !== 'all') query = query.eq('is_active', statusFilter === 'active');
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
@@ -123,7 +125,7 @@ const CustomersPage = () => {
   // Reset page on filter change
   useEffect(() => {
     pagination.resetPage();
-  }, [debouncedSearch, typeFilter, vipFilter]);
+  }, [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter]);
 
   // Server-side paginated data query
   const { data: customers = [], isLoading, refetch } = useQuery({
