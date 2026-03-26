@@ -334,6 +334,10 @@ const CustomersPage = () => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isMobile && (
             <>
+              <Button variant="outline" size="sm" onClick={() => setMergeDialogOpen(true)}>
+                <Merge className="h-4 w-4 ml-2" />
+                دمج
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
                 <Upload className="h-4 w-4 ml-2" />
                 استيراد
