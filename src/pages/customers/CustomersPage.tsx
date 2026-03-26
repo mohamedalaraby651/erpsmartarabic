@@ -437,7 +437,23 @@ const CustomersPage = () => {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="بحث بالاسم، الهاتف، المحافظة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10" />
             </div>
-            {!isMobile && (
+            {isMobile ? (
+              <Button variant="outline" size="sm" onClick={() => {
+                setTempType(typeFilter);
+                setTempVip(vipFilter);
+                setTempGovernorate(governorateFilter);
+                setTempStatus(statusFilter);
+                setFilterDrawerOpen(true);
+              }} className="relative">
+                <Filter className="h-4 w-4 ml-2" />
+                الفلاتر
+                {activeFiltersCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-2 -left-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+                    {activeFiltersCount}
+                  </Badge>
+                )}
+              </Button>
+            ) : (
               <>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="نوع العميل" /></SelectTrigger>
@@ -458,15 +474,62 @@ const CustomersPage = () => {
                     <SelectItem value="platinum">بلاتيني</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={governorateFilter} onValueChange={setGovernorateFilter}>
+                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="المحافظة" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل المحافظات</SelectItem>
+                    {egyptGovernorates.map((gov) => (
+                      <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-32"><SelectValue placeholder="الحالة" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="active">نشط</SelectItem>
+                    <SelectItem value="inactive">غير نشط</SelectItem>
+                  </SelectContent>
+                </Select>
               </>
             )}
           </div>
+          {/* Active Filter Chips */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              <FilterChips
+                filters={activeFilterChips}
+                onRemove={(key) => {
+                  if (key === 'type') setTypeFilter('all');
+                  if (key === 'vip') setVipFilter('all');
+                  if (key === 'governorate') setGovernorateFilter('all');
+                  if (key === 'status') setStatusFilter('all');
+                }}
+                onClearAll={() => { setTypeFilter('all'); setVipFilter('all'); setGovernorateFilter('all'); setStatusFilter('all'); }}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Content */}
       {isMobile ? (
-        <div className="pb-20">{renderMobileView()}</div>
+        <div className="pb-20">
+          {renderMobileView()}
+          {totalCount > 25 && (
+            <div className="mt-4">
+              <ServerPagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalCount={totalCount}
+                pageSize={pagination.pageSize}
+                onPageChange={pagination.goToPage}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+              />
+            </div>
+          )}
+        </div>
       ) : (
         <Card>
           <CardHeader>
@@ -490,6 +553,71 @@ const CustomersPage = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Mobile Filter Drawer */}
+      <FilterDrawer
+        open={filterDrawerOpen}
+        onOpenChange={setFilterDrawerOpen}
+        title="فلاتر العملاء"
+        activeFiltersCount={activeFiltersCount}
+        onApply={() => {
+          setTypeFilter(tempType);
+          setVipFilter(tempVip);
+          setGovernorateFilter(tempGovernorate);
+          setStatusFilter(tempStatus);
+        }}
+        onReset={() => {
+          setTempType('all');
+          setTempVip('all');
+          setTempGovernorate('all');
+          setTempStatus('all');
+        }}
+      >
+        <FilterSection title="نوع العميل">
+          <Select value={tempType} onValueChange={setTempType}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="individual">فرد</SelectItem>
+              <SelectItem value="company">شركة</SelectItem>
+              <SelectItem value="farm">مزرعة</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterSection>
+        <FilterSection title="مستوى VIP">
+          <Select value={tempVip} onValueChange={setTempVip}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="regular">عادي</SelectItem>
+              <SelectItem value="silver">فضي</SelectItem>
+              <SelectItem value="gold">ذهبي</SelectItem>
+              <SelectItem value="platinum">بلاتيني</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterSection>
+        <FilterSection title="المحافظة">
+          <Select value={tempGovernorate} onValueChange={setTempGovernorate}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل المحافظات</SelectItem>
+              {egyptGovernorates.map((gov) => (
+                <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterSection>
+        <FilterSection title="الحالة">
+          <Select value={tempStatus} onValueChange={setTempStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterSection>
+      </FilterDrawer>
 
       {/* Dialogs */}
       <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />
