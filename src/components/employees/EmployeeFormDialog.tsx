@@ -243,386 +243,85 @@ export default function EmployeeFormDialog({
     mutation.mutate(data);
   };
 
-  return (
+  const formContent = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex justify-center">
+          <FormField control={form.control} name="image_url" render={({ field }) => (<ImageUpload currentImageUrl={field.value} onImageUploaded={(url) => field.onChange(url)} onImageRemoved={() => field.onChange('')} bucket="employee-images" folder={employee?.id || 'new'} size="xl" fallback={form.watch('full_name') || '?'} />)} />
+        </div>
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="w-full">
+            <TabsTrigger value="personal" className="flex-1 gap-2"><User className="h-4 w-4" />شخصية</TabsTrigger>
+            <TabsTrigger value="job" className="flex-1 gap-2"><Briefcase className="h-4 w-4" />وظيفية</TabsTrigger>
+            <TabsTrigger value="financial" className="flex-1 gap-2"><Wallet className="h-4 w-4" />مالية</TabsTrigger>
+            <TabsTrigger value="emergency" className="flex-1 gap-2"><AlertCircle className="h-4 w-4" />طوارئ</TabsTrigger>
+          </TabsList>
+          <TabsContent value="personal" className="space-y-4 mt-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="full_name" render={({ field }) => (<FormItem><FormLabel>الاسم الكامل *</FormLabel><FormControl><Input {...field} placeholder="أدخل الاسم الكامل" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="national_id" render={({ field }) => (<FormItem><FormLabel>الرقم القومي</FormLabel><FormControl><Input {...field} placeholder="أدخل الرقم القومي" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="birth_date" render={({ field }) => (<FormItem><FormLabel>تاريخ الميلاد</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="gender" render={({ field }) => (<FormItem><FormLabel>الجنس</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر الجنس" /></SelectTrigger></FormControl><SelectContent><SelectItem value="male">ذكر</SelectItem><SelectItem value="female">أنثى</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="marital_status" render={({ field }) => (<FormItem><FormLabel>الحالة الاجتماعية</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر الحالة" /></SelectTrigger></FormControl><SelectContent><SelectItem value="single">أعزب</SelectItem><SelectItem value="married">متزوج</SelectItem><SelectItem value="divorced">مطلق</SelectItem><SelectItem value="widowed">أرمل</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>البريد الإلكتروني</FormLabel><FormControl><Input type="email" {...field} placeholder="example@email.com" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel>الهاتف</FormLabel><FormControl><Input {...field} placeholder="01xxxxxxxxx" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="phone2" render={({ field }) => (<FormItem><FormLabel>هاتف إضافي</FormLabel><FormControl><Input {...field} placeholder="01xxxxxxxxx" /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+            <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>العنوان</FormLabel><FormControl><Textarea {...field} placeholder="أدخل العنوان" /></FormControl><FormMessage /></FormItem>)} />
+          </TabsContent>
+          <TabsContent value="job" className="space-y-4 mt-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="employee_number" render={({ field }) => (<FormItem><FormLabel>رقم الموظف *</FormLabel><FormControl><Input {...field} placeholder="EMP-XXXXXX" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="job_title" render={({ field }) => (<FormItem><FormLabel>المسمى الوظيفي</FormLabel><FormControl><Input {...field} placeholder="مثال: مدير مبيعات" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="department" render={({ field }) => (<FormItem><FormLabel>القسم</FormLabel><FormControl><Input {...field} placeholder="مثال: المبيعات" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="hire_date" render={({ field }) => (<FormItem><FormLabel>تاريخ التعيين</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="contract_type" render={({ field }) => (<FormItem><FormLabel>نوع العقد</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر نوع العقد" /></SelectTrigger></FormControl><SelectContent><SelectItem value="full_time">دوام كامل</SelectItem><SelectItem value="part_time">دوام جزئي</SelectItem><SelectItem value="contract">عقد مؤقت</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="employment_status" render={({ field }) => (<FormItem><FormLabel>حالة التوظيف</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر الحالة" /></SelectTrigger></FormControl><SelectContent><SelectItem value="active">نشط</SelectItem><SelectItem value="on_leave">في إجازة</SelectItem><SelectItem value="terminated">منتهي</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+            </div>
+          </TabsContent>
+          <TabsContent value="financial" className="space-y-4 mt-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="base_salary" render={({ field }) => (<FormItem><FormLabel>الراتب الأساسي</FormLabel><FormControl><Input type="number" {...field} placeholder="0" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="bank_account" render={({ field }) => (<FormItem><FormLabel>رقم الحساب البنكي</FormLabel><FormControl><Input {...field} placeholder="أدخل رقم الحساب" /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+          </TabsContent>
+          <TabsContent value="emergency" className="space-y-4 mt-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="emergency_contact_name" render={({ field }) => (<FormItem><FormLabel>اسم جهة الاتصال</FormLabel><FormControl><Input {...field} placeholder="اسم الشخص للطوارئ" /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="emergency_contact_phone" render={({ field }) => (<FormItem><FormLabel>هاتف جهة الاتصال</FormLabel><FormControl><Input {...field} placeholder="01xxxxxxxxx" /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+            <FormField control={form.control} name="notes" render={({ field }) => (<FormItem><FormLabel>ملاحظات</FormLabel><FormControl><Textarea {...field} placeholder="ملاحظات إضافية..." /></FormControl><FormMessage /></FormItem>)} />
+          </TabsContent>
+        </Tabs>
+      </form>
+    </Form>
+  );
+
+  const formFooter = (
+    <div className="flex justify-end gap-2">
+      <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+      <Button disabled={mutation.isPending} onClick={form.handleSubmit(onSubmit)}>{mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}</Button>
+    </div>
+  );
+
+  const desktopForm = (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'تعديل موظف' : 'إضافة موظف جديد'}</DialogTitle>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Image Upload */}
-            <div className="flex justify-center">
-              <FormField
-                control={form.control}
-                name="image_url"
-                render={({ field }) => (
-                  <ImageUpload
-                    currentImageUrl={field.value}
-                    onImageUploaded={(url) => field.onChange(url)}
-                    onImageRemoved={() => field.onChange('')}
-                    bucket="employee-images"
-                    folder={employee?.id || 'new'}
-                    size="xl"
-                    fallback={form.watch('full_name') || '?'}
-                  />
-                )}
-              />
-            </div>
-
-            <Tabs defaultValue="personal" className="w-full">
-              <TabsList className="w-full">
-                <TabsTrigger value="personal" className="flex-1 gap-2">
-                  <User className="h-4 w-4" />
-                  شخصية
-                </TabsTrigger>
-                <TabsTrigger value="job" className="flex-1 gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  وظيفية
-                </TabsTrigger>
-                <TabsTrigger value="financial" className="flex-1 gap-2">
-                  <Wallet className="h-4 w-4" />
-                  مالية
-                </TabsTrigger>
-                <TabsTrigger value="emergency" className="flex-1 gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  طوارئ
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Personal Tab */}
-              <TabsContent value="personal" className="space-y-4 mt-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="full_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الاسم الكامل *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="أدخل الاسم الكامل" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="national_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الرقم القومي</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="أدخل الرقم القومي" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="birth_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>تاريخ الميلاد</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الجنس</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر الجنس" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="male">ذكر</SelectItem>
-                            <SelectItem value="female">أنثى</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="marital_status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الحالة الاجتماعية</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر الحالة" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="single">أعزب</SelectItem>
-                            <SelectItem value="married">متزوج</SelectItem>
-                            <SelectItem value="divorced">مطلق</SelectItem>
-                            <SelectItem value="widowed">أرمل</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>البريد الإلكتروني</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} placeholder="example@email.com" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الهاتف</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="01xxxxxxxxx" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>هاتف إضافي</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="01xxxxxxxxx" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>العنوان</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} placeholder="أدخل العنوان" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
-
-              {/* Job Tab */}
-              <TabsContent value="job" className="space-y-4 mt-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="employee_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>رقم الموظف *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="EMP-XXXXXX" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="job_title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>المسمى الوظيفي</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="مثال: مدير مبيعات" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>القسم</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="مثال: المبيعات" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="hire_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>تاريخ التعيين</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="contract_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>نوع العقد</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر نوع العقد" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="full_time">دوام كامل</SelectItem>
-                            <SelectItem value="part_time">دوام جزئي</SelectItem>
-                            <SelectItem value="contract">عقد مؤقت</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="employment_status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>حالة التوظيف</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر الحالة" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="active">نشط</SelectItem>
-                            <SelectItem value="on_leave">في إجازة</SelectItem>
-                            <SelectItem value="terminated">منتهي</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-
-              {/* Financial Tab */}
-              <TabsContent value="financial" className="space-y-4 mt-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="base_salary"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الراتب الأساسي</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} placeholder="0" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bank_account"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>رقم الحساب البنكي</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="أدخل رقم الحساب" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-
-              {/* Emergency Tab */}
-              <TabsContent value="emergency" className="space-y-4 mt-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="emergency_contact_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>اسم جهة الاتصال</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="اسم الشخص للطوارئ" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="emergency_contact_phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>هاتف جهة الاتصال</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="01xxxxxxxxx" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ملاحظات</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} placeholder="ملاحظات إضافية..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
-            </Tabs>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                إلغاء
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <DialogHeader><DialogTitle>{isEditing ? 'تعديل موظف' : 'إضافة موظف جديد'}</DialogTitle></DialogHeader>
+        {formContent}
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button disabled={mutation.isPending} onClick={form.handleSubmit(onSubmit)}>{mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
+
+  const mobileForm = (
+    <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل موظف' : 'إضافة موظف جديد'} footer={formFooter}>
+      {formContent}
+    </FullScreenForm>
+  );
+
+  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
 }
