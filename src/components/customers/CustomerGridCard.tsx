@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -5,24 +6,9 @@ import { Progress } from "@/components/ui/progress";
 import { Crown, Phone, MapPin, FileText, MessageSquare, DollarSign } from "lucide-react";
 import CustomerAvatar from "./CustomerAvatar";
 import { cn } from "@/lib/utils";
-import type { Database } from "@/integrations/supabase/types";
+import { vipColors, vipLabels } from "@/lib/customerConstants";
+import type { Customer } from "@/lib/customerConstants";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type Customer = Database['public']['Tables']['customers']['Row'];
-
-const vipColors = {
-  regular: "bg-muted text-muted-foreground",
-  silver: "bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200",
-  gold: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-  platinum: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-};
-
-const vipLabels = {
-  regular: "عادي",
-  silver: "فضي",
-  gold: "ذهبي",
-  platinum: "بلاتيني",
-};
 
 interface CustomerGridCardProps {
   customer: Customer;
@@ -34,7 +20,7 @@ interface CustomerGridCardProps {
   showSelect?: boolean;
 }
 
-export default function CustomerGridCard({
+const CustomerGridCardInner = ({
   customer,
   onClick,
   onNewInvoice,
@@ -42,7 +28,7 @@ export default function CustomerGridCard({
   isSelected,
   onSelect,
   showSelect,
-}: CustomerGridCardProps) {
+}: CustomerGridCardProps) => {
   const balance = Number(customer.current_balance || 0);
   const creditLimit = Number(customer.credit_limit || 0);
   const creditUsage = creditLimit > 0 ? Math.min((balance / creditLimit) * 100, 100) : 0;
@@ -121,4 +107,7 @@ export default function CustomerGridCard({
       </CardContent>
     </Card>
   );
-}
+};
+
+const CustomerGridCard = memo(CustomerGridCardInner);
+export default CustomerGridCard;
