@@ -40,6 +40,7 @@ export default function AppLayout() {
   
   // Keyboard shortcuts with modal
   const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts();
+  useScrollRestoration();
   
   // ربط مع تفضيلات المستخدم
   const { preferences, updateSidebarCompact, updateTheme } = useUserPreferences();
