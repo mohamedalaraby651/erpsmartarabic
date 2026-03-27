@@ -170,7 +170,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
         _action: 'bulk_status_update',
         _entity_type: 'customers',
         _entity_ids: ids,
-        _details: { is_active: isActive } as unknown as Record<string, unknown>,
+        _details: JSON.stringify({ is_active: isActive }),
       }).then(() => {});
       toast.success('تم تحديث حالة العملاء بنجاح');
     },
