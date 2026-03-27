@@ -128,8 +128,8 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
         _action: 'bulk_delete',
         _entity_type: 'customers',
         _entity_ids: ids,
-        _details: { count: ids.length },
-      }).catch(() => {});
+        _details: { count: ids.length } as unknown as Record<string, unknown>,
+      }).then(() => {});
       toast.success('تم حذف العملاء المحددين بنجاح');
     },
     onError: (err) => {
