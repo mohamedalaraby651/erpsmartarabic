@@ -7,6 +7,8 @@ import type { Customer, CustomerAddress } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
 
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
+type Invoice = Database['public']['Tables']['invoices']['Row'];
+type Payment = Database['public']['Tables']['payments']['Row'];
 
 export function useCustomerDetail(id: string | undefined) {
   const { toast } = useToast();
@@ -38,7 +40,7 @@ export function useCustomerDetail(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase.from('invoices').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data as Invoice[];
     },
     enabled: !!id && ['invoices', 'financial', 'statement', 'analytics', 'aging'].includes(activeTab),
     staleTime: 30000,
@@ -49,7 +51,7 @@ export function useCustomerDetail(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase.from('payments').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data as Payment[];
     },
     enabled: !!id && ['payments', 'financial', 'statement', 'analytics'].includes(activeTab),
     staleTime: 30000,
@@ -120,16 +122,34 @@ export function useCustomerDetail(id: string | undefined) {
   const avgInvoiceValue = invoices.length > 0 ? totalPurchases / invoices.length : 0;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
 
-  // DSO
+  // DSO — Fixed: uses actual payment dates instead of due dates
   const dso = (() => {
-    const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid' && inv.due_date);
-    if (paidInvoices.length === 0) return null;
-    const totalDays = paidInvoices.reduce((sum, inv) => {
+    const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid');
+    if (paidInvoices.length === 0 || payments.length === 0) return null;
+
+    // Build a map of invoice_id → latest payment date
+    const paymentDatesByInvoice = new Map<string, string>();
+    for (const payment of payments) {
+      const invId = payment.invoice_id;
+      if (!invId) continue;
+      const existing = paymentDatesByInvoice.get(invId);
+      if (!existing || payment.payment_date > existing) {
+        paymentDatesByInvoice.set(invId, payment.payment_date);
+      }
+    }
+
+    let totalDays = 0;
+    let count = 0;
+    for (const inv of paidInvoices) {
+      const paidAt = paymentDatesByInvoice.get(inv.id);
+      if (!paidAt) continue;
       const created = new Date(inv.created_at).getTime();
-      const due = new Date(inv.due_date!).getTime();
-      return sum + Math.max(0, (due - created) / (1000 * 60 * 60 * 24));
-    }, 0);
-    return Math.round(totalDays / paidInvoices.length);
+      const paid = new Date(paidAt).getTime();
+      totalDays += Math.max(0, (paid - created) / (1000 * 60 * 60 * 24));
+      count++;
+    }
+
+    return count > 0 ? Math.round(totalDays / count) : null;
   })();
 
   const clv = totalPurchases;

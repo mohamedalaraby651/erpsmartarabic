@@ -11,14 +11,16 @@ import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
 import ImageUpload from "@/components/shared/ImageUpload";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
+import type { Database } from "@/integrations/supabase/types";
+
+type Invoice = Database['public']['Tables']['invoices']['Row'];
+type Payment = Database['public']['Tables']['payments']['Row'];
 
 interface CustomerHeroHeaderProps {
   customer: Customer;
   customerId: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  invoices: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payments: any[];
+  invoices: Invoice[];
+  payments: Payment[];
   onBack: () => void;
   onEdit: () => void;
   onNewInvoice: () => void;

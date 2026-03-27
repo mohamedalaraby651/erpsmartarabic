@@ -26,6 +26,7 @@ import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { useCustomerDetail } from "@/hooks/customers";
 import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
 import { CustomerStatsGrid } from "@/components/customers/CustomerStatsGrid";
+import { tabGroups } from "@/lib/customerConstants";
 import type { CustomerAddress } from "@/lib/customerConstants";
 
 // Icon map for tab groups
@@ -35,21 +36,6 @@ const tabIcons: Record<string, React.ElementType> = {
   payments: CreditCard, financial: Wallet, statement: Printer, aging: Clock,
   analytics: BarChart3, communications: MessageSquare, activity: Activity,
 };
-
-const tabGroups = [
-  { id: 'basic', label: 'الأساسي', tabs: [
-    { value: 'addresses', label: 'العناوين' }, { value: 'attachments', label: 'المرفقات' }, { value: 'reminders', label: 'التذكيرات' },
-  ]},
-  { id: 'sales', label: 'المبيعات', tabs: [
-    { value: 'invoices', label: 'الفواتير' }, { value: 'quotations', label: 'عروض الأسعار' }, { value: 'orders', label: 'أوامر البيع' },
-  ]},
-  { id: 'financial', label: 'المالي', tabs: [
-    { value: 'payments', label: 'المدفوعات' }, { value: 'financial', label: 'الملخص المالي' }, { value: 'statement', label: 'كشف الحساب' }, { value: 'aging', label: 'أعمار الديون' },
-  ]},
-  { id: 'analytics', label: 'التحليلات', tabs: [
-    { value: 'analytics', label: 'التحليلات' }, { value: 'communications', label: 'التواصل' }, { value: 'activity', label: 'النشاط' },
-  ]},
-];
 
 const CustomerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
