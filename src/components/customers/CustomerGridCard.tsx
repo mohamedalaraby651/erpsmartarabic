@@ -20,7 +20,7 @@ interface CustomerGridCardProps {
   showSelect?: boolean;
 }
 
-export default function CustomerGridCard({
+const CustomerGridCardInner = ({
   customer,
   onClick,
   onNewInvoice,
