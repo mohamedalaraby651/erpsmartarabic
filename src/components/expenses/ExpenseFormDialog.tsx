@@ -31,6 +31,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
+import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
+import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 
 const formSchema = z.object({
   category_id: z.string().optional(),
