@@ -23,16 +23,16 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter];
 
   // Inline filter helper
-  const buildFilteredQuery = (baseQuery: ReturnType<typeof supabase.from<'customers'>['select']>) => {
-    let q = baseQuery;
+  const applyFilters = <T>(q: T & { or: Function; eq: Function }) => {
+    let result = q as Record<string, Function>;
     if (debouncedSearch) {
-      q = q.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
+      result = result.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
     }
-    if (typeFilter !== 'all') q = q.eq('customer_type', typeFilter as never);
-    if (vipFilter !== 'all') q = q.eq('vip_level', vipFilter as never);
-    if (governorateFilter !== 'all') q = q.eq('governorate', governorateFilter);
-    if (statusFilter !== 'all') q = q.eq('is_active', statusFilter === 'active');
-    return q;
+    if (typeFilter !== 'all') result = result.eq('customer_type', typeFilter);
+    if (vipFilter !== 'all') result = result.eq('vip_level', vipFilter);
+    if (governorateFilter !== 'all') result = result.eq('governorate', governorateFilter);
+    if (statusFilter !== 'all') result = result.eq('is_active', statusFilter === 'active');
+    return result as unknown as T;
   };
 
   // Count query
