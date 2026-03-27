@@ -54,7 +54,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const { data: customers = [], isLoading, refetch } = useQuery({
     queryKey: ['customers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
     queryFn: async () => {
-      const query = buildFilteredQuery(
+      const query = applyFilters(
         supabase.from('customers').select('*')
           .order(sortColumn, { ascending: sortAsc })
           .range(rangeFrom, rangeTo)
