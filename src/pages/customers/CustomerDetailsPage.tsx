@@ -79,6 +79,7 @@ const tabGroups = [
       { value: 'payments', label: 'المدفوعات', icon: CreditCard },
       { value: 'financial', label: 'الملخص المالي', icon: Wallet },
       { value: 'statement', label: 'كشف الحساب', icon: Printer },
+      { value: 'aging', label: 'أعمار الديون', icon: Clock },
     ],
   },
   {
