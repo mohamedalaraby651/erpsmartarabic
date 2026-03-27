@@ -12,6 +12,7 @@ import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 
 // Lazy load ShortcutsModal
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
@@ -39,6 +40,7 @@ export default function AppLayout() {
   
   // Keyboard shortcuts with modal
   const { showShortcutsModal, setShowShortcutsModal } = useKeyboardShortcuts();
+  useScrollRestoration();
   
   // ربط مع تفضيلات المستخدم
   const { preferences, updateSidebarCompact, updateTheme } = useUserPreferences();
