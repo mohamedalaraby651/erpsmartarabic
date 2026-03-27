@@ -39,7 +39,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['customers-count', ...filterKey],
     queryFn: async () => {
-      const query = buildFilteredQuery(supabase.from('customers').select('*', { count: 'exact', head: true }));
+      const query = applyFilters(supabase.from('customers').select('*', { count: 'exact', head: true }));
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
