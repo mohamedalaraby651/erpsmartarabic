@@ -1,5 +1,4 @@
-import React, { memo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { memo, useState, useCallback, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -40,8 +39,57 @@ export const CustomerTableView = memo(function CustomerTableView({
   canEdit, canDelete, deletingId,
   selectedIds, onToggleSelect, onToggleSelectAll, isAllSelected,
 }: CustomerTableViewProps) {
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (data.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedIndex(prev => Math.min(prev + 1, data.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedIndex(prev => Math.max(prev - 1, 0));
+        break;
+      case 'Enter':
+        if (focusedIndex >= 0 && focusedIndex < data.length) {
+          onNavigate(data[focusedIndex].id);
+        }
+        break;
+      case ' ':
+        e.preventDefault();
+        if (focusedIndex >= 0 && focusedIndex < data.length) {
+          const customer = data[focusedIndex];
+          onToggleSelect(customer.id, !selectedIds.has(customer.id));
+        }
+        break;
+      case 'Delete':
+        if (canDelete && focusedIndex >= 0 && focusedIndex < data.length) {
+          onDelete(data[focusedIndex].id);
+        }
+        break;
+    }
+  }, [data, focusedIndex, onNavigate, onToggleSelect, selectedIds, canDelete, onDelete]);
+
+  // Scroll focused row into view
+  useEffect(() => {
+    if (focusedIndex < 0 || !tableRef.current) return;
+    const rows = tableRef.current.querySelectorAll('tbody tr');
+    rows[focusedIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [focusedIndex]);
+
   return (
-    <div className="overflow-x-auto">
+    <div
+      ref={tableRef}
+      className="overflow-x-auto"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      role="grid"
+      aria-label="جدول العملاء"
+    >
       <Table>
         <TableHeader>
           <TableRow>
@@ -61,13 +109,16 @@ export const CustomerTableView = memo(function CustomerTableView({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((customer) => (
+          {data.map((customer, index) => (
             <TableRow
               key={customer.id}
-              className="hover:bg-muted/50 cursor-pointer"
+              className={`hover:bg-muted/50 cursor-pointer transition-colors ${
+                focusedIndex === index ? 'ring-2 ring-primary/50 bg-muted/30' : ''
+              }`}
               onClick={() => onNavigate(customer.id)}
-              onMouseEnter={() => onRowHover(customer.id)}
+              onMouseEnter={() => { onRowHover(customer.id); setFocusedIndex(index); }}
               onMouseLeave={onRowLeave}
+              aria-selected={selectedIds.has(customer.id)}
             >
               {canDelete && (
                 <TableCell onClick={(e) => e.stopPropagation()}>

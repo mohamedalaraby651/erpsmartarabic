@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { canDeleteCustomer } from "@/lib/services/customerService";
 import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
 
@@ -82,7 +82,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const deleteMutation = useMutation({
     mutationFn: async (deleteId: string) => {
       // Server-side permission verification
-      const hasPermission = await verifyPermissionOnServer('customers', 'delete');
+      const hasPermission = await canDeleteCustomer();
       if (!hasPermission) {
         throw new Error('ليس لديك صلاحية حذف العملاء');
       }
@@ -115,14 +115,21 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   // Bulk delete with server-side permission check
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const hasPermission = await verifyPermissionOnServer('customers', 'delete');
+      const hasPermission = await canDeleteCustomer();
       if (!hasPermission) throw new Error('ليس لديك صلاحية حذف العملاء');
       const { error } = await supabase.from('customers').delete().in('id', ids);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, ids) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
+      // Audit trail for bulk delete
+      supabase.rpc('log_bulk_operation', {
+        _action: 'bulk_delete',
+        _entity_type: 'customers',
+        _entity_ids: ids,
+        _details: JSON.stringify({ count: ids.length }),
+      }).then(() => {});
       toast.success('تم حذف العملاء المحددين بنجاح');
     },
     onError: (err) => {
@@ -136,9 +143,15 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
       const { error } = await supabase.from('customers').update({ vip_level: vipLevel as 'regular' | 'silver' | 'gold' | 'platinum' }).in('id', ids);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { ids, vipLevel }) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
+      supabase.rpc('log_bulk_operation', {
+        _action: 'bulk_vip_update',
+        _entity_type: 'customers',
+        _entity_ids: ids,
+        _details: JSON.stringify({ vip_level: vipLevel }),
+      }).then(() => {});
       toast.success('تم تحديث مستوى VIP بنجاح');
     },
     onError: () => toast.error('فشل تحديث مستوى VIP'),
@@ -150,9 +163,15 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
       const { error } = await supabase.from('customers').update({ is_active: isActive }).in('id', ids);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { ids, isActive }) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
+      supabase.rpc('log_bulk_operation', {
+        _action: 'bulk_status_update',
+        _entity_type: 'customers',
+        _entity_ids: ids,
+        _details: JSON.stringify({ is_active: isActive }),
+      }).then(() => {});
       toast.success('تم تحديث حالة العملاء بنجاح');
     },
     onError: () => toast.error('فشل تحديث الحالة'),

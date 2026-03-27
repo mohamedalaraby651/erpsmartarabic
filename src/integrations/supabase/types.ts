@@ -754,7 +754,9 @@ export type Database = {
           governorate: string | null
           id: string
           image_url: string | null
+          invoice_count_cached: number | null
           is_active: boolean | null
+          last_activity_at: string | null
           last_transaction_date: string | null
           name: string
           notes: string | null
@@ -764,6 +766,7 @@ export type Database = {
           preferred_payment_method: string | null
           tax_number: string | null
           tenant_id: string | null
+          total_purchases_cached: number | null
           updated_at: string
           vip_level: Database["public"]["Enums"]["vip_level"]
           website_url: string | null
@@ -783,7 +786,9 @@ export type Database = {
           governorate?: string | null
           id?: string
           image_url?: string | null
+          invoice_count_cached?: number | null
           is_active?: boolean | null
+          last_activity_at?: string | null
           last_transaction_date?: string | null
           name: string
           notes?: string | null
@@ -793,6 +798,7 @@ export type Database = {
           preferred_payment_method?: string | null
           tax_number?: string | null
           tenant_id?: string | null
+          total_purchases_cached?: number | null
           updated_at?: string
           vip_level?: Database["public"]["Enums"]["vip_level"]
           website_url?: string | null
@@ -812,7 +818,9 @@ export type Database = {
           governorate?: string | null
           id?: string
           image_url?: string | null
+          invoice_count_cached?: number | null
           is_active?: boolean | null
+          last_activity_at?: string | null
           last_transaction_date?: string | null
           name?: string
           notes?: string | null
@@ -822,6 +830,7 @@ export type Database = {
           preferred_payment_method?: string | null
           tax_number?: string | null
           tenant_id?: string | null
+          total_purchases_cached?: number | null
           updated_at?: string
           vip_level?: Database["public"]["Enums"]["vip_level"]
           website_url?: string | null
@@ -3829,6 +3838,15 @@ export type Database = {
       is_tenant_member: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_bulk_operation: {
+        Args: {
+          _action: string
+          _details?: Json
+          _entity_ids: string[]
+          _entity_type: string
+        }
+        Returns: undefined
       }
       needs_approval: {
         Args: { _amount: number; _entity_type: string }

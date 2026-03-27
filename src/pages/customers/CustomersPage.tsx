@@ -7,7 +7,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet } from "lucide-react";
+import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
 import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
+import { DuplicateDetectionDialog } from "@/components/customers/DuplicateDetectionDialog";
 import { vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 
@@ -47,6 +48,7 @@ const CustomersPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkVipOpen, setBulkVipOpen] = useState(false);
@@ -168,6 +170,9 @@ const CustomersPage = () => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isMobile && (
             <>
+              <Button variant="outline" size="sm" onClick={() => setDuplicateDialogOpen(true)}>
+                <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setMergeDialogOpen(true)}>
                 <Merge className="h-4 w-4 ml-2" />دمج
               </Button>
@@ -500,6 +505,7 @@ const CustomersPage = () => {
       <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />
       <CustomerImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
       <CustomerMergeDialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen} />
+      <DuplicateDetectionDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen} />
     </div>
   );
 };

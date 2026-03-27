@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+import { calculateCustomerHealth } from "@/lib/services/customerService";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -115,44 +116,10 @@ export function useCustomerDetail(id: string | undefined) {
     },
   });
 
-  // Computed stats
-  const totalPurchases = invoices.reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0);
-  const totalPayments = payments.reduce((sum, pay) => sum + Number(pay.amount || 0), 0);
-  const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
-  const avgInvoiceValue = invoices.length > 0 ? totalPurchases / invoices.length : 0;
+  // Computed stats via domain service
+  const healthMetrics = calculateCustomerHealth(invoices, payments);
+  const { totalPurchases, totalPayments, paymentRatio, avgInvoiceValue, dso, clv } = healthMetrics;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
-
-  // DSO — Fixed: uses actual payment dates instead of due dates
-  const dso = (() => {
-    const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid');
-    if (paidInvoices.length === 0 || payments.length === 0) return null;
-
-    // Build a map of invoice_id → latest payment date
-    const paymentDatesByInvoice = new Map<string, string>();
-    for (const payment of payments) {
-      const invId = payment.invoice_id;
-      if (!invId) continue;
-      const existing = paymentDatesByInvoice.get(invId);
-      if (!existing || payment.payment_date > existing) {
-        paymentDatesByInvoice.set(invId, payment.payment_date);
-      }
-    }
-
-    let totalDays = 0;
-    let count = 0;
-    for (const inv of paidInvoices) {
-      const paidAt = paymentDatesByInvoice.get(inv.id);
-      if (!paidAt) continue;
-      const created = new Date(inv.created_at).getTime();
-      const paid = new Date(paidAt).getTime();
-      totalDays += Math.max(0, (paid - created) / (1000 * 60 * 60 * 24));
-      count++;
-    }
-
-    return count > 0 ? Math.round(totalDays / count) : null;
-  })();
-
-  const clv = totalPurchases;
 
   const creditLimit = Number(customer?.credit_limit || 0);
   const currentBalance = Number(customer?.current_balance || 0);
