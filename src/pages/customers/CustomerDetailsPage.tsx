@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { 
   ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User,
   Crown, CreditCard, Paperclip, ShoppingCart, Activity, FileText,
