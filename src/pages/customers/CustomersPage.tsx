@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload, Filter, X, Merge, MapPin } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload, Filter, X, Merge, MapPin, FileText, MessageSquare, LayoutGrid, LayoutList, Trash2, Star, Download } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -39,6 +44,7 @@ import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import { CustomerSearchPreview } from "@/components/customers/CustomerSearchPreview";
 import { SwipeableRow } from "@/components/mobile/SwipeableRow";
+import CustomerGridCard from "@/components/customers/CustomerGridCard";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 
@@ -87,6 +93,16 @@ const CustomersPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
+  // New state: view mode and bulk selection
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('customers-view-mode') as 'table' | 'grid') || 'table';
+    }
+    return 'table';
+  });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
   // Temporary filter state for drawer
   const [tempType, setTempType] = useState("all");
   const [tempVip, setTempVip] = useState("all");
@@ -96,6 +112,14 @@ const CustomersPage = () => {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
+
+  // Prefetch timer ref
+  const prefetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Save view mode preference
+  useEffect(() => {
+    localStorage.setItem('customers-view-mode', viewMode);
+  }, [viewMode]);
 
   // Handle action parameter from URL
   useEffect(() => {
@@ -176,7 +200,6 @@ const CustomersPage = () => {
       if (error) throw error;
     },
     onMutate: async (deleteId: string) => {
-      // Optimistic update: remove from list immediately
       await queryClient.cancelQueries({ queryKey: ['customers'] });
       const previousCustomers = queryClient.getQueryData(['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage]);
       queryClient.setQueryData(
@@ -192,7 +215,6 @@ const CustomersPage = () => {
       setDeletingId(null);
     },
     onError: (_err, _deleteId, context) => {
-      // Rollback on error
       if (context?.previousCustomers) {
         queryClient.setQueryData(
           ['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage],
@@ -201,6 +223,26 @@ const CustomersPage = () => {
       }
       toast.error('فشل حذف العميل');
       setDeletingId(null);
+    },
+  });
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('customers').delete().in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customers-count'] });
+      queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
+      toast.success(`تم حذف ${selectedIds.size} عميل بنجاح`);
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
+    },
+    onError: () => {
+      toast.error('فشل حذف العملاء المحددين');
+      setBulkDeleteOpen(false);
     },
   });
 
@@ -222,19 +264,78 @@ const CustomersPage = () => {
     deleteMutation.mutate(id);
   }, [deleteMutation]);
 
+  // Quick actions
+  const handleNewInvoice = useCallback((customerId: string) => {
+    navigate('/invoices', { state: { prefillCustomerId: customerId } });
+  }, [navigate]);
+
+  const handleWhatsApp = useCallback((phone: string) => {
+    const cleaned = phone.replace(/\D/g, '');
+    window.open(`https://wa.me/${cleaned}`, '_blank');
+  }, []);
+
+  // Prefetch on hover
+  const handleRowHover = useCallback((customerId: string) => {
+    if (prefetchTimerRef.current) clearTimeout(prefetchTimerRef.current);
+    prefetchTimerRef.current = setTimeout(() => {
+      queryClient.prefetchQuery({
+        queryKey: ['customer', customerId],
+        queryFn: async () => {
+          const { data } = await supabase.from('customers').select('*').eq('id', customerId).single();
+          return data;
+        },
+        staleTime: 60000,
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['customer-addresses', customerId],
+        queryFn: async () => {
+          const { data } = await supabase.from('customer_addresses').select('*').eq('customer_id', customerId).order('is_default', { ascending: false });
+          return data;
+        },
+        staleTime: 60000,
+      });
+    }, 200);
+  }, [queryClient]);
+
+  const handleRowLeave = useCallback(() => {
+    if (prefetchTimerRef.current) {
+      clearTimeout(prefetchTimerRef.current);
+      prefetchTimerRef.current = null;
+    }
+  }, []);
+
+  // Bulk selection
+  const toggleSelect = useCallback((id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(sortedData.map(c => c.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }, [sortedData]);
+
+  const isAllSelected = sortedData.length > 0 && selectedIds.size === sortedData.length;
+  const hasSelection = selectedIds.size > 0;
+
   const activeFiltersCount = [typeFilter, vipFilter, governorateFilter, statusFilter].filter(f => f !== 'all').length;
 
   const handleRefresh = async () => { await refetch(); };
 
   const getBalanceColor = (balance: number, creditLimit: number) => {
-    if (balance <= 0) return 'text-emerald-600';
+    if (balance <= 0) return 'text-emerald-600 dark:text-emerald-400';
     if (creditLimit > 0 && balance >= creditLimit * 0.5) return 'text-destructive';
-    if (balance > 0) return 'text-amber-600';
-    return 'text-emerald-600';
+    if (balance > 0) return 'text-amber-600 dark:text-amber-400';
+    return 'text-emerald-600 dark:text-emerald-400';
   };
 
   const renderCustomerCard = useCallback((customer: Customer) => {
-    const TypeIcon = typeIcons[customer.customer_type as keyof typeof typeIcons] || Users;
     return (
       <SwipeableRow
         key={customer.id}
@@ -286,6 +387,29 @@ const CustomersPage = () => {
     );
   };
 
+  const renderGridView = () => {
+    if (isLoading) return <TableSkeleton rows={4} columns={4} />;
+    if (sortedData.length === 0) {
+      return <EmptyState icon={Users} title="لا يوجد عملاء" description="ابدأ بإضافة عميلك الأول" action={canEdit ? { label: 'إضافة عميل جديد', onClick: handleAdd, icon: Plus } : undefined} />;
+    }
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {sortedData.map((customer) => (
+          <CustomerGridCard
+            key={customer.id}
+            customer={customer}
+            onClick={() => navigate(`/customers/${customer.id}`)}
+            onNewInvoice={canEdit ? () => handleNewInvoice(customer.id) : undefined}
+            onWhatsApp={customer.phone ? () => handleWhatsApp(customer.phone!) : undefined}
+            isSelected={selectedIds.has(customer.id)}
+            onSelect={(checked) => toggleSelect(customer.id, checked)}
+            showSelect={hasSelection}
+          />
+        ))}
+      </div>
+    );
+  };
+
   const renderTableView = () => {
     if (isLoading) return <TableSkeleton rows={5} columns={7} />;
     if (sortedData.length === 0) {
@@ -296,6 +420,14 @@ const CustomersPage = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              {canDelete && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={(c) => toggleSelectAll(!!c)}
+                  />
+                </TableHead>
+              )}
               <TableHead><DataTableHeader label="الاسم" sortKey="name" sortConfig={sortConfig} onSort={requestSort} /></TableHead>
               <TableHead>النوع</TableHead>
               <TableHead>الهاتف</TableHead>
@@ -308,7 +440,21 @@ const CustomersPage = () => {
           </TableHeader>
           <TableBody>
             {sortedData.map((customer) => (
-              <TableRow key={customer.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/customers/${customer.id}`)}>
+              <TableRow
+                key={customer.id}
+                className="hover:bg-muted/50 cursor-pointer"
+                onClick={() => navigate(`/customers/${customer.id}`)}
+                onMouseEnter={() => handleRowHover(customer.id)}
+                onMouseLeave={handleRowLeave}
+              >
+                {canDelete && (
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedIds.has(customer.id)}
+                      onCheckedChange={(c) => toggleSelect(customer.id, !!c)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <CustomerAvatar
@@ -344,16 +490,28 @@ const CustomersPage = () => {
                 <TableCell>
                   <Badge variant={customer.is_active ? "default" : "secondary"}>{customer.is_active ? "نشط" : "غير نشط"}</Badge>
                 </TableCell>
-                <TableCell>
-                  <DataTableActions
-                    onView={() => navigate(`/customers/${customer.id}`)}
-                    onEdit={() => handleEdit(customer)}
-                    onDelete={() => handleDelete(customer.id)}
-                    canEdit={canEdit}
-                    canDelete={canDelete}
-                    isDeleting={deletingId === customer.id}
-                    deleteDescription="سيتم حذف العميل وجميع بياناته. هذا الإجراء لا يمكن التراجع عنه."
-                  />
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-0.5">
+                    <DataTableActions
+                      onView={() => navigate(`/customers/${customer.id}`)}
+                      onEdit={() => handleEdit(customer)}
+                      onDelete={() => handleDelete(customer.id)}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                      isDeleting={deletingId === customer.id}
+                      deleteDescription="سيتم حذف العميل وجميع بياناته. هذا الإجراء لا يمكن التراجع عنه."
+                    />
+                    {canEdit && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleNewInvoice(customer.id)} title="فاتورة جديدة">
+                        <FileText className="h-4 w-4 text-primary" />
+                      </Button>
+                    )}
+                    {customer.phone && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleWhatsApp(customer.phone!)} title="واتساب">
+                        <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -406,6 +564,27 @@ const CustomersPage = () => {
           )}
         </div>
       </div>
+
+      {/* Bulk Actions Bar */}
+      {hasSelection && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="p-3 flex items-center justify-between">
+            <span className="text-sm font-medium">تم تحديد {selectedIds.size} عميل</span>
+            <div className="flex items-center gap-2">
+              {canDelete && (
+                <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+                  <Trash2 className="h-4 w-4 ml-1" />
+                  حذف المحدد
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+                <X className="h-4 w-4 ml-1" />
+                إلغاء التحديد
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       {isMobile ? (
@@ -470,7 +649,7 @@ const CustomersPage = () => {
                 <p key={`e-${i}`} className="text-xs text-destructive">⚠️ {alert.message}</p>
               ))}
               {warningAlerts.slice(0, 3).map((alert, i) => (
-                <p key={`w-${i}`} className="text-xs text-amber-600">⏰ {alert.message}</p>
+                <p key={`w-${i}`} className="text-xs text-amber-600 dark:text-amber-400">⏰ {alert.message}</p>
               ))}
             </div>
           </CardContent>
@@ -592,10 +771,32 @@ const CustomersPage = () => {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>قائمة العملاء ({totalCount})</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>قائمة العملاء ({totalCount})</CardTitle>
+              <div className="flex items-center gap-1 border rounded-lg p-0.5">
+                <Button
+                  variant={viewMode === 'table' ? 'default' : 'ghost'}
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setViewMode('table')}
+                  title="عرض جدول"
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setViewMode('grid')}
+                  title="عرض بطاقات"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {renderTableView()}
+            {viewMode === 'grid' ? renderGridView() : renderTableView()}
             {totalCount > 25 && (
               <div className="mt-4">
                 <ServerPagination
@@ -677,6 +878,28 @@ const CustomersPage = () => {
           </Select>
         </FilterSection>
       </FilterDrawer>
+
+      {/* Bulk Delete Dialog */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف {selectedIds.size} عميل</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف العملاء المحددين وجميع بياناتهم. هذا الإجراء لا يمكن التراجع عنه.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bulkDeleteMutation.mutate(Array.from(selectedIds))}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={bulkDeleteMutation.isPending}
+            >
+              {bulkDeleteMutation.isPending ? 'جاري الحذف...' : 'حذف الكل'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Dialogs */}
       <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />

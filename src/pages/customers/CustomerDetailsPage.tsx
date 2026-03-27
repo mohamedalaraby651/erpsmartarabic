@@ -12,7 +12,7 @@ import {
   ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User,
   Crown, CreditCard, Paperclip, ShoppingCart, Activity, FileText,
   TrendingUp, TrendingDown, Calendar, Printer, MessageSquare, BarChart3,
-  Wallet, Globe, ExternalLink, Bell,
+  Wallet, Globe, ExternalLink, Bell, Clock, Target,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
@@ -26,6 +26,7 @@ import CommunicationLogTab from "@/components/customers/CommunicationLogTab";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
 import CustomerReminderSection from "@/components/customers/CustomerReminderDialog";
+import CustomerAgingReport from "@/components/customers/CustomerAgingReport";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import ImageUpload from "@/components/shared/ImageUpload";
@@ -78,6 +79,7 @@ const tabGroups = [
       { value: 'payments', label: 'المدفوعات', icon: CreditCard },
       { value: 'financial', label: 'الملخص المالي', icon: Wallet },
       { value: 'statement', label: 'كشف الحساب', icon: Printer },
+      { value: 'aging', label: 'أعمار الديون', icon: Clock },
     ],
   },
   {
@@ -209,6 +211,21 @@ const CustomerDetailsPage = () => {
   const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
   const avgInvoiceValue = invoices.length > 0 ? totalPurchases / invoices.length : 0;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
+
+  // DSO: average days between invoice creation and payment
+  const dso = (() => {
+    const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid' && inv.due_date);
+    if (paidInvoices.length === 0) return null;
+    const totalDays = paidInvoices.reduce((sum, inv) => {
+      const created = new Date(inv.created_at).getTime();
+      const due = new Date(inv.due_date!).getTime();
+      return sum + Math.max(0, (due - created) / (1000 * 60 * 60 * 24));
+    }, 0);
+    return Math.round(totalDays / paidInvoices.length);
+  })();
+
+  // CLV: total purchases since first invoice
+  const clv = totalPurchases;
 
   const handleWhatsApp = () => {
     if (customer?.phone) {
@@ -352,7 +369,7 @@ const CustomerDetailsPage = () => {
       </Card>
 
       {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-2">
@@ -429,6 +446,36 @@ const CustomerDetailsPage = () => {
               <div>
                 <p className="text-lg font-bold">{avgInvoiceValue.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">متوسط الفاتورة</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* DSO */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary">
+                <Clock className="h-5 w-5 text-secondary-foreground" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{dso !== null ? `${dso} يوم` : '-'}</p>
+                <p className="text-xs text-muted-foreground">متوسط السداد</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CLV */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-accent">
+                <Target className="h-5 w-5 text-accent-foreground" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{clv.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">قيمة العميل (CLV)</p>
               </div>
             </div>
           </CardContent>
@@ -688,6 +735,11 @@ const CustomerDetailsPage = () => {
         {/* Statement of Account Tab */}
         <TabsContent value="statement" className="mt-6">
           <StatementOfAccount customerName={customer.name} invoices={invoices} payments={payments} />
+        </TabsContent>
+
+        {/* Aging Report Tab */}
+        <TabsContent value="aging" className="mt-6">
+          <CustomerAgingReport invoices={invoices} />
         </TabsContent>
 
         {/* Communication Log Tab */}
