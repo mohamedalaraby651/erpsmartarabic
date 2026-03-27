@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+import { calculateCustomerHealth } from "@/lib/services/customerService";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
 
