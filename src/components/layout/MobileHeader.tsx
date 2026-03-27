@@ -16,6 +16,27 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOnline } = useOnlineStatus();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Check pending offline operations
+  useEffect(() => {
+    const checkPending = () => {
+      try {
+        const queue = localStorage.getItem('offline_mutation_queue');
+        if (queue) {
+          const parsed = JSON.parse(queue);
+          setPendingCount(Array.isArray(parsed) ? parsed.length : 0);
+        } else {
+          setPendingCount(0);
+        }
+      } catch {
+        setPendingCount(0);
+      }
+    };
+    checkPending();
+    const interval = setInterval(checkPending, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const userInitials = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)
