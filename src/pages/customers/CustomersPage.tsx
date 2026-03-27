@@ -290,11 +290,19 @@ const CustomersPage = () => {
           </TableHeader>
           <TableBody>
             {sortedData.map((customer) => (
-              <TableRow key={customer.id} className="hover:bg-muted/50">
+              <TableRow key={customer.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/customers/${customer.id}`)}>
                 <TableCell>
-                  <div>
-                    <p className="font-medium">{customer.name}</p>
-                    {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
+                  <div className="flex items-center gap-3">
+                    <CustomerAvatar
+                      name={customer.name}
+                      imageUrl={customer.image_url}
+                      customerType={customer.customer_type}
+                      size="sm"
+                    />
+                    <div>
+                      <p className="font-medium">{customer.name}</p>
+                      {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>
