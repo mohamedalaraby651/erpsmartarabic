@@ -505,6 +505,7 @@ const CustomersPage = () => {
       <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />
       <CustomerImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
       <CustomerMergeDialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen} />
+      <DuplicateDetectionDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen} />
     </div>
   );
 };
