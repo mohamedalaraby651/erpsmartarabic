@@ -26,6 +26,8 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import ImageUpload from "@/components/shared/ImageUpload";
 import { User, Phone, Building2, CreditCard, MapPin, DollarSign } from "lucide-react";
 import { egyptGovernorates, getCitiesByGovernorate } from "@/lib/egyptLocations";
+import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
+import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 
 interface SupplierFormDialogProps {
   open: boolean;
