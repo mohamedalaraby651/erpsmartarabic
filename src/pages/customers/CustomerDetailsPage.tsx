@@ -26,6 +26,7 @@ import CommunicationLogTab from "@/components/customers/CommunicationLogTab";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
 import CustomerReminderSection from "@/components/customers/CustomerReminderDialog";
+import CustomerAgingReport from "@/components/customers/CustomerAgingReport";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import ImageUpload from "@/components/shared/ImageUpload";
