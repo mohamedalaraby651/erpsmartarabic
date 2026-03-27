@@ -111,11 +111,16 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
 
       {/* Left Side - Logo and Avatar (RTL) */}
       <div className="flex items-center gap-1.5">
-        {/* Offline Indicator */}
+        {/* Offline Indicator with pending count */}
         {!isOnline && (
           <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/20">
             <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
             غير متصل
+            {pendingCount > 0 && (
+              <span className="bg-amber-500 text-white rounded-full px-1 min-w-[16px] text-center text-[9px] font-bold">
+                {pendingCount}
+              </span>
+            )}
           </span>
         )}
         
