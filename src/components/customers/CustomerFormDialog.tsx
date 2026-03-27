@@ -123,7 +123,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
       const sanitize = (val: string | undefined | null) => 
         val?.trim().replace(/[\u200E\u200F\u061C\u200B\u200C\u200D\uFEFF\u202A-\u202E\u2066-\u2069]/g, '') || null;
       
-      const payload: any = {
+      const payload: Database['public']['Tables']['customers']['Insert'] = {
         name: sanitize(data.name) || data.name.trim(),
         customer_type: data.customer_type,
         vip_level: data.vip_level,

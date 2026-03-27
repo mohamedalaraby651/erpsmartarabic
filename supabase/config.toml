@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.verify-totp]
 verify_jwt = false
+
+[functions.merge-customers]
+verify_jwt = false
