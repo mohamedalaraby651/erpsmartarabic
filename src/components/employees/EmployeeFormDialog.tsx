@@ -34,6 +34,8 @@ import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import { useAuth } from '@/hooks/useAuth';
 import ImageUpload from '@/components/shared/ImageUpload';
 import { User, Briefcase, Wallet, AlertCircle } from 'lucide-react';
+import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
+import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 
 const employeeSchema = z.object({
   employee_number: z.string().min(1, 'رقم الموظف مطلوب'),
