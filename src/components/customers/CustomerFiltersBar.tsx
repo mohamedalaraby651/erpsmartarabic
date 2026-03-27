@@ -19,7 +19,7 @@ interface CustomerFiltersBarProps {
   onGovernorateChange: (v: string) => void;
   statusFilter: string;
   onStatusChange: (v: string) => void;
-  governorates: string[];
+  governorates: readonly string[];
   activeFiltersCount: number;
   isMobile: boolean;
   onOpenDrawer: () => void;
