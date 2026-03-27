@@ -22,12 +22,24 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, currentPage, rangeFrom, rangeTo, sortConfig } = options;
   const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter];
 
+  // Inline filter helper
+  const buildFilteredQuery = (baseQuery: ReturnType<typeof supabase.from<'customers'>['select']>) => {
+    let q = baseQuery;
+    if (debouncedSearch) {
+      q = q.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
+    }
+    if (typeFilter !== 'all') q = q.eq('customer_type', typeFilter as never);
+    if (vipFilter !== 'all') q = q.eq('vip_level', vipFilter as never);
+    if (governorateFilter !== 'all') q = q.eq('governorate', governorateFilter);
+    if (statusFilter !== 'all') q = q.eq('is_active', statusFilter === 'active');
+    return q;
+  };
+
   // Count query
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['customers-count', ...filterKey],
     queryFn: async () => {
-      let query = supabase.from('customers').select('*', { count: 'exact', head: true });
-      query = applyFilters(query, options) as typeof query;
+      const query = buildFilteredQuery(supabase.from('customers').select('*', { count: 'exact', head: true }));
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
@@ -42,10 +54,11 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const { data: customers = [], isLoading, refetch } = useQuery({
     queryKey: ['customers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
     queryFn: async () => {
-      let query = supabase.from('customers').select('*')
-        .order(sortColumn, { ascending: sortAsc })
-        .range(rangeFrom, rangeTo);
-      query = applyFilters(query, options) as typeof query;
+      const query = buildFilteredQuery(
+        supabase.from('customers').select('*')
+          .order(sortColumn, { ascending: sortAsc })
+          .range(rangeFrom, rangeTo)
+      );
       const { data, error } = await query;
       if (error) throw error;
       return data as Customer[];
