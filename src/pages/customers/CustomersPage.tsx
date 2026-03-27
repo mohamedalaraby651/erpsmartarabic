@@ -255,7 +255,8 @@ const CustomersPage = () => {
           badge={{ text: vipLabels[customer.vip_level as keyof typeof vipLabels], variant: customer.vip_level === 'regular' ? 'secondary' : 'default' }}
           fields={[
             ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
-            ...(customer.email ? [{ label: 'البريد', value: customer.email, icon: <Mail className="h-3 w-3" /> }] : []),
+            ...(customer.governorate ? [{ label: 'المحافظة', value: customer.governorate, icon: <MapPin className="h-3 w-3" /> }] : []),
+            { label: 'الرصيد', value: <span className={Number(customer.current_balance) > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}>{Number(customer.current_balance || 0).toLocaleString()} ج.م</span>, icon: <DollarSign className="h-3 w-3" /> },
           ]}
           onClick={() => navigate(`/customers/${customer.id}`)}
           onView={() => navigate(`/customers/${customer.id}`)}
