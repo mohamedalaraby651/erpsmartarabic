@@ -115,7 +115,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   // Bulk delete with server-side permission check
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const hasPermission = await verifyPermissionOnServer('customers', 'delete');
+      const hasPermission = await canDeleteCustomer();
       if (!hasPermission) throw new Error('ليس لديك صلاحية حذف العملاء');
       const { error } = await supabase.from('customers').delete().in('id', ids);
       if (error) throw error;
