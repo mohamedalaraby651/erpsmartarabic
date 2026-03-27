@@ -7,17 +7,15 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown } from "lucide-react";
+import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
-import { useTableSort } from "@/hooks/useTableSort";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useCustomerFilters, useCustomerQueries, useBulkSelection } from "@/hooks/customers";
 import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
 import { ServerPagination } from "@/components/shared/ServerPagination";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
 import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
 import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
 import { egyptGovernorates } from "@/lib/egyptLocations";
@@ -31,6 +29,8 @@ import { CustomerMobileView } from "@/components/customers/CustomerMobileView";
 import { CustomerGridView } from "@/components/customers/CustomerGridView";
 import { CustomerStatsBar } from "@/components/customers/CustomerStatsBar";
 import { CustomerFiltersBar } from "@/components/customers/CustomerFiltersBar";
+import { CustomerGridSkeleton } from "@/components/customers/CustomerGridSkeleton";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
@@ -46,6 +46,7 @@ const CustomersPage = () => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkVipOpen, setBulkVipOpen] = useState(false);
@@ -73,7 +74,7 @@ const CustomersPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
 
-  // Sorting (now server-side via sortConfig passed to queries)
+  // Sorting (server-side via sortConfig passed to queries)
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
   const requestSort = useCallback((key: string) => {
     setSortConfig(current => {
@@ -85,46 +86,34 @@ const CustomersPage = () => {
     });
   }, []);
 
-  // Pagination
-  const { data: countForPagination } = { data: 0 }; // placeholder, actual count from queries
-  const pagination = useServerPagination({ pageSize: 25, totalCount: 0 });
+  // Single pagination instance — totalCount updated reactively from queries
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 25;
 
-  // Queries (server-side sort + filter)
+  // Queries (single call — count + data merged)
   const queries = useCustomerQueries({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter,
     vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter,
     statusFilter: filters.statusFilter,
-    currentPage: pagination.currentPage,
-    rangeFrom: pagination.range.from,
-    rangeTo: pagination.range.to,
+    currentPage,
+    pageSize,
     sortConfig,
   });
 
-  // Update pagination total count
-  const paginationWithCount = useServerPagination({ pageSize: 25, totalCount: queries.totalCount });
+  // Derived pagination
+  const totalPages = Math.ceil(queries.totalCount / pageSize);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
 
   // Reset page on filter change
   useEffect(() => {
-    paginationWithCount.resetPage();
+    setCurrentPage(1);
   }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter]);
 
-  // Re-query with correct pagination
-  const queriesWithPagination = useCustomerQueries({
-    debouncedSearch: filters.debouncedSearch,
-    typeFilter: filters.typeFilter,
-    vipFilter: filters.vipFilter,
-    governorateFilter: filters.governorateFilter,
-    statusFilter: filters.statusFilter,
-    currentPage: paginationWithCount.currentPage,
-    rangeFrom: paginationWithCount.range.from,
-    rangeTo: paginationWithCount.range.to,
-    sortConfig,
-  });
-
   // Bulk selection
-  const bulk = useBulkSelection(queriesWithPagination.customers);
+  const bulk = useBulkSelection(queries.customers);
 
   // Handlers
   const handleEdit = useCallback((customer: Customer) => {
@@ -137,10 +126,21 @@ const CustomersPage = () => {
     setDialogOpen(true);
   }, []);
 
-  const handleDelete = useCallback((id: string) => {
-    setDeletingId(id);
-    queriesWithPagination.deleteMutation.mutate(id, { onSettled: () => setDeletingId(null) });
-  }, [queriesWithPagination.deleteMutation]);
+  // Delete with confirmation dialog
+  const handleDeleteRequest = useCallback((id: string) => {
+    setDeleteConfirmId(id);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteConfirmId) return;
+    setDeletingId(deleteConfirmId);
+    queries.deleteMutation.mutate(deleteConfirmId, {
+      onSettled: () => {
+        setDeletingId(null);
+        setDeleteConfirmId(null);
+      },
+    });
+  }, [deleteConfirmId, queries.deleteMutation]);
 
   const handleNewInvoice = useCallback((customerId: string) => {
     navigate('/invoices', { state: { prefillCustomerId: customerId } });
@@ -151,7 +151,11 @@ const CustomersPage = () => {
     window.open(`https://wa.me/${cleaned}`, '_blank');
   }, []);
 
-  const handleRefresh = async () => { await queriesWithPagination.refetch(); };
+  const handleRefresh = async () => { await queries.refetch(); };
+
+  const goToPage = useCallback((page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  }, [totalPages]);
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
@@ -171,7 +175,7 @@ const CustomersPage = () => {
                 <Upload className="h-4 w-4 ml-2" />استيراد
               </Button>
               <ExportWithTemplateButton
-                section="customers" sectionLabel="العملاء" data={queriesWithPagination.customers}
+                section="customers" sectionLabel="العملاء" data={queries.customers}
                 columns={[
                   { key: 'name', label: 'الاسم' }, { key: 'phone', label: 'الهاتف' },
                   { key: 'email', label: 'البريد الإلكتروني' }, { key: 'customer_type', label: 'النوع' },
@@ -195,19 +199,17 @@ const CustomersPage = () => {
           <CardContent className="p-3 flex items-center justify-between flex-wrap gap-2">
             <span className="text-sm font-medium">تم تحديد {bulk.selectedIds.size} عميل</span>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Bulk VIP */}
               <Button variant="outline" size="sm" onClick={() => setBulkVipOpen(true)}>
                 <Crown className="h-4 w-4 ml-1" />تغيير VIP
               </Button>
-              {/* Bulk Status */}
               <Button variant="outline" size="sm" onClick={() => {
-                queriesWithPagination.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: true });
+                queries.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: true });
                 bulk.clearSelection();
               }}>
                 <Star className="h-4 w-4 ml-1" />تفعيل
               </Button>
               <Button variant="outline" size="sm" onClick={() => {
-                queriesWithPagination.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: false });
+                queries.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: false });
                 bulk.clearSelection();
               }}>
                 تعطيل
@@ -226,7 +228,7 @@ const CustomersPage = () => {
       )}
 
       {/* Stats */}
-      <CustomerStatsBar stats={queriesWithPagination.stats} isMobile={isMobile} />
+      <CustomerStatsBar stats={queries.stats} isMobile={isMobile} />
 
       {/* Alerts */}
       {totalAlerts > 0 && (
@@ -264,23 +266,23 @@ const CustomersPage = () => {
       {isMobile ? (
         <div className="pb-20">
           <CustomerMobileView
-            data={queriesWithPagination.customers}
-            isLoading={queriesWithPagination.isLoading}
+            data={queries.customers}
+            isLoading={queries.isLoading}
             canEdit={canEdit} canDelete={canDelete}
             onNavigate={(id) => navigate(`/customers/${id}`)}
-            onEdit={handleEdit} onDelete={handleDelete}
+            onEdit={handleEdit} onDelete={handleDeleteRequest}
             onRefresh={handleRefresh}
           />
-          {queriesWithPagination.totalCount > 25 && (
+          {queries.totalCount > pageSize && (
             <div className="mt-4">
               <ServerPagination
-                currentPage={paginationWithCount.currentPage}
-                totalPages={paginationWithCount.totalPages}
-                totalCount={queriesWithPagination.totalCount}
-                pageSize={paginationWithCount.pageSize}
-                onPageChange={paginationWithCount.goToPage}
-                hasNextPage={paginationWithCount.hasNextPage}
-                hasPrevPage={paginationWithCount.hasPrevPage}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={queries.totalCount}
+                pageSize={pageSize}
+                onPageChange={goToPage}
+                hasNextPage={hasNextPage}
+                hasPrevPage={hasPrevPage}
               />
             </div>
           )}
@@ -289,7 +291,7 @@ const CustomersPage = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>قائمة العملاء ({queriesWithPagination.totalCount})</CardTitle>
+              <CardTitle>قائمة العملاء ({queries.totalCount})</CardTitle>
               <div className="flex items-center gap-1 border rounded-lg p-0.5">
                 <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('table')} title="عرض جدول">
                   <LayoutList className="h-4 w-4" />
@@ -302,34 +304,54 @@ const CustomersPage = () => {
           </CardHeader>
           <CardContent>
             {viewMode === 'grid' ? (
-              <CustomerGridView
-                data={queriesWithPagination.customers}
-                isLoading={queriesWithPagination.isLoading}
-                canEdit={canEdit}
-                onNavigate={(id) => navigate(`/customers/${id}`)}
-                onNewInvoice={handleNewInvoice}
-                onWhatsApp={handleWhatsApp}
-                selectedIds={bulk.selectedIds}
-                onToggleSelect={bulk.toggleSelect}
-                hasSelection={bulk.hasSelection}
-                onAdd={canEdit ? handleAdd : undefined}
-              />
-            ) : queriesWithPagination.isLoading ? (
+              queries.isLoading ? (
+                <CustomerGridSkeleton />
+              ) : (
+                <CustomerGridView
+                  data={queries.customers}
+                  isLoading={queries.isLoading}
+                  canEdit={canEdit}
+                  onNavigate={(id) => navigate(`/customers/${id}`)}
+                  onNewInvoice={handleNewInvoice}
+                  onWhatsApp={handleWhatsApp}
+                  selectedIds={bulk.selectedIds}
+                  onToggleSelect={bulk.toggleSelect}
+                  hasSelection={bulk.hasSelection}
+                  onAdd={canEdit ? handleAdd : undefined}
+                />
+              )
+            ) : queries.isLoading ? (
               <TableSkeleton rows={5} columns={7} />
-            ) : queriesWithPagination.customers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">لا يوجد عملاء</div>
+            ) : queries.customers.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">لا يوجد عملاء</h3>
+                <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
+                  ابدأ بإضافة عملائك لإدارة بياناتهم وتتبع معاملاتهم المالية
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  {canEdit && (
+                    <Button onClick={handleAdd}>
+                      <Plus className="h-4 w-4 ml-2" />إضافة عميل جديد
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                    <FileSpreadsheet className="h-4 w-4 ml-2" />استيراد من Excel
+                  </Button>
+                </div>
+              </div>
             ) : (
               <CustomerTableView
-                data={queriesWithPagination.customers}
+                data={queries.customers}
                 sortConfig={sortConfig}
                 onSort={requestSort}
                 onNavigate={(id) => navigate(`/customers/${id}`)}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={handleDeleteRequest}
                 onNewInvoice={handleNewInvoice}
                 onWhatsApp={handleWhatsApp}
-                onRowHover={queriesWithPagination.handleRowHover}
-                onRowLeave={queriesWithPagination.handleRowLeave}
+                onRowHover={queries.handleRowHover}
+                onRowLeave={queries.handleRowLeave}
                 canEdit={canEdit} canDelete={canDelete}
                 deletingId={deletingId}
                 selectedIds={bulk.selectedIds}
@@ -338,16 +360,16 @@ const CustomersPage = () => {
                 isAllSelected={bulk.isAllSelected}
               />
             )}
-            {queriesWithPagination.totalCount > 25 && (
+            {queries.totalCount > pageSize && (
               <div className="mt-4">
                 <ServerPagination
-                  currentPage={paginationWithCount.currentPage}
-                  totalPages={paginationWithCount.totalPages}
-                  totalCount={queriesWithPagination.totalCount}
-                  pageSize={paginationWithCount.pageSize}
-                  onPageChange={paginationWithCount.goToPage}
-                  hasNextPage={paginationWithCount.hasNextPage}
-                  hasPrevPage={paginationWithCount.hasPrevPage}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalCount={queries.totalCount}
+                  pageSize={pageSize}
+                  onPageChange={goToPage}
+                  hasNextPage={hasNextPage}
+                  hasPrevPage={hasPrevPage}
                 />
               </div>
             )}
@@ -405,6 +427,27 @@ const CustomersPage = () => {
         </FilterSection>
       </FilterDrawer>
 
+      {/* Single Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف العميل</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف هذا العميل وجميع بياناته بشكل نهائي. هل أنت متأكد؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Bulk Delete Dialog */}
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
         <AlertDialogContent>
@@ -416,7 +459,7 @@ const CustomersPage = () => {
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                queriesWithPagination.bulkDeleteMutation.mutate(Array.from(bulk.selectedIds));
+                queries.bulkDeleteMutation.mutate(Array.from(bulk.selectedIds));
                 bulk.clearSelection();
                 setBulkDeleteOpen(false);
               }}
@@ -443,7 +486,7 @@ const CustomersPage = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction onClick={() => {
-              queriesWithPagination.bulkVipMutation.mutate({ ids: Array.from(bulk.selectedIds), vipLevel: bulkVipValue });
+              queries.bulkVipMutation.mutate({ ids: Array.from(bulk.selectedIds), vipLevel: bulkVipValue });
               bulk.clearSelection();
               setBulkVipOpen(false);
             }}>

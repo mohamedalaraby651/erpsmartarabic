@@ -3781,6 +3781,19 @@ export type Database = {
         }
         Returns: Json
       }
+      find_duplicate_customers: {
+        Args: { p_tenant_id?: string }
+        Returns: {
+          id1: string
+          id2: string
+          match_type: string
+          name1: string
+          name2: string
+          phone1: string
+          phone2: string
+          similarity_score: number
+        }[]
+      }
       get_all_tenants_admin: {
         Args: never
         Returns: {

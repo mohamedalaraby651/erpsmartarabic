@@ -67,12 +67,14 @@ export function useCustomerFilters() {
     setFilterDrawerOpen(true);
   }, [typeFilter, vipFilter, governorateFilter, statusFilter]);
 
+  // Fixed: now syncs to URL after applying drawer filters
   const applyDrawerFilters = useCallback(() => {
     setTypeFilter(tempType);
     setVipFilter(tempVip);
     setGovernorateFilter(tempGovernorate);
     setStatusFilter(tempStatus);
-  }, [tempType, tempVip, tempGovernorate, tempStatus]);
+    syncToUrl({ type: tempType, vip: tempVip, gov: tempGovernorate, status: tempStatus });
+  }, [tempType, tempVip, tempGovernorate, tempStatus, syncToUrl]);
 
   const resetDrawerFilters = useCallback(() => {
     setTempType('all');
