@@ -39,7 +39,12 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['customers-count', ...filterKey],
     queryFn: async () => {
-      const query = applyFilters(supabase.from('customers').select('*', { count: 'exact', head: true }));
+      let query = supabase.from('customers').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
+      if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as never);
+      if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as never);
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (statusFilter !== 'all') query = query.eq('is_active', statusFilter === 'active');
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
@@ -54,11 +59,12 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const { data: customers = [], isLoading, refetch } = useQuery({
     queryKey: ['customers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
     queryFn: async () => {
-      const query = applyFilters(
-        supabase.from('customers').select('*')
-          .order(sortColumn, { ascending: sortAsc })
-          .range(rangeFrom, rangeTo)
-      );
+      let query = supabase.from('customers').select('*').order(sortColumn, { ascending: sortAsc }).range(rangeFrom, rangeTo);
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
+      if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter as never);
+      if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter as never);
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (statusFilter !== 'all') query = query.eq('is_active', statusFilter === 'active');
       const { data, error } = await query;
       if (error) throw error;
       return data as Customer[];
