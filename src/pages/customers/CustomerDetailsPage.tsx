@@ -12,7 +12,7 @@ import {
   ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User,
   Crown, CreditCard, Paperclip, ShoppingCart, Activity, FileText,
   TrendingUp, TrendingDown, Calendar, Printer, MessageSquare, BarChart3,
-  Wallet, Globe, ExternalLink,
+  Wallet, Globe, ExternalLink, Bell,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
@@ -25,6 +25,7 @@ import StatementOfAccount from "@/components/customers/StatementOfAccount";
 import CommunicationLogTab from "@/components/customers/CommunicationLogTab";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
+import CustomerReminderSection from "@/components/customers/CustomerReminderDialog";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import ImageUpload from "@/components/shared/ImageUpload";
@@ -50,6 +51,46 @@ const vipLabels = {
   platinum: "بلاتيني",
 };
 
+// Tab group definitions
+const tabGroups = [
+  {
+    id: 'basic',
+    label: 'الأساسي',
+    tabs: [
+      { value: 'addresses', label: 'العناوين', icon: MapPin },
+      { value: 'attachments', label: 'المرفقات', icon: Paperclip },
+      { value: 'reminders', label: 'التذكيرات', icon: Bell },
+    ],
+  },
+  {
+    id: 'sales',
+    label: 'المبيعات',
+    tabs: [
+      { value: 'invoices', label: 'الفواتير', icon: FileText },
+      { value: 'quotations', label: 'عروض الأسعار', icon: Globe },
+      { value: 'orders', label: 'أوامر البيع', icon: ShoppingCart },
+    ],
+  },
+  {
+    id: 'financial',
+    label: 'المالي',
+    tabs: [
+      { value: 'payments', label: 'المدفوعات', icon: CreditCard },
+      { value: 'financial', label: 'الملخص المالي', icon: Wallet },
+      { value: 'statement', label: 'كشف الحساب', icon: Printer },
+    ],
+  },
+  {
+    id: 'analytics',
+    label: 'التحليلات',
+    tabs: [
+      { value: 'analytics', label: 'التحليلات', icon: BarChart3 },
+      { value: 'communications', label: 'التواصل', icon: MessageSquare },
+      { value: 'activity', label: 'النشاط', icon: Activity },
+    ],
+  },
+];
+
 const CustomerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -58,7 +99,9 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
+  const [activeTab, setActiveTab] = useState('addresses');
 
+  // Always load: customer + addresses
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
@@ -79,6 +122,7 @@ const CustomerDetailsPage = () => {
     enabled: !!id,
   });
 
+  // Lazy loaded: only fetch when tab is active
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: async () => {
@@ -86,7 +130,7 @@ const CustomerDetailsPage = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && ['invoices', 'financial', 'statement', 'analytics'].includes(activeTab),
     staleTime: 30000,
   });
 
@@ -97,7 +141,7 @@ const CustomerDetailsPage = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && ['payments', 'financial', 'statement', 'analytics'].includes(activeTab),
     staleTime: 30000,
   });
 
@@ -108,7 +152,7 @@ const CustomerDetailsPage = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && activeTab === 'orders',
     staleTime: 30000,
   });
 
@@ -119,7 +163,7 @@ const CustomerDetailsPage = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && activeTab === 'quotations',
     staleTime: 30000,
   });
 
@@ -130,7 +174,7 @@ const CustomerDetailsPage = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && activeTab === 'activity',
   });
 
   const updateImageMutation = useMutation({
@@ -248,14 +292,14 @@ const CustomerDetailsPage = () => {
                 {customer.phone && (
                   <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
                     <a href={`tel:${customer.phone}`}>
-                      <Phone className="h-3.5 w-3.5 ml-1.5 text-emerald-600" />
+                      <Phone className="h-3.5 w-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400" />
                       {customer.phone}
                     </a>
                   </Button>
                 )}
                 {customer.phone && (
                   <Button variant="outline" size="sm" className="h-8 text-xs border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950" onClick={handleWhatsApp}>
-                    <MessageSquare className="h-3.5 w-3.5 ml-1.5 text-emerald-600" />
+                    <MessageSquare className="h-3.5 w-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400" />
                     واتساب
                   </Button>
                 )}
@@ -294,10 +338,7 @@ const CustomerDetailsPage = () => {
                 <FileText className="h-4 w-4 ml-2" />
                 فاتورة جديدة
               </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                const tabsTrigger = document.querySelector('[value="statement"]') as HTMLElement;
-                tabsTrigger?.click();
-              }}>
+              <Button variant="outline" size="sm" onClick={() => setActiveTab('statement')}>
                 <Printer className="h-4 w-4 ml-2" />
                 كشف حساب
               </Button>
@@ -312,15 +353,14 @@ const CustomerDetailsPage = () => {
 
       {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {/* Balance Card with Credit Progress */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className={`p-2 rounded-lg ${balanceIsDebit ? 'bg-destructive/10' : 'bg-emerald-500/10'}`}>
-                <CreditCard className={`h-5 w-5 ${balanceIsDebit ? 'text-destructive' : 'text-emerald-600'}`} />
+              <div className={`p-2 rounded-lg ${balanceIsDebit ? 'bg-destructive/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20'}`}>
+                <CreditCard className={`h-5 w-5 ${balanceIsDebit ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`} />
               </div>
               <div>
-                <p className={`text-lg font-bold ${balanceIsDebit ? 'text-destructive' : 'text-emerald-600'}`}>
+                <p className={`text-lg font-bold ${balanceIsDebit ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {currentBalance.toLocaleString()}
                 </p>
                 <p className="text-xs text-muted-foreground">الرصيد الحالي</p>
@@ -337,7 +377,6 @@ const CustomerDetailsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Total Purchases */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -352,12 +391,11 @@ const CustomerDetailsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Payment Ratio with Progress */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-2">
-              <div className={`p-2 rounded-lg ${paymentRatio >= 80 ? 'bg-emerald-500/10' : paymentRatio >= 50 ? 'bg-warning/10' : 'bg-destructive/10'}`}>
-                <Wallet className={`h-5 w-5 ${paymentRatio >= 80 ? 'text-emerald-600' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'}`} />
+              <div className={`p-2 rounded-lg ${paymentRatio >= 80 ? 'bg-emerald-500/10 dark:bg-emerald-500/20' : paymentRatio >= 50 ? 'bg-warning/10' : 'bg-destructive/10'}`}>
+                <Wallet className={`h-5 w-5 ${paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'}`} />
               </div>
               <div>
                 <p className="text-lg font-bold">{paymentRatio.toFixed(0)}%</p>
@@ -368,7 +406,6 @@ const CustomerDetailsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Invoice Count */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -383,7 +420,6 @@ const CustomerDetailsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Average Invoice */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -398,7 +434,6 @@ const CustomerDetailsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Last Purchase */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -416,54 +451,24 @@ const CustomerDetailsPage = () => {
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="addresses" className="w-full">
+      {/* Grouped Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ScrollArea className="w-full">
           <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
-            <TabsTrigger value="addresses" className="gap-2 whitespace-nowrap">
-              <MapPin className="h-4 w-4" />
-              العناوين ({addresses.length})
-            </TabsTrigger>
-            <TabsTrigger value="invoices" className="gap-2 whitespace-nowrap">
-              <FileText className="h-4 w-4" />
-              الفواتير ({invoices.length})
-            </TabsTrigger>
-            <TabsTrigger value="quotations" className="gap-2 whitespace-nowrap">
-              <Globe className="h-4 w-4" />
-              عروض الأسعار ({quotations.length})
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="gap-2 whitespace-nowrap">
-              <ShoppingCart className="h-4 w-4" />
-              أوامر البيع ({salesOrders.length})
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="gap-2 whitespace-nowrap">
-              <CreditCard className="h-4 w-4" />
-              المدفوعات ({payments.length})
-            </TabsTrigger>
-            <TabsTrigger value="financial" className="gap-2 whitespace-nowrap">
-              <Wallet className="h-4 w-4" />
-              الملخص المالي
-            </TabsTrigger>
-            <TabsTrigger value="statement" className="gap-2 whitespace-nowrap">
-              <Printer className="h-4 w-4" />
-              كشف الحساب
-            </TabsTrigger>
-            <TabsTrigger value="communications" className="gap-2 whitespace-nowrap">
-              <MessageSquare className="h-4 w-4" />
-              التواصل
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2 whitespace-nowrap">
-              <BarChart3 className="h-4 w-4" />
-              التحليلات
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="gap-2 whitespace-nowrap">
-              <Activity className="h-4 w-4" />
-              النشاط
-            </TabsTrigger>
-            <TabsTrigger value="attachments" className="gap-2 whitespace-nowrap">
-              <Paperclip className="h-4 w-4" />
-              المرفقات
-            </TabsTrigger>
+            {tabGroups.map((group, gi) => (
+              <div key={group.id} className="flex items-center">
+                {gi > 0 && <div className="w-px h-6 bg-border mx-1" />}
+                {group.tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5 whitespace-nowrap text-xs px-2.5">
+                      <Icon className="h-3.5 w-3.5" />
+                      {tab.label}
+                    </TabsTrigger>
+                  );
+                })}
+              </div>
+            ))}
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -517,6 +522,11 @@ const CustomerDetailsPage = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Reminders Tab */}
+        <TabsContent value="reminders" className="mt-6">
+          <CustomerReminderSection customerId={id!} />
         </TabsContent>
 
         {/* Invoices Tab */}
@@ -653,7 +663,7 @@ const CustomerDetailsPage = () => {
                           {new Date(payment.payment_date).toLocaleDateString('ar-EG')}
                         </span>
                       </div>
-                      <span className="font-bold text-emerald-600">{Number(payment.amount).toLocaleString()} ج.م</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{Number(payment.amount).toLocaleString()} ج.م</span>
                     </div>
                   ))}
                 </div>
