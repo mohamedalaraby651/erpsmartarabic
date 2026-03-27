@@ -212,6 +212,21 @@ const CustomerDetailsPage = () => {
   const avgInvoiceValue = invoices.length > 0 ? totalPurchases / invoices.length : 0;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
 
+  // DSO: average days between invoice creation and payment
+  const dso = (() => {
+    const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid' && inv.due_date);
+    if (paidInvoices.length === 0) return null;
+    const totalDays = paidInvoices.reduce((sum, inv) => {
+      const created = new Date(inv.created_at).getTime();
+      const due = new Date(inv.due_date!).getTime();
+      return sum + Math.max(0, (due - created) / (1000 * 60 * 60 * 24));
+    }, 0);
+    return Math.round(totalDays / paidInvoices.length);
+  })();
+
+  // CLV: total purchases since first invoice
+  const clv = totalPurchases;
+
   const handleWhatsApp = () => {
     if (customer?.phone) {
       const phone = customer.phone.replace(/\D/g, '');
