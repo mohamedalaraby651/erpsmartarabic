@@ -12,6 +12,7 @@ import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 
 // Lazy load ShortcutsModal
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));

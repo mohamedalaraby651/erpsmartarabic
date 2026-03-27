@@ -26,6 +26,9 @@ import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { useCustomerDetail } from "@/hooks/customers";
 import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
 import { CustomerStatsGrid } from "@/components/customers/CustomerStatsGrid";
+import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
+import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { tabGroups } from "@/lib/customerConstants";
 import type { CustomerAddress } from "@/lib/customerConstants";
 
@@ -41,6 +44,7 @@ const CustomerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
@@ -69,8 +73,26 @@ const CustomerDetailsPage = () => {
 
   const customer = detail.customer;
 
+  // Mobile stats for horizontal scroll
+  const mobileStats = [
+    { icon: Wallet, value: `${detail.currentBalance.toLocaleString()}`, label: 'الرصيد', color: detail.balanceIsDebit ? 'text-destructive' : 'text-success' },
+    { icon: FileText, value: detail.invoices.length, label: 'الفواتير', color: 'text-primary' },
+    { icon: CreditCard, value: `${detail.paymentRatio}%`, label: 'نسبة السداد', color: 'text-info' },
+    { icon: BarChart3, value: `${detail.totalPurchases.toLocaleString()}`, label: 'المشتريات', color: 'text-warning' },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
+      <MobileDetailHeader
+        title={customer.name}
+        backTo="/customers"
+        action={
+          <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+        }
+      />
+
       <CustomerHeroHeader
         customer={customer}
         customerId={id!}
@@ -84,19 +106,23 @@ const CustomerDetailsPage = () => {
         onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
       />
 
-      <CustomerStatsGrid
-        currentBalance={detail.currentBalance}
-        balanceIsDebit={detail.balanceIsDebit}
-        creditLimit={detail.creditLimit}
-        creditUsagePercent={detail.creditUsagePercent}
-        totalPurchases={detail.totalPurchases}
-        paymentRatio={detail.paymentRatio}
-        invoiceCount={detail.invoices.length}
-        avgInvoiceValue={detail.avgInvoiceValue}
-        dso={detail.dso}
-        clv={detail.clv}
-        lastPurchaseDate={detail.lastPurchaseDate}
-      />
+      {isMobile ? (
+        <MobileStatsScroll stats={mobileStats} />
+      ) : (
+        <CustomerStatsGrid
+          currentBalance={detail.currentBalance}
+          balanceIsDebit={detail.balanceIsDebit}
+          creditLimit={detail.creditLimit}
+          creditUsagePercent={detail.creditUsagePercent}
+          totalPurchases={detail.totalPurchases}
+          paymentRatio={detail.paymentRatio}
+          invoiceCount={detail.invoices.length}
+          avgInvoiceValue={detail.avgInvoiceValue}
+          dso={detail.dso}
+          clv={detail.clv}
+          lastPurchaseDate={detail.lastPurchaseDate}
+        />
+      )}
 
       {/* Tabs */}
       <Tabs value={detail.activeTab} onValueChange={detail.setActiveTab} className="w-full">
