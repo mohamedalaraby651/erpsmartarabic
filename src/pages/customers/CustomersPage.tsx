@@ -150,19 +150,19 @@ const CustomersPage = () => {
     },
   });
 
-  // Stats query (separate, cached)
+  // Stats query using server-side RPC
   const { data: stats } = useQuery({
     queryKey: ['customers-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('customers').select('customer_type, vip_level, current_balance');
+      const { data, error } = await supabase.rpc('get_customer_stats');
       if (error) throw error;
-      const all = data || [];
+      const d = data as Record<string, number>;
       return {
-        total: all.length,
-        individuals: all.filter(c => c.customer_type === 'individual').length,
-        companies: all.filter(c => c.customer_type === 'company').length,
-        vip: all.filter(c => c.vip_level !== 'regular').length,
-        totalBalance: all.reduce((sum, c) => sum + Number(c.current_balance || 0), 0),
+        total: d.total || 0,
+        individuals: d.individuals || 0,
+        companies: d.companies || 0,
+        vip: d.vip || 0,
+        totalBalance: d.total_balance || 0,
       };
     },
     staleTime: 30000,
