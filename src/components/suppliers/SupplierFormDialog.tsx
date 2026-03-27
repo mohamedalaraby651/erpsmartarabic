@@ -26,6 +26,8 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import ImageUpload from "@/components/shared/ImageUpload";
 import { User, Phone, Building2, CreditCard, MapPin, DollarSign } from "lucide-react";
 import { egyptGovernorates, getCitiesByGovernorate } from "@/lib/egyptLocations";
+import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
+import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 
 interface SupplierFormDialogProps {
   open: boolean;
@@ -174,149 +176,87 @@ const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialog
 
   const imageUrl = watch('image_url');
 
-  return (
+  const formContent = (
+    <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-2">
+      {/* Image */}
+      <div className="flex justify-center py-4 border-b">
+        <ImageUpload currentImageUrl={imageUrl} onImageUploaded={(url) => setValue('image_url', url)} onImageRemoved={() => setValue('image_url', '')} bucket="supplier-images" folder="suppliers" size="lg" fallback={watch('name')?.slice(0, 2) || 'مو'} />
+      </div>
+      <SectionHeader icon={User} title="المعلومات الأساسية" color="text-primary" />
+      <div><Label htmlFor="name">اسم المورد *</Label><Input id="name" {...register('name', { required: 'اسم المورد مطلوب' })} placeholder="اسم الشركة أو المورد" />{errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label>نوع المورد</Label><Select value={watch('supplier_type')} onValueChange={(v) => setValue('supplier_type', v)}><SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger><SelectContent>{supplierTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></div>
+        <div><Label>التصنيف</Label><Select value={watch('category')} onValueChange={(v) => setValue('category', v)}><SelectTrigger><SelectValue placeholder="اختر التصنيف" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent></Select></div>
+      </div>
+      <SectionHeader icon={Phone} title="معلومات الاتصال" color="text-info" />
+      <div><Label>جهة الاتصال</Label><Input {...register('contact_person')} placeholder="اسم المسؤول" /></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label>الهاتف</Label><Input {...register('phone')} placeholder="رقم الهاتف" /></div>
+        <div><Label>هاتف إضافي</Label><Input {...register('phone2')} placeholder="رقم هاتف إضافي" /></div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label>البريد الإلكتروني</Label><Input type="email" {...register('email')} placeholder="البريد الإلكتروني" /></div>
+        <div><Label>الموقع الإلكتروني</Label><Input {...register('website')} placeholder="https://example.com" /></div>
+      </div>
+      <SectionHeader icon={MapPin} title="الموقع الجغرافي" color="text-success" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label>المحافظة</Label><Select value={watch('governorate')} onValueChange={(v) => { setValue('governorate', v); setValue('city', ''); }}><SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger><SelectContent>{egyptGovernorates.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent></Select></div>
+        <div><Label>المدينة / المركز</Label><Select value={watch('city')} onValueChange={(v) => setValue('city', v)} disabled={!selectedGovernorate}><SelectTrigger><SelectValue placeholder={selectedGovernorate ? "اختر المدينة" : "اختر المحافظة أولاً"} /></SelectTrigger><SelectContent>{cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+      </div>
+      <div><Label>العنوان التفصيلي</Label><Textarea {...register('address')} placeholder="العنوان الكامل" rows={2} /></div>
+      <SectionHeader icon={DollarSign} title="المعلومات المالية" color="text-warning" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label>حد الائتمان</Label><Input type="number" {...register('credit_limit', { valueAsNumber: true })} placeholder="0" /></div>
+        <div><Label>نسبة الخصم (%)</Label><Input type="number" step="0.1" {...register('discount_percentage', { valueAsNumber: true })} placeholder="0" /></div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label>مدة السداد (أيام)</Label><Input type="number" {...register('payment_terms_days', { valueAsNumber: true })} placeholder="0" /></div>
+        <div><Label>طريقة الدفع المفضلة</Label><Select value={watch('preferred_payment_method')} onValueChange={(v) => setValue('preferred_payment_method', v)}><SelectTrigger><SelectValue placeholder="اختر طريقة الدفع" /></SelectTrigger><SelectContent>{paymentMethods.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent></Select></div>
+      </div>
+      <div><Label>الرقم الضريبي</Label><Input {...register('tax_number')} placeholder="الرقم الضريبي" /></div>
+      <SectionHeader icon={CreditCard} title="البيانات البنكية" color="text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label>اسم البنك</Label><Input {...register('bank_name')} placeholder="مثال: البنك الأهلي" /></div>
+        <div><Label>رقم الحساب</Label><Input {...register('bank_account')} placeholder="رقم الحساب البنكي" /></div>
+      </div>
+      <div><Label>IBAN</Label><Input {...register('iban')} placeholder="EG..." className="font-mono" /></div>
+      <SectionHeader icon={Building2} title="ملاحظات" color="text-muted-foreground" />
+      <Textarea {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} />
+      <div className="flex items-center gap-3"><Switch id="is_active" checked={watch('is_active')} onCheckedChange={(c) => setValue('is_active', c)} /><Label htmlFor="is_active">مورد نشط</Label></div>
+    </form>
+  );
+
+  const formFooter = (
+    <div className="flex justify-end gap-3">
+      <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+      <Button type="submit" disabled={mutation.isPending} onClick={handleSubmit((data) => mutation.mutate(data))}>
+        {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+      </Button>
+    </div>
+  );
+
+  const desktopForm = (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'تعديل المورد' : 'إضافة مورد جديد'}</DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-2">
-          {/* Image */}
-          <div className="flex justify-center py-4 border-b">
-            <ImageUpload
-              currentImageUrl={imageUrl}
-              onImageUploaded={(url) => setValue('image_url', url)}
-              onImageRemoved={() => setValue('image_url', '')}
-              bucket="supplier-images"
-              folder="suppliers"
-              size="lg"
-              fallback={watch('name')?.slice(0, 2) || 'مو'}
-            />
-          </div>
-
-          {/* المعلومات الأساسية */}
-          <SectionHeader icon={User} title="المعلومات الأساسية" color="text-primary" />
-          <div>
-            <Label htmlFor="name">اسم المورد *</Label>
-            <Input id="name" {...register('name', { required: 'اسم المورد مطلوب' })} placeholder="اسم الشركة أو المورد" />
-            {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>نوع المورد</Label>
-              <Select value={watch('supplier_type')} onValueChange={(v) => setValue('supplier_type', v)}>
-                <SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger>
-                <SelectContent>
-                  {supplierTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>التصنيف</Label>
-              <Select value={watch('category')} onValueChange={(v) => setValue('category', v)}>
-                <SelectTrigger><SelectValue placeholder="اختر التصنيف" /></SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* معلومات الاتصال */}
-          <SectionHeader icon={Phone} title="معلومات الاتصال" color="text-info" />
-          <div>
-            <Label>جهة الاتصال</Label>
-            <Input {...register('contact_person')} placeholder="اسم المسؤول" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><Label>الهاتف</Label><Input {...register('phone')} placeholder="رقم الهاتف" /></div>
-            <div><Label>هاتف إضافي</Label><Input {...register('phone2')} placeholder="رقم هاتف إضافي" /></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><Label>البريد الإلكتروني</Label><Input type="email" {...register('email')} placeholder="البريد الإلكتروني" /></div>
-            <div><Label>الموقع الإلكتروني</Label><Input {...register('website')} placeholder="https://example.com" /></div>
-          </div>
-
-          {/* الموقع الجغرافي */}
-          <SectionHeader icon={MapPin} title="الموقع الجغرافي" color="text-success" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>المحافظة</Label>
-              <Select value={watch('governorate')} onValueChange={(v) => { setValue('governorate', v); setValue('city', ''); }}>
-                <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
-                <SelectContent>
-                  {egyptGovernorates.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>المدينة / المركز</Label>
-              <Select value={watch('city')} onValueChange={(v) => setValue('city', v)} disabled={!selectedGovernorate}>
-                <SelectTrigger><SelectValue placeholder={selectedGovernorate ? "اختر المدينة" : "اختر المحافظة أولاً"} /></SelectTrigger>
-                <SelectContent>
-                  {cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div>
-            <Label>العنوان التفصيلي</Label>
-            <Textarea {...register('address')} placeholder="العنوان الكامل" rows={2} />
-          </div>
-
-          {/* المعلومات المالية */}
-          <SectionHeader icon={DollarSign} title="المعلومات المالية" color="text-warning" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><Label>حد الائتمان</Label><Input type="number" {...register('credit_limit', { valueAsNumber: true })} placeholder="0" /></div>
-            <div><Label>نسبة الخصم (%)</Label><Input type="number" step="0.1" {...register('discount_percentage', { valueAsNumber: true })} placeholder="0" /></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><Label>مدة السداد (أيام)</Label><Input type="number" {...register('payment_terms_days', { valueAsNumber: true })} placeholder="0" /></div>
-            <div>
-              <Label>طريقة الدفع المفضلة</Label>
-              <Select value={watch('preferred_payment_method')} onValueChange={(v) => setValue('preferred_payment_method', v)}>
-                <SelectTrigger><SelectValue placeholder="اختر طريقة الدفع" /></SelectTrigger>
-                <SelectContent>
-                  {paymentMethods.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div>
-            <Label>الرقم الضريبي</Label>
-            <Input {...register('tax_number')} placeholder="الرقم الضريبي" />
-          </div>
-
-          {/* البيانات البنكية */}
-          <SectionHeader icon={CreditCard} title="البيانات البنكية" color="text-muted-foreground" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><Label>اسم البنك</Label><Input {...register('bank_name')} placeholder="مثال: البنك الأهلي" /></div>
-            <div><Label>رقم الحساب</Label><Input {...register('bank_account')} placeholder="رقم الحساب البنكي" /></div>
-          </div>
-          <div>
-            <Label>IBAN</Label>
-            <Input {...register('iban')} placeholder="EG..." className="font-mono" />
-          </div>
-
-          {/* ملاحظات */}
-          <SectionHeader icon={Building2} title="ملاحظات" color="text-muted-foreground" />
-          <Textarea {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} />
-          <div className="flex items-center gap-3">
-            <Switch id="is_active" checked={watch('is_active')} onCheckedChange={(c) => setValue('is_active', c)} />
-            <Label htmlFor="is_active">مورد نشط</Label>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
-            </Button>
-          </div>
-        </form>
+        <DialogHeader><DialogTitle>{isEditing ? 'تعديل المورد' : 'إضافة مورد جديد'}</DialogTitle></DialogHeader>
+        {formContent}
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button disabled={mutation.isPending} onClick={handleSubmit((data) => mutation.mutate(data))}>
+            {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
+
+  const mobileForm = (
+    <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل المورد' : 'إضافة مورد جديد'} footer={formFooter}>
+      {formContent}
+    </FullScreenForm>
+  );
+
+  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
 };
 
 export default SupplierFormDialog;

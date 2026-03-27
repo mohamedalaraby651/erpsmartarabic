@@ -31,6 +31,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
+import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
+import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 
 const formSchema = z.object({
   category_id: z.string().optional(),
@@ -202,167 +204,47 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
     mutation.mutate(data);
   };
 
-  return (
+  const formContent = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="category_id" render={({ field }) => (<FormItem><FormLabel>التصنيف</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر التصنيف" /></SelectTrigger></FormControl><SelectContent>{categories?.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="amount" render={({ field }) => (<FormItem><FormLabel>المبلغ *</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="payment_method" render={({ field }) => (<FormItem><FormLabel>طريقة الدفع *</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="cash">نقدي</SelectItem><SelectItem value="bank">تحويل بنكي</SelectItem><SelectItem value="card">بطاقة</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+        {paymentMethod === 'cash' && (<FormField control={form.control} name="register_id" render={({ field }) => (<FormItem><FormLabel>الصندوق</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر الصندوق" /></SelectTrigger></FormControl><SelectContent>{registers?.map((reg) => (<SelectItem key={reg.id} value={reg.id}>{reg.name} ({Number(reg.current_balance).toLocaleString()} ج.م)</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />)}
+        <FormField control={form.control} name="expense_date" render={({ field }) => (<FormItem><FormLabel>التاريخ *</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="supplier_id" render={({ field }) => (<FormItem><FormLabel>المورد (اختياري)</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger></FormControl><SelectContent>{suppliers?.map((sup) => (<SelectItem key={sup.id} value={sup.id}>{sup.name}</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />
+        <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>الوصف</FormLabel><FormControl><Textarea placeholder="وصف المصروف..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+      </form>
+    </Form>
+  );
+
+  const formFooter = (
+    <div className="flex gap-2">
+      <Button className="flex-1" disabled={mutation.isPending} onClick={form.handleSubmit(onSubmit)}>
+        {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+      </Button>
+      <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+    </div>
+  );
+
+  const desktopForm = (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'تعديل المصروف' : 'مصروف جديد'}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="category_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>التصنيف</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر التصنيف" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories?.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>المبلغ *</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="payment_method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>طريقة الدفع *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="cash">نقدي</SelectItem>
-                      <SelectItem value="bank">تحويل بنكي</SelectItem>
-                      <SelectItem value="card">بطاقة</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {paymentMethod === 'cash' && (
-              <FormField
-                control={form.control}
-                name="register_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>الصندوق</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="اختر الصندوق" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {registers?.map((reg) => (
-                          <SelectItem key={reg.id} value={reg.id}>
-                            {reg.name} ({Number(reg.current_balance).toLocaleString()} ج.م)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="expense_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>التاريخ *</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="supplier_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>المورد (اختياري)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر المورد" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {suppliers?.map((sup) => (
-                        <SelectItem key={sup.id} value={sup.id}>
-                          {sup.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>الوصف</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="وصف المصروف..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-                {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                إلغاء
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <DialogHeader><DialogTitle>{isEditing ? 'تعديل المصروف' : 'مصروف جديد'}</DialogTitle></DialogHeader>
+        {formContent}
+        <div className="flex gap-2 pt-4">
+          <Button className="flex-1" disabled={mutation.isPending} onClick={form.handleSubmit(onSubmit)}>{mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}</Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
+
+  const mobileForm = (
+    <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل المصروف' : 'مصروف جديد'} footer={formFooter}>
+      {formContent}
+    </FullScreenForm>
+  );
+
+  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
 }
