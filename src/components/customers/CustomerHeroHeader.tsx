@@ -15,8 +15,10 @@ import type { Customer } from "@/lib/customerConstants";
 interface CustomerHeroHeaderProps {
   customer: Customer;
   customerId: string;
-  invoices: Array<Record<string, unknown>>;
-  payments: Array<Record<string, unknown>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  invoices: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payments: any[];
   onBack: () => void;
   onEdit: () => void;
   onNewInvoice: () => void;
