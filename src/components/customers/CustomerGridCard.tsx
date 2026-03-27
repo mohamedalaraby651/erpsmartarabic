@@ -106,5 +106,7 @@ const CustomerGridCardInner = ({
         </div>
       </CardContent>
     </Card>
-  );
-}
+};
+
+const CustomerGridCard = memo(CustomerGridCardInner);
+export default CustomerGridCard;
