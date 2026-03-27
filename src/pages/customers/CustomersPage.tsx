@@ -20,6 +20,7 @@ import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
 import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
+import { DuplicateDetectionDialog } from "@/components/customers/DuplicateDetectionDialog";
 import { vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 
