@@ -687,6 +687,57 @@ export type Database = {
           },
         ]
       }
+      customer_reminders: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          is_completed: boolean
+          note: string
+          reminder_date: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          is_completed?: boolean
+          note: string
+          reminder_date: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          is_completed?: boolean
+          note?: string
+          reminder_date?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_reminders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_reminders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           category_id: string | null
@@ -3749,6 +3800,7 @@ export type Database = {
         Returns: string
       }
       get_current_tenant: { Args: never; Returns: string }
+      get_customer_stats: { Args: never; Returns: Json }
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
       get_user_tenants: { Args: { _user_id: string }; Returns: string[] }

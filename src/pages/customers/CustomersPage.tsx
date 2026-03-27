@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload, Filter, X, Merge } from "lucide-react";
+import { Plus, Search, Users, Building2, Crown, Phone, Mail, DollarSign, AlertTriangle, Upload, Filter, X, Merge, MapPin } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -37,6 +37,7 @@ import { FilterChips } from "@/components/filters/FilterChips";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import { CustomerSearchPreview } from "@/components/customers/CustomerSearchPreview";
 import { SwipeableRow } from "@/components/mobile/SwipeableRow";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -149,19 +150,19 @@ const CustomersPage = () => {
     },
   });
 
-  // Stats query (separate, cached)
+  // Stats query using server-side RPC
   const { data: stats } = useQuery({
     queryKey: ['customers-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('customers').select('customer_type, vip_level, current_balance');
+      const { data, error } = await supabase.rpc('get_customer_stats');
       if (error) throw error;
-      const all = data || [];
+      const d = data as Record<string, number>;
       return {
-        total: all.length,
-        individuals: all.filter(c => c.customer_type === 'individual').length,
-        companies: all.filter(c => c.customer_type === 'company').length,
-        vip: all.filter(c => c.vip_level !== 'regular').length,
-        totalBalance: all.reduce((sum, c) => sum + Number(c.current_balance || 0), 0),
+        total: d.total || 0,
+        individuals: d.individuals || 0,
+        companies: d.companies || 0,
+        vip: d.vip || 0,
+        totalBalance: d.total_balance || 0,
       };
     },
     staleTime: 30000,
@@ -170,18 +171,34 @@ const CustomersPage = () => {
   const displayStats = stats || { total: 0, individuals: 0, companies: 0, vip: 0, totalBalance: 0 };
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('customers').delete().eq('id', id);
+    mutationFn: async (deleteId: string) => {
+      const { error } = await supabase.from('customers').delete().eq('id', deleteId);
       if (error) throw error;
     },
+    onMutate: async (deleteId: string) => {
+      // Optimistic update: remove from list immediately
+      await queryClient.cancelQueries({ queryKey: ['customers'] });
+      const previousCustomers = queryClient.getQueryData(['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage]);
+      queryClient.setQueryData(
+        ['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage],
+        (old: Customer[] | undefined) => old?.filter(c => c.id !== deleteId) || []
+      );
+      return { previousCustomers };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-count'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       toast.success('تم حذف العميل بنجاح');
       setDeletingId(null);
     },
-    onError: () => {
+    onError: (_err, _deleteId, context) => {
+      // Rollback on error
+      if (context?.previousCustomers) {
+        queryClient.setQueryData(
+          ['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage],
+          context.previousCustomers
+        );
+      }
       toast.error('فشل حذف العميل');
       setDeletingId(null);
     },
@@ -238,7 +255,8 @@ const CustomersPage = () => {
           badge={{ text: vipLabels[customer.vip_level as keyof typeof vipLabels], variant: customer.vip_level === 'regular' ? 'secondary' : 'default' }}
           fields={[
             ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
-            ...(customer.email ? [{ label: 'البريد', value: customer.email, icon: <Mail className="h-3 w-3" /> }] : []),
+            ...(customer.governorate ? [{ label: 'المحافظة', value: customer.governorate, icon: <MapPin className="h-3 w-3" /> }] : []),
+            { label: 'الرصيد', value: <span className={Number(customer.current_balance) > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}>{Number(customer.current_balance || 0).toLocaleString()} ج.م</span>, icon: <DollarSign className="h-3 w-3" /> },
           ]}
           onClick={() => navigate(`/customers/${customer.id}`)}
           onView={() => navigate(`/customers/${customer.id}`)}
@@ -463,10 +481,10 @@ const CustomersPage = () => {
       <Card>
         <CardContent className="p-3 md:p-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="بحث بالاسم، الهاتف، المحافظة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10" />
-            </div>
+            <CustomerSearchPreview
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
             {isMobile ? (
               <Button variant="outline" size="sm" onClick={() => {
                 setTempType(typeFilter);
