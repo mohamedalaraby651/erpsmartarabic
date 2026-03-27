@@ -28,7 +28,7 @@ const CustomerGridCardInner = ({
   isSelected,
   onSelect,
   showSelect,
-}: CustomerGridCardProps) {
+}: CustomerGridCardProps) => {
   const balance = Number(customer.current_balance || 0);
   const creditLimit = Number(customer.credit_limit || 0);
   const creditUsage = creditLimit > 0 ? Math.min((balance / creditLimit) * 100, 100) : 0;
