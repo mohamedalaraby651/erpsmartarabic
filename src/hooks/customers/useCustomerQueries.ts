@@ -143,9 +143,15 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
       const { error } = await supabase.from('customers').update({ vip_level: vipLevel as 'regular' | 'silver' | 'gold' | 'platinum' }).in('id', ids);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { ids, vipLevel }) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
+      supabase.rpc('log_bulk_operation', {
+        _action: 'bulk_vip_update',
+        _entity_type: 'customers',
+        _entity_ids: ids,
+        _details: { vip_level: vipLevel },
+      }).catch(() => {});
       toast.success('تم تحديث مستوى VIP بنجاح');
     },
     onError: () => toast.error('فشل تحديث مستوى VIP'),
