@@ -120,9 +120,16 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
       const { error } = await supabase.from('customers').delete().in('id', ids);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, ids) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
+      // Audit trail for bulk delete
+      supabase.rpc('log_bulk_operation', {
+        _action: 'bulk_delete',
+        _entity_type: 'customers',
+        _entity_ids: ids,
+        _details: { count: ids.length },
+      }).catch(() => {});
       toast.success('تم حذف العملاء المحددين بنجاح');
     },
     onError: (err) => {
