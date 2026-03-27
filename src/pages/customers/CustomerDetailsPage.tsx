@@ -12,7 +12,7 @@ import {
   ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User,
   Crown, CreditCard, Paperclip, ShoppingCart, Activity, FileText,
   TrendingUp, TrendingDown, Calendar, Printer, MessageSquare, BarChart3,
-  Wallet, Globe, ExternalLink, Bell,
+  Wallet, Globe, ExternalLink, Bell, Clock, Target,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
