@@ -37,6 +37,7 @@ import { FilterChips } from "@/components/filters/FilterChips";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import { CustomerSearchPreview } from "@/components/customers/CustomerSearchPreview";
 import { SwipeableRow } from "@/components/mobile/SwipeableRow";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
