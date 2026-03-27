@@ -150,8 +150,8 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
         _action: 'bulk_vip_update',
         _entity_type: 'customers',
         _entity_ids: ids,
-        _details: { vip_level: vipLevel },
-      }).catch(() => {});
+        _details: { vip_level: vipLevel } as unknown as Record<string, unknown>,
+      }).then(() => {});
       toast.success('تم تحديث مستوى VIP بنجاح');
     },
     onError: () => toast.error('فشل تحديث مستوى VIP'),
