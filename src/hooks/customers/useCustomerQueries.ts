@@ -22,18 +22,6 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, currentPage, rangeFrom, rangeTo, sortConfig } = options;
   const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter];
 
-  // Inline filter helper
-  const applyFilters = <T>(q: T & { or: Function; eq: Function }) => {
-    let result = q as Record<string, Function>;
-    if (debouncedSearch) {
-      result = result.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
-    }
-    if (typeFilter !== 'all') result = result.eq('customer_type', typeFilter);
-    if (vipFilter !== 'all') result = result.eq('vip_level', vipFilter);
-    if (governorateFilter !== 'all') result = result.eq('governorate', governorateFilter);
-    if (statusFilter !== 'all') result = result.eq('is_active', statusFilter === 'active');
-    return result as unknown as T;
-  };
 
   // Count query
   const { data: totalCount = 0 } = useQuery({
