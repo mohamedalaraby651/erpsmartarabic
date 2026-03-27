@@ -17,21 +17,6 @@ interface UseCustomerQueriesOptions {
   sortConfig: SortConfig;
 }
 
-function applyFilters(
-  query: ReturnType<typeof supabase.from>,
-  { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter }: Pick<UseCustomerQueriesOptions, 'debouncedSearch' | 'typeFilter' | 'vipFilter' | 'governorateFilter' | 'statusFilter'>
-) {
-  let q = query;
-  if (debouncedSearch) {
-    q = q.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`) as typeof q;
-  }
-  if (typeFilter !== 'all') q = q.eq('customer_type', typeFilter as 'individual' | 'company' | 'farm') as typeof q;
-  if (vipFilter !== 'all') q = q.eq('vip_level', vipFilter as 'regular' | 'silver' | 'gold' | 'platinum') as typeof q;
-  if (governorateFilter !== 'all') q = q.eq('governorate', governorateFilter) as typeof q;
-  if (statusFilter !== 'all') q = q.eq('is_active', statusFilter === 'active') as typeof q;
-  return q;
-}
-
 export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const queryClient = useQueryClient();
   const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, currentPage, rangeFrom, rangeTo, sortConfig } = options;
