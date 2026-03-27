@@ -1,376 +1,81 @@
-# خطة تطوير الملف الشخصي للعميل - بروفايل محسّن متكامل
+
+
+# خطة التطوير المرحلة التالية - قسم العملاء
 
 ---
 
-## ملخص التطوير
+## المشاكل المكتشفة والإصلاحات المطلوبة
 
-تحسين شامل لعرض بيانات العميل مع نظام صور متقدم يشمل اقتصاص وأيقونات تلقائية حسب النوع، وإعادة تصميم قسم الهيدر ليعرض البيانات المالية والاتصال وتاريخ التعامل بشكل أفضل وأكثر تفاعلية.
+### مشكلة 1: Edge Function لدمج العملاء لن تعمل
+`merge-customers` غير مسجلة في `supabase/config.toml` مما يمنع نشرها بشكل صحيح.
+- **الإصلاح:** إضافة `[functions.merge-customers]` مع `verify_jwt = false` في config.toml
+
+### مشكلة 2: روابط الصور تنتهي بعد 24 ساعة
+`ImageUpload` يستخدم `createSignedUrl` بصلاحية 24 ساعة فقط. بعدها تختفي صورة العميل.
+- **الإصلاح:** تحويل bucket `customer-images` إلى public واستخدام `getPublicUrl` بدلا من signed URLs. أو حفظ المسار النسبي وتوليد signed URL عند العرض.
+
+### مشكلة 3: `any` متبقي في CustomerFormDialog
+السطر 126: `const payload: any` لا يزال موجود.
+- **الإصلاح:** استبداله بـ `Partial<CustomerInsert>`
 
 ---
 
-## التغييرات المطلوبة
+## خطوات التنفيذ
 
-### 1. مكون ImageUpload محسّن مع اقتصاص الصورة
+### الخطوة 1: إصلاح نظام الصور (الأولوية القصوى)
+**الملفات:** `src/components/shared/ImageUpload.tsx`، migration SQL
 
-**الملف:** `src/components/shared/ImageUpload.tsx`
+- تحويل `customer-images` bucket إلى public عبر migration
+- تعديل `ImageUpload` لاستخدام `getPublicUrl` بدلا من `createSignedUrl`
+- حفظ المسار النسبي في `image_url` بدلا من signed URL الكامل
+- تعديل `CustomerAvatar` و `CustomerDetailsPage` لبناء URL العرض من المسار المحفوظ
 
-- اضافة مكتبة `react-image-crop` لاقتصاص الصورة قبل الرفع
-- عرض نافذة اقتصاص (Crop Modal) بعد اختيار الصورة وقبل الرفع
-- دعم نسبة 1:1 للصور الشخصية
-- دعم `capture="environment"` على الموبايل للتصوير المباشر من الكاميرا
-- تحسين زر الرفع ليكون overlay مباشر على الصورة بدل أسفلها
+### الخطوة 2: إصلاح config.toml + type safety
+**الملفات:** `supabase/config.toml`، `src/components/customers/CustomerFormDialog.tsx`
 
-### 2. مكون CustomerAvatar الذكي (جديد)
+- إضافة `[functions.merge-customers]` verify_jwt = false
+- استبدال `const payload: any` بـ `Partial<CustomerInsert>` مع الأنواع الصحيحة
 
-**الملف:** `src/components/customers/CustomerAvatar.tsx` (جديد)
+### الخطوة 3: تحسين عرض العملاء في القائمة
+**الملف:** `src/pages/customers/CustomersPage.tsx`
 
-- يعرض صورة العميل اذا وجدت
-- بدون صورة: يولّد أفاتار ملون بالأحرف الأولى مع تدرجات مختلفة حسب نوع العميل:
-  - فرد: تدرج أزرق
-  - شركة: تدرج أخضر
-  - مزرعة: تدرج بني/أخضر
-- أيقونة صغيرة overlay (User / Building2 / Leaf) تظهر في الزاوية حسب النوع
-- أحجام متعددة (sm, md, lg, xl)
+- استخدام `CustomerAvatar` في جدول العملاء (عمود الاسم) بدلا من النص العادي
+- استخدام `CustomerAvatar` في بطاقات الموبايل `DataCard`
+- إضافة عمود صورة مصغرة في الجدول
 
-### 3. إعادة تصميم هيدر صفحة تفاصيل العميل
+### الخطوة 4: تفعيل Swipe Actions على الموبايل
+**الملف:** `src/pages/customers/CustomersPage.tsx`
 
-**الملف:** `src/pages/customers/CustomerDetailsPage.tsx` (تعديل الأسطر 258-440)
+- دمج `SwipeableRow` مع بطاقات العملاء على الموبايل
+- إضافة أزرار سحب: تعديل، واتساب، حذف
+- تحسين تجربة اللمس
 
-**الهيكل الجديد للهيدر:**
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│  ┌──────┐  الاسم + VIP Badge + حالة                     │
-│  │Avatar│  نوع العميل | التصنيف | المحافظة               │
-│  │ كبير │                                                │
-│  │+رفع  │  [📞 هاتف] [💬 واتساب] [✉ بريد] [🌐 فيسبوك]  │
-│  └──────┘                                                │
-│                                                          │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │
-│  │الرصيد   │ │المشتريات│ │نسبة     │ │آخر شراء │       │
-│  │الحالي   │ │الإجمالي │ │السداد % │ │         │       │
-│  │مع شريط  │ │         │ │مع شريط  │ │         │       │
-│  │ائتمان   │ │         │ │تقدم     │ │         │       │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘       │
-│                                                          │
-│  آخر 3 فواتير: INV-001 (مدفوع) | INV-002 (جزئي) | ...  │
-│  ─────────────────────────── أزرار: تعديل | فاتورة جديدة│
-└─────────────────────────────────────────────────────────┘
-```
-
-التغييرات المحددة:
-
-- **الصورة**: استبدال Avatar + ImageUpload المنفصلين بـ `CustomerAvatar` مدمج مع زر رفع overlay
-- **أزرار الاتصال**: تحويل النصوص الحالية لأزرار تفاعلية ملونة (هاتف أخضر، واتساب أخضر، بريد أزرق)
-- **البيانات المالية**: نقل 4 بطاقات إحصاء أساسية داخل الهيدر مع شريط تقدم للائتمان ونسبة السداد
-- **تاريخ التعامل المختصر**: عرض آخر 3 فواتير كشريط صغير أسفل الهيدر مع حالة كل فاتورة
-- **الموبايل**: تصميم متجاوب يعرض الصورة والاسم في المنتصف، والأزرار في صف أفقي قابل للتمرير
-
-### 4. تحسين بطاقات الإحصاءات
-
+### الخطوة 5: تحسين صفحة تفاصيل العميل
 **الملف:** `src/pages/customers/CustomerDetailsPage.tsx`
 
-- اضافة `Progress` bar في بطاقة الرصيد (نسبة الاستخدام من حد الائتمان)
-- اضافة `Progress` bar في بطاقة نسبة السداد
-- تلوين الرصيد (أخضر اذا دائن، أحمر اذا مدين)
-- اضافة مؤشر اتجاه (سهم أعلى/أسفل) مقارنة بالشهر السابق
-
-### 5. شريط تاريخ التعامل المختصر (جديد)
-
-**الملف:** `src/components/customers/CustomerQuickHistory.tsx` (جديد)
-
-- يعرض آخر 3 فواتير وآخر دفعة وتاريخ أول تعامل
-- كل عنصر قابل للنقر (EntityLink)
-- تصميم أفقي مدمج في الهيدر
+- تحسين عرض التبويبات على الموبايل (ScrollArea أفقي للتبويبات)
+- إضافة ملخص مالي سريع قابل للنقر يفتح التبويب المناسب
+- تحسين بطاقات الإحصاء بإضافة مؤشرات اتجاه (سهم أعلى/أسفل)
 
 ---
 
 ## الملفات المتأثرة
 
-
-| #   | الملف                                               | نوع التغيير                   |
-| --- | --------------------------------------------------- | ----------------------------- |
-| 1   | `src/components/shared/ImageUpload.tsx`             | تعديل - اضافة اقتصاص + كاميرا |
-| 2   | `src/components/customers/CustomerAvatar.tsx`       | **جديد** - أفاتار ذكي         |
-| 3   | `src/components/customers/CustomerQuickHistory.tsx` | **جديد** - تاريخ تعامل مختصر  |
-| 4   | `src/pages/customers/CustomerDetailsPage.tsx`       | تعديل - هيدر محسن + إحصاءات   |
-| 5   | `package.json`                                      | اضافة `react-image-crop`      |
-
+| # | الملف | التغيير |
+|---|-------|---------|
+| 1 | `src/components/shared/ImageUpload.tsx` | إصلاح نظام URLs - استخدام public URLs |
+| 2 | `supabase/config.toml` | إضافة merge-customers function config |
+| 3 | `src/components/customers/CustomerFormDialog.tsx` | إزالة `any` المتبقي |
+| 4 | `src/pages/customers/CustomersPage.tsx` | CustomerAvatar + SwipeableRow في الموبايل |
+| 5 | `src/pages/customers/CustomerDetailsPage.tsx` | تحسين التبويبات + مؤشرات الاتجاه |
+| 6 | Migration SQL | تحويل customer-images bucket إلى public |
 
 ---
 
 ## التفاصيل التقنية
 
-- **react-image-crop**: مكتبة خفيفة (~8KB gzipped) لاقتصاص الصور في المتصفح قبل الرفع
-- **Canvas API**: لتحويل الصورة المقتصة الى Blob قبل رفعها لـ Storage
-- **تدرجات الألوان**: CSS gradients ثابتة حسب `customer_type` بدون حساب ديناميكي
-- **الموبايل**: `capture="user"` في input file للتصوير المباشر، مع fallback لاختيار ملف
-- **الأداء**: لا استعلامات اضافية - كل البيانات متاحة بالفعل في الصفحة
+- **Public URL pattern:** `{SUPABASE_URL}/storage/v1/object/public/customer-images/{path}`
+- حفظ المسار النسبي فقط في DB (مثل: `{customer_id}/1234.jpg`)
+- توليد URL الكامل عند العرض عبر `getPublicUrl`
+- لا حاجة لتغيير schema - فقط تغيير ما يُحفظ في `image_url`
 
-....
-
-خطة تطوير قسم العملاء - المرحلة المتقدمة
-
-الوضع الحالي بعد الفحص
-
-ما تم إنجازه
-
-Server-side pagination + debounce (يعمل)
-
-&nbsp;
-
-إزالة as any من CustomersPage و CustomerDetailsPage (تم)
-
-&nbsp;
-
-StatementOfAccount مع running balance (يعمل)
-
-&nbsp;
-
-CustomerImportDialog من Excel (يعمل)
-
-&nbsp;
-
-CommunicationLogTab (الكود جاهز لكن الجدول غير موجود في قاعدة البيانات)
-
-&nbsp;
-
-CustomerPurchaseChart + CustomerFinancialSummary (يعمل)
-
-&nbsp;
-
-المشاكل المتبقية
-
-جدول customer_communications غير موجود - المهاجرة فشلت سابقا ويجب إعادتها
-
-&nbsp;
-
-11 موضع as any في CustomerFormDialog.tsx (الأعمدة موجودة فعلا في types.ts لذا يمكن إزالتها)
-
-&nbsp;
-
-لا يوجد فلاتر موبايل - الفلاتر تختفي على الموبايل
-
-&nbsp;
-
-لا يوجد دمج عملاء مكررين
-
-&nbsp;
-
-لا يوجد بحث متقدم بالمحافظة والرصيد والحالة
-
-&nbsp;
-
-خطة التنفيذ
-
-1. إنشاء جدول customer_communications + RLS
-
-إعادة تشغيل المهاجرة:
-
-&nbsp;
-
-جدول customer_communications مع أعمدة: id, customer_id, type, subject, note, communication_date, created_by, created_at
-
-&nbsp;
-
-RLS: authenticated users يقرأون ويضيفون
-
-&nbsp;
-
-2. إصلاح Type Safety في CustomerFormDialog
-
-إزالة كل as any واستبدالها بالأنواع الصحيحة من Database['public']['Tables']['customers']['Row'] - جميع الأعمدة (governorate, city, discount_percentage, contact_person, إلخ) موجودة فعلا في types.ts
-
-&nbsp;
-
-3. فلاتر متقدمة + FilterDrawer للموبايل
-
-إضافة فلتر بالمحافظة (من قائمة egyptGovernorates)
-
-&nbsp;
-
-فلتر بالحالة (نشط/غير نشط)
-
-&nbsp;
-
-فلتر بنطاق الرصيد (من/إلى)
-
-&nbsp;
-
-على الموبايل: استخدام FilterDrawer (موجود بالفعل) بدل إخفاء الفلاتر
-
-&nbsp;
-
-إضافة FilterChips لعرض الفلاتر النشطة
-
-&nbsp;
-
-4. دمج العملاء المكررين
-
-مكون CustomerMergeDialog جديد
-
-&nbsp;
-
-كشف تلقائي بالأسماء المتشابهة (Levenshtein أو بحث بسيط)
-
-&nbsp;
-
-واجهة لاختيار السجل الرئيسي والسجل المكرر
-
-&nbsp;
-
-نقل الفواتير والمدفوعات والعناوين للسجل الرئيسي عبر edge function آمنة
-
-&nbsp;
-
-حذف السجل المكرر بعد النقل
-
-&nbsp;
-
-5. تحسينات واجهة المستخدم
-
-إضافة Swipe actions على بطاقات العملاء في الموبايل (تعديل، واتساب، حذف)
-
-&nbsp;
-
-ServerPagination للموبايل أيضا
-
-&nbsp;
-
-تحسين الانتقالات بين الصفحات
-
-&nbsp;
-
-الملفات المتأثرة
-
-#
-
-&nbsp;
-
-الملف
-
-&nbsp;
-
-التغيير
-
-&nbsp;
-
-1
-
-&nbsp;
-
-Migration SQL
-
-&nbsp;
-
-إنشاء جدول customer_communications + RLS
-
-&nbsp;
-
-2
-
-&nbsp;
-
-src/components/customers/CustomerFormDialog.tsx
-
-&nbsp;
-
-إزالة as any
-
-&nbsp;
-
-3
-
-&nbsp;
-
-src/pages/customers/CustomersPage.tsx
-
-&nbsp;
-
-فلاتر متقدمة + FilterDrawer + swipe
-
-&nbsp;
-
-4
-
-&nbsp;
-
-src/components/customers/CustomerMergeDialog.tsx
-
-&nbsp;
-
-جديد
-
-&nbsp;
-
-5
-
-&nbsp;
-
-supabase/functions/merge-customers/index.ts
-
-&nbsp;
-
-جديد - edge function للدمج
-
-&nbsp;
-
-ترتيب التنفيذ
-
-#
-
-&nbsp;
-
-المهمة
-
-&nbsp;
-
-السبب
-
-&nbsp;
-
-1
-
-&nbsp;
-
-إنشاء جدول customer_communications
-
-&nbsp;
-
-فك حجب ميزة التواصل
-
-&nbsp;
-
-2
-
-&nbsp;
-
-إصلاح as any في CustomerFormDialog
-
-&nbsp;
-
-جودة الكود
-
-&nbsp;
-
-3
-
-&nbsp;
-
-فلاتر متقدمة + FilterDrawer موبايل
-
-&nbsp;
-
-سهولة الاستخدام
-
-&nbsp;
-
-4
-
-&nbsp;
-
-دمج العملاء المكررين
-
-&nbsp;
-
-جودة البيانات
