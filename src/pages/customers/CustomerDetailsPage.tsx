@@ -369,7 +369,7 @@ const CustomerDetailsPage = () => {
       </Card>
 
       {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-2">
@@ -446,6 +446,36 @@ const CustomerDetailsPage = () => {
               <div>
                 <p className="text-lg font-bold">{avgInvoiceValue.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">متوسط الفاتورة</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* DSO */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary">
+                <Clock className="h-5 w-5 text-secondary-foreground" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{dso !== null ? `${dso} يوم` : '-'}</p>
+                <p className="text-xs text-muted-foreground">متوسط السداد</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CLV */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-accent">
+                <Target className="h-5 w-5 text-accent-foreground" />
+              </div>
+              <div>
+                <p className="text-lg font-bold">{clv.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">قيمة العميل (CLV)</p>
               </div>
             </div>
           </CardContent>
