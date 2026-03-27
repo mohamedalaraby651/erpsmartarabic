@@ -82,7 +82,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const deleteMutation = useMutation({
     mutationFn: async (deleteId: string) => {
       // Server-side permission verification
-      const hasPermission = await verifyPermissionOnServer('customers', 'delete');
+      const hasPermission = await canDeleteCustomer();
       if (!hasPermission) {
         throw new Error('ليس لديك صلاحية حذف العملاء');
       }
