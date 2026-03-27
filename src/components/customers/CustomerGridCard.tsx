@@ -90,16 +90,16 @@ const CustomerGridCardInner = ({
             )}
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+          {/* Quick Actions — always visible on mobile, hover on desktop */}
+          <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
             {onNewInvoice && (
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onNewInvoice} title="فاتورة جديدة">
-                <FileText className="h-3.5 w-3.5 text-primary" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onNewInvoice} title="فاتورة جديدة">
+                <FileText className="h-4 w-4 md:h-3.5 md:w-3.5 text-primary" />
               </Button>
             )}
             {onWhatsApp && customer.phone && (
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onWhatsApp} title="واتساب">
-                <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onWhatsApp} title="واتساب">
+                <MessageSquare className="h-4 w-4 md:h-3.5 md:w-3.5 text-emerald-600" />
               </Button>
             )}
           </div>

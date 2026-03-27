@@ -6,6 +6,7 @@ import { Layers, Search, Bell, LayoutGrid } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
+import { useEffect, useState } from 'react';
 
 interface MobileHeaderProps {
   onMenuOpen?: () => void;
