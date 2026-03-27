@@ -114,12 +114,11 @@ export default function ImageUpload({
         .upload(filePath, blob, { upsert: true, contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
 
-      const { data, error: urlError } = await supabase.storage
+      const { data } = supabase.storage
         .from(bucket)
-        .createSignedUrl(filePath, 60 * 60 * 24);
-      if (urlError) throw urlError;
+        .getPublicUrl(filePath);
 
-      onImageUploaded(data.signedUrl);
+      onImageUploaded(data.publicUrl);
       toast({ title: 'تم رفع الصورة', description: 'تم رفع الصورة بنجاح' });
       setCropDialogOpen(false);
       setImgSrc('');

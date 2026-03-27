@@ -36,6 +36,8 @@ import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
 import { FilterChips } from "@/components/filters/FilterChips";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
+import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import { SwipeableRow } from "@/components/mobile/SwipeableRow";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 
@@ -217,21 +219,33 @@ const CustomersPage = () => {
   const renderCustomerCard = useCallback((customer: Customer) => {
     const TypeIcon = typeIcons[customer.customer_type as keyof typeof typeIcons] || Users;
     return (
-      <DataCard
+      <SwipeableRow
         key={customer.id}
-        title={customer.name}
-        subtitle={typeLabels[customer.customer_type as keyof typeof typeLabels]}
-        icon={<TypeIcon className="h-5 w-5" />}
-        badge={{ text: vipLabels[customer.vip_level as keyof typeof vipLabels], variant: customer.vip_level === 'regular' ? 'secondary' : 'default' }}
-        fields={[
-          ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
-          ...(customer.email ? [{ label: 'البريد', value: customer.email, icon: <Mail className="h-3 w-3" /> }] : []),
-        ]}
-        onClick={() => navigate(`/customers/${customer.id}`)}
-        onView={() => navigate(`/customers/${customer.id}`)}
         onEdit={canEdit ? () => handleEdit(customer) : undefined}
         onDelete={canDelete ? () => handleDelete(customer.id) : undefined}
-      />
+      >
+        <DataCard
+          title={customer.name}
+          subtitle={typeLabels[customer.customer_type as keyof typeof typeLabels]}
+          icon={
+            <CustomerAvatar
+              name={customer.name}
+              imageUrl={customer.image_url}
+              customerType={customer.customer_type}
+              size="sm"
+            />
+          }
+          badge={{ text: vipLabels[customer.vip_level as keyof typeof vipLabels], variant: customer.vip_level === 'regular' ? 'secondary' : 'default' }}
+          fields={[
+            ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
+            ...(customer.email ? [{ label: 'البريد', value: customer.email, icon: <Mail className="h-3 w-3" /> }] : []),
+          ]}
+          onClick={() => navigate(`/customers/${customer.id}`)}
+          onView={() => navigate(`/customers/${customer.id}`)}
+          onEdit={canEdit ? () => handleEdit(customer) : undefined}
+          onDelete={canDelete ? () => handleDelete(customer.id) : undefined}
+        />
+      </SwipeableRow>
     );
   }, [navigate, canEdit, canDelete, handleEdit, handleDelete]);
 
@@ -276,11 +290,19 @@ const CustomersPage = () => {
           </TableHeader>
           <TableBody>
             {sortedData.map((customer) => (
-              <TableRow key={customer.id} className="hover:bg-muted/50">
+              <TableRow key={customer.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/customers/${customer.id}`)}>
                 <TableCell>
-                  <div>
-                    <p className="font-medium">{customer.name}</p>
-                    {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
+                  <div className="flex items-center gap-3">
+                    <CustomerAvatar
+                      name={customer.name}
+                      imageUrl={customer.image_url}
+                      customerType={customer.customer_type}
+                      size="sm"
+                    />
+                    <div>
+                      <p className="font-medium">{customer.name}</p>
+                      {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>

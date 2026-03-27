@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { 
   ArrowRight, Edit, Trash2, Plus, MapPin, Phone, Mail, Building2, User,
   Crown, CreditCard, Paperclip, ShoppingCart, Activity, FileText,
@@ -417,52 +418,55 @@ const CustomerDetailsPage = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="addresses" className="w-full">
-        <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="addresses" className="gap-2">
-            <MapPin className="h-4 w-4" />
-            العناوين ({addresses.length})
-          </TabsTrigger>
-          <TabsTrigger value="invoices" className="gap-2">
-            <FileText className="h-4 w-4" />
-            الفواتير ({invoices.length})
-          </TabsTrigger>
-          <TabsTrigger value="quotations" className="gap-2">
-            <Globe className="h-4 w-4" />
-            عروض الأسعار ({quotations.length})
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            أوامر البيع ({salesOrders.length})
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="gap-2">
-            <CreditCard className="h-4 w-4" />
-            المدفوعات ({payments.length})
-          </TabsTrigger>
-          <TabsTrigger value="financial" className="gap-2">
-            <Wallet className="h-4 w-4" />
-            الملخص المالي
-          </TabsTrigger>
-          <TabsTrigger value="statement" className="gap-2">
-            <Printer className="h-4 w-4" />
-            كشف الحساب
-          </TabsTrigger>
-          <TabsTrigger value="communications" className="gap-2">
-            <MessageSquare className="h-4 w-4" />
-            التواصل
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            التحليلات
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-2">
-            <Activity className="h-4 w-4" />
-            النشاط
-          </TabsTrigger>
-          <TabsTrigger value="attachments" className="gap-2">
-            <Paperclip className="h-4 w-4" />
-            المرفقات
-          </TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full">
+          <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
+            <TabsTrigger value="addresses" className="gap-2 whitespace-nowrap">
+              <MapPin className="h-4 w-4" />
+              العناوين ({addresses.length})
+            </TabsTrigger>
+            <TabsTrigger value="invoices" className="gap-2 whitespace-nowrap">
+              <FileText className="h-4 w-4" />
+              الفواتير ({invoices.length})
+            </TabsTrigger>
+            <TabsTrigger value="quotations" className="gap-2 whitespace-nowrap">
+              <Globe className="h-4 w-4" />
+              عروض الأسعار ({quotations.length})
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2 whitespace-nowrap">
+              <ShoppingCart className="h-4 w-4" />
+              أوامر البيع ({salesOrders.length})
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-2 whitespace-nowrap">
+              <CreditCard className="h-4 w-4" />
+              المدفوعات ({payments.length})
+            </TabsTrigger>
+            <TabsTrigger value="financial" className="gap-2 whitespace-nowrap">
+              <Wallet className="h-4 w-4" />
+              الملخص المالي
+            </TabsTrigger>
+            <TabsTrigger value="statement" className="gap-2 whitespace-nowrap">
+              <Printer className="h-4 w-4" />
+              كشف الحساب
+            </TabsTrigger>
+            <TabsTrigger value="communications" className="gap-2 whitespace-nowrap">
+              <MessageSquare className="h-4 w-4" />
+              التواصل
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2 whitespace-nowrap">
+              <BarChart3 className="h-4 w-4" />
+              التحليلات
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="gap-2 whitespace-nowrap">
+              <Activity className="h-4 w-4" />
+              النشاط
+            </TabsTrigger>
+            <TabsTrigger value="attachments" className="gap-2 whitespace-nowrap">
+              <Paperclip className="h-4 w-4" />
+              المرفقات
+            </TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
         {/* Addresses Tab */}
         <TabsContent value="addresses" className="mt-6">
