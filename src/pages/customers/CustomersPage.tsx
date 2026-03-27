@@ -171,18 +171,34 @@ const CustomersPage = () => {
   const displayStats = stats || { total: 0, individuals: 0, companies: 0, vip: 0, totalBalance: 0 };
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('customers').delete().eq('id', id);
+    mutationFn: async (deleteId: string) => {
+      const { error } = await supabase.from('customers').delete().eq('id', deleteId);
       if (error) throw error;
     },
+    onMutate: async (deleteId: string) => {
+      // Optimistic update: remove from list immediately
+      await queryClient.cancelQueries({ queryKey: ['customers'] });
+      const previousCustomers = queryClient.getQueryData(['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage]);
+      queryClient.setQueryData(
+        ['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage],
+        (old: Customer[] | undefined) => old?.filter(c => c.id !== deleteId) || []
+      );
+      return { previousCustomers };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-count'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       toast.success('تم حذف العميل بنجاح');
       setDeletingId(null);
     },
-    onError: () => {
+    onError: (_err, _deleteId, context) => {
+      // Rollback on error
+      if (context?.previousCustomers) {
+        queryClient.setQueryData(
+          ['customers', debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, pagination.currentPage],
+          context.previousCustomers
+        );
+      }
       toast.error('فشل حذف العميل');
       setDeletingId(null);
     },
