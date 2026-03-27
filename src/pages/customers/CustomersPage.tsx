@@ -481,10 +481,10 @@ const CustomersPage = () => {
       <Card>
         <CardContent className="p-3 md:p-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="بحث بالاسم، الهاتف، المحافظة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10" />
-            </div>
+            <CustomerSearchPreview
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
             {isMobile ? (
               <Button variant="outline" size="sm" onClick={() => {
                 setTempType(typeFilter);
