@@ -60,7 +60,7 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
 
   // Fetch stats with proper loading states
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ['mobile-dashboard-stats'],
+    queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const [customers, products, invoices, quotations] = await Promise.all([
         supabase.from('customers').select('*', { count: 'exact', head: true }),

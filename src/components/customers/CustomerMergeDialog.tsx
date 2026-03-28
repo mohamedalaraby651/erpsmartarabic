@@ -76,7 +76,8 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
       handleClose();
     },
     onError: (error) => {
-      toast.error(`فشل الدمج: ${error.message}`);
+      logErrorSafely('CustomerMergeDialog', error);
+      toast.error('فشل الدمج، يرجى المحاولة لاحقاً');
     },
   });
 

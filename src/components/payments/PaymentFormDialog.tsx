@@ -100,8 +100,8 @@ const PaymentFormDialog = ({ open, onOpenChange, prefillCustomerId, prefillInvoi
   useEffect(() => {
     if (open) {
       reset({
-        customer_id: '',
-        invoice_id: '',
+        customer_id: prefillCustomerId || '',
+        invoice_id: prefillInvoiceId || '',
         amount: 0,
         payment_method: 'cash',
         payment_date: new Date().toISOString().split('T')[0],
@@ -109,7 +109,7 @@ const PaymentFormDialog = ({ open, onOpenChange, prefillCustomerId, prefillInvoi
         notes: '',
       });
     }
-  }, [open, reset]);
+  }, [open, reset, prefillCustomerId, prefillInvoiceId]);
 
   const [isProcessing, setIsProcessing] = useState(false);
 

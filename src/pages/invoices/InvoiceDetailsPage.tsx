@@ -643,7 +643,7 @@ const InvoiceDetailsPage = () => {
 
       {/* Dialogs */}
       <InvoiceFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} invoice={invoice} />
-      <PaymentFormDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} />
+      <PaymentFormDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} prefillCustomerId={invoice?.customer_id} prefillInvoiceId={invoice?.id} />
       {id && <InvoicePrintView invoiceId={id} open={printDialogOpen} onOpenChange={setPrintDialogOpen} />}
       <InvoiceApprovalDialog
         open={approvalDialogOpen}

@@ -237,7 +237,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   ];
 
   const handleQuickAction = (action: QuickAction) => {
-    navigate(action.href, { state: { openNew: true } });
+    navigate(action.href + '?action=new');
   };
 
   const handleWidgetsChange = (newWidgets: WidgetConfig[]) => {
