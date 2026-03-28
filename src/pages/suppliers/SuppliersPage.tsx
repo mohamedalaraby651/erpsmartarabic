@@ -52,6 +52,8 @@ const getBalanceColor = (balance: number, creditLimit: number) => {
   return '';
 };
 
+const PAGE_SIZE = 25;
+
 const SuppliersPage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -59,8 +61,9 @@ const SuppliersPage = () => {
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [governorateFilter, setGovernorateFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
