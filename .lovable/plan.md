@@ -1,96 +1,110 @@
 
 
-# خطة تنفيذ الفجوات الحرجة — Priority 1 + Priority 2
-
-بناءً على مراجعة Post-Implementation Review، هذه المهام المتبقية المسؤولة عن ~50% من جودة التجربة.
+# تقرير تقييم ما بعد التنفيذ + خطة التحسين
 
 ---
 
-## Priority 1: فوري (3 مهام)
+## الجزء الأول: تقييم الحالة الفعلية مقابل المراجعة
 
-### 1. تفعيل PageTransition في AppLayout
-**ملف:** `src/components/layout/AppLayout.tsx`
+### ✅ ما تم تنفيذه بشكل صحيح
 
-المكون `PageTransition` موجود وجاهز لكنه غير مستخدم. التغيير بسيط:
-- استيراد `PageTransition` (lazy loaded)
-- لف `<Outlet />` بـ `<PageTransition direction="fade" duration="fast">` في كلا الـ mobile و desktop layouts
-- إزالة `animate-fade-in` الحالي من الـ `div` المحيط (لتجنب تداخل الأنيميشن)
+| البند | الحالة | ملاحظات |
+|-------|--------|---------|
+| PageTransition مفعّل | ✅ | يعمل في mobile + desktop حول `<Outlet>` |
+| DataCard hover → tap | ✅ | أزرار View + Edit ظاهرة على الموبايل مع `e.stopPropagation()` و `min-h-11` |
+| MobileDetailSection مكون موحد | ✅ | موجود مع priority system (high/medium/low) |
+| Reports tabs scrollable | ✅ | `ScrollArea` مع horizontal scroll |
+| Reports chart height reduced | ✅ | `h-48` بدل `h-80` على الموبايل |
+| MobileSummaryCards أولاً | ✅ | KPI cards قبل الرسوم البيانية |
 
-### 2. إصلاح DataCard — hover → tap
-**ملف:** `src/components/mobile/DataCard.tsx`
+### ❌ الفجوات المكتشفة
 
-المشكلة: الأزرار (view/edit/delete) تعتمد على swipe أو long-press فقط — لا يوجد اكتشاف مباشر على الموبايل عند عدم استخدام swipe.
-
-الحل:
-- إضافة `useIsMobile()` في DataCard
-- على الموبايل: إظهار 1-2 أزرار أساسية (view + edit) دائماً بجانب السهم، بأيقونات صغيرة (بدون نص)
-- الحفاظ على swipe actions كما هي (لا تغيير)
-- ضمان touch targets بحجم 44px (`min-h-11 min-w-11`)
-
-### 3. توحيد Touch Targets (44px)
-**ملفات متعددة:** كل detail pages + action buttons
-
-مراجعة شاملة وإضافة:
-- `min-h-[44px] min-w-[44px]` لكل زر تفاعلي على الموبايل
-- الملفات المستهدفة: `InvoiceDetailsPage`, `CustomerDetailsPage`, `ProductDetailsPage`, `QuotationDetailsPage`, `SalesOrderDetailsPage`, `PurchaseOrderDetailsPage`, `SupplierDetailsPage`
-- التطبيق عبر utility class مشترك أو conditional class باستخدام `isMobile`
+| البند | المشكلة | الخطورة |
+|-------|---------|---------|
+| **MobileDetailSection غير مستخدم** | المكون موجود لكن **لا توجد صفحة واحدة تستورده** | 🔴 عالية |
+| **Touch targets ناقصة** | `min-h-11` موجود في 4 صفحات فقط (Invoice, Quotation, Sales, Purchase) — **غائب من Customer, Product, Supplier** | 🔴 عالية |
+| **Reports لا تزال passive** | لا يوجد KPI interpretation (↑ +12%) — الأرقام مسطحة بدون مقارنة | 🟠 متوسطة |
+| **PageTransition بدون guard** | يُطبّق على كل render بما فيه first load مع Skeleton → double animation perception | 🟡 منخفضة |
+| **Auto-save drafts غير موجود** | Wizard forms بدون حفظ تلقائي = data loss risk | 🟡 منخفضة |
 
 ---
 
-## Priority 2: أسبوع (3 مهام)
+## الجزء الثاني: خطة التصحيح
 
-### 4. بناء MobileDetailSection موحد
-**ملف جديد:** `src/components/mobile/MobileDetailSection.tsx`
+### Sprint A: إغلاق الفجوات الحرجة (Priority 1)
 
-مكون wrapper موحد يستبدل استخدام `Collapsible` بشكل ad-hoc:
-```tsx
-<MobileDetailSection
-  title="النشاط"
-  priority="low"        // high=always open, medium=open by default, low=collapsed
-  icon={<Activity />}
-  badge={3}             // optional count badge
->
-  {children}
-</MobileDetailSection>
+#### 1. تطبيق MobileDetailSection على Detail Pages
+المكون جاهز لكن غير مدمج. يجب استبدال `Card` و `div` wrappers بالمكون الموحد في:
+- `CustomerDetailsPage.tsx` — tabs sections → MobileDetailSection مع priority mapping
+- `ProductDetailsPage.tsx` — stock/variants/activity sections
+- `SupplierDetailsPage.tsx` — tabs sections
+- `InvoiceDetailsPage.tsx` — items/payments/activity
+- `QuotationDetailsPage.tsx` — items section
+- `SalesOrderDetailsPage.tsx` — items section
+- `PurchaseOrderDetailsPage.tsx` — items section
+
+**Priority mapping rule:**
+```text
+HIGH    = Hero, Stats, Primary Action (decision-critical)
+MEDIUM  = Items, Payments, Financial (frequently-used)
+LOW     = Activity, Attachments, Notes (rarely-used)
 ```
-- `priority="high"` → لا يمكن إغلاقه
-- `priority="medium"` → مفتوح افتراضياً، قابل للإغلاق
-- `priority="low"` → مغلق افتراضياً
 
-### 5. تطبيق MobileDetailSection على كل detail pages
-استبدال كل استخدام مباشر لـ `Collapsible` في الصفحات الست بالمكون الموحد، مع تحديد priority لكل قسم.
+#### 2. Touch Targets في الصفحات الناقصة
+إضافة `min-h-11 min-w-11` لجميع الأزرار التفاعلية في:
+- `CustomerDetailsPage.tsx`
+- `ProductDetailsPage.tsx`
+- `SupplierDetailsPage.tsx`
 
-### 6. Reports — Insight-first على الموبايل
-**ملف:** `src/pages/reports/ReportsPage.tsx` (680 سطر)
+مع ضمان `gap-2` بين الأزرار المتجاورة.
 
-الصفحة تحتوي أصلاً على `MobileSummaryCards` و `MobileTopItemsList` — لكنها chart-first.
+### Sprint B: تعميق Reports (Priority 2)
 
-التحسينات:
-- على الموبايل: إعادة ترتيب المحتوى — KPI cards أولاً ثم Top Items ثم Charts (مصغرة)
-- تقليص حجم الرسوم البيانية على الموبايل (height من 300 إلى 200)
-- إضافة `MobileStatsScroll` للـ KPIs الرئيسية بدل grid
-- Tabs على الموبايل: scrollable horizontally بدل wrap
+#### 3. KPI Interpretation Layer
+تحسين `MobileSummaryCards` في ReportsPage لإضافة:
+- مقارنة مع الفترة السابقة (↑ +12% أو ↓ -5%)
+- لون أخضر/أحمر حسب الاتجاه
+- حساب التغيير عبر query إضافي للفترة السابقة
+
+#### 4. Decision Hooks (تنبيهات ذكية)
+إضافة section صغير أعلى الصفحة على الموبايل يعرض:
+- "X عملاء في تراجع" (إذا وُجد)
+- "Y منتج منخفض المخزون" (من بيانات lowStock الموجودة)
+- يظهر فقط إذا كانت هناك بيانات تستحق الانتباه
+
+### Sprint C: Polish (Priority 3)
+
+#### 5. Auto-save Drafts
+- إنشاء `useFormDraft` hook يحفظ في `localStorage` كل 5 ثوان
+- مفتاح التخزين: `draft_{formType}_{entityId}`
+- عند فتح form → يسأل "هل تريد استكمال المسودة؟"
+- تطبيق على النماذج الطويلة فقط: Invoice, Customer, Product
+
+#### 6. PageTransition guard (اختياري)
+- لا تطبق animation إذا كان المحتوى في حالة loading (Suspense fallback يكفي)
+- الأثر بسيط ويمكن تأجيله
 
 ---
 
-## الملفات المتأثرة
+## الجزء الثالث: الملفات المتأثرة
 
-| الملف | نوع التغيير |
-|-------|-------------|
-| `layout/AppLayout.tsx` | تفعيل PageTransition |
-| `mobile/DataCard.tsx` | إظهار أزرار أساسية على الموبايل |
-| `mobile/MobileDetailSection.tsx` | **جديد** — section موحد مع priority |
-| 7 detail pages | touch targets 44px + MobileDetailSection |
-| `reports/ReportsPage.tsx` | Insight-first layout على الموبايل |
+| الملف | التغيير |
+|-------|---------|
+| 7 Detail Pages | دمج MobileDetailSection + touch targets |
+| `ReportsPage.tsx` | KPI interpretation + decision hooks |
+| `useFormDraft.ts` (جديد) | Auto-save hook |
+| 3 Form Dialogs | دمج useFormDraft |
 
 ---
 
-## النتيجة المتوقعة
+## الجزء الرابع: التقييم المتوقع بعد التنفيذ
 
-| المعيار | الحالي | بعد التنفيذ |
-|---------|--------|------------|
-| التقارير | 5/10 | 7.5/10 |
-| التنقل | 8/10 | 9/10 |
-| الاتساق | 8/10 | 9/10 |
-| **الإجمالي** | **7.8/10** | **8.6/10** |
+| المعيار | الحالي | بعد Sprint A | بعد A+B+C |
+|---------|--------|-------------|-----------|
+| الاتساق | 8.0 | **9.0** | 9.2 |
+| التفاصيل | 8.0 | **8.8** | 9.0 |
+| التقارير | 5.5 | 5.5 | **7.5** |
+| النماذج | 9.0 | 9.0 | **9.5** |
+| التنقل | 8.0 | 8.0 | 8.5 |
+| **الإجمالي** | **7.8** | **8.3** | **8.7** |
 
