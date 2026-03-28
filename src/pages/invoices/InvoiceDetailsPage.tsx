@@ -29,6 +29,7 @@ import { WhatsAppShareButton } from "@/components/shared/WhatsAppShareButton";
 import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { MobileDetailItems, type DetailItemData } from "@/components/mobile/MobileDetailItems";
+import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
