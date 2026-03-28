@@ -170,6 +170,8 @@ const App = () => (
                   <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
                   <Route path="attendance" element={<AttendancePage />} />
                   <Route path="collections" element={<CollectionDashboard />} />
+                  <Route path="price-lists" element={<PriceListsPage />} />
+                  <Route path="kpis" element={<KPIDashboard />} />
                   {/* Accounting Routes */}
                   <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
                   <Route path="accounting/journals" element={<JournalEntriesPage />} />
