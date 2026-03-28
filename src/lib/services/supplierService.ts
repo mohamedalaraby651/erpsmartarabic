@@ -73,7 +73,7 @@ export async function recordSupplierPayment(data: RecordSupplierPaymentData): Pr
   if (paymentError) throw paymentError;
 
   // Atomic balance update — avoids race conditions
-  const { error: updateError } = await supabase.rpc('atomic_supplier_balance_update' as never, {
+  const { error: updateError } = await (supabase.rpc as Function)('atomic_supplier_balance_update', {
     _supplier_id: data.supplierId,
     _amount: data.amount,
   });
