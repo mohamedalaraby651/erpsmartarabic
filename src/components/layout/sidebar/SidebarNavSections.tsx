@@ -33,7 +33,9 @@ import {
   Wallet,
   Briefcase,
   RefreshCw,
+  RotateCcw,
   DollarSign,
+  ArrowLeftRight,
 } from 'lucide-react';
 import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
 import DraggableNavSection from '@/components/sidebar/DraggableNavSection';
