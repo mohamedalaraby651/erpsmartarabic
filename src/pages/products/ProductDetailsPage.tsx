@@ -38,6 +38,7 @@ const ProductDetailsPage = () => {
   const isMobile = useIsMobile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+  const [stockMovementOpen, setStockMovementOpen] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
 
   const { data: product, isLoading } = useQuery({
