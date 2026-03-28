@@ -31,7 +31,7 @@ interface PriceListItem {
   price: number;
   min_quantity: number;
   discount_percentage: number;
-  products?: { name: string; price: number; sku: string | null } | null;
+  products?: { name: string; selling_price: number | null; sku: string | null } | null;
 }
 
 const PriceListsPage = () => {
