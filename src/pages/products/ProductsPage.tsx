@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Package, AlertTriangle, Layers } from "lucide-react";
+import { Plus, Search, Package, AlertTriangle, Layers, Upload } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
