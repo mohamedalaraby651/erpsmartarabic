@@ -65,7 +65,7 @@ export function BackupTab() {
       const counts: Record<string, number> = {};
       for (const table of tables) {
         const { count } = await supabase
-          .from(table.name as any)
+          .from(table.name as never)
           .select('*', { count: 'exact', head: true });
         counts[table.name] = count || 0;
       }
