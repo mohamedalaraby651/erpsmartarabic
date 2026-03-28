@@ -110,7 +110,7 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
         
         await supabase.storage.from('logos').remove([fileName]);
       } catch (error) {
-        console.error('Remove error:', error);
+        logErrorSafely('LogoUpload', error);
       }
     }
     
