@@ -47,6 +47,22 @@ export default function ReportsPage() {
     },
   });
 
+  // Previous period for trend comparison
+  const periodDays = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const previousStartDate = subDays(startDate, periodDays);
+  const { data: prevSalesData } = useQuery({
+    queryKey: ["prev-sales-report", period],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("total_amount, payment_status")
+        .gte("created_at", previousStartDate.toISOString())
+        .lt("created_at", startDate.toISOString());
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Top Products
   const { data: topProducts } = useQuery({
     queryKey: ["top-products", period],
