@@ -72,7 +72,7 @@ const KPIDashboard = () => {
   const { data: products = [] } = useQuery({
     queryKey: ['kpi-products'],
     queryFn: async () => {
-      const { data } = await supabase.from('products').select('id, stock_quantity, cost_price, price');
+      const { data } = await supabase.from('products').select('id, cost_price, selling_price');
       return data || [];
     },
   });
