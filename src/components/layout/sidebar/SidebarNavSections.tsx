@@ -36,6 +36,8 @@ import {
   RotateCcw,
   DollarSign,
   ArrowLeftRight,
+  CalendarCheck,
+  Landmark,
 } from 'lucide-react';
 import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
 import DraggableNavSection from '@/components/sidebar/DraggableNavSection';
