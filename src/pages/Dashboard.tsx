@@ -479,6 +479,38 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
       case 'calendar':
         return <CalendarWidget />;
 
+      case 'insights':
+        return (
+          <>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">تنبيهات ذكية</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {insights.slice(0, 5).map((insight) => {
+                  const Icon = insightIcons[insight.severity] || InfoIcon;
+                  return (
+                    <div
+                      key={insight.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:opacity-80 ${insightColors[insight.severity]}`}
+                      onClick={() => insight.action && navigate(insight.action.href)}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{insight.title}</p>
+                        <p className="text-xs opacity-80">{insight.message}</p>
+                      </div>
+                      {insight.count && (
+                        <Badge variant="secondary" className="shrink-0">{insight.count}</Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </>
+        );
+
       default:
         return null;
     }
