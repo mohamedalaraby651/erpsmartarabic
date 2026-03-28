@@ -243,12 +243,12 @@ const InventoryPage = () => {
       title={movement.product?.name || "منتج غير معروف"}
       subtitle={new Date(movement.created_at).toLocaleDateString("ar-EG")}
       icon={<ArrowRightLeft className="h-5 w-5" />}
-      badge={{ text: getMovementTypeLabel(movement.movement_type), variant: getMovementTypeBadge(movement.movement_type) as any }}
-      fields={[
+      badge={{ text: getMovementTypeLabel(movement.movement_type), variant: getMovementTypeBadge(movement.movement_type) }}
+      fields={([
         { label: "الكمية", value: movement.quantity.toLocaleString() },
-        movement.from_warehouse && { label: "من", value: movement.from_warehouse.name },
-        movement.to_warehouse && { label: "إلى", value: movement.to_warehouse.name },
-      ].filter(Boolean) as any[]}
+        movement.from_warehouse ? { label: "من", value: movement.from_warehouse.name } : null,
+        movement.to_warehouse ? { label: "إلى", value: movement.to_warehouse.name } : null,
+      ] as const).filter(Boolean) as Array<{ label: string; value: string | number | React.ReactNode; icon?: React.ReactNode }>}
     />
   );
 
