@@ -639,6 +639,7 @@ const InvoiceDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       {/* Dialogs */}
       <InvoiceFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} invoice={invoice} />

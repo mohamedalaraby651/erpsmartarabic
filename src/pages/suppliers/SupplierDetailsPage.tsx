@@ -142,7 +142,7 @@ const SupplierDetailsPage = () => {
 
   return (
     <div className="space-y-6">
-      <MobileDetailHeader title={supplier.name} backTo="/suppliers" action={<Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>تعديل</Button>} />
+      <MobileDetailHeader title={supplier.name} backTo="/suppliers" action={<Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}>تعديل</Button>} />
       {!isMobile && <Button variant="ghost" onClick={() => navigate('/suppliers')} className="mb-2"><ArrowRight className="h-4 w-4 ml-2" />العودة للموردين</Button>}
 
       <SupplierProfileHeader supplier={supplier} onEdit={() => setEditDialogOpen(true)} onCreatePurchaseOrder={handleCreatePurchaseOrder} onRecordPayment={() => setPaymentDialogOpen(true)} onPrintStatement={handlePrintStatement} isPrintingStatement={isPrintingStatement} />

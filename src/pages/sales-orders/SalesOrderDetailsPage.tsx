@@ -349,6 +349,7 @@ const SalesOrderDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       <SalesOrderFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} order={order} />
       {id && <SalesOrderPrintView orderId={id} open={printDialogOpen} onOpenChange={setPrintDialogOpen} />}

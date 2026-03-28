@@ -335,6 +335,7 @@ const PurchaseOrderDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       <PurchaseOrderFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} order={order} />
       {order.suppliers && <SupplierPaymentDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} supplier={order.suppliers} />}

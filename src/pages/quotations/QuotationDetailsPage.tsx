@@ -430,6 +430,7 @@ const QuotationDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       <QuotationFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} quotation={quotation} />
       {id && <QuotationPrintView quotationId={id} open={printDialogOpen} onOpenChange={setPrintDialogOpen} />}

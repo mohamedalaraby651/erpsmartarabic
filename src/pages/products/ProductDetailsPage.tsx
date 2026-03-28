@@ -128,7 +128,7 @@ const ProductDetailsPage = () => {
         title={product.name}
         backTo="/products"
         action={
-          <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+          <Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}>
             <Edit className="h-4 w-4" />
           </Button>
         }

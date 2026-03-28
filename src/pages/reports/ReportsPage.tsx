@@ -472,6 +472,34 @@ export default function ReportsPage() {
         </div>
       )}
 
+      {/* Decision Hooks — Mobile smart alerts */}
+      {isMobile && (lowStockProducts && lowStockProducts.length > 0 || (totalSales > 0 && unpaidAmount > totalSales * 0.5)) && (
+        <div className="space-y-2">
+          {lowStockProducts && lowStockProducts.length > 0 && (
+            <Card className="border-warning/30 bg-warning/5">
+              <CardContent className="p-3 flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">تنبيه المخزون</p>
+                  <p className="text-xs text-muted-foreground">{lowStockProducts.length} منتج تحت الحد الأدنى</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {totalSales > 0 && unpaidAmount > totalSales * 0.5 && (
+            <Card className="border-destructive/30 bg-destructive/5">
+              <CardContent className="p-3 flex items-center gap-3">
+                <TrendingDown className="h-5 w-5 text-destructive shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">تنبيه التحصيل</p>
+                  <p className="text-xs text-muted-foreground">أكثر من 50% من المبيعات غير محصلة</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       <Tabs defaultValue={isMobile ? "products" : "sales"} className="space-y-4">
         {isMobile ? (
           <ScrollArea className="w-full">
