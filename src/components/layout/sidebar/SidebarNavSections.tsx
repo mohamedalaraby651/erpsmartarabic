@@ -109,6 +109,7 @@ export const defaultNavSections: NavSection[] = [
       { title: 'الخزينة', icon: Wallet, href: '/treasury', roles: ['admin', 'accountant'] },
       { title: 'المصروفات', icon: Receipt, href: '/expenses', roles: ['admin', 'accountant'] },
       { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
+      { title: 'التحصيلات', icon: Landmark, href: '/collections', roles: ['admin', 'accountant'] },
       { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
     ],
   },
