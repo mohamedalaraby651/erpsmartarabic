@@ -217,7 +217,7 @@ const SuppliersPage = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {(sortedData as any[]).map((supplier) => {
+          {(sortedData as Supplier[]).map((supplier) => {
             const stats = getSupplierStats(supplier.id);
             const balanceColor = getBalanceColor(supplier.current_balance || 0, supplier.credit_limit || 0);
             return (

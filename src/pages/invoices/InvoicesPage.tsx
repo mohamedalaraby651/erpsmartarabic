@@ -185,11 +185,8 @@ const InvoicesPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const hasPermission = await verifyPermissionOnServer('invoices', 'delete');
-      if (!hasPermission) throw new Error('UNAUTHORIZED');
-      await supabase.from('invoice_items').delete().eq('invoice_id', id);
-      const { error } = await supabase.from('invoices').delete().eq('id', id);
-      if (error) throw error;
+      const { deleteInvoice } = await import('@/lib/services/invoiceService');
+      await deleteInvoice(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });

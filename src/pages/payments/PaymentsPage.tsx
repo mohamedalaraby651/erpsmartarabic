@@ -131,7 +131,7 @@ const PaymentsPage = () => {
         { label: "المبلغ", value: <span className="font-bold text-success">{Number(payment.amount).toLocaleString()} ج.م</span> },
         { label: "التاريخ", value: new Date(payment.payment_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
         payment.invoices?.invoice_number && { label: "الفاتورة", value: payment.invoices.invoice_number },
-      ].filter(Boolean) as any[]}
+      ].filter((f): f is { label: string; value: string | number | React.ReactNode; icon?: React.ReactNode } => Boolean(f))}
       onDelete={canDelete ? () => deleteMutation.mutate(payment.id) : undefined}
     />
   );
