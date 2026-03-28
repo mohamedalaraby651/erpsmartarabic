@@ -38,6 +38,22 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
   });
 
   const wizard = useFormWizard({ totalSteps: 3 });
+  const formData = watch();
+  const { hasDraft, restoreDraft, clearDraft } = useFormDraft({
+    key: `product_${product?.id || 'new'}`,
+    data: formData,
+    enabled: !isEditing,
+  });
+
+  useEffect(() => {
+    if (hasDraft && !isEditing && open) {
+      const draft = restoreDraft();
+      if (draft) {
+        toast({ title: 'تم استعادة المسودة', description: 'تم استرجاع بيانات المنتج المحفوظة' });
+        reset(draft);
+      }
+    }
+  }, [hasDraft, isEditing, open]);
 
   useEffect(() => {
     if (product) { reset({ name: product.name, sku: product.sku || '', description: product.description || '', category_id: product.category_id || '', cost_price: Number(product.cost_price) || 0, selling_price: Number(product.selling_price) || 0, min_stock: product.min_stock || 0, image_url: product.image_url || '', weight_kg: Number(product.weight_kg) || 0, length_cm: Number(product.length_cm) || 0, width_cm: Number(product.width_cm) || 0, height_cm: Number(product.height_cm) || 0, is_active: product.is_active ?? true }); }
