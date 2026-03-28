@@ -51,6 +51,7 @@ const quickActions: QuickActionItem[] = [
 export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>((props, ref) => {
   const navigate = useNavigate();
   const { user, userRole, loading: authLoading } = useAuth();
+  const { insights, hasAlerts } = useBusinessInsights();
 
   // Filter quick actions based on role
   const filteredActions = quickActions.filter(action => 
