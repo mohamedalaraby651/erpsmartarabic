@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { useServerPagination } from "@/hooks/useServerPagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { ServerPagination } from "@/components/shared/ServerPagination";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type PurchaseOrderStats = Pick<Database['public']['Tables']['purchase_orders']['Row'], 'supplier_id' | 'total_amount' | 'status'>;
@@ -49,6 +52,8 @@ const getBalanceColor = (balance: number, creditLimit: number) => {
   return '';
 };
 
+const PAGE_SIZE = 25;
+
 const SuppliersPage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -56,8 +61,9 @@ const SuppliersPage = () => {
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [governorateFilter, setGovernorateFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -73,12 +79,29 @@ const SuppliersPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: suppliers = [], isLoading, refetch } = useQuery({
-    queryKey: ["suppliers", searchTerm, governorateFilter, categoryFilter],
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ["suppliers-count", debouncedSearch, governorateFilter, categoryFilter],
     queryFn: async () => {
-      let query = supabase.from("suppliers").select("*").order("name");
-      if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,governorate.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`);
+      let query = supabase.from("suppliers").select("*", { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`);
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: suppliers = [], isLoading, refetch } = useQuery({
+    queryKey: ["suppliers", debouncedSearch, governorateFilter, categoryFilter, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase.from("suppliers").select("*").order("name")
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) {
+        query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%,contact_person.ilike.%${debouncedSearch}%`);
       }
       if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
       if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
@@ -312,6 +335,15 @@ const SuppliersPage = () => {
         </>
       )}
 
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
       <SupplierFormDialog open={dialogOpen} onOpenChange={setDialogOpen} supplier={selectedSupplier} />
     </div>
   );

@@ -2,6 +2,9 @@ import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerPagination } from "@/hooks/useServerPagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { ServerPagination } from "@/components/shared/ServerPagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Wallet, CreditCard, Banknote, Calendar } from "lucide-react";
+import { Plus, Search, Wallet, CreditCard, Banknote, Calendar, ArrowLeftRight } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -31,6 +34,7 @@ import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import type { Database } from "@/integrations/supabase/types";
+import MultiInvoiceSettlement from "@/components/payments/MultiInvoiceSettlement";
 
 type PaymentWithRelations = Database['public']['Tables']['payments']['Row'] & {
   customers: { name: string } | null;
@@ -45,9 +49,13 @@ const paymentMethodLabels: Record<string, string> = {
   installment: "تقسيط",
 };
 
+const PAGE_SIZE = 25;
+
 const PaymentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [settlementOpen, setSettlementOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { userRole } = useAuth();
 
@@ -66,13 +74,34 @@ const PaymentsPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
 
-  const { data: payments = [], isLoading, refetch } = useQuery({
-    queryKey: ['payments'],
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['payments-count', debouncedSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('payments').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) {
+        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
+      }
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: payments = [], isLoading, refetch } = useQuery({
+    queryKey: ['payments', debouncedSearch, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('payments')
         .select('*, customers(name), invoices(invoice_number)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) {
+        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -159,6 +188,10 @@ const PaymentsPage = () => {
               ]}
             />
           )}
+          <Button variant="outline" onClick={() => setSettlementOpen(true)} className="flex-1 sm:flex-none">
+            <ArrowLeftRight className="h-4 w-4 ml-2" />
+            تسوية فواتير
+          </Button>
           <Button onClick={() => setDialogOpen(true)} className="flex-1 sm:flex-none">
             <Plus className="h-4 w-4 ml-2" />
             تسجيل دفعة
@@ -362,7 +395,24 @@ const PaymentsPage = () => {
         </Card>
       )}
 
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
+
       <PaymentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <MultiInvoiceSettlement
+        open={settlementOpen}
+        onOpenChange={setSettlementOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['payments'] });
+        }}
+      />
     </div>
   );
 

@@ -24,6 +24,7 @@ import { TrialBalanceReport } from "@/components/reports/TrialBalanceReport";
 import { IncomeStatementReport } from "@/components/reports/IncomeStatementReport";
 import { GeographicReport } from "@/components/reports/GeographicReport";
 import { InactiveCustomersReport } from "@/components/reports/InactiveCustomersReport";
+import { CashFlowReport } from "@/components/reports/CashFlowReport";
 
 export default function ReportsPage() {
   const isMobile = useIsMobile();
@@ -136,13 +137,14 @@ export default function ReportsPage() {
               <TabsTrigger value="flow" className="text-xs whitespace-nowrap px-2.5">حركة المخزون</TabsTrigger>
               <TabsTrigger value="geographic" className="text-xs whitespace-nowrap px-2.5">التوزيع الجغرافي</TabsTrigger>
               <TabsTrigger value="inactive" className="text-xs whitespace-nowrap px-2.5">غير النشطين</TabsTrigger>
+              <TabsTrigger value="cashflow" className="text-xs whitespace-nowrap px-2.5">التدفق النقدي</TabsTrigger>
               <TabsTrigger value="trial-balance" className="text-xs whitespace-nowrap px-2.5">ميزان المراجعة</TabsTrigger>
               <TabsTrigger value="income-statement" className="text-xs whitespace-nowrap px-2.5">قائمة الدخل</TabsTrigger>
             </TabsList>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         ) : (
-          <TabsList className="grid w-full grid-cols-11 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-12 lg:w-auto lg:inline-grid">
             <TabsTrigger value="sales" className="text-xs sm:text-sm">المبيعات</TabsTrigger>
             <TabsTrigger value="products" className="text-xs sm:text-sm">المنتجات</TabsTrigger>
             <TabsTrigger value="customers" className="text-xs sm:text-sm">العملاء</TabsTrigger>
@@ -152,6 +154,7 @@ export default function ReportsPage() {
             <TabsTrigger value="flow" className="text-xs sm:text-sm">حركة المخزون</TabsTrigger>
             <TabsTrigger value="geographic" className="text-xs sm:text-sm">التوزيع الجغرافي</TabsTrigger>
             <TabsTrigger value="inactive" className="text-xs sm:text-sm">غير النشطين</TabsTrigger>
+            <TabsTrigger value="cashflow" className="text-xs sm:text-sm">التدفق النقدي</TabsTrigger>
             <TabsTrigger value="trial-balance" className="text-xs sm:text-sm">ميزان المراجعة</TabsTrigger>
             <TabsTrigger value="income-statement" className="text-xs sm:text-sm">قائمة الدخل</TabsTrigger>
           </TabsList>
@@ -178,6 +181,9 @@ export default function ReportsPage() {
         </TabsContent>
         <TabsContent value="geographic" className="space-y-4"><GeographicReport /></TabsContent>
         <TabsContent value="inactive" className="space-y-4"><InactiveCustomersReport /></TabsContent>
+        <TabsContent value="cashflow" className="space-y-4">
+          <CashFlowReport startDate={startDate} endDate={endDate} />
+        </TabsContent>
         <TabsContent value="trial-balance" className="space-y-4">
           <TrialBalanceReport asOfDate={endDate} />
         </TabsContent>

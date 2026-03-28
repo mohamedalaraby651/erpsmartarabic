@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useServerPagination } from '@/hooks/useServerPagination';
+import { useDebounce } from '@/hooks/useDebounce';
+import { ServerPagination } from '@/components/shared/ServerPagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,6 +70,8 @@ const statusLabels: Record<string, { label: string; variant: 'default' | 'second
 
 const VIRTUALIZATION_THRESHOLD = 50;
 
+const PAGE_SIZE = 25;
+
 export default function EmployeesPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -74,6 +79,7 @@ export default function EmployeesPage() {
   const isMobile = useIsMobile();
   const [searchParamsState, setSearchParamsState] = useSearchParams();
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -90,13 +96,34 @@ export default function EmployeesPage() {
     }
   }, [searchParamsState, setSearchParamsState]);
 
-  const { data: employees = [], isLoading, refetch } = useQuery({
-    queryKey: ['employees'],
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['employees-count', debouncedSearch, departmentFilter, statusFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('employees').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
+      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
+      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: employees = [], isLoading, refetch } = useQuery({
+    queryKey: ['employees', debouncedSearch, departmentFilter, statusFilter, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('employees')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
+      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
+      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
+      const { data, error } = await query;
       if (error) throw error;
       return data as Employee[];
     },
@@ -495,6 +522,15 @@ export default function EmployeesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
     </div>
   );
 }

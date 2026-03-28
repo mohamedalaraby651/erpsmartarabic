@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerPagination } from "@/hooks/useServerPagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { ServerPagination } from "@/components/shared/ServerPagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +45,8 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 type Product = Database['public']['Tables']['products']['Row'];
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
 
+const PAGE_SIZE = 25;
+
 const ProductsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -49,6 +54,7 @@ const ProductsPage = () => {
   const { isMobile, isTableView } = useResponsiveView();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -66,16 +72,32 @@ const ProductsPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['products-count', debouncedSearch, categoryFilter],
+    queryFn: async () => {
+      let query = supabase.from('products').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,sku.ilike.%${debouncedSearch}%`);
+      if (categoryFilter !== 'all') query = query.eq('category_id', categoryFilter);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
   const { data: products = [], isLoading, refetch } = useQuery({
-    queryKey: ['products', searchQuery, categoryFilter],
+    queryKey: ['products', debouncedSearch, categoryFilter, pagination.currentPage],
     queryFn: async () => {
       let query = supabase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
 
-      if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`);
+      if (debouncedSearch) {
+        query = query.or(`name.ilike.%${debouncedSearch}%,sku.ilike.%${debouncedSearch}%`);
       }
       if (categoryFilter !== 'all') {
         query = query.eq('category_id', categoryFilter);
@@ -544,7 +566,15 @@ const ProductsPage = () => {
         </Card>
       )}
 
-      {/* Add/Edit Product Dialog */}
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
       <ProductFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
