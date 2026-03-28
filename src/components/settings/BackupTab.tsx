@@ -88,7 +88,7 @@ export function BackupTab() {
     try {
       const allData: Record<string, any[]> = {};
       for (const tableName of selectedTables) {
-        const { data } = await supabase.from(tableName as any).select('*');
+        const { data } = await supabase.from(tableName as never).select('*');
         allData[tableName] = data || [];
       }
 
