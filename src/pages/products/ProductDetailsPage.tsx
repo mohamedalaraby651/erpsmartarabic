@@ -83,6 +83,7 @@ const ProductDetailsPage = () => {
   });
 
   const totalStock = stockData.reduce((sum, s) => sum + s.quantity, 0);
+  const isLowStock = totalStock <= (product?.min_stock || 0);
 
   const deleteVariantMutation = useMutation({
     mutationFn: async (variantId: string) => {
