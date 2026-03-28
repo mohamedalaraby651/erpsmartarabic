@@ -416,6 +416,12 @@ const ProductsPage = () => {
             />
           )}
           {canEdit && (
+            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={() => setImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 ml-2" />
+              {isMobile ? "استيراد" : "استيراد من Excel"}
+            </Button>
+          )}
+          {canEdit && (
             <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
               <Plus className="h-4 w-4 ml-2" />
               {isMobile ? "جديد" : "إضافة منتج"}
