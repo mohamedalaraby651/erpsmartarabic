@@ -338,6 +338,17 @@ const ProductDetailsPage = () => {
 
       <ProductFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} product={product} />
       <ProductVariantDialog open={variantDialogOpen} onOpenChange={setVariantDialogOpen} productId={id!} variant={selectedVariant} />
+      <StockMovementDialog open={stockMovementOpen} onOpenChange={setStockMovementOpen} productId={id} />
+
+      {/* Mobile FAB for quick stock addition */}
+      {isMobile && product && (
+        <FloatingActionButton
+          onClick={() => setStockMovementOpen(true)}
+          icon={<Plus className="h-5 w-5" />}
+          label={isLowStock ? "إضافة مخزون" : undefined}
+          className={isLowStock ? "bg-destructive hover:bg-destructive/90" : undefined}
+        />
+      )}
     </div>
   );
 };
