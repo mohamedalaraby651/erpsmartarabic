@@ -73,13 +73,34 @@ const PaymentsPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
 
-  const { data: payments = [], isLoading, refetch } = useQuery({
-    queryKey: ['payments'],
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['payments-count', debouncedSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('payments').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) {
+        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
+      }
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: payments = [], isLoading, refetch } = useQuery({
+    queryKey: ['payments', debouncedSearch, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('payments')
         .select('*, customers(name), invoices(invoice_number)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) {
+        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
