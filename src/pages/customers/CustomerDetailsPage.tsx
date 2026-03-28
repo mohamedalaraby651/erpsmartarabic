@@ -464,6 +464,7 @@ const CustomerDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       {/* Dialogs */}
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
