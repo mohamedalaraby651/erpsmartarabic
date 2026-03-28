@@ -61,7 +61,7 @@ export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: Purchase
       await generateDocumentPDF('purchase_order', { ...order, items });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
-      console.error('PDF generation error:', error);
+      logErrorSafely('PurchaseOrderPrintView', error);
       toast.error("فشل في إنشاء ملف PDF");
     } finally {
       setDownloading(false);

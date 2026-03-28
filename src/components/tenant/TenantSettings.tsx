@@ -55,7 +55,7 @@ export function TenantSettings() {
       toast.success('تم حفظ إعدادات الشركة بنجاح');
       refreshTenant();
     } catch (error) {
-      console.error('Error saving tenant settings:', error);
+      logErrorSafely('TenantSettings', error);
       toast.error('حدث خطأ أثناء حفظ الإعدادات');
     } finally {
       setIsSaving(false);

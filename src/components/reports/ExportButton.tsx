@@ -90,7 +90,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
       
       toast.success('تم تصدير الملف بنجاح');
     } catch (error) {
-      console.error('Export error:', error);
+      logErrorSafely('ExportButton', error);
       toast.error('حدث خطأ أثناء التصدير');
     } finally {
       setIsExporting(false);

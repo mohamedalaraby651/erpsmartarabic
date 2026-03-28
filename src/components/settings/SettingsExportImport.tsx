@@ -223,7 +223,7 @@ export function SettingsExportImport() {
       // Reload page to apply theme
       window.location.reload();
     } catch (error) {
-      console.error("Import error:", error);
+      logErrorSafely('SettingsExportImport', error);
       toast({ title: "حدث خطأ أثناء الاستيراد", variant: "destructive" });
     } finally {
       setIsImporting(false);

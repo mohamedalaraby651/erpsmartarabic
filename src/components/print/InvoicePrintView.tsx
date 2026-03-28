@@ -91,7 +91,7 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
       });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
-      console.error('PDF generation error:', error);
+      logErrorSafely('InvoicePrintView', error);
       toast.error("فشل في إنشاء ملف PDF");
     } finally {
       setDownloading(false);
