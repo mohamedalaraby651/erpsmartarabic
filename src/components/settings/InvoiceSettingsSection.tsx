@@ -57,7 +57,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
       } else {
         const { error } = await supabase
           .from('company_settings')
-          .insert({ company_name: 'شركتي', currency, pdf_font: pdfFont } as any);
+          .insert({ company_name: 'شركتي', currency, pdf_font: pdfFont });
         if (error) throw error;
       }
     },

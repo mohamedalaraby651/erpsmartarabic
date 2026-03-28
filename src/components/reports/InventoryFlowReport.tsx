@@ -120,7 +120,7 @@ export function InventoryFlowReport({ startDate, endDate }: InventoryFlowReportP
     const productMovements: Record<string, { name: string; in: number; out: number }> = {};
 
     data.movements.forEach(m => {
-      const productName = (m.products as any)?.name || 'منتج غير معروف';
+      const productName = (m as { products?: { name: string } | null }).products?.name || 'منتج غير معروف';
       if (!productMovements[m.product_id]) {
         productMovements[m.product_id] = { name: productName, in: 0, out: 0 };
       }

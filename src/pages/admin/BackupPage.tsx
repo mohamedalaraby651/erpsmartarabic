@@ -431,7 +431,7 @@ const BackupPage = () => {
                           ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                           : 'hover:bg-muted/50'
                       }`}
-                      onClick={() => setExportFormat(format.id as any)}
+                      onClick={() => setExportFormat(format.id as 'json' | 'csv' | 'excel' | 'sql')}
                     >
                       <div className="flex flex-col items-center text-center gap-2">
                         <Icon className={`h-8 w-8 ${exportFormat === format.id ? 'text-primary' : 'text-muted-foreground'}`} />

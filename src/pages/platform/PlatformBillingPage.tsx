@@ -9,7 +9,7 @@ export default function PlatformBillingPage() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_platform_stats');
       if (error) throw error;
-      return data as any;
+      return data as Record<string, number>;
     },
   });
 
