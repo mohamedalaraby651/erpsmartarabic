@@ -30,6 +30,7 @@ interface InvoiceFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice?: Invoice | null;
+  prefillCustomerId?: string;
 }
 
 const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogProps) => {
