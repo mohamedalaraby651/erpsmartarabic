@@ -158,8 +158,8 @@ export default function UsersPage() {
   const exportToExcel = () => {
     if (!users) return;
     const data = users.map(user => {
-      const profile = user.profiles as any;
-      const customRole = user.custom_roles as any;
+      const profile = user.profiles as { full_name?: string; phone?: string } | null;
+      const customRole = user.custom_roles as { name?: string } | null;
       return {
         'الاسم': profile?.full_name || 'غير محدد',
         'الهاتف': profile?.phone || '-',
