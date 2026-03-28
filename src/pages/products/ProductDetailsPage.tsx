@@ -17,6 +17,7 @@ import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { MobileDetailItems, type DetailItemData } from "@/components/mobile/MobileDetailItems";
+import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 
