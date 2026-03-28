@@ -145,9 +145,11 @@ export default function AppLayout() {
         >
           <AppHeader />
           <main className="p-6">
-            <div className="animate-fade-in">
-              <Outlet />
-            </div>
+            <Suspense fallback={<PageSkeleton />}>
+              <PageTransition direction="fade" duration="fast">
+                <Outlet />
+              </PageTransition>
+            </Suspense>
           </main>
         </div>
       </div>
