@@ -68,6 +68,23 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
   });
 
   const wizard = useFormWizard({ totalSteps: 3 });
+  const formData = watch();
+  const { hasDraft, restoreDraft, clearDraft } = useFormDraft({
+    key: `invoice_${invoice?.id || 'new'}`,
+    data: formData,
+    enabled: !isEditing,
+  });
+
+  // Restore draft if available
+  useEffect(() => {
+    if (hasDraft && !isEditing && open) {
+      const draft = restoreDraft();
+      if (draft) {
+        toast({ title: 'تم استعادة المسودة', description: 'تم استرجاع البيانات المحفوظة تلقائياً' });
+        reset(draft);
+      }
+    }
+  }, [hasDraft, isEditing, open]);
 
   useEffect(() => {
     if (invoice) {
