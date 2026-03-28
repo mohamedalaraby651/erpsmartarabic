@@ -1,42 +1,124 @@
 
-# تقرير التدقيق الشامل — الإصلاحات المنفذة
+
+# خطة شاملة — 3 محاور: Service Layer + إصلاح as any + إعادة هيكلة Dashboard
 
 ---
 
-## ✅ المشاكل التي تم حلها
+## المحور 1: Service Layer كامل (4 ملفات جديدة)
 
-### المرحلة 1: أمان حرج
+### 1.1 إنشاء `src/lib/services/invoiceService.ts`
+- دالة `deleteInvoice(id)`: تتحقق من الصلاحيات → تحذف `invoice_items` → تحذف الفاتورة → تُبطل cache
+- دالة `validateBeforeDelete(invoiceId)`: تتحقق من وجود مدفوعات مرتبطة
+- دالة `getInvoiceStats()`: تغلف استعلام الإحصائيات الموجود في `InvoicesPage`
 
-| # | المشكلة | الحل | الملفات |
-|---|---------|------|---------|
-| 1 | حذف بدون تحقق صلاحيات (10 صفحات) | إضافة `verifyPermissionOnServer()` قبل كل delete | PaymentsPage, InvoicesPage, SuppliersPage, ProductsPage, EmployeesPage, QuotationsPage, SalesOrdersPage, PurchaseOrdersPage |
-| 2 | حذف الدفعات لا يعكس الأرصدة | DB trigger `reverse_payment_on_delete` يعكس `current_balance` و `paid_amount` تلقائياً | Migration: triggers |
-| 3 | حذف الفواتير لا يعكس cached stats | DB trigger `reverse_invoice_on_delete` يعكس `total_purchases_cached` و `invoice_count_cached` | Migration: triggers |
-| 4 | switchTenant غير ذري | SQL function `switch_user_tenant` ذرية + تحديث `tenantContext.ts` | tenantContext.ts + Migration |
-| 5 | Race condition في SupplierPayment | SQL function `atomic_supplier_balance_update` | SupplierPaymentDialog.tsx + Migration |
-| 6 | payment_number من Math.random() | DB sequence `payment_seq` + trigger `generate_payment_number` | Migration: sequence + trigger |
+### 1.2 إنشاء `src/lib/services/paymentService.ts`
+- دالة `deletePayment(id)`: صلاحيات → حذف → (trigger يعكس الرصيد تلقائياً)
+- دالة `getPaymentStats(payments)`: حساب إجماليات النقدي والتحويل
 
-### المرحلة السابقة: إصلاحات حرجة (تم تنفيذها مسبقاً)
+### 1.3 إنشاء `src/lib/services/supplierService.ts`
+- دالة `recordSupplierPayment(data)`: INSERT في `supplier_payments` → RPC `atomic_supplier_balance_update`
+- دالة `deleteSupplier(id)`: صلاحيات → تحقق من أوامر شراء مفتوحة → حذف
 
-| # | المشكلة | الحل |
-|---|---------|------|
-| 7 | Quick Actions لا تفتح النموذج | `navigate(action.href + '?action=new')` |
-| 8 | PaymentForm بدون prefill | إضافة `prefillCustomerId` + `prefillInvoiceId` |
-| 9 | console.error مكشوف (8 ملفات) | استبدال بـ `logErrorSafely()` |
-| 10 | لا ربط Invoice↔SalesOrder | إضافة قسم المستند المصدر |
-| 11 | استعلامات مكررة Dashboard | توحيد queryKey |
-| 12 | error.message في CustomerMerge | استبدال بـ `getSafeErrorMessage()` |
+### 1.4 إنشاء `src/lib/services/inventoryService.ts`
+- دالة `getLowStockProducts()`: منطق المخزون المنخفض الموحد (يستبدل 3 نسخ مكررة)
+
+### 1.5 تحديث الصفحات لاستخدام Service Layer
+- `InvoicesPage.tsx`: استبدال delete mutation المباشر بـ `invoiceService.deleteInvoice()`
+- `PaymentsPage.tsx`: استبدال بـ `paymentService.deletePayment()`
+- `SuppliersPage.tsx`: استبدال بـ `supplierService.deleteSupplier()`
+- `SupplierPaymentDialog.tsx`: استبدال بـ `supplierService.recordSupplierPayment()`
 
 ---
 
-## 🔲 مشاكل متبقية للمراحل القادمة
+## المحور 2: إصلاح as any (107 استخدام في 14 ملف)
 
-| # | المشكلة | الأولوية |
-|---|---------|---------|
-| 1 | `as any` في 14 ملف (107 استخدام) | متوسط |
-| 2 | Service Layer غير مكتمل (invoiceService, paymentService) | متوسط |
-| 3 | Dashboard.tsx أكثر من 575 سطر | متوسط |
-| 4 | توحيد low-stock queries | متوسط |
-| 5 | monthly chart يجلب كل الفواتير | متوسط |
-| 6 | Deep links في Business Insights | منخفض |
-| 7 | Supplier Intelligence | منخفض |
+### الفئة A: Supabase Join Relations (أكثر شيوعاً — 40+ استخدام)
+**النمط**: `(invoice.customers as any)?.name`
+**السبب**: Supabase ترجع العلاقات بنوع مركب لكن TypeScript لا يستنتجه
+**الإصلاح**: تعريف types صريحة لكل query result
+
+| الملف | التغيير |
+|-------|---------|
+| `Dashboard.tsx` سطر 446 | تعريف `InvoiceWithCustomer` type محلي |
+| `MobileDashboard.tsx` سطر 350 | نفس النمط |
+| `SearchPage.tsx` سطور 130, 147 | تعريف types للـ search results |
+| `GeographicReport.tsx` سطر 46 | تعريف invoice with customer join type |
+| `InventoryFlowReport.tsx` سطر 123 | تعريف movement with product type |
+
+### الفئة B: Dynamic Table Names (BackupTab, OfflineSettings, SyncStatus)
+**النمط**: `supabase.from(tableName as any)`
+**السبب**: Supabase client يقبل فقط literal table names
+**الإصلاح**: استخدام `as never` (المعتمد في المشروع) أو generic helper
+
+| الملف | التغيير |
+|-------|---------|
+| `BackupPage.tsx` (3 مواقع) | `tableName as never` |
+| `BackupTab.tsx` (6 مواقع) | `tableName as never` |
+| `OfflineSettings.tsx` | `table as never` |
+| `SyncStatusPage.tsx` | `table as never` |
+
+### الفئة C: Filter Boolean Arrays
+**النمط**: `.filter(Boolean) as any[]`
+**السبب**: TypeScript لا يستنتج نوع العنصر بعد filter
+**الإصلاح**: استخدام type guard صريح
+
+| الملف | التغيير |
+|-------|---------|
+| `PaymentsPage.tsx` سطر 136 | `.filter((f): f is FieldType => Boolean(f))` |
+| `InventoryPage.tsx` سطر 251 | نفس النمط |
+| `TasksPage.tsx` سطر 154 | نفس النمط |
+| `CategoriesPage.tsx` سطر 132 | نفس النمط |
+
+### الفئة D: UsersPage Join Types
+**النمط**: `user.profiles as any`, `user.custom_roles as any`
+**الإصلاح**: تعريف `UserWithRelations` type يشمل profiles و custom_roles joins
+
+### الفئة E: Badge Variant
+**النمط**: `variant={getMovementTypeBadge(...) as any}`
+**الإصلاح**: تعريف return type الدالة كـ `BadgeProps['variant']`
+
+### الفئة F: Company Settings / Push Notifications
+**النمط**: `data as any`, `subscription as any`
+**الإصلاح**: تعريف interfaces صحيحة أو استخدام `satisfies`
+
+---
+
+## المحور 3: إعادة هيكلة Dashboard (575 → ~150 سطر)
+
+### 3.1 استخراج مكونات Widget منفصلة
+| مكون جديد | المحتوى |
+|-----------|---------|
+| `StatsWidget.tsx` | بطاقات الإحصائيات الأربعة (سطور 256-294) |
+| `QuickActionsWidget.tsx` | شبكة الإجراءات السريعة (سطور 297-323) |
+| `SalesChartWidget.tsx` | رسم المبيعات الشهرية (سطور 326-364) |
+| `TasksWidget.tsx` | قائمة المهام (سطور 367-413) |
+| `RecentInvoicesWidget.tsx` | آخر الفواتير (سطور 417-473) |
+| `InsightsWidget.tsx` | التنبيهات الذكية (سطور 485-515) |
+
+### 3.2 استخراج hook مخصص `useDashboardData.ts`
+- ينقل جميع استعلامات Dashboard (stats, monthly sales, tasks, recent invoices) لـ hook واحد
+- يُصدّر: `dashboardStats`, `monthlySalesData`, `tasks`, `recentInvoices`, `isLoading`
+
+### 3.3 توحيد استعلام المخزون المنخفض
+- إنشاء `useLowStockProducts` hook مشترك بـ queryKey `['low-stock-products']`
+- يستبدل 3 نسخ مكررة في: `useBusinessInsights`, `useReportsData`, `LowStockWidget`
+
+### 3.4 `Dashboard.tsx` النهائي (~150 سطر)
+- يستورد `useDashboardData` + المكونات المستخرجة
+- `renderWidget` يصبح switch بسيط يعيد المكون المناسب
+- باقي المنطق (greeting, role filtering) يبقى
+
+---
+
+## ملخص التأثير
+
+```text
+المحور          الملفات الجديدة   الملفات المعدلة   النتيجة
+─────────────  ──────────────── ──────────────── ───────────────────
+Service Layer   4 services       4-5 صفحات        مركزية منطق الأعمال
+as any          0                14 ملف            107 → 0 استخدام any
+Dashboard       8 (widgets+hook) 4 (dashboard+3)   575 → ~150 سطر
+```
+
+**ضمانات**: كل تغيير backwards-compatible — لا يكسر أي وظيفة موجودة. الـ services تغلف نفس المنطق الحالي مع إضافة التحقق. الـ types تستبدل `as any` بدون تغيير السلوك.
+
