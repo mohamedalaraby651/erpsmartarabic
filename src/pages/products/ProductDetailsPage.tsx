@@ -192,6 +192,37 @@ const ProductDetailsPage = () => {
         </div>
       )}
 
+      {/* Context-Aware: Low Stock Alert + Actions */}
+      {product && isLowStock && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>تنبيه: مخزون منخفض</AlertTitle>
+          <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-1">
+            <span>المخزون الحالي ({totalStock}) أقل من الحد الأدنى ({product.min_stock || 0})</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="min-h-9" onClick={() => setStockMovementOpen(true)}>
+                <Plus className="h-3.5 w-3.5 ml-1" />إضافة مخزون
+              </Button>
+              <Button size="sm" variant="outline" className="min-h-9" onClick={() => navigate('/purchase-orders', { state: { prefillProductId: id } })}>
+                <ShoppingCart className="h-3.5 w-3.5 ml-1" />أمر شراء
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Context Actions: Desktop quick actions bar */}
+      {!isMobile && product && (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setStockMovementOpen(true)}>
+            <Plus className="h-4 w-4 ml-2" />إضافة للمخزون
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => navigate('/purchase-orders', { state: { prefillProductId: id } })}>
+            <ShoppingCart className="h-4 w-4 ml-2" />إنشاء أمر شراء
+          </Button>
+        </div>
+      )}
+
       {/* Mobile: Collapsible Sections */}
       {isMobile && (
         <div className="space-y-3 mt-4">
