@@ -335,6 +335,15 @@ const SuppliersPage = () => {
         </>
       )}
 
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
       <SupplierFormDialog open={dialogOpen} onOpenChange={setDialogOpen} supplier={selectedSupplier} />
     </div>
   );
