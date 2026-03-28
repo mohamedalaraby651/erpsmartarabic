@@ -269,11 +269,11 @@ const PriceListsPage = () => {
               </TableHeader>
               <TableBody>
                 {listItems.map(item => {
-                  const prod = item.products as { name: string; price: number; sku: string | null } | null;
+                  const prod = item.products as { name: string; selling_price: number | null; sku: string | null } | null;
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{prod?.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{Number(prod?.price || 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-muted-foreground">{Number(prod?.selling_price || 0).toLocaleString()}</TableCell>
                       <TableCell className="font-bold text-primary">{Number(item.price).toLocaleString()}</TableCell>
                       <TableCell>{item.min_quantity}</TableCell>
                       <TableCell>{Number(item.discount_percentage)}%</TableCell>

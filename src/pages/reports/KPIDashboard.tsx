@@ -141,7 +141,7 @@ const KPIDashboard = () => {
   };
 
   // Inventory turnover
-  const inventoryValue = products.reduce((s, p) => s + (p.stock_quantity || 0) * Number(p.cost_price || 0), 0);
+  const inventoryValue = products.reduce((s, p) => s + Number(p.cost_price || 0), 0);
   const totalCOGS = monthlyData.reduce((s, m) => s + m.cogs, 0);
   const annualizedCOGS = (totalCOGS / monthsCount) * 12;
   const inventoryTurnover = inventoryValue > 0 ? Math.round((annualizedCOGS / inventoryValue) * 10) / 10 : 0;
