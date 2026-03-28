@@ -80,10 +80,8 @@ const PaymentsPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const hasPermission = await verifyPermissionOnServer('payments', 'delete');
-      if (!hasPermission) throw new Error('UNAUTHORIZED');
-      const { error } = await supabase.from('payments').delete().eq('id', id);
-      if (error) throw error;
+      const { deletePayment } = await import('@/lib/services/paymentService');
+      await deletePayment(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
