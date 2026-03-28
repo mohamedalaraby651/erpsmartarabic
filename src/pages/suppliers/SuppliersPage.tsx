@@ -17,7 +17,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Users, Phone, Mail, Building2, CreditCard, MapPin } from "lucide-react";
+import { Plus, Search, Users, Phone, Mail, Building2, CreditCard, MapPin, Upload } from "lucide-react";
 import { toast } from "sonner";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
