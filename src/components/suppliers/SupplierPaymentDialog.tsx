@@ -94,31 +94,7 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
         _amount: amount,
       });
 
-      // Fallback if RPC doesn't exist yet — use direct atomic update
-      if (updateError) {
-        const { error: directError } = await supabase
-          .from('suppliers')
-          .update({ current_balance: supabase.rpc('atomic_subtract' as any, { val: amount }) as any })
-          .eq('id', supplierId);
-        
-        // Final fallback: read-then-write (not ideal but functional)
-        if (directError) {
-          const { data: currentSupplier } = await supabase
-            .from('suppliers')
-            .select('current_balance')
-            .eq('id', supplierId)
-            .single();
-          
-          const newBalance = (currentSupplier?.current_balance || 0) - amount;
-          
-          const { error: fallbackError } = await supabase
-            .from('suppliers')
-            .update({ current_balance: newBalance })
-            .eq('id', supplierId);
-          
-          if (fallbackError) throw fallbackError;
-        }
-      }
+      if (updateError) throw updateError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
