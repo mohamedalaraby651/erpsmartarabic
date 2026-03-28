@@ -445,20 +445,39 @@ export default function ReportsPage() {
         </div>
       )}
 
-      <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList className={isMobile ? "grid grid-cols-3 w-full" : "grid w-full grid-cols-11 lg:w-auto lg:inline-grid"}>
-          <TabsTrigger value="sales" className="text-xs sm:text-sm">المبيعات</TabsTrigger>
-          <TabsTrigger value="products" className="text-xs sm:text-sm">المنتجات</TabsTrigger>
-          <TabsTrigger value="customers" className="text-xs sm:text-sm">العملاء</TabsTrigger>
-          <TabsTrigger value="inventory" className="text-xs sm:text-sm">المخزون</TabsTrigger>
-          <TabsTrigger value="profitability" className="text-xs sm:text-sm">الربحية</TabsTrigger>
-          <TabsTrigger value="aging" className="text-xs sm:text-sm">أعمار الديون</TabsTrigger>
-          <TabsTrigger value="flow" className="text-xs sm:text-sm">حركة المخزون</TabsTrigger>
-          <TabsTrigger value="geographic" className="text-xs sm:text-sm">التوزيع الجغرافي</TabsTrigger>
-          <TabsTrigger value="inactive" className="text-xs sm:text-sm">غير النشطين</TabsTrigger>
-          <TabsTrigger value="trial-balance" className="text-xs sm:text-sm">ميزان المراجعة</TabsTrigger>
-          <TabsTrigger value="income-statement" className="text-xs sm:text-sm">قائمة الدخل</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue={isMobile ? "products" : "sales"} className="space-y-4">
+        {isMobile ? (
+          <ScrollArea className="w-full">
+            <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="products" className="text-xs whitespace-nowrap px-2.5">المنتجات</TabsTrigger>
+              <TabsTrigger value="customers" className="text-xs whitespace-nowrap px-2.5">العملاء</TabsTrigger>
+              <TabsTrigger value="sales" className="text-xs whitespace-nowrap px-2.5">المبيعات</TabsTrigger>
+              <TabsTrigger value="inventory" className="text-xs whitespace-nowrap px-2.5">المخزون</TabsTrigger>
+              <TabsTrigger value="profitability" className="text-xs whitespace-nowrap px-2.5">الربحية</TabsTrigger>
+              <TabsTrigger value="aging" className="text-xs whitespace-nowrap px-2.5">أعمار الديون</TabsTrigger>
+              <TabsTrigger value="flow" className="text-xs whitespace-nowrap px-2.5">حركة المخزون</TabsTrigger>
+              <TabsTrigger value="geographic" className="text-xs whitespace-nowrap px-2.5">التوزيع الجغرافي</TabsTrigger>
+              <TabsTrigger value="inactive" className="text-xs whitespace-nowrap px-2.5">غير النشطين</TabsTrigger>
+              <TabsTrigger value="trial-balance" className="text-xs whitespace-nowrap px-2.5">ميزان المراجعة</TabsTrigger>
+              <TabsTrigger value="income-statement" className="text-xs whitespace-nowrap px-2.5">قائمة الدخل</TabsTrigger>
+            </TabsList>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        ) : (
+          <TabsList className="grid w-full grid-cols-11 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="sales" className="text-xs sm:text-sm">المبيعات</TabsTrigger>
+            <TabsTrigger value="products" className="text-xs sm:text-sm">المنتجات</TabsTrigger>
+            <TabsTrigger value="customers" className="text-xs sm:text-sm">العملاء</TabsTrigger>
+            <TabsTrigger value="inventory" className="text-xs sm:text-sm">المخزون</TabsTrigger>
+            <TabsTrigger value="profitability" className="text-xs sm:text-sm">الربحية</TabsTrigger>
+            <TabsTrigger value="aging" className="text-xs sm:text-sm">أعمار الديون</TabsTrigger>
+            <TabsTrigger value="flow" className="text-xs sm:text-sm">حركة المخزون</TabsTrigger>
+            <TabsTrigger value="geographic" className="text-xs sm:text-sm">التوزيع الجغرافي</TabsTrigger>
+            <TabsTrigger value="inactive" className="text-xs sm:text-sm">غير النشطين</TabsTrigger>
+            <TabsTrigger value="trial-balance" className="text-xs sm:text-sm">ميزان المراجعة</TabsTrigger>
+            <TabsTrigger value="income-statement" className="text-xs sm:text-sm">قائمة الدخل</TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="sales" className="space-y-4">
           {isMobile ? (
