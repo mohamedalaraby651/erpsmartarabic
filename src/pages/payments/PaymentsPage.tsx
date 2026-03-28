@@ -48,6 +48,7 @@ const paymentMethodLabels: Record<string, string> = {
 const PaymentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [settlementOpen, setSettlementOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { userRole } = useAuth();
 
