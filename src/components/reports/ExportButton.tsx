@@ -52,7 +52,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
       XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
       toast.success('تم تصدير الملف بنجاح');
     } catch (error) {
-      console.error('Export error:', error);
+      logErrorSafely('ExportButton', error);
       toast.error('حدث خطأ أثناء التصدير');
     } finally {
       setIsExporting(false);
