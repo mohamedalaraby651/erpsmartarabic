@@ -369,6 +369,13 @@ const PaymentsPage = () => {
       )}
 
       <PaymentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <MultiInvoiceSettlement
+        open={settlementOpen}
+        onOpenChange={setSettlementOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['payments'] });
+        }}
+      />
     </div>
   );
 
