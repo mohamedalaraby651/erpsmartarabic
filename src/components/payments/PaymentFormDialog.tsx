@@ -36,6 +36,8 @@ type Invoice = Database['public']['Tables']['invoices']['Row'];
 interface PaymentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  prefillCustomerId?: string;
+  prefillInvoiceId?: string;
 }
 
 const paymentMethods = [
