@@ -33,7 +33,7 @@ interface InvoiceFormDialogProps {
   prefillCustomerId?: string;
 }
 
-const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogProps) => {
+const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: InvoiceFormDialogProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
