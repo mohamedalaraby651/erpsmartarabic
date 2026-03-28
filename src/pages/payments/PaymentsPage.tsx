@@ -160,6 +160,10 @@ const PaymentsPage = () => {
               ]}
             />
           )}
+          <Button variant="outline" onClick={() => setSettlementOpen(true)} className="flex-1 sm:flex-none">
+            <ArrowLeftRight className="h-4 w-4 ml-2" />
+            تسوية فواتير
+          </Button>
           <Button onClick={() => setDialogOpen(true)} className="flex-1 sm:flex-none">
             <Plus className="h-4 w-4 ml-2" />
             تسجيل دفعة
