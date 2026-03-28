@@ -249,17 +249,27 @@ export default function ReportsPage() {
   })) || [];
 
   // Mobile Summary Cards Component
+  const TrendIndicator = ({ value }: { value: number | null }) => {
+    if (value === null) return null;
+    const isPositive = value >= 0;
+    return (
+      <p className={`text-[10px] flex items-center gap-0.5 ${isPositive ? 'text-success' : 'text-destructive'}`}>
+        {isPositive ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+        {isPositive ? '+' : ''}{value.toFixed(1)}%
+      </p>
+    );
+  };
+
   const MobileSummaryCards = () => (
     <div className="grid grid-cols-2 gap-3">
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <DollarSign className="h-4 w-4 text-primary" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-primary/10"><DollarSign className="h-4 w-4 text-primary" /></div>
             <div>
               <p className="text-lg font-bold">{formatCurrency(totalSales)}</p>
               <p className="text-xs text-muted-foreground">إجمالي المبيعات</p>
+              <TrendIndicator value={salesTrend} />
             </div>
           </div>
         </CardContent>
@@ -267,12 +277,11 @@ export default function ReportsPage() {
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-success/10">
-              <TrendingUp className="h-4 w-4 text-success" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-success/10"><TrendingUp className="h-4 w-4 text-success" /></div>
             <div>
               <p className="text-lg font-bold text-success">{formatCurrency(paidAmount)}</p>
               <p className="text-xs text-muted-foreground">المحصل</p>
+              <TrendIndicator value={collectionTrend} />
             </div>
           </div>
         </CardContent>
@@ -280,12 +289,11 @@ export default function ReportsPage() {
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-destructive/10">
-              <TrendingDown className="h-4 w-4 text-destructive" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-destructive/10"><TrendingDown className="h-4 w-4 text-destructive" /></div>
             <div>
               <p className="text-lg font-bold text-destructive">{formatCurrency(unpaidAmount)}</p>
               <p className="text-xs text-muted-foreground">المستحق</p>
+              {totalSales > 0 && <p className="text-[10px] text-muted-foreground">{((unpaidAmount / totalSales) * 100).toFixed(0)}% من الإجمالي</p>}
             </div>
           </div>
         </CardContent>
@@ -293,9 +301,7 @@ export default function ReportsPage() {
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-info/10">
-              <FileText className="h-4 w-4 text-info" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-info/10"><FileText className="h-4 w-4 text-info" /></div>
             <div>
               <p className="text-lg font-bold">{invoiceCount}</p>
               <p className="text-xs text-muted-foreground">الفواتير</p>
