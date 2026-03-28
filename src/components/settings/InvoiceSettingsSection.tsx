@@ -51,7 +51,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
       if (settings?.id) {
         const { error } = await supabase
           .from('company_settings')
-          .update({ currency, pdf_font: pdfFont } as any)
+          .update({ currency, pdf_font: pdfFont })
           .eq('id', settings.id);
         if (error) throw error;
       } else {
