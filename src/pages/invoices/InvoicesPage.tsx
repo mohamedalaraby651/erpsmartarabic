@@ -185,6 +185,8 @@ const InvoicesPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('invoices', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       await supabase.from('invoice_items').delete().eq('invoice_id', id);
       const { error } = await supabase.from('invoices').delete().eq('id', id);
       if (error) throw error;
@@ -193,10 +195,16 @@ const InvoicesPage = () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoices-count'] });
       queryClient.invalidateQueries({ queryKey: ['invoices-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast({ title: "تم حذف الفاتورة بنجاح" });
     },
-    onError: () => {
-      toast({ title: "خطأ في حذف الفاتورة", variant: "destructive" });
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف الفواتير", variant: "destructive" });
+      } else {
+        toast({ title: "خطأ في حذف الفاتورة", variant: "destructive" });
+      }
+      logErrorSafely('InvoicesPage.delete', error);
     },
   });
 
