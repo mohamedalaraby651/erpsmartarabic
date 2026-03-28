@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ArrowRight, Edit, Plus, Package, Trash2, Layers, Box, Paperclip } from "lucide-react";
+import { ArrowRight, Edit, Plus, Package, Trash2, Layers, Box, Paperclip, ShoppingCart, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
 import ProductVariantDialog from "@/components/products/ProductVariantDialog";
@@ -19,6 +19,9 @@ import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { MobileDetailItems, type DetailItemData } from "@/components/mobile/MobileDetailItems";
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { FloatingActionButton } from "@/components/mobile/FloatingActionButton";
+import StockMovementDialog from "@/components/inventory/StockMovementDialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -35,6 +38,7 @@ const ProductDetailsPage = () => {
   const isMobile = useIsMobile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+  const [stockMovementOpen, setStockMovementOpen] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
 
   const { data: product, isLoading } = useQuery({
@@ -79,6 +83,7 @@ const ProductDetailsPage = () => {
   });
 
   const totalStock = stockData.reduce((sum, s) => sum + s.quantity, 0);
+  const isLowStock = totalStock <= (product?.min_stock || 0);
 
   const deleteVariantMutation = useMutation({
     mutationFn: async (variantId: string) => {
@@ -184,6 +189,37 @@ const ProductDetailsPage = () => {
               {product.description && <div className="mt-4 p-3 bg-muted rounded-lg"><p className="text-sm">{product.description}</p></div>}
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Context-Aware: Low Stock Alert + Actions */}
+      {product && isLowStock && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>تنبيه: مخزون منخفض</AlertTitle>
+          <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-1">
+            <span>المخزون الحالي ({totalStock}) أقل من الحد الأدنى ({product.min_stock || 0})</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="min-h-9" onClick={() => setStockMovementOpen(true)}>
+                <Plus className="h-3.5 w-3.5 ml-1" />إضافة مخزون
+              </Button>
+              <Button size="sm" variant="outline" className="min-h-9" onClick={() => navigate('/purchase-orders', { state: { prefillProductId: id } })}>
+                <ShoppingCart className="h-3.5 w-3.5 ml-1" />أمر شراء
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Context Actions: Desktop quick actions bar */}
+      {!isMobile && product && (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setStockMovementOpen(true)}>
+            <Plus className="h-4 w-4 ml-2" />إضافة للمخزون
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => navigate('/purchase-orders', { state: { prefillProductId: id } })}>
+            <ShoppingCart className="h-4 w-4 ml-2" />إنشاء أمر شراء
+          </Button>
         </div>
       )}
 
@@ -302,6 +338,17 @@ const ProductDetailsPage = () => {
 
       <ProductFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} product={product} />
       <ProductVariantDialog open={variantDialogOpen} onOpenChange={setVariantDialogOpen} productId={id!} variant={selectedVariant} />
+      <StockMovementDialog open={stockMovementOpen} onOpenChange={setStockMovementOpen} />
+
+      {/* Mobile FAB for quick stock addition */}
+      {isMobile && product && (
+        <FloatingActionButton
+          onClick={() => setStockMovementOpen(true)}
+          icon={<Plus className="h-5 w-5" />}
+          label={isLowStock ? "إضافة مخزون" : undefined}
+          className={isLowStock ? "bg-destructive hover:bg-destructive/90" : undefined}
+        />
+      )}
     </div>
   );
 };
