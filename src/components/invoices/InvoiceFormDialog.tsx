@@ -163,6 +163,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      clearDraft();
       toast({ title: isEditing ? "تم تحديث الفاتورة بنجاح" : "تم إنشاء الفاتورة بنجاح", description: "تم التحقق من الصلاحيات والحدود المالية" });
       onOpenChange(false);
     },
