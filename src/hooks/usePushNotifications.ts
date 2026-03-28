@@ -56,7 +56,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       try {
         const registration = await navigator.serviceWorker.ready;
-        const existingSub = await (registration as any).pushManager?.getSubscription();
+        const existingSub = await (registration as unknown as { pushManager?: PushManager }).pushManager?.getSubscription();
         setSubscription(existingSub);
       } catch (error) {
         console.error('Error getting push subscription:', error);
@@ -111,12 +111,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const registration = await navigator.serviceWorker.ready;
 
       // Check if already subscribed
-      let pushSubscription = await (registration as any).pushManager?.getSubscription();
+      let pushSubscription = await (registration as unknown as { pushManager?: PushManager }).pushManager?.getSubscription();
 
       if (!pushSubscription && VAPID_PUBLIC_KEY) {
         // Create new subscription
         const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        pushSubscription = await (registration as any).pushManager.subscribe({
+        pushSubscription = await (registration as unknown as { pushManager: PushManager }).pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
         });
@@ -132,12 +132,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           .from('push_subscriptions')
           .upsert({
             user_id: user.id,
-            subscription: subscriptionJSON as any,
+            subscription: subscriptionJSON as unknown as import('@/integrations/supabase/types').Json,
             device_info: {
               userAgent: navigator.userAgent,
               platform: navigator.platform,
               language: navigator.language,
-            } as any,
+            } as unknown as import('@/integrations/supabase/types').Json,
             is_active: true,
           });
 

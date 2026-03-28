@@ -30,7 +30,7 @@ export function useFileHandling() {
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-          resolve(jsonData as any[][]);
+          resolve(jsonData as unknown[][]);
         } catch (err) {
           reject(err);
         }

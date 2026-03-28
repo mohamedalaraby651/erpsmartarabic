@@ -146,7 +146,7 @@ export default function UsersPage() {
   const filteredUsers = useMemo(() => {
     if (!users) return [];
     return users.filter(user => {
-      const profile = user.profiles as any;
+      const profile = user.profiles as { full_name?: string; avatar_url?: string; phone?: string } | null;
       const matchesSearch = !searchQuery || 
         profile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         profile?.phone?.includes(searchQuery);
@@ -158,8 +158,8 @@ export default function UsersPage() {
   const exportToExcel = () => {
     if (!users) return;
     const data = users.map(user => {
-      const profile = user.profiles as any;
-      const customRole = user.custom_roles as any;
+      const profile = user.profiles as { full_name?: string; phone?: string } | null;
+      const customRole = user.custom_roles as { name?: string } | null;
       return {
         'الاسم': profile?.full_name || 'غير محدد',
         'الهاتف': profile?.phone || '-',
@@ -266,8 +266,8 @@ export default function UsersPage() {
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => {
-                const profile = user.profiles as any;
-                const customRole = user.custom_roles as any;
+                const profile = user.profiles as { full_name?: string; avatar_url?: string; phone?: string; id?: string } | null;
+                const customRole = user.custom_roles as { id?: string; name?: string; color?: string } | null;
                 const initials = profile?.full_name
                   ?.split(' ')
                   .map((n: string) => n[0])

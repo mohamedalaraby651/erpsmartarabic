@@ -129,7 +129,7 @@ const ChartOfAccountsPage = () => {
   const handleAdd = (parentId?: string) => {
     if (parentId) {
       const parent = accounts.find((a) => a.id === parentId);
-      setSelectedAccount({ parent_id: parentId, account_type: parent?.account_type } as any);
+      setSelectedAccount({ parent_id: parentId, account_type: parent?.account_type } as Partial<Account> as Account);
     } else {
       setSelectedAccount(null);
     }

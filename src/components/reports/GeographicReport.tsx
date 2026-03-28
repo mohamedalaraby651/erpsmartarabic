@@ -43,7 +43,7 @@ export function GeographicReport() {
     });
 
     invoices?.forEach(inv => {
-      const gov = (inv.customers as any)?.governorate || 'غير محدد';
+      const gov = (inv as { customers?: { governorate?: string } | null }).customers?.governorate || 'غير محدد';
       const entry = govMap.get(gov) || { count: 0, balance: 0, sales: 0 };
       entry.sales += Number(inv.total_amount || 0);
       govMap.set(gov, entry);

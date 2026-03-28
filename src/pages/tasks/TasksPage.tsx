@@ -148,10 +148,10 @@ const TasksPage = () => {
         }
         badge={priorityBadge}
         className={task.is_completed ? 'opacity-60' : ''}
-        fields={[
-          task.due_date && { label: "الاستحقاق", value: new Date(task.due_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
+        fields={([
+          task.due_date ? { label: "الاستحقاق", value: new Date(task.due_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> } : null,
           { label: "الإنشاء", value: new Date(task.created_at).toLocaleDateString('ar-EG'), icon: <Clock className="h-3 w-3" /> },
-        ].filter(Boolean) as any[]}
+        ] as const).filter(Boolean) as Array<{ label: string; value: string | number | React.ReactNode; icon?: React.ReactNode }>}
         onClick={() => toggleTaskMutation.mutate({ id: task.id, is_completed: !task.is_completed })}
         rightContent={
           <Checkbox

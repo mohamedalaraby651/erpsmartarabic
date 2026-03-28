@@ -58,7 +58,7 @@ export function useCustomerAlerts() {
     // Overdue invoices
     overdueInvoices?.forEach(inv => {
       const daysOverdue = Math.floor((Date.now() - new Date(inv.due_date!).getTime()) / 86400000);
-      const customerName = (inv.customers as any)?.name || 'عميل';
+      const customerName = (inv as { customers?: { name: string } | null }).customers?.name || 'عميل';
       result.push({
         type: 'overdue_payment',
         severity: daysOverdue > 30 ? 'error' : 'warning',

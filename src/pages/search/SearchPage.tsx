@@ -127,7 +127,7 @@ export default function SearchPage() {
           id: i.id,
           type: 'invoice',
           title: `فاتورة ${i.invoice_number}`,
-          subtitle: (i.customers as any)?.name,
+          subtitle: (i as { customers?: { name: string } | null }).customers?.name,
           href: `/invoices?id=${i.id}`,
         });
       });
@@ -144,7 +144,7 @@ export default function SearchPage() {
           id: q.id,
           type: 'quotation',
           title: `عرض سعر ${q.quotation_number}`,
-          subtitle: (q.customers as any)?.name,
+          subtitle: (q as { customers?: { name: string } | null }).customers?.name,
           href: `/quotations?id=${q.id}`,
         });
       });

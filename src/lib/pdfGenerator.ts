@@ -66,6 +66,7 @@ let _jspdfPatched = false;
 function disableJsPdfInternalArabicProcessing(): void {
   if (_jspdfPatched) return;
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const api = (jsPDF as any).API;
   if (!api || !Array.isArray(api.events)) {
     console.warn('[PDF] Could not access jsPDF.API.events to patch');
@@ -451,7 +452,7 @@ export async function generateDocumentPDF(
       },
     });
 
-    startY = (doc as any).lastAutoTable.finalY + 10;
+    startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
   }
 
   // Totals

@@ -99,10 +99,8 @@ const SuppliersPage = () => {
 
   const deleteSupplierMutation = useMutation({
     mutationFn: async (id: string) => {
-      const hasPermission = await verifyPermissionOnServer('suppliers', 'delete');
-      if (!hasPermission) throw new Error('UNAUTHORIZED');
-      const { error } = await supabase.from("suppliers").delete().eq("id", id);
-      if (error) throw error;
+      const { deleteSupplier } = await import('@/lib/services/supplierService');
+      await deleteSupplier(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });
@@ -219,7 +217,7 @@ const SuppliersPage = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {(sortedData as any[]).map((supplier) => {
+          {(sortedData as Supplier[]).map((supplier) => {
             const stats = getSupplierStats(supplier.id);
             const balanceColor = getBalanceColor(supplier.current_balance || 0, supplier.credit_limit || 0);
             return (

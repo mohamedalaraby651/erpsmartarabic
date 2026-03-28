@@ -31,7 +31,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as any;
+      return data;
     },
   });
 
@@ -51,13 +51,13 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
       if (settings?.id) {
         const { error } = await supabase
           .from('company_settings')
-          .update({ currency, pdf_font: pdfFont } as any)
+          .update({ currency, pdf_font: pdfFont })
           .eq('id', settings.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('company_settings')
-          .insert({ company_name: 'شركتي', currency, pdf_font: pdfFont } as any);
+          .insert({ company_name: 'شركتي', currency, pdf_font: pdfFont });
         if (error) throw error;
       }
     },

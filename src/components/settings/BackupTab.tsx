@@ -65,7 +65,7 @@ export function BackupTab() {
       const counts: Record<string, number> = {};
       for (const table of tables) {
         const { count } = await supabase
-          .from(table.name as any)
+          .from(table.name as never)
           .select('*', { count: 'exact', head: true });
         counts[table.name] = count || 0;
       }
@@ -88,7 +88,7 @@ export function BackupTab() {
     try {
       const allData: Record<string, any[]> = {};
       for (const tableName of selectedTables) {
-        const { data } = await supabase.from(tableName as any).select('*');
+        const { data } = await supabase.from(tableName as never).select('*');
         allData[tableName] = data || [];
       }
 
@@ -176,7 +176,7 @@ export function BackupTab() {
     
     if (!hasValidCondition) return null;
     
-    let query = supabase.from(tableName as any).select('id');
+    let query = supabase.from(tableName as never).select('id');
     
     for (const [key, value] of Object.entries(conditions)) {
       query = query.eq(key, value);
@@ -219,8 +219,8 @@ export function BackupTab() {
               if (mode === 'replace') {
                 // Replace: update with new data
                 const { error } = await supabase
-                  .from(tableName as any)
-                  .update(cleanRecord)
+                  .from(tableName as never)
+                  .update(cleanRecord as never)
                   .eq('id', existing.id);
                 
                 if (error) {
@@ -240,8 +240,8 @@ export function BackupTab() {
                 
                 if (Object.keys(mergedData).length > 0) {
                   const { error } = await supabase
-                    .from(tableName as any)
-                    .update(mergedData)
+                    .from(tableName as never)
+                    .update(mergedData as never)
                     .eq('id', existing.id);
                   
                   if (error) {
@@ -259,8 +259,8 @@ export function BackupTab() {
             } else {
               // No match found - insert new record
               const { error } = await supabase
-                .from(tableName as any)
-                .insert(cleanRecord);
+                .from(tableName as never)
+                .insert(cleanRecord as never);
               
               if (error) {
                 result.errors++;

@@ -82,7 +82,7 @@ export default function SyncStatusPage() {
       const counts: Record<string, number> = {};
       for (const table of tables) {
         try {
-          const data = await getCachedData(table as any);
+          const data = await getCachedData(table as never);
           counts[table] = data.length;
         } catch {
           counts[table] = 0;
