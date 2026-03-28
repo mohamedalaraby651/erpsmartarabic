@@ -70,6 +70,8 @@ const statusLabels: Record<string, { label: string; variant: 'default' | 'second
 
 const VIRTUALIZATION_THRESHOLD = 50;
 
+const PAGE_SIZE = 25;
+
 export default function EmployeesPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,6 +79,7 @@ export default function EmployeesPage() {
   const isMobile = useIsMobile();
   const [searchParamsState, setSearchParamsState] = useSearchParams();
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
