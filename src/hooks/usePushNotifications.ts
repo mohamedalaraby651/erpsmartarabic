@@ -116,7 +116,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       if (!pushSubscription && VAPID_PUBLIC_KEY) {
         // Create new subscription
         const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        pushSubscription = await (registration as any).pushManager.subscribe({
+        pushSubscription = await (registration as unknown as { pushManager: PushManager }).pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
         });
