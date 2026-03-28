@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/lib/validations";
 import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
 import { useInvoiceItems } from "./useInvoiceItems";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import InvoiceFormHeader from "./InvoiceFormHeader";
 import { InvoiceItemsTable } from "./InvoiceItemsTable";
 import { InvoiceTotalsSection } from "./InvoiceTotalsSection";
