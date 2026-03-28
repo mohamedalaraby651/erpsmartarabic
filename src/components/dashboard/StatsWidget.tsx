@@ -1,15 +1,7 @@
 import React from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { Users, Package, FileText, Receipt, TrendingUp, TrendingDown } from 'lucide-react';
 import type { DashboardStats } from '@/hooks/useDashboardData';
-
-interface StatItem {
-  title: string;
-  value: number;
-  icon: React.ElementType;
-  change: string;
-  positive: boolean;
-}
 
 interface StatsWidgetProps {
   dashboardStats: DashboardStats | undefined;
@@ -21,20 +13,12 @@ export function StatsWidget({ dashboardStats }: StatsWidgetProps) {
     ? `${invoiceTrend >= 0 ? '+' : ''}${invoiceTrend.toFixed(0)}%`
     : '—';
 
-  const stats: StatItem[] = [
-    { title: 'العملاء', value: dashboardStats?.customersCount || 0, icon: () => null, change: '', positive: true },
-    { title: 'المنتجات', value: dashboardStats?.productsCount || 0, icon: () => null, change: '', positive: true },
-    { title: 'عروض الأسعار', value: dashboardStats?.quotationsCount || 0, icon: () => null, change: '', positive: true },
-    { title: 'الفواتير', value: dashboardStats?.invoicesCount || 0, icon: () => null, change: trendLabel, positive: invoiceTrend !== null && invoiceTrend !== undefined ? invoiceTrend >= 0 : true },
+  const stats = [
+    { title: 'العملاء', value: dashboardStats?.customersCount || 0, icon: Users, change: '', positive: true },
+    { title: 'المنتجات', value: dashboardStats?.productsCount || 0, icon: Package, change: '', positive: true },
+    { title: 'عروض الأسعار', value: dashboardStats?.quotationsCount || 0, icon: FileText, change: '', positive: true },
+    { title: 'الفواتير', value: dashboardStats?.invoicesCount || 0, icon: Receipt, change: trendLabel, positive: invoiceTrend !== null && invoiceTrend !== undefined ? invoiceTrend >= 0 : true },
   ];
-
-  // We receive icons from parent through the stats config
-  // For now use the same icons pattern
-  const { Users, Package, FileText, Receipt } = require('lucide-react');
-  stats[0].icon = Users;
-  stats[1].icon = Package;
-  stats[2].icon = FileText;
-  stats[3].icon = Receipt;
 
   return (
     <>
