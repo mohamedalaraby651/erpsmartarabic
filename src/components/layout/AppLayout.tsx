@@ -108,9 +108,11 @@ export default function AppLayout() {
       <div className="min-h-screen bg-background pb-14">
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
-          <div className="animate-fade-in">
-            <Outlet />
-          </div>
+          <Suspense fallback={<PageSkeleton />}>
+            <PageTransition direction="fade" duration="fast">
+              <Outlet />
+            </PageTransition>
+          </Suspense>
         </main>
         <FABMenu pageContext={getPageContext()} />
         <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
