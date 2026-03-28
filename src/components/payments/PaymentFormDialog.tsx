@@ -48,7 +48,7 @@ const paymentMethods = [
   { value: 'installment', label: 'تقسيط' },
 ];
 
-const PaymentFormDialog = ({ open, onOpenChange }: PaymentFormDialogProps) => {
+const PaymentFormDialog = ({ open, onOpenChange, prefillCustomerId, prefillInvoiceId }: PaymentFormDialogProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
