@@ -210,7 +210,7 @@ const CollectionDashboard = () => {
                 const remaining = Number(inv.total_amount) - Number(inv.paid_amount || 0);
                 return (
                   <DataCard key={inv.id} title={cust?.name || ''} subtitle={inv.invoice_number}
-                    badge={{ label: `${remaining.toLocaleString()} ج.م`, variant: 'destructive' }}
+                    badge={{ text: `${remaining.toLocaleString()} ج.م`, variant: 'destructive' }}
                     fields={[
                       { label: 'الاستحقاق', value: inv.due_date || '—' },
                     ]}

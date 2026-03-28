@@ -297,7 +297,7 @@ const AttendancePage = () => {
                 const emp = record.employees as { full_name: string; employee_number: string } | null;
                 return (
                   <DataCard key={record.id} title={emp?.full_name || ''} subtitle={format(parseISO(record.check_in), 'yyyy/MM/dd')}
-                    badge={{ label: record.check_out ? formatDuration(record.check_in, record.check_out) : 'قيد العمل', variant: record.check_out ? 'default' : 'warning' }}
+                    badge={{ text: record.check_out ? formatDuration(record.check_in, record.check_out) : 'قيد العمل', variant: record.check_out ? 'default' : 'secondary' }}
                     fields={[
                       { label: 'حضور', value: format(parseISO(record.check_in), 'hh:mm a', { locale: ar }) },
                       { label: 'انصراف', value: record.check_out ? format(parseISO(record.check_out), 'hh:mm a', { locale: ar }) : '—' },

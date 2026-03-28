@@ -167,6 +167,8 @@ const App = () => (
                   <Route path="treasury/:id" element={<CashRegisterDetailsPage />} />
                   <Route path="expenses" element={<ExpensesPage />} />
                   <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
+                  <Route path="attendance" element={<AttendancePage />} />
+                  <Route path="collections" element={<CollectionDashboard />} />
                   {/* Accounting Routes */}
                   <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
                   <Route path="accounting/journals" element={<JournalEntriesPage />} />
