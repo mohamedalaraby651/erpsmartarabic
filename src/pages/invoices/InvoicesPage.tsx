@@ -78,10 +78,12 @@ const approvalStatusIcons: Record<string, React.ElementType> = {
 
 const InvoicesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [prefillCustomerId, setPrefillCustomerId] = useState<string | undefined>(undefined);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printInvoiceId, setPrintInvoiceId] = useState<string | null>(null);
   const { userRole } = useAuth();
