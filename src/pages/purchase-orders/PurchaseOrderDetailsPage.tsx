@@ -182,7 +182,45 @@ const PurchaseOrderDetailsPage = () => {
         </div>
       )}
 
-      {/* Tabs */}
+      {/* Mobile: Collapsible Sections */}
+      {isMobile && (
+        <div className="space-y-3 mt-4">
+          <MobileDetailSection title="بنود الأمر" priority="medium" icon={<Package className="h-4 w-4" />} badge={orderItems.length}>
+            <MobileDetailItems items={itemCards} emptyIcon={<Package className="h-12 w-12 text-muted-foreground/50" />} emptyMessage="لا توجد بنود" />
+            {orderItems.length > 0 && (
+              <div className="mt-3 p-3 rounded-lg bg-muted/50 space-y-1 text-sm">
+                <div className="flex justify-between"><span>المجموع الفرعي</span><span>{Number(order.subtotal).toLocaleString()} ج.م</span></div>
+                {Number(order.tax_amount) > 0 && <div className="flex justify-between"><span>الضريبة</span><span>{Number(order.tax_amount).toLocaleString()} ج.م</span></div>}
+                <div className="flex justify-between font-bold text-base pt-2 border-t"><span>الإجمالي</span><span>{totalAmount.toLocaleString()} ج.م</span></div>
+              </div>
+            )}
+          </MobileDetailSection>
+          <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={payments.length}>
+            <MobileDetailItems items={paymentCards} emptyIcon={<CreditCard className="h-12 w-12 text-muted-foreground/50" />} emptyMessage="لا توجد مدفوعات مسجلة" />
+          </MobileDetailSection>
+          <MobileDetailSection title="سجل النشاط" priority="low" icon={<Activity className="h-4 w-4" />} badge={activities.length}>
+            {activities.length > 0 ? (
+              <div className="space-y-2">
+                {(activities as Array<{id: string; action: string; created_at: string}>).map((a) => (
+                  <div key={a.id} className="flex items-start gap-3 p-2 rounded-lg bg-muted/50">
+                    <div className="p-1.5 rounded-full bg-primary/10 shrink-0"><Activity className="h-3 w-3 text-primary" /></div>
+                    <div className="min-w-0"><p className="text-xs font-medium">{a.action}</p><p className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleString('ar-EG')}</p></div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-4">لا يوجد نشاط</p>}
+          </MobileDetailSection>
+          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
+            <div className="space-y-3">
+              <FileUpload entityType="purchase_order" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'purchase_order', id] })} />
+              <AttachmentsList entityType="purchase_order" entityId={id!} />
+            </div>
+          </MobileDetailSection>
+        </div>
+      )}
+
+      {/* Desktop: Tabs */}
+      {!isMobile && (
       <Tabs defaultValue="items" className="mt-6">
         <ScrollArea className="w-full">
           <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
