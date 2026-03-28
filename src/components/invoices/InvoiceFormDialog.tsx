@@ -100,7 +100,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
       });
       loadItems(invoice.id);
     } else {
-      reset({ customer_id: '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '', discount_amount: 0, tax_amount: 0 });
+      reset({ customer_id: prefillCustomerId || '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '', discount_amount: 0, tax_amount: 0 });
       resetItems();
     }
     wizard.reset();

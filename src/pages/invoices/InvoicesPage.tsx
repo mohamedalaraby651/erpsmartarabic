@@ -577,8 +577,12 @@ const InvoicesPage = () => {
 
       <InvoiceFormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setPrefillCustomerId(undefined);
+        }}
         invoice={selectedInvoice}
+        prefillCustomerId={prefillCustomerId}
       />
 
       {printInvoiceId && (

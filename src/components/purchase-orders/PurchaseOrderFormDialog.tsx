@@ -42,7 +42,7 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
 
   useEffect(() => {
     if (order) { reset({ supplier_id: order.supplier_id, expected_date: order.expected_date || '', notes: order.notes || '', tax_amount: Number(order.tax_amount) || 0 }); loadOrderItems(order.id); }
-    else { reset({ supplier_id: '', expected_date: '', notes: '', tax_amount: 0 }); setItems([]); }
+    else { reset({ supplier_id: prefillSupplierId || '', expected_date: '', notes: '', tax_amount: 0 }); setItems([]); }
     wizard.reset();
   }, [order, reset]);
 

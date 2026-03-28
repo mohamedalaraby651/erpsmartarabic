@@ -440,8 +440,12 @@ const PurchaseOrdersPage = () => {
 
       <PurchaseOrderFormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setPrefillSupplierId(undefined);
+        }}
         order={selectedOrder}
+        prefillSupplierId={prefillSupplierId}
       />
 
       {printOrderId && (
