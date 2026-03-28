@@ -66,7 +66,7 @@ let _jspdfPatched = false;
 function disableJsPdfInternalArabicProcessing(): void {
   if (_jspdfPatched) return;
   
-  const api = (jsPDF as unknown as { API: { events?: unknown[] } }).API;
+  const api = (jsPDF as unknown as Record<string, Record<string, unknown>>).API;
   if (!api || !Array.isArray(api.events)) {
     console.warn('[PDF] Could not access jsPDF.API.events to patch');
     return;

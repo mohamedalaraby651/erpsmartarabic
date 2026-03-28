@@ -48,7 +48,7 @@ export default function PlatformDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_all_tenants_admin');
       if (error) throw error;
-      return (data as Record<string, unknown>[])?.slice(0, 5) ?? [];
+      return (data as Array<{ id: string; name: string; slug: string; subscription_tier: string; is_active: boolean; user_count: number }>)?.slice(0, 5) ?? [];
     },
   });
 
