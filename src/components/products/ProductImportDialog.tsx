@@ -90,12 +90,9 @@ export default function ProductImportDialog({ open, onOpenChange }: Props) {
           const { error } = await supabase.from('products').insert({
             name: row.name.trim(),
             sku: row.sku?.trim() || null,
-            barcode: row.barcode?.trim() || null,
-            price: row.price || 0,
+            selling_price: row.price || 0,
             cost_price: row.cost_price || 0,
-            stock_quantity: row.stock_quantity || 0,
-            min_stock_level: row.min_stock_level || 0,
-            unit: row.unit?.trim() || 'قطعة',
+            min_stock: row.min_stock_level || 0,
             description: row.description?.trim() || null,
           });
           if (error) throw error;
