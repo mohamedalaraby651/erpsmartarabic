@@ -2,11 +2,13 @@ import { memo, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { ChevronLeft, Trash2, Pencil, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LongPressMenu } from './LongPressMenu';
 import { useDoubleTap } from '@/hooks/useDoubleTap';
 import { haptics } from '@/lib/haptics';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DataField {
   label: string;
@@ -97,6 +99,7 @@ export const DataCard = memo(function DataCard({
   menuItems = [],
   swipeActions = true,
 }: DataCardProps) {
+  const isMobile = useIsMobile();
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const startX = useRef(0);
@@ -262,9 +265,34 @@ export const DataCard = memo(function DataCard({
               )}
             </div>
 
-            {/* Right content or arrow */}
+            {/* Right content or mobile quick actions or arrow */}
             {rightContent || (
-              <ChevronLeft className="h-5 w-5 text-muted-foreground/50 shrink-0 mt-1" />
+              isMobile && (onView || onEdit) ? (
+                <div className="flex items-center gap-1 shrink-0">
+                  {onView && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground"
+                      onClick={(e) => { e.stopPropagation(); haptics.light(); onView(); }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground"
+                      onClick={(e) => { e.stopPropagation(); haptics.light(); onEdit(); }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <ChevronLeft className="h-5 w-5 text-muted-foreground/50 shrink-0 mt-1" />
+              )
             )}
           </div>
         </CardContent>

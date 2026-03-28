@@ -14,8 +14,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 
-// Lazy load ShortcutsModal
+// Lazy load ShortcutsModal and PageTransition
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
+const PageTransition = lazy(() => import('@/components/transitions/PageTransition'));
 
 // Skeleton loader for page content
 function PageSkeleton() {
@@ -107,9 +108,11 @@ export default function AppLayout() {
       <div className="min-h-screen bg-background pb-14">
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
-          <div className="animate-fade-in">
-            <Outlet />
-          </div>
+          <Suspense fallback={<PageSkeleton />}>
+            <PageTransition direction="fade" duration="fast">
+              <Outlet />
+            </PageTransition>
+          </Suspense>
         </main>
         <FABMenu pageContext={getPageContext()} />
         <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
@@ -142,9 +145,11 @@ export default function AppLayout() {
         >
           <AppHeader />
           <main className="p-6">
-            <div className="animate-fade-in">
-              <Outlet />
-            </div>
+            <Suspense fallback={<PageSkeleton />}>
+              <PageTransition direction="fade" duration="fast">
+                <Outlet />
+              </PageTransition>
+            </Suspense>
           </main>
         </div>
       </div>
