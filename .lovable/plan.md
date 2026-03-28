@@ -1,127 +1,168 @@
 
 
-# تقرير تحليل شامل — المشاكل المتبقية وخطة الإصلاح
+# تقرير التدقيق الشامل — نظام ERP إنتاجي
 
 ---
 
-## المشاكل المكتشفة
+## 1. ثغرات أمنية (Security)
 
-### 🔴 حرج — يكسر الوظائف
+### 1.1 حذف السجلات بدون تحقق صلاحيات — Critical
+**السبب الجذري**: 14 صفحة تنفذ `supabase.from(table).delete()` مباشرة بدون استدعاء `verifyPermissionOnServer` قبل الحذف.
 
-#### 1. أزرار "الإجراءات السريعة" في Dashboard الديسكتوب لا تعمل
-**الملف**: `src/pages/Dashboard.tsx` سطر 240
-**المشكلة**: `handleQuickAction` يرسل `navigate(action.href, { state: { openNew: true } })` لكن **جميع الصفحات** تستمع فقط لـ `searchParams.get('action') === 'new'` — لا أحد يقرأ `state.openNew`.
-**النتيجة**: الضغط على "عميل جديد" أو "فاتورة جديدة" من Dashboard الديسكتوب ينقل للصفحة لكن **لا يفتح النموذج**.
-**ملاحظة**: Mobile Dashboard يعمل بشكل صحيح لأنه يستخدم `href: '/customers?action=new'`.
+**الملفات المتأثرة**: `PaymentsPage`, `InvoicesPage`, `SuppliersPage`, `ProductsPage`, `EmployeesPage`, `QuotationsPage`, `SalesOrdersPage`, `PurchaseOrdersPage`, `CategoriesPage`, `InventoryPage` (warehouses).
 
-**الإصلاح**: تغيير `handleQuickAction` لاستخدام `navigate(action.href + '?action=new')` بدلاً من state.
+**الأثر**: أي مستخدم لديه session صالحة يستطيع حذف فواتير ومدفوعات ومنتجات — حتى لو كان دوره `sales` بدون صلاحية delete. الحماية الوحيدة هي RLS، لكن إذا كانت سياسة الحذف تعتمد على `has_any_role` (وليس `check_section_permission`) فالثغرة مفتوحة.
 
----
+**التأثير الحقيقي**: حذف دفعات مالية يؤدي لفقدان بيانات لا يمكن استردادها + خلل في الأرصدة.
 
-#### 2. PaymentFormDialog لا يتعبأ تلقائياً من صفحة الفاتورة
-**الملف**: `src/pages/invoices/InvoiceDetailsPage.tsx` سطر 646
-**المشكلة**: عند الضغط على "تسجيل دفعة" في صفحة تفاصيل الفاتورة، يُفتح `PaymentFormDialog` **بدون** تمرير `customer_id` أو `invoice_id` — المستخدم يجب أن يختار العميل والفاتورة يدوياً رغم أنه بالفعل في صفحة الفاتورة.
-
-**الإصلاح**: إضافة props `prefillCustomerId` و `prefillInvoiceId` لـ `PaymentFormDialog` وتمريرهما من `InvoiceDetailsPage`.
+**الإصلاح**: إضافة `await verifyPermissionOnServer(section, 'delete')` قبل كل `delete()` mutation — نفس النمط المستخدم في `CustomerFormDialog` و `SalesOrderFormDialog`.
 
 ---
 
-#### 3. `console.error` مكشوف في Production
-**الملف**: `src/components/suppliers/SupplierPaymentDialog.tsx` سطر 125
-**المشكلة**: `console.error(error)` بدون حماية `import.meta.env.DEV` — يكشف تفاصيل أخطاء قاعدة البيانات في console المستخدم.
-**ملفات إضافية**: `ExportButton.tsx`, `TenantSettings.tsx`, `LogoUpload.tsx` (سطر 113), `SalesOrderPrintView.tsx`, `PurchaseOrderPrintView.tsx`, `InvoicePrintView.tsx`, `SettingsExportImport.tsx`.
+### 1.2 حذف الدفعات لا يعكس الرصيد — Critical
+**الملف**: `PaymentsPage.tsx` سطر 79-83
 
-**الإصلاح**: استبدال بـ `logErrorSafely()` أو لف بـ `if (import.meta.env.DEV)`.
+**المشكلة**: عند حذف دفعة، يُحذف السجل من `payments` لكن **لا يُعاد تحديث** `paid_amount` في الفاتورة ولا `current_balance` للعميل. النتيجة: الأرصدة المالية تصبح غير متسقة بشكل دائم.
 
----
-
-### 🟡 مهم — وظائف ناقصة
-
-#### 4. لا يوجد ربط بين الفاتورة ومستندها المصدر
-**الملف**: `src/pages/invoices/InvoiceDetailsPage.tsx`
-**المشكلة**: رغم أن جدول `invoices` يحتوي على `sales_order_id`، لا يوجد أي عرض لهذا الربط في صفحة تفاصيل الفاتورة. لا يمكن تتبع دورة المستند (Quote → Order → Invoice).
-
-**الإصلاح**: إضافة قسم "المستند المصدر" في Hero Header يعرض رابط لأمر البيع إذا وُجد.
+**الإصلاح**: يجب أن يمر الحذف عبر Edge Function (مثل `process-payment` لكن بوضع reverse) أو trigger في قاعدة البيانات يعيد حساب الأرصدة عند DELETE.
 
 ---
 
-#### 5. `(supplier as any)` في SupplierDetailsPage
-**الملف**: `src/pages/suppliers/SupplierDetailsPage.tsx` سطر 170, 221
-**المشكلة**: `(supplier as any).credit_limit`, `(supplier as any).payment_terms_days`, `(supplier as any).discount_percentage` — تصل لحقول ليست في الـ Type definition. إذا كانت الحقول موجودة فعلاً في قاعدة البيانات لكن ليست في TypeScript types، ستعمل لكنها تخفي أخطاء. وإذا غير موجودة ستعطي `0` دائماً.
+### 1.3 حذف الفواتير لا يعكس cached stats — High
+**الملف**: `InvoicesPage.tsx` سطر 184-188
 
-**الإصلاح**: إزالة `as any` واستخدام type assertion صحيح أو قراءة القيم من query مباشرة.
-
----
-
-#### 6. استعلامات مكررة بين Dashboard و MobileDashboard
-**الملف**: `Dashboard.tsx` و `MobileDashboard.tsx`
-**المشكلة**: نفس البيانات (customers count, products count, invoices count, quotations count) تُجلب بـ query keys مختلفة:
-- Desktop: `['dashboard-stats']`
-- Mobile: `['mobile-dashboard-stats']`
-
-**النتيجة**: عند التبديل بين desktop/mobile (resize)، البيانات تُعاد جلبها بالكامل بدل استخدام الـ cache.
-
-**الإصلاح**: توحيد queryKey لـ `['dashboard-stats']` في كلا الملفين.
+عند حذف فاتورة، يُحذف `invoice_items` ثم `invoices`، لكن trigger `update_customer_cached_stats` قد لا يعمل بشكل صحيح لأن الـ customer_id غير متوفر بعد الحذف. النتيجة: `total_purchases_cached` و `invoice_count_cached` في جدول customers تصبح قديمة.
 
 ---
 
-#### 7. `CustomerMergeDialog` يكشف `error.message` مباشرة
-**الملف**: `src/components/customers/CustomerMergeDialog.tsx` سطر 79
-**المشكلة**: `toast.error(\`فشل الدمج: ${error.message}\`)` — يكشف رسائل خطأ داخلية للمستخدم.
+### 1.4 switchTenant عملية غير ذرية — High
+**الملف**: `tenantContext.ts` سطر 110-147
 
-**الإصلاح**: استبدال بـ `getSafeErrorMessage(error)`.
+**المشكلة**: تبديل المستأجر يتم عبر عمليتين منفصلتين:
+1. `UPDATE user_tenants SET is_default = false` (كل السجلات)
+2. `UPDATE user_tenants SET is_default = true` (السجل الجديد)
 
----
+إذا فشلت العملية الثانية، يصبح المستخدم **بدون مستأجر افتراضي** — وكل استعلامات `get_current_tenant()` ترجع `null`، مما يعني **عدم إمكانية الوصول لأي بيانات**.
 
-### 🟠 متوسط — تحسينات
-
-#### 8. `as any` منتشر في 15 ملف (117 استخدام)
-أبرز الملفات: `InventoryPage.tsx`, `Dashboard.tsx`, `BackupPage.tsx`, `UsersPage.tsx`, `SearchPage.tsx`, `SupplierDetailsPage.tsx`.
-
-**الإصلاح**: استبدال بـ type assertions صحيحة أو تعريف types واضحة.
+**الإصلاح**: نقل المنطق لـ SQL function واحدة أو Edge Function تنفذ كلتا العمليتين في transaction واحد.
 
 ---
 
-## ملخص الأولويات
+## 2. سلامة البيانات المالية (Financial Integrity)
+
+### 2.1 SupplierPaymentDialog — race condition على الرصيد — High
+**الملف**: `SupplierPaymentDialog.tsx` سطر 71-92
+
+الكود يجلب `current_balance`، يحسب الرصيد الجديد، ثم يحدّث. إذا قام مستخدمان بتسجيل دفعات لنفس المورد في نفس الوقت، أحد التحديثات يُلغي الآخر (lost update).
+
+**الإصلاح**: استخدام `UPDATE suppliers SET current_balance = current_balance - $amount` بدلاً من قراءة-حساب-كتابة. أو نقل العملية لـ Edge Function مع transaction.
+
+---
+
+### 2.2 payment_number يُولّد من `Math.random()` — Medium
+**الملف**: `PaymentFormDialog.tsx` سطر 116-121
+
+`generatePaymentNumber` يستخدم `Math.floor(Math.random() * 1000)` — احتمال التكرار عالي في بيئة إنتاج (1/1000 لكل دفعة في نفس الشهر). لا يوجد UNIQUE constraint في قاعدة البيانات على `payment_number`.
+
+**الإصلاح**: استخدام sequence في قاعدة البيانات (مثل `cash_txn_seq`) أو UUID مختصر.
+
+---
+
+## 3. معمارية وبنية الكود (Architecture)
+
+### 3.1 Service Layer غير مكتمل — High
+**الحالة**: يوجد فقط `customerService.ts`. لا يوجد service layer لـ:
+- Invoices (إنشاء/حذف/اعتماد)
+- Payments (مع عكس الأرصدة)
+- Suppliers (دفعات + أرصدة)
+- Inventory (حركات المخزون)
+
+**الأثر**: منطق الأعمال مبعثر في 18+ صفحة ومكون. كل صفحة تنفذ `supabase.from().delete()` بطريقتها الخاصة بدون مركزية.
+
+**الإصلاح**: إنشاء `invoiceService.ts`, `paymentService.ts`, `supplierService.ts` تغلف العمليات الحرجة مع التحقق من الصلاحيات.
+
+---
+
+### 3.2 Dashboard.tsx مسؤول عن أكثر من اللازم — Medium
+575 سطر — يجمع بين: data fetching, widget rendering, chart config, quick actions, greeting logic, trend calculations. كل هذا في ملف واحد.
+
+---
+
+## 4. أداء (Performance)
+
+### 4.1 استعلامات متكررة لنفس البيانات — Medium
+**المشكلة**: 3 hooks مختلفة تجلب `products` + `product_stock` بشكل منفصل:
+- `useBusinessInsights` → `['insights-low-stock']`
+- `useReportsData` → `['low-stock']`
+- `LowStockWidget` (dashboard widget)
+
+كل واحد ينشئ `Map<string, number>` لحساب المخزون. الـ query keys مختلفة فلا يوجد cache sharing.
+
+**الإصلاح**: توحيد في hook مشترك `useLowStockProducts` بـ queryKey واحد.
+
+---
+
+### 4.2 monthly sales chart يجلب كل بيانات الفواتير — Medium
+**الملف**: `Dashboard.tsx` سطر 137-161
+
+يجلب كل الفواتير لآخر 6 أشهر (`select('total_amount, created_at')`) ثم يفلتر ويجمع client-side. مع نمو البيانات (10K+ فاتورة)، هذا الاستعلام سيصبح بطيئاً.
+
+**الإصلاح**: استخدام GROUP BY في SQL أو RPC function.
+
+---
+
+## 5. UX وتجربة المستخدم
+
+### 5.1 Insights بدون Deep Links — Medium
+**الملف**: `useBusinessInsights.ts`
+
+كل insight يوجه لصفحة عامة (`/customers`, `/products`) بدون filter. المستخدم يصل لقائمة كاملة ولا يعرف أي عملاء تجاوزوا حد الائتمان.
+
+**الإصلاح**: إضافة query params لـ href (مثل `/customers?filter=credit_exceeded`).
+
+---
+
+### 5.2 لا يوجد confirmation dialog قبل الحذف — Medium
+أغلب صفحات الحذف تنفذ `deleteMutation.mutate(id)` مباشرة بدون تأكيد. حذف فاتورة بضغطة زر واحدة.
+
+---
+
+## 6. Type Safety
+
+### 6.1 `as any` في 14 ملف (107 استخدام) — Medium
+أبرز الملفات: `UsersPage.tsx` (6 استخدامات لقراءة profiles/roles), `SuppliersPage.tsx`, `SearchPage.tsx`, `BackupPage.tsx`.
+
+---
+
+## 7. Business Intelligence
+
+### 7.1 لا يوجد Supplier Intelligence — Low
+النظام يحتوي على `useCustomerAlerts` لكن لا يوجد مكافئ للموردين: لا تنبيه عند تأخر توريد، لا تحليل أداء الموردين.
+
+---
+
+## أعلى 10 إصلاحات بحسب ROI
 
 ```text
-الأولوية   المشكلة                                     الملفات
-──────── ──────────────────────────────────────────  ────────
-🔴 حرج   #1 Quick Actions لا تفتح النموذج          Dashboard.tsx
-🔴 حرج   #2 PaymentForm بدون prefill من الفاتورة   InvoiceDetailsPage + PaymentFormDialog
-🔴 حرج   #3 console.error مكشوف (8 ملفات)          8 ملفات
-🟡 مهم    #4 لا ربط Invoice↔SalesOrder              InvoiceDetailsPage
-🟡 مهم    #5 supplier as any                        SupplierDetailsPage
-🟡 مهم    #6 استعلامات مكررة Dashboard               MobileDashboard
-🟡 مهم    #7 error.message في CustomerMerge          CustomerMergeDialog
-🟠 متوسط  #8 as any (117 استخدام)                    15 ملف
+#   الإصلاح                                        الجهد    الأثر     ROI
+─── ──────────────────────────────────────────── ────── ─────── ────
+1   إضافة verifyPermission قبل كل delete          2h     Critical  ★★★★★
+2   عكس الأرصدة عند حذف دفعات                     3h     Critical  ★★★★★
+3   جعل switchTenant ذرياً (SQL function)          1h     High      ★★★★★
+4   إصلاح race condition في SupplierPayment       1h     High      ★★★★★
+5   payment_number بـ sequence بدل random           1h     Medium    ★★★★
+6   توحيد low-stock query في hook مشترك           1h     Medium    ★★★★
+7   إنشاء invoiceService + paymentService          4h     High      ★★★★
+8   إضافة confirmation dialog قبل الحذف            2h     Medium    ★★★
+9   تحويل monthly chart لـ GROUP BY query          1h     Medium    ★★★
+10  Deep links في Business Insights               1h     Medium    ★★★
 ```
 
----
+## أعلى 3 مخاطر تكسر النظام في الإنتاج
 
-## خطة التنفيذ
+1. **حذف دفعة يفسد الأرصدة المالية بشكل صامت** — لا يوجد آلية لعكس الأثر المالي، والمستخدم لن يلاحظ الخلل حتى يظهر في التقارير. هذا الأخطر لأنه يتراكم.
 
-### المرحلة 1: إصلاحات حرجة (3 مشاكل)
+2. **switchTenant غير ذري** — فشل جزئي يجعل المستخدم بدون مستأجر = لا يستطيع رؤية أي بيانات ولا يعرف السبب.
 
-| # | الملف | التغيير |
-|---|-------|---------|
-| 1 | `Dashboard.tsx` | تغيير `handleQuickAction` → `navigate(action.href + '?action=new')` |
-| 2 | `PaymentFormDialog.tsx` | إضافة props `prefillCustomerId?` و `prefillInvoiceId?` + useEffect للتعبئة |
-| 2b | `InvoiceDetailsPage.tsx` | تمرير `customer_id` و `invoice.id` لـ PaymentFormDialog |
-| 3 | 8 ملفات | استبدال `console.error` بـ `logErrorSafely()` أو `if (DEV)` |
-
-### المرحلة 2: وظائف مهمة (4 مشاكل)
-
-| # | الملف | التغيير |
-|---|-------|---------|
-| 4 | `InvoiceDetailsPage.tsx` | إضافة قسم المستند المصدر (sales_order_id) مع EntityLink |
-| 5 | `SupplierDetailsPage.tsx` | إزالة `as any` واستخدام type الصحيح مع الحقول الفعلية |
-| 6 | `MobileDashboard.tsx` | توحيد queryKey مع Desktop |
-| 7 | `CustomerMergeDialog.tsx` | استبدال `error.message` بـ `getSafeErrorMessage()` |
-
-### ضمان عدم حدوث أخطاء جديدة
-- كل prefill prop اختياري (`?`) — لا يكسر الاستخدام الحالي بدون props
-- `handleQuickAction` يستخدم نفس pattern الـ `?action=new` الذي تستمع له كل الصفحات
-- `logErrorSafely` موجود ومستخدم بالفعل في أغلب الملفات — توحيد النمط فقط
-- توحيد queryKey لا يغير البيانات — فقط يتيح cache sharing
+3. **حذف بدون صلاحيات** — موظف مبيعات يستطيع حذف فواتير ومدفوعات وموردين بدون أي تحقق — الحماية تعتمد فقط على RLS التي قد تكون permissive.
 
