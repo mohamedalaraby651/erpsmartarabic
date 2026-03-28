@@ -48,8 +48,11 @@ const paymentMethodLabels: Record<string, string> = {
   installment: "تقسيط",
 };
 
+const PAGE_SIZE = 25;
+
 const PaymentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settlementOpen, setSettlementOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
