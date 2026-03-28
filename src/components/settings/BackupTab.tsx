@@ -220,7 +220,7 @@ export function BackupTab() {
                 // Replace: update with new data
                 const { error } = await supabase
                   .from(tableName as never)
-                  .update(cleanRecord)
+                  .update(cleanRecord as never)
                   .eq('id', existing.id);
                 
                 if (error) {
