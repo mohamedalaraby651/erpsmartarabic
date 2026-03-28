@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { logErrorSafely } from '@/lib/errorHandler';
 import * as XLSX from 'xlsx';
 
 interface ExportButtonProps {
