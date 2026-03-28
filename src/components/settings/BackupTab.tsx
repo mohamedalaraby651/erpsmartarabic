@@ -176,7 +176,7 @@ export function BackupTab() {
     
     if (!hasValidCondition) return null;
     
-    let query = supabase.from(tableName as any).select('id');
+    let query = supabase.from(tableName as never).select('id');
     
     for (const [key, value] of Object.entries(conditions)) {
       query = query.eq(key, value);
