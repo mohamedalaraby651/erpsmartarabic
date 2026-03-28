@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Upload, AlertTriangle, CheckCircle, FileJson, Settings2, Loader2 } from "lucide-react";
+import { logErrorSafely } from "@/lib/errorHandler";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
