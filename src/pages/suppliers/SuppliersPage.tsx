@@ -99,10 +99,8 @@ const SuppliersPage = () => {
 
   const deleteSupplierMutation = useMutation({
     mutationFn: async (id: string) => {
-      const hasPermission = await verifyPermissionOnServer('suppliers', 'delete');
-      if (!hasPermission) throw new Error('UNAUTHORIZED');
-      const { error } = await supabase.from("suppliers").delete().eq("id", id);
-      if (error) throw error;
+      const { deleteSupplier } = await import('@/lib/services/supplierService');
+      await deleteSupplier(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });
