@@ -43,7 +43,7 @@ export function useCustomerDetail(id: string | undefined) {
       if (error) throw error;
       return data as Invoice[];
     },
-    enabled: !!id && ['invoices', 'financial', 'statement', 'analytics', 'aging'].includes(activeTab),
+    enabled: !!id,
     staleTime: 30000,
   });
 
