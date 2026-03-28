@@ -66,7 +66,8 @@ let _jspdfPatched = false;
 function disableJsPdfInternalArabicProcessing(): void {
   if (_jspdfPatched) return;
   
-  const api = (jsPDF as never as Record<string, Record<string, unknown>>).API;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const api = (jsPDF as any).API;
   if (!api || !Array.isArray(api.events)) {
     console.warn('[PDF] Could not access jsPDF.API.events to patch');
     return;
