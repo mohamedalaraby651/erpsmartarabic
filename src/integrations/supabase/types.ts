@@ -3769,6 +3769,10 @@ export type Database = {
       }
     }
     Functions: {
+      atomic_supplier_balance_update: {
+        Args: { _amount: number; _supplier_id: string }
+        Returns: undefined
+      }
       check_financial_limit: {
         Args: { _limit_type: string; _user_id: string; _value: number }
         Returns: boolean
