@@ -32,6 +32,7 @@ import { User, Phone, MapPin, Wallet, FileText, Building2 } from "lucide-react";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import type { Path } from "react-hook-form";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
