@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ArrowRight, Edit, Plus, Package, Trash2, Layers, Box, Paperclip } from "lucide-react";
+import { ArrowRight, Edit, Plus, Package, Trash2, Layers, Box, Paperclip, ShoppingCart, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
 import ProductVariantDialog from "@/components/products/ProductVariantDialog";
