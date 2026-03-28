@@ -284,6 +284,14 @@ const InvoiceDetailsPage = () => {
                       {new Date(invoice.due_date).toLocaleDateString('ar-EG')}
                     </span>
                   )}
+                  {invoice.order_id && (
+                    <span className="flex items-center gap-1">
+                      <FileText className="h-3 w-3 md:h-4 md:w-4" />
+                      <EntityLink type="sales-order" id={invoice.order_id}>
+                        أمر البيع المصدر
+                      </EntityLink>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
