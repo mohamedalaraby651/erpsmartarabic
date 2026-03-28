@@ -221,11 +221,16 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 
   const userName = user?.user_metadata?.full_name || 'المستخدم';
 
+  const invoiceTrend = dashboardStats?.invoiceTrend;
+  const trendLabel = invoiceTrend !== null && invoiceTrend !== undefined
+    ? `${invoiceTrend >= 0 ? '+' : ''}${invoiceTrend.toFixed(0)}%`
+    : '—';
+
   const stats = [
-    { title: 'العملاء', value: dashboardStats?.customersCount || 0, icon: Users, change: '+12%', positive: true },
-    { title: 'المنتجات', value: dashboardStats?.productsCount || 0, icon: Package, change: '+5%', positive: true },
-    { title: 'عروض الأسعار', value: dashboardStats?.quotationsCount || 0, icon: FileText, change: '+18%', positive: true },
-    { title: 'الفواتير', value: dashboardStats?.invoicesCount || 0, icon: Receipt, change: '+8%', positive: true },
+    { title: 'العملاء', value: dashboardStats?.customersCount || 0, icon: Users, change: '', positive: true },
+    { title: 'المنتجات', value: dashboardStats?.productsCount || 0, icon: Package, change: '', positive: true },
+    { title: 'عروض الأسعار', value: dashboardStats?.quotationsCount || 0, icon: FileText, change: '', positive: true },
+    { title: 'الفواتير', value: dashboardStats?.invoicesCount || 0, icon: Receipt, change: trendLabel, positive: invoiceTrend !== null && invoiceTrend !== undefined ? invoiceTrend >= 0 : true },
   ];
 
   const handleQuickAction = (action: QuickAction) => {
