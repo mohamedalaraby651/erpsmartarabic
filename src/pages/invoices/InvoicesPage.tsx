@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -78,10 +78,12 @@ const approvalStatusIcons: Record<string, React.ElementType> = {
 
 const InvoicesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [prefillCustomerId, setPrefillCustomerId] = useState<string | undefined>(undefined);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printInvoiceId, setPrintInvoiceId] = useState<string | null>(null);
   const { userRole } = useAuth();
@@ -102,6 +104,18 @@ const InvoicesPage = () => {
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
+
+  // Handle prefill from navigation state (e.g. from CustomerDetailsPage)
+  useEffect(() => {
+    const state = location.state as { prefillCustomerId?: string } | null;
+    if (state?.prefillCustomerId) {
+      setPrefillCustomerId(state.prefillCustomerId);
+      setSelectedInvoice(null);
+      setDialogOpen(true);
+      // Clear state to prevent re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Server-side count query
   const { data: totalCount = 0 } = useQuery({
@@ -563,8 +577,12 @@ const InvoicesPage = () => {
 
       <InvoiceFormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setPrefillCustomerId(undefined);
+        }}
         invoice={selectedInvoice}
+        prefillCustomerId={prefillCustomerId}
       />
 
       {printInvoiceId && (

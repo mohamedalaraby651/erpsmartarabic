@@ -23,11 +23,11 @@ type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type Product = Database['public']['Tables']['products']['Row'];
 
-interface PurchaseOrderFormDialogProps { open: boolean; onOpenChange: (open: boolean) => void; order?: PurchaseOrder | null; }
+interface PurchaseOrderFormDialogProps { open: boolean; onOpenChange: (open: boolean) => void; order?: PurchaseOrder | null; prefillSupplierId?: string; }
 interface OrderItem { product_id: string; product_name: string; quantity: number; unit_price: number; total_price: number; }
 interface FormData { supplier_id: string; expected_date: string; notes: string; tax_amount: number; }
 
-const PurchaseOrderFormDialog = ({ open, onOpenChange, order }: PurchaseOrderFormDialogProps) => {
+const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId }: PurchaseOrderFormDialogProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -37,12 +37,12 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order }: PurchaseOrderFor
   const { data: suppliers = [] } = useQuery({ queryKey: ['suppliers'], queryFn: async () => { const { data, error } = await supabase.from('suppliers').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as Supplier[]; } });
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: async () => { const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as Product[]; } });
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({ defaultValues: { supplier_id: '', expected_date: '', notes: '', tax_amount: 0 } });
+  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({ defaultValues: { supplier_id: prefillSupplierId || '', expected_date: '', notes: '', tax_amount: 0 } });
   const wizard = useFormWizard({ totalSteps: 3 });
 
   useEffect(() => {
     if (order) { reset({ supplier_id: order.supplier_id, expected_date: order.expected_date || '', notes: order.notes || '', tax_amount: Number(order.tax_amount) || 0 }); loadOrderItems(order.id); }
-    else { reset({ supplier_id: '', expected_date: '', notes: '', tax_amount: 0 }); setItems([]); }
+    else { reset({ supplier_id: prefillSupplierId || '', expected_date: '', notes: '', tax_amount: 0 }); setItems([]); }
     wizard.reset();
   }, [order, reset]);
 

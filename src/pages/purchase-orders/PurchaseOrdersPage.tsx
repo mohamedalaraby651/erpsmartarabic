@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -54,9 +54,11 @@ const statusColors: Record<string, string> = {
 
 const PurchaseOrdersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [prefillSupplierId, setPrefillSupplierId] = useState<string | undefined>(undefined);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printOrderId, setPrintOrderId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -76,6 +78,17 @@ const PurchaseOrdersPage = () => {
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
+
+  // Handle prefill from navigation state (e.g. from SupplierDetailsPage)
+  useEffect(() => {
+    const state = location.state as { prefillSupplierId?: string } | null;
+    if (state?.prefillSupplierId) {
+      setPrefillSupplierId(state.prefillSupplierId);
+      setSelectedOrder(null);
+      setDialogOpen(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['purchase-orders'],
@@ -427,8 +440,12 @@ const PurchaseOrdersPage = () => {
 
       <PurchaseOrderFormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setPrefillSupplierId(undefined);
+        }}
         order={selectedOrder}
+        prefillSupplierId={prefillSupplierId}
       />
 
       {printOrderId && (

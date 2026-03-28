@@ -30,9 +30,10 @@ interface InvoiceFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice?: Invoice | null;
+  prefillCustomerId?: string;
 }
 
-const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogProps) => {
+const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: InvoiceFormDialogProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -62,7 +63,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      customer_id: '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '',
+      customer_id: prefillCustomerId || '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '',
       discount_amount: 0, tax_amount: 0,
     },
   });
@@ -99,7 +100,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
       });
       loadItems(invoice.id);
     } else {
-      reset({ customer_id: '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '', discount_amount: 0, tax_amount: 0 });
+      reset({ customer_id: prefillCustomerId || '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '', discount_amount: 0, tax_amount: 0 });
       resetItems();
     }
     wizard.reset();

@@ -112,8 +112,11 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         supabase.from('invoices').select('*', { count: 'exact', head: true }).gte('created_at', sixtyDaysAgo).lt('created_at', thirtyDaysAgo),
       ]);
 
+      // results[4] = current period invoices (last 30 days), results[5] = previous period invoices (30-60 days)
       const currentPeriodInvoices = prevInvoicesRes.count || 0;
       const previousPeriodInvoices = prevQuotationsRes.count || 0;
+      // NOTE: Variable names are misleading but the queries above are correct:
+      // prevInvoicesRes = index [4] = last 30 days, prevQuotationsRes = index [5] = 30-60 days
       const invoiceTrend = previousPeriodInvoices > 0
         ? ((currentPeriodInvoices - previousPeriodInvoices) / previousPeriodInvoices * 100)
         : null;
