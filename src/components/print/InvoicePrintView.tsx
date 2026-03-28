@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
 import { generateDocumentPDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
+import { logErrorSafely } from "@/lib/errorHandler";
 import {
   Dialog,
   DialogContent,
