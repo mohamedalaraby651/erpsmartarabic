@@ -90,6 +90,8 @@ const QuotationsPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('quotations', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       await supabase.from('quotation_items').delete().eq('quotation_id', id);
       const { error } = await supabase.from('quotations').delete().eq('id', id);
       if (error) throw error;
@@ -98,8 +100,12 @@ const QuotationsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       toast({ title: "تم حذف عرض السعر بنجاح" });
     },
-    onError: () => {
-      toast({ title: "خطأ في حذف عرض السعر", variant: "destructive" });
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف عروض الأسعار", variant: "destructive" });
+      } else {
+        toast({ title: "خطأ في حذف عرض السعر", variant: "destructive" });
+      }
     },
   });
 

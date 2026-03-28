@@ -105,6 +105,8 @@ const PurchaseOrdersPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('purchase_orders', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       await supabase.from('purchase_order_items').delete().eq('order_id', id);
       const { error } = await supabase.from('purchase_orders').delete().eq('id', id);
       if (error) throw error;
@@ -113,8 +115,12 @@ const PurchaseOrdersPage = () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       toast({ title: "تم حذف أمر الشراء بنجاح" });
     },
-    onError: () => {
-      toast({ title: "حدث خطأ أثناء الحذف", variant: "destructive" });
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف أوامر الشراء", variant: "destructive" });
+      } else {
+        toast({ title: "حدث خطأ أثناء الحذف", variant: "destructive" });
+      }
     },
   });
 

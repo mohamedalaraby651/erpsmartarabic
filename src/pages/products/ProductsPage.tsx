@@ -112,6 +112,8 @@ const ProductsPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('products', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
     },
@@ -120,8 +122,12 @@ const ProductsPage = () => {
       toast.success('تم حذف المنتج بنجاح');
       setDeletingId(null);
     },
-    onError: () => {
-      toast.error('فشل حذف المنتج');
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast.error('غير مصرح: ليس لديك صلاحية حذف المنتجات');
+      } else {
+        toast.error('فشل حذف المنتج');
+      }
       setDeletingId(null);
     },
   });
