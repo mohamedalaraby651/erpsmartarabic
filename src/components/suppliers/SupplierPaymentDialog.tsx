@@ -60,9 +60,6 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
 
   const [selectedSupplierId, setSelectedSupplierId] = useState(supplier?.id || '');
 
-  const generatePaymentNumber = () => {
-    return `SP-${Date.now().toString().slice(-8)}`;
-  };
 
   const mutation = useMutation({
     mutationFn: async () => {
