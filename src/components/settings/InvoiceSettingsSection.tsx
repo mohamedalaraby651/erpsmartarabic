@@ -31,7 +31,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as any;
+      return data;
     },
   });
 
