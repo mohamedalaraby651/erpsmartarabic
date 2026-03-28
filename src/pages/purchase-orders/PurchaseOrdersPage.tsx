@@ -79,6 +79,17 @@ const PurchaseOrdersPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // Handle prefill from navigation state (e.g. from SupplierDetailsPage)
+  useEffect(() => {
+    const state = location.state as { prefillSupplierId?: string } | null;
+    if (state?.prefillSupplierId) {
+      setPrefillSupplierId(state.prefillSupplierId);
+      setSelectedOrder(null);
+      setDialogOpen(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['purchase-orders'],
     queryFn: async () => {

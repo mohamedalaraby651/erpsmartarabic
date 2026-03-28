@@ -105,6 +105,18 @@ const InvoicesPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // Handle prefill from navigation state (e.g. from CustomerDetailsPage)
+  useEffect(() => {
+    const state = location.state as { prefillCustomerId?: string } | null;
+    if (state?.prefillCustomerId) {
+      setPrefillCustomerId(state.prefillCustomerId);
+      setSelectedInvoice(null);
+      setDialogOpen(true);
+      // Clear state to prevent re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   // Server-side count query
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['invoices-count', debouncedSearch],

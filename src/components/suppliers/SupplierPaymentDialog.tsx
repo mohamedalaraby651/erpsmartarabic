@@ -109,6 +109,7 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       queryClient.invalidateQueries({ queryKey: ['supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-payments'] });
       toast({ title: "تم تسجيل الدفعة بنجاح" });
       onOpenChange(false);
       setFormData({

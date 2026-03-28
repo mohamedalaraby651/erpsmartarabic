@@ -54,7 +54,7 @@ export function useCustomerDetail(id: string | undefined) {
       if (error) throw error;
       return data as Payment[];
     },
-    enabled: !!id && ['payments', 'financial', 'statement', 'analytics'].includes(activeTab),
+    enabled: !!id,
     staleTime: 30000,
   });
 
