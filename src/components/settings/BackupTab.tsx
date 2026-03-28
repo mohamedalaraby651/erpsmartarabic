@@ -240,7 +240,7 @@ export function BackupTab() {
                 
                 if (Object.keys(mergedData).length > 0) {
                   const { error } = await supabase
-                    .from(tableName as any)
+                    .from(tableName as never)
                     .update(mergedData)
                     .eq('id', existing.id);
                   
