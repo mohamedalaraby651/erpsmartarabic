@@ -129,7 +129,7 @@ function measureCLS() {
   try {
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const layoutShiftEntry = entry as any;
+        const layoutShiftEntry = entry as PerformanceEntry & { hadRecentInput: boolean; value: number };
         if (!layoutShiftEntry.hadRecentInput) {
           const firstSessionEntry = sessionEntries[0];
           const lastSessionEntry = sessionEntries[sessionEntries.length - 1];

@@ -130,7 +130,7 @@ export function DataTableHeader({
                     type="number"
                     placeholder="إلى"
                     onChange={(e) => {
-                      const current = (filterValue as any) || {};
+                      const current = (filterValue as Record<string, unknown>) || {};
                       onFilter(filterKey, {
                         ...current,
                         max: e.target.value ? Number(e.target.value) : undefined,

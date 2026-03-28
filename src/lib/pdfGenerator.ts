@@ -451,7 +451,7 @@ export async function generateDocumentPDF(
       },
     });
 
-    startY = (doc as any).lastAutoTable.finalY + 10;
+    startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
   }
 
   // Totals

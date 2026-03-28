@@ -62,7 +62,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
         .select('*')
         .limit(1)
         .maybeSingle();
-      return data as any;
+      return data;
     },
     staleTime: 60000,
   });
