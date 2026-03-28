@@ -73,10 +73,10 @@ const PriceListsPage = () => {
       if (!selectedList) return [];
       const { data } = await supabase
         .from('price_list_items')
-        .select('*, products(name, price, sku)')
+        .select('*, products(name, selling_price, sku)')
         .eq('price_list_id', selectedList.id)
         .order('created_at');
-      return (data || []) as PriceListItem[];
+      return (data || []) as unknown as PriceListItem[];
     },
     enabled: !!selectedList,
   });
