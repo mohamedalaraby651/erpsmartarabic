@@ -566,7 +566,15 @@ const ProductsPage = () => {
         </Card>
       )}
 
-      {/* Add/Edit Product Dialog */}
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
       <ProductFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
