@@ -298,6 +298,7 @@ const ProductDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       <ProductFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} product={product} />
       <ProductVariantDialog open={variantDialogOpen} onOpenChange={setVariantDialogOpen} productId={id!} variant={selectedVariant} />
