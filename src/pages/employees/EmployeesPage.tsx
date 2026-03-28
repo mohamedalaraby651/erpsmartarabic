@@ -33,6 +33,7 @@ import { Plus, Search, MoreHorizontal, Eye, Edit, Trash2, Users, UserCheck, User
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { verifyPermissionOnServer } from '@/lib/api/secureOperations';
 import EmployeeFormDialog from '@/components/employees/EmployeeFormDialog';
 import { ExportWithTemplateButton } from '@/components/export/ExportWithTemplateButton';
 import { DataCard } from '@/components/mobile/DataCard';
