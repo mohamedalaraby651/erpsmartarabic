@@ -24,6 +24,7 @@ import { TrialBalanceReport } from "@/components/reports/TrialBalanceReport";
 import { IncomeStatementReport } from "@/components/reports/IncomeStatementReport";
 import { GeographicReport } from "@/components/reports/GeographicReport";
 import { InactiveCustomersReport } from "@/components/reports/InactiveCustomersReport";
+import { CashFlowReport } from "@/components/reports/CashFlowReport";
 
 export default function ReportsPage() {
   const isMobile = useIsMobile();
