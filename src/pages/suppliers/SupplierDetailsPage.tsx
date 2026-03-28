@@ -35,6 +35,7 @@ import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -160,7 +161,47 @@ const SupplierDetailsPage = () => {
 
       <SupplierPurchasesChart purchaseOrders={purchaseOrders} />
 
-      {/* Tabs */}
+      {isMobile ? (
+        <div className="space-y-3 mt-4">
+          <MobileDetailSection title="معلومات المورد" priority="medium" icon={<Info className="h-4 w-4" />}>
+            <SupplierInfoTab supplier={supplier} />
+          </MobileDetailSection>
+          <MobileDetailSection title="الملخص المالي" priority="medium" icon={<CreditCard className="h-4 w-4" />}>
+            <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPurchases - currentBalance} currentBalance={currentBalance} creditLimit={(supplier as any).credit_limit || 0} paymentTermsDays={(supplier as any).payment_terms_days || 0} discountPercentage={(supplier as any).discount_percentage || 0} />
+          </MobileDetailSection>
+          <MobileDetailSection title="أوامر الشراء" priority="medium" icon={<ShoppingCart className="h-4 w-4" />} badge={totalOrders}>
+            {purchaseOrders.length > 0 ? (
+              <div className="space-y-2">
+                {purchaseOrders.slice(0, 10).map(order => (
+                  <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg active:bg-muted/50" onClick={() => navigate(`/purchase-orders/${order.id}`)}>
+                    <div><p className="text-sm font-medium font-mono">{order.order_number}</p><p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString('ar-EG')}</p></div>
+                    <div className="flex items-center gap-2">{getStatusBadge(order.status)}<span className="text-sm font-bold">{Number(order.total_amount).toLocaleString()}</span></div>
+                  </div>
+                ))}
+                <Button onClick={handleCreatePurchaseOrder} size="sm" className="w-full min-h-11 gap-2"><ShoppingCart className="h-4 w-4" />أمر شراء جديد</Button>
+              </div>
+            ) : (
+              <div className="text-center py-4"><ClipboardList className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" /><p className="text-sm text-muted-foreground">لا توجد أوامر شراء</p><Button onClick={handleCreatePurchaseOrder} variant="outline" size="sm" className="mt-2 min-h-11">إنشاء أول أمر شراء</Button></div>
+            )}
+          </MobileDetailSection>
+          <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />}>
+            <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} />
+          </MobileDetailSection>
+          <MobileDetailSection title="المنتجات" priority="low" icon={<Package className="h-4 w-4" />}>
+            <SupplierProductsTab supplierId={id!} />
+          </MobileDetailSection>
+          <MobileDetailSection title="التقييم" priority="low" icon={<Star className="h-4 w-4" />}>
+            <SupplierRatingTab supplierId={id!} currentRating={supplier.rating || 0} onRatingChange={(rating) => updateRatingMutation.mutate(rating)} />
+          </MobileDetailSection>
+          <MobileDetailSection title="النشاطات" priority="low" icon={<Activity className="h-4 w-4" />}>
+            <SupplierActivityTab supplierId={id!} />
+          </MobileDetailSection>
+          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
+            <FileUpload entityType="supplier" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'supplier', id] })} />
+            <AttachmentsList entityType="supplier" entityId={id!} />
+          </MobileDetailSection>
+        </div>
+      ) : (
       <Tabs defaultValue="info" className="mt-6">
         <ScrollArea className="w-full">
           <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
@@ -221,6 +262,7 @@ const SupplierDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       <SupplierFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} supplier={supplier} />
       <SupplierPaymentDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} supplier={supplier} />

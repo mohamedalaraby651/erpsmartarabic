@@ -30,6 +30,8 @@ import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { tabGroups } from "@/lib/customerConstants";
+import MobileDetailSection from "@/components/mobile/MobileDetailSection";
+import { useNavigationState } from "@/hooks/useNavigationState";
 import type { CustomerAddress } from "@/lib/customerConstants";
 
 // Icon map for tab groups
@@ -124,7 +126,112 @@ const CustomerDetailsPage = () => {
         />
       )}
 
-      {/* Tabs */}
+      {isMobile ? (
+        /* Mobile: Stacked MobileDetailSection */
+        <div className="space-y-3">
+          {/* MEDIUM: Invoices */}
+          <MobileDetailSection title="الفواتير" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.invoices.length}>
+            {detail.invoices.length === 0 ? (
+              <div className="text-center py-4"><FileText className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" /><p className="text-sm text-muted-foreground">لا توجد فواتير</p><Button variant="outline" size="sm" className="mt-2 min-h-11" onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })}>إنشاء أول فاتورة</Button></div>
+            ) : (
+              <div className="space-y-2">
+                {detail.invoices.slice(0, 10).map((invoice) => (
+                  <div key={invoice.id} className="flex items-center justify-between p-3 border rounded-lg active:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                    <div><p className="text-sm font-medium">{invoice.invoice_number}</p><p className="text-xs text-muted-foreground">{new Date(invoice.created_at).toLocaleDateString('ar-EG')}</p></div>
+                    <div className="flex items-center gap-2"><Badge variant={invoice.payment_status === 'paid' ? 'default' : 'secondary'} className="text-[10px]">{invoice.payment_status === 'paid' ? 'مدفوع' : invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}</Badge><span className="text-sm font-bold">{Number(invoice.total_amount).toLocaleString()}</span></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </MobileDetailSection>
+
+          {/* MEDIUM: Payments */}
+          <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
+            {detail.payments.length === 0 ? (
+              <div className="text-center py-4"><CreditCard className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" /><p className="text-sm text-muted-foreground">لا توجد مدفوعات</p></div>
+            ) : (
+              <div className="space-y-2">
+                {detail.payments.slice(0, 10).map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div><p className="text-sm font-medium">{payment.payment_number}</p><p className="text-xs text-muted-foreground">{new Date(payment.payment_date).toLocaleDateString('ar-EG')}</p></div>
+                    <span className="text-sm font-bold text-success">{Number(payment.amount).toLocaleString()} ج.م</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </MobileDetailSection>
+
+          {/* MEDIUM: Financial */}
+          <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />}>
+            <CustomerFinancialSummary
+              totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments}
+              currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+              discountPercentage={Number(customer.discount_percentage || 0)}
+              paymentTermsDays={Number(customer.payment_terms_days || 0)}
+              invoiceCount={detail.invoices.length}
+            />
+          </MobileDetailSection>
+
+          {/* MEDIUM: Addresses */}
+          <MobileDetailSection title="العناوين" priority="medium" icon={<MapPin className="h-4 w-4" />} badge={detail.addresses.length}>
+            <div className="space-y-2">
+              <Button size="sm" className="w-full min-h-11" onClick={() => { setSelectedAddress(null); setAddressDialogOpen(true); }}><Plus className="h-4 w-4 ml-2" />إضافة عنوان</Button>
+              {detail.addresses.map((address) => (
+                <div key={address.id} className="p-3 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-1"><span className="text-sm font-medium">{address.label}</span>{address.is_default && <Badge variant="secondary" className="text-[10px]">افتراضي</Badge>}</div>
+                  <p className="text-xs text-muted-foreground">{address.address}</p>
+                  <div className="flex gap-2 mt-2">
+                    <Button variant="ghost" size="sm" className="min-h-11 min-w-11" onClick={() => { setSelectedAddress(address); setAddressDialogOpen(true); }}><Edit className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </MobileDetailSection>
+
+          {/* LOW: Analytics */}
+          <MobileDetailSection title="التحليلات" priority="low" icon={<BarChart3 className="h-4 w-4" />}>
+            <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+          </MobileDetailSection>
+
+          {/* LOW: Statement */}
+          <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />}>
+            <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} />
+          </MobileDetailSection>
+
+          {/* LOW: Communications */}
+          <MobileDetailSection title="سجل التواصل" priority="low" icon={<MessageSquare className="h-4 w-4" />}>
+            <CommunicationLogTab customerId={id!} />
+          </MobileDetailSection>
+
+          {/* LOW: Reminders */}
+          <MobileDetailSection title="التذكيرات" priority="low" icon={<Bell className="h-4 w-4" />}>
+            <CustomerReminderSection customerId={id!} />
+          </MobileDetailSection>
+
+          {/* LOW: Attachments */}
+          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
+            <FileUpload entityType="customer" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'customer', id] })} />
+            <AttachmentsList entityType="customer" entityId={id!} />
+          </MobileDetailSection>
+
+          {/* LOW: Activity */}
+          <MobileDetailSection title="سجل النشاط" priority="low" icon={<Activity className="h-4 w-4" />}>
+            {detail.activities.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">لا يوجد سجل نشاط</p>
+            ) : (
+              <div className="space-y-2">
+                {detail.activities.slice(0, 10).map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-2 p-2 rounded-lg bg-muted/50">
+                    <Activity className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                    <div><p className="text-xs font-medium">{activity.action}</p><p className="text-[10px] text-muted-foreground">{new Date(activity.created_at).toLocaleString('ar-EG')}</p></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </MobileDetailSection>
+        </div>
+      ) : (
+      /* Desktop: Keep Tabs */
       <Tabs value={detail.activeTab} onValueChange={detail.setActiveTab} className="w-full">
         <ScrollArea className="w-full">
           <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
@@ -357,6 +464,7 @@ const CustomerDetailsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
 
       {/* Dialogs */}
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />

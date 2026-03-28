@@ -16,10 +16,14 @@ import {
   CheckCircle2,
   UserPlus,
   ShoppingCart,
+  AlertCircle,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { ShimmerSkeleton } from '@/components/shared/ShimmerSkeleton';
+import { useBusinessInsights, type BusinessInsight } from '@/hooks/useBusinessInsights';
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -47,6 +51,7 @@ const quickActions: QuickActionItem[] = [
 export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>((props, ref) => {
   const navigate = useNavigate();
   const { user, userRole, loading: authLoading } = useAuth();
+  const { insights, hasAlerts } = useBusinessInsights();
 
   // Filter quick actions based on role
   const filteredActions = quickActions.filter(action => 
@@ -229,6 +234,38 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
             );
           })}
         </div>
+
+        {/* Smart Insights */}
+        {hasAlerts && (
+          <div className="space-y-1.5 px-1">
+            {insights.slice(0, 3).map((insight) => {
+              const iconMap: Record<string, React.ElementType> = { error: AlertCircle, warning: AlertTriangle, info: Info, success: CheckCircle2 };
+              const colorMap: Record<string, string> = {
+                error: 'border-destructive/30 bg-destructive/5',
+                warning: 'border-warning/30 bg-warning/5',
+                info: 'border-info/30 bg-info/5',
+                success: 'border-success/30 bg-success/5',
+              };
+              const Icon = iconMap[insight.severity] || Info;
+              return (
+                <Card
+                  key={insight.id}
+                  className={`shadow-sm ${colorMap[insight.severity]} active:opacity-80`}
+                  onClick={() => insight.action && navigate(insight.action.href)}
+                >
+                  <CardContent className="p-2.5 flex items-center gap-2.5">
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold">{insight.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{insight.message}</p>
+                    </div>
+                    {insight.count && <Badge variant="secondary" className="text-[10px] h-5">{insight.count}</Badge>}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         {/* Tasks Card */}
         <Card className="mx-1 shadow-sm">

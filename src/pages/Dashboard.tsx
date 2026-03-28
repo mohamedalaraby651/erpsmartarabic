@@ -37,16 +37,23 @@ import { useToast } from '@/hooks/use-toast';
 import { TodayPerformanceWidget } from '@/components/dashboard/TodayPerformanceWidget';
 import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
+import { useBusinessInsights, type BusinessInsight } from '@/hooks/useBusinessInsights';
+import { AlertTriangle, AlertCircle, Info as InfoIcon, CheckCircle } from 'lucide-react';
 
-// Sample chart data
-const salesData = [
-  { name: 'يناير', sales: 4000 },
-  { name: 'فبراير', sales: 3000 },
-  { name: 'مارس', sales: 5000 },
-  { name: 'أبريل', sales: 4500 },
-  { name: 'مايو', sales: 6000 },
-  { name: 'يونيو', sales: 5500 },
-];
+// Insight severity icon mapping
+const insightIcons: Record<string, React.ElementType> = {
+  error: AlertCircle,
+  warning: AlertTriangle,
+  info: InfoIcon,
+  success: CheckCircle,
+};
+
+const insightColors: Record<string, string> = {
+  error: 'border-destructive/30 bg-destructive/5 text-destructive',
+  warning: 'border-warning/30 bg-warning/5 text-warning',
+  info: 'border-info/30 bg-info/5 text-info',
+  success: 'border-success/30 bg-success/5 text-success',
+};
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -84,27 +91,71 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const isMobile = useIsMobile();
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
    const { currentTenantName, tenant } = useTenant();
+  const { insights, hasAlerts } = useBusinessInsights();
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  // Batch fetch all counts in one query for better performance
+  // Batch fetch all counts + previous period for trends
   const { data: dashboardStats, isLoading: isStatsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const [customersRes, productsRes, invoicesRes, quotationsRes] = await Promise.all([
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+      const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString();
+
+      const [customersRes, productsRes, invoicesRes, quotationsRes, prevInvoicesRes, prevQuotationsRes] = await Promise.all([
         supabase.from('customers').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('invoices').select('*', { count: 'exact', head: true }),
         supabase.from('quotations').select('*', { count: 'exact', head: true }),
+        // Current period invoices (last 30 days)
+        supabase.from('invoices').select('*', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgo),
+        // Previous period invoices (30-60 days ago)
+        supabase.from('invoices').select('*', { count: 'exact', head: true }).gte('created_at', sixtyDaysAgo).lt('created_at', thirtyDaysAgo),
       ]);
+
+      const currentPeriodInvoices = prevInvoicesRes.count || 0;
+      const previousPeriodInvoices = prevQuotationsRes.count || 0;
+      const invoiceTrend = previousPeriodInvoices > 0
+        ? ((currentPeriodInvoices - previousPeriodInvoices) / previousPeriodInvoices * 100)
+        : null;
+
       return {
         customersCount: customersRes.count || 0,
         productsCount: productsRes.count || 0,
         invoicesCount: invoicesRes.count || 0,
         quotationsCount: quotationsRes.count || 0,
+        invoiceTrend,
       };
     },
-    staleTime: 30000, // 30 seconds
-    gcTime: 60000, // 1 minute
+    staleTime: 300000,
+    gcTime: 600000,
+  });
+
+  // Monthly sales data for chart (real data)
+  const { data: monthlySalesData } = useQuery({
+    queryKey: ['dashboard-monthly-sales'],
+    queryFn: async () => {
+      const months: { name: string; start: string; end: string }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const start = new Date(d.getFullYear(), d.getMonth(), 1);
+        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        months.push({ name: monthNames[start.getMonth()], start: start.toISOString(), end: end.toISOString() });
+      }
+      const { data } = await supabase
+        .from('invoices')
+        .select('total_amount, created_at')
+        .gte('created_at', months[0].start)
+        .lte('created_at', months[months.length - 1].end);
+
+      return months.map(m => {
+        const sales = data?.filter(inv => inv.created_at >= m.start && inv.created_at <= m.end)
+          .reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
+        return { name: m.name, sales };
+      });
+    },
+    staleTime: 300000,
   });
 
   const { data: tasks } = useQuery({
@@ -170,11 +221,16 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 
   const userName = user?.user_metadata?.full_name || 'المستخدم';
 
+  const invoiceTrend = dashboardStats?.invoiceTrend;
+  const trendLabel = invoiceTrend !== null && invoiceTrend !== undefined
+    ? `${invoiceTrend >= 0 ? '+' : ''}${invoiceTrend.toFixed(0)}%`
+    : '—';
+
   const stats = [
-    { title: 'العملاء', value: dashboardStats?.customersCount || 0, icon: Users, change: '+12%', positive: true },
-    { title: 'المنتجات', value: dashboardStats?.productsCount || 0, icon: Package, change: '+5%', positive: true },
-    { title: 'عروض الأسعار', value: dashboardStats?.quotationsCount || 0, icon: FileText, change: '+18%', positive: true },
-    { title: 'الفواتير', value: dashboardStats?.invoicesCount || 0, icon: Receipt, change: '+8%', positive: true },
+    { title: 'العملاء', value: dashboardStats?.customersCount || 0, icon: Users, change: '', positive: true },
+    { title: 'المنتجات', value: dashboardStats?.productsCount || 0, icon: Package, change: '', positive: true },
+    { title: 'عروض الأسعار', value: dashboardStats?.quotationsCount || 0, icon: FileText, change: '', positive: true },
+    { title: 'الفواتير', value: dashboardStats?.invoicesCount || 0, icon: Receipt, change: trendLabel, positive: invoiceTrend !== null && invoiceTrend !== undefined ? invoiceTrend >= 0 : true },
   ];
 
   const handleQuickAction = (action: QuickAction) => {
@@ -210,16 +266,18 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                         <div>
                           <p className="text-sm text-muted-foreground">{stat.title}</p>
                           <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                          <div className="flex items-center gap-1 mt-2">
-                            {stat.positive ? (
-                              <TrendingUp className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4 text-red-500" />
-                            )}
-                            <span className={`text-sm ${stat.positive ? 'text-green-500' : 'text-red-500'}`}>
-                              {stat.change}
-                            </span>
-                          </div>
+                          {stat.change && stat.change !== '—' && (
+                            <div className="flex items-center gap-1 mt-2">
+                              {stat.positive ? (
+                                <TrendingUp className="h-4 w-4 text-success" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4 text-destructive" />
+                              )}
+                              <span className={`text-sm ${stat.positive ? 'text-success' : 'text-destructive'}`}>
+                                {stat.change}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                           <Icon className="h-5 w-5 text-primary" />
@@ -272,7 +330,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
             <CardContent>
               <div className="h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={salesData}>
+                  <AreaChart data={monthlySalesData || []}>
                     <defs>
                       <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -420,6 +478,38 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 
       case 'calendar':
         return <CalendarWidget />;
+
+      case 'insights':
+        return (
+          <>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">تنبيهات ذكية</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {insights.slice(0, 5).map((insight) => {
+                  const Icon = insightIcons[insight.severity] || InfoIcon;
+                  return (
+                    <div
+                      key={insight.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:opacity-80 ${insightColors[insight.severity]}`}
+                      onClick={() => insight.action && navigate(insight.action.href)}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{insight.title}</p>
+                        <p className="text-xs opacity-80">{insight.message}</p>
+                      </div>
+                      {insight.count && (
+                        <Badge variant="secondary" className="shrink-0">{insight.count}</Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </>
+        );
 
       default:
         return null;

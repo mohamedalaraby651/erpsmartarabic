@@ -32,6 +32,7 @@ import { User, Phone, MapPin, Wallet, FileText, Building2 } from "lucide-react";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import type { Path } from "react-hook-form";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -104,6 +105,22 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     stepFields: WIZARD_STEP_FIELDS,
     trigger,
   });
+  const formData = watch();
+  const { hasDraft, restoreDraft, clearDraft } = useFormDraft({
+    key: `customer_${customer?.id || 'new'}`,
+    data: formData,
+    enabled: !isEditing,
+  });
+
+  useEffect(() => {
+    if (hasDraft && !isEditing && open) {
+      const draft = restoreDraft();
+      if (draft) {
+        toast({ title: 'تم استعادة المسودة', description: 'تم استرجاع بيانات العميل المحفوظة' });
+        reset(draft);
+      }
+    }
+  }, [hasDraft, isEditing, open]);
 
   useEffect(() => {
     if (customer) {
@@ -174,6 +191,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer', customer?.id] });
+      clearDraft();
       toast({ title: isEditing ? "تم تحديث العميل بنجاح" : "تم إضافة العميل بنجاح" });
       onOpenChange(false);
     },

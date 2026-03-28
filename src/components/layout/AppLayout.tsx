@@ -109,7 +109,7 @@ export default function AppLayout() {
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
           <Suspense fallback={<PageSkeleton />}>
-            <PageTransition direction="fade" duration="fast">
+            <PageTransition key={location.pathname} direction="fade" duration="fast">
               <Outlet />
             </PageTransition>
           </Suspense>
@@ -146,7 +146,7 @@ export default function AppLayout() {
           <AppHeader />
           <main className="p-6">
             <Suspense fallback={<PageSkeleton />}>
-              <PageTransition direction="fade" duration="fast">
+              <PageTransition key={location.pathname} direction="fade" duration="fast">
                 <Outlet />
               </PageTransition>
             </Suspense>

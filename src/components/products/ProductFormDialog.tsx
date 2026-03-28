@@ -16,6 +16,7 @@ import { productSchema, type ProductFormData } from "@/lib/validations";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -37,6 +38,22 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
   });
 
   const wizard = useFormWizard({ totalSteps: 3 });
+  const formData = watch();
+  const { hasDraft, restoreDraft, clearDraft } = useFormDraft({
+    key: `product_${product?.id || 'new'}`,
+    data: formData,
+    enabled: !isEditing,
+  });
+
+  useEffect(() => {
+    if (hasDraft && !isEditing && open) {
+      const draft = restoreDraft();
+      if (draft) {
+        toast({ title: 'تم استعادة المسودة', description: 'تم استرجاع بيانات المنتج المحفوظة' });
+        reset(draft);
+      }
+    }
+  }, [hasDraft, isEditing, open]);
 
   useEffect(() => {
     if (product) { reset({ name: product.name, sku: product.sku || '', description: product.description || '', category_id: product.category_id || '', cost_price: Number(product.cost_price) || 0, selling_price: Number(product.selling_price) || 0, min_stock: product.min_stock || 0, image_url: product.image_url || '', weight_kg: Number(product.weight_kg) || 0, length_cm: Number(product.length_cm) || 0, width_cm: Number(product.width_cm) || 0, height_cm: Number(product.height_cm) || 0, is_active: product.is_active ?? true }); }
@@ -50,7 +67,7 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
       if (isEditing) { const { error } = await supabase.from('products').update(payload).eq('id', product.id); if (error) throw error; }
       else { const { error } = await supabase.from('products').insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); toast({ title: isEditing ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح" }); onOpenChange(false); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); clearDraft(); toast({ title: isEditing ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح" }); onOpenChange(false); },
     onError: (error) => { logErrorSafely('ProductFormDialog', error); toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" }); },
   });
 

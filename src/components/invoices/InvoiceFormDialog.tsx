@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/lib/validations";
 import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
 import { useInvoiceItems } from "./useInvoiceItems";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import InvoiceFormHeader from "./InvoiceFormHeader";
 import { InvoiceItemsTable } from "./InvoiceItemsTable";
 import { InvoiceTotalsSection } from "./InvoiceTotalsSection";
@@ -67,6 +68,23 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
   });
 
   const wizard = useFormWizard({ totalSteps: 3 });
+  const formData = watch();
+  const { hasDraft, restoreDraft, clearDraft } = useFormDraft({
+    key: `invoice_${invoice?.id || 'new'}`,
+    data: formData,
+    enabled: !isEditing,
+  });
+
+  // Restore draft if available
+  useEffect(() => {
+    if (hasDraft && !isEditing && open) {
+      const draft = restoreDraft();
+      if (draft) {
+        toast({ title: 'تم استعادة المسودة', description: 'تم استرجاع البيانات المحفوظة تلقائياً' });
+        reset(draft);
+      }
+    }
+  }, [hasDraft, isEditing, open]);
 
   useEffect(() => {
     if (invoice) {
@@ -145,6 +163,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice }: InvoiceFormDialogPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      clearDraft();
       toast({ title: isEditing ? "تم تحديث الفاتورة بنجاح" : "تم إنشاء الفاتورة بنجاح", description: "تم التحقق من الصلاحيات والحدود المالية" });
       onOpenChange(false);
     },
