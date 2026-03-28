@@ -74,7 +74,7 @@ const BackupPage = () => {
       
       for (const table of tables) {
         const { count, error } = await supabase
-          .from(table.name as any)
+          .from(table.name as never)
           .select('*', { count: 'exact', head: true });
         
         if (!error) {
