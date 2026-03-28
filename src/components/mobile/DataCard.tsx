@@ -2,11 +2,13 @@ import { memo, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { ChevronLeft, Trash2, Pencil, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LongPressMenu } from './LongPressMenu';
 import { useDoubleTap } from '@/hooks/useDoubleTap';
 import { haptics } from '@/lib/haptics';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DataField {
   label: string;
