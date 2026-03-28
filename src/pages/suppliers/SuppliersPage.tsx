@@ -353,6 +353,7 @@ const SuppliersPage = () => {
         hasPrevPage={pagination.hasPrevPage}
       />
       <SupplierFormDialog open={dialogOpen} onOpenChange={setDialogOpen} supplier={selectedSupplier} />
+      <SupplierImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
     </div>
   );
 };

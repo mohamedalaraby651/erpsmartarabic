@@ -20,6 +20,7 @@ import {
 import { Plus, Search, Package, AlertTriangle, Layers, Upload } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
+import ProductImportDialog from "@/components/products/ProductImportDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
