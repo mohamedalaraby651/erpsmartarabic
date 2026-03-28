@@ -239,7 +239,7 @@ const PriceListsPage = () => {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
                   <div className="col-span-2">
                     <Label>المنتج</Label>
-                    <Select value={productId} onValueChange={v => { setProductId(v); const p = products.find(x => x.id === v); if (p) setItemPrice(String(p.price)); }}>
+                    <Select value={productId} onValueChange={v => { setProductId(v); const p = products.find(x => x.id === v); if (p) setItemPrice(String(p.selling_price || 0)); }}>
                       <SelectTrigger><SelectValue placeholder="اختر منتج" /></SelectTrigger>
                       <SelectContent>
                         {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ''}</SelectItem>)}
