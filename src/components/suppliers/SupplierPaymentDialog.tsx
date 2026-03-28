@@ -88,23 +88,12 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
 
       if (paymentError) throw paymentError;
 
-      // Get current supplier balance
-      const { data: currentSupplier, error: fetchError } = await supabase
-        .from('suppliers')
-        .select('current_balance')
-        .eq('id', supplierId)
-        .single();
-      
-      if (fetchError) throw fetchError;
-      
-      const newBalance = (currentSupplier?.current_balance || 0) - amount;
-      
-      // Update supplier balance
-      const { error: updateError } = await supabase
-        .from('suppliers')
-        .update({ current_balance: newBalance })
-        .eq('id', supplierId);
-      
+      // Atomic balance update — avoids race conditions
+      const { error: updateError } = await supabase.rpc('atomic_supplier_balance_update' as any, {
+        _supplier_id: supplierId,
+        _amount: amount,
+      });
+
       if (updateError) throw updateError;
     },
     onSuccess: () => {

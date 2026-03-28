@@ -33,6 +33,7 @@ import { Plus, Search, MoreHorizontal, Eye, Edit, Trash2, Users, UserCheck, User
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { verifyPermissionOnServer } from '@/lib/api/secureOperations';
 import EmployeeFormDialog from '@/components/employees/EmployeeFormDialog';
 import { ExportWithTemplateButton } from '@/components/export/ExportWithTemplateButton';
 import { DataCard } from '@/components/mobile/DataCard';
@@ -103,6 +104,8 @@ export default function EmployeesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('employees', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       const { error } = await supabase.from('employees').delete().eq('id', id);
       if (error) throw error;
     },
@@ -111,8 +114,12 @@ export default function EmployeesPage() {
       toast({ title: 'تم حذف الموظف بنجاح' });
       setDeleteDialogOpen(false);
     },
-    onError: () => {
-      toast({ title: 'خطأ في حذف الموظف', variant: 'destructive' });
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast({ title: 'غير مصرح', description: 'ليس لديك صلاحية حذف الموظفين', variant: 'destructive' });
+      } else {
+        toast({ title: 'خطأ في حذف الموظف', variant: 'destructive' });
+      }
     },
   });
 

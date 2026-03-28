@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type PurchaseOrderStats = Pick<Database['public']['Tables']['purchase_orders']['Row'], 'supplier_id' | 'total_amount' | 'status'>;
@@ -98,6 +99,8 @@ const SuppliersPage = () => {
 
   const deleteSupplierMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('suppliers', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       const { error } = await supabase.from("suppliers").delete().eq("id", id);
       if (error) throw error;
     },
@@ -106,7 +109,14 @@ const SuppliersPage = () => {
       toast.success("تم حذف المورد بنجاح");
       setDeletingId(null);
     },
-    onError: () => { toast.error("خطأ في حذف المورد"); setDeletingId(null); },
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast.error("غير مصرح: ليس لديك صلاحية حذف الموردين");
+      } else {
+        toast.error("خطأ في حذف المورد");
+      }
+      setDeletingId(null);
+    },
   });
 
   const { filteredData, filters, setFilter } = useTableFilter(suppliers);

@@ -36,6 +36,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -183,6 +185,8 @@ const InvoicesPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('invoices', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       await supabase.from('invoice_items').delete().eq('invoice_id', id);
       const { error } = await supabase.from('invoices').delete().eq('id', id);
       if (error) throw error;
@@ -191,10 +195,16 @@ const InvoicesPage = () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoices-count'] });
       queryClient.invalidateQueries({ queryKey: ['invoices-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast({ title: "تم حذف الفاتورة بنجاح" });
     },
-    onError: () => {
-      toast({ title: "خطأ في حذف الفاتورة", variant: "destructive" });
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف الفواتير", variant: "destructive" });
+      } else {
+        toast({ title: "خطأ في حذف الفاتورة", variant: "destructive" });
+      }
+      logErrorSafely('InvoicesPage.delete', error);
     },
   });
 

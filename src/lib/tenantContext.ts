@@ -113,30 +113,20 @@ export async function switchTenant(tenantId: string): Promise<boolean> {
     return false;
   }
 
-  // First, set all user's tenants to non-default
-  const { error: resetError } = await supabase
-    .from('user_tenants')
-    .update({ is_default: false })
-    .eq('user_id', user.id);
+  // Atomic tenant switch via SQL function
+  const { data, error } = await supabase.rpc('switch_user_tenant', {
+    _user_id: user.id,
+    _tenant_id: tenantId,
+  });
 
-  if (resetError) {
+  if (error) {
     if (import.meta.env.DEV) {
-      console.error('Error resetting default tenant:', resetError);
+      console.error('Error switching tenant:', error);
     }
     return false;
   }
 
-  // Set the new tenant as default
-  const { error: setError } = await supabase
-    .from('user_tenants')
-    .update({ is_default: true })
-    .eq('user_id', user.id)
-    .eq('tenant_id', tenantId);
-
-  if (setError) {
-    if (import.meta.env.DEV) {
-      console.error('Error setting default tenant:', setError);
-    }
+  if (!data) {
     return false;
   }
 

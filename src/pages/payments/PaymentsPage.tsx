@@ -23,6 +23,8 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { logErrorSafely } from "@/lib/errorHandler";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
@@ -78,15 +80,24 @@ const PaymentsPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      const hasPermission = await verifyPermissionOnServer('payments', 'delete');
+      if (!hasPermission) throw new Error('UNAUTHORIZED');
       const { error } = await supabase.from('payments').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       toast({ title: "تم حذف الدفعة بنجاح" });
     },
-    onError: () => {
-      toast({ title: "خطأ في حذف الدفعة", variant: "destructive" });
+    onError: (error) => {
+      if (error.message === 'UNAUTHORIZED') {
+        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف المدفوعات", variant: "destructive" });
+      } else {
+        toast({ title: "خطأ في حذف الدفعة", variant: "destructive" });
+      }
+      logErrorSafely('PaymentsPage.delete', error);
     },
   });
 
