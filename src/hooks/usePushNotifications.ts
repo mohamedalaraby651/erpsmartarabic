@@ -56,7 +56,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       try {
         const registration = await navigator.serviceWorker.ready;
-        const existingSub = await (registration as any).pushManager?.getSubscription();
+        const existingSub = await (registration as unknown as { pushManager?: PushManager }).pushManager?.getSubscription();
         setSubscription(existingSub);
       } catch (error) {
         console.error('Error getting push subscription:', error);
