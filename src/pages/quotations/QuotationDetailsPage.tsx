@@ -257,7 +257,54 @@ const QuotationDetailsPage = () => {
         </div>
       )}
 
-      {/* Tabs */}
+      {/* Mobile: Collapsible Sections */}
+      {isMobile && (
+        <div className="space-y-3 mt-4">
+          <MobileDetailSection title="بنود العرض" priority="medium" icon={<Package className="h-4 w-4" />} badge={quotationItems.length}>
+            <MobileDetailItems items={itemCards} emptyIcon={<Package className="h-12 w-12 text-muted-foreground/50" />} emptyMessage="لا توجد بنود" />
+            {quotationItems.length > 0 && (
+              <div className="mt-3 p-3 rounded-lg bg-muted/50 space-y-1 text-sm">
+                <div className="flex justify-between"><span>المجموع الفرعي</span><span>{Number(quotation.subtotal).toLocaleString()} ج.م</span></div>
+                {Number(quotation.discount_amount) > 0 && <div className="flex justify-between text-success"><span>الخصم</span><span>-{Number(quotation.discount_amount).toLocaleString()} ج.م</span></div>}
+                {Number(quotation.tax_amount) > 0 && <div className="flex justify-between"><span>الضريبة</span><span>{Number(quotation.tax_amount).toLocaleString()} ج.م</span></div>}
+                <div className="flex justify-between font-bold text-base pt-2 border-t"><span>الإجمالي</span><span>{totalAmount.toLocaleString()} ج.م</span></div>
+              </div>
+            )}
+          </MobileDetailSection>
+          <MobileDetailSection title="أوامر البيع المرتبطة" priority="medium" icon={<ShoppingCart className="h-4 w-4" />} badge={salesOrders.length}>
+            <MobileDetailItems
+              items={(salesOrders as Array<{id: string; order_number: string; created_at: string; total_amount: number; status: string}>).map(o => ({
+                id: o.id, title: o.order_number, value: `${Number(o.total_amount).toLocaleString()} ج.م`,
+                details: [{ label: 'التاريخ', value: new Date(o.created_at).toLocaleDateString('ar-EG') }],
+                badge: <Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge>,
+              }))}
+              emptyIcon={<ShoppingCart className="h-12 w-12 text-muted-foreground/50" />}
+              emptyMessage="لا توجد أوامر بيع مرتبطة"
+            />
+          </MobileDetailSection>
+          <MobileDetailSection title="سجل النشاط" priority="low" icon={<Activity className="h-4 w-4" />} badge={activities.length}>
+            {activities.length > 0 ? (
+              <div className="space-y-2">
+                {(activities as Array<{id: string; action: string; created_at: string}>).map((a) => (
+                  <div key={a.id} className="flex items-start gap-3 p-2 rounded-lg bg-muted/50">
+                    <div className="p-1.5 rounded-full bg-primary/10 shrink-0"><Activity className="h-3 w-3 text-primary" /></div>
+                    <div className="min-w-0"><p className="text-xs font-medium">{a.action}</p><p className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleString('ar-EG')}</p></div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-4">لا يوجد نشاط</p>}
+          </MobileDetailSection>
+          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
+            <div className="space-y-3">
+              <FileUpload entityType="quotation" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'quotation', id] })} />
+              <AttachmentsList entityType="quotation" entityId={id!} />
+            </div>
+          </MobileDetailSection>
+        </div>
+      )}
+
+      {/* Desktop: Tabs */}
+      {!isMobile && (
       <Tabs defaultValue="items" className="mt-6">
         <ScrollArea className="w-full">
           <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
