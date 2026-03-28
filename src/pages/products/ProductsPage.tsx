@@ -59,6 +59,7 @@ const ProductsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';
