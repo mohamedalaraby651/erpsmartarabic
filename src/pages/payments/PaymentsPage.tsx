@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Wallet, CreditCard, Banknote, Calendar } from "lucide-react";
+import { Plus, Search, Wallet, CreditCard, Banknote, Calendar, ArrowLeftRight } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
