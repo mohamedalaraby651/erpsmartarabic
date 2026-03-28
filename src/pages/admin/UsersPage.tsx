@@ -146,7 +146,7 @@ export default function UsersPage() {
   const filteredUsers = useMemo(() => {
     if (!users) return [];
     return users.filter(user => {
-      const profile = user.profiles as any;
+      const profile = user.profiles as { full_name?: string; avatar_url?: string; phone?: string } | null;
       const matchesSearch = !searchQuery || 
         profile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         profile?.phone?.includes(searchQuery);
