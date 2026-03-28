@@ -229,6 +229,10 @@ export default function ReportsPage() {
   const paidAmount = salesData?.filter((s) => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.total_amount), 0) || 0;
   const unpaidAmount = totalSales - paidAmount;
   const invoiceCount = salesData?.length || 0;
+  const prevTotalSales = prevSalesData?.reduce((sum, s) => sum + Number(s.total_amount), 0) || 0;
+  const prevPaidAmount = prevSalesData?.filter(s => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.total_amount), 0) || 0;
+  const salesTrend = prevTotalSales > 0 ? ((totalSales - prevTotalSales) / prevTotalSales * 100) : null;
+  const collectionTrend = prevPaidAmount > 0 ? ((paidAmount - prevPaidAmount) / prevPaidAmount * 100) : null;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("ar-EG", {
