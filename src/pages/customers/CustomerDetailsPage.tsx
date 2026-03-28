@@ -297,10 +297,22 @@ const CustomerDetailsPage = () => {
         {/* Invoices */}
         <TabsContent value="invoices" className="mt-6">
           <Card>
-            <CardHeader><CardTitle>الفواتير</CardTitle><CardDescription>سجل فواتير العميل</CardDescription></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div><CardTitle>الفواتير</CardTitle><CardDescription>سجل فواتير العميل</CardDescription></div>
+              <Button size="sm" onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })}>
+                <Plus className="h-4 w-4 ml-2" />فاتورة جديدة
+              </Button>
+            </CardHeader>
             <CardContent>
               {detail.invoices.length === 0 ? (
-                <div className="text-center py-8"><FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" /><p className="text-muted-foreground">لا توجد فواتير</p></div>
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-2">لا توجد فواتير لهذا العميل</p>
+                  <p className="text-sm text-muted-foreground mb-4">ابدأ بإنشاء أول فاتورة للعميل</p>
+                  <Button size="sm" onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })}>
+                    <FileText className="h-4 w-4 ml-2" />إنشاء أول فاتورة
+                  </Button>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {detail.invoices.slice(0, 15).map((invoice) => (
