@@ -954,6 +954,7 @@ export type Database = {
           phone: string | null
           phone2: string | null
           preferred_payment_method: string | null
+          price_list_id: string | null
           tax_number: string | null
           tenant_id: string | null
           total_purchases_cached: number | null
@@ -986,6 +987,7 @@ export type Database = {
           phone?: string | null
           phone2?: string | null
           preferred_payment_method?: string | null
+          price_list_id?: string | null
           tax_number?: string | null
           tenant_id?: string | null
           total_purchases_cached?: number | null
@@ -1018,6 +1020,7 @@ export type Database = {
           phone?: string | null
           phone2?: string | null
           preferred_payment_method?: string | null
+          price_list_id?: string | null
           tax_number?: string | null
           tenant_id?: string | null
           total_purchases_cached?: number | null
@@ -1031,6 +1034,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "customer_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_price_list_id_fkey"
+            columns: ["price_list_id"]
+            isOneToOne: false
+            referencedRelation: "price_lists"
             referencedColumns: ["id"]
           },
           {
@@ -1919,6 +1929,102 @@ export type Database = {
           target_type?: string | null
         }
         Relationships: []
+      }
+      price_list_items: {
+        Row: {
+          created_at: string
+          discount_percentage: number | null
+          id: string
+          min_quantity: number | null
+          price: number
+          price_list_id: string
+          product_id: string
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          min_quantity?: number | null
+          price?: number
+          price_list_id: string
+          product_id: string
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          min_quantity?: number | null
+          price?: number
+          price_list_id?: string
+          product_id?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_list_items_price_list_id_fkey"
+            columns: ["price_list_id"]
+            isOneToOne: false
+            referencedRelation: "price_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_list_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_list_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_lists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_lists_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_categories: {
         Row: {

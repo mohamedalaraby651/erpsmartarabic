@@ -64,6 +64,8 @@ const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
 const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
 const AttendancePage = lazy(() => import("./pages/attendance/AttendancePage"));
 const CollectionDashboard = lazy(() => import("./pages/collections/CollectionDashboard"));
+const PriceListsPage = lazy(() => import("./pages/pricing/PriceListsPage"));
+const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
 // Accounting Pages
 const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
 const JournalEntriesPage = lazy(() => import("./pages/accounting/JournalEntriesPage"));
@@ -169,6 +171,8 @@ const App = () => (
                   <Route path="expense-categories" element={<ExpenseCategoriesPage />} />
                   <Route path="attendance" element={<AttendancePage />} />
                   <Route path="collections" element={<CollectionDashboard />} />
+                  <Route path="price-lists" element={<PriceListsPage />} />
+                  <Route path="kpis" element={<KPIDashboard />} />
                   {/* Accounting Routes */}
                   <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
                   <Route path="accounting/journals" element={<JournalEntriesPage />} />

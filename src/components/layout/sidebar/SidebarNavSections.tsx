@@ -94,6 +94,7 @@ export const defaultNavSections: NavSection[] = [
     items: [
       { title: 'المنتجات', icon: Package, href: '/products', roles: ['admin', 'warehouse'] },
       { title: 'التصنيفات', icon: FolderTree, href: '/categories', roles: ['admin', 'warehouse'] },
+      { title: 'قوائم الأسعار', icon: ArrowLeftRight, href: '/price-lists', roles: ['admin', 'sales'] },
       { title: 'المخزون', icon: Warehouse, href: '/inventory', roles: ['admin', 'warehouse'], countKey: 'lowStockAlerts', countColor: 'warning' },
       { title: 'الموردين', icon: Truck, href: '/suppliers', roles: ['admin', 'warehouse'] },
       { title: 'أوامر الشراء', icon: ClipboardList, href: '/purchase-orders', roles: ['admin', 'warehouse'], countKey: 'pendingPurchaseOrders', countColor: 'info' },
@@ -111,6 +112,7 @@ export const defaultNavSections: NavSection[] = [
       { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
       { title: 'التحصيلات', icon: Landmark, href: '/collections', roles: ['admin', 'accountant'] },
       { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
+      { title: 'مؤشرات الأداء', icon: ArrowLeftRight, href: '/kpis', roles: ['admin', 'accountant'] },
     ],
   },
   {
