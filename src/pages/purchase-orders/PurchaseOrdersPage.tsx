@@ -30,6 +30,7 @@ import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'] & {
