@@ -62,6 +62,8 @@ const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
 const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
 const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
 const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
+const AttendancePage = lazy(() => import("./pages/attendance/AttendancePage"));
+const CollectionDashboard = lazy(() => import("./pages/collections/CollectionDashboard"));
 // Accounting Pages
 const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
 const JournalEntriesPage = lazy(() => import("./pages/accounting/JournalEntriesPage"));
