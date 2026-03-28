@@ -266,8 +266,8 @@ export default function UsersPage() {
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => {
-                const profile = user.profiles as any;
-                const customRole = user.custom_roles as any;
+                const profile = user.profiles as { full_name?: string; avatar_url?: string; phone?: string; id?: string } | null;
+                const customRole = user.custom_roles as { id?: string; name?: string; color?: string } | null;
                 const initials = profile?.full_name
                   ?.split(' ')
                   .map((n: string) => n[0])

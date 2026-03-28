@@ -347,7 +347,7 @@ export default function CustomizationsPage() {
                       </TableCell>
                       <TableCell>
                         {field.is_custom_field ? (
-                          <Badge variant="outline">{(field as any).field_type || 'text'}</Badge>
+                          <Badge variant="outline">{(field as { field_type?: string }).field_type || 'text'}</Badge>
                         ) : (
                           <Badge variant="secondary">نظامي</Badge>
                         )}

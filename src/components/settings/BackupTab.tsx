@@ -259,7 +259,7 @@ export function BackupTab() {
             } else {
               // No match found - insert new record
               const { error } = await supabase
-                .from(tableName as any)
+                .from(tableName as never)
                 .insert(cleanRecord);
               
               if (error) {

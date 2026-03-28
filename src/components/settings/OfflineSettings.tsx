@@ -81,7 +81,7 @@ export function OfflineSettings() {
       const tables = ['customers', 'products', 'invoices', 'quotations', 'suppliers'];
       for (const table of tables) {
         try {
-          const data = await getCachedData(table as any);
+          const data = await getCachedData(table as never);
           totalSize += JSON.stringify(data).length;
         } catch {
           // Ignore errors
