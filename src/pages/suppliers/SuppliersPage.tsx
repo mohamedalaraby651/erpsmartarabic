@@ -79,12 +79,29 @@ const SuppliersPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: suppliers = [], isLoading, refetch } = useQuery({
-    queryKey: ["suppliers", searchTerm, governorateFilter, categoryFilter],
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ["suppliers-count", debouncedSearch, governorateFilter, categoryFilter],
     queryFn: async () => {
-      let query = supabase.from("suppliers").select("*").order("name");
-      if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,governorate.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`);
+      let query = supabase.from("suppliers").select("*", { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`);
+      if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
+      if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: suppliers = [], isLoading, refetch } = useQuery({
+    queryKey: ["suppliers", debouncedSearch, governorateFilter, categoryFilter, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase.from("suppliers").select("*").order("name")
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) {
+        query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%,contact_person.ilike.%${debouncedSearch}%`);
       }
       if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
       if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);

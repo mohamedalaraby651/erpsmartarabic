@@ -72,16 +72,32 @@ const ProductsPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['products-count', debouncedSearch, categoryFilter],
+    queryFn: async () => {
+      let query = supabase.from('products').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,sku.ilike.%${debouncedSearch}%`);
+      if (categoryFilter !== 'all') query = query.eq('category_id', categoryFilter);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
   const { data: products = [], isLoading, refetch } = useQuery({
-    queryKey: ['products', searchQuery, categoryFilter],
+    queryKey: ['products', debouncedSearch, categoryFilter, pagination.currentPage],
     queryFn: async () => {
       let query = supabase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
 
-      if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`);
+      if (debouncedSearch) {
+        query = query.or(`name.ilike.%${debouncedSearch}%,sku.ilike.%${debouncedSearch}%`);
       }
       if (categoryFilter !== 'all') {
         query = query.eq('category_id', categoryFilter);

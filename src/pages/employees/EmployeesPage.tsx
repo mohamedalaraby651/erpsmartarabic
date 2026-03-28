@@ -96,13 +96,34 @@ export default function EmployeesPage() {
     }
   }, [searchParamsState, setSearchParamsState]);
 
-  const { data: employees = [], isLoading, refetch } = useQuery({
-    queryKey: ['employees'],
+  // Count query
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['employees-count', debouncedSearch, departmentFilter, statusFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('employees').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
+      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
+      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: employees = [], isLoading, refetch } = useQuery({
+    queryKey: ['employees', debouncedSearch, departmentFilter, statusFilter, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('employees')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
+      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
+      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
+      const { data, error } = await query;
       if (error) throw error;
       return data as Employee[];
     },
