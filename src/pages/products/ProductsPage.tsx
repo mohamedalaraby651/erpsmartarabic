@@ -587,6 +587,7 @@ const ProductsPage = () => {
         onOpenChange={setDialogOpen}
         product={selectedProduct}
       />
+      <ProductImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
     </div>
   );
 };
