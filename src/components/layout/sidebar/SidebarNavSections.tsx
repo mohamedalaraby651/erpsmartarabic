@@ -120,6 +120,7 @@ export const defaultNavSections: NavSection[] = [
     bgColor: sectionIconColors.system.bg,
     items: [
       { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
+      { title: 'الحضور والانصراف', icon: CalendarCheck, href: '/attendance', roles: ['admin', 'hr'] },
       { title: 'المهام', icon: CheckSquare, href: '/tasks', countKey: 'openTasks', countColor: 'success' },
       { title: 'الإشعارات', icon: Bell, href: '/notifications', countKey: 'unreadNotifications', countColor: 'info' },
       { title: 'حالة المزامنة', icon: RefreshCw, href: '/sync' },
