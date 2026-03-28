@@ -181,6 +181,9 @@ export default function ReportsPage() {
         </TabsContent>
         <TabsContent value="geographic" className="space-y-4"><GeographicReport /></TabsContent>
         <TabsContent value="inactive" className="space-y-4"><InactiveCustomersReport /></TabsContent>
+        <TabsContent value="cashflow" className="space-y-4">
+          <CashFlowReport startDate={startDate} endDate={endDate} />
+        </TabsContent>
         <TabsContent value="trial-balance" className="space-y-4">
           <TrialBalanceReport asOfDate={endDate} />
         </TabsContent>
