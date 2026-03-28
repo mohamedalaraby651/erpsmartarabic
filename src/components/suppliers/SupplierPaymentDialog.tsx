@@ -68,10 +68,25 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
       const supplierId = supplier?.id || selectedSupplierId;
       if (!supplierId) throw new Error('يجب اختيار المورد');
 
-      // Note: This will need the supplier_payments table to be created first
-      // For now, we just update the supplier balance directly
       const amount = parseFloat(formData.amount);
-      
+      const paymentNumber = generatePaymentNumber();
+
+      // Insert payment record into supplier_payments
+      const { error: paymentError } = await supabase
+        .from('supplier_payments')
+        .insert({
+          payment_number: paymentNumber,
+          supplier_id: supplierId,
+          amount,
+          payment_method: formData.payment_method,
+          payment_date: formData.payment_date,
+          reference_number: formData.reference_number || null,
+          notes: formData.notes || null,
+          created_by: user?.id || null,
+        });
+
+      if (paymentError) throw paymentError;
+
       // Get current supplier balance
       const { data: currentSupplier, error: fetchError } = await supabase
         .from('suppliers')
