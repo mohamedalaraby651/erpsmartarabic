@@ -16,10 +16,14 @@ import {
   CheckCircle2,
   UserPlus,
   ShoppingCart,
+  AlertCircle,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { ShimmerSkeleton } from '@/components/shared/ShimmerSkeleton';
+import { useBusinessInsights, type BusinessInsight } from '@/hooks/useBusinessInsights';
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
