@@ -99,6 +99,7 @@ export const DataCard = memo(function DataCard({
   menuItems = [],
   swipeActions = true,
 }: DataCardProps) {
+  const isMobile = useIsMobile();
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const startX = useRef(0);
