@@ -137,7 +137,7 @@ export function SettingsExportImport() {
 
       toast({ title: "تم تصدير الإعدادات بنجاح" });
     } catch (error) {
-      console.error("Export error:", error);
+      logErrorSafely('SettingsExportImport', error);
       toast({ title: "حدث خطأ أثناء التصدير", variant: "destructive" });
     } finally {
       setIsExporting(false);
