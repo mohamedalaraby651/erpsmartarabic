@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useTenant } from '@/hooks/useTenant';
+import { logErrorSafely } from '@/lib/errorHandler';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
