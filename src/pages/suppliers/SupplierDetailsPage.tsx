@@ -35,6 +35,7 @@ import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
