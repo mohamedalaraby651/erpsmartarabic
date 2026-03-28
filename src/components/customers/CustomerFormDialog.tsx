@@ -105,6 +105,22 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     stepFields: WIZARD_STEP_FIELDS,
     trigger,
   });
+  const formData = watch();
+  const { hasDraft, restoreDraft, clearDraft } = useFormDraft({
+    key: `customer_${customer?.id || 'new'}`,
+    data: formData,
+    enabled: !isEditing,
+  });
+
+  useEffect(() => {
+    if (hasDraft && !isEditing && open) {
+      const draft = restoreDraft();
+      if (draft) {
+        toast({ title: 'تم استعادة المسودة', description: 'تم استرجاع بيانات العميل المحفوظة' });
+        reset(draft);
+      }
+    }
+  }, [hasDraft, isEditing, open]);
 
   useEffect(() => {
     if (customer) {
