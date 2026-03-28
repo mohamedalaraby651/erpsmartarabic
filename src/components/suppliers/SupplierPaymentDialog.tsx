@@ -122,7 +122,7 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
     },
     onError: (error) => {
       toast({ title: "حدث خطأ أثناء تسجيل الدفعة", variant: "destructive" });
-      console.error(error);
+      logErrorSafely('SupplierPaymentDialog', error);
     },
   });
 
