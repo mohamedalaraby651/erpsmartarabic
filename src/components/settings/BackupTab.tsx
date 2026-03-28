@@ -260,7 +260,7 @@ export function BackupTab() {
               // No match found - insert new record
               const { error } = await supabase
                 .from(tableName as never)
-                .insert(cleanRecord);
+                .insert(cleanRecord as never);
               
               if (error) {
                 result.errors++;
