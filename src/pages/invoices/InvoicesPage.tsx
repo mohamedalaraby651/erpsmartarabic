@@ -36,6 +36,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
