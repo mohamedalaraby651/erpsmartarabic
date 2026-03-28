@@ -443,7 +443,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                         <div>
                           <p className="font-medium text-sm">{invoice.invoice_number}</p>
                           <p className="text-xs text-muted-foreground">
-                            {(invoice.customers as any)?.name || 'عميل'}
+                            {(invoice as { customers?: { name: string } | null }).customers?.name || 'عميل'}
                           </p>
                         </div>
                       </div>

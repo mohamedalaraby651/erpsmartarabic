@@ -126,10 +126,10 @@ const CategoriesPage = () => {
           subtitle={category.description || undefined}
           icon={<Layers className="h-5 w-5" />}
           badge={hasChildren ? { text: `${children.length} فرعي`, variant: "secondary" } : undefined}
-          fields={[
-            category.parent_id && { label: "التصنيف الأب", value: getParentName(category.parent_id) },
+          fields={([
+            category.parent_id ? { label: "التصنيف الأب", value: getParentName(category.parent_id) } : null,
             { label: "الترتيب", value: category.sort_order || 0 },
-          ].filter(Boolean) as any[]}
+          ] as const).filter(Boolean) as Array<{ label: string; value: string | number | React.ReactNode; icon?: React.ReactNode }>}
           onEdit={() => handleEdit(category)}
           onDelete={() => {
             if (confirm('هل أنت متأكد من حذف هذا التصنيف؟')) {

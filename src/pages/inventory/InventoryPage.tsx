@@ -537,7 +537,7 @@ const InventoryPage = () => {
                       </TableCell>
                       <TableCell className="font-medium">{movement.product?.name}</TableCell>
                       <TableCell>
-                        <Badge variant={getMovementTypeBadge(movement.movement_type) as any}>
+                        <Badge variant={getMovementTypeBadge(movement.movement_type)}>
                           {getMovementTypeLabel(movement.movement_type)}
                         </Badge>
                       </TableCell>

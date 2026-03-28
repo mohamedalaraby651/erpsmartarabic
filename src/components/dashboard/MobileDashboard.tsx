@@ -347,7 +347,7 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
                       <div>
                         <p className="text-sm font-medium">{invoice.invoice_number}</p>
                         <p className="text-xs text-muted-foreground">
-                          {(invoice.customers as any)?.name || 'عميل'}
+                          {(invoice as { customers?: { name: string } | null }).customers?.name || 'عميل'}
                         </p>
                       </div>
                     </div>

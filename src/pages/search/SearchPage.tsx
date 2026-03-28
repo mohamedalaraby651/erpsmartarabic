@@ -144,7 +144,7 @@ export default function SearchPage() {
           id: q.id,
           type: 'quotation',
           title: `عرض سعر ${q.quotation_number}`,
-          subtitle: (q.customers as any)?.name,
+          subtitle: (q as { customers?: { name: string } | null }).customers?.name,
           href: `/quotations?id=${q.id}`,
         });
       });
