@@ -45,6 +45,8 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 type Product = Database['public']['Tables']['products']['Row'];
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
 
+const PAGE_SIZE = 25;
+
 const ProductsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -52,6 +54,7 @@ const ProductsPage = () => {
   const { isMobile, isTableView } = useResponsiveView();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
