@@ -338,7 +338,7 @@ const ProductDetailsPage = () => {
 
       <ProductFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} product={product} />
       <ProductVariantDialog open={variantDialogOpen} onOpenChange={setVariantDialogOpen} productId={id!} variant={selectedVariant} />
-      <StockMovementDialog open={stockMovementOpen} onOpenChange={setStockMovementOpen} productId={id} />
+      <StockMovementDialog open={stockMovementOpen} onOpenChange={setStockMovementOpen} />
 
       {/* Mobile FAB for quick stock addition */}
       {isMobile && product && (
