@@ -66,6 +66,7 @@ const SuppliersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [governorateFilter, setGovernorateFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
