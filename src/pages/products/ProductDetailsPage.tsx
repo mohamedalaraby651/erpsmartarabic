@@ -19,6 +19,9 @@ import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { MobileDetailItems, type DetailItemData } from "@/components/mobile/MobileDetailItems";
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { FloatingActionButton } from "@/components/mobile/FloatingActionButton";
+import { StockMovementDialog } from "@/components/inventory/StockMovementDialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
