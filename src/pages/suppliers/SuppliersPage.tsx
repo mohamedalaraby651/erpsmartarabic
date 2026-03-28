@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Users, Phone, Mail, Building2, CreditCard, MapPin, Upload } from "lucide-react";
 import { toast } from "sonner";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
+import SupplierImportDialog from "@/components/suppliers/SupplierImportDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
