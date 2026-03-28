@@ -63,7 +63,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      customer_id: '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '',
+      customer_id: prefillCustomerId || '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '',
       discount_amount: 0, tax_amount: 0,
     },
   });
