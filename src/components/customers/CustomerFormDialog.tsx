@@ -191,6 +191,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer', customer?.id] });
+      clearDraft();
       toast({ title: isEditing ? "تم تحديث العميل بنجاح" : "تم إضافة العميل بنجاح" });
       onOpenChange(false);
     },

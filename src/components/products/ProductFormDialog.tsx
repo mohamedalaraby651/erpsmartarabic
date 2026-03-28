@@ -67,7 +67,7 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
       if (isEditing) { const { error } = await supabase.from('products').update(payload).eq('id', product.id); if (error) throw error; }
       else { const { error } = await supabase.from('products').insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); toast({ title: isEditing ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح" }); onOpenChange(false); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); clearDraft(); toast({ title: isEditing ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح" }); onOpenChange(false); },
     onError: (error) => { logErrorSafely('ProductFormDialog', error); toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" }); },
   });
 
