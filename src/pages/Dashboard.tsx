@@ -266,16 +266,18 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                         <div>
                           <p className="text-sm text-muted-foreground">{stat.title}</p>
                           <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                          <div className="flex items-center gap-1 mt-2">
-                            {stat.positive ? (
-                              <TrendingUp className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4 text-red-500" />
-                            )}
-                            <span className={`text-sm ${stat.positive ? 'text-green-500' : 'text-red-500'}`}>
-                              {stat.change}
-                            </span>
-                          </div>
+                          {stat.change && stat.change !== '—' && (
+                            <div className="flex items-center gap-1 mt-2">
+                              {stat.positive ? (
+                                <TrendingUp className="h-4 w-4 text-success" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4 text-destructive" />
+                              )}
+                              <span className={`text-sm ${stat.positive ? 'text-success' : 'text-destructive'}`}>
+                                {stat.change}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                           <Icon className="h-5 w-5 text-primary" />
