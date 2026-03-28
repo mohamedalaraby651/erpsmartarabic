@@ -20,7 +20,7 @@ import { MobileDetailItems, type DetailItemData } from "@/components/mobile/Mobi
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FloatingActionButton } from "@/components/mobile/FloatingActionButton";
-import { StockMovementDialog } from "@/components/inventory/StockMovementDialog";
+import StockMovementDialog from "@/components/inventory/StockMovementDialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Database } from "@/integrations/supabase/types";
 
