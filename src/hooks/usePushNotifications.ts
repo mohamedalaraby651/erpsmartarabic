@@ -111,7 +111,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const registration = await navigator.serviceWorker.ready;
 
       // Check if already subscribed
-      let pushSubscription = await (registration as any).pushManager?.getSubscription();
+      let pushSubscription = await (registration as unknown as { pushManager?: PushManager }).pushManager?.getSubscription();
 
       if (!pushSubscription && VAPID_PUBLIC_KEY) {
         // Create new subscription
