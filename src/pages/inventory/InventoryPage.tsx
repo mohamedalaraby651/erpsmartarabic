@@ -186,7 +186,7 @@ const InventoryPage = () => {
     }
   };
 
-  const getMovementTypeBadge = (type: string) => {
+  const getMovementTypeBadge = (type: string): 'default' | 'destructive' | 'secondary' | 'outline' => {
     switch (type) {
       case "in": return "default";
       case "out": return "destructive";
