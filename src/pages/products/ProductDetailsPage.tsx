@@ -187,7 +187,26 @@ const ProductDetailsPage = () => {
         </div>
       )}
 
-      {/* Tabs */}
+      {/* Mobile: Collapsible Sections */}
+      {isMobile && (
+        <div className="space-y-3 mt-4">
+          <MobileDetailSection title="متغيرات المنتج" priority="medium" icon={<Layers className="h-4 w-4" />} badge={variants.length}>
+            <MobileDetailItems items={variantCards} emptyIcon={<Layers className="h-12 w-12 text-muted-foreground/50" />} emptyMessage="لا توجد متغيرات" />
+          </MobileDetailSection>
+          <MobileDetailSection title="المخزون في المستودعات" priority="medium" icon={<Box className="h-4 w-4" />} badge={stockData.length}>
+            <MobileDetailItems items={stockCards} emptyIcon={<Box className="h-12 w-12 text-muted-foreground/50" />} emptyMessage="لا يوجد مخزون مسجل" />
+          </MobileDetailSection>
+          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
+            <div className="space-y-3">
+              <FileUpload entityType="product" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'product', id] })} />
+              <AttachmentsList entityType="product" entityId={id!} />
+            </div>
+          </MobileDetailSection>
+        </div>
+      )}
+
+      {/* Desktop: Tabs */}
+      {!isMobile && (
       <Tabs defaultValue="variants" className="w-full">
         <ScrollArea className="w-full">
           <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
