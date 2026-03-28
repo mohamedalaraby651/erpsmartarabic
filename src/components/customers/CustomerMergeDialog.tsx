@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Search, Merge, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import { logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
