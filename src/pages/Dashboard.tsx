@@ -40,15 +40,20 @@ import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
 import { useBusinessInsights, type BusinessInsight } from '@/hooks/useBusinessInsights';
 import { AlertTriangle, AlertCircle, Info as InfoIcon, CheckCircle } from 'lucide-react';
 
-// Sample chart data
-const salesData = [
-  { name: 'يناير', sales: 4000 },
-  { name: 'فبراير', sales: 3000 },
-  { name: 'مارس', sales: 5000 },
-  { name: 'أبريل', sales: 4500 },
-  { name: 'مايو', sales: 6000 },
-  { name: 'يونيو', sales: 5500 },
-];
+// Insight severity icon mapping
+const insightIcons: Record<string, React.ElementType> = {
+  error: AlertCircle,
+  warning: AlertTriangle,
+  info: InfoIcon,
+  success: CheckCircle,
+};
+
+const insightColors: Record<string, string> = {
+  error: 'border-destructive/30 bg-destructive/5 text-destructive',
+  warning: 'border-warning/30 bg-warning/5 text-warning',
+  info: 'border-info/30 bg-info/5 text-info',
+  success: 'border-success/30 bg-success/5 text-success',
+};
 
 const roleLabels: Record<string, string> = {
   admin: 'مدير النظام',
