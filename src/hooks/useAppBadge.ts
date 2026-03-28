@@ -15,10 +15,10 @@ export function useAppBadge() {
 
     try {
       if (count > 0) {
-        await (navigator as any).setAppBadge(count);
+        await (navigator as unknown as { setAppBadge: (count: number) => Promise<void> }).setAppBadge(count);
         console.log(`[App Badge] Set to ${count}`);
       } else {
-        await (navigator as any).clearAppBadge();
+        await (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge();
         console.log('[App Badge] Cleared');
       }
       return true;
