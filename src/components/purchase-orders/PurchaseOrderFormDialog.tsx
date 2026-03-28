@@ -23,11 +23,11 @@ type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type Product = Database['public']['Tables']['products']['Row'];
 
-interface PurchaseOrderFormDialogProps { open: boolean; onOpenChange: (open: boolean) => void; order?: PurchaseOrder | null; }
+interface PurchaseOrderFormDialogProps { open: boolean; onOpenChange: (open: boolean) => void; order?: PurchaseOrder | null; prefillSupplierId?: string; }
 interface OrderItem { product_id: string; product_name: string; quantity: number; unit_price: number; total_price: number; }
 interface FormData { supplier_id: string; expected_date: string; notes: string; tax_amount: number; }
 
-const PurchaseOrderFormDialog = ({ open, onOpenChange, order }: PurchaseOrderFormDialogProps) => {
+const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId }: PurchaseOrderFormDialogProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
