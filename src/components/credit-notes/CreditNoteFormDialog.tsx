@@ -47,7 +47,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
         .from('invoices')
         .select('id, invoice_number, total_amount, paid_amount')
         .eq('customer_id', customerId)
-        .in('status', ['confirmed', 'pending'])
+        .neq('status', 'cancelled')
         .order('created_at', { ascending: false });
       return data || [];
     },
