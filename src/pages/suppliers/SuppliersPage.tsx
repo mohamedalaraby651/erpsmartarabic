@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type PurchaseOrderStats = Pick<Database['public']['Tables']['purchase_orders']['Row'], 'supplier_id' | 'total_amount' | 'status'>;
