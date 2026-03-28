@@ -30,6 +30,8 @@ import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { tabGroups } from "@/lib/customerConstants";
+import MobileDetailSection from "@/components/mobile/MobileDetailSection";
+import { useNavigationState } from "@/hooks/useNavigationState";
 import type { CustomerAddress } from "@/lib/customerConstants";
 
 // Icon map for tab groups
