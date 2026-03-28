@@ -17,9 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Package, AlertTriangle, Layers } from "lucide-react";
+import { Plus, Search, Package, AlertTriangle, Layers, Upload } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
+import ProductImportDialog from "@/components/products/ProductImportDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
@@ -59,6 +60,7 @@ const ProductsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';
@@ -415,6 +417,12 @@ const ProductsPage = () => {
             />
           )}
           {canEdit && (
+            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={() => setImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 ml-2" />
+              {isMobile ? "استيراد" : "استيراد من Excel"}
+            </Button>
+          )}
+          {canEdit && (
             <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
               <Plus className="h-4 w-4 ml-2" />
               {isMobile ? "جديد" : "إضافة منتج"}
@@ -580,6 +588,7 @@ const ProductsPage = () => {
         onOpenChange={setDialogOpen}
         product={selectedProduct}
       />
+      <ProductImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
     </div>
   );
 };

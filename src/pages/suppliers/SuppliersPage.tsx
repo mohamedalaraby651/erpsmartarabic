@@ -17,9 +17,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Users, Phone, Mail, Building2, CreditCard, MapPin } from "lucide-react";
+import { Plus, Search, Users, Phone, Mail, Building2, CreditCard, MapPin, Upload } from "lucide-react";
 import { toast } from "sonner";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
+import SupplierImportDialog from "@/components/suppliers/SupplierImportDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
@@ -65,6 +66,7 @@ const SuppliersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [governorateFilter, setGovernorateFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -278,6 +280,12 @@ const SuppliersPage = () => {
             ]} />
           )}
           {canEdit && (
+            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={() => setImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 ml-2" />
+              {isMobile ? "استيراد" : "استيراد من Excel"}
+            </Button>
+          )}
+          {canEdit && (
             <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
               <Plus className="h-4 w-4 ml-2" />{isMobile ? "جديد" : "مورد جديد"}
             </Button>
@@ -345,6 +353,7 @@ const SuppliersPage = () => {
         hasPrevPage={pagination.hasPrevPage}
       />
       <SupplierFormDialog open={dialogOpen} onOpenChange={setDialogOpen} supplier={selectedSupplier} />
+      <SupplierImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
     </div>
   );
 };

@@ -36,6 +36,8 @@ import {
   RotateCcw,
   DollarSign,
   ArrowLeftRight,
+  CalendarCheck,
+  Landmark,
 } from 'lucide-react';
 import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
 import DraggableNavSection from '@/components/sidebar/DraggableNavSection';
@@ -107,6 +109,7 @@ export const defaultNavSections: NavSection[] = [
       { title: 'الخزينة', icon: Wallet, href: '/treasury', roles: ['admin', 'accountant'] },
       { title: 'المصروفات', icon: Receipt, href: '/expenses', roles: ['admin', 'accountant'] },
       { title: 'مدفوعات الموردين', icon: Wallet, href: '/supplier-payments', roles: ['admin', 'accountant'] },
+      { title: 'التحصيلات', icon: Landmark, href: '/collections', roles: ['admin', 'accountant'] },
       { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
     ],
   },
@@ -118,6 +121,7 @@ export const defaultNavSections: NavSection[] = [
     bgColor: sectionIconColors.system.bg,
     items: [
       { title: 'الموظفين', icon: Briefcase, href: '/employees', roles: ['admin', 'hr'] },
+      { title: 'الحضور والانصراف', icon: CalendarCheck, href: '/attendance', roles: ['admin', 'hr'] },
       { title: 'المهام', icon: CheckSquare, href: '/tasks', countKey: 'openTasks', countColor: 'success' },
       { title: 'الإشعارات', icon: Bell, href: '/notifications', countKey: 'unreadNotifications', countColor: 'info' },
       { title: 'حالة المزامنة', icon: RefreshCw, href: '/sync' },
