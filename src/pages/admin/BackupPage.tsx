@@ -119,7 +119,7 @@ const BackupPage = () => {
 
       for (const tableName of selectedTables) {
         const { data, error } = await supabase
-          .from(tableName as any)
+          .from(tableName as never)
           .select('*');
         
         if (error) {
