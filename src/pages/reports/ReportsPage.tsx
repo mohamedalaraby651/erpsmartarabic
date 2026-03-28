@@ -47,6 +47,22 @@ export default function ReportsPage() {
     },
   });
 
+  // Previous period for trend comparison
+  const periodDays = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const previousStartDate = subDays(startDate, periodDays);
+  const { data: prevSalesData } = useQuery({
+    queryKey: ["prev-sales-report", period],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("total_amount, payment_status")
+        .gte("created_at", previousStartDate.toISOString())
+        .lt("created_at", startDate.toISOString());
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Top Products
   const { data: topProducts } = useQuery({
     queryKey: ["top-products", period],
@@ -213,6 +229,10 @@ export default function ReportsPage() {
   const paidAmount = salesData?.filter((s) => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.total_amount), 0) || 0;
   const unpaidAmount = totalSales - paidAmount;
   const invoiceCount = salesData?.length || 0;
+  const prevTotalSales = prevSalesData?.reduce((sum, s) => sum + Number(s.total_amount), 0) || 0;
+  const prevPaidAmount = prevSalesData?.filter(s => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.total_amount), 0) || 0;
+  const salesTrend = prevTotalSales > 0 ? ((totalSales - prevTotalSales) / prevTotalSales * 100) : null;
+  const collectionTrend = prevPaidAmount > 0 ? ((paidAmount - prevPaidAmount) / prevPaidAmount * 100) : null;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("ar-EG", {
@@ -229,17 +249,27 @@ export default function ReportsPage() {
   })) || [];
 
   // Mobile Summary Cards Component
+  const TrendIndicator = ({ value }: { value: number | null }) => {
+    if (value === null) return null;
+    const isPositive = value >= 0;
+    return (
+      <p className={`text-[10px] flex items-center gap-0.5 ${isPositive ? 'text-success' : 'text-destructive'}`}>
+        {isPositive ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+        {isPositive ? '+' : ''}{value.toFixed(1)}%
+      </p>
+    );
+  };
+
   const MobileSummaryCards = () => (
     <div className="grid grid-cols-2 gap-3">
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <DollarSign className="h-4 w-4 text-primary" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-primary/10"><DollarSign className="h-4 w-4 text-primary" /></div>
             <div>
               <p className="text-lg font-bold">{formatCurrency(totalSales)}</p>
               <p className="text-xs text-muted-foreground">إجمالي المبيعات</p>
+              <TrendIndicator value={salesTrend} />
             </div>
           </div>
         </CardContent>
@@ -247,12 +277,11 @@ export default function ReportsPage() {
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-success/10">
-              <TrendingUp className="h-4 w-4 text-success" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-success/10"><TrendingUp className="h-4 w-4 text-success" /></div>
             <div>
               <p className="text-lg font-bold text-success">{formatCurrency(paidAmount)}</p>
               <p className="text-xs text-muted-foreground">المحصل</p>
+              <TrendIndicator value={collectionTrend} />
             </div>
           </div>
         </CardContent>
@@ -260,12 +289,11 @@ export default function ReportsPage() {
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-destructive/10">
-              <TrendingDown className="h-4 w-4 text-destructive" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-destructive/10"><TrendingDown className="h-4 w-4 text-destructive" /></div>
             <div>
               <p className="text-lg font-bold text-destructive">{formatCurrency(unpaidAmount)}</p>
               <p className="text-xs text-muted-foreground">المستحق</p>
+              {totalSales > 0 && <p className="text-[10px] text-muted-foreground">{((unpaidAmount / totalSales) * 100).toFixed(0)}% من الإجمالي</p>}
             </div>
           </div>
         </CardContent>
@@ -273,9 +301,7 @@ export default function ReportsPage() {
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-info/10">
-              <FileText className="h-4 w-4 text-info" />
-            </div>
+            <div className="p-1.5 rounded-lg bg-info/10"><FileText className="h-4 w-4 text-info" /></div>
             <div>
               <p className="text-lg font-bold">{invoiceCount}</p>
               <p className="text-xs text-muted-foreground">الفواتير</p>
@@ -443,6 +469,34 @@ export default function ReportsPage() {
               <p className="text-xs text-muted-foreground">فاتورة خلال الفترة</p>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Decision Hooks — Mobile smart alerts */}
+      {isMobile && (lowStockProducts && lowStockProducts.length > 0 || (totalSales > 0 && unpaidAmount > totalSales * 0.5)) && (
+        <div className="space-y-2">
+          {lowStockProducts && lowStockProducts.length > 0 && (
+            <Card className="border-warning/30 bg-warning/5">
+              <CardContent className="p-3 flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">تنبيه المخزون</p>
+                  <p className="text-xs text-muted-foreground">{lowStockProducts.length} منتج تحت الحد الأدنى</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {totalSales > 0 && unpaidAmount > totalSales * 0.5 && (
+            <Card className="border-destructive/30 bg-destructive/5">
+              <CardContent className="p-3 flex items-center gap-3">
+                <TrendingDown className="h-5 w-5 text-destructive shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">تنبيه التحصيل</p>
+                  <p className="text-xs text-muted-foreground">أكثر من 50% من المبيعات غير محصلة</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 

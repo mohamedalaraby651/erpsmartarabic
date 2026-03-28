@@ -87,7 +87,7 @@ const CustomerDetailsPage = () => {
         title={customer.name}
         backTo="/customers"
         action={
-          <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+          <Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}>
             <Edit className="h-4 w-4" />
           </Button>
         }
@@ -172,8 +172,8 @@ const CustomerDetailsPage = () => {
                         )}
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => { setSelectedAddress(address); setAddressDialogOpen(true); }}><Edit className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => detail.deleteAddressMutation.mutate(address.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        <Button variant="ghost" size="icon" className="min-h-11 min-w-11" onClick={() => { setSelectedAddress(address); setAddressDialogOpen(true); }}><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="min-h-11 min-w-11" onClick={() => detail.deleteAddressMutation.mutate(address.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                       </div>
                     </div>
                   ))}
