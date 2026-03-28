@@ -31,6 +31,7 @@ import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import type { Database } from "@/integrations/supabase/types";
+import MultiInvoiceSettlement from "@/components/payments/MultiInvoiceSettlement";
 
 type PaymentWithRelations = Database['public']['Tables']['payments']['Row'] & {
   customers: { name: string } | null;
