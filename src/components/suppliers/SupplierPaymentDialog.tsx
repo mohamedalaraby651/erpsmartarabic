@@ -66,35 +66,16 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const supplierId = supplier?.id || selectedSupplierId;
-      if (!supplierId) throw new Error('يجب اختيار المورد');
-
-      const amount = parseFloat(formData.amount);
-      const paymentNumber = generatePaymentNumber();
-
-      // Insert payment record into supplier_payments
-      const { error: paymentError } = await supabase
-        .from('supplier_payments')
-        .insert({
-          payment_number: paymentNumber,
-          supplier_id: supplierId,
-          amount,
-          payment_method: formData.payment_method as Database['public']['Enums']['payment_method'],
-          payment_date: formData.payment_date,
-          reference_number: formData.reference_number || null,
-          notes: formData.notes || null,
-          created_by: user?.id || null,
-        });
-
-      if (paymentError) throw paymentError;
-
-      // Atomic balance update — avoids race conditions
-      const { error: updateError } = await supabase.rpc('atomic_supplier_balance_update' as any, {
-        _supplier_id: supplierId,
-        _amount: amount,
+      const { recordSupplierPayment } = await import('@/lib/services/supplierService');
+      await recordSupplierPayment({
+        supplierId: supplier?.id || selectedSupplierId,
+        amount: parseFloat(formData.amount),
+        paymentMethod: formData.payment_method as Database['public']['Enums']['payment_method'],
+        paymentDate: formData.payment_date,
+        referenceNumber: formData.reference_number || undefined,
+        notes: formData.notes || undefined,
+        createdBy: user?.id || undefined,
       });
-
-      if (updateError) throw updateError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
