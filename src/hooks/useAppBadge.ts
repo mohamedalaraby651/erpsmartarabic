@@ -32,7 +32,7 @@ export function useAppBadge() {
     if (!isSupported) return false;
 
     try {
-      await (navigator as any).clearAppBadge();
+      await (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge();
       console.log('[App Badge] Cleared');
       return true;
     } catch (error) {

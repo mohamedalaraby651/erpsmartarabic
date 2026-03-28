@@ -40,7 +40,7 @@ export function useInstallPrompt(): UseInstallPromptReturn {
   // Check if app is running in standalone mode (installed)
   const isStandalone = 
     window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true ||
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
     document.referrer.includes('android-app://');
 
   // PWA 2025: Check for Window Controls Overlay mode

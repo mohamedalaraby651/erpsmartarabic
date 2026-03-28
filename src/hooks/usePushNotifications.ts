@@ -132,12 +132,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           .from('push_subscriptions')
           .upsert({
             user_id: user.id,
-            subscription: subscriptionJSON as any,
+            subscription: subscriptionJSON as unknown as Record<string, unknown>,
             device_info: {
               userAgent: navigator.userAgent,
               platform: navigator.platform,
               language: navigator.language,
-            } as any,
+            } as unknown as Record<string, unknown>,
             is_active: true,
           });
 
