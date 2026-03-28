@@ -91,27 +91,71 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const isMobile = useIsMobile();
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
    const { currentTenantName, tenant } = useTenant();
+  const { insights, hasAlerts } = useBusinessInsights();
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  // Batch fetch all counts in one query for better performance
+  // Batch fetch all counts + previous period for trends
   const { data: dashboardStats, isLoading: isStatsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const [customersRes, productsRes, invoicesRes, quotationsRes] = await Promise.all([
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+      const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString();
+
+      const [customersRes, productsRes, invoicesRes, quotationsRes, prevInvoicesRes, prevQuotationsRes] = await Promise.all([
         supabase.from('customers').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('invoices').select('*', { count: 'exact', head: true }),
         supabase.from('quotations').select('*', { count: 'exact', head: true }),
+        // Current period invoices (last 30 days)
+        supabase.from('invoices').select('*', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgo),
+        // Previous period invoices (30-60 days ago)
+        supabase.from('invoices').select('*', { count: 'exact', head: true }).gte('created_at', sixtyDaysAgo).lt('created_at', thirtyDaysAgo),
       ]);
+
+      const currentPeriodInvoices = prevInvoicesRes.count || 0;
+      const previousPeriodInvoices = prevQuotationsRes.count || 0;
+      const invoiceTrend = previousPeriodInvoices > 0
+        ? ((currentPeriodInvoices - previousPeriodInvoices) / previousPeriodInvoices * 100)
+        : null;
+
       return {
         customersCount: customersRes.count || 0,
         productsCount: productsRes.count || 0,
         invoicesCount: invoicesRes.count || 0,
         quotationsCount: quotationsRes.count || 0,
+        invoiceTrend,
       };
     },
-    staleTime: 30000, // 30 seconds
-    gcTime: 60000, // 1 minute
+    staleTime: 300000,
+    gcTime: 600000,
+  });
+
+  // Monthly sales data for chart (real data)
+  const { data: monthlySalesData } = useQuery({
+    queryKey: ['dashboard-monthly-sales'],
+    queryFn: async () => {
+      const months: { name: string; start: string; end: string }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const start = new Date(d.getFullYear(), d.getMonth(), 1);
+        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        months.push({ name: monthNames[start.getMonth()], start: start.toISOString(), end: end.toISOString() });
+      }
+      const { data } = await supabase
+        .from('invoices')
+        .select('total_amount, created_at')
+        .gte('created_at', months[0].start)
+        .lte('created_at', months[months.length - 1].end);
+
+      return months.map(m => {
+        const sales = data?.filter(inv => inv.created_at >= m.start && inv.created_at <= m.end)
+          .reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
+        return { name: m.name, sales };
+      });
+    },
+    staleTime: 300000,
   });
 
   const { data: tasks } = useQuery({
