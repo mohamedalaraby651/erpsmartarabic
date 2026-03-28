@@ -127,11 +127,11 @@ const PaymentsPage = () => {
       subtitle={`#${payment.payment_number}`}
       icon={<Wallet className="h-5 w-5" />}
       badge={{ text: paymentMethodLabels[payment.payment_method] || payment.payment_method, variant: "outline" }}
-      fields={[
+      fields={([
         { label: "المبلغ", value: <span className="font-bold text-success">{Number(payment.amount).toLocaleString()} ج.م</span> },
         { label: "التاريخ", value: new Date(payment.payment_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
-        payment.invoices?.invoice_number && { label: "الفاتورة", value: payment.invoices.invoice_number },
-      ].filter((f): f is { label: string; value: string | number | React.ReactNode; icon?: React.ReactNode } => Boolean(f))}
+        payment.invoices?.invoice_number ? { label: "الفاتورة", value: payment.invoices.invoice_number } : null,
+      ] as const).filter(Boolean) as Array<{ label: string; value: string | number | React.ReactNode; icon?: React.ReactNode }>}
       onDelete={canDelete ? () => deleteMutation.mutate(payment.id) : undefined}
     />
   );
