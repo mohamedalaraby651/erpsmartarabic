@@ -37,6 +37,8 @@ import { useToast } from '@/hooks/use-toast';
 import { TodayPerformanceWidget } from '@/components/dashboard/TodayPerformanceWidget';
 import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
+import { useBusinessInsights, type BusinessInsight } from '@/hooks/useBusinessInsights';
+import { AlertTriangle, AlertCircle, Info as InfoIcon, CheckCircle } from 'lucide-react';
 
 // Sample chart data
 const salesData = [
