@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useTenant } from '@/hooks/useTenant';
+import { logErrorSafely } from '@/lib/errorHandler';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -54,7 +55,7 @@ export function TenantSettings() {
       toast.success('تم حفظ إعدادات الشركة بنجاح');
       refreshTenant();
     } catch (error) {
-      console.error('Error saving tenant settings:', error);
+      logErrorSafely('TenantSettings', error);
       toast.error('حدث خطأ أثناء حفظ الإعدادات');
     } finally {
       setIsSaving(false);

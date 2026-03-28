@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Upload, AlertTriangle, CheckCircle, FileJson, Settings2, Loader2 } from "lucide-react";
+import { logErrorSafely } from "@/lib/errorHandler";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
@@ -136,7 +137,7 @@ export function SettingsExportImport() {
 
       toast({ title: "تم تصدير الإعدادات بنجاح" });
     } catch (error) {
-      console.error("Export error:", error);
+      logErrorSafely('SettingsExportImport', error);
       toast({ title: "حدث خطأ أثناء التصدير", variant: "destructive" });
     } finally {
       setIsExporting(false);
@@ -222,7 +223,7 @@ export function SettingsExportImport() {
       // Reload page to apply theme
       window.location.reload();
     } catch (error) {
-      console.error("Import error:", error);
+      logErrorSafely('SettingsExportImport', error);
       toast({ title: "حدث خطأ أثناء الاستيراد", variant: "destructive" });
     } finally {
       setIsImporting(false);

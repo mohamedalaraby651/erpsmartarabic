@@ -167,7 +167,7 @@ const SupplierDetailsPage = () => {
             <SupplierInfoTab supplier={supplier} />
           </MobileDetailSection>
           <MobileDetailSection title="الملخص المالي" priority="medium" icon={<CreditCard className="h-4 w-4" />}>
-            <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPurchases - currentBalance} currentBalance={currentBalance} creditLimit={(supplier as any).credit_limit || 0} paymentTermsDays={(supplier as any).payment_terms_days || 0} discountPercentage={(supplier as any).discount_percentage || 0} />
+            <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPurchases - currentBalance} currentBalance={currentBalance} creditLimit={supplier.credit_limit || 0} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} />
           </MobileDetailSection>
           <MobileDetailSection title="أوامر الشراء" priority="medium" icon={<ShoppingCart className="h-4 w-4" />} badge={totalOrders}>
             {purchaseOrders.length > 0 ? (
@@ -218,7 +218,7 @@ const SupplierDetailsPage = () => {
         </ScrollArea>
 
         <TabsContent value="info" className="mt-6"><SupplierInfoTab supplier={supplier} /></TabsContent>
-        <TabsContent value="financial" className="mt-6"><SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPurchases - currentBalance} currentBalance={currentBalance} creditLimit={(supplier as any).credit_limit || 0} paymentTermsDays={(supplier as any).payment_terms_days || 0} discountPercentage={(supplier as any).discount_percentage || 0} /></TabsContent>
+        <TabsContent value="financial" className="mt-6"><SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPurchases - currentBalance} currentBalance={currentBalance} creditLimit={supplier.credit_limit || 0} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} /></TabsContent>
 
         <TabsContent value="orders" className="mt-6">
           <Card>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
 import { generateDocumentPDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
+import { logErrorSafely } from "@/lib/errorHandler";
 import {
   Dialog,
   DialogContent,
@@ -90,7 +91,7 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
       });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
-      console.error('PDF generation error:', error);
+      logErrorSafely('InvoicePrintView', error);
       toast.error("فشل في إنشاء ملف PDF");
     } finally {
       setDownloading(false);

@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { logErrorSafely } from '@/lib/errorHandler';
 import * as XLSX from 'xlsx';
 
 interface ExportButtonProps {
@@ -51,7 +52,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
       XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
       toast.success('تم تصدير الملف بنجاح');
     } catch (error) {
-      console.error('Export error:', error);
+      logErrorSafely('ExportButton', error);
       toast.error('حدث خطأ أثناء التصدير');
     } finally {
       setIsExporting(false);
@@ -89,7 +90,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
       
       toast.success('تم تصدير الملف بنجاح');
     } catch (error) {
-      console.error('Export error:', error);
+      logErrorSafely('ExportButton', error);
       toast.error('حدث خطأ أثناء التصدير');
     } finally {
       setIsExporting(false);

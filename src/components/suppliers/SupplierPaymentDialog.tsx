@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -122,7 +123,7 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
     },
     onError: (error) => {
       toast({ title: "حدث خطأ أثناء تسجيل الدفعة", variant: "destructive" });
-      console.error(error);
+      logErrorSafely('SupplierPaymentDialog', error);
     },
   });
 
