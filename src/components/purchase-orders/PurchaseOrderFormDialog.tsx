@@ -37,7 +37,7 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
   const { data: suppliers = [] } = useQuery({ queryKey: ['suppliers'], queryFn: async () => { const { data, error } = await supabase.from('suppliers').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as Supplier[]; } });
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: async () => { const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as Product[]; } });
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({ defaultValues: { supplier_id: '', expected_date: '', notes: '', tax_amount: 0 } });
+  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({ defaultValues: { supplier_id: prefillSupplierId || '', expected_date: '', notes: '', tax_amount: 0 } });
   const wizard = useFormWizard({ totalSteps: 3 });
 
   useEffect(() => {
