@@ -54,9 +54,11 @@ const statusColors: Record<string, string> = {
 
 const PurchaseOrdersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [prefillSupplierId, setPrefillSupplierId] = useState<string | undefined>(undefined);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printOrderId, setPrintOrderId] = useState<string | null>(null);
   const { toast } = useToast();
