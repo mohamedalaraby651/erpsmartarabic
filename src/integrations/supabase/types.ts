@@ -3852,6 +3852,10 @@ export type Database = {
         Args: { _amount: number; _entity_type: string }
         Returns: boolean
       }
+      switch_user_tenant: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
       toggle_tenant_status: {
         Args: { _is_active: boolean; _tenant_id: string }
         Returns: boolean
