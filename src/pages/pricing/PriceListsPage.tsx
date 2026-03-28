@@ -62,7 +62,7 @@ const PriceListsPage = () => {
   const { data: products = [] } = useQuery({
     queryKey: ['products-for-pricing'],
     queryFn: async () => {
-      const { data } = await supabase.from('products').select('id, name, price, sku').eq('is_active', true).order('name');
+      const { data } = await supabase.from('products').select('id, name, selling_price, sku').eq('is_active', true).order('name');
       return data || [];
     },
   });
