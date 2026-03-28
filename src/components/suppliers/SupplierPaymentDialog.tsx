@@ -78,7 +78,7 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
           payment_number: paymentNumber,
           supplier_id: supplierId,
           amount,
-          payment_method: formData.payment_method,
+          payment_method: formData.payment_method as Database['public']['Enums']['payment_method'],
           payment_date: formData.payment_date,
           reference_number: formData.reference_number || null,
           notes: formData.notes || null,
