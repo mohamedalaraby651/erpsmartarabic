@@ -116,7 +116,7 @@ const CustomersPage = () => {
   // Reset page on filter change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter]);
+  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
 
   // Bulk selection
   const bulk = useBulkSelection(queries.customers);
