@@ -4,7 +4,7 @@
  * Hooks and components should delegate business rules here.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -31,23 +31,30 @@ export async function canModifyCustomer(): Promise<boolean> {
 
 /** Check if customer has open invoices preventing deletion */
 export async function validateBeforeDelete(customerId: string): Promise<{ canDelete: boolean; reason?: string }> {
-  const { count, error } = await supabase
-    .from('invoices')
-    .select('*', { count: 'exact', head: true })
-    .eq('customer_id', customerId)
-    .in('payment_status', ['pending', 'partial']);
+  const count = await customerRepository.countOpenInvoices(customerId);
 
-  if (error) {
-    return { canDelete: false, reason: 'فشل التحقق من الفواتير المفتوحة' };
-  }
-
-  if (count && count > 0) {
+  if (count > 0) {
     return {
       canDelete: false,
       reason: `لا يمكن حذف العميل — لديه ${count} فاتورة غير مسددة`,
     };
   }
 
+  return { canDelete: true };
+}
+
+/** Batch validate delete — returns blocked customers with open invoices */
+export async function validateBatchDelete(ids: string[]): Promise<{ canDelete: boolean; reason?: string }> {
+  const blocked = await customerRepository.batchValidateDelete(ids);
+  if (blocked && blocked.length > 0) {
+    const names = blocked
+      .map(b => `${b.customer_name} (${b.open_invoice_count} فاتورة)`)
+      .join('، ');
+    return {
+      canDelete: false,
+      reason: `لا يمكن حذف العملاء التالية لوجود فواتير مفتوحة: ${names}`,
+    };
+  }
   return { canDelete: true };
 }
 
@@ -94,7 +101,6 @@ export function calculateCustomerHealth(
     for (const inv of paidInvoices) {
       const paidAt = paymentDatesByInvoice.get(inv.id);
       if (!paidAt) continue;
-      // Use due_date if available, otherwise created_at
       const referenceDate = new Date(inv.due_date || inv.created_at).getTime();
       const paid = new Date(paidAt).getTime();
       totalDays += Math.max(0, (paid - referenceDate) / (1000 * 60 * 60 * 24));
@@ -111,4 +117,51 @@ export function calculateCustomerHealth(
     totalPurchases,
     totalPayments,
   };
+}
+
+// ============================================
+// Export
+// ============================================
+
+/** Export all customers to Excel file with Arabic headers */
+export async function exportCustomersToExcel(): Promise<void> {
+  const toastId = 'export-all';
+  try {
+    const { toast: sonnerToast } = await import('sonner');
+    sonnerToast.loading('جاري تحميل بيانات جميع العملاء...', { id: toastId });
+
+    const data = await customerRepository.exportAll(5000);
+    if (!data || data.length === 0) {
+      sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });
+      return;
+    }
+
+    sonnerToast.loading(`جاري تصدير ${data.length} عميل...`, { id: toastId });
+
+    const XLSX = await import('xlsx');
+    const headers: Record<string, string> = {
+      name: 'الاسم', phone: 'الهاتف', email: 'البريد', customer_type: 'النوع',
+      vip_level: 'مستوى VIP', current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
+      governorate: 'المحافظة', city: 'المدينة', contact_person: 'المسؤول',
+      is_active: 'نشط', created_at: 'تاريخ الإنشاء',
+    };
+    const exportData = data.map(row => {
+      const mapped: Record<string, any> = {};
+      Object.keys(headers).forEach(key => {
+        mapped[headers[key]] = (row as any)[key];
+      });
+      return mapped;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    ws['!cols'] = Object.values(headers).map(h => ({ wch: Math.max(h.length, 15) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+    XLSX.writeFile(wb, `customers_all_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+    sonnerToast.success(`تم تصدير ${data.length} عميل بنجاح`, { id: toastId });
+  } catch {
+    const { toast: sonnerToast } = await import('sonner');
+    sonnerToast.error('حدث خطأ أثناء التصدير', { id: toastId });
+  }
 }

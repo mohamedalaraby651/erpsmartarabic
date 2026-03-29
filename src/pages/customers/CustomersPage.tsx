@@ -1,30 +1,23 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch, Download, Loader2, ArrowUpDown } from "lucide-react";
-import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
+import { Plus, Upload, Merge, LayoutGrid, LayoutList, AlertTriangle, Users, FileSpreadsheet, ScanSearch, Download, Loader2, ArrowUpDown } from "lucide-react";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
-import { useServerPagination } from "@/hooks/useServerPagination";
-import { useCustomerFilters, useCustomerQueries, useBulkSelection } from "@/hooks/customers";
+import { useCustomerFilters, useBulkSelection } from "@/hooks/customers";
+import { useCustomerList } from "@/hooks/customers/useCustomerList";
+import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
 import { ServerPagination } from "@/components/shared/ServerPagination";
-import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
 import { FilterDrawer, FilterSection } from "@/components/filters/FilterDrawer";
 import { egyptGovernorates } from "@/lib/egyptLocations";
-import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
-import { DuplicateDetectionDialog } from "@/components/customers/DuplicateDetectionDialog";
 import { vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
+import { exportCustomersToExcel } from "@/lib/services/customerService";
 
 // Sub-components
 import { CustomerTableView } from "@/components/customers/CustomerTableView";
@@ -34,28 +27,22 @@ import { CustomerStatsBar } from "@/components/customers/CustomerStatsBar";
 import { CustomerFiltersBar } from "@/components/customers/CustomerFiltersBar";
 import { CustomerGridSkeleton } from "@/components/customers/CustomerGridSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { CustomerBulkActionsBar } from "@/components/customers/CustomerBulkActionsBar";
+import { CustomerDialogManager, type DialogManagerHandle } from "@/components/customers/CustomerDialogManager";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
   const { userRole } = useAuth();
   const { isMobile } = useResponsiveView();
   const { errorAlerts, warningAlerts, totalAlerts } = useCustomerAlerts();
+  const dialogRef = useRef<DialogManagerHandle>(null);
 
   // Filters (URL-persisted)
   const filters = useCustomerFilters();
 
-  // Dialog state
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  // Local UI state
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [bulkVipOpen, setBulkVipOpen] = useState(false);
   const [exportAllLoading, setExportAllLoading] = useState(false);
-  const [bulkVipValue, setBulkVipValue] = useState('regular');
 
   // View mode (localStorage-persisted)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
@@ -64,14 +51,13 @@ const CustomersPage = () => {
     }
     return 'table';
   });
-
   useEffect(() => { localStorage.setItem('customers-view-mode', viewMode); }, [viewMode]);
 
   // Handle URL action param
   useEffect(() => {
     const action = filters.searchParams.get('action');
     if (action === 'new' || action === 'create') {
-      setDialogOpen(true);
+      dialogRef.current?.openAdd();
       filters.setSearchParams({}, { replace: true });
     }
   }, [filters.searchParams, filters.setSearchParams]);
@@ -79,7 +65,7 @@ const CustomersPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
 
-  // Sorting (server-side via sortConfig passed to queries)
+  // Sorting
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
   const requestSort = useCallback((key: string) => {
     setSortConfig(current => {
@@ -91,12 +77,12 @@ const CustomersPage = () => {
     });
   }, []);
 
-  // Single pagination instance — totalCount updated reactively from queries
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
-  // Queries (single call — count + data merged)
-  const queries = useCustomerQueries({
+  // Data queries (CQRS: Read side)
+  const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter,
     vipFilter: filters.vipFilter,
@@ -109,8 +95,15 @@ const CustomersPage = () => {
     sortConfig,
   });
 
+  // Mutations (CQRS: Write side)
+  const mutations = useCustomerMutations({
+    filterKey: list.filterKey,
+    currentPage,
+    sortConfig,
+  });
+
   // Derived pagination
-  const totalPages = Math.ceil(queries.totalCount / pageSize);
+  const totalPages = Math.ceil(list.totalCount / pageSize);
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
@@ -120,34 +113,27 @@ const CustomersPage = () => {
   }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
 
   // Bulk selection
-  const bulk = useBulkSelection(queries.customers);
+  const bulk = useBulkSelection(list.customers);
 
   // Handlers
   const handleEdit = useCallback((customer: Customer) => {
-    setSelectedCustomer(customer);
-    setDialogOpen(true);
+    dialogRef.current?.openEdit(customer);
   }, []);
 
   const handleAdd = useCallback(() => {
-    setSelectedCustomer(null);
-    setDialogOpen(true);
+    dialogRef.current?.openAdd();
   }, []);
 
-  // Delete with confirmation dialog
   const handleDeleteRequest = useCallback((id: string) => {
-    setDeleteConfirmId(id);
+    dialogRef.current?.confirmDelete(id);
   }, []);
 
-  const handleDeleteConfirm = useCallback(() => {
-    if (!deleteConfirmId) return;
-    setDeletingId(deleteConfirmId);
-    queries.deleteMutation.mutate(deleteConfirmId, {
-      onSettled: () => {
-        setDeletingId(null);
-        setDeleteConfirmId(null);
-      },
+  const handleDeleteConfirm = useCallback((id: string) => {
+    setDeletingId(id);
+    mutations.deleteMutation.mutate(id, {
+      onSettled: () => setDeletingId(null),
     });
-  }, [deleteConfirmId, queries.deleteMutation]);
+  }, [mutations.deleteMutation]);
 
   const handleNewInvoice = useCallback((customerId: string) => {
     navigate('/invoices', { state: { prefillCustomerId: customerId } });
@@ -158,57 +144,24 @@ const CustomersPage = () => {
     window.open(`https://wa.me/${cleaned}`, '_blank');
   }, []);
 
-  const handleRefresh = async () => { await queries.refetch(); };
+  const handleRefresh = async () => { await list.refetch(); };
 
   const handleExportAll = useCallback(async () => {
     setExportAllLoading(true);
-    const toastId = 'export-all';
-    try {
-      const { toast: sonnerToast } = await import('sonner');
-      sonnerToast.loading('جاري تحميل بيانات جميع العملاء...', { id: toastId });
-
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5000);
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });
-        return;
-      }
-
-      sonnerToast.loading(`جاري تصدير ${data.length} عميل...`, { id: toastId });
-
-      const XLSX = await import('xlsx');
-      const headers: Record<string, string> = {
-        name: 'الاسم', phone: 'الهاتف', email: 'البريد', customer_type: 'النوع',
-        vip_level: 'مستوى VIP', current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
-        governorate: 'المحافظة', city: 'المدينة', contact_person: 'المسؤول',
-        is_active: 'نشط', created_at: 'تاريخ الإنشاء',
-      };
-      const exportData = data.map(row => {
-        const mapped: Record<string, any> = {};
-        Object.keys(headers).forEach(key => {
-          mapped[headers[key]] = (row as any)[key];
-        });
-        return mapped;
-      });
-
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      ws['!cols'] = Object.values(headers).map(h => ({ wch: Math.max(h.length, 15) }));
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
-      XLSX.writeFile(wb, `customers_all_${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-      sonnerToast.success(`تم تصدير ${data.length} عميل بنجاح`, { id: toastId });
-    } catch (err) {
-      const { toast: sonnerToast } = await import('sonner');
-      sonnerToast.error('حدث خطأ أثناء التصدير', { id: toastId });
-    } finally {
-      setExportAllLoading(false);
-    }
+    await exportCustomersToExcel();
+    setExportAllLoading(false);
   }, []);
+
+  const handleBulkDelete = useCallback(() => {
+    mutations.bulkDeleteMutation.mutate(Array.from(bulk.selectedIds));
+    bulk.clearSelection();
+  }, [mutations.bulkDeleteMutation, bulk]);
+
+  const handleBulkVipUpdate = useCallback((vipLevel: string) => {
+    mutations.bulkVipMutation.mutate({ ids: Array.from(bulk.selectedIds), vipLevel });
+    bulk.clearSelection();
+  }, [mutations.bulkVipMutation, bulk]);
+
   const goToPage = useCallback((page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   }, [totalPages]);
@@ -224,17 +177,17 @@ const CustomersPage = () => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isMobile && (
             <>
-              <Button variant="outline" size="sm" onClick={() => setDuplicateDialogOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => dialogRef.current?.openDuplicates()}>
                 <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setMergeDialogOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => dialogRef.current?.openMerge()}>
                 <Merge className="h-4 w-4 ml-2" />دمج
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => dialogRef.current?.openImport()}>
                 <Upload className="h-4 w-4 ml-2" />استيراد
               </Button>
               <ExportWithTemplateButton
-                section="customers" sectionLabel="العملاء" data={queries.customers}
+                section="customers" sectionLabel="العملاء" data={list.customers}
                 columns={[
                   { key: 'name', label: 'الاسم' }, { key: 'phone', label: 'الهاتف' },
                   { key: 'email', label: 'البريد الإلكتروني' }, { key: 'customer_type', label: 'النوع' },
@@ -242,10 +195,7 @@ const CustomersPage = () => {
                   { key: 'credit_limit', label: 'حد الائتمان' },
                 ]}
               />
-              <Button
-                variant="outline" size="sm" disabled={exportAllLoading}
-                onClick={() => handleExportAll()}
-              >
+              <Button variant="outline" size="sm" disabled={exportAllLoading} onClick={handleExportAll}>
                 {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
                 تصدير الكل (Excel)
               </Button>
@@ -261,40 +211,25 @@ const CustomersPage = () => {
 
       {/* Bulk Actions Bar */}
       {bulk.hasSelection && (
-        <Card className="border-primary/50 bg-primary/5">
-          <CardContent className="p-3 flex items-center justify-between flex-wrap gap-2">
-            <span className="text-sm font-medium">تم تحديد {bulk.selectedIds.size} عميل <span className="text-xs text-muted-foreground">(من هذه الصفحة فقط)</span></span>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={() => setBulkVipOpen(true)}>
-                <Crown className="h-4 w-4 ml-1" />تغيير VIP
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                queries.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: true });
-                bulk.clearSelection();
-              }}>
-                <Star className="h-4 w-4 ml-1" />تفعيل
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                queries.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: false });
-                bulk.clearSelection();
-              }}>
-                تعطيل
-              </Button>
-              {canDelete && (
-                <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
-                  <Trash2 className="h-4 w-4 ml-1" />حذف المحدد
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={bulk.clearSelection}>
-                <X className="h-4 w-4 ml-1" />إلغاء
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <CustomerBulkActionsBar
+          selectedCount={bulk.selectedIds.size}
+          canDelete={canDelete}
+          onVipChange={() => dialogRef.current?.openBulkVip()}
+          onActivate={() => {
+            mutations.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: true });
+            bulk.clearSelection();
+          }}
+          onDeactivate={() => {
+            mutations.bulkStatusMutation.mutate({ ids: Array.from(bulk.selectedIds), isActive: false });
+            bulk.clearSelection();
+          }}
+          onDelete={() => dialogRef.current?.openBulkDelete()}
+          onClear={bulk.clearSelection}
+        />
       )}
 
       {/* Stats */}
-      <CustomerStatsBar stats={queries.stats} isMobile={isMobile} />
+      <CustomerStatsBar stats={list.stats} isMobile={isMobile} />
 
       {/* Alerts */}
       {totalAlerts > 0 && (
@@ -332,23 +267,19 @@ const CustomersPage = () => {
       {isMobile ? (
         <div className="pb-20">
           <CustomerMobileView
-            data={queries.customers}
-            isLoading={queries.isLoading}
+            data={list.customers}
+            isLoading={list.isLoading}
             canEdit={canEdit} canDelete={canDelete}
             onNavigate={(id) => navigate(`/customers/${id}`)}
             onEdit={handleEdit} onDelete={handleDeleteRequest}
             onRefresh={handleRefresh}
           />
-          {queries.totalCount > pageSize && (
+          {list.totalCount > pageSize && (
             <div className="mt-4">
               <ServerPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalCount={queries.totalCount}
-                pageSize={pageSize}
-                onPageChange={goToPage}
-                hasNextPage={hasNextPage}
-                hasPrevPage={hasPrevPage}
+                currentPage={currentPage} totalPages={totalPages}
+                totalCount={list.totalCount} pageSize={pageSize}
+                onPageChange={goToPage} hasNextPage={hasNextPage} hasPrevPage={hasPrevPage}
               />
             </div>
           )}
@@ -357,7 +288,7 @@ const CustomersPage = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>قائمة العملاء ({queries.totalCount})</CardTitle>
+              <CardTitle>قائمة العملاء ({list.totalCount})</CardTitle>
               <div className="flex items-center gap-2">
                 {viewMode === 'grid' && (
                   <Select value={sortConfig.key || 'created_at'} onValueChange={(val) => requestSort(val)}>
@@ -386,14 +317,13 @@ const CustomersPage = () => {
           </CardHeader>
           <CardContent>
             {viewMode === 'grid' ? (
-              queries.isLoading ? (
+              list.isLoading ? (
                 <CustomerGridSkeleton />
               ) : (
                 <CustomerGridView
-                  data={queries.customers}
-                  isLoading={queries.isLoading}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
+                  data={list.customers}
+                  isLoading={list.isLoading}
+                  canEdit={canEdit} canDelete={canDelete}
                   onNavigate={(id) => navigate(`/customers/${id}`)}
                   onNewInvoice={handleNewInvoice}
                   onWhatsApp={handleWhatsApp}
@@ -404,13 +334,13 @@ const CustomersPage = () => {
                   hasSelection={bulk.hasSelection}
                   onAdd={canEdit ? handleAdd : undefined}
                   deletingId={deletingId}
-                  onRowHover={queries.handleRowHover}
-                  onRowLeave={queries.handleRowLeave}
+                  onRowHover={list.handleRowHover}
+                  onRowLeave={list.handleRowLeave}
                 />
               )
-            ) : queries.isLoading ? (
+            ) : list.isLoading ? (
               <TableSkeleton rows={5} columns={7} />
-            ) : queries.customers.length === 0 ? (
+            ) : list.customers.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">لا يوجد عملاء</h3>
@@ -423,14 +353,14 @@ const CustomersPage = () => {
                       <Plus className="h-4 w-4 ml-2" />إضافة عميل جديد
                     </Button>
                   )}
-                  <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                  <Button variant="outline" onClick={() => dialogRef.current?.openImport()}>
                     <FileSpreadsheet className="h-4 w-4 ml-2" />استيراد من Excel
                   </Button>
                 </div>
               </div>
             ) : (
               <CustomerTableView
-                data={queries.customers}
+                data={list.customers}
                 sortConfig={sortConfig}
                 onSort={requestSort}
                 onNavigate={(id) => navigate(`/customers/${id}`)}
@@ -438,8 +368,8 @@ const CustomersPage = () => {
                 onDelete={handleDeleteRequest}
                 onNewInvoice={handleNewInvoice}
                 onWhatsApp={handleWhatsApp}
-                onRowHover={queries.handleRowHover}
-                onRowLeave={queries.handleRowLeave}
+                onRowHover={list.handleRowHover}
+                onRowLeave={list.handleRowLeave}
                 canEdit={canEdit} canDelete={canDelete}
                 deletingId={deletingId}
                 selectedIds={bulk.selectedIds}
@@ -448,16 +378,12 @@ const CustomersPage = () => {
                 isAllSelected={bulk.isAllSelected}
               />
             )}
-            {queries.totalCount > pageSize && (
+            {list.totalCount > pageSize && (
               <div className="mt-4">
                 <ServerPagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalCount={queries.totalCount}
-                  pageSize={pageSize}
-                  onPageChange={goToPage}
-                  hasNextPage={hasNextPage}
-                  hasPrevPage={hasPrevPage}
+                  currentPage={currentPage} totalPages={totalPages}
+                  totalCount={list.totalCount} pageSize={pageSize}
+                  onPageChange={goToPage} hasNextPage={hasNextPage} hasPrevPage={hasPrevPage}
                 />
               </div>
             )}
@@ -529,80 +455,14 @@ const CustomersPage = () => {
         </FilterSection>
       </FilterDrawer>
 
-      {/* Single Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد حذف العميل</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف هذا العميل وجميع بياناته بشكل نهائي. هل أنت متأكد؟
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Bulk Delete Dialog */}
-      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>حذف {bulk.selectedIds.size} عميل</AlertDialogTitle>
-            <AlertDialogDescription>سيتم حذف العملاء المحددين وجميع بياناتهم. هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                queries.bulkDeleteMutation.mutate(Array.from(bulk.selectedIds));
-                bulk.clearSelection();
-                setBulkDeleteOpen(false);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              حذف الكل
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Bulk VIP Dialog */}
-      <AlertDialog open={bulkVipOpen} onOpenChange={setBulkVipOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>تغيير مستوى VIP لـ {bulk.selectedIds.size} عميل</AlertDialogTitle>
-          </AlertDialogHeader>
-          <Select value={bulkVipValue} onValueChange={setBulkVipValue}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {vipOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              queries.bulkVipMutation.mutate({ ids: Array.from(bulk.selectedIds), vipLevel: bulkVipValue });
-              bulk.clearSelection();
-              setBulkVipOpen(false);
-            }}>
-              تحديث
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Dialogs */}
-      <CustomerFormDialog open={dialogOpen} onOpenChange={setDialogOpen} customer={selectedCustomer} />
-      <CustomerImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
-      <CustomerMergeDialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen} />
-      <DuplicateDetectionDialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen} />
+      {/* Dialog Manager — handles all dialogs */}
+      <CustomerDialogManager
+        ref={dialogRef}
+        onDeleteConfirm={handleDeleteConfirm}
+        onBulkDelete={handleBulkDelete}
+        onBulkVipUpdate={handleBulkVipUpdate}
+        bulkSelectedCount={bulk.selectedIds.size}
+      />
     </div>
   );
 };
