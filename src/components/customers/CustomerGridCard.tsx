@@ -15,6 +15,8 @@ interface CustomerGridCardProps {
   onClick: () => void;
   onNewInvoice?: () => void;
   onWhatsApp?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   isSelected?: boolean;
   onSelect?: (checked: boolean) => void;
   showSelect?: boolean;
