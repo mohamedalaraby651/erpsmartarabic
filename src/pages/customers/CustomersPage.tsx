@@ -53,6 +53,7 @@ const CustomersPage = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkVipOpen, setBulkVipOpen] = useState(false);
+  const [exportAllLoading, setExportAllLoading] = useState(false);
   const [bulkVipValue, setBulkVipValue] = useState('regular');
 
   // View mode (localStorage-persisted)
