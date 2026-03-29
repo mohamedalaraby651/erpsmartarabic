@@ -33,10 +33,11 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
     queryKey: ['merge-customers-search', searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
+      const s = searchQuery.replace(/[%_\\]/g, '\\$&');
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
+        .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
         .order('name')
         .limit(20);
       if (error) throw error;
