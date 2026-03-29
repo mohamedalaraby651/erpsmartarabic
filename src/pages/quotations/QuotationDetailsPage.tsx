@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useConvertDocument } from "@/hooks/useConvertDocument";
+import { WorkflowPipeline } from "@/components/shared/WorkflowPipeline";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -237,6 +238,19 @@ const QuotationDetailsPage = () => {
             )}
           </div>
         </CardContent>
+      </Card>
+
+      {/* Workflow Pipeline */}
+      <Card className="p-3">
+        <div className="flex items-center gap-2 mb-2 text-xs font-medium text-muted-foreground">
+          <Activity className="h-3.5 w-3.5" />
+          <span>مسار الصفقة</span>
+        </div>
+        <WorkflowPipeline steps={[
+          { label: 'عرض سعر', status: 'current', entityType: 'quotation', entityId: id!, entityNumber: quotation.quotation_number },
+          { label: 'أمر بيع', status: salesOrders.length > 0 ? 'completed' : 'upcoming', ...(salesOrders.length > 0 ? { entityType: 'sales-order' as const, entityId: salesOrders[0].id, entityNumber: (salesOrders[0] as any).order_number } : {}) },
+          { label: 'فاتورة', status: 'upcoming' },
+        ]} />
       </Card>
 
       {/* Alerts */}

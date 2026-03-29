@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useConvertDocument } from "@/hooks/useConvertDocument";
+import { WorkflowPipeline } from "@/components/shared/WorkflowPipeline";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
@@ -166,6 +167,19 @@ const SalesOrderDetailsPage = () => {
             )}
           </div>
         </CardContent>
+      </Card>
+
+      {/* Workflow Pipeline */}
+      <Card className="p-3">
+        <div className="flex items-center gap-2 mb-2 text-xs font-medium text-muted-foreground">
+          <Activity className="h-3.5 w-3.5" />
+          <span>مسار الصفقة</span>
+        </div>
+        <WorkflowPipeline steps={[
+          { label: 'عرض سعر', status: order.quotation_id ? 'completed' : 'upcoming', ...(order.quotations ? { entityType: 'quotation' as const, entityId: order.quotations.id, entityNumber: order.quotations.quotation_number } : {}) },
+          { label: 'أمر بيع', status: 'current', entityType: 'sales-order', entityId: id!, entityNumber: order.order_number },
+          { label: 'فاتورة', status: invoices.length > 0 ? 'completed' : 'upcoming', ...(invoices.length > 0 ? { entityType: 'invoice' as const, entityId: invoices[0].id, entityNumber: (invoices[0] as any).invoice_number } : {}) },
+        ]} />
       </Card>
 
       {/* Stats */}
