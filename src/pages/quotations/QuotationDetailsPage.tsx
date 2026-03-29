@@ -240,6 +240,19 @@ const QuotationDetailsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Workflow Pipeline */}
+      <Card className="p-3">
+        <div className="flex items-center gap-2 mb-2 text-xs font-medium text-muted-foreground">
+          <Activity className="h-3.5 w-3.5" />
+          <span>مسار الصفقة</span>
+        </div>
+        <WorkflowPipeline steps={[
+          { label: 'عرض سعر', status: 'current', entityType: 'quotation', entityId: id!, entityNumber: quotation.quotation_number },
+          { label: 'أمر بيع', status: salesOrders.length > 0 ? 'completed' : 'upcoming', ...(salesOrders.length > 0 ? { entityType: 'sales-order' as const, entityId: salesOrders[0].id, entityNumber: (salesOrders[0] as any).order_number } : {}) },
+          { label: 'فاتورة', status: 'upcoming' },
+        ]} />
+      </Card>
+
       {/* Alerts */}
       {isExpired && <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertTitle>عرض سعر منتهي الصلاحية</AlertTitle><AlertDescription>انتهت صلاحية هذا العرض. يمكنك نسخه وإنشاء عرض جديد.</AlertDescription></Alert>}
       {!isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
