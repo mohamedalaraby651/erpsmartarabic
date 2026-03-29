@@ -82,13 +82,29 @@ const QuotationsPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: quotations = [], isLoading, refetch } = useQuery({
-    queryKey: ['quotations'],
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['quotations-count', debouncedSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('quotations').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`quotation_number.ilike.%${debouncedSearch}%`);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: quotations = [], isLoading, refetch } = useQuery({
+    queryKey: ['quotations', debouncedSearch, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('quotations')
         .select('*, customers(name)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) query = query.or(`quotation_number.ilike.%${debouncedSearch}%`);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
