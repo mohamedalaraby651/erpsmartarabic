@@ -50,6 +50,7 @@ export function useCustomerFilters() {
   const updateFilter = useCallback((key: string, value: string) => {
     const setters: Record<string, (v: string) => void> = {
       type: setTypeFilter, vip: setVipFilter, gov: setGovernorateFilter, status: setStatusFilter,
+      noComm: setNoCommDays, inactive: setInactiveDays,
     };
     setters[key]?.(value);
     syncToUrl({ [key]: value });
