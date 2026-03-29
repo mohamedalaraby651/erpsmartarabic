@@ -157,6 +157,22 @@ const CustomersPage = () => {
 
   const handleRefresh = async () => { await queries.refetch(); };
 
+  const handleExportAll = useCallback(async () => {
+    setExportAllLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5000);
+      if (error) throw error;
+      return data as Customer[];
+    } catch {
+      return null;
+    } finally {
+      setExportAllLoading(false);
+    }
+  }, []);
   const goToPage = useCallback((page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   }, [totalPages]);
