@@ -59,6 +59,7 @@ const statusColors: Record<string, string> = {
 const QuotationsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
