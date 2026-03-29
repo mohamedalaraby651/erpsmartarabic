@@ -279,6 +279,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
             <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+            {duplicateWarning}
             <SectionHeader icon={User} title="المعلومات الأساسية" />
             <CustomerFormBasicInfo categories={categories} />
             {customerType === 'company' && (
