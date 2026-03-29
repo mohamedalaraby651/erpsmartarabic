@@ -20,6 +20,8 @@ export function useCustomerFilters() {
   const [tempVip, setTempVip] = useState("all");
   const [tempGovernorate, setTempGovernorate] = useState("all");
   const [tempStatus, setTempStatus] = useState("all");
+  const [tempNoCommDays, setTempNoCommDays] = useState("");
+  const [tempInactiveDays, setTempInactiveDays] = useState("");
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
