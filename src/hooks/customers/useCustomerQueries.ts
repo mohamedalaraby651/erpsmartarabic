@@ -191,15 +191,17 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
       const { error } = await supabase.from('customers').update({ is_active: isActive }).in('id', ids);
       if (error) throw error;
     },
-    onSuccess: (_data, { ids, isActive }) => {
+    onSuccess: async (_data, { ids, isActive }) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
-      supabase.rpc('log_bulk_operation', {
-        _action: 'bulk_status_update',
-        _entity_type: 'customers',
-        _entity_ids: ids,
-        _details: JSON.stringify({ is_active: isActive }),
-      }).then(() => {});
+      try {
+        await supabase.rpc('log_bulk_operation', {
+          _action: 'bulk_status_update',
+          _entity_type: 'customers',
+          _entity_ids: ids,
+          _details: JSON.stringify({ is_active: isActive }),
+        });
+      } catch (logErr) { logErrorSafely('bulkStatus:audit', logErr); }
       toast.success('تم تحديث حالة العملاء بنجاح');
     },
     onError: () => toast.error('فشل تحديث الحالة'),
