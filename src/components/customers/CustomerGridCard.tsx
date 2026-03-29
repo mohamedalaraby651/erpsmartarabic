@@ -48,10 +48,18 @@ const CustomerGridCardInner = ({
     <Card
       className={cn(
         "cursor-pointer hover:shadow-md transition-all group relative",
-        isSelected && "ring-2 ring-primary"
+        isSelected && "ring-2 ring-primary",
+        isDeleting && "opacity-60 pointer-events-none"
       )}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
+      {isDeleting && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 rounded-lg">
+          <Loader2 className="h-6 w-6 animate-spin text-destructive" />
+        </div>
+      )}
       {showSelect && (
         <div className="absolute top-3 left-3 z-10" onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={isSelected} onCheckedChange={(c) => onSelect?.(!!c)} />
