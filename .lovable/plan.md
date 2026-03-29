@@ -1,135 +1,92 @@
 
 
-# خطة تحسين قسم العملاء — 5 مراحل
+# خطة إكمال تحسين قسم العملاء — المرحلة 4 + المرحلة 5
+
+## المرحلة 4: تحسينات UX والحماية (8 مهام)
+
+### 4.1 تحذير البيانات غير المحفوظة — `CustomerFormDialog.tsx`
+- استخدام `formState.isDirty` من react-hook-form
+- إضافة `onInteractOutside` على `DialogContent` يمنع الإغلاق إذا كان النموذج dirty
+- عند محاولة الإغلاق مع بيانات غير محفوظة → عرض `AlertDialog` تأكيد
+
+### 4.2 عرض قائمة الأسعار المرتبطة — `CustomerHeroHeader.tsx`
+- فحص `customer.price_list_id`
+- إذا موجود → جلب اسم القائمة عبر query خفيف أو عرض Badge "قائمة أسعار مخصصة"
+- عرض Badge بجانب VIP badge
+
+### 4.3 تصدير كل العملاء — `CustomersPage.tsx`
+- إضافة زر "تصدير الكل" بجانب `ExportWithTemplateButton` الحالي
+- عند الضغط → جلب كل العملاء بدون `.range()` limit ثم تمرير البيانات للتصدير
+- عرض loading أثناء الجلب
+
+### 4.4 توضيح نطاق التحديد الجماعي — `CustomersPage.tsx`
+- في شريط Bulk Actions، تغيير النص من "تم تحديد X عميل" إلى "تم تحديد X عميل من هذه الصفحة فقط"
+- إضافة tooltip أو نص فرعي
+
+### 4.5 إضافة `placeholderData: keepPreviousData` — `useCustomerQueries.ts`
+- استيراد `keepPreviousData` من `@tanstack/react-query`
+- إضافتها في query العملاء الرئيسي لمنع UI flash أثناء البحث/التصفح
+
+### 4.6 طي الأقسام على الموبايل — `CustomerDetailsPage.tsx`
+- تعيين `defaultOpen={false}` في `MobileDetailSection` لجميع الأقسام ما عدا "الفواتير" و"الملخص المالي"
+
+### 4.7 تقسيم `CustomerFormDialog.tsx` (488 سطر)
+- استخراج الأقسام كمكونات `React.memo` مستقلة:
+  - `CustomerFormBasicInfo.tsx`
+  - `CustomerFormContact.tsx`
+  - `CustomerFormLocation.tsx`
+  - `CustomerFormFinancial.tsx`
+- تقليص الملف الأصلي إلى ~150 سطر orchestrator
+
+### 4.8 توحيد Action Menu في GridView
+- فحص `CustomerGridView.tsx` وإضافة dropdown menu (تعديل، حذف، فاتورة، واتساب) مثل TableView
 
 ---
 
-## المرحلة 1: الأمان وسلامة البيانات (الأساس)
+## المرحلة 5: التوسع — DB + فلاتر متقدمة
 
-### 1.1 نقل دمج العملاء إلى DB Function ذرية
-- **ملف جديد**: Migration SQL — إنشاء `merge_customers_atomic(p_primary_id UUID, p_duplicate_id UUID)` كـ `SECURITY DEFINER` function
-- تنقل invoices, payments, sales_orders, quotations, customer_addresses, customer_communications, customer_reminders, attachments في transaction واحدة
-- تحذف العميل المكرر وتُحدّث رصيد العميل الأساسي
-- **تعديل**: `CustomerMergeDialog.tsx` — استبدال Edge Function call بـ `supabase.rpc('merge_customers_atomic', ...)`
-- **حذف**: `supabase/functions/merge-customers/index.ts` (لم يعد مطلوباً)
+### 5.1 فلتر "بدون تواصل منذ X يوم"
+- العمود `last_communication_at` والـ trigger موجودان بالفعل ✅
+- إضافة خيار فلتر في `FilterDrawer` بالصفحة الرئيسية
+- تمرير الفلتر إلى `useCustomerQueries` → `.lte('last_communication_at', cutoffDate)`
 
-### 1.2 Batch Validation قبل الحذف الجماعي
-- **Migration**: إنشاء `batch_validate_delete(p_ids UUID[])` — ترجع قائمة العملاء الذين لديهم فواتير مفتوحة
-- **تعديل**: `useCustomerQueries.ts` — `bulkDeleteMutation` يستدعي الـ RPC أولاً ويعرض خطأ بأسماء العملاء غير القابلين للحذف
+### 5.2 فلتر "بدون فواتير منذ X يوم"
+- استخدام `last_activity_at` (موجود في customers)
+- نفس آلية الفلتر السابقة
 
-### 1.3 إصلاح audit logging
-- **تعديل**: `useCustomerQueries.ts` — استبدال `.then(() => {})` بـ `try/await/catch` مع `logErrorSafely`
-
-### 1.4 Sanitize search input
-- **تعديل**: `useCustomerQueries.ts` — escape `%` و `_` في `debouncedSearch` قبل `.ilike`
-- **تعديل**: `CustomerMergeDialog.tsx` — نفس المعالجة
-
----
-
-## المرحلة 2: دقة البيانات المالية
-
-### 2.1 إضافة Credit Notes لكشف الحساب
-- **تعديل**: `StatementOfAccount.tsx` — إضافة prop `creditNotes` واستخدامها كحركات credit بنوع 'مرتجع'
-- **تعديل**: `useCustomerDetail.ts` — إضافة query لجلب `credit_notes` المرتبطة بالعميل
-- **تعديل**: `CustomerDetailsPage.tsx` — تمرير `creditNotes` إلى `StatementOfAccount`
-
-### 2.2 إصلاح حساب DSO
-- **تعديل**: `customerService.ts` — استخدام `due_date` (إن وُجد) بدلاً من `created_at` في حساب DSO
-
-### 2.3 عرض قائمة الأسعار المرتبطة
-- **تعديل**: `CustomerHeroHeader.tsx` — عرض badge باسم price list إن وُجد `price_list_id`
-
----
-
-## المرحلة 3: الأداء والتحميل الكسول
-
-### 3.1 تقسيم CustomerDetailsPage إلى Tab Components مستقلة
-- **ملفات جديدة** (في `src/components/customers/tabs/`):
-  - `CustomerTabAddresses.tsx`
-  - `CustomerTabInvoices.tsx` (مع pagination داخلية 20/page)
-  - `CustomerTabPayments.tsx`
-  - `CustomerTabQuotations.tsx`
-  - `CustomerTabOrders.tsx`
-  - `CustomerTabFinancial.tsx`
-  - `CustomerTabStatement.tsx`
-  - `CustomerTabAging.tsx`
-  - `CustomerTabAnalytics.tsx`
-  - `CustomerTabActivity.tsx`
-  - `CustomerTabAttachments.tsx`
-- **تعديل**: `CustomerDetailsPage.tsx` — تقليصه إلى ~120 سطر orchestrator يستخدم `React.lazy` + `Suspense` لتحميل كل tab
-
-### 3.2 تحسين useCustomerDetail
-- **تعديل**: `useCustomerDetail.ts` — 
-  - تحميل `invoices` و `payments` فقط عند فتح tab يحتاجها (ليس دائماً)
-  - رفع `staleTime` للـ stats إلى 60000+
-  - إضافة `placeholderData: keepPreviousData`
-
-### 3.3 Pagination في كشف الحساب
-- **تعديل**: `StatementOfAccount.tsx` — إضافة client-side pagination (20 صف/صفحة)
-
----
-
-## المرحلة 4: تحسينات UX والحماية
-
-### 4.1 تأكيد الإجراءات التدميرية
-- **تعديل**: `CustomerDetailsPage.tsx` (tab العناوين) — إضافة `AlertDialog` قبل حذف العنوان بدلاً من الحذف المباشر
-- المكونات الفرعية الجديدة ستتضمن التأكيد
-
-### 4.2 تحذير البيانات غير المحفوظة
-- **تعديل**: `CustomerFormDialog.tsx` — إضافة `onInteractOutside` مع فحص dirty state + confirmation dialog
-
-### 4.3 تحسين التصدير
-- **تعديل**: `CustomersPage.tsx` — إضافة خيار "تصدير الكل" يجلب بدون `.range()` limit
-
-### 4.4 إصلاحات صغيرة
-- إضافة `keepPreviousData` في search preview
-- عرض "محدد من هذه الصفحة فقط" عند bulk selection
-- Mobile: جعل الأقسام منطوية افتراضياً
-
----
-
-## المرحلة 5: التوسع والتحسينات المتقدمة
-
-### 5.1 DB: إضافة `last_communication_at`
-- **Migration**: إضافة عمود cached + trigger يُحدّث عند INSERT في `customer_communications`
-
-### 5.2 فلاتر متقدمة
-- فلتر "بدون تواصل منذ X يوم" باستخدام `last_communication_at`
-- فلتر "بدون فواتير منذ X يوم" باستخدام `last_activity_at`
-
-### 5.3 DB Index
-- **Migration**: `CREATE INDEX idx_invoices_customer_payment ON invoices(customer_id, payment_status)`
+### 5.3 DB Index (migration)
+```sql
+CREATE INDEX IF NOT EXISTS idx_invoices_customer_payment 
+ON invoices(customer_id, payment_status);
+CREATE INDEX IF NOT EXISTS idx_payments_customer 
+ON payments(customer_id);
+```
 
 ---
 
 ## ملخص الملفات المتأثرة
 
 ```text
-جديد:
-  - 1 migration (merge_customers_atomic + batch_validate_delete + last_communication_at + index)
-  - 11 tab components في src/components/customers/tabs/
-
 تعديل:
-  - CustomerDetailsPage.tsx (488→~120 سطر)
-  - useCustomerDetail.ts (lazy loading)
-  - useCustomerQueries.ts (sanitize + audit fix + batch validate)
-  - StatementOfAccount.tsx (credit notes + pagination)
-  - CustomerMergeDialog.tsx (RPC بدل Edge Function)
-  - customerService.ts (DSO fix)
-  - CustomerFormDialog.tsx (unsaved warning)
+  - CustomerFormDialog.tsx (dirty warning + split)
   - CustomerHeroHeader.tsx (price list badge)
-  - CustomersPage.tsx (export all)
+  - CustomersPage.tsx (export all + bulk label)
+  - useCustomerQueries.ts (keepPreviousData)
+  - CustomerDetailsPage.tsx (mobile collapsed)
+  - CustomerGridView.tsx (action menu)
+  - useCustomerFilters.ts (advanced filters)
 
-حذف:
-  - supabase/functions/merge-customers/index.ts
+جديد:
+  - src/components/customers/form/CustomerFormBasicInfo.tsx
+  - src/components/customers/form/CustomerFormContact.tsx
+  - src/components/customers/form/CustomerFormLocation.tsx
+  - src/components/customers/form/CustomerFormFinancial.tsx
+
+Migration:
+  - DB indexes
 ```
 
-## معايير القبول
-- Merge ذري 100% على مستوى DB
-- لا يمكن حذف عميل لديه فواتير مفتوحة
-- كشف الحساب يشمل المرتجعات
-- التحميل الأولي ≤ 3 queries
-- Tabs تُحمّل فقط عند الفتح
-- لا freeze مع 1000+ فاتورة
-- جميع الإجراءات التدميرية تتطلب تأكيد
+## التنفيذ: مرحلتين متتاليتين
+- **المرحلة 4 أولاً**: UX + حماية (4.1–4.8)
+- **المرحلة 5 ثانياً**: فلاتر + DB indexes
 
