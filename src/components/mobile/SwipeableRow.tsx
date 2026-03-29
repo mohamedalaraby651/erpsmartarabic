@@ -10,7 +10,7 @@ interface SwipeableRowProps {
   className?: string;
 }
 
-export function SwipeableRow({ children, onDelete, onEdit, className }: SwipeableRowProps) {
+export function SwipeableRow({ children, onDelete, onEdit, onCall, className }: SwipeableRowProps) {
   const [translateX, setTranslateX] = useState(0);
   const [startX, setStartX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -28,11 +28,18 @@ export function SwipeableRow({ children, onDelete, onEdit, className }: Swipeabl
     
     const diff = e.touches[0].clientX - startX;
     
-    // Only allow right-to-left swipe (for RTL layout, this becomes left action)
+    // Left swipe → show edit/delete actions
     if (diff < 0) {
       const newTranslate = Math.max(diff, -ACTION_WIDTH * 2);
       setTranslateX(newTranslate);
-    } else if (diff > 0 && translateX < 0) {
+    }
+    // Right swipe → show call action
+    else if (diff > 0 && onCall) {
+      const newTranslate = Math.min(diff, ACTION_WIDTH);
+      setTranslateX(newTranslate);
+    }
+    // Right swipe to close left actions
+    else if (diff > 0 && translateX < 0) {
       const newTranslate = Math.min(translateX + diff, 0);
       setTranslateX(newTranslate);
     }
@@ -41,21 +48,23 @@ export function SwipeableRow({ children, onDelete, onEdit, className }: Swipeabl
   const handleTouchEnd = () => {
     setIsSwiping(false);
     
-    if (Math.abs(translateX) > THRESHOLD) {
-      // Snap to actions
+    if (translateX < -THRESHOLD) {
       setTranslateX(-ACTION_WIDTH);
+    } else if (translateX > THRESHOLD && onCall) {
+      setTranslateX(ACTION_WIDTH);
     } else {
-      // Snap back
       setTranslateX(0);
     }
   };
 
-  const handleAction = (action: 'edit' | 'delete') => {
+  const handleAction = (action: 'edit' | 'delete' | 'call') => {
     setTranslateX(0);
     if (action === 'delete' && onDelete) {
       onDelete();
     } else if (action === 'edit' && onEdit) {
       onEdit();
+    } else if (action === 'call' && onCall) {
+      onCall();
     }
   };
 
