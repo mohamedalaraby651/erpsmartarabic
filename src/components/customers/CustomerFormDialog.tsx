@@ -194,11 +194,9 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
       };
 
       if (isEditing) {
-        const { error } = await supabase.from('customers').update(payload).eq('id', customer.id);
-        if (error) throw error;
+        await customerRepository.update(customer.id, payload);
       } else {
-        const { error } = await supabase.from('customers').insert(payload);
-        if (error) throw error;
+        await customerRepository.create(payload);
       }
     },
     onSuccess: () => {

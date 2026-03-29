@@ -111,27 +111,18 @@ const CustomerGridCardInner = ({
           </div>
 
           {/* Quick Actions — always visible on mobile, hover on desktop */}
-          <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-            {onNewInvoice && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onNewInvoice} title="فاتورة جديدة">
-                <FileText className="h-4 w-4 md:h-3.5 md:w-3.5 text-primary" />
-              </Button>
-            )}
-            {onWhatsApp && customer.phone && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onWhatsApp} title="واتساب">
-                <MessageSquare className="h-4 w-4 md:h-3.5 md:w-3.5 text-emerald-600" />
-              </Button>
-            )}
-            {onEdit && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onEdit} title="تعديل">
-                <Edit className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onDelete} title="حذف">
-                <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5 text-destructive" />
-              </Button>
-            )}
+          <div onClick={(e) => e.stopPropagation()}>
+            <CustomerActionMenu
+              customer={customer}
+              variant="grid"
+              canEdit={!!onEdit}
+              canDelete={!!onDelete}
+              onView={onClick}
+              onEdit={() => onEdit?.()}
+              onDelete={() => onDelete?.()}
+              onNewInvoice={onNewInvoice}
+              onWhatsApp={onWhatsApp}
+            />
           </div>
         </div>
       </CardContent>
