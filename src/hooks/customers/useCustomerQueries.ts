@@ -72,7 +72,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
         .order(sortColumn, { ascending: sortAsc })
         .range(rangeFrom, rangeTo);
 
-      query = applyFilters(query, { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter });
+      query = applyFilters(query, { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays });
 
       const { data, count, error } = await query;
       if (error) throw error;
