@@ -38,6 +38,8 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
 
+const PAGE_SIZE = 25;
+
 const statusLabels: Record<string, string> = {
   draft: "مسودة",
   pending: "معلق",
