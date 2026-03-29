@@ -65,6 +65,8 @@ export function useCustomerFilters() {
     setVipFilter('all');
     setGovernorateFilter('all');
     setStatusFilter('all');
+    setNoCommDays('');
+    setInactiveDays('');
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
