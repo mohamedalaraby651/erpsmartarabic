@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Crown, Phone, MapPin, FileText, MessageSquare, DollarSign } from "lucide-react";
+import { Crown, Phone, MapPin, FileText, MessageSquare, DollarSign, Edit, Trash2 } from "lucide-react";
 import CustomerAvatar from "./CustomerAvatar";
 import { cn } from "@/lib/utils";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
