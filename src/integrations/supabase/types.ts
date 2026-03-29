@@ -947,6 +947,7 @@ export type Database = {
           invoice_count_cached: number | null
           is_active: boolean | null
           last_activity_at: string | null
+          last_communication_at: string | null
           last_transaction_date: string | null
           name: string
           notes: string | null
@@ -980,6 +981,7 @@ export type Database = {
           invoice_count_cached?: number | null
           is_active?: boolean | null
           last_activity_at?: string | null
+          last_communication_at?: string | null
           last_transaction_date?: string | null
           name: string
           notes?: string | null
@@ -1013,6 +1015,7 @@ export type Database = {
           invoice_count_cached?: number | null
           is_active?: boolean | null
           last_activity_at?: string | null
+          last_communication_at?: string | null
           last_transaction_date?: string | null
           name?: string
           notes?: string | null
@@ -4133,6 +4136,14 @@ export type Database = {
         Args: { _amount: number; _supplier_id: string }
         Returns: undefined
       }
+      batch_validate_delete: {
+        Args: { p_ids: string[] }
+        Returns: {
+          customer_id: string
+          customer_name: string
+          open_invoice_count: number
+        }[]
+      }
       check_financial_limit: {
         Args: { _limit_type: string; _user_id: string; _value: number }
         Returns: boolean
@@ -4211,6 +4222,10 @@ export type Database = {
           _entity_type: string
         }
         Returns: undefined
+      }
+      merge_customers_atomic: {
+        Args: { p_duplicate_id: string; p_primary_id: string }
+        Returns: Json
       }
       needs_approval: {
         Args: { _amount: number; _entity_type: string }

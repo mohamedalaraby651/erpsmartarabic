@@ -33,10 +33,11 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
     queryKey: ['merge-customers-search', searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
+      const s = searchQuery.replace(/[%_\\]/g, '\\$&');
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
+        .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
         .order('name')
         .limit(20);
       if (error) throw error;
@@ -50,28 +51,16 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
 
   const mergeMutation = useMutation({
     mutationFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/merge-customers`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ primaryId, duplicateId }),
-        }
-      );
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Merge failed');
-      return result;
+      if (!primaryId || !duplicateId) throw new Error('Missing IDs');
+      const { data, error } = await supabase.rpc('merge_customers_atomic', {
+        p_primary_id: primaryId,
+        p_duplicate_id: duplicateId,
+      });
+      if (error) throw error;
+      return data as { success: boolean; message: string };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['customers-count'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       toast.success(data.message);
       handleClose();

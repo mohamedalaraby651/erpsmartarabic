@@ -10,12 +10,14 @@ import type { Database } from "@/integrations/supabase/types";
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
+type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
 
 export function useCustomerDetail(id: string | undefined) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('addresses');
 
+  // === CORE queries (always loaded) ===
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
@@ -36,6 +38,8 @@ export function useCustomerDetail(id: string | undefined) {
     enabled: !!id,
   });
 
+  // === LAZY queries (loaded on tab open) ===
+  const invoicesNeeded = ['invoices', 'financial', 'statement', 'aging', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: async () => {
@@ -43,10 +47,12 @@ export function useCustomerDetail(id: string | undefined) {
       if (error) throw error;
       return data as Invoice[];
     },
-    enabled: !!id,
-    staleTime: 30000,
+    enabled: !!id && invoicesNeeded,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
+  const paymentsNeeded = ['payments', 'financial', 'statement', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: async () => {
@@ -54,8 +60,20 @@ export function useCustomerDetail(id: string | undefined) {
       if (error) throw error;
       return data as Payment[];
     },
-    enabled: !!id,
-    staleTime: 30000,
+    enabled: !!id && paymentsNeeded,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: creditNotes = [] } = useQuery({
+    queryKey: ['customer-credit-notes', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('credit_notes').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as CreditNote[];
+    },
+    enabled: !!id && activeTab === 'statement',
+    staleTime: 60000,
   });
 
   const { data: salesOrders = [] } = useQuery({
@@ -66,7 +84,7 @@ export function useCustomerDetail(id: string | undefined) {
       return data;
     },
     enabled: !!id && activeTab === 'orders',
-    staleTime: 30000,
+    staleTime: 60000,
   });
 
   const { data: quotations = [] } = useQuery({
@@ -77,7 +95,7 @@ export function useCustomerDetail(id: string | undefined) {
       return data;
     },
     enabled: !!id && activeTab === 'quotations',
-    staleTime: 30000,
+    staleTime: 60000,
   });
 
   const { data: activities = [] } = useQuery({
@@ -127,7 +145,7 @@ export function useCustomerDetail(id: string | undefined) {
   const balanceIsDebit = currentBalance > 0;
 
   return {
-    customer, isLoading, addresses, invoices, payments,
+    customer, isLoading, addresses, invoices, payments, creditNotes,
     salesOrders, quotations, activities,
     activeTab, setActiveTab,
     updateImageMutation, deleteAddressMutation,

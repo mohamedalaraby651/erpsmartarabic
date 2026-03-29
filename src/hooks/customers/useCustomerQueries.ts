@@ -3,8 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { canDeleteCustomer } from "@/lib/services/customerService";
+import { logErrorSafely } from "@/lib/errorHandler";
 import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
+
+/** Escape special chars for Postgres .ilike */
+function sanitizeSearch(input: string): string {
+  return input.replace(/[%_\\]/g, '\\$&');
+}
 
 interface UseCustomerQueriesOptions {
   debouncedSearch: string;
@@ -21,7 +27,10 @@ function applyFilters(
   query: any,
   { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter }: Pick<UseCustomerQueriesOptions, 'debouncedSearch' | 'typeFilter' | 'vipFilter' | 'governorateFilter' | 'statusFilter'>
 ) {
-  if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
+  if (debouncedSearch) {
+    const s = sanitizeSearch(debouncedSearch);
+    query = query.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`);
+  }
   if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter);
   if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter);
   if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
@@ -75,7 +84,8 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
         totalBalance: d.total_balance || 0,
       };
     },
-    staleTime: 30000,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
   // Delete mutation with server-side permission check
@@ -112,24 +122,40 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
     },
   });
 
-  // Bulk delete with server-side permission check
+  // Bulk delete with server-side permission check + batch validation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const hasPermission = await canDeleteCustomer();
       if (!hasPermission) throw new Error('ليس لديك صلاحية حذف العملاء');
+
+      // Batch validate: check for open invoices
+      const { data: blocked, error: valError } = await supabase.rpc('batch_validate_delete', { p_ids: ids });
+      if (valError) throw valError;
+      if (blocked && blocked.length > 0) {
+        const names = (blocked as Array<{ customer_name: string; open_invoice_count: number }>)
+          .map(b => `${b.customer_name} (${b.open_invoice_count} فاتورة)`)
+          .join('، ');
+        throw new Error(`لا يمكن حذف العملاء التالية لوجود فواتير مفتوحة: ${names}`);
+      }
+
       const { error } = await supabase.from('customers').delete().in('id', ids);
       if (error) throw error;
+
+      // Audit trail — awaited with error handling
+      try {
+        await supabase.rpc('log_bulk_operation', {
+          _action: 'bulk_delete',
+          _entity_type: 'customers',
+          _entity_ids: ids,
+          _details: JSON.stringify({ count: ids.length }),
+        });
+      } catch (logErr) {
+        logErrorSafely('bulkDelete:audit', logErr);
+      }
     },
-    onSuccess: (_data, ids) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
-      // Audit trail for bulk delete
-      supabase.rpc('log_bulk_operation', {
-        _action: 'bulk_delete',
-        _entity_type: 'customers',
-        _entity_ids: ids,
-        _details: JSON.stringify({ count: ids.length }),
-      }).then(() => {});
       toast.success('تم حذف العملاء المحددين بنجاح');
     },
     onError: (err) => {
@@ -143,15 +169,17 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
       const { error } = await supabase.from('customers').update({ vip_level: vipLevel as 'regular' | 'silver' | 'gold' | 'platinum' }).in('id', ids);
       if (error) throw error;
     },
-    onSuccess: (_data, { ids, vipLevel }) => {
+    onSuccess: async (_data, { ids, vipLevel }) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
-      supabase.rpc('log_bulk_operation', {
-        _action: 'bulk_vip_update',
-        _entity_type: 'customers',
-        _entity_ids: ids,
-        _details: JSON.stringify({ vip_level: vipLevel }),
-      }).then(() => {});
+      try {
+        await supabase.rpc('log_bulk_operation', {
+          _action: 'bulk_vip_update',
+          _entity_type: 'customers',
+          _entity_ids: ids,
+          _details: JSON.stringify({ vip_level: vipLevel }),
+        });
+      } catch (logErr) { logErrorSafely('bulkVip:audit', logErr); }
       toast.success('تم تحديث مستوى VIP بنجاح');
     },
     onError: () => toast.error('فشل تحديث مستوى VIP'),
@@ -163,15 +191,17 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
       const { error } = await supabase.from('customers').update({ is_active: isActive }).in('id', ids);
       if (error) throw error;
     },
-    onSuccess: (_data, { ids, isActive }) => {
+    onSuccess: async (_data, { ids, isActive }) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
-      supabase.rpc('log_bulk_operation', {
-        _action: 'bulk_status_update',
-        _entity_type: 'customers',
-        _entity_ids: ids,
-        _details: JSON.stringify({ is_active: isActive }),
-      }).then(() => {});
+      try {
+        await supabase.rpc('log_bulk_operation', {
+          _action: 'bulk_status_update',
+          _entity_type: 'customers',
+          _entity_ids: ids,
+          _details: JSON.stringify({ is_active: isActive }),
+        });
+      } catch (logErr) { logErrorSafely('bulkStatus:audit', logErr); }
       toast.success('تم تحديث حالة العملاء بنجاح');
     },
     onError: () => toast.error('فشل تحديث الحالة'),
