@@ -47,8 +47,8 @@ function GridSkeleton() {
 }
 
 export const CustomerGridView = memo(function CustomerGridView({
-  data, isLoading, canEdit, onNavigate, onNewInvoice, onWhatsApp,
-  selectedIds, onToggleSelect, hasSelection, onAdd,
+  data, isLoading, canEdit, canDelete, onNavigate, onNewInvoice, onWhatsApp,
+  onEdit, onDelete, selectedIds, onToggleSelect, hasSelection, onAdd,
 }: CustomerGridViewProps) {
   if (isLoading) return <GridSkeleton />;
 
