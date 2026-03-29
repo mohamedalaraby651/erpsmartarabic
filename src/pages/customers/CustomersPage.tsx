@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch } from "lucide-react";
+import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch, Download, Loader2 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { useAuth } from "@/hooks/useAuth";
@@ -52,6 +54,7 @@ const CustomersPage = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkVipOpen, setBulkVipOpen] = useState(false);
+  const [exportAllLoading, setExportAllLoading] = useState(false);
   const [bulkVipValue, setBulkVipValue] = useState('regular');
 
   // View mode (localStorage-persisted)
@@ -99,6 +102,8 @@ const CustomersPage = () => {
     vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter,
     statusFilter: filters.statusFilter,
+    noCommDays: filters.noCommDays,
+    inactiveDays: filters.inactiveDays,
     currentPage,
     pageSize,
     sortConfig,
@@ -112,7 +117,7 @@ const CustomersPage = () => {
   // Reset page on filter change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter]);
+  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
 
   // Bulk selection
   const bulk = useBulkSelection(queries.customers);
@@ -155,6 +160,22 @@ const CustomersPage = () => {
 
   const handleRefresh = async () => { await queries.refetch(); };
 
+  const handleExportAll = useCallback(async () => {
+    setExportAllLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5000);
+      if (error) throw error;
+      return data as Customer[];
+    } catch {
+      return null;
+    } finally {
+      setExportAllLoading(false);
+    }
+  }, []);
   const goToPage = useCallback((page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   }, [totalPages]);
@@ -188,6 +209,22 @@ const CustomersPage = () => {
                   { key: 'credit_limit', label: 'حد الائتمان' },
                 ]}
               />
+              <Button
+                variant="outline" size="sm" disabled={exportAllLoading}
+                onClick={async () => {
+                  const allData = await handleExportAll();
+                  if (allData) {
+                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = `customers_all_${new Date().toISOString().slice(0,10)}.json`;
+                    a.click(); URL.revokeObjectURL(url);
+                  }
+                }}
+              >
+                {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
+                تصدير الكل
+              </Button>
             </>
           )}
           {canEdit && (
@@ -432,6 +469,20 @@ const CustomersPage = () => {
               <SelectItem value="inactive">غير نشط</SelectItem>
             </SelectContent>
           </Select>
+        </FilterSection>
+        <FilterSection title="بدون تواصل منذ (أيام)">
+          <Input
+            type="number" min={0} placeholder="مثال: 30"
+            value={filters.tempNoCommDays}
+            onChange={(e) => filters.setTempNoCommDays(e.target.value)}
+          />
+        </FilterSection>
+        <FilterSection title="بدون نشاط منذ (أيام)">
+          <Input
+            type="number" min={0} placeholder="مثال: 60"
+            value={filters.tempInactiveDays}
+            onChange={(e) => filters.setTempInactiveDays(e.target.value)}
+          />
         </FilterSection>
       </FilterDrawer>
 

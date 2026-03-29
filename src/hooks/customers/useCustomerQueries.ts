@@ -18,6 +18,8 @@ interface UseCustomerQueriesOptions {
   vipFilter: string;
   governorateFilter: string;
   statusFilter: string;
+  noCommDays?: string;
+  inactiveDays?: string;
   currentPage: number;
   pageSize: number;
   sortConfig: SortConfig;
@@ -25,8 +27,9 @@ interface UseCustomerQueriesOptions {
 
 function applyFilters(
   query: any,
-  { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter }: Pick<UseCustomerQueriesOptions, 'debouncedSearch' | 'typeFilter' | 'vipFilter' | 'governorateFilter' | 'statusFilter'>
+  opts: Pick<UseCustomerQueriesOptions, 'debouncedSearch' | 'typeFilter' | 'vipFilter' | 'governorateFilter' | 'statusFilter' | 'noCommDays' | 'inactiveDays'>
 ) {
+  const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays } = opts;
   if (debouncedSearch) {
     const s = sanitizeSearch(debouncedSearch);
     query = query.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`);
@@ -35,13 +38,23 @@ function applyFilters(
   if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter);
   if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
   if (statusFilter !== 'all') query = query.eq('is_active', statusFilter === 'active');
+  if (noCommDays) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - Number(noCommDays));
+    query = query.or(`last_communication_at.is.null,last_communication_at.lte.${cutoff.toISOString()}`);
+  }
+  if (inactiveDays) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - Number(inactiveDays));
+    query = query.or(`last_activity_at.is.null,last_activity_at.lte.${cutoff.toISOString()}`);
+  }
   return query;
 }
 
 export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const queryClient = useQueryClient();
-  const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, currentPage, pageSize, sortConfig } = options;
-  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter];
+  const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig } = options;
+  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays];
 
   const sortColumn = sortConfig.key || 'created_at';
   const sortAsc = sortConfig.direction === 'asc';
@@ -59,7 +72,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
         .order(sortColumn, { ascending: sortAsc })
         .range(rangeFrom, rangeTo);
 
-      query = applyFilters(query, { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter });
+      query = applyFilters(query, { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays });
 
       const { data, count, error } = await query;
       if (error) throw error;
