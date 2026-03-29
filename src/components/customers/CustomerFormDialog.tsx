@@ -238,7 +238,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   // Wizard steps for mobile
   const wizardSteps = [
     { title: 'المعلومات الأساسية', content: (
-      <><SectionHeader icon={User} title="المعلومات الأساسية" /><CustomerFormBasicInfo categories={categories} /></>
+      <>{duplicateWarning}<SectionHeader icon={User} title="المعلومات الأساسية" /><CustomerFormBasicInfo categories={categories} /></>
     )},
     { title: 'معلومات الاتصال', content: (
       <><SectionHeader icon={Phone} title="معلومات الاتصال" /><CustomerFormContact showCompanyFields={customerType === 'company'} /></>
