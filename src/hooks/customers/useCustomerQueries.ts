@@ -122,24 +122,40 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
     },
   });
 
-  // Bulk delete with server-side permission check
+  // Bulk delete with server-side permission check + batch validation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const hasPermission = await canDeleteCustomer();
       if (!hasPermission) throw new Error('ليس لديك صلاحية حذف العملاء');
+
+      // Batch validate: check for open invoices
+      const { data: blocked, error: valError } = await supabase.rpc('batch_validate_delete', { p_ids: ids });
+      if (valError) throw valError;
+      if (blocked && blocked.length > 0) {
+        const names = (blocked as Array<{ customer_name: string; open_invoice_count: number }>)
+          .map(b => `${b.customer_name} (${b.open_invoice_count} فاتورة)`)
+          .join('، ');
+        throw new Error(`لا يمكن حذف العملاء التالية لوجود فواتير مفتوحة: ${names}`);
+      }
+
       const { error } = await supabase.from('customers').delete().in('id', ids);
       if (error) throw error;
+
+      // Audit trail — awaited with error handling
+      try {
+        await supabase.rpc('log_bulk_operation', {
+          _action: 'bulk_delete',
+          _entity_type: 'customers',
+          _entity_ids: ids,
+          _details: JSON.stringify({ count: ids.length }),
+        });
+      } catch (logErr) {
+        logErrorSafely('bulkDelete:audit', logErr);
+      }
     },
-    onSuccess: (_data, ids) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
-      // Audit trail for bulk delete
-      supabase.rpc('log_bulk_operation', {
-        _action: 'bulk_delete',
-        _entity_type: 'customers',
-        _entity_ids: ids,
-        _details: JSON.stringify({ count: ids.length }),
-      }).then(() => {});
       toast.success('تم حذف العملاء المحددين بنجاح');
     },
     onError: (err) => {
