@@ -20,6 +20,9 @@ interface CustomerGridViewProps {
   onToggleSelect: (id: string, checked: boolean) => void;
   hasSelection: boolean;
   onAdd?: () => void;
+  deletingId?: string | null;
+  onRowHover?: (id: string) => void;
+  onRowLeave?: () => void;
 }
 
 // Grid skeleton component
