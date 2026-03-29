@@ -36,6 +36,8 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
+const PAGE_SIZE = 25;
+
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'] & {
   suppliers: { name: string } | null;
 };
