@@ -49,7 +49,7 @@ const TabFallback = () => <div className="flex items-center justify-center py-12
 const CustomerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  
   const isMobile = useIsMobile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
