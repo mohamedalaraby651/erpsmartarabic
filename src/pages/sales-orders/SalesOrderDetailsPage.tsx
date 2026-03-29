@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useConvertDocument } from "@/hooks/useConvertDocument";
+import { WorkflowPipeline } from "@/components/shared/WorkflowPipeline";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
