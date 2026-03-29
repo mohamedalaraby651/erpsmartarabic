@@ -1,7 +1,7 @@
 
 # خطة إعادة هيكلة وحدة العملاء — Sprint 1: Enterprise Polish
 
-## الحالة: ✅ مكتمل
+## الحالة: ✅ مكتمل بالكامل
 
 ---
 
@@ -10,7 +10,7 @@
 ### Phase 1 — تقسيم God Component ✅
 - **CustomerDialogManager.tsx**: استخراج 7 dialog states + 5 AlertDialogs باستخدام `forwardRef` + `useImperativeHandle`
 - **CustomerBulkActionsBar.tsx**: مكون مستقل بـ `React.memo` لشريط الإجراءات الجماعية
-- **CustomersPage.tsx**: تقليص من ~610 سطر إلى ~310 سطر
+- **CustomersPage.tsx**: تقليص من ~610 سطر إلى ~470 سطر
 
 ### Phase 2 — Repository Pattern + CQRS ✅
 - **customerRepository.ts**: طبقة Data Access موحدة — كل استدعاءات Supabase مركزة هنا
@@ -41,13 +41,13 @@ src/components/customers/CustomerBulkActionsBar.tsx
 
 ## الملفات المحدثة
 ```
-src/pages/customers/CustomersPage.tsx (610 → ~310 سطر)
+src/pages/customers/CustomersPage.tsx (610 → ~470 سطر)
 src/lib/services/customerService.ts (إضافة validateBatchDelete + exportCustomersToExcel)
 src/hooks/customers/useDuplicateCheck.ts (يستخدم repository)
 src/hooks/customers/index.ts (exports محدثة)
 ```
 
-## الملفات القابلة للحذف مستقبلاً
+## الملفات المحذوفة
 ```
 src/hooks/customers/useCustomerQueries.ts (مستبدل بـ useCustomerList + useCustomerMutations)
 ```
