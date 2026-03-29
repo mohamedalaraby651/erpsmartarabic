@@ -75,8 +75,10 @@ export function useCustomerFilters() {
     setTempVip(vipFilter);
     setTempGovernorate(governorateFilter);
     setTempStatus(statusFilter);
+    setTempNoCommDays(noCommDays);
+    setTempInactiveDays(inactiveDays);
     setFilterDrawerOpen(true);
-  }, [typeFilter, vipFilter, governorateFilter, statusFilter]);
+  }, [typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays]);
 
   // Fixed: now syncs to URL after applying drawer filters
   const applyDrawerFilters = useCallback(() => {
