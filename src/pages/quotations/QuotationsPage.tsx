@@ -133,11 +133,8 @@ const QuotationsPage = () => {
 
   type QuotationWithCustomer = Quotation & { customers: { name: string } | null };
 
-  // Filter by search
-  const searchFiltered = (quotations as QuotationWithCustomer[]).filter((q) =>
-    q.quotation_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    q.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Search is now server-side
+  const searchFiltered = quotations as QuotationWithCustomer[];
 
   const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
