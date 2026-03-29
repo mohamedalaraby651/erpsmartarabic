@@ -70,7 +70,7 @@ export function SwipeableRow({ children, onDelete, onEdit, onCall, className }: 
 
   return (
     <div className={cn('relative overflow-hidden', className)}>
-      {/* Action buttons (behind) */}
+      {/* Left action buttons (edit/delete — shown on left swipe) */}
       <div className="absolute inset-y-0 left-0 flex items-stretch">
         {onEdit && (
           <button
@@ -89,6 +89,18 @@ export function SwipeableRow({ children, onDelete, onEdit, onCall, className }: 
           </button>
         )}
       </div>
+
+      {/* Right action button (call — shown on right swipe) */}
+      {onCall && (
+        <div className="absolute inset-y-0 right-0 flex items-stretch">
+          <button
+            onClick={() => handleAction('call')}
+            className="flex items-center justify-center w-20 bg-emerald-600 text-white"
+          >
+            <span className="text-sm font-medium">اتصال</span>
+          </button>
+        </div>
+      )}
 
       {/* Main content */}
       <div
