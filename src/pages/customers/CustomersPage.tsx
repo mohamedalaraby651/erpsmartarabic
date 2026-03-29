@@ -9,7 +9,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch, Download, Loader2 } from "lucide-react";
+import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch, Download, Loader2, ArrowUpDown } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { useAuth } from "@/hooks/useAuth";
@@ -162,16 +162,49 @@ const CustomersPage = () => {
 
   const handleExportAll = useCallback(async () => {
     setExportAllLoading(true);
+    const toastId = 'export-all';
     try {
+      const { toast: sonnerToast } = await import('sonner');
+      sonnerToast.loading('جاري تحميل بيانات جميع العملاء...', { id: toastId });
+
       const { data, error } = await supabase
         .from('customers')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5000);
       if (error) throw error;
-      return data as Customer[];
-    } catch {
-      return null;
+      if (!data || data.length === 0) {
+        sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });
+        return;
+      }
+
+      sonnerToast.loading(`جاري تصدير ${data.length} عميل...`, { id: toastId });
+
+      const XLSX = await import('xlsx');
+      const headers: Record<string, string> = {
+        name: 'الاسم', phone: 'الهاتف', email: 'البريد', customer_type: 'النوع',
+        vip_level: 'مستوى VIP', current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
+        governorate: 'المحافظة', city: 'المدينة', contact_person: 'المسؤول',
+        is_active: 'نشط', created_at: 'تاريخ الإنشاء',
+      };
+      const exportData = data.map(row => {
+        const mapped: Record<string, any> = {};
+        Object.keys(headers).forEach(key => {
+          mapped[headers[key]] = (row as any)[key];
+        });
+        return mapped;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      ws['!cols'] = Object.values(headers).map(h => ({ wch: Math.max(h.length, 15) }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+      XLSX.writeFile(wb, `customers_all_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+      sonnerToast.success(`تم تصدير ${data.length} عميل بنجاح`, { id: toastId });
+    } catch (err) {
+      const { toast: sonnerToast } = await import('sonner');
+      sonnerToast.error('حدث خطأ أثناء التصدير', { id: toastId });
     } finally {
       setExportAllLoading(false);
     }
@@ -211,19 +244,10 @@ const CustomersPage = () => {
               />
               <Button
                 variant="outline" size="sm" disabled={exportAllLoading}
-                onClick={async () => {
-                  const allData = await handleExportAll();
-                  if (allData) {
-                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = `customers_all_${new Date().toISOString().slice(0,10)}.json`;
-                    a.click(); URL.revokeObjectURL(url);
-                  }
-                }}
+                onClick={() => handleExportAll()}
               >
                 {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
-                تصدير الكل
+                تصدير الكل (Excel)
               </Button>
             </>
           )}
@@ -334,13 +358,29 @@ const CustomersPage = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>قائمة العملاء ({queries.totalCount})</CardTitle>
-              <div className="flex items-center gap-1 border rounded-lg p-0.5">
-                <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('table')} title="عرض جدول">
-                  <LayoutList className="h-4 w-4" />
-                </Button>
-                <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('grid')} title="عرض بطاقات">
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center gap-2">
+                {viewMode === 'grid' && (
+                  <Select value={sortConfig.key || 'created_at'} onValueChange={(val) => requestSort(val)}>
+                    <SelectTrigger className="w-40 h-8 text-xs">
+                      <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
+                      <SelectValue placeholder="ترتيب حسب" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
+                      <SelectItem value="name">الاسم</SelectItem>
+                      <SelectItem value="current_balance">الرصيد</SelectItem>
+                      <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+                <div className="flex items-center gap-1 border rounded-lg p-0.5">
+                  <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('table')} title="عرض جدول">
+                    <LayoutList className="h-4 w-4" />
+                  </Button>
+                  <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('grid')} title="عرض بطاقات">
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -363,6 +403,9 @@ const CustomersPage = () => {
                   onToggleSelect={bulk.toggleSelect}
                   hasSelection={bulk.hasSelection}
                   onAdd={canEdit ? handleAdd : undefined}
+                  deletingId={deletingId}
+                  onRowHover={queries.handleRowHover}
+                  onRowLeave={queries.handleRowLeave}
                 />
               )
             ) : queries.isLoading ? (

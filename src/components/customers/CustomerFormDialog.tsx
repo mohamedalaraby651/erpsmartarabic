@@ -17,11 +17,13 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { customerSchema, type CustomerFormData } from "@/lib/validations";
 import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
-import { User, Phone, MapPin, Wallet } from "lucide-react";
+import { User, Phone, MapPin, Wallet, AlertTriangle } from "lucide-react";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { useDuplicateCheck } from "@/hooks/customers/useDuplicateCheck";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Path } from "react-hook-form";
 
 // Sub-components
@@ -105,6 +107,26 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   };
 
   const customerType = watch('customer_type');
+  const watchedName = watch('name');
+  const watchedPhone = watch('phone');
+
+  const { nameDuplicates, phoneDuplicates } = useDuplicateCheck(
+    watchedName, watchedPhone || '', customer?.id
+  );
+
+  const duplicateWarning = (nameDuplicates.length > 0 || phoneDuplicates.length > 0) ? (
+    <Alert variant="default" className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+      <AlertTriangle className="h-4 w-4 text-amber-600" />
+      <AlertDescription className="text-xs text-amber-700 dark:text-amber-400">
+        {nameDuplicates.length > 0 && (
+          <p>⚠️ يوجد عميل مشابه بالاسم: {nameDuplicates.map(d => d.name).join('، ')}</p>
+        )}
+        {phoneDuplicates.length > 0 && (
+          <p>⚠️ رقم الهاتف مسجل لدى: {phoneDuplicates.map(d => d.name).join('، ')}</p>
+        )}
+      </AlertDescription>
+    </Alert>
+  ) : null;
 
   const wizard = useFormWizard<CustomerFormData>({
     totalSteps: 4,
@@ -216,7 +238,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   // Wizard steps for mobile
   const wizardSteps = [
     { title: 'المعلومات الأساسية', content: (
-      <><SectionHeader icon={User} title="المعلومات الأساسية" /><CustomerFormBasicInfo categories={categories} /></>
+      <>{duplicateWarning}<SectionHeader icon={User} title="المعلومات الأساسية" /><CustomerFormBasicInfo categories={categories} /></>
     )},
     { title: 'معلومات الاتصال', content: (
       <><SectionHeader icon={Phone} title="معلومات الاتصال" /><CustomerFormContact showCompanyFields={customerType === 'company'} /></>
@@ -257,6 +279,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
             <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+            {duplicateWarning}
             <SectionHeader icon={User} title="المعلومات الأساسية" />
             <CustomerFormBasicInfo categories={categories} />
             {customerType === 'company' && (

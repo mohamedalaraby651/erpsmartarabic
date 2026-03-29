@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,9 @@ interface CustomerGridCardProps {
   isSelected?: boolean;
   onSelect?: (checked: boolean) => void;
   showSelect?: boolean;
+  isDeleting?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 const CustomerGridCardInner = ({
@@ -32,6 +36,9 @@ const CustomerGridCardInner = ({
   isSelected,
   onSelect,
   showSelect,
+  isDeleting,
+  onMouseEnter,
+  onMouseLeave,
 }: CustomerGridCardProps) => {
   const balance = Number(customer.current_balance || 0);
   const creditLimit = Number(customer.credit_limit || 0);
@@ -41,10 +48,18 @@ const CustomerGridCardInner = ({
     <Card
       className={cn(
         "cursor-pointer hover:shadow-md transition-all group relative",
-        isSelected && "ring-2 ring-primary"
+        isSelected && "ring-2 ring-primary",
+        isDeleting && "opacity-60 pointer-events-none"
       )}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
+      {isDeleting && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 rounded-lg">
+          <Loader2 className="h-6 w-6 animate-spin text-destructive" />
+        </div>
+      )}
       {showSelect && (
         <div className="absolute top-3 left-3 z-10" onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={isSelected} onCheckedChange={(c) => onSelect?.(!!c)} />

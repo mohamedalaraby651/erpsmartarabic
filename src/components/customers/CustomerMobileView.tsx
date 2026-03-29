@@ -29,6 +29,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
       key={customer.id}
       onEdit={canEdit ? () => onEdit(customer) : undefined}
       onDelete={canDelete ? () => onDelete(customer.id) : undefined}
+      onCall={customer.phone ? () => window.open(`tel:${customer.phone}`) : undefined}
     >
       <DataCard
         title={customer.name}

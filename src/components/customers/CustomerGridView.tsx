@@ -20,6 +20,9 @@ interface CustomerGridViewProps {
   onToggleSelect: (id: string, checked: boolean) => void;
   hasSelection: boolean;
   onAdd?: () => void;
+  deletingId?: string | null;
+  onRowHover?: (id: string) => void;
+  onRowLeave?: () => void;
 }
 
 // Grid skeleton component
@@ -49,6 +52,7 @@ function GridSkeleton() {
 export const CustomerGridView = memo(function CustomerGridView({
   data, isLoading, canEdit, canDelete, onNavigate, onNewInvoice, onWhatsApp,
   onEdit, onDelete, selectedIds, onToggleSelect, hasSelection, onAdd,
+  deletingId, onRowHover, onRowLeave,
 }: CustomerGridViewProps) {
   if (isLoading) return <GridSkeleton />;
 
@@ -70,6 +74,9 @@ export const CustomerGridView = memo(function CustomerGridView({
           isSelected={selectedIds.has(customer.id)}
           onSelect={(checked) => onToggleSelect(customer.id, checked)}
           showSelect={hasSelection}
+          isDeleting={deletingId === customer.id}
+          onMouseEnter={onRowHover ? () => onRowHover(customer.id) : undefined}
+          onMouseLeave={onRowLeave}
         />
       ))}
     </div>
