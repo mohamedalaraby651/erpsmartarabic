@@ -107,6 +107,26 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   };
 
   const customerType = watch('customer_type');
+  const watchedName = watch('name');
+  const watchedPhone = watch('phone');
+
+  const { nameDuplicates, phoneDuplicates } = useDuplicateCheck(
+    watchedName, watchedPhone || '', customer?.id
+  );
+
+  const duplicateWarning = (nameDuplicates.length > 0 || phoneDuplicates.length > 0) ? (
+    <Alert variant="default" className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+      <AlertTriangle className="h-4 w-4 text-amber-600" />
+      <AlertDescription className="text-xs text-amber-700 dark:text-amber-400">
+        {nameDuplicates.length > 0 && (
+          <p>⚠️ يوجد عميل مشابه بالاسم: {nameDuplicates.map(d => d.name).join('، ')}</p>
+        )}
+        {phoneDuplicates.length > 0 && (
+          <p>⚠️ رقم الهاتف مسجل لدى: {phoneDuplicates.map(d => d.name).join('، ')}</p>
+        )}
+      </AlertDescription>
+    </Alert>
+  ) : null;
 
   const wizard = useFormWizard<CustomerFormData>({
     totalSteps: 4,
