@@ -53,8 +53,8 @@ function applyFilters(
 
 export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   const queryClient = useQueryClient();
-  const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, currentPage, pageSize, sortConfig } = options;
-  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter];
+  const { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig } = options;
+  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays];
 
   const sortColumn = sortConfig.key || 'created_at';
   const sortAsc = sortConfig.direction === 'asc';
