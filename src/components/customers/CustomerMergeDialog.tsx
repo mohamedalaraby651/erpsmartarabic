@@ -1,18 +1,16 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Search, Merge, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import { logErrorSafely } from "@/lib/errorHandler";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -31,18 +29,7 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['merge-customers-search', searchQuery],
-    queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) return [];
-      const s = searchQuery.replace(/[%_\\]/g, '\\$&');
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
-        .order('name')
-        .limit(20);
-      if (error) throw error;
-      return data as Customer[];
-    },
+    queryFn: () => customerRepository.searchForMerge(searchQuery),
     enabled: searchQuery.length >= 2,
   });
 
@@ -52,12 +39,7 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
   const mergeMutation = useMutation({
     mutationFn: async () => {
       if (!primaryId || !duplicateId) throw new Error('Missing IDs');
-      const { data, error } = await supabase.rpc('merge_customers_atomic', {
-        p_primary_id: primaryId,
-        p_duplicate_id: duplicateId,
-      });
-      if (error) throw error;
-      return data as { success: boolean; message: string };
+      return customerRepository.mergeCustomers(primaryId, duplicateId);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -96,9 +78,7 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
             دمج العملاء المكررين
           </DialogTitle>
           <DialogDescription>
-            {step === 'search'
-              ? 'ابحث واختر العميل الأساسي ثم العميل المكرر'
-              : 'تأكد من اختيارك قبل الدمج'}
+            {step === 'search' ? 'ابحث واختر العميل الأساسي ثم العميل المكرر' : 'تأكد من اختيارك قبل الدمج'}
           </DialogDescription>
         </DialogHeader>
 
@@ -106,43 +86,27 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="ابحث بالاسم أو الهاتف..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10"
-              />
+              <Input placeholder="ابحث بالاسم أو الهاتف..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10" />
             </div>
-
             {primaryId && (
               <div className="flex items-center gap-2 p-2 rounded-md bg-primary/5 border border-primary/20">
                 <Badge>الأساسي</Badge>
                 <span className="text-sm font-medium">{primaryCustomer?.name}</span>
-                <Button variant="ghost" size="sm" className="mr-auto h-6 text-xs" onClick={() => { setPrimaryId(null); setDuplicateId(null); }}>
-                  تغيير
-                </Button>
+                <Button variant="ghost" size="sm" className="mr-auto h-6 text-xs" onClick={() => { setPrimaryId(null); setDuplicateId(null); }}>تغيير</Button>
               </div>
             )}
-
             {duplicateId && (
               <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/5 border border-destructive/20">
                 <Badge variant="destructive">مكرر</Badge>
                 <span className="text-sm font-medium">{duplicateCustomer?.name}</span>
-                <Button variant="ghost" size="sm" className="mr-auto h-6 text-xs" onClick={() => setDuplicateId(null)}>
-                  تغيير
-                </Button>
+                <Button variant="ghost" size="sm" className="mr-auto h-6 text-xs" onClick={() => setDuplicateId(null)}>تغيير</Button>
               </div>
             )}
-
             <ScrollArea className="max-h-60">
               <div className="space-y-2">
                 {isLoading && <p className="text-center text-sm text-muted-foreground py-4">جاري البحث...</p>}
                 {customers.filter(c => c.id !== primaryId && c.id !== duplicateId).map((customer) => (
-                  <Card
-                    key={customer.id}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSelectCustomer(customer.id)}
-                  >
+                  <Card key={customer.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSelectCustomer(customer.id)}>
                     <CardContent className="p-3 flex items-center gap-3">
                       <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="sm" />
                       <div className="flex-1 min-w-0">
@@ -171,7 +135,6 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
                 </div>
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <Card className="border-primary/30">
                 <CardContent className="p-4 text-center">
@@ -196,18 +159,9 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>إلغاء</Button>
           {step === 'search' ? (
-            <Button
-              onClick={() => setStep('confirm')}
-              disabled={!primaryId || !duplicateId}
-            >
-              متابعة
-            </Button>
+            <Button onClick={() => setStep('confirm')} disabled={!primaryId || !duplicateId}>متابعة</Button>
           ) : (
-            <Button
-              variant="destructive"
-              onClick={() => mergeMutation.mutate()}
-              disabled={mergeMutation.isPending}
-            >
+            <Button variant="destructive" onClick={() => mergeMutation.mutate()} disabled={mergeMutation.isPending}>
               {mergeMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin ml-2" /> جاري الدمج...</> : 'تأكيد الدمج'}
             </Button>
           )}

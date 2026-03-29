@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 interface CustomerImportDialogProps {
   open: boolean;
@@ -91,10 +91,9 @@ const CustomerImportDialog = ({ open, onOpenChange }: CustomerImportDialogProps)
 
   const importMutation = useMutation({
     mutationFn: async (rows: ImportRow[]) => {
-      // Check for duplicates
-      const { data: existing } = await supabase.from('customers').select('name, phone');
-      const existingNames = new Set((existing || []).map(c => c.name.toLowerCase().trim()));
-      const existingPhones = new Set((existing || []).filter(c => c.phone).map(c => c.phone!));
+      const existing = await customerRepository.findAllNamesAndPhones();
+      const existingNames = new Set(existing.map(c => c.name.toLowerCase().trim()));
+      const existingPhones = new Set(existing.filter(c => c.phone).map(c => c.phone!));
 
       const importResults: ImportResult[] = [];
 
@@ -108,7 +107,7 @@ const CustomerImportDialog = ({ open, onOpenChange }: CustomerImportDialogProps)
         }
 
         try {
-          const { error } = await supabase.from('customers').insert({
+          await customerRepository.insertCustomer({
             name: row.name.trim(),
             phone: row.phone?.trim() || null,
             email: row.email?.trim() || null,
@@ -119,11 +118,10 @@ const CustomerImportDialog = ({ open, onOpenChange }: CustomerImportDialogProps)
             credit_limit: row.credit_limit || 0,
             notes: row.notes?.trim() || null,
           });
-          if (error) throw error;
           importResults.push({ row, status: 'success', message: 'تم الاستيراد بنجاح' });
           existingNames.add(row.name.toLowerCase().trim());
           if (row.phone) existingPhones.add(row.phone);
-        } catch (err) {
+        } catch {
           importResults.push({ row, status: 'error', message: 'فشل الحفظ' });
         }
       }
@@ -142,16 +140,8 @@ const CustomerImportDialog = ({ open, onOpenChange }: CustomerImportDialogProps)
     onError: () => toast.error('حدث خطأ أثناء الاستيراد'),
   });
 
-  const handleReset = () => {
-    setStep('upload');
-    setParsedRows([]);
-    setResults([]);
-  };
-
-  const handleClose = () => {
-    handleReset();
-    onOpenChange(false);
-  };
+  const handleReset = () => { setStep('upload'); setParsedRows([]); setResults([]); };
+  const handleClose = () => { handleReset(); onOpenChange(false); };
 
   const successCount = results.filter(r => r.status === 'success').length;
   const duplicateCount = results.filter(r => r.status === 'duplicate').length;

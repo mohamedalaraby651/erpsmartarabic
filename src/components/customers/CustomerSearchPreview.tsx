@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search, X, Phone, MapPin } from "lucide-react";
 import CustomerAvatar from "./CustomerAvatar";
 import { cn } from "@/lib/utils";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 interface CustomerSearchPreviewProps {
   value: string;
@@ -24,16 +24,7 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
 
   const { data: results = [] } = useQuery({
     queryKey: ['customer-search-preview', debouncedSearch],
-    queryFn: async () => {
-      if (!debouncedSearch || debouncedSearch.length < 2) return [];
-      const { data, error } = await supabase
-        .from('customers')
-        .select('id, name, phone, governorate, customer_type, image_url, current_balance, vip_level')
-        .or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`)
-        .limit(5);
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => customerRepository.searchPreview(debouncedSearch),
     enabled: !!debouncedSearch && debouncedSearch.length >= 2,
     staleTime: 10000,
   });
