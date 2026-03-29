@@ -357,6 +357,21 @@ const InvoiceDetailsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Workflow Pipeline */}
+      {invoice.order_id && (
+        <Card className="p-3">
+          <div className="flex items-center gap-2 mb-2 text-xs font-medium text-muted-foreground">
+            <Activity className="h-3.5 w-3.5" />
+            <span>مسار الصفقة</span>
+          </div>
+          <WorkflowPipeline steps={[
+            { label: 'عرض سعر', status: 'completed' },
+            { label: 'أمر بيع', status: 'completed', entityType: 'sales-order', entityId: invoice.order_id, entityNumber: 'أمر البيع' },
+            { label: 'فاتورة', status: 'current', entityType: 'invoice', entityId: id!, entityNumber: invoice.invoice_number },
+          ]} />
+        </Card>
+      )}
+
       {/* Alerts */}
       {isOverdue && (
         <Alert variant="destructive">
