@@ -5,9 +5,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Crown, FileText, MessageSquare } from "lucide-react";
+import { Building2, Users, Crown } from "lucide-react";
 import { DataTableHeader } from "@/components/ui/data-table-header";
-import { DataTableActions } from "@/components/ui/data-table-actions";
+import { CustomerActionMenu } from "@/components/customers/CustomerActionMenu";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import { vipColors, vipLabels, getBalanceColor } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
@@ -159,27 +159,18 @@ export const CustomerTableView = memo(function CustomerTableView({
                 <Badge variant={customer.is_active ? "default" : "secondary"}>{customer.is_active ? "نشط" : "غير نشط"}</Badge>
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center gap-0.5">
-                  <DataTableActions
-                    onView={() => onNavigate(customer.id)}
-                    onEdit={() => onEdit(customer)}
-                    onDelete={() => onDelete(customer.id)}
-                    canEdit={canEdit}
-                    canDelete={canDelete}
-                    isDeleting={deletingId === customer.id}
-                    deleteDescription="سيتم حذف العميل وجميع بياناته. هذا الإجراء لا يمكن التراجع عنه."
-                  />
-                  {canEdit && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onNewInvoice(customer.id)} title="فاتورة جديدة">
-                      <FileText className="h-4 w-4 text-primary" />
-                    </Button>
-                  )}
-                  {customer.phone && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onWhatsApp(customer.phone!)} title="واتساب">
-                      <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    </Button>
-                  )}
-                </div>
+                <CustomerActionMenu
+                  customer={customer}
+                  variant="table"
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                  isDeleting={deletingId === customer.id}
+                  onView={() => onNavigate(customer.id)}
+                  onEdit={() => onEdit(customer)}
+                  onDelete={() => onDelete(customer.id)}
+                  onNewInvoice={() => onNewInvoice(customer.id)}
+                  onWhatsApp={() => customer.phone && onWhatsApp(customer.phone)}
+                />
               </TableCell>
             </TableRow>
           ))}

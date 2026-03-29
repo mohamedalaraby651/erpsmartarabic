@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { MessageSquare, Plus, Phone, Mail, MapPin, MessagesSquare } from "lucide
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 interface CommunicationLogTabProps {
   customerId: string;
@@ -27,7 +27,6 @@ const typeConfig = {
 
 type CommType = keyof typeof typeConfig;
 
-// Group communications by month
 function groupByMonth(items: Array<{ communication_date: string; [key: string]: unknown }>) {
   const groups: Record<string, typeof items> = {};
   for (const item of items) {
@@ -49,29 +48,18 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
 
   const { data: communications = [], isLoading } = useQuery({
     queryKey: ['customer-communications', customerId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customer_communications')
-        .select('*')
-        .eq('customer_id', customerId)
-        .order('communication_date', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => customerRepository.findCommunications(customerId),
     staleTime: 30000,
   });
 
   const addMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('customer_communications').insert({
-        customer_id: customerId,
-        type: commType,
-        subject: subject.trim() || null,
-        note: note.trim(),
-        created_by: user?.id || '',
-      });
-      if (error) throw error;
-    },
+    mutationFn: () => customerRepository.createCommunication({
+      customer_id: customerId,
+      type: commType,
+      subject: subject.trim() || null,
+      note: note.trim(),
+      created_by: user?.id || '',
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-communications', customerId] });
       toast.success('تم إضافة سجل التواصل');
@@ -116,11 +104,8 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
                     <Badge variant="outline" className="text-xs">{monthLabel}</Badge>
                     <div className="flex-1 h-px bg-border" />
                   </div>
-                  {/* Timeline */}
                   <div className="relative pr-6">
-                    {/* Vertical line */}
                     <div className="absolute right-2.5 top-2 bottom-2 w-px bg-border" />
-                    
                     <div className="space-y-4">
                       {items.map((comm) => {
                         const type = (comm.type as CommType) || 'other';
@@ -129,12 +114,9 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
                         const colorParts = config.color.split(' ');
                         return (
                           <div key={comm.id as string} className="relative flex items-start gap-3">
-                            {/* Timeline dot */}
                             <div className={cn("absolute right-[-14px] w-5 h-5 rounded-full border-2 flex items-center justify-center bg-background", colorParts[2] || 'border-border')}>
                               <div className={cn("w-2 h-2 rounded-full", colorParts[0]?.replace('/10', '/60') || 'bg-muted')} />
                             </div>
-                            
-                            {/* Content */}
                             <div className={cn("flex-1 p-3 border rounded-lg", `border-l-2`)}>
                               <div className="flex items-center gap-2 mb-1">
                                 <div className={cn("p-1 rounded", colorParts[0], colorParts[1])}>

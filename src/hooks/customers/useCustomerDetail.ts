@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { calculateCustomerHealth } from "@/lib/services/customerService";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
-import type { Database } from "@/integrations/supabase/types";
-
-type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
-type Invoice = Database['public']['Tables']['invoices']['Row'];
-type Payment = Database['public']['Tables']['payments']['Row'];
-type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
 
 export function useCustomerDetail(id: string | undefined) {
   const { toast } = useToast();
@@ -20,21 +14,13 @@ export function useCustomerDetail(id: string | undefined) {
   // === CORE queries (always loaded) ===
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('customers').select('*').eq('id', id!).single();
-      if (error) throw error;
-      return data as Customer;
-    },
+    queryFn: () => customerRepository.findById(id!),
     enabled: !!id,
   });
 
   const { data: addresses = [] } = useQuery({
     queryKey: ['customer-addresses', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('customer_addresses').select('*').eq('customer_id', id!).order('is_default', { ascending: false });
-      if (error) throw error;
-      return data as CustomerAddress[];
-    },
+    queryFn: () => customerRepository.findAddresses(id!),
     enabled: !!id,
   });
 
@@ -42,11 +28,7 @@ export function useCustomerDetail(id: string | undefined) {
   const invoicesNeeded = ['invoices', 'financial', 'statement', 'aging', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('invoices').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Invoice[];
-    },
+    queryFn: () => customerRepository.findInvoices(id!),
     enabled: !!id && invoicesNeeded,
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -55,11 +37,7 @@ export function useCustomerDetail(id: string | undefined) {
   const paymentsNeeded = ['payments', 'financial', 'statement', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('payments').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Payment[];
-    },
+    queryFn: () => customerRepository.findPayments(id!),
     enabled: !!id && paymentsNeeded,
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -67,52 +45,33 @@ export function useCustomerDetail(id: string | undefined) {
 
   const { data: creditNotes = [] } = useQuery({
     queryKey: ['customer-credit-notes', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('credit_notes').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as CreditNote[];
-    },
+    queryFn: () => customerRepository.findCreditNotes(id!),
     enabled: !!id && activeTab === 'statement',
     staleTime: 60000,
   });
 
   const { data: salesOrders = [] } = useQuery({
     queryKey: ['customer-sales-orders', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('sales_orders').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => customerRepository.findSalesOrders(id!),
     enabled: !!id && activeTab === 'orders',
     staleTime: 60000,
   });
 
   const { data: quotations = [] } = useQuery({
     queryKey: ['customer-quotations', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('quotations').select('*').eq('customer_id', id!).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => customerRepository.findQuotations(id!),
     enabled: !!id && activeTab === 'quotations',
     staleTime: 60000,
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ['customer-activities', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('activity_logs').select('*').eq('entity_type', 'customer').eq('entity_id', id!).order('created_at', { ascending: false }).limit(20);
-      if (error) throw error;
-      return data as ActivityLog[];
-    },
+    queryFn: () => customerRepository.findActivities(id!),
     enabled: !!id && activeTab === 'activity',
   });
 
   const updateImageMutation = useMutation({
-    mutationFn: async (imageUrl: string | null) => {
-      const { error } = await supabase.from('customers').update({ image_url: imageUrl }).eq('id', id!);
-      if (error) throw error;
-    },
+    mutationFn: (imageUrl: string | null) => customerRepository.updateImage(id!, imageUrl),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer', id] });
       toast({ title: "تم تحديث صورة العميل" });
@@ -124,10 +83,7 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   const deleteAddressMutation = useMutation({
-    mutationFn: async (addressId: string) => {
-      const { error } = await supabase.from('customer_addresses').delete().eq('id', addressId);
-      if (error) throw error;
-    },
+    mutationFn: (addressId: string) => customerRepository.deleteAddress(addressId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-addresses', id] });
       toast({ title: "تم حذف العنوان بنجاح" });
@@ -149,7 +105,6 @@ export function useCustomerDetail(id: string | undefined) {
     salesOrders, quotations, activities,
     activeTab, setActiveTab,
     updateImageMutation, deleteAddressMutation,
-    // Computed
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
     lastPurchaseDate, dso, clv,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Plus, Clock, Check } from "lucide-react";
 import { toast } from "sonner";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 interface CustomerReminderDialogProps {
   customerId: string;
@@ -25,28 +25,17 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
 
   const { data: reminders = [] } = useQuery({
     queryKey: ['customer-reminders', customerId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customer_reminders')
-        .select('*')
-        .eq('customer_id', customerId)
-        .order('reminder_date', { ascending: true });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => customerRepository.findReminders(customerId),
     staleTime: 30000,
   });
 
   const addMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('customer_reminders').insert({
-        customer_id: customerId,
-        reminder_date: reminderDate,
-        note: reminderNote.trim(),
-        created_by: user?.id || '',
-      });
-      if (error) throw error;
-    },
+    mutationFn: () => customerRepository.createReminder({
+      customer_id: customerId,
+      reminder_date: reminderDate,
+      note: reminderNote.trim(),
+      created_by: user?.id || '',
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-reminders', customerId] });
       toast.success('تم إضافة التذكير');
@@ -58,13 +47,8 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
-      const { error } = await supabase
-        .from('customer_reminders')
-        .update({ is_completed: completed, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
+      customerRepository.updateReminder(id, { is_completed: completed, updated_at: new Date().toISOString() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-reminders', customerId] });
     },
@@ -97,11 +81,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
               const isOverdue = new Date(r.reminder_date) < new Date();
               return (
                 <div key={r.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                  <Checkbox
-                    checked={false}
-                    onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: true })}
-                    className="mt-0.5"
-                  />
+                  <Checkbox checked={false} onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: true })} className="mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">{r.note}</p>
                     <div className="flex items-center gap-2 mt-1">
@@ -121,11 +101,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                 <div className="space-y-2 mt-2">
                   {completed.map((r) => (
                     <div key={r.id} className="flex items-start gap-3 p-3 border rounded-lg opacity-60">
-                      <Checkbox
-                        checked={true}
-                        onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: false })}
-                        className="mt-0.5"
-                      />
+                      <Checkbox checked={true} onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: false })} className="mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm line-through">{r.note}</p>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -73,11 +73,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
 
   const { data: categories = [] } = useQuery({
     queryKey: ['customer-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('customer_categories').select('*').order('name');
-      if (error) throw error;
-      return data as CustomerCategory[];
-    },
+    queryFn: () => customerRepository.findCategories(),
   });
 
   const methods = useForm<CustomerFormData>({
@@ -198,11 +194,9 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
       };
 
       if (isEditing) {
-        const { error } = await supabase.from('customers').update(payload).eq('id', customer.id);
-        if (error) throw error;
+        await customerRepository.update(customer.id, payload);
       } else {
-        const { error } = await supabase.from('customers').insert(payload);
-        if (error) throw error;
+        await customerRepository.create(payload);
       }
     },
     onSuccess: () => {
