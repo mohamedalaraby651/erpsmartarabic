@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useConvertDocument } from "@/hooks/useConvertDocument";
+import { WorkflowPipeline } from "@/components/shared/WorkflowPipeline";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
