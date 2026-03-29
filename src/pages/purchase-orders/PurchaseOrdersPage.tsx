@@ -488,6 +488,8 @@ const PurchaseOrdersPage = () => {
         totalCount={totalCount}
         pageSize={PAGE_SIZE}
         onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
       />
     </div>
   );
