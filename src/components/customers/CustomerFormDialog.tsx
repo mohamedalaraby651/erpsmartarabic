@@ -496,7 +496,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
           {LocationSection}
           {FinancialSection}
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>إلغاء</Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
             </Button>
