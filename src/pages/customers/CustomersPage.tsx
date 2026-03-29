@@ -7,7 +7,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch } from "lucide-react";
+import { Plus, Upload, Merge, LayoutGrid, LayoutList, Trash2, X, AlertTriangle, Star, Crown, Users, FileSpreadsheet, ScanSearch, Download, Loader2 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { useAuth } from "@/hooks/useAuth";

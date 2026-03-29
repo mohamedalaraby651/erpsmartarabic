@@ -448,7 +448,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     <>
     {unsavedDialog}
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }} onEscapeKeyDown={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}>
         <DialogHeader>
           <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
         </DialogHeader>

@@ -115,10 +115,10 @@ const CustomerDetailsPage = () => {
           <MobileDetailSection title="الفواتير" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.invoices.length}>
             <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="المدفوعات" priority="low" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
+          <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
             <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="الملخص المالي" priority="low" icon={<Wallet className="h-4 w-4" />}>
+          <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}>
               <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} />
             </Suspense>
