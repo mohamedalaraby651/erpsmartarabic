@@ -73,11 +73,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
 
   const { data: categories = [] } = useQuery({
     queryKey: ['customer-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('customer_categories').select('*').order('name');
-      if (error) throw error;
-      return data as CustomerCategory[];
-    },
+    queryFn: () => customerRepository.findCategories(),
   });
 
   const methods = useForm<CustomerFormData>({
