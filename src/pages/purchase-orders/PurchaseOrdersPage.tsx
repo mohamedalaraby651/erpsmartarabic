@@ -97,13 +97,29 @@ const PurchaseOrdersPage = () => {
     }
   }, [location.state]);
 
-  const { data: orders = [], isLoading, refetch } = useQuery({
-    queryKey: ['purchase-orders'],
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['purchase-orders-count', debouncedSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('purchase_orders').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`order_number.ilike.%${debouncedSearch}%`);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: orders = [], isLoading, refetch } = useQuery({
+    queryKey: ['purchase-orders', debouncedSearch, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('purchase_orders')
         .select('*, suppliers(name)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) query = query.or(`order_number.ilike.%${debouncedSearch}%`);
+      const { data, error } = await query;
       if (error) throw error;
       return data as PurchaseOrder[];
     },
