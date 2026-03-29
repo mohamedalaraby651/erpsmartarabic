@@ -106,6 +106,16 @@ const CustomerGridCardInner = ({
                 <MessageSquare className="h-4 w-4 md:h-3.5 md:w-3.5 text-emerald-600" />
               </Button>
             )}
+            {onEdit && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onEdit} title="تعديل">
+                <Edit className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onDelete} title="حذف">
+                <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5 text-destructive" />
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

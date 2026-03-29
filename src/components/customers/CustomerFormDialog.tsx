@@ -524,6 +524,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
       isSubmitting={mutation.isPending}
       submitLabel={isEditing ? 'تحديث' : 'إضافة'}
     />
+    </>
   );
 
   return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;

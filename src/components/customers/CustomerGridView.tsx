@@ -65,6 +65,8 @@ export const CustomerGridView = memo(function CustomerGridView({
           onClick={() => onNavigate(customer.id)}
           onNewInvoice={canEdit ? () => onNewInvoice(customer.id) : undefined}
           onWhatsApp={customer.phone ? () => onWhatsApp(customer.phone!) : undefined}
+          onEdit={canEdit && onEdit ? () => onEdit(customer) : undefined}
+          onDelete={canDelete && onDelete ? () => onDelete(customer.id) : undefined}
           isSelected={selectedIds.has(customer.id)}
           onSelect={(checked) => onToggleSelect(customer.id, checked)}
           showSelect={hasSelection}

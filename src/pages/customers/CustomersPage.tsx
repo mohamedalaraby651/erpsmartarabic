@@ -316,9 +316,12 @@ const CustomersPage = () => {
                   data={queries.customers}
                   isLoading={queries.isLoading}
                   canEdit={canEdit}
+                  canDelete={canDelete}
                   onNavigate={(id) => navigate(`/customers/${id}`)}
                   onNewInvoice={handleNewInvoice}
                   onWhatsApp={handleWhatsApp}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteRequest}
                   selectedIds={bulk.selectedIds}
                   onToggleSelect={bulk.toggleSelect}
                   hasSelection={bulk.hasSelection}
