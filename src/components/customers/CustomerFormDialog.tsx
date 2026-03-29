@@ -427,10 +427,28 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     { title: 'المالي والملاحظات', content: FinancialSection },
   ];
 
+  // ─── Unsaved changes dialog ────
+  const unsavedDialog = (
+    <AlertDialog open={unsavedWarningOpen} onOpenChange={setUnsavedWarningOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>بيانات غير محفوظة</AlertDialogTitle>
+          <AlertDialogDescription>لديك تغييرات لم يتم حفظها. هل تريد تجاهلها؟</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>متابعة التعديل</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmDiscard} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">تجاهل التغييرات</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   // ─── Desktop form ────
   const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <>
+    {unsavedDialog}
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}>
         <DialogHeader>
           <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
         </DialogHeader>
