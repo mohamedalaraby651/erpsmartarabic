@@ -1,93 +1,149 @@
 
 
-# تقرير المقارنة: Sprint 1 المطلوب vs الحالة الفعلية للكود
+# خطة التنفيذ الشاملة — إعادة هيكلة وحدة العملاء (Sprint 1: Enterprise Polish)
 
 ---
 
-## 1. المسار المرئي: توحيد GridView و TableView
-
-| المتطلب | الحالة | التفاصيل |
-|---|---|---|
-| Hover Prefetching في GridCard | ❌ مفقود | `handleRowHover` موجود في `useCustomerQueries` ويُستخدم فقط في `CustomerTableView` (سطر 398-399). `CustomerGridView` لا يمرر `onRowHover` ولا يستدعيه. |
-| Loading/Deleting States على الكارت | ❌ مفقود | `CustomerGridCard` لا يستقبل `isDeleting` prop. لا يوجد overlay أو spinner أثناء الحذف. `deletingId` يُستخدم فقط في `CustomerTableView`. |
-| Sort By dropdown في Grid mode | ❌ مفقود | `sortConfig` و `requestSort` موجودان في `CustomersPage` لكنهما يُمررّان فقط لـ `CustomerTableView`. لا يوجد UI للترتيب عند تفعيل Grid mode. |
-| Selection (Checkbox) | ✅ موجود | `CustomerGridCard` يدعم `isSelected`, `onSelect`, `showSelect`. |
-| Action buttons (تعديل، حذف، فاتورة، واتساب) | ✅ موجود | أزرار inline buttons على الكارت (hover على desktop، دائمة على mobile). |
+## الترتيب: 8 مهام مقسمة على 4 مراحل
 
 ---
 
-## 2. مسار البيانات: التصدير والفلترة
+## Phase 1 — تقسيم God Component + توحيد Actions (3 خطوات)
 
-| المتطلب | الحالة | التفاصيل |
-|---|---|---|
-| تصدير Excel/CSV بدل JSON | ❌ مفقود | `handleExportAll` (سطر 163-178) يُصدّر JSON فقط: `new Blob([JSON.stringify(allData)])`. لا يوجد CSV أو XLSX. |
-| Global Progress Toast أثناء التصدير | ❌ مفقود | يوجد `exportAllLoading` state يُظهر spinner على الزر فقط. لا يوجد toast أو progress bar عالمي. |
-| عداد الفلاتر يشمل noCommDays/inactiveDays | ✅ موجود | `activeFiltersCount` في `useCustomerFilters` (سطر 103-107) يحسب `(noCommDays ? 1 : 0) + (inactiveDays ? 1 : 0)`. |
-| فلاتر زمنية (بدون تواصل/نشاط) | ✅ موجود | `noCommDays` و `inactiveDays` مُنفذان بالكامل في الـ filters hook والـ queries hook والـ FilterDrawer. |
-| ExportWithTemplateButton (الصفحة الحالية) | ✅ موجود | يصدّر بيانات الصفحة الحالية فقط (`queries.customers`). |
+### الخطوة 1: استخراج CustomerDialogManager
+**المشكلة**: `CustomersPage.tsx` يدير 7 dialog states (سطر 48-58) + 5 AlertDialogs (سطر 532-599) = ~120 سطر dialogs
+**الملف الجديد**: `src/components/customers/CustomerDialogManager.tsx`
+**التنفيذ**:
+- نقل كل states: `dialogOpen`, `importDialogOpen`, `mergeDialogOpen`, `deleteConfirmId`, `duplicateDialogOpen`, `bulkDeleteOpen`, `bulkVipOpen`, `bulkVipValue`, `selectedCustomer`
+- نقل كل الـ AlertDialogs (single delete, bulk delete, bulk VIP) + الـ 4 dialogs (Form, Import, Merge, Duplicate)
+- تصدير interface `DialogManagerHandle` مع methods: `openAdd()`, `openEdit(customer)`, `confirmDelete(id)`, `openBulkDelete()`, `openBulkVip()`, إلخ
+- استخدام `useImperativeHandle` + `forwardRef` حتى يستدعي `CustomersPage` الدوال بدون prop drilling
 
----
+### الخطوة 2: استخراج CustomerBulkActionsBar
+**المشكلة**: شريط الـ Bulk Actions (سطر 262-294) inline في الصفحة
+**الملف الجديد**: `src/components/customers/CustomerBulkActionsBar.tsx`
+**التنفيذ**:
+- مكون يستقبل: `selectedCount`, `canDelete`, `onVipChange()`, `onActivate()`, `onDeactivate()`, `onDelete()`, `onClear()`
+- يعرض العدد + الأزرار
+- `React.memo` لمنع re-render غير ضروري
 
-## 3. مسار الحماية: Validation الاستباقي
+### الخطوة 3: استخراج CustomerActionMenu مشترك
+**المشكلة**: أزرار الإجراءات (تعديل، حذف، فاتورة، واتساب) مكررة بأشكال مختلفة في `CustomerGridCard` (سطر 112-134) و`CustomerTableView` (عبر `DataTableActions`) و`CustomerMobileView` (عبر `DataCard`)
+**الملف الجديد**: `src/components/customers/CustomerActionMenu.tsx`
+**التنفيذ**:
+- مكون واحد يقبل: `customer`, `canEdit`, `canDelete`, `onEdit`, `onDelete`, `onNewInvoice`, `onWhatsApp`, `variant: 'inline' | 'dropdown' | 'card'`
+- `variant='card'` → أزرار أيقونات (للـ Grid)
+- `variant='dropdown'` → قائمة منسدلة (للـ Table عبر DataTableActions)
+- `variant='inline'` → أزرار مباشرة (للـ Mobile)
+- يُستخدم في الثلاث views بدلاً من التكرار
 
-| المتطلب | الحالة | التفاصيل |
-|---|---|---|
-| Real-time Duplicate Check (اسم/هاتف) | ❌ مفقود | `CustomerFormDialog` لا يحتوي على أي debounced query للتحقق من التكرار أثناء الكتابة. يوجد `DuplicateDetectionDialog` منفصل لكنه يعمل بشكل مستقل عن النموذج. |
-| Unsaved Changes — onInteractOutside | ✅ موجود | سطر 253: `onInteractOutside={(e) => { if (isDirty) { e.preventDefault(); ... } }}` |
-| Unsaved Changes — onEscapeKeyDown | ✅ موجود | سطر 254: `onEscapeKeyDown={(e) => { if (isDirty) { e.preventDefault(); ... } }}` |
-| Unsaved Changes — زر الإغلاق (onOpenChange) | ✅ موجود | `handleOpenChange` (سطر 91-98) يعترض الإغلاق عند `isDirty`. |
-| Zod Schema Validation | ✅ موجود | يستخدم `zodResolver(customerSchema)`. |
-| Server-side Permission Check | ✅ موجود | `verifyPermissionOnServer` و `verifyFinancialLimit` قبل الحفظ. |
-
----
-
-## 4. مسار الموبايل: تحسين الوصول
-
-| المتطلب | الحالة | التفاصيل |
-|---|---|---|
-| Communication Log على الموبايل | ✅ موجود | `MobileDetailSection title="سجل التواصل" priority="low"` (سطر 134). لكنه `priority="low"` → مغلق افتراضياً. |
-| Reminders على الموبايل | ✅ موجود | `MobileDetailSection title="التذكيرات" priority="low"` (سطر 137). أيضاً `priority="low"`. |
-| رفع أولوية التواصل/التذكيرات | ❌ مطلوب | المطلوب جعلها `priority="medium"` ليكون الوصول أسهل من الميدان. |
-| Swipe Actions في MobileView | ⚠️ جزئي | `SwipeableRow` موجود ويدعم `onEdit` و `onDelete`. لا يدعم "سحب لليمين للاتصال". |
-| Pull to Refresh | ✅ موجود | `PullToRefresh` مُستخدم في `CustomerMobileView`. |
-| VirtualizedList للقوائم الطويلة | ✅ موجود | يُفعّل عند `data.length > 50`. |
-| Mobile Wizard للنموذج | ✅ موجود | `FullScreenForm` مع 4 خطوات wizard. |
-| Form Draft Auto-save | ✅ موجود | `useFormDraft` يحفظ كل 5 ثوانٍ في localStorage. |
+**النتيجة**: `CustomersPage` ينخفض من ~610 إلى ~250 سطر
 
 ---
 
-## 5. المسار المعماري المتقدم (الأهداف الاستراتيجية)
+## Phase 2 — Repository Pattern + CQRS (3 خطوات)
 
-| المتطلب | الحالة | التفاصيل |
-|---|---|---|
-| FormProvider + useFormContext | ✅ موجود | الملف الرئيسي يلف بـ `FormProvider`، والمكونات الفرعية تستخدم `useFormContext`. |
-| Component Decomposition | ✅ موجود | تم تقسيم النموذج إلى 4 مكونات: BasicInfo, Contact, Location, Financial. |
-| keepPreviousData | ✅ موجود | سطر 67 في `useCustomerQueries`: `placeholderData: keepPreviousData`. |
-| Optimistic Delete | ✅ موجود | `onMutate` في `deleteMutation` يزيل العميل مباشرة من الـ cache. |
-| Batch Validation قبل الحذف الجماعي | ✅ موجود | يستدعي `batch_validate_delete` RPC. |
-| Audit Trail | ✅ موجود | `log_bulk_operation` RPC بعد كل عملية جماعية. |
-| Keyboard Navigation (Table) | ✅ موجود | Arrow keys + Enter + Space + Delete في `CustomerTableView`. |
-| Command Palette (Cmd+K) | ❌ مفقود | لا يوجد global search/command palette. (خارج نطاق هذا السبرينت) |
-| Dashboards تفاعلية | ⚠️ جزئي | `CustomerPurchaseChart` موجود كتبويب. لا يوجد dashboard مركزي. |
+### الخطوة 4: إنشاء customerRepository.ts
+**المشكلة**: `supabase.from('customers')` مُستدعى مباشرة في `useCustomerQueries` + `CustomerFormDialog` + `handleExportAll` + `useDuplicateCheck`
+**الملف الجديد**: `src/lib/repositories/customerRepository.ts`
+**التنفيذ**:
+```text
+customerRepository = {
+  findAll(filters, sort, pagination) → { data, count }
+  findById(id) → Customer
+  create(data) → Customer
+  update(id, data) → Customer
+  delete(id) → void
+  getStats() → CustomerStats           // wraps RPC get_customer_stats
+  batchValidateDelete(ids) → blocked[] // wraps RPC batch_validate_delete
+  logBulkOperation(action, ids, details) // wraps RPC log_bulk_operation
+  findDuplicates(name, phone, excludeId?) → matches[]
+  exportAll(limit?) → Customer[]
+}
+```
+- كل الـ Supabase imports تتركز هنا فقط
+- الـ hooks تستورد من Repository بدلاً من supabase مباشرة
+- يسهّل الاختبار والتبديل المستقبلي
+
+### الخطوة 5: تقسيم useCustomerQueries إلى Read/Write
+**المشكلة**: Hook واحد (262 سطر) يخلط queries + mutations + prefetch
+**الملفات**:
+- `src/hooks/customers/useCustomerList.ts` — query الرئيسي + stats + prefetch
+- `src/hooks/customers/useCustomerMutations.ts` — delete + bulk delete + bulk VIP + bulk status
+- تحديث `src/hooks/customers/index.ts` للتصدير الجديد
+
+**التنفيذ**:
+- `useCustomerList` يستدعي `customerRepository.findAll()` + `customerRepository.getStats()`
+- `useCustomerMutations` يستدعي `customerRepository.delete()` + `customerRepository.batchValidateDelete()`
+- `CustomersPage` يستدعي الاثنين بدلاً من `useCustomerQueries` الموحد
+- نقل `handleRowHover`/`handleRowLeave` إلى `useCustomerList`
+- الحفاظ على optimistic updates في `useCustomerMutations`
+
+### الخطوة 6: توحيد Validation في customerService
+**المشكلة**: التحقق من صلاحية الحذف في 3 أماكن مختلفة
+**الملف**: `src/lib/services/customerService.ts`
+**التنفيذ**:
+- `validateBeforeDelete(id)` يبقى كما هو (للحذف الفردي)
+- إضافة `validateBatchDelete(ids)` يستدعي `customerRepository.batchValidateDelete()` — بدلاً من استدعاء RPC مباشرة في mutation
+- `canDeleteCustomer()` و `canModifyCustomer()` يبقيان — لكن `CustomerFormDialog` يستدعيهم عبر `customerService` بدلاً من `verifyPermissionOnServer` المباشر
+- إضافة `transformForExport(customers)` — تحويل بيانات التصدير (headers عربية + formatting)
 
 ---
 
-## ملخص الفجوات — المهام المطلوب تنفيذها في Sprint 1
+## Phase 3 — UI Parity بين Grid/Table/Mobile (خطوة واحدة)
+
+### الخطوة 7: توحيد التجربة عبر Views
+**تم تنفيذه سابقاً** (جزئياً): hover prefetch + deleting overlay + sort dropdown
+**المتبقي**:
+- **Keyboard Navigation في Grid**: استخراج `useGridNavigation` hook من `CustomerTableView.handleKeyDown` وتطبيقه في `CustomerGridView`
+- **SelectAll في Grid**: إضافة checkbox "تحديد الكل" في toolbar الـ Grid (موجود في Table فقط)
+- **Mobile Prefetch**: تمرير `onRowHover` لـ `CustomerMobileView` عبر `DataCard.onMouseEnter`
+
+---
+
+## Phase 4 — Scalability (خطوة واحدة)
+
+### الخطوة 8: تحسين Export + Server-Side Aggregation
+**8a — تحسين Export**:
+- نقل منطق التصدير من `CustomersPage.handleExportAll` إلى `customerService.exportToExcel()`
+- دعم cursor-based pagination للتصدير (+5000): جلب 1000 سجل في كل دفعة مع تحديث progress toast
+- Fallback: الاحتفاظ بالتصدير الحالي كـ client-side fallback
+
+**8b — Server-Side Aggregation (مستقبلي)**:
+- إنشاء RPC `get_customer_financial_summary(customer_id)` يعيد: total_invoiced, total_paid, dso, aging_buckets
+- تقليل حجم البيانات المنقولة في `useCustomerDetail` من جلب كل الفواتير+المدفوعات إلى استدعاء RPC واحد
+
+---
+
+## ملخص الملفات
 
 ```text
-┌─────────────────────────────────────────────────────────┬──────────┐
-│ المهمة                                                  │ الأولوية │
-├─────────────────────────────────────────────────────────┼──────────┤
-│ 1. Hover Prefetch في GridCard                           │ عالية    │
-│ 2. Deleting overlay/spinner على GridCard                │ عالية    │
-│ 3. Sort dropdown في Grid mode                           │ عالية    │
-│ 4. تحويل Export All من JSON إلى CSV/XLSX                │ عالية    │
-│ 5. Progress Toast أثناء التصدير                          │ متوسطة   │
-│ 6. Real-time Duplicate Check في النموذج                  │ عالية    │
-│ 7. رفع أولوية التواصل/التذكيرات على الموبايل             │ منخفضة   │
-│ 8. إضافة "سحب لليمين للاتصال" في SwipeableRow           │ متوسطة   │
-└─────────────────────────────────────────────────────────┴──────────┘
+جديد:
+  src/components/customers/CustomerDialogManager.tsx    (~180 سطر)
+  src/components/customers/CustomerBulkActionsBar.tsx    (~60 سطر)
+  src/components/customers/CustomerActionMenu.tsx        (~80 سطر)
+  src/lib/repositories/customerRepository.ts             (~120 سطر)
+  src/hooks/customers/useCustomerList.ts                 (~100 سطر)
+  src/hooks/customers/useCustomerMutations.ts            (~120 سطر)
+  src/hooks/customers/useGridNavigation.ts               (~40 سطر)
+
+تعديل:
+  src/pages/customers/CustomersPage.tsx     (610 → ~250 سطر)
+  src/components/customers/CustomerGridCard.tsx (يستخدم CustomerActionMenu)
+  src/components/customers/CustomerTableView.tsx (يستخدم CustomerActionMenu)
+  src/components/customers/CustomerMobileView.tsx (يستخدم CustomerActionMenu)
+  src/components/customers/CustomerFormDialog.tsx (يستخدم customerService بدل verifyPermissionOnServer)
+  src/lib/services/customerService.ts (إضافة validateBatchDelete + transformForExport)
+  src/hooks/customers/index.ts (تحديث exports)
+  src/hooks/customers/useDuplicateCheck.ts (يستخدم repository)
+
+حذف:
+  src/hooks/customers/useCustomerQueries.ts (يُستبدل بـ useCustomerList + useCustomerMutations)
 ```
 
-**الخلاصة**: من أصل ~20 متطلباً في Sprint 1، تم تنفيذ ~12 بالفعل (60%). المتبقي 8 مهام محددة وواضحة، أكبرها: تحويل التصدير لـ CSV/XLSX، إضافة Duplicate Check الحقيقي في النموذج، وتوحيد Prefetch/Sort/Delete States بين Grid و Table.
+## ترتيب التنفيذ الآمن
+1. **Phase 1** أولاً — لأنه refactoring بصري فقط، لا يغيّر data flow
+2. **Phase 2** ثانياً — Repository + CQRS = أكبر تغيير، لكن Phase 1 يجعله أسهل
+3. **Phase 3** ثالثاً — UI polish بعد استقرار البنية
+4. **Phase 4** أخيراً — تحسينات أداء لا تؤثر على الوظائف
 
