@@ -27,7 +27,10 @@ function applyFilters(
   query: any,
   { debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter }: Pick<UseCustomerQueriesOptions, 'debouncedSearch' | 'typeFilter' | 'vipFilter' | 'governorateFilter' | 'statusFilter'>
 ) {
-  if (debouncedSearch) query = query.or(`name.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%,governorate.ilike.%${debouncedSearch}%`);
+  if (debouncedSearch) {
+    const s = sanitizeSearch(debouncedSearch);
+    query = query.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`);
+  }
   if (typeFilter !== 'all') query = query.eq('customer_type', typeFilter);
   if (vipFilter !== 'all') query = query.eq('vip_level', vipFilter);
   if (governorateFilter !== 'all') query = query.eq('governorate', governorateFilter);
