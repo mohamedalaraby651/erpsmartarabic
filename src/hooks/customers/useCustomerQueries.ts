@@ -84,7 +84,8 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
         totalBalance: d.total_balance || 0,
       };
     },
-    staleTime: 30000,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
   // Delete mutation with server-side permission check
