@@ -469,6 +469,20 @@ const CustomersPage = () => {
             </SelectContent>
           </Select>
         </FilterSection>
+        <FilterSection title="بدون تواصل منذ (أيام)">
+          <Input
+            type="number" min={0} placeholder="مثال: 30"
+            value={filters.tempNoCommDays}
+            onChange={(e) => filters.setTempNoCommDays(e.target.value)}
+          />
+        </FilterSection>
+        <FilterSection title="بدون نشاط منذ (أيام)">
+          <Input
+            type="number" min={0} placeholder="مثال: 60"
+            value={filters.tempInactiveDays}
+            onChange={(e) => filters.setTempInactiveDays(e.target.value)}
+          />
+        </FilterSection>
       </FilterDrawer>
 
       {/* Single Delete Confirmation Dialog */}
