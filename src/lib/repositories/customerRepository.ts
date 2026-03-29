@@ -9,6 +9,13 @@ import type { Database } from "@/integrations/supabase/types";
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
 type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
+type CustomerAddress = Database['public']['Tables']['customer_addresses']['Row'];
+type CustomerAddressInsert = Database['public']['Tables']['customer_addresses']['Insert'];
+type CustomerCategory = Database['public']['Tables']['customer_categories']['Row'];
+type Invoice = Database['public']['Tables']['invoices']['Row'];
+type Payment = Database['public']['Tables']['payments']['Row'];
+type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
+type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
 
 /** Escape special chars for Postgres .ilike */
 function sanitizeSearch(input: string): string {
@@ -51,6 +58,17 @@ export interface DuplicateResult {
   phone: string | null;
 }
 
+export interface DuplicateDetectionResult {
+  id1: string;
+  name1: string;
+  phone1: string | null;
+  id2: string;
+  name2: string;
+  phone2: string | null;
+  similarity_score: number;
+  match_type: string;
+}
+
 // ============================================
 // Repository Methods
 // ============================================
@@ -79,7 +97,10 @@ function applyFilters(query: any, filters: CustomerFilters) {
 }
 
 export const customerRepository = {
-  /** Fetch paginated + filtered customer list with count */
+  // ============================================
+  // Core CRUD
+  // ============================================
+
   async findAll(
     filters: CustomerFilters,
     sort: CustomerSort,
@@ -103,7 +124,6 @@ export const customerRepository = {
     return { data: (data || []) as Customer[], count: count || 0 };
   },
 
-  /** Fetch single customer by ID */
   async findById(id: string): Promise<Customer | null> {
     const { data, error } = await supabase
       .from('customers')
@@ -114,7 +134,6 @@ export const customerRepository = {
     return data;
   },
 
-  /** Create a new customer */
   async create(payload: CustomerInsert): Promise<Customer> {
     const { data, error } = await supabase
       .from('customers')
@@ -125,7 +144,6 @@ export const customerRepository = {
     return data;
   },
 
-  /** Update an existing customer */
   async update(id: string, payload: CustomerUpdate): Promise<void> {
     const { error } = await supabase
       .from('customers')
@@ -134,7 +152,6 @@ export const customerRepository = {
     if (error) throw error;
   },
 
-  /** Delete a customer */
   async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('customers')
@@ -143,7 +160,10 @@ export const customerRepository = {
     if (error) throw error;
   },
 
-  /** Bulk delete customers */
+  // ============================================
+  // Bulk Operations
+  // ============================================
+
   async bulkDelete(ids: string[]): Promise<void> {
     const { error } = await supabase
       .from('customers')
@@ -152,7 +172,6 @@ export const customerRepository = {
     if (error) throw error;
   },
 
-  /** Bulk update VIP level */
   async bulkUpdateVip(ids: string[], vipLevel: string): Promise<void> {
     const { error } = await supabase
       .from('customers')
@@ -161,7 +180,6 @@ export const customerRepository = {
     if (error) throw error;
   },
 
-  /** Bulk update active status */
   async bulkUpdateStatus(ids: string[], isActive: boolean): Promise<void> {
     const { error } = await supabase
       .from('customers')
@@ -170,21 +188,22 @@ export const customerRepository = {
     if (error) throw error;
   },
 
-  /** Get aggregate stats via RPC */
+  // ============================================
+  // RPCs & Stats
+  // ============================================
+
   async getStats(): Promise<Record<string, number>> {
     const { data, error } = await supabase.rpc('get_customer_stats');
     if (error) throw error;
     return data as Record<string, number>;
   },
 
-  /** Batch validate delete — returns customers that cannot be deleted */
   async batchValidateDelete(ids: string[]): Promise<BlockedCustomer[]> {
     const { data, error } = await supabase.rpc('batch_validate_delete', { p_ids: ids });
     if (error) throw error;
     return (data || []) as BlockedCustomer[];
   },
 
-  /** Log a bulk operation for audit trail */
   async logBulkOperation(action: string, ids: string[], details: Record<string, unknown>): Promise<void> {
     await supabase.rpc('log_bulk_operation', {
       _action: action,
@@ -194,7 +213,25 @@ export const customerRepository = {
     });
   },
 
-  /** Find duplicates by name or phone */
+  async findDuplicatesRpc(): Promise<DuplicateDetectionResult[]> {
+    const { data, error } = await supabase.rpc('find_duplicate_customers');
+    if (error) throw error;
+    return (data || []) as DuplicateDetectionResult[];
+  },
+
+  async mergeCustomers(primaryId: string, duplicateId: string): Promise<{ success: boolean; message: string }> {
+    const { data, error } = await supabase.rpc('merge_customers_atomic', {
+      p_primary_id: primaryId,
+      p_duplicate_id: duplicateId,
+    });
+    if (error) throw error;
+    return data as { success: boolean; message: string };
+  },
+
+  // ============================================
+  // Search & Duplicates
+  // ============================================
+
   async findDuplicates(
     name: string | undefined,
     phone: string | undefined,
@@ -228,7 +265,35 @@ export const customerRepository = {
     return { nameDuplicates, phoneDuplicates };
   },
 
-  /** Export all customers (with optional limit) */
+  async searchPreview(searchTerm: string): Promise<Customer[]> {
+    if (!searchTerm || searchTerm.length < 2) return [];
+    const s = sanitizeSearch(searchTerm);
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, name, phone, governorate, customer_type, image_url, current_balance, vip_level')
+      .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
+      .limit(5);
+    if (error) throw error;
+    return (data || []) as Customer[];
+  },
+
+  async searchForMerge(searchTerm: string): Promise<Customer[]> {
+    if (!searchTerm || searchTerm.length < 2) return [];
+    const s = sanitizeSearch(searchTerm);
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
+      .order('name')
+      .limit(20);
+    if (error) throw error;
+    return (data || []) as Customer[];
+  },
+
+  // ============================================
+  // Export & Prefetch
+  // ============================================
+
   async exportAll(limit = 5000): Promise<Customer[]> {
     const { data, error } = await supabase
       .from('customers')
@@ -239,7 +304,6 @@ export const customerRepository = {
     return (data || []) as Customer[];
   },
 
-  /** Prefetch customer detail data */
   async prefetchCustomer(id: string): Promise<Customer | null> {
     const { data } = await supabase
       .from('customers')
@@ -249,7 +313,6 @@ export const customerRepository = {
     return data;
   },
 
-  /** Prefetch customer addresses */
   async prefetchAddresses(customerId: string) {
     const { data } = await supabase
       .from('customer_addresses')
@@ -259,7 +322,6 @@ export const customerRepository = {
     return data;
   },
 
-  /** Check open invoices for single customer */
   async countOpenInvoices(customerId: string): Promise<number> {
     const { count, error } = await supabase
       .from('invoices')
@@ -268,5 +330,198 @@ export const customerRepository = {
       .in('payment_status', ['pending', 'partial']);
     if (error) throw error;
     return count || 0;
+  },
+
+  // ============================================
+  // Addresses
+  // ============================================
+
+  async findAddresses(customerId: string): Promise<CustomerAddress[]> {
+    const { data, error } = await supabase
+      .from('customer_addresses')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('is_default', { ascending: false });
+    if (error) throw error;
+    return (data || []) as CustomerAddress[];
+  },
+
+  async createAddress(payload: CustomerAddressInsert): Promise<void> {
+    const { error } = await supabase
+      .from('customer_addresses')
+      .insert(payload);
+    if (error) throw error;
+  },
+
+  async updateAddress(id: string, payload: Partial<CustomerAddressInsert>): Promise<void> {
+    const { error } = await supabase
+      .from('customer_addresses')
+      .update(payload)
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async deleteAddress(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('customer_addresses')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  // ============================================
+  // Categories
+  // ============================================
+
+  async findCategories(): Promise<CustomerCategory[]> {
+    const { data, error } = await supabase
+      .from('customer_categories')
+      .select('*')
+      .order('name');
+    if (error) throw error;
+    return (data || []) as CustomerCategory[];
+  },
+
+  // ============================================
+  // Detail Page — Related Entities
+  // ============================================
+
+  async findInvoices(customerId: string): Promise<Invoice[]> {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Invoice[];
+  },
+
+  async findPayments(customerId: string): Promise<Payment[]> {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Payment[];
+  },
+
+  async findCreditNotes(customerId: string): Promise<CreditNote[]> {
+    const { data, error } = await supabase
+      .from('credit_notes')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as CreditNote[];
+  },
+
+  async findSalesOrders(customerId: string) {
+    const { data, error } = await supabase
+      .from('sales_orders')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async findQuotations(customerId: string) {
+    const { data, error } = await supabase
+      .from('quotations')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async findActivities(customerId: string): Promise<ActivityLog[]> {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('entity_type', 'customer')
+      .eq('entity_id', customerId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    return (data || []) as ActivityLog[];
+  },
+
+  async updateImage(id: string, imageUrl: string | null): Promise<void> {
+    const { error } = await supabase
+      .from('customers')
+      .update({ image_url: imageUrl })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  // ============================================
+  // Reminders
+  // ============================================
+
+  async findReminders(customerId: string) {
+    const { data, error } = await supabase
+      .from('customer_reminders')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('reminder_date', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createReminder(payload: { customer_id: string; reminder_date: string; note: string; created_by: string }): Promise<void> {
+    const { error } = await supabase
+      .from('customer_reminders')
+      .insert(payload);
+    if (error) throw error;
+  },
+
+  async updateReminder(id: string, payload: { is_completed: boolean; updated_at: string }): Promise<void> {
+    const { error } = await supabase
+      .from('customer_reminders')
+      .update(payload)
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  // ============================================
+  // Communications
+  // ============================================
+
+  async findCommunications(customerId: string) {
+    const { data, error } = await supabase
+      .from('customer_communications')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('communication_date', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createCommunication(payload: { customer_id: string; type: string; subject: string | null; note: string; created_by: string }): Promise<void> {
+    const { error } = await supabase
+      .from('customer_communications')
+      .insert(payload);
+    if (error) throw error;
+  },
+
+  // ============================================
+  // Import
+  // ============================================
+
+  async findAllNamesAndPhones(): Promise<{ name: string; phone: string | null }[]> {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('name, phone');
+    if (error) throw error;
+    return (data || []) as { name: string; phone: string | null }[];
+  },
+
+  async insertCustomer(payload: CustomerInsert): Promise<void> {
+    const { error } = await supabase
+      .from('customers')
+      .insert(payload);
+    if (error) throw error;
   },
 };
