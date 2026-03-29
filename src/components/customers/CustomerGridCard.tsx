@@ -27,6 +27,8 @@ const CustomerGridCardInner = ({
   onClick,
   onNewInvoice,
   onWhatsApp,
+  onEdit,
+  onDelete,
   isSelected,
   onSelect,
   showSelect,
