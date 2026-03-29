@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerPagination } from "@/hooks/useServerPagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { ServerPagination } from "@/components/shared/ServerPagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +36,8 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
+const PAGE_SIZE = 25;
+
 type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'] & {
   suppliers: { name: string } | null;
 };
@@ -57,6 +62,7 @@ const PurchaseOrdersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [prefillSupplierId, setPrefillSupplierId] = useState<string | undefined>(undefined);
@@ -91,13 +97,29 @@ const PurchaseOrdersPage = () => {
     }
   }, [location.state]);
 
-  const { data: orders = [], isLoading, refetch } = useQuery({
-    queryKey: ['purchase-orders'],
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['purchase-orders-count', debouncedSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase.from('purchase_orders').select('*', { count: 'exact', head: true });
+      if (debouncedSearch) query = query.or(`order_number.ilike.%${debouncedSearch}%`);
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+
+  const { data: orders = [], isLoading, refetch } = useQuery({
+    queryKey: ['purchase-orders', debouncedSearch, pagination.currentPage],
+    queryFn: async () => {
+      let query = supabase
         .from('purchase_orders')
         .select('*, suppliers(name)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(pagination.range.from, pagination.range.to);
+      if (debouncedSearch) query = query.or(`order_number.ilike.%${debouncedSearch}%`);
+      const { data, error } = await query;
       if (error) throw error;
       return data as PurchaseOrder[];
     },
@@ -124,11 +146,8 @@ const PurchaseOrdersPage = () => {
     },
   });
 
-  // Filter by search
-  const searchFiltered = orders.filter(order =>
-    order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.suppliers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Search is now server-side via debouncedSearch
+  const searchFiltered = orders;
 
   const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
@@ -462,6 +481,16 @@ const PurchaseOrdersPage = () => {
           onOpenChange={setPrintDialogOpen}
         />
       )}
+
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
     </div>
   );
 };
