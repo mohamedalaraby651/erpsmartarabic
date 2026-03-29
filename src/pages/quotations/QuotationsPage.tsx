@@ -465,6 +465,16 @@ const QuotationsPage = () => {
           onOpenChange={setPrintDialogOpen}
         />
       )}
+
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
     </div>
   );
 };
