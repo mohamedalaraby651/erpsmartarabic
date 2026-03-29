@@ -162,16 +162,49 @@ const CustomersPage = () => {
 
   const handleExportAll = useCallback(async () => {
     setExportAllLoading(true);
+    const toastId = 'export-all';
     try {
+      const { toast: sonnerToast } = await import('sonner');
+      sonnerToast.loading('جاري تحميل بيانات جميع العملاء...', { id: toastId });
+
       const { data, error } = await supabase
         .from('customers')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5000);
       if (error) throw error;
-      return data as Customer[];
-    } catch {
-      return null;
+      if (!data || data.length === 0) {
+        sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });
+        return;
+      }
+
+      sonnerToast.loading(`جاري تصدير ${data.length} عميل...`, { id: toastId });
+
+      const XLSX = await import('xlsx');
+      const headers: Record<string, string> = {
+        name: 'الاسم', phone: 'الهاتف', email: 'البريد', customer_type: 'النوع',
+        vip_level: 'مستوى VIP', current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
+        governorate: 'المحافظة', city: 'المدينة', contact_person: 'المسؤول',
+        is_active: 'نشط', created_at: 'تاريخ الإنشاء',
+      };
+      const exportData = data.map(row => {
+        const mapped: Record<string, any> = {};
+        Object.keys(headers).forEach(key => {
+          mapped[headers[key]] = (row as any)[key];
+        });
+        return mapped;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      ws['!cols'] = Object.values(headers).map(h => ({ wch: Math.max(h.length, 15) }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+      XLSX.writeFile(wb, `customers_all_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+      sonnerToast.success(`تم تصدير ${data.length} عميل بنجاح`, { id: toastId });
+    } catch (err) {
+      const { toast: sonnerToast } = await import('sonner');
+      sonnerToast.error('حدث خطأ أثناء التصدير', { id: toastId });
     } finally {
       setExportAllLoading(false);
     }
