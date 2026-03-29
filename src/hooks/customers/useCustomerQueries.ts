@@ -3,8 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { canDeleteCustomer } from "@/lib/services/customerService";
+import { logErrorSafely } from "@/lib/errorHandler";
 import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
+
+/** Escape special chars for Postgres .ilike */
+function sanitizeSearch(input: string): string {
+  return input.replace(/[%_\\]/g, '\\$&');
+}
 
 interface UseCustomerQueriesOptions {
   debouncedSearch: string;
