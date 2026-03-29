@@ -34,14 +34,18 @@ export function useCustomerFilters() {
       vip: overrides.vip ?? vipFilter,
       gov: overrides.gov ?? governorateFilter,
       status: overrides.status ?? statusFilter,
+      noComm: overrides.noComm ?? noCommDays,
+      inactive: overrides.inactive ?? inactiveDays,
     };
     if (vals.q) params.q = vals.q;
     if (vals.type !== 'all') params.type = vals.type;
     if (vals.vip !== 'all') params.vip = vals.vip;
     if (vals.gov !== 'all') params.gov = vals.gov;
     if (vals.status !== 'all') params.status = vals.status;
+    if (vals.noComm) params.noComm = vals.noComm;
+    if (vals.inactive) params.inactive = vals.inactive;
     setSearchParams(params, { replace: true });
-  }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, setSearchParams]);
+  }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays, setSearchParams]);
 
   const updateFilter = useCallback((key: string, value: string) => {
     const setters: Record<string, (v: string) => void> = {
