@@ -101,8 +101,9 @@ export function useCustomerFilters() {
   }, []);
 
   const activeFiltersCount = useMemo(
-    () => [typeFilter, vipFilter, governorateFilter, statusFilter].filter(f => f !== 'all').length,
-    [typeFilter, vipFilter, governorateFilter, statusFilter]
+    () => [typeFilter, vipFilter, governorateFilter, statusFilter].filter(f => f !== 'all').length
+      + (noCommDays ? 1 : 0) + (inactiveDays ? 1 : 0),
+    [typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays]
   );
 
   return {
