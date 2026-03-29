@@ -60,7 +60,7 @@ const PurchaseOrdersPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [prefillSupplierId, setPrefillSupplierId] = useState<string | undefined>(undefined);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
