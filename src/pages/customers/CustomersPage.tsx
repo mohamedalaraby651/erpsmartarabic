@@ -206,6 +206,22 @@ const CustomersPage = () => {
                   { key: 'credit_limit', label: 'حد الائتمان' },
                 ]}
               />
+              <Button
+                variant="outline" size="sm" disabled={exportAllLoading}
+                onClick={async () => {
+                  const allData = await handleExportAll();
+                  if (allData) {
+                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = `customers_all_${new Date().toISOString().slice(0,10)}.json`;
+                    a.click(); URL.revokeObjectURL(url);
+                  }
+                }}
+              >
+                {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
+                تصدير الكل
+              </Button>
             </>
           )}
           {canEdit && (
