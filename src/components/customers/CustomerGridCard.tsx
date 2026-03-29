@@ -20,6 +20,9 @@ interface CustomerGridCardProps {
   isSelected?: boolean;
   onSelect?: (checked: boolean) => void;
   showSelect?: boolean;
+  isDeleting?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 const CustomerGridCardInner = ({
