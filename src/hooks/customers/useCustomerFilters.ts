@@ -112,11 +112,14 @@ export function useCustomerFilters() {
     vipFilter, setVipFilter: (v: string) => updateFilter('vip', v),
     governorateFilter, setGovernorateFilter: (v: string) => updateFilter('gov', v),
     statusFilter, setStatusFilter: (v: string) => updateFilter('status', v),
+    noCommDays, setNoCommDays: (v: string) => updateFilter('noComm', v),
+    inactiveDays, setInactiveDays: (v: string) => updateFilter('inactive', v),
     clearFilter, clearAllFilters, activeFiltersCount,
     // Drawer
     filterDrawerOpen, setFilterDrawerOpen,
     tempType, setTempType, tempVip, setTempVip,
     tempGovernorate, setTempGovernorate, tempStatus, setTempStatus,
+    tempNoCommDays, setTempNoCommDays, tempInactiveDays, setTempInactiveDays,
     openDrawerWithCurrentValues, applyDrawerFilters, resetDrawerFilters,
     // URL
     searchParams, setSearchParams,
