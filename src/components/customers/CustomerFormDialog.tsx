@@ -17,11 +17,13 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { customerSchema, type CustomerFormData } from "@/lib/validations";
 import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
-import { User, Phone, MapPin, Wallet } from "lucide-react";
+import { User, Phone, MapPin, Wallet, AlertTriangle } from "lucide-react";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { useDuplicateCheck } from "@/hooks/customers/useDuplicateCheck";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Path } from "react-hook-form";
 
 // Sub-components
