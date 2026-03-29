@@ -146,11 +146,8 @@ const PurchaseOrdersPage = () => {
     },
   });
 
-  // Filter by search
-  const searchFiltered = orders.filter(order =>
-    order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.suppliers?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Search is now server-side via debouncedSearch
+  const searchFiltered = orders;
 
   const { filteredData, filters, setFilter } = useTableFilter(searchFiltered);
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
