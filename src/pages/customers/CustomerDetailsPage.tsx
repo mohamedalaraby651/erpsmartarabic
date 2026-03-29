@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
-  CreditCard, Bell, MessageSquare, BarChart3, Wallet, Globe, Clock, Printer, Trash2, Plus,
+  CreditCard, Bell, MessageSquare, BarChart3, Wallet, Globe, Clock, Printer,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
