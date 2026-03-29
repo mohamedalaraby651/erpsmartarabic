@@ -86,8 +86,10 @@ export function useCustomerFilters() {
     setVipFilter(tempVip);
     setGovernorateFilter(tempGovernorate);
     setStatusFilter(tempStatus);
-    syncToUrl({ type: tempType, vip: tempVip, gov: tempGovernorate, status: tempStatus });
-  }, [tempType, tempVip, tempGovernorate, tempStatus, syncToUrl]);
+    setNoCommDays(tempNoCommDays);
+    setInactiveDays(tempInactiveDays);
+    syncToUrl({ type: tempType, vip: tempVip, gov: tempGovernorate, status: tempStatus, noComm: tempNoCommDays, inactive: tempInactiveDays });
+  }, [tempType, tempVip, tempGovernorate, tempStatus, tempNoCommDays, tempInactiveDays, syncToUrl]);
 
   const resetDrawerFilters = useCallback(() => {
     setTempType('all');
