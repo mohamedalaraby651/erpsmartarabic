@@ -5,9 +5,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Crown, FileText, MessageSquare } from "lucide-react";
+import { Building2, Users, Crown } from "lucide-react";
 import { DataTableHeader } from "@/components/ui/data-table-header";
-import { DataTableActions } from "@/components/ui/data-table-actions";
+import { CustomerActionMenu } from "@/components/customers/CustomerActionMenu";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import { vipColors, vipLabels, getBalanceColor } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
