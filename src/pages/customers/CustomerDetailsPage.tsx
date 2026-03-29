@@ -117,29 +117,29 @@ const CustomerDetailsPage = () => {
           <MobileDetailSection title="الفواتير" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.invoices.length}>
             <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length} defaultCollapsed>
+          <MobileDetailSection title="المدفوعات" priority="low" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
             <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />} defaultCollapsed>
+          <MobileDetailSection title="الملخص المالي" priority="low" icon={<Wallet className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}>
               <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} />
             </Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="العناوين" priority="medium" icon={<MapPin className="h-4 w-4" />} badge={detail.addresses.length} defaultCollapsed>
+          <MobileDetailSection title="العناوين" priority="low" icon={<MapPin className="h-4 w-4" />} badge={detail.addresses.length}>
             <Suspense fallback={<TabFallback />}>
               <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(id) => detail.deleteAddressMutation.mutate(id)} />
             </Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />} defaultCollapsed>
+          <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="سجل التواصل" priority="low" icon={<MessageSquare className="h-4 w-4" />} defaultCollapsed>
+          <MobileDetailSection title="سجل التواصل" priority="low" icon={<MessageSquare className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CommunicationLogTab customerId={id!} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="التذكيرات" priority="low" icon={<Bell className="h-4 w-4" />} defaultCollapsed>
+          <MobileDetailSection title="التذكيرات" priority="low" icon={<Bell className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CustomerReminderSection customerId={id!} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />} defaultCollapsed>
+          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CustomerTabAttachments customerId={id!} /></Suspense>
           </MobileDetailSection>
         </div>
