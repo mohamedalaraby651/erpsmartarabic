@@ -91,10 +91,29 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     facebook_url: '', website_url: '',
   };
 
-  const { register, handleSubmit, reset, setValue, watch, trigger, formState: { errors } } = useForm<CustomerFormData>({
+  const { register, handleSubmit, reset, setValue, watch, trigger, formState: { errors, isDirty } } = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues,
   });
+
+  const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
+  const pendingCloseRef = useRef(false);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && isDirty) {
+      setUnsavedWarningOpen(true);
+      pendingCloseRef.current = true;
+      return;
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const confirmDiscard = () => {
+    setUnsavedWarningOpen(false);
+    pendingCloseRef.current = false;
+    reset(defaultValues);
+    onOpenChange(false);
+  };
 
   const customerType = watch('customer_type');
   const selectedGovernorate = watch('governorate');
