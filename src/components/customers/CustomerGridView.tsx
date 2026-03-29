@@ -74,6 +74,9 @@ export const CustomerGridView = memo(function CustomerGridView({
           isSelected={selectedIds.has(customer.id)}
           onSelect={(checked) => onToggleSelect(customer.id, checked)}
           showSelect={hasSelection}
+          isDeleting={deletingId === customer.id}
+          onMouseEnter={onRowHover ? () => onRowHover(customer.id) : undefined}
+          onMouseLeave={onRowLeave}
         />
       ))}
     </div>
