@@ -35,6 +35,9 @@ const CustomerGridCardInner = ({
   isSelected,
   onSelect,
   showSelect,
+  isDeleting,
+  onMouseEnter,
+  onMouseLeave,
 }: CustomerGridCardProps) => {
   const balance = Number(customer.current_balance || 0);
   const creditLimit = Number(customer.credit_limit || 0);
