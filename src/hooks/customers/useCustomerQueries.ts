@@ -18,6 +18,8 @@ interface UseCustomerQueriesOptions {
   vipFilter: string;
   governorateFilter: string;
   statusFilter: string;
+  noCommDays?: string;
+  inactiveDays?: string;
   currentPage: number;
   pageSize: number;
   sortConfig: SortConfig;
