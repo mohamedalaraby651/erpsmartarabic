@@ -202,7 +202,7 @@ const CustomersPage = () => {
       {bulk.hasSelection && (
         <Card className="border-primary/50 bg-primary/5">
           <CardContent className="p-3 flex items-center justify-between flex-wrap gap-2">
-            <span className="text-sm font-medium">تم تحديد {bulk.selectedIds.size} عميل</span>
+            <span className="text-sm font-medium">تم تحديد {bulk.selectedIds.size} عميل <span className="text-xs text-muted-foreground">(من هذه الصفحة فقط)</span></span>
             <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => setBulkVipOpen(true)}>
                 <Crown className="h-4 w-4 ml-1" />تغيير VIP
