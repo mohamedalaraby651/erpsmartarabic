@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { canDeleteCustomer } from "@/lib/services/customerService";
@@ -51,6 +51,7 @@ export function useCustomerQueries(options: UseCustomerQueriesOptions) {
   // Single merged query: data + count
   const { data: queryResult, isLoading, refetch } = useQuery({
     queryKey: ['customers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       let query = supabase
         .from('customers')

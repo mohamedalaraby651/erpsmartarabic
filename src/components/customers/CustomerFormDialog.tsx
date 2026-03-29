@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -22,6 +22,10 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { customerSchema, type CustomerFormData } from "@/lib/validations";
@@ -87,10 +91,29 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     facebook_url: '', website_url: '',
   };
 
-  const { register, handleSubmit, reset, setValue, watch, trigger, formState: { errors } } = useForm<CustomerFormData>({
+  const { register, handleSubmit, reset, setValue, watch, trigger, formState: { errors, isDirty } } = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues,
   });
+
+  const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
+  const pendingCloseRef = useRef(false);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && isDirty) {
+      setUnsavedWarningOpen(true);
+      pendingCloseRef.current = true;
+      return;
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const confirmDiscard = () => {
+    setUnsavedWarningOpen(false);
+    pendingCloseRef.current = false;
+    reset(defaultValues);
+    onOpenChange(false);
+  };
 
   const customerType = watch('customer_type');
   const selectedGovernorate = watch('governorate');
@@ -404,10 +427,28 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     { title: 'المالي والملاحظات', content: FinancialSection },
   ];
 
+  // ─── Unsaved changes dialog ────
+  const unsavedDialog = (
+    <AlertDialog open={unsavedWarningOpen} onOpenChange={setUnsavedWarningOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>بيانات غير محفوظة</AlertDialogTitle>
+          <AlertDialogDescription>لديك تغييرات لم يتم حفظها. هل تريد تجاهلها؟</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>متابعة التعديل</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmDiscard} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">تجاهل التغييرات</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   // ─── Desktop form ────
   const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <>
+    {unsavedDialog}
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}>
         <DialogHeader>
           <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
         </DialogHeader>
@@ -455,7 +496,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
           {LocationSection}
           {FinancialSection}
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>إلغاء</Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
             </Button>
@@ -463,13 +504,16 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 
   // ─── Mobile wizard form ────
   const mobileForm = (
+    <>
+    {unsavedDialog}
     <FullScreenForm
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}
       steps={wizardSteps}
       activeStep={wizard.currentStep}
@@ -480,6 +524,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
       isSubmitting={mutation.isPending}
       submitLabel={isEditing ? 'تحديث' : 'إضافة'}
     />
+    </>
   );
 
   return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;

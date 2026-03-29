@@ -10,9 +10,12 @@ interface CustomerGridViewProps {
   data: Customer[];
   isLoading: boolean;
   canEdit: boolean;
+  canDelete?: boolean;
   onNavigate: (id: string) => void;
   onNewInvoice: (id: string) => void;
   onWhatsApp: (phone: string) => void;
+  onEdit?: (customer: Customer) => void;
+  onDelete?: (id: string) => void;
   selectedIds: Set<string>;
   onToggleSelect: (id: string, checked: boolean) => void;
   hasSelection: boolean;
@@ -44,8 +47,8 @@ function GridSkeleton() {
 }
 
 export const CustomerGridView = memo(function CustomerGridView({
-  data, isLoading, canEdit, onNavigate, onNewInvoice, onWhatsApp,
-  selectedIds, onToggleSelect, hasSelection, onAdd,
+  data, isLoading, canEdit, canDelete, onNavigate, onNewInvoice, onWhatsApp,
+  onEdit, onDelete, selectedIds, onToggleSelect, hasSelection, onAdd,
 }: CustomerGridViewProps) {
   if (isLoading) return <GridSkeleton />;
 
@@ -62,6 +65,8 @@ export const CustomerGridView = memo(function CustomerGridView({
           onClick={() => onNavigate(customer.id)}
           onNewInvoice={canEdit ? () => onNewInvoice(customer.id) : undefined}
           onWhatsApp={customer.phone ? () => onWhatsApp(customer.phone!) : undefined}
+          onEdit={canEdit && onEdit ? () => onEdit(customer) : undefined}
+          onDelete={canDelete && onDelete ? () => onDelete(customer.id) : undefined}
           isSelected={selectedIds.has(customer.id)}
           onSelect={(checked) => onToggleSelect(customer.id, checked)}
           showSelect={hasSelection}

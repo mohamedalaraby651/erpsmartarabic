@@ -12,6 +12,7 @@ import ImageUpload from "@/components/shared/ImageUpload";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
+import { Tag } from "lucide-react";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
@@ -70,6 +71,11 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
                 <Badge variant={customer.is_active ? "default" : "secondary"}>
                   {customer.is_active ? "نشط" : "غير نشط"}
                 </Badge>
+                {customer.price_list_id && (
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    <Tag className="h-3 w-3 ml-1" />قائمة أسعار مخصصة
+                  </Badge>
+                )}
               </div>
               <p className="text-muted-foreground mb-3">
                 {customer.customer_type === 'company' ? 'شركة' : customer.customer_type === 'farm' ? 'مزرعة' : 'فرد'}

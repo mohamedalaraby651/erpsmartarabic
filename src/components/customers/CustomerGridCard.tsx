@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Crown, Phone, MapPin, FileText, MessageSquare, DollarSign } from "lucide-react";
+import { Crown, Phone, MapPin, FileText, MessageSquare, DollarSign, Edit, Trash2 } from "lucide-react";
 import CustomerAvatar from "./CustomerAvatar";
 import { cn } from "@/lib/utils";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
@@ -15,6 +15,8 @@ interface CustomerGridCardProps {
   onClick: () => void;
   onNewInvoice?: () => void;
   onWhatsApp?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   isSelected?: boolean;
   onSelect?: (checked: boolean) => void;
   showSelect?: boolean;
@@ -25,6 +27,8 @@ const CustomerGridCardInner = ({
   onClick,
   onNewInvoice,
   onWhatsApp,
+  onEdit,
+  onDelete,
   isSelected,
   onSelect,
   showSelect,
@@ -100,6 +104,16 @@ const CustomerGridCardInner = ({
             {onWhatsApp && customer.phone && (
               <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onWhatsApp} title="واتساب">
                 <MessageSquare className="h-4 w-4 md:h-3.5 md:w-3.5 text-emerald-600" />
+              </Button>
+            )}
+            {onEdit && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onEdit} title="تعديل">
+                <Edit className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 min-h-[44px] min-w-[44px] md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={onDelete} title="حذف">
+                <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5 text-destructive" />
               </Button>
             )}
           </div>
