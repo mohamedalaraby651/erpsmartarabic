@@ -74,7 +74,7 @@ export function calculateCustomerHealth(
   const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
   const avgInvoiceValue = invoices.length > 0 ? totalPurchases / invoices.length : 0;
 
-  // DSO — uses actual payment dates
+  // DSO — uses due_date (fallback to created_at) vs actual payment dates
   const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid');
   let dso: number | null = null;
 
@@ -94,9 +94,10 @@ export function calculateCustomerHealth(
     for (const inv of paidInvoices) {
       const paidAt = paymentDatesByInvoice.get(inv.id);
       if (!paidAt) continue;
-      const created = new Date(inv.created_at).getTime();
+      // Use due_date if available, otherwise created_at
+      const referenceDate = new Date(inv.due_date || inv.created_at).getTime();
       const paid = new Date(paidAt).getTime();
-      totalDays += Math.max(0, (paid - created) / (1000 * 60 * 60 * 24));
+      totalDays += Math.max(0, (paid - referenceDate) / (1000 * 60 * 60 * 24));
       count++;
     }
     dso = count > 0 ? Math.round(totalDays / count) : null;

@@ -4,16 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Printer, Calendar } from "lucide-react";
+import { Printer, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 
 interface StatementEntry {
   date: string;
-  type: 'فاتورة' | 'دفعة';
+  type: 'فاتورة' | 'دفعة' | 'مرتجع';
   reference: string;
   debit: number;
   credit: number;
+  status: string;
+}
+
+interface CreditNote {
+  created_at: string;
+  credit_note_number: string;
+  amount: number;
   status: string;
 }
 
@@ -21,12 +28,16 @@ interface StatementOfAccountProps {
   customerName: string;
   invoices: Array<{ created_at: string; invoice_number: string; total_amount: number | null; payment_status: string }>;
   payments: Array<{ payment_date: string; payment_number: string; amount: number | null }>;
+  creditNotes?: CreditNote[];
 }
 
-const StatementOfAccount = ({ customerName, invoices, payments }: StatementOfAccountProps) => {
+const PAGE_SIZE = 20;
+
+const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = [] }: StatementOfAccountProps) => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [isPrinting, setIsPrinting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const statementData = useMemo(() => {
     const entries: StatementEntry[] = [];
@@ -53,21 +64,35 @@ const StatementOfAccount = ({ customerName, invoices, payments }: StatementOfAcc
       });
     });
 
-    // Sort ascending for running balance
+    creditNotes.forEach(cn => {
+      entries.push({
+        date: cn.created_at,
+        type: 'مرتجع',
+        reference: cn.credit_note_number,
+        debit: 0,
+        credit: Number(cn.amount || 0),
+        status: cn.status === 'approved' ? 'معتمد' : 'معلق',
+      });
+    });
+
     entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Filter by date range
     let filtered = entries;
     if (dateFrom) filtered = filtered.filter(e => new Date(e.date) >= new Date(dateFrom));
     if (dateTo) filtered = filtered.filter(e => new Date(e.date) <= new Date(dateTo + 'T23:59:59'));
 
-    // Calculate running balance
     let balance = 0;
     return filtered.map(entry => {
       balance += entry.debit - entry.credit;
       return { ...entry, runningBalance: balance };
     });
-  }, [invoices, payments, dateFrom, dateTo]);
+  }, [invoices, payments, creditNotes, dateFrom, dateTo]);
+
+  // Reset page when filters change
+  useMemo(() => setCurrentPage(1), [dateFrom, dateTo]);
+
+  const totalPages = Math.ceil(statementData.length / PAGE_SIZE);
+  const pagedData = statementData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const totalDebit = statementData.reduce((sum, e) => sum + e.debit, 0);
   const totalCredit = statementData.reduce((sum, e) => sum + e.credit, 0);
@@ -107,6 +132,12 @@ const StatementOfAccount = ({ customerName, invoices, payments }: StatementOfAcc
     } finally {
       setIsPrinting(false);
     }
+  };
+
+  const getTypeBadgeVariant = (type: string) => {
+    if (type === 'فاتورة') return 'default';
+    if (type === 'مرتجع') return 'outline';
+    return 'secondary';
   };
 
   return (
@@ -154,44 +185,63 @@ const StatementOfAccount = ({ customerName, invoices, payments }: StatementOfAcc
         {statementData.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">لا توجد حركات في الفترة المحددة</div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>التاريخ</TableHead>
-                  <TableHead>النوع</TableHead>
-                  <TableHead>المرجع</TableHead>
-                  <TableHead>مدين</TableHead>
-                  <TableHead>دائن</TableHead>
-                  <TableHead>الرصيد</TableHead>
-                  <TableHead>الحالة</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {statementData.map((entry, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="text-sm">{new Date(entry.date).toLocaleDateString('ar-EG')}</TableCell>
-                    <TableCell>
-                      <Badge variant={entry.type === 'فاتورة' ? 'default' : 'secondary'}>{entry.type}</Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{entry.reference}</TableCell>
-                    <TableCell className={entry.debit > 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}>
-                      {entry.debit > 0 ? entry.debit.toLocaleString() : '-'}
-                    </TableCell>
-                    <TableCell className={entry.credit > 0 ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}>
-                      {entry.credit > 0 ? entry.credit.toLocaleString() : '-'}
-                    </TableCell>
-                    <TableCell className={`font-bold ${entry.runningBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
-                      {entry.runningBalance.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={entry.status === 'مسدد' ? 'default' : 'secondary'}>{entry.status}</Badge>
-                    </TableCell>
+          <>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>التاريخ</TableHead>
+                    <TableHead>النوع</TableHead>
+                    <TableHead>المرجع</TableHead>
+                    <TableHead>مدين</TableHead>
+                    <TableHead>دائن</TableHead>
+                    <TableHead>الرصيد</TableHead>
+                    <TableHead>الحالة</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {pagedData.map((entry, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-sm">{new Date(entry.date).toLocaleDateString('ar-EG')}</TableCell>
+                      <TableCell>
+                        <Badge variant={getTypeBadgeVariant(entry.type)}>{entry.type}</Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{entry.reference}</TableCell>
+                      <TableCell className={entry.debit > 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+                        {entry.debit > 0 ? entry.debit.toLocaleString() : '-'}
+                      </TableCell>
+                      <TableCell className={entry.credit > 0 ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}>
+                        {entry.credit > 0 ? entry.credit.toLocaleString() : '-'}
+                      </TableCell>
+                      <TableCell className={`font-bold ${entry.runningBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                        {entry.runningBalance.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={entry.status === 'مسدد' || entry.status === 'معتمد' ? 'default' : 'secondary'}>{entry.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-sm text-muted-foreground">
+                  {statementData.length} حركة — صفحة {currentPage} من {totalPages}
+                </span>
+                <div className="flex gap-1">
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

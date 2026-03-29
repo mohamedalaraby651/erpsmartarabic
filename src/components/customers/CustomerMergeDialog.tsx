@@ -51,28 +51,16 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
 
   const mergeMutation = useMutation({
     mutationFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/merge-customers`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ primaryId, duplicateId }),
-        }
-      );
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Merge failed');
-      return result;
+      if (!primaryId || !duplicateId) throw new Error('Missing IDs');
+      const { data, error } = await supabase.rpc('merge_customers_atomic', {
+        p_primary_id: primaryId,
+        p_duplicate_id: duplicateId,
+      });
+      if (error) throw error;
+      return data as { success: boolean; message: string };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['customers-count'] });
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       toast.success(data.message);
       handleClose();
