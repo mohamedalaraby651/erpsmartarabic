@@ -35,9 +35,7 @@ const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAg
 const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
 
-// Lazy-loaded mobile sections
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
-import { Badge } from "@/components/ui/badge";
 
 const tabIcons: Record<string, React.ElementType> = {
   addresses: MapPin, attachments: Paperclip, reminders: Bell,
