@@ -1,92 +1,88 @@
 
 
-# خطة إكمال تحسين قسم العملاء — المرحلة 4 + المرحلة 5
+# خطة التنفيذ — المهام المتبقية والتحسينات الإضافية
 
-## المرحلة 4: تحسينات UX والحماية (8 مهام)
+## تحليل الحالة الحالية
 
-### 4.1 تحذير البيانات غير المحفوظة — `CustomerFormDialog.tsx`
-- استخدام `formState.isDirty` من react-hook-form
-- إضافة `onInteractOutside` على `DialogContent` يمنع الإغلاق إذا كان النموذج dirty
-- عند محاولة الإغلاق مع بيانات غير محفوظة → عرض `AlertDialog` تأكيد
+بعد مراجعة الكود، المهام التالية **تم تنفيذها بالفعل** ولا تحتاج تغيير:
+- ✅ تحذير البيانات غير المحفوظة (isDirty + AlertDialog + onInteractOutside)
+- ✅ Price list badge في HeroHeader
+- ✅ توضيح "من هذه الصفحة فقط" في bulk selection
+- ✅ keepPreviousData في useCustomerQueries
+- ✅ GridView action menu (تعديل + حذف)
+- ✅ DB indexes migration
+- ✅ Credit notes في كشف الحساب + pagination
+- ✅ إصلاح DSO (due_date)
+- ✅ Sanitize search + Batch validate delete + Audit logging fix
+- ✅ Lazy-loaded tabs + lazy queries
 
-### 4.2 عرض قائمة الأسعار المرتبطة — `CustomerHeroHeader.tsx`
-- فحص `customer.price_list_id`
-- إذا موجود → جلب اسم القائمة عبر query خفيف أو عرض Badge "قائمة أسعار مخصصة"
-- عرض Badge بجانب VIP badge
+## المهام المتبقية — 5 مهام
 
-### 4.3 تصدير كل العملاء — `CustomersPage.tsx`
+### 1. إضافة `onEscapeKeyDown` prevention في CustomerFormDialog
+**المشكلة**: `onInteractOutside` موجود لكن Escape key يغلق النموذج بدون تحذير عند وجود بيانات غير محفوظة.
+**الملف**: `src/components/customers/CustomerFormDialog.tsx`
+**التنفيذ**:
+- إضافة `onEscapeKeyDown={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}` على `DialogContent`
+- هذا يضمن أن ESC + Click outside + زر X كلها محمية
+
+### 2. تصدير كل العملاء (Export All)
+**المشكلة**: زر التصدير الحالي يصدر فقط بيانات الصفحة (25 سجل).
+**الملف**: `src/pages/customers/CustomersPage.tsx`
+**التنفيذ**:
+- إضافة state `exportAllLoading` + async function `handleExportAll`
+- الدالة تجلب كل العملاء بـ `.select('*').limit(5000)` بدون `.range()`
 - إضافة زر "تصدير الكل" بجانب `ExportWithTemplateButton` الحالي
-- عند الضغط → جلب كل العملاء بدون `.range()` limit ثم تمرير البيانات للتصدير
-- عرض loading أثناء الجلب
+- عرض loading spinner أثناء الجلب
 
-### 4.4 توضيح نطاق التحديد الجماعي — `CustomersPage.tsx`
-- في شريط Bulk Actions، تغيير النص من "تم تحديد X عميل" إلى "تم تحديد X عميل من هذه الصفحة فقط"
-- إضافة tooltip أو نص فرعي
+### 3. طي الأقسام على الموبايل (Mobile collapsed sections)
+**المشكلة**: جميع أقسام الموبايل تستخدم `priority="low"` أو `"medium"` لكن الفواتير والملخص المالي يجب أن تبقى مفتوحة.
+**الملف**: `src/pages/customers/CustomerDetailsPage.tsx`
+**التنفيذ**:
+- تعيين `priority="medium"` للفواتير والملخص المالي (مفتوحة افتراضياً)
+- تعيين `priority="low"` لباقي الأقسام (العناوين، المدفوعات، كشف الحساب، التواصل، التذكيرات، المرفقات) — بعضها بالفعل `"low"`
 
-### 4.5 إضافة `placeholderData: keepPreviousData` — `useCustomerQueries.ts`
-- استيراد `keepPreviousData` من `@tanstack/react-query`
-- إضافتها في query العملاء الرئيسي لمنع UI flash أثناء البحث/التصفح
+### 4. تقسيم CustomerFormDialog إلى مكونات فرعية
+**المشكلة**: الملف 533 سطر — كل sections inline JSX يُعاد render كاملاً.
+**الملفات الجديدة** (في `src/components/customers/form/`):
+- `CustomerFormBasicInfo.tsx` — المعلومات الأساسية (الاسم، النوع، التصنيف، VIP)
+- `CustomerFormContact.tsx` — معلومات الاتصال + الشخص المسؤول
+- `CustomerFormLocation.tsx` — المحافظة والمدينة
+- `CustomerFormFinancial.tsx` — حد الائتمان، الخصم، الملاحظات
 
-### 4.6 طي الأقسام على الموبايل — `CustomerDetailsPage.tsx`
-- تعيين `defaultOpen={false}` في `MobileDetailSection` لجميع الأقسام ما عدا "الفواتير" و"الملخص المالي"
+**النهج**: استخدام `useFormContext` من react-hook-form بدلاً من prop drilling:
+- كل مكون فرعي يستدعي `useFormContext<CustomerFormData>()` مباشرة
+- `CustomerFormDialog.tsx` يلف المكونات بـ `FormProvider` (موجود في react-hook-form)
+- كل مكون ملفوف بـ `React.memo` لمنع re-renders غير ضرورية
+- تقليص الملف الأصلي إلى ~200 سطر orchestrator
 
-### 4.7 تقسيم `CustomerFormDialog.tsx` (488 سطر)
-- استخراج الأقسام كمكونات `React.memo` مستقلة:
-  - `CustomerFormBasicInfo.tsx`
-  - `CustomerFormContact.tsx`
-  - `CustomerFormLocation.tsx`
-  - `CustomerFormFinancial.tsx`
-- تقليص الملف الأصلي إلى ~150 سطر orchestrator
-
-### 4.8 توحيد Action Menu في GridView
-- فحص `CustomerGridView.tsx` وإضافة dropdown menu (تعديل، حذف، فاتورة، واتساب) مثل TableView
-
----
-
-## المرحلة 5: التوسع — DB + فلاتر متقدمة
-
-### 5.1 فلتر "بدون تواصل منذ X يوم"
-- العمود `last_communication_at` والـ trigger موجودان بالفعل ✅
-- إضافة خيار فلتر في `FilterDrawer` بالصفحة الرئيسية
-- تمرير الفلتر إلى `useCustomerQueries` → `.lte('last_communication_at', cutoffDate)`
-
-### 5.2 فلتر "بدون فواتير منذ X يوم"
-- استخدام `last_activity_at` (موجود في customers)
-- نفس آلية الفلتر السابقة
-
-### 5.3 DB Index (migration)
-```sql
-CREATE INDEX IF NOT EXISTS idx_invoices_customer_payment 
-ON invoices(customer_id, payment_status);
-CREATE INDEX IF NOT EXISTS idx_payments_customer 
-ON payments(customer_id);
-```
+### 5. فلاتر متقدمة — Phase 5
+**الملفات**: `useCustomerFilters.ts` + `CustomersPage.tsx` (FilterDrawer) + `useCustomerQueries.ts`
+**التنفيذ**:
+- إضافة فلتر "بدون تواصل منذ X يوم" — حقل number input في FilterDrawer
+- إضافة فلتر "بدون نشاط منذ X يوم" — حقل number input في FilterDrawer
+- في `useCustomerFilters`: إضافة `inactiveDays` و `noCommDays` كـ state + URL sync
+- في `useCustomerQueries`: إضافة `.lte('last_communication_at', cutoffDate)` و `.lte('last_activity_at', cutoffDate)` عند تفعيل الفلاتر
 
 ---
 
-## ملخص الملفات المتأثرة
+## ترتيب التنفيذ
+1. **أولاً**: المهام 1-3 (إصلاحات سريعة — ESC key + Export All + Mobile collapse)
+2. **ثانياً**: المهمة 4 (تقسيم CustomerFormDialog — أكبر مهمة)
+3. **ثالثاً**: المهمة 5 (فلاتر متقدمة)
 
+## الملفات المتأثرة
 ```text
 تعديل:
-  - CustomerFormDialog.tsx (dirty warning + split)
-  - CustomerHeroHeader.tsx (price list badge)
-  - CustomersPage.tsx (export all + bulk label)
-  - useCustomerQueries.ts (keepPreviousData)
-  - CustomerDetailsPage.tsx (mobile collapsed)
-  - CustomerGridView.tsx (action menu)
-  - useCustomerFilters.ts (advanced filters)
+  - CustomerFormDialog.tsx (onEscapeKeyDown + FormProvider refactor)
+  - CustomersPage.tsx (Export All button)
+  - CustomerDetailsPage.tsx (mobile priority fixes)
+  - useCustomerFilters.ts (advanced filter state)
+  - useCustomerQueries.ts (advanced filter queries)
 
 جديد:
   - src/components/customers/form/CustomerFormBasicInfo.tsx
   - src/components/customers/form/CustomerFormContact.tsx
   - src/components/customers/form/CustomerFormLocation.tsx
   - src/components/customers/form/CustomerFormFinancial.tsx
-
-Migration:
-  - DB indexes
 ```
-
-## التنفيذ: مرحلتين متتاليتين
-- **المرحلة 4 أولاً**: UX + حماية (4.1–4.8)
-- **المرحلة 5 ثانياً**: فلاتر + DB indexes
 
