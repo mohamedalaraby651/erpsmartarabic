@@ -504,13 +504,16 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 
   // ─── Mobile wizard form ────
   const mobileForm = (
+    <>
+    {unsavedDialog}
     <FullScreenForm
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}
       steps={wizardSteps}
       activeStep={wizard.currentStep}
