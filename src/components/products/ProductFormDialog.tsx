@@ -109,21 +109,22 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
 
   const wizardSteps = [{ title: 'البيانات الأساسية', content: Step1Basic }, { title: 'الأسعار والمخزون', content: Step2Pricing }, { title: 'الأبعاد', content: Step3Dimensions }];
 
-  const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{isEditing ? 'تعديل المنتج' : 'إضافة منتج جديد'}</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {Step1Basic}{Step2Pricing}{Step3Dimensions}
-          <div className="flex justify-end gap-3 pt-4"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button><Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}</Button></div>
-        </form>
-      </DialogContent>
-    </Dialog>
+  return (
+    <StandardFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEditing ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+      steps={wizardSteps}
+      activeStep={wizard.currentStep}
+      onNext={wizard.nextStep}
+      onPrev={wizard.prevStep}
+      onSubmit={handleSubmit(onSubmit)}
+      progress={wizard.progress}
+      isSubmitting={mutation.isPending}
+      submitLabel={isEditing ? 'تحديث' : 'إضافة'}
+      maxWidth="3xl"
+    />
   );
-
-  const mobileForm = (<FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل المنتج' : 'إضافة منتج جديد'} steps={wizardSteps} activeStep={wizard.currentStep} onNext={wizard.nextStep} onPrev={wizard.prevStep} onSubmit={handleSubmit(onSubmit)} progress={wizard.progress} isSubmitting={mutation.isPending} submitLabel={isEditing ? 'تحديث' : 'إضافة'} />);
-
-  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
 };
 
 export default ProductFormDialog;
