@@ -11,6 +11,8 @@ export function useCustomerFilters() {
   const [vipFilter, setVipFilter] = useState(searchParams.get('vip') || "all");
   const [governorateFilter, setGovernorateFilter] = useState(searchParams.get('gov') || "all");
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || "all");
+  const [noCommDays, setNoCommDays] = useState(searchParams.get('noComm') || "");
+  const [inactiveDays, setInactiveDays] = useState(searchParams.get('inactive') || "");
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   // Temporary filter state for mobile drawer
