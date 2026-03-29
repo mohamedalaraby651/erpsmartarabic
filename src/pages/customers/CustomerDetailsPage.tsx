@@ -131,10 +131,10 @@ const CustomerDetailsPage = () => {
           <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="سجل التواصل" priority="low" icon={<MessageSquare className="h-4 w-4" />}>
+          <MobileDetailSection title="سجل التواصل" priority="medium" icon={<MessageSquare className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CommunicationLogTab customerId={id!} /></Suspense>
           </MobileDetailSection>
-          <MobileDetailSection title="التذكيرات" priority="low" icon={<Bell className="h-4 w-4" />}>
+          <MobileDetailSection title="التذكيرات" priority="medium" icon={<Bell className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CustomerReminderSection customerId={id!} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>

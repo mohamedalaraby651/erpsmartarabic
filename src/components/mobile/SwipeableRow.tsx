@@ -6,6 +6,7 @@ interface SwipeableRowProps {
   children: React.ReactNode;
   onDelete?: () => void;
   onEdit?: () => void;
+  onCall?: () => void;
   className?: string;
 }
 
