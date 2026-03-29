@@ -1,26 +1,12 @@
-import { useEffect, useMemo, useState, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState, useRef } from "react";
+import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -30,14 +16,19 @@ import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { customerSchema, type CustomerFormData } from "@/lib/validations";
 import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
-import { egyptGovernorates, egyptCities } from "@/lib/egyptLocations";
 import type { Database } from "@/integrations/supabase/types";
-import { User, Phone, MapPin, Wallet, FileText, Building2 } from "lucide-react";
+import { User, Phone, MapPin, Wallet } from "lucide-react";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import type { Path } from "react-hook-form";
+
+// Sub-components
+import CustomerFormBasicInfo from "./form/CustomerFormBasicInfo";
+import CustomerFormContact from "./form/CustomerFormContact";
+import CustomerFormLocation from "./form/CustomerFormLocation";
+import CustomerFormFinancial from "./form/CustomerFormFinancial";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerCategory = Database['public']['Tables']['customer_categories']['Row'];
@@ -56,12 +47,21 @@ const SectionHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: 
   </div>
 );
 
-// ─── Step field definitions for wizard validation ────
 const WIZARD_STEP_FIELDS: Record<number, Path<CustomerFormData>[]> = {
   0: ['name', 'customer_type', 'vip_level'],
   1: ['phone', 'email'],
   2: ['governorate', 'city'],
   3: ['credit_limit', 'discount_percentage'],
+};
+
+const defaultValues: CustomerFormData = {
+  name: '', customer_type: 'individual', vip_level: 'regular',
+  phone: '', phone2: '', email: '', tax_number: '', credit_limit: 0,
+  category_id: '', notes: '', is_active: true,
+  governorate: '', city: '', discount_percentage: 0,
+  contact_person: '', contact_person_role: '',
+  payment_terms_days: 0, preferred_payment_method: '',
+  facebook_url: '', website_url: '',
 };
 
 const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialogProps) => {
@@ -72,29 +72,18 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   const { data: categories = [] } = useQuery({
     queryKey: ['customer-categories'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customer_categories')
-        .select('*')
-        .order('name');
+      const { data, error } = await supabase.from('customer_categories').select('*').order('name');
       if (error) throw error;
       return data as CustomerCategory[];
     },
   });
 
-  const defaultValues: CustomerFormData = {
-    name: '', customer_type: 'individual', vip_level: 'regular',
-    phone: '', phone2: '', email: '', tax_number: '', credit_limit: 0,
-    category_id: '', notes: '', is_active: true,
-    governorate: '', city: '', discount_percentage: 0,
-    contact_person: '', contact_person_role: '',
-    payment_terms_days: 0, preferred_payment_method: '',
-    facebook_url: '', website_url: '',
-  };
-
-  const { register, handleSubmit, reset, setValue, watch, trigger, formState: { errors, isDirty } } = useForm<CustomerFormData>({
+  const methods = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues,
   });
+
+  const { reset, handleSubmit, watch, trigger, formState: { isDirty } } = methods;
 
   const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
   const pendingCloseRef = useRef(false);
@@ -116,18 +105,13 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   };
 
   const customerType = watch('customer_type');
-  const selectedGovernorate = watch('governorate');
-
-  const cities = useMemo(() => {
-    if (!selectedGovernorate) return [];
-    return egyptCities[selectedGovernorate] || [];
-  }, [selectedGovernorate]);
 
   const wizard = useFormWizard<CustomerFormData>({
     totalSteps: 4,
     stepFields: WIZARD_STEP_FIELDS,
     trigger,
   });
+
   const formData = watch();
   const { hasDraft, restoreDraft, clearDraft } = useFormDraft({
     key: `customer_${customer?.id || 'new'}`,
@@ -151,23 +135,18 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
         name: customer.name,
         customer_type: customer.customer_type,
         vip_level: customer.vip_level,
-        phone: customer.phone || '',
-        phone2: customer.phone2 || '',
-        email: customer.email || '',
-        tax_number: customer.tax_number || '',
+        phone: customer.phone || '', phone2: customer.phone2 || '',
+        email: customer.email || '', tax_number: customer.tax_number || '',
         credit_limit: Number(customer.credit_limit) || 0,
-        category_id: customer.category_id || '',
-        notes: customer.notes || '',
+        category_id: customer.category_id || '', notes: customer.notes || '',
         is_active: customer.is_active ?? true,
-        governorate: customer.governorate || '',
-        city: customer.city || '',
+        governorate: customer.governorate || '', city: customer.city || '',
         discount_percentage: Number(customer.discount_percentage) || 0,
         contact_person: customer.contact_person || '',
         contact_person_role: customer.contact_person_role || '',
         payment_terms_days: Number(customer.payment_terms_days) || 0,
         preferred_payment_method: customer.preferred_payment_method || '',
-        facebook_url: customer.facebook_url || '',
-        website_url: customer.website_url || '',
+        facebook_url: customer.facebook_url || '', website_url: customer.website_url || '',
       });
     } else {
       reset(defaultValues);
@@ -182,25 +161,18 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
 
       const payload: Database['public']['Tables']['customers']['Insert'] = {
         name: sanitize(data.name) || data.name.trim(),
-        customer_type: data.customer_type,
-        vip_level: data.vip_level,
-        phone: sanitize(data.phone),
-        phone2: sanitize(data.phone2),
+        customer_type: data.customer_type, vip_level: data.vip_level,
+        phone: sanitize(data.phone), phone2: sanitize(data.phone2),
         email: data.email?.trim().toLowerCase() || null,
-        tax_number: sanitize(data.tax_number),
-        credit_limit: data.credit_limit,
-        category_id: data.category_id || null,
-        notes: sanitize(data.notes),
-        is_active: data.is_active,
-        governorate: sanitize(data.governorate),
-        city: sanitize(data.city),
-        discount_percentage: data.discount_percentage || 0,
+        tax_number: sanitize(data.tax_number), credit_limit: data.credit_limit,
+        category_id: data.category_id || null, notes: sanitize(data.notes),
+        is_active: data.is_active, governorate: sanitize(data.governorate),
+        city: sanitize(data.city), discount_percentage: data.discount_percentage || 0,
         contact_person: sanitize(data.contact_person),
         contact_person_role: sanitize(data.contact_person_role),
         payment_terms_days: data.payment_terms_days || 0,
         preferred_payment_method: data.preferred_payment_method || null,
-        facebook_url: sanitize(data.facebook_url),
-        website_url: sanitize(data.website_url),
+        facebook_url: sanitize(data.facebook_url), website_url: sanitize(data.website_url),
       };
 
       if (isEditing) {
@@ -241,193 +213,22 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     mutation.mutate(data);
   };
 
-  // ─── Form sections (shared between desktop & mobile) ────
-
-  const BasicInfoSection = (
-    <>
-      <SectionHeader icon={User} title="المعلومات الأساسية" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
-          <Label htmlFor="name">اسم العميل *</Label>
-          <Input id="name" {...register('name')} placeholder="أدخل اسم العميل" />
-          {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
-        </div>
-        <div>
-          <Label>نوع العميل</Label>
-          <Select value={watch('customer_type')} onValueChange={(v) => setValue('customer_type', v as CustomerFormData['customer_type'])}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="individual">فرد</SelectItem>
-              <SelectItem value="company">شركة</SelectItem>
-              <SelectItem value="farm">مزرعة</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>التصنيف</Label>
-          <Select value={watch('category_id')} onValueChange={(v) => setValue('category_id', v)}>
-            <SelectTrigger><SelectValue placeholder="اختر التصنيف" /></SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>مستوى VIP</Label>
-          <Select value={watch('vip_level')} onValueChange={(v) => setValue('vip_level', v as CustomerFormData['vip_level'])}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="regular">عادي</SelectItem>
-              <SelectItem value="silver">فضي</SelectItem>
-              <SelectItem value="gold">ذهبي</SelectItem>
-              <SelectItem value="platinum">بلاتيني</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </>
-  );
-
-  const ContactSection = (
-    <>
-      <SectionHeader icon={Phone} title="معلومات الاتصال" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="phone">الهاتف</Label>
-          <Input id="phone" {...register('phone')} placeholder="رقم الهاتف" />
-        </div>
-        <div>
-          <Label htmlFor="phone2">هاتف إضافي</Label>
-          <Input id="phone2" {...register('phone2')} placeholder="رقم هاتف إضافي" />
-        </div>
-        <div>
-          <Label htmlFor="email">البريد الإلكتروني</Label>
-          <Input id="email" type="email" {...register('email')} placeholder="البريد الإلكتروني" />
-        </div>
-        <div>
-          <Label htmlFor="facebook_url">فيسبوك</Label>
-          <Input id="facebook_url" {...register('facebook_url')} placeholder="رابط صفحة فيسبوك" />
-        </div>
-        <div>
-          <Label htmlFor="website_url">الموقع الإلكتروني</Label>
-          <Input id="website_url" {...register('website_url')} placeholder="https://..." />
-        </div>
-      </div>
-      {customerType === 'company' && (
-        <>
-          <SectionHeader icon={Building2} title="الشخص المسؤول" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="contact_person">اسم المسؤول</Label>
-              <Input id="contact_person" {...register('contact_person')} placeholder="اسم الشخص المسؤول" />
-            </div>
-            <div>
-              <Label htmlFor="contact_person_role">المنصب</Label>
-              <Input id="contact_person_role" {...register('contact_person_role')} placeholder="مثال: مدير المشتريات" />
-            </div>
-          </div>
-        </>
-      )}
-    </>
-  );
-
-  const LocationSection = (
-    <>
-      <SectionHeader icon={MapPin} title="الموقع الجغرافي" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label>المحافظة</Label>
-          <Select
-            value={watch('governorate') || ''}
-            onValueChange={(v) => { setValue('governorate', v); setValue('city', ''); }}
-          >
-            <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
-            <SelectContent>
-              {egyptGovernorates.map((gov) => (
-                <SelectItem key={gov} value={gov}>{gov}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>المدينة / المركز</Label>
-          <Select
-            value={watch('city') || ''}
-            onValueChange={(v) => setValue('city', v)}
-            disabled={!selectedGovernorate}
-          >
-            <SelectTrigger><SelectValue placeholder={selectedGovernorate ? "اختر المدينة" : "اختر المحافظة أولاً"} /></SelectTrigger>
-            <SelectContent>
-              {cities.map((city) => (
-                <SelectItem key={city} value={city}>{city}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </>
-  );
-
-  const FinancialSection = (
-    <>
-      <SectionHeader icon={Wallet} title="المعلومات المالية" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="credit_limit">حد الائتمان (ج.م)</Label>
-          <Input id="credit_limit" type="number" {...register('credit_limit', { valueAsNumber: true })} placeholder="0" />
-        </div>
-        <div>
-          <Label htmlFor="discount_percentage">نسبة الخصم (%)</Label>
-          <Input id="discount_percentage" type="number" {...register('discount_percentage', { valueAsNumber: true })} placeholder="0" min={0} max={100} />
-          {errors.discount_percentage && <p className="text-sm text-destructive mt-1">{errors.discount_percentage.message}</p>}
-        </div>
-        <div>
-          <Label htmlFor="payment_terms_days">مدة السداد (أيام)</Label>
-          <Input id="payment_terms_days" type="number" {...register('payment_terms_days', { valueAsNumber: true })} placeholder="0" />
-        </div>
-        <div>
-          <Label>طريقة الدفع المفضلة</Label>
-          <Select value={watch('preferred_payment_method') || ''} onValueChange={(v) => setValue('preferred_payment_method', v)}>
-            <SelectTrigger><SelectValue placeholder="اختر طريقة الدفع" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cash">نقدي</SelectItem>
-              <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
-              <SelectItem value="credit">آجل</SelectItem>
-              <SelectItem value="installment">أقساط</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="tax_number">الرقم الضريبي</Label>
-          <Input id="tax_number" {...register('tax_number')} placeholder="الرقم الضريبي" />
-        </div>
-      </div>
-
-      <SectionHeader icon={FileText} title="ملاحظات" />
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="notes">ملاحظات إضافية</Label>
-          <Textarea id="notes" {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} />
-        </div>
-        <div className="flex items-center gap-3">
-          <Switch id="is_active" checked={watch('is_active')} onCheckedChange={(checked) => setValue('is_active', checked)} />
-          <Label htmlFor="is_active">عميل نشط</Label>
-        </div>
-      </div>
-    </>
-  );
-
-  // ─── Wizard steps for mobile ────
+  // Wizard steps for mobile
   const wizardSteps = [
-    { title: 'المعلومات الأساسية', content: BasicInfoSection },
-    { title: 'معلومات الاتصال', content: ContactSection },
-    { title: 'الموقع الجغرافي', content: LocationSection },
-    { title: 'المالي والملاحظات', content: FinancialSection },
+    { title: 'المعلومات الأساسية', content: (
+      <><SectionHeader icon={User} title="المعلومات الأساسية" /><CustomerFormBasicInfo categories={categories} /></>
+    )},
+    { title: 'معلومات الاتصال', content: (
+      <><SectionHeader icon={Phone} title="معلومات الاتصال" /><CustomerFormContact showCompanyFields={customerType === 'company'} /></>
+    )},
+    { title: 'الموقع الجغرافي', content: (
+      <><SectionHeader icon={MapPin} title="الموقع الجغرافي" /><CustomerFormLocation /></>
+    )},
+    { title: 'المالي والملاحظات', content: (
+      <><SectionHeader icon={Wallet} title="المعلومات المالية" /><CustomerFormFinancial /></>
+    )},
   ];
 
-  // ─── Unsaved changes dialog ────
   const unsavedDialog = (
     <AlertDialog open={unsavedWarningOpen} onOpenChange={setUnsavedWarningOpen}>
       <AlertDialogContent>
@@ -443,88 +244,59 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     </AlertDialog>
   );
 
-  // ─── Desktop form ────
   const desktopForm = (
-    <>
-    {unsavedDialog}
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }} onEscapeKeyDown={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}>
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          {BasicInfoSection}
-          {customerType === 'company' && (
-            <>
-              <SectionHeader icon={Building2} title="الشخص المسؤول" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="contact_person_desktop">اسم المسؤول</Label>
-                  <Input id="contact_person_desktop" {...register('contact_person')} placeholder="اسم الشخص المسؤول" />
-                </div>
-                <div>
-                  <Label htmlFor="contact_person_role_desktop">المنصب</Label>
-                  <Input id="contact_person_role_desktop" {...register('contact_person_role')} placeholder="مثال: مدير المشتريات" />
-                </div>
-              </div>
-            </>
-          )}
-          {/* Contact without company fields (already in ContactSection for mobile) */}
-          <SectionHeader icon={Phone} title="معلومات الاتصال" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="phone_desktop">الهاتف</Label>
-              <Input id="phone_desktop" {...register('phone')} placeholder="رقم الهاتف" />
+    <FormProvider {...methods}>
+      {unsavedDialog}
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          className="max-w-2xl max-h-[90vh] overflow-y-auto"
+          onInteractOutside={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}
+          onEscapeKeyDown={(e) => { if (isDirty) { e.preventDefault(); setUnsavedWarningOpen(true); } }}
+        >
+          <DialogHeader>
+            <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+            <SectionHeader icon={User} title="المعلومات الأساسية" />
+            <CustomerFormBasicInfo categories={categories} />
+            {customerType === 'company' && (
+              <CustomerFormContact showCompanyFields idPrefix="desktop" />
+            )}
+            <SectionHeader icon={Phone} title="معلومات الاتصال" />
+            <CustomerFormContact idPrefix="desktop_contact" />
+            <SectionHeader icon={MapPin} title="الموقع الجغرافي" />
+            <CustomerFormLocation />
+            <SectionHeader icon={Wallet} title="المعلومات المالية" />
+            <CustomerFormFinancial />
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>إلغاء</Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+              </Button>
             </div>
-            <div>
-              <Label htmlFor="phone2_desktop">هاتف إضافي</Label>
-              <Input id="phone2_desktop" {...register('phone2')} placeholder="رقم هاتف إضافي" />
-            </div>
-            <div>
-              <Label htmlFor="email_desktop">البريد الإلكتروني</Label>
-              <Input id="email_desktop" type="email" {...register('email')} placeholder="البريد الإلكتروني" />
-            </div>
-            <div>
-              <Label htmlFor="facebook_url_desktop">فيسبوك</Label>
-              <Input id="facebook_url_desktop" {...register('facebook_url')} placeholder="رابط صفحة فيسبوك" />
-            </div>
-            <div>
-              <Label htmlFor="website_url_desktop">الموقع الإلكتروني</Label>
-              <Input id="website_url_desktop" {...register('website_url')} placeholder="https://..." />
-            </div>
-          </div>
-          {LocationSection}
-          {FinancialSection}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>إلغاء</Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-    </>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </FormProvider>
   );
 
-  // ─── Mobile wizard form ────
   const mobileForm = (
-    <>
-    {unsavedDialog}
-    <FullScreenForm
-      open={open}
-      onOpenChange={handleOpenChange}
-      title={isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}
-      steps={wizardSteps}
-      activeStep={wizard.currentStep}
-      onNext={wizard.nextStep}
-      onPrev={wizard.prevStep}
-      onSubmit={handleSubmit(onSubmit)}
-      progress={wizard.progress}
-      isSubmitting={mutation.isPending}
-      submitLabel={isEditing ? 'تحديث' : 'إضافة'}
-    />
-    </>
+    <FormProvider {...methods}>
+      {unsavedDialog}
+      <FullScreenForm
+        open={open}
+        onOpenChange={handleOpenChange}
+        title={isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}
+        steps={wizardSteps}
+        activeStep={wizard.currentStep}
+        onNext={wizard.nextStep}
+        onPrev={wizard.prevStep}
+        onSubmit={handleSubmit(onSubmit)}
+        progress={wizard.progress}
+        isSubmitting={mutation.isPending}
+        submitLabel={isEditing ? 'تحديث' : 'إضافة'}
+      />
+    </FormProvider>
   );
 
   return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
