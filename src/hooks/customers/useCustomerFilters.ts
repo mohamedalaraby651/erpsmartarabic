@@ -96,6 +96,8 @@ export function useCustomerFilters() {
     setTempVip('all');
     setTempGovernorate('all');
     setTempStatus('all');
+    setTempNoCommDays('');
+    setTempInactiveDays('');
   }, []);
 
   const activeFiltersCount = useMemo(
