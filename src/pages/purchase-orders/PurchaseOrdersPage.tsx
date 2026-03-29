@@ -481,6 +481,14 @@ const PurchaseOrdersPage = () => {
           onOpenChange={setPrintDialogOpen}
         />
       )}
+
+      <ServerPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={totalCount}
+        pageSize={PAGE_SIZE}
+        onPageChange={pagination.goToPage}
+      />
     </div>
   );
 };
