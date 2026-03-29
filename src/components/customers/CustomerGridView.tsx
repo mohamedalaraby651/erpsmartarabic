@@ -10,9 +10,12 @@ interface CustomerGridViewProps {
   data: Customer[];
   isLoading: boolean;
   canEdit: boolean;
+  canDelete?: boolean;
   onNavigate: (id: string) => void;
   onNewInvoice: (id: string) => void;
   onWhatsApp: (phone: string) => void;
+  onEdit?: (customer: Customer) => void;
+  onDelete?: (id: string) => void;
   selectedIds: Set<string>;
   onToggleSelect: (id: string, checked: boolean) => void;
   hasSelection: boolean;
