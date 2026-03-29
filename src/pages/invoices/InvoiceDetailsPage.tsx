@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { EntityLink } from "@/components/shared/EntityLink";
+import { WorkflowPipeline } from "@/components/shared/WorkflowPipeline";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { WhatsAppShareButton } from "@/components/shared/WhatsAppShareButton";
 import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
