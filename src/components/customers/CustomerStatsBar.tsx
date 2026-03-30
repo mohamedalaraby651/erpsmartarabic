@@ -18,6 +18,8 @@ interface CustomerStatsBarProps {
 
 const statsDef = (s: CustomerStatsBarProps['stats']) => [
   { icon: Users, value: s.total, label: 'إجمالي العملاء', shortLabel: 'الإجمالي', color: 'text-primary', bg: 'bg-primary/10' },
+  { icon: UserCheck, value: s.active, label: 'نشط', shortLabel: 'نشط', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+  { icon: UserX, value: s.inactive, label: 'غير نشط', shortLabel: 'غير نشط', color: 'text-muted-foreground', bg: 'bg-muted' },
   { icon: Users, value: s.individuals, label: 'أفراد', shortLabel: 'أفراد', color: 'text-info', bg: 'bg-info/10' },
   { icon: Building2, value: s.companies, label: 'شركات', shortLabel: 'شركات', color: 'text-secondary-foreground', bg: 'bg-secondary' },
   { icon: Crown, value: s.vip, label: 'عملاء VIP', shortLabel: 'VIP', color: 'text-warning', bg: 'bg-warning/10' },
