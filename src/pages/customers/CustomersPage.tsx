@@ -100,7 +100,17 @@ const CustomersPage = () => {
   const handleNewInvoice = useCallback((customerId: string) => { navigate('/invoices', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleWhatsApp = useCallback((phone: string) => { window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank'); }, []);
   const handleRefresh = async () => { await list.refetch(); };
-  const handleExportAll = useCallback(async () => { setExportAllLoading(true); await exportCustomersToExcel(); setExportAllLoading(false); }, []);
+  const handleExportAll = useCallback(async () => {
+    const hasPermission = await verifyPermissionOnServer('customers', 'view');
+    if (!hasPermission) {
+      const { toast: sonnerToast } = await import('sonner');
+      sonnerToast.error('غير مصرح لك بتصدير بيانات العملاء');
+      return;
+    }
+    setExportAllLoading(true);
+    await exportCustomersToExcel();
+    setExportAllLoading(false);
+  }, []);
   const handleBulkDelete = useCallback(() => { mutations.bulkDeleteMutation.mutate(Array.from(bulk.selectedIds)); bulk.clearSelection(); }, [mutations.bulkDeleteMutation, bulk]);
   const handleBulkVipUpdate = useCallback((vipLevel: string) => { mutations.bulkVipMutation.mutate({ ids: Array.from(bulk.selectedIds), vipLevel }); bulk.clearSelection(); }, [mutations.bulkVipMutation, bulk]);
   const goToPage = useCallback((page: number) => { setCurrentPage(Math.max(1, Math.min(page, totalPages))); }, [totalPages]);
