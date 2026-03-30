@@ -15,6 +15,10 @@ type CustomerCategory = Database['public']['Tables']['customer_categories']['Row
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
 type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
+type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
+type Quotation = Database['public']['Tables']['quotations']['Row'];
+type CustomerReminder = Database['public']['Tables']['customer_reminders']['Row'];
+type CustomerCommunication = Database['public']['Tables']['customer_communications']['Row'];
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
 
 /** Escape special chars for Postgres .ilike */
@@ -73,27 +77,35 @@ export interface DuplicateDetectionResult {
 // Repository Methods
 // ============================================
 
-function applyFilters(query: any, filters: CustomerFilters) {
+/**
+ * Apply filter predicates to a customer query.
+ * Uses ReturnType to correctly type the query builder without `any`.
+ */
+function applyFilters(
+  query: ReturnType<typeof supabase.from<'customers'>>,
+  filters: CustomerFilters
+) {
+  let q = query;
   const { search, type, vip, governorate, status, noCommDays, inactiveDays } = filters;
   if (search) {
     const s = sanitizeSearch(search);
-    query = query.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`);
+    q = q.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`) as typeof q;
   }
-  if (type && type !== 'all') query = query.eq('customer_type', type);
-  if (vip && vip !== 'all') query = query.eq('vip_level', vip);
-  if (governorate && governorate !== 'all') query = query.eq('governorate', governorate);
-  if (status && status !== 'all') query = query.eq('is_active', status === 'active');
+  if (type && type !== 'all') q = q.eq('customer_type', type) as typeof q;
+  if (vip && vip !== 'all') q = q.eq('vip_level', vip) as typeof q;
+  if (governorate && governorate !== 'all') q = q.eq('governorate', governorate) as typeof q;
+  if (status && status !== 'all') q = q.eq('is_active', status === 'active') as typeof q;
   if (noCommDays) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - Number(noCommDays));
-    query = query.or(`last_communication_at.is.null,last_communication_at.lte.${cutoff.toISOString()}`);
+    q = q.or(`last_communication_at.is.null,last_communication_at.lte.${cutoff.toISOString()}`) as typeof q;
   }
   if (inactiveDays) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - Number(inactiveDays));
-    query = query.or(`last_activity_at.is.null,last_activity_at.lte.${cutoff.toISOString()}`);
+    q = q.or(`last_activity_at.is.null,last_activity_at.lte.${cutoff.toISOString()}`) as typeof q;
   }
-  return query;
+  return q;
 }
 
 export const customerRepository = {
