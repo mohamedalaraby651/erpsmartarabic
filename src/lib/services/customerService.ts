@@ -130,10 +130,15 @@ export async function exportCustomersToExcel(): Promise<void> {
     const { toast: sonnerToast } = await import('sonner');
     sonnerToast.loading('جاري تحميل بيانات جميع العملاء...', { id: toastId });
 
-    const data = await customerRepository.exportAll(5000);
+    const result = await customerRepository.exportAll();
+    const data = result.data;
     if (!data || data.length === 0) {
       sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });
       return;
+    }
+
+    if (result.isPartial) {
+      sonnerToast.warning(`تم تصدير أول ${data.length.toLocaleString()} عميل فقط. للتصدير الكامل تواصل مع المسؤول.`, { id: toastId, duration: 8000 });
     }
 
     sonnerToast.loading(`جاري تصدير ${data.length} عميل...`, { id: toastId });
@@ -146,9 +151,9 @@ export async function exportCustomersToExcel(): Promise<void> {
       is_active: 'نشط', created_at: 'تاريخ الإنشاء',
     };
     const exportData = data.map(row => {
-      const mapped: Record<string, any> = {};
+      const mapped: Record<string, unknown> = {};
       Object.keys(headers).forEach(key => {
-        mapped[headers[key]] = (row as any)[key];
+        mapped[headers[key]] = (row as Record<string, unknown>)[key];
       });
       return mapped;
     });
