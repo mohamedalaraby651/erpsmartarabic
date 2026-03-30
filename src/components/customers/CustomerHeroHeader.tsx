@@ -36,7 +36,7 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
 }: CustomerHeroHeaderProps) {
   return (
     <>
-      <Button variant="ghost" onClick={onBack} className="mb-2">
+      <Button variant="ghost" onClick={onBack} className="mb-2 hidden md:inline-flex">
         <ArrowRight className="h-4 w-4 ml-2" />العودة للعملاء
       </Button>
 

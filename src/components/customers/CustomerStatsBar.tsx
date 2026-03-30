@@ -60,7 +60,7 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stat.bg}`}><stat.icon className={`h-5 w-5 ${stat.color}`} /></div>
               <div>
-                <p className={`text-2xl font-bold ${i === 4 ? stat.color : ''}`}>{stat.value}</p>
+                <p className={`text-2xl font-bold ${i === 6 ? stat.color : ''}`}>{stat.value}</p>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
               </div>
             </div>

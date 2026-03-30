@@ -74,6 +74,32 @@ export const CustomerActionMenu = memo(function CustomerActionMenu({
     );
   }
 
-  // mobile variant — not used directly since MobileView uses DataCard
-  return null;
+  // mobile variant — full touch-friendly buttons
+  return (
+    <div className="flex gap-1.5 flex-wrap">
+      {onNewInvoice && (
+        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onNewInvoice} title="فاتورة جديدة">
+          <FileText className="h-4 w-4 text-primary" />
+        </Button>
+      )}
+      {onWhatsApp && customer.phone && (
+        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onWhatsApp} title="واتساب">
+          <MessageSquare className="h-4 w-4 text-emerald-600" />
+        </Button>
+      )}
+      {canEdit && (
+        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onEdit} title="تعديل">
+          <Edit className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      )}
+      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onView} title="عرض">
+        <Eye className="h-4 w-4 text-primary" />
+      </Button>
+      {canDelete && (
+        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={onDelete} title="حذف">
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      )}
+    </div>
+  );
 });
