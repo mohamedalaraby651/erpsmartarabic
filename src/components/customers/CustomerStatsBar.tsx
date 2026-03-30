@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Users, Building2, Crown, DollarSign } from "lucide-react";
+import { Users, Building2, Crown, DollarSign, UserCheck, UserX } from "lucide-react";
 
 interface CustomerStatsBarProps {
   stats: {
