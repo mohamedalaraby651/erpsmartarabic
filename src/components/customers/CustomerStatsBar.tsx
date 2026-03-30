@@ -10,6 +10,8 @@ interface CustomerStatsBarProps {
     companies: number;
     vip: number;
     totalBalance: number;
+    active: number;
+    inactive: number;
   };
   isMobile: boolean;
 }
