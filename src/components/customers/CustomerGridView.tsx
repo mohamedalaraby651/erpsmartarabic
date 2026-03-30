@@ -83,7 +83,7 @@ export const CustomerGridView = memo(function CustomerGridView({
       {/* Select All for Grid */}
       {onToggleSelectAll && (
         <div className="flex items-center gap-2 mb-3">
-          <Checkbox checked={isAllSelected} onCheckedChange={() => onToggleSelectAll()} />
+          <Checkbox checked={isAllSelected} onCheckedChange={(c) => onToggleSelectAll(!!c)} />
           <span className="text-sm text-muted-foreground">تحديد الكل ({data.length})</span>
         </div>
       )}
