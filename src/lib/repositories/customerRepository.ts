@@ -306,14 +306,27 @@ export const customerRepository = {
   // Export & Prefetch
   // ============================================
 
-  async exportAll(limit = 5000): Promise<Customer[]> {
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    return (data || []) as Customer[];
+  /** Cursor-based export — fetches all customers in batches */
+  async exportAll(): Promise<{ data: Customer[]; isPartial: boolean }> {
+    const batchSize = 1000;
+    const maxRecords = 10000;
+    let allData: Customer[] = [];
+    let offset = 0;
+
+    while (offset < maxRecords) {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + batchSize - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allData = allData.concat(data as Customer[]);
+      if (data.length < batchSize) break;
+      offset += batchSize;
+    }
+
+    return { data: allData, isPartial: offset >= maxRecords };
   },
 
   async prefetchCustomer(id: string): Promise<Customer | null> {
