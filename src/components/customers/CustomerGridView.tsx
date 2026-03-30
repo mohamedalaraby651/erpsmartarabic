@@ -1,9 +1,11 @@
 import React, { memo } from "react";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, Search } from "lucide-react";
 import CustomerGridCard from "@/components/customers/CustomerGridCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerGridViewProps {
@@ -18,11 +20,15 @@ interface CustomerGridViewProps {
   onDelete?: (id: string) => void;
   selectedIds: Set<string>;
   onToggleSelect: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean) => void;
+  isAllSelected?: boolean;
   hasSelection: boolean;
   onAdd?: () => void;
   deletingId?: string | null;
   onRowHover?: (id: string) => void;
   onRowLeave?: () => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 // Grid skeleton component
@@ -51,34 +57,55 @@ function GridSkeleton() {
 
 export const CustomerGridView = memo(function CustomerGridView({
   data, isLoading, canEdit, canDelete, onNavigate, onNewInvoice, onWhatsApp,
-  onEdit, onDelete, selectedIds, onToggleSelect, hasSelection, onAdd,
-  deletingId, onRowHover, onRowLeave,
+  onEdit, onDelete, selectedIds, onToggleSelect, onToggleSelectAll, isAllSelected,
+  hasSelection, onAdd, deletingId, onRowHover, onRowLeave, hasActiveFilters, onClearFilters,
 }: CustomerGridViewProps) {
   if (isLoading) return <GridSkeleton />;
 
   if (data.length === 0) {
+    if (hasActiveFilters) {
+      return (
+        <div className="text-center py-12">
+          <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">لا توجد نتائج</h3>
+          <p className="text-muted-foreground text-sm mb-6">لا يوجد عملاء يطابقون الفلاتر المحددة</p>
+          {onClearFilters && (
+            <Button variant="outline" onClick={onClearFilters}>إزالة الفلاتر</Button>
+          )}
+        </div>
+      );
+    }
     return <EmptyState icon={Users} title="لا يوجد عملاء" description="ابدأ بإضافة عميلك الأول" action={onAdd ? { label: 'إضافة عميل جديد', onClick: onAdd, icon: Plus } : undefined} />;
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {data.map((customer) => (
-        <CustomerGridCard
-          key={customer.id}
-          customer={customer}
-          onClick={() => onNavigate(customer.id)}
-          onNewInvoice={canEdit ? () => onNewInvoice(customer.id) : undefined}
-          onWhatsApp={customer.phone ? () => onWhatsApp(customer.phone!) : undefined}
-          onEdit={canEdit && onEdit ? () => onEdit(customer) : undefined}
-          onDelete={canDelete && onDelete ? () => onDelete(customer.id) : undefined}
-          isSelected={selectedIds.has(customer.id)}
-          onSelect={(checked) => onToggleSelect(customer.id, checked)}
-          showSelect={hasSelection}
-          isDeleting={deletingId === customer.id}
-          onMouseEnter={onRowHover ? () => onRowHover(customer.id) : undefined}
-          onMouseLeave={onRowLeave}
-        />
-      ))}
+    <div>
+      {/* Select All for Grid */}
+      {onToggleSelectAll && (
+        <div className="flex items-center gap-2 mb-3">
+          <Checkbox checked={isAllSelected} onCheckedChange={(c) => onToggleSelectAll(!!c)} />
+          <span className="text-sm text-muted-foreground">تحديد الكل ({data.length})</span>
+        </div>
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {data.map((customer) => (
+          <CustomerGridCard
+            key={customer.id}
+            customer={customer}
+            onClick={() => onNavigate(customer.id)}
+            onNewInvoice={canEdit ? () => onNewInvoice(customer.id) : undefined}
+            onWhatsApp={customer.phone ? () => onWhatsApp(customer.phone!) : undefined}
+            onEdit={canEdit && onEdit ? () => onEdit(customer) : undefined}
+            onDelete={canDelete && onDelete ? () => onDelete(customer.id) : undefined}
+            isSelected={selectedIds.has(customer.id)}
+            onSelect={(checked) => onToggleSelect(customer.id, checked)}
+            showSelect={hasSelection}
+            isDeleting={deletingId === customer.id}
+            onMouseEnter={onRowHover ? () => onRowHover(customer.id) : undefined}
+            onMouseLeave={onRowLeave}
+          />
+        ))}
+      </div>
     </div>
   );
 });

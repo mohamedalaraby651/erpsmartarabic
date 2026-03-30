@@ -107,7 +107,8 @@ export function useCustomerFilters() {
   );
 
   return {
-    searchQuery, setSearchQuery, debouncedSearch,
+    searchQuery, setSearchQuery: (v: string) => { setSearchQuery(v); syncToUrl({ q: v }); },
+    debouncedSearch,
     typeFilter, setTypeFilter: (v: string) => updateFilter('type', v),
     vipFilter, setVipFilter: (v: string) => updateFilter('vip', v),
     governorateFilter, setGovernorateFilter: (v: string) => updateFilter('gov', v),

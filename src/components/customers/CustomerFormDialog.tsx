@@ -276,11 +276,8 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
             {duplicateWarning}
             <SectionHeader icon={User} title="المعلومات الأساسية" />
             <CustomerFormBasicInfo categories={categories} />
-            {customerType === 'company' && (
-              <CustomerFormContact showCompanyFields idPrefix="desktop" />
-            )}
             <SectionHeader icon={Phone} title="معلومات الاتصال" />
-            <CustomerFormContact idPrefix="desktop_contact" />
+            <CustomerFormContact showCompanyFields={customerType === 'company'} idPrefix="desktop" />
             <SectionHeader icon={MapPin} title="الموقع الجغرافي" />
             <CustomerFormLocation />
             <SectionHeader icon={Wallet} title="المعلومات المالية" />

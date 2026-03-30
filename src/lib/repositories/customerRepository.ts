@@ -15,6 +15,10 @@ type CustomerCategory = Database['public']['Tables']['customer_categories']['Row
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
 type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
+type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
+type Quotation = Database['public']['Tables']['quotations']['Row'];
+type CustomerReminder = Database['public']['Tables']['customer_reminders']['Row'];
+type CustomerCommunication = Database['public']['Tables']['customer_communications']['Row'];
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
 
 /** Escape special chars for Postgres .ilike */
@@ -73,27 +77,36 @@ export interface DuplicateDetectionResult {
 // Repository Methods
 // ============================================
 
-function applyFilters(query: any, filters: CustomerFilters) {
+/**
+ * Apply filter predicates to a customer query.
+ * Uses a typed helper to avoid `any`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any[]) => any }>(
+  query: T,
+  filters: CustomerFilters
+): T {
+  let q = query;
   const { search, type, vip, governorate, status, noCommDays, inactiveDays } = filters;
   if (search) {
     const s = sanitizeSearch(search);
-    query = query.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`);
+    q = q.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`) as typeof q;
   }
-  if (type && type !== 'all') query = query.eq('customer_type', type);
-  if (vip && vip !== 'all') query = query.eq('vip_level', vip);
-  if (governorate && governorate !== 'all') query = query.eq('governorate', governorate);
-  if (status && status !== 'all') query = query.eq('is_active', status === 'active');
+  if (type && type !== 'all') q = q.eq('customer_type', type) as typeof q;
+  if (vip && vip !== 'all') q = q.eq('vip_level', vip) as typeof q;
+  if (governorate && governorate !== 'all') q = q.eq('governorate', governorate) as typeof q;
+  if (status && status !== 'all') q = q.eq('is_active', status === 'active') as typeof q;
   if (noCommDays) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - Number(noCommDays));
-    query = query.or(`last_communication_at.is.null,last_communication_at.lte.${cutoff.toISOString()}`);
+    q = q.or(`last_communication_at.is.null,last_communication_at.lte.${cutoff.toISOString()}`) as typeof q;
   }
   if (inactiveDays) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - Number(inactiveDays));
-    query = query.or(`last_activity_at.is.null,last_activity_at.lte.${cutoff.toISOString()}`);
+    q = q.or(`last_activity_at.is.null,last_activity_at.lte.${cutoff.toISOString()}`) as typeof q;
   }
-  return query;
+  return q;
 }
 
 export const customerRepository = {
@@ -294,14 +307,27 @@ export const customerRepository = {
   // Export & Prefetch
   // ============================================
 
-  async exportAll(limit = 5000): Promise<Customer[]> {
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    return (data || []) as Customer[];
+  /** Cursor-based export — fetches all customers in batches */
+  async exportAll(): Promise<{ data: Customer[]; isPartial: boolean }> {
+    const batchSize = 1000;
+    const maxRecords = 10000;
+    let allData: Customer[] = [];
+    let offset = 0;
+
+    while (offset < maxRecords) {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + batchSize - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allData = allData.concat(data as Customer[]);
+      if (data.length < batchSize) break;
+      offset += batchSize;
+    }
+
+    return { data: allData, isPartial: offset >= maxRecords };
   },
 
   async prefetchCustomer(id: string): Promise<Customer | null> {
@@ -416,24 +442,24 @@ export const customerRepository = {
     return (data || []) as CreditNote[];
   },
 
-  async findSalesOrders(customerId: string) {
+  async findSalesOrders(customerId: string): Promise<SalesOrder[]> {
     const { data, error } = await supabase
       .from('sales_orders')
       .select('*')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []) as SalesOrder[];
   },
 
-  async findQuotations(customerId: string) {
+  async findQuotations(customerId: string): Promise<Quotation[]> {
     const { data, error } = await supabase
       .from('quotations')
       .select('*')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []) as Quotation[];
   },
 
   async findActivities(customerId: string): Promise<ActivityLog[]> {
@@ -460,14 +486,14 @@ export const customerRepository = {
   // Reminders
   // ============================================
 
-  async findReminders(customerId: string) {
+  async findReminders(customerId: string): Promise<CustomerReminder[]> {
     const { data, error } = await supabase
       .from('customer_reminders')
       .select('*')
       .eq('customer_id', customerId)
       .order('reminder_date', { ascending: true });
     if (error) throw error;
-    return data || [];
+    return (data || []) as CustomerReminder[];
   },
 
   async createReminder(payload: { customer_id: string; reminder_date: string; note: string; created_by: string }): Promise<void> {
@@ -489,14 +515,14 @@ export const customerRepository = {
   // Communications
   // ============================================
 
-  async findCommunications(customerId: string) {
+  async findCommunications(customerId: string): Promise<CustomerCommunication[]> {
     const { data, error } = await supabase
       .from('customer_communications')
       .select('*')
       .eq('customer_id', customerId)
       .order('communication_date', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []) as CustomerCommunication[];
   },
 
   async createCommunication(payload: { customer_id: string; type: string; subject: string | null; note: string; created_by: string }): Promise<void> {
@@ -513,7 +539,8 @@ export const customerRepository = {
   async findAllNamesAndPhones(): Promise<{ name: string; phone: string | null }[]> {
     const { data, error } = await supabase
       .from('customers')
-      .select('name, phone');
+      .select('name, phone')
+      .limit(10000);
     if (error) throw error;
     return (data || []) as { name: string; phone: string | null }[];
   },

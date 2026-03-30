@@ -80,6 +80,9 @@ const CustomerGridCardInner = ({
               <Crown className="h-2.5 w-2.5 ml-0.5" />
               {vipLabels[customer.vip_level as keyof typeof vipLabels]}
             </Badge>
+            {customer.is_active === false && (
+              <Badge variant="outline" className="mt-1 text-[10px] text-muted-foreground">غير نشط</Badge>
+            )}
           </div>
 
           <div className="w-full space-y-1.5 text-xs text-muted-foreground">

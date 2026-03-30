@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid, LayoutList, AlertTriangle, Users, FileSpreadsheet, ArrowUpDown } from "lucide-react";
+import { Plus, LayoutGrid, LayoutList, AlertTriangle, Users, FileSpreadsheet, ArrowUpDown, Search } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useCustomerFilters, useBulkSelection } from "@/hooks/customers";
@@ -12,6 +12,7 @@ import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Customer } from "@/lib/customerConstants";
 
 // Sub-components
@@ -100,7 +101,17 @@ const CustomersPage = () => {
   const handleNewInvoice = useCallback((customerId: string) => { navigate('/invoices', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleWhatsApp = useCallback((phone: string) => { window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank'); }, []);
   const handleRefresh = async () => { await list.refetch(); };
-  const handleExportAll = useCallback(async () => { setExportAllLoading(true); await exportCustomersToExcel(); setExportAllLoading(false); }, []);
+  const handleExportAll = useCallback(async () => {
+    const hasPermission = await verifyPermissionOnServer('customers', 'view');
+    if (!hasPermission) {
+      const { toast: sonnerToast } = await import('sonner');
+      sonnerToast.error('غير مصرح لك بتصدير بيانات العملاء');
+      return;
+    }
+    setExportAllLoading(true);
+    await exportCustomersToExcel();
+    setExportAllLoading(false);
+  }, []);
   const handleBulkDelete = useCallback(() => { mutations.bulkDeleteMutation.mutate(Array.from(bulk.selectedIds)); bulk.clearSelection(); }, [mutations.bulkDeleteMutation, bulk]);
   const handleBulkVipUpdate = useCallback((vipLevel: string) => { mutations.bulkVipMutation.mutate({ ids: Array.from(bulk.selectedIds), vipLevel }); bulk.clearSelection(); }, [mutations.bulkVipMutation, bulk]);
   const goToPage = useCallback((page: number) => { setCurrentPage(Math.max(1, Math.min(page, totalPages))); }, [totalPages]);
@@ -193,18 +204,27 @@ const CustomersPage = () => {
           <CardContent>
             {viewMode === 'grid' ? (
               list.isLoading ? <CustomerGridSkeleton /> : (
-                <CustomerGridView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onEdit={handleEdit} onDelete={handleDeleteRequest} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} hasSelection={bulk.hasSelection} onAdd={canEdit ? handleAdd : undefined} deletingId={deletingId} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} />
+                <CustomerGridView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onEdit={handleEdit} onDelete={handleDeleteRequest} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} onToggleSelectAll={bulk.toggleSelectAll} isAllSelected={bulk.isAllSelected} hasSelection={bulk.hasSelection} onAdd={canEdit ? handleAdd : undefined} deletingId={deletingId} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch} onClearFilters={filters.clearAllFilters} />
               )
             ) : list.isLoading ? <TableSkeleton rows={5} columns={7} /> : list.customers.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">لا يوجد عملاء</h3>
-                <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">ابدأ بإضافة عملائك لإدارة بياناتهم وتتبع معاملاتهم المالية</p>
-                <div className="flex items-center justify-center gap-3">
-                  {canEdit && <Button onClick={handleAdd}><Plus className="h-4 w-4 ml-2" />إضافة عميل جديد</Button>}
-                  <Button variant="outline" onClick={() => dialogRef.current?.openImport()}><FileSpreadsheet className="h-4 w-4 ml-2" />استيراد من Excel</Button>
+              filters.activeFiltersCount > 0 || filters.debouncedSearch ? (
+                <div className="text-center py-12">
+                  <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">لا توجد نتائج</h3>
+                  <p className="text-muted-foreground text-sm mb-6">لا يوجد عملاء يطابقون الفلاتر المحددة</p>
+                  <Button variant="outline" onClick={filters.clearAllFilters}>إزالة الفلاتر</Button>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">لا يوجد عملاء</h3>
+                  <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">ابدأ بإضافة عملائك لإدارة بياناتهم وتتبع معاملاتهم المالية</p>
+                  <div className="flex items-center justify-center gap-3">
+                    {canEdit && <Button onClick={handleAdd}><Plus className="h-4 w-4 ml-2" />إضافة عميل جديد</Button>}
+                    <Button variant="outline" onClick={() => dialogRef.current?.openImport()}><FileSpreadsheet className="h-4 w-4 ml-2" />استيراد من Excel</Button>
+                  </div>
+                </div>
+              )
             ) : (
               <CustomerTableView data={list.customers} sortConfig={sortConfig} onSort={requestSort} onNavigate={(id) => navigate(`/customers/${id}`)} onEdit={handleEdit} onDelete={handleDeleteRequest} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} canEdit={canEdit} canDelete={canDelete} deletingId={deletingId} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} onToggleSelectAll={bulk.toggleSelectAll} isAllSelected={bulk.isAllSelected} />
             )}
