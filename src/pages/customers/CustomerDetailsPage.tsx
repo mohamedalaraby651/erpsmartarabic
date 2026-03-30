@@ -128,8 +128,17 @@ const CustomerDetailsPage = () => {
               <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(id) => detail.deleteAddressMutation.mutate(id)} />
             </Suspense>
           </MobileDetailSection>
+          <MobileDetailSection title="عروض الأسعار" priority="low" icon={<Globe className="h-4 w-4" />}>
+            <Suspense fallback={<TabFallback />}><CustomerTabQuotations quotations={detail.quotations} /></Suspense>
+          </MobileDetailSection>
+          <MobileDetailSection title="أوامر البيع" priority="low" icon={<ShoppingCart className="h-4 w-4" />}>
+            <Suspense fallback={<TabFallback />}><CustomerTabOrders salesOrders={detail.salesOrders} /></Suspense>
+          </MobileDetailSection>
           <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} /></Suspense>
+          </MobileDetailSection>
+          <MobileDetailSection title="أعمار الديون" priority="low" icon={<Clock className="h-4 w-4" />}>
+            <Suspense fallback={<TabFallback />}><CustomerAgingReport invoices={detail.invoices} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="سجل التواصل" priority="medium" icon={<MessageSquare className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CommunicationLogTab customerId={id!} /></Suspense>
@@ -137,8 +146,14 @@ const CustomerDetailsPage = () => {
           <MobileDetailSection title="التذكيرات" priority="medium" icon={<Bell className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CustomerReminderSection customerId={id!} /></Suspense>
           </MobileDetailSection>
+          <MobileDetailSection title="التحليلات" priority="low" icon={<BarChart3 className="h-4 w-4" />}>
+            <Suspense fallback={<TabFallback />}><CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} /></Suspense>
+          </MobileDetailSection>
           <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CustomerTabAttachments customerId={id!} /></Suspense>
+          </MobileDetailSection>
+          <MobileDetailSection title="سجل النشاط" priority="low" icon={<Activity className="h-4 w-4" />}>
+            <Suspense fallback={<TabFallback />}><CustomerTabActivity activities={detail.activities} /></Suspense>
           </MobileDetailSection>
         </div>
       ) : (
