@@ -514,14 +514,14 @@ export const customerRepository = {
   // Communications
   // ============================================
 
-  async findCommunications(customerId: string) {
+  async findCommunications(customerId: string): Promise<CustomerCommunication[]> {
     const { data, error } = await supabase
       .from('customer_communications')
       .select('*')
       .eq('customer_id', customerId)
       .order('communication_date', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []) as CustomerCommunication[];
   },
 
   async createCommunication(payload: { customer_id: string; type: string; subject: string | null; note: string; created_by: string }): Promise<void> {
