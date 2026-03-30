@@ -130,7 +130,7 @@ export const customerRepository = {
       .order(sortColumn, { ascending: sortAsc })
       .range(rangeFrom, rangeTo);
 
-    query = applyFilters(query, filters) as typeof query;
+    query = applyFilters(query, filters);
 
     const { data, count, error } = await query;
     if (error) throw error;

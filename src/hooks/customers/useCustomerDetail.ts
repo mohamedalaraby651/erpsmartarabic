@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { calculateCustomerHealth } from "@/lib/services/customerService";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
 
@@ -83,10 +84,20 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   const deleteAddressMutation = useMutation({
-    mutationFn: (addressId: string) => customerRepository.deleteAddress(addressId),
+    mutationFn: async (addressId: string) => {
+      const hasPermission = await verifyPermissionOnServer('customers', 'delete');
+      if (!hasPermission) {
+        throw new Error('غير مصرح لك بحذف العناوين');
+      }
+      return customerRepository.deleteAddress(addressId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-addresses', id] });
       toast({ title: "تم حذف العنوان بنجاح" });
+    },
+    onError: (error) => {
+      logErrorSafely('CustomerDetailsPage', error);
+      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 

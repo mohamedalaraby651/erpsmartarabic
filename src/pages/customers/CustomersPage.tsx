@@ -12,6 +12,7 @@ import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Customer } from "@/lib/customerConstants";
 
 // Sub-components

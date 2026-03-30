@@ -102,7 +102,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
     totalCount,
     isLoading,
     refetch,
-    stats: stats || { total: 0, individuals: 0, companies: 0, vip: 0, totalBalance: 0 },
+    stats: stats || { total: 0, individuals: 0, companies: 0, vip: 0, totalBalance: 0, active: 0, inactive: 0 },
     handleRowHover,
     handleRowLeave,
     filterKey,
