@@ -485,14 +485,14 @@ export const customerRepository = {
   // Reminders
   // ============================================
 
-  async findReminders(customerId: string) {
+  async findReminders(customerId: string): Promise<CustomerReminder[]> {
     const { data, error } = await supabase
       .from('customer_reminders')
       .select('*')
       .eq('customer_id', customerId)
       .order('reminder_date', { ascending: true });
     if (error) throw error;
-    return data || [];
+    return (data || []) as CustomerReminder[];
   },
 
   async createReminder(payload: { customer_id: string; reminder_date: string; note: string; created_by: string }): Promise<void> {
