@@ -538,7 +538,8 @@ export const customerRepository = {
   async findAllNamesAndPhones(): Promise<{ name: string; phone: string | null }[]> {
     const { data, error } = await supabase
       .from('customers')
-      .select('name, phone');
+      .select('name, phone')
+      .limit(10000);
     if (error) throw error;
     return (data || []) as { name: string; phone: string | null }[];
   },
