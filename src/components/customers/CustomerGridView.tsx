@@ -20,7 +20,7 @@ interface CustomerGridViewProps {
   onDelete?: (id: string) => void;
   selectedIds: Set<string>;
   onToggleSelect: (id: string, checked: boolean) => void;
-  onToggleSelectAll?: () => void;
+  onToggleSelectAll?: (checked: boolean) => void;
   isAllSelected?: boolean;
   hasSelection: boolean;
   onAdd?: () => void;
