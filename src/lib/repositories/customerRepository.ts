@@ -79,12 +79,13 @@ export interface DuplicateDetectionResult {
 
 /**
  * Apply filter predicates to a customer query.
- * Uses ReturnType to correctly type the query builder without `any`.
+ * Uses a typed helper to avoid `any`.
  */
-function applyFilters(
-  query: ReturnType<typeof supabase.from<'customers'>>,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any[]) => any }>(
+  query: T,
   filters: CustomerFilters
-) {
+): T {
   let q = query;
   const { search, type, vip, governorate, status, noCommDays, inactiveDays } = filters;
   if (search) {
