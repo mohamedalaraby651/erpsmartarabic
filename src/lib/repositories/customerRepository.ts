@@ -441,24 +441,24 @@ export const customerRepository = {
     return (data || []) as CreditNote[];
   },
 
-  async findSalesOrders(customerId: string) {
+  async findSalesOrders(customerId: string): Promise<SalesOrder[]> {
     const { data, error } = await supabase
       .from('sales_orders')
       .select('*')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []) as SalesOrder[];
   },
 
-  async findQuotations(customerId: string) {
+  async findQuotations(customerId: string): Promise<Quotation[]> {
     const { data, error } = await supabase
       .from('quotations')
       .select('*')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []) as Quotation[];
   },
 
   async findActivities(customerId: string): Promise<ActivityLog[]> {
