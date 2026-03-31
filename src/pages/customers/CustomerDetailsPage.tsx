@@ -197,6 +197,9 @@ const CustomerDetailsPage = () => {
               </TabsContent>
               <TabsContent value="analysis" className="mt-4 space-y-4">
                 <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+                <AgingDonutChart invoices={detail.invoices} />
+                <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
+                <TopProductsChart customerId={id!} />
                 <CustomerTabActivity activities={detail.activities} />
               </TabsContent>
               <TabsContent value="more" className="mt-4 space-y-4">
