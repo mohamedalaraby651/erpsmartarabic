@@ -275,21 +275,43 @@ const CustomersPage = () => {
         </div>
       ) : (
         <div>
-          {/* Sort dropdown */}
+          {/* Toolbar: sort + saved views + column settings */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">{list.totalCount} عميل</span>
-            <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
-              <SelectTrigger className="w-40 h-8 text-xs">
-                <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
-                <SelectValue placeholder="ترتيب حسب" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
-                <SelectItem value="name">الاسم</SelectItem>
-                <SelectItem value="current_balance">الرصيد</SelectItem>
-                <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <CustomerSavedViews
+                currentFilters={{
+                  type: filters.typeFilter,
+                  vip: filters.vipFilter,
+                  governorate: filters.governorateFilter,
+                  status: filters.statusFilter,
+                  noCommDays: filters.noCommDays,
+                  inactiveDays: filters.inactiveDays,
+                }}
+                onApplyView={(viewFilters) => {
+                  filters.setTypeFilter(viewFilters.type);
+                  filters.setVipFilter(viewFilters.vip);
+                  filters.setGovernorateFilter(viewFilters.governorate);
+                  filters.setStatusFilter(viewFilters.status);
+                  filters.setNoCommDays(viewFilters.noCommDays);
+                  filters.setInactiveDays(viewFilters.inactiveDays);
+                  setQuickFilter(null);
+                }}
+              />
+              <CustomerColumnSettings />
+              <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
+                <SelectTrigger className="w-40 h-9 text-xs">
+                  <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
+                  <SelectValue placeholder="ترتيب حسب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
+                  <SelectItem value="name">الاسم</SelectItem>
+                  <SelectItem value="current_balance">الرصيد</SelectItem>
+                  <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {list.isLoading && allCustomers.length === 0 ? (
