@@ -3965,6 +3965,29 @@ export type Database = {
       }
     }
     Views: {
+      customer_stats_mv: {
+        Row: {
+          active: number | null
+          companies: number | null
+          debtors: number | null
+          farms: number | null
+          inactive: number | null
+          individuals: number | null
+          tenant_id: string | null
+          total: number | null
+          total_balance: number | null
+          vip: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees_safe: {
         Row: {
           address: string | null
@@ -4264,6 +4287,10 @@ export type Database = {
         Args: { _customer_id: string }
         Returns: Json
       }
+      get_customer_health_score: {
+        Args: { _customer_id: string }
+        Returns: Json
+      }
       get_customer_statement: {
         Args: { _customer_id: string; _date_from?: string; _date_to?: string }
         Returns: {
@@ -4311,6 +4338,7 @@ export type Database = {
         Args: { _amount: number; _entity_type: string }
         Returns: boolean
       }
+      refresh_customer_stats_mv: { Args: never; Returns: undefined }
       switch_user_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
