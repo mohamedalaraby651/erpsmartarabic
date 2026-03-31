@@ -7,9 +7,8 @@ import {
 } from "@/components/ui/sheet";
 import {
   Crown, FileText, Printer, Phone, MessageSquare, MapPin,
-  CreditCard, Target, Percent, TrendingUp, MoreHorizontal,
+  Target, MoreHorizontal,
   Edit, Wallet, Globe, ShoppingCart, Receipt, UserCheck, UserX,
-  ArrowRight, ArrowLeft,
 } from "lucide-react";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import ImageUpload from "@/components/shared/ImageUpload";
@@ -30,11 +29,6 @@ interface CustomerMobileProfileProps {
   onStatement: () => void;
   onWhatsApp: () => void;
   onImageUpdate: (url: string | null) => void;
-  // Navigation
-  onPrev?: () => void;
-  onNext?: () => void;
-  hasPrev?: boolean;
-  hasNext?: boolean;
   // Embedded stats
   currentBalance?: number;
   balanceIsDebit?: boolean;
@@ -55,7 +49,6 @@ interface CustomerMobileProfileProps {
 
 export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   customer, customerId, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
-  onPrev, onNext, hasPrev, hasNext,
   currentBalance = 0, balanceIsDebit = false, creditLimit, creditUsagePercent, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
   onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
 }: CustomerMobileProfileProps) {
@@ -64,18 +57,6 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   return (
     <Card className="border-0 shadow-lg bg-gradient-to-b from-primary/5 via-background to-background overflow-hidden">
       <CardContent className="p-5">
-        {/* Navigation arrows */}
-        {(hasPrev || hasNext) && (
-          <div className="flex items-center justify-between mb-3">
-            <Button variant="ghost" size="icon" disabled={!hasPrev} onClick={onPrev} className="min-h-11 min-w-11">
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" disabled={!hasNext} onClick={onNext} className="min-h-11 min-w-11">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
-
         {/* Avatar + VIP centered */}
         <div className="flex flex-col items-center text-center gap-3 mb-4">
           <div className="relative">
