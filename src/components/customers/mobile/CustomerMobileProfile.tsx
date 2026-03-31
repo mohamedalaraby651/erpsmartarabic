@@ -182,17 +182,6 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   );
 });
 
-function MiniStat({ icon: Icon, label, value, color }: {
-  icon: React.ElementType; label: string; value: string; color: string;
-}) {
-  return (
-    <div className="text-center min-w-0">
-      <Icon className={cn("h-3.5 w-3.5 mx-auto mb-0.5", color)} />
-      <p className={cn("text-xs font-bold leading-tight", color)}>{value}</p>
-      <p className="text-[9px] text-muted-foreground truncate">{label}</p>
-    </div>
-  );
-}
 
 function SheetAction({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
   return (

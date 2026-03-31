@@ -261,7 +261,7 @@ const CustomerDetailsPage = () => {
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
 
-          <Suspense fallback={<TabFallback />}>
+          <Suspense fallback={<TabSkeleton />}>
             <TabsContent value="basic-info" className="mt-6">
               <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(aid) => detail.deleteAddressMutation.mutate(aid)} onWhatsApp={handleWhatsApp} />
             </TabsContent>
