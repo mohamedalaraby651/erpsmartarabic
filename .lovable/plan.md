@@ -1,63 +1,165 @@
+# خطة إعادة هيكلة قسم العملاء
 
+## الوضع الحالي
+- **96 ملف** | **~11,000 سطر** كود
+- **48 ملف** في المجلد الجذري `src/components/customers/` — مسطح جداً
+- **4 مكونات ميتة** لا تُستخدم في أي مكان (1,112 سطر مهدرة)
+- **دالة تصدير مكررة** في `customerService.ts` لم تعد مستخدمة
+- **MobileCustomerView** مكتوبة داخل `CustomerDetailsPage.tsx` (120 سطر)
+- أنواع TypeScript مكررة في عدة ملفات
 
-# خطة التحسين الشاملة لقسم العملاء
+## المرحلة 1: حذف الكود الميت (Dead Code Removal)
 
-## نظرة عامة
+### 1.1 حذف مكونات غير مستخدمة
+| الملف | السطور | السبب |
+|-------|--------|-------|
+| `CustomerTableView.tsx` | 286 | لم يعد مستخدماً — استُبدل بـ `CustomerListRow` |
+| `CustomerGridView.tsx` | 111 | لم يعد مستخدماً — يستورد `CustomerGridCard` فقط |
+| `CustomerGridCard.tsx` | 140 | مستخدم فقط من `CustomerGridView` المحذوف |
+| `CustomerGridSkeleton.tsx` | 32 | skeleton لعرض الشبكة المحذوف |
+| `CustomerStatsGrid.tsx` | 168 | لم يعد مستخدماً — استُبدل بـ `CustomerStatsBar` |
+| **المجموع** | **737 سطر** | |
 
-بعد فحص 96+ ملف (10,900+ سطر)، تم تحديد 28 نقطة تحسين مقسمة على 8 مراحل تنفيذية.
+### 1.2 إزالة دالة التصدير القديمة
+- `exportCustomersToExcel` في `customerService.ts` — استُبدلت بـ `useCustomerExport` hook
 
----
+## المرحلة 2: إعادة تنظيم المجلدات
 
-## المرحلة 1: جودة الكود والأنواع (P0 — أساسية)
+### الهيكل الحالي (48 ملف في الجذر)
+```
+src/components/customers/
+├── alerts/          (4 ملفات) ✅
+├── charts/          (3 ملفات) ✅
+├── form/            (4 ملفات) ✅
+├── hero/            (3 ملفات) ✅
+├── mobile/          (4 ملفات) ✅
+├── tabs/            (9 ملفات) ✅
+└── 48 ملف في الجذر ❌
+```
 
-### 1.1 إزالة `any` من `useCustomerAlerts.ts`
-يوجد 5 استخدامات لـ `(inv as any).customers` في الأسطر 109, 110, 153, 190.
-**الحل**: إنشاء type للـ joined query يتضمن `customers: { name: string; phone: string | null }`.
+### الهيكل المقترح
+```
+src/components/customers/
+├── alerts/          → بدون تغيير (4 ملفات)
+├── charts/          → بدون تغيير (3 ملفات)
+├── form/            → بدون تغيير (4 ملفات)
+├── hero/            → بدون تغيير (3 ملفات)
+├── mobile/          → + MobileCustomerView من DetailsPage (5 ملفات)
+├── tabs/            → بدون تغيير (9 ملفات)
+├── list/            → جديد: مكونات القائمة
+│   ├── CustomerListCard.tsx
+│   ├── CustomerListRow.tsx
+│   ├── CustomerListSkeleton.tsx
+│   ├── CustomerMobileView.tsx
+│   ├── CustomerEmptyState.tsx
+│   └── index.ts
+├── details/         → جديد: مكونات التفاصيل
+│   ├── CustomerSmartAlerts.tsx
+│   ├── CustomerKPICards.tsx
+│   ├── CustomerPinnedNote.tsx
+│   ├── CustomerTimelineDrawer.tsx
+│   ├── CustomerAgingReport.tsx
+│   ├── CustomerFinancialSummary.tsx
+│   ├── CustomerPurchaseChart.tsx
+│   ├── CommunicationLogTab.tsx
+│   ├── ActivityDiffViewer.tsx
+│   ├── StatementOfAccount.tsx
+│   ├── CustomerReminderDialog.tsx
+│   ├── CustomerSalesPipeline.tsx
+│   ├── CustomerQuickHistory.tsx
+│   ├── CustomerHealthBadge.tsx
+│   └── index.ts
+├── dialogs/         → جديد: النوافذ المنبثقة
+│   ├── CustomerFormDialog.tsx
+│   ├── CustomerDialogManager.tsx
+│   ├── CustomerQuickAddDialog.tsx
+│   ├── CustomerAddressDialog.tsx
+│   ├── CustomerMergeDialog.tsx
+│   ├── CustomerImportDialog.tsx
+│   ├── CustomerExportDialog.tsx
+│   ├── DuplicateDetectionDialog.tsx
+│   └── index.ts
+├── filters/         → جديد: مكونات الفلترة والترتيب
+│   ├── CustomerFiltersBar.tsx
+│   ├── CustomerFilterDrawer.tsx
+│   ├── CustomerSavedViews.tsx
+│   ├── CustomerColumnSettings.tsx
+│   ├── CustomerSearchPreview.tsx
+│   └── index.ts
+├── shared/          → جديد: المشتركة
+│   ├── CustomerAvatar.tsx
+│   ├── CustomerActionMenu.tsx
+│   ├── CustomerErrorBoundary.tsx
+│   └── index.ts
+├── CustomerPageHeader.tsx   → يبقى في الجذر (مستوى صفحة)
+├── CustomerStatsBar.tsx     → يبقى في الجذر (مستوى صفحة)
+└── CustomerHeroHeader.tsx   → يبقى في الجذر (مستوى صفحة)
+```
 
-### 1.2 إزالة `any` من `AlertItemActions.tsx`
-السطر 70: `(e as any)` في `onKeyDown`.
-**الحل**: استخدام `React.KeyboardEvent` بشكل صحيح.
+## المرحلة 3: استخراج المكونات الكبيرة
 
-### 1.3 إزالة `any` من `customerRepository.ts`
-السطر 86: دالة `applyFilters` تستخدم `any` في generic constraint.
-**الحل**: استخدام `PostgrestFilterBuilder` type من Supabase SDK.
+### 3.1 استخراج MobileCustomerView من CustomerDetailsPage
+- **الملف**: `CustomerDetailsPage.tsx` (411 سطر)
+- **المكون**: `MobileCustomerView` (الأسطر 76-221 = 145 سطر)
+- **النقل إلى**: `src/components/customers/mobile/MobileCustomerDetailView.tsx`
+- **النتيجة**: `CustomerDetailsPage` ينخفض من 411 → ~270 سطر
 
----
+### 3.2 استخراج منطق الـ Infinite Scroll من CustomersPage
+- **الملف**: `CustomersPage.tsx` (402 سطر)
+- **المنطق**: أسطر 93-178 (إدارة الصفحات + IntersectionObserver)
+- **النقل إلى**: `src/hooks/customers/useInfiniteCustomers.ts`
+- **النتيجة**: `CustomersPage` ينخفض من 402 → ~320 سطر
 
-## المرحلة 2: حفظ الملاحظات في قاعدة البيانات (P0 — وظيفية)
+## المرحلة 4: تنظيف الأنواع والثوابت
 
-### 2.1 ملاحظات التنبيهات تُحفظ حالياً في `localStorage` فقط
-`AlertItemActions.tsx` السطر 36-38 يحفظ في `customer-alert-notes`.
-**الحل**: حفظ الملاحظات في جدول `customer_notes` الموجود فعلاً، مع tag نوعه `alert_note` لتمييزها.
+### 4.1 توحيد تعريفات الأنواع
+- `customerRepository.ts` يعرّف `Customer` محلياً (سطر 10)
+- `customerConstants.ts` يصدّر `Customer` type
+- `CustomerFormDialog.tsx` يعرّف `Customer` محلياً (سطر 35)
+- **الحل**: استخدام `import type { Customer } from '@/lib/customerConstants'` في كل مكان
 
-### 2.2 إعدادات التنبيهات في `localStorage`
-`useAlertSettings.ts` يحفظ كل الإعدادات محلياً.
-**الحل**: (مرحلة لاحقة) نقل الإعدادات لجدول `user_preferences` لمزامنتها بين الأجهزة.
+### 4.2 نقل ألوان VIP المكررة
+- `vipBorderAccent` معرّف في كل من `CustomerListCard.tsx` (سطر 32) و `CustomerListRow.tsx` (سطر 24)
+- **الحل**: نقلها إلى `customerConstants.ts`
 
----
+## المرحلة 5: تنظيف Repository
 
-## المرحلة 3: أداء الاستعلامات (P1 — أداء)
+### 5.1 فصل customerRepository.ts (610 سطر)
+```
+src/lib/repositories/
+├── customerRepository.ts      → CRUD + Filters + Stats (300 سطر)
+├── customerRelationsRepo.ts   → Invoices, Payments, Orders, etc. (200 سطر)
+└── customerSearchRepo.ts      → Search, Duplicates, Export (110 سطر)
+```
 
-### 3.1 `useCustomerAlerts` يجلب جميع العملاء النشطين
-السطر 47-51: يجلب كل الأعمدة لكل العملاء النشطين في كل مرة.
-**الحل**: إنشاء RPC `get_customer_alerts_data` يُرجع فقط العملاء الذين لديهم تنبيهات فعلية (تجاوز ائتمان، خمول، VIP بدون تواصل) بدلاً من تحميل الجميع وفلترتهم في الواجهة.
+## المرحلة 6: تحديث barrel exports
 
-### 3.2 ثلاث queries منفصلة للفواتير
-`useCustomerAlerts` يُجري 3 queries (overdue + upcoming + monthly sales) + query العملاء = 4 queries.
-**الحل**: دمجها في RPC واحد `get_alert_summary` يُرجع كل البيانات دفعة واحدة.
+### إنشاء ملفات index.ts لكل مجلد جديد
+لتسهيل الاستيراد:
+```typescript
+// قبل
+import { CustomerListRow } from "@/components/customers/CustomerListRow";
+import { CustomerMobileView } from "@/components/customers/CustomerMobileView";
 
-### 3.3 البحث يستخدم `ilike` بدون index
-`customerRepository.ts` السطر 94: يبحث بـ `ilike` على 4 أعمدة.
-**الحل**: إضافة GIN index مع `pg_trgm` للبحث السريع، أو استخدام full-text search.
+// بعد
+import { CustomerListRow, CustomerMobileView } from "@/components/customers/list";
+```
 
-### 3.4 `CustomersPage.tsx` كبير (503 سطر)
-يحتوي على منطق التصدير (السطور 195-308) مدمج في المكون.
-**الحل**: استخراج `useCustomerExport` hook منفصل.
+## ملخص التأثير
 
----
+| المقياس | قبل | بعد | التحسن |
+|---------|-----|-----|--------|
+| ملفات في الجذر | 48 | 3 | -94% |
+| كود ميت | 737 سطر | 0 | -100% |
+| أكبر ملف صفحة | 411 سطر | ~270 سطر | -34% |
+| أكبر repository | 610 سطر | ~300 سطر | -51% |
+| أنواع مكررة | 4 أماكن | 1 مكان | موحد |
+| ثوابت مكررة | 2 أماكن | 1 مكان | موحد |
 
-## المرحلة 4: تحسين تجربة البانر (P1 — UX)
-
-### 4.1 الصوت يُشغّل مرتين
-`CustomerAlertsBanner.tsx` (سطر 30-44) و `useAlertNotifier.ts` (سطر 53-61) كلاهما يشغل صوت.
-**الحل**: إزالة الصو
+## ترتيب التنفيذ
+1. **المرحلة 1** — حذف الكود الميت (أسرع مكسب)
+2. **المرحلة 4** — توحيد الأنواع (يجب قبل النقل)
+3. **المرحلة 2** — إعادة تنظيم المجلدات
+4. **المرحلة 3** — استخراج المكونات الكبيرة
+5. **المرحلة 5** — فصل Repository
+6. **المرحلة 6** — barrel exports
