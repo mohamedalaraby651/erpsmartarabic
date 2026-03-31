@@ -10,6 +10,7 @@ import { useCustomerFilters, useBulkSelection } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
+import { useMemo } from "react";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
@@ -35,6 +36,7 @@ const CustomersPage = () => {
   const { userRole } = useAuth();
   const { isMobile } = useResponsiveView();
   const { errorAlerts, warningAlerts, totalAlerts } = useCustomerAlerts();
+  const [alertsDismissed, setAlertsDismissed] = useState(false);
   const dialogRef = useRef<DialogManagerHandle>(null);
 
   const filters = useCustomerFilters();
@@ -136,7 +138,7 @@ const CustomersPage = () => {
     }
   }, [list.customers, mobilePage, isMobile]);
 
-  const allMobileCustomers = isMobile ? mobilePages.flat() : list.customers;
+  const allMobileCustomers = useMemo(() => isMobile ? mobilePages.flat() : list.customers, [isMobile, mobilePages, list.customers]);
 
   const handleLoadMore = useCallback(() => {
     if (mobileHasNextPage && !isFetchingNextPage) {
@@ -149,7 +151,7 @@ const CustomersPage = () => {
     setCurrentPage(1);
     setMobilePage(1);
     setMobilePages([]);
-  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
+  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction]);
 
   const bulk = useBulkSelection(list.customers);
 
@@ -162,6 +164,7 @@ const CustomersPage = () => {
   }, [mutations.deleteMutation]);
   const handleNewInvoice = useCallback((customerId: string) => { navigate('/invoices', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleWhatsApp = useCallback((phone: string) => { window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank'); }, []);
+  const handleNewPayment = useCallback((customerId: string) => { navigate('/payments', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleRefresh = async () => { await list.refetch(); };
   const handleExportAll = useCallback(async () => {
     const hasPermission = await verifyPermissionOnServer('customers', 'view');
@@ -208,12 +211,18 @@ const CustomersPage = () => {
 
       <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
 
-      {totalAlerts > 0 && (
+      {totalAlerts > 0 && !alertsDismissed && (
         <Card className="border-warning/50 bg-warning/5">
           <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              <span className="font-medium text-sm">تنبيهات ({totalAlerts})</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                <span className="font-medium text-sm">تنبيهات ({totalAlerts})</span>
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAlertsDismissed(true)}>
+                <span className="sr-only">إغلاق</span>
+                <span className="text-muted-foreground text-xs">✕</span>
+              </Button>
             </div>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {errorAlerts.slice(0, 3).map((alert, i) => (<p key={`e-${i}`} className="text-xs text-destructive">⚠️ {alert.message}</p>))}
@@ -225,10 +234,10 @@ const CustomersPage = () => {
 
       <CustomerFiltersBar
         searchQuery={filters.searchQuery} onSearchChange={filters.setSearchQuery}
-        typeFilter={filters.typeFilter} onTypeChange={filters.setTypeFilter}
-        vipFilter={filters.vipFilter} onVipChange={filters.setVipFilter}
-        governorateFilter={filters.governorateFilter} onGovernorateChange={filters.setGovernorateFilter}
-        statusFilter={filters.statusFilter} onStatusChange={filters.setStatusFilter}
+        typeFilter={filters.typeFilter} onTypeChange={(v) => { filters.setTypeFilter(v); setQuickFilter(null); }}
+        vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
+        governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
+        statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
         governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
         isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
         onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
@@ -251,6 +260,7 @@ const CustomersPage = () => {
             onAdd={canEdit ? handleAdd : undefined}
             onImport={() => dialogRef.current?.openImport()}
             onNewInvoice={handleNewInvoice}
+            onNewPayment={handleNewPayment}
             hasNextPage={mobileHasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}

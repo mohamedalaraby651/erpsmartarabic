@@ -23,6 +23,7 @@ interface CustomerMobileViewProps {
   onAdd?: () => void;
   onImport?: () => void;
   onNewInvoice?: (id: string) => void;
+  onNewPayment?: (id: string) => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
@@ -32,7 +33,7 @@ interface CustomerMobileViewProps {
 
 export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
-  hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice,
+  hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
 }: CustomerMobileViewProps) {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -112,6 +113,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
                 onEdit={canEdit ? onEdit : undefined}
                 onDelete={canDelete ? onDelete : undefined}
                 onNewInvoice={onNewInvoice}
+                onNewPayment={onNewPayment}
               />
             </div>
           ))}

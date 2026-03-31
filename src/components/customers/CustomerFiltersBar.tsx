@@ -99,6 +99,7 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
                   <SelectItem value="all">الكل</SelectItem>
                   <SelectItem value="active">نشط</SelectItem>
                   <SelectItem value="inactive">غير نشط</SelectItem>
+                  <SelectItem value="debtors">مدين</SelectItem>
                 </SelectContent>
               </Select>
             </>

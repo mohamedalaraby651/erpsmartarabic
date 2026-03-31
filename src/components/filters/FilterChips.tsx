@@ -1,3 +1,4 @@
+import React, { forwardRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,17 +20,17 @@ interface FilterChipsProps {
   className?: string;
 }
 
-export function FilterChips({
+export const FilterChips = forwardRef<HTMLDivElement, FilterChipsProps>(function FilterChips({
   chips,
   activeChips,
   onToggle,
   onClearAll,
   className,
-}: FilterChipsProps) {
+}, ref) {
   const hasActiveFilters = activeChips.length > 0;
 
   return (
-    <div className={cn('py-2', className)}>
+    <div ref={ref} className={cn('py-2', className)}>
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex items-center gap-2 px-3">
           {hasActiveFilters && onClearAll && (
@@ -70,4 +71,4 @@ export function FilterChips({
       </ScrollArea>
     </div>
   );
-}
+});
