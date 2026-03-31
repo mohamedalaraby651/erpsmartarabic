@@ -22,6 +22,8 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reminderDate, setReminderDate] = useState('');
   const [reminderNote, setReminderNote] = useState('');
+  const [recurrence, setRecurrence] = useState<string>('none');
+  const [linkedInvoiceId, setLinkedInvoiceId] = useState<string>('');
 
   const { data: reminders = [] } = useQuery({
     queryKey: ['customer-reminders', customerId],
