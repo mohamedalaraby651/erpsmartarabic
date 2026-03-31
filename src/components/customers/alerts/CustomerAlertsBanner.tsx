@@ -3,7 +3,7 @@ import { Settings, ChevronDown, ChevronUp, AlertOctagon, Clock, TrendingUp, Cale
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { useDismissedAlerts } from '@/hooks/useAlertSettings';
+import { useDismissedAlerts, useAlertSettings } from '@/hooks/useAlertSettings';
 import { AlertItemActions } from './AlertItemActions';
 import { ALERT_TYPE_CONFIG, ALERT_TYPE_ORDER } from './AlertTypeConfig';
 import type { AlertType, CustomerAlert } from '@/hooks/useCustomerAlerts';
