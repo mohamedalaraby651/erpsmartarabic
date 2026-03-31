@@ -132,6 +132,7 @@ describe('useLongPress', () => {
       );
 
       expect(result.current).toHaveProperty('onTouchStart');
+      expect(result.current).toHaveProperty('onTouchMove');
       expect(result.current).toHaveProperty('onTouchEnd');
       expect(result.current).toHaveProperty('onTouchCancel');
       expect(result.current).toHaveProperty('onMouseDown');

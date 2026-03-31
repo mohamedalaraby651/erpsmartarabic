@@ -8,7 +8,7 @@ import { Crown, Phone, MapPin, DollarSign } from "lucide-react";
 import CustomerAvatar from "./CustomerAvatar";
 import { CustomerActionMenu } from "./CustomerActionMenu";
 import { cn } from "@/lib/utils";
-import { vipColors, vipLabels } from "@/lib/customerConstants";
+import { vipColors, vipLabels, getBalanceColor } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -48,9 +48,10 @@ const CustomerGridCardInner = ({
   return (
     <Card
       className={cn(
-        "cursor-pointer hover:shadow-md transition-all group relative",
+        "cursor-pointer hover:shadow-md transition-all group relative bg-gradient-to-b from-primary/5 to-transparent",
         isSelected && "ring-2 ring-primary",
-        isDeleting && "opacity-60 pointer-events-none"
+        isDeleting && "opacity-60 pointer-events-none",
+        customer.is_active === false && "opacity-60",
       )}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
@@ -73,6 +74,8 @@ const CustomerGridCardInner = ({
             imageUrl={customer.image_url}
             customerType={customer.customer_type}
             size="lg"
+            shape="rounded-square"
+            vipBorder={customer.vip_level}
           />
           <div className="min-w-0 w-full">
             <h3 className="font-semibold text-sm truncate">{customer.name}</h3>
@@ -104,11 +107,11 @@ const CustomerGridCardInner = ({
           <div className="w-full pt-2 border-t">
             <div className="flex items-center justify-center gap-1.5">
               <DollarSign className="h-3.5 w-3.5" />
-              <span className={cn("font-bold text-sm", balance > 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400")}>
+              <span className={cn("font-bold text-sm", getBalanceColor(balance, creditLimit))}>
                 {balance.toLocaleString()} ج.م
               </span>
             </div>
-            {creditLimit > 0 && creditUsage > 40 && (
+            {creditLimit > 0 && (
               <Progress value={creditUsage} className="h-1 mt-1.5" />
             )}
           </div>

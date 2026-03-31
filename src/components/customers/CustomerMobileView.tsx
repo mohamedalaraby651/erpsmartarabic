@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from "react";
-import { LayoutGrid, LayoutList, Loader2, Users, Search } from "lucide-react";
+import { LayoutGrid, LayoutList, Loader2, Users, Search, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/CustomerListCard";
 import CustomerGridCard from "@/components/customers/CustomerGridCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
@@ -25,12 +26,14 @@ interface CustomerMobileViewProps {
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
+  sortKey?: string;
+  onSortChange?: (key: string) => void;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice,
-  hasNextPage, isFetchingNextPage, onLoadMore,
+  hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
 }: CustomerMobileViewProps) {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const observerRef = useRef<HTMLDivElement>(null);
@@ -63,8 +66,22 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {/* View toggle */}
-      <div className="flex items-center justify-end mb-3 gap-1">
+      {/* Sort + View toggle */}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        {onSortChange && (
+          <Select value={sortKey || 'created_at'} onValueChange={onSortChange}>
+            <SelectTrigger className="w-auto h-8 text-xs gap-1 px-2">
+              <ArrowUpDown className="h-3 w-3" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created_at">تاريخ الإضافة</SelectItem>
+              <SelectItem value="name">الاسم</SelectItem>
+              <SelectItem value="current_balance">الرصيد</SelectItem>
+              <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <div className="flex items-center gap-1 border rounded-lg p-0.5 bg-background">
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}

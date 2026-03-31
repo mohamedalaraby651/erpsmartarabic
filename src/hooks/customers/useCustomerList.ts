@@ -65,6 +65,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
         totalBalance: d.total_balance || 0,
         active: d.active || 0,
         inactive: d.inactive || 0,
+        debtors: d.debtors || 0,
       };
     },
     staleTime: 60000,

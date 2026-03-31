@@ -83,24 +83,29 @@ const CustomersPage = () => {
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
 
   // Apply quick filter to actual filters
+  const resetAllQuickFilters = useCallback(() => {
+    filters.setStatusFilter('all');
+    filters.setVipFilter('all');
+    filters.setTypeFilter('all');
+  }, [filters]);
+
   const handleQuickFilter = useCallback((filterId: string | null) => {
     setQuickFilter(filterId);
-    if (!filterId) {
-      filters.setStatusFilter('all');
-      filters.setVipFilter('all');
-      filters.setTypeFilter('all');
-    } else if (filterId === 'active') {
+    resetAllQuickFilters();
+    if (filterId === 'active') {
       filters.setStatusFilter('active');
     } else if (filterId === 'inactive') {
       filters.setStatusFilter('inactive');
     } else if (filterId === 'vip') {
-      filters.setVipFilter('gold');
+      filters.setVipFilter('non-regular');
     } else if (filterId === 'companies') {
       filters.setTypeFilter('company');
     } else if (filterId === 'individuals') {
       filters.setTypeFilter('individual');
+    } else if (filterId === 'debtors') {
+      filters.setStatusFilter('debtors');
     }
-  }, [filters]);
+  }, [filters, resetAllQuickFilters]);
 
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
@@ -247,6 +252,8 @@ const CustomersPage = () => {
             hasNextPage={mobileHasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
+            sortKey={sortConfig.key || 'created_at'}
+            onSortChange={requestSort}
           />
         </div>
       ) : (
