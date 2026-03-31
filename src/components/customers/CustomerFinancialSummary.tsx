@@ -21,6 +21,7 @@ const CustomerFinancialSummary = ({
   discountPercentage,
   paymentTermsDays,
   invoiceCount,
+  totalOutstanding,
 }: CustomerFinancialSummaryProps) => {
   const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
   const creditUsage = creditLimit > 0 ? (currentBalance / creditLimit) * 100 : 0;
