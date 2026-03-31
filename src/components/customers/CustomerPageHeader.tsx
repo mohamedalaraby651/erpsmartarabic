@@ -1,7 +1,6 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical } from "lucide-react";
-import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
