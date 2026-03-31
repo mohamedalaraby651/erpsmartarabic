@@ -1,31 +1,21 @@
 /**
  * useInfiniteCustomers — Standardized infinite scroll for customer listings.
- * Manages page accumulation, load-more triggers, and resets on filter changes.
+ * Returns currentPage for use in list queries + accumulates page results.
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { Customer } from "@/lib/customerConstants";
 
 interface UseInfiniteCustomersOptions {
-  /** Number of items per page */
   pageSize: number;
-  /** Whether we're on mobile viewport */
   isMobile: boolean;
-  /** Total number of customers matching filters */
-  totalCount: number;
   /** Dependencies that should reset pagination when changed */
   resetDeps: unknown[];
-}
-
-interface AccumulateOptions {
-  /** Current page data from the query */
-  customers: Customer[];
 }
 
 export function useInfiniteCustomers({
   pageSize,
   isMobile,
-  totalCount,
   resetDeps,
 }: UseInfiniteCustomersOptions) {
   const [mobilePages, setMobilePages] = useState<Customer[][]>([]);
@@ -33,12 +23,12 @@ export function useInfiniteCustomers({
   const [desktopPages, setDesktopPages] = useState<Customer[][]>([]);
   const [desktopPage, setDesktopPage] = useState(1);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   const currentPage = isMobile ? mobilePage : desktopPage;
   const totalPages = Math.ceil(totalCount / pageSize);
   const hasNextPage = currentPage < totalPages;
 
-  // Load more handler
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       setIsFetchingNextPage(true);
@@ -56,11 +46,9 @@ export function useInfiniteCustomers({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, resetDeps);
 
-  // Desktop sentinel ref + IntersectionObserver
-  const desktopSentinelRef = useRef<HTMLDivElement>(null);
-
-  /** Call this in a useEffect after list.customers changes to accumulate pages */
-  const accumulate = useCallback((customers: Customer[]) => {
+  /** Call after list query returns to accumulate page data */
+  const feedPage = useCallback((customers: Customer[], count: number) => {
+    setTotalCount(count);
     if (customers.length > 0) {
       if (isMobile) {
         setMobilePages(prev => {
@@ -79,12 +67,12 @@ export function useInfiniteCustomers({
     }
   }, [isMobile, mobilePage, desktopPage]);
 
-  // All accumulated data
   const allData = useMemo(() => {
     return isMobile ? mobilePages.flat() : desktopPages.flat();
   }, [isMobile, mobilePages, desktopPages]);
 
-  // Desktop observer
+  // Desktop sentinel
+  const desktopSentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isMobile || !hasNextPage || isFetchingNextPage) return;
     const el = desktopSentinelRef.current;
@@ -104,6 +92,6 @@ export function useInfiniteCustomers({
     isFetchingNextPage,
     handleLoadMore,
     desktopSentinelRef,
-    accumulate,
+    feedPage,
   };
 }
