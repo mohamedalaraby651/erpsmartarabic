@@ -22,7 +22,7 @@ const colorMap = {
     valueText: 'text-emerald-600 dark:text-emerald-400',
   },
   destructive: {
-    border: 'border-r-destructive',
+    border: 'border-s-destructive',
     iconBg: 'bg-destructive/10',
     iconText: 'text-destructive',
     valueText: 'text-destructive',
