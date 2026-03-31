@@ -94,25 +94,28 @@ const CustomersPage = () => {
   // Infinite scroll via extracted hook
   const pageSize = 20;
 
+  const {
+    currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
+    handleLoadMore, desktopSentinelRef, accumulate,
+  } = useInfiniteCustomers({
+    pageSize,
+    isMobile,
+    totalCount: 0, // will update after list is ready
+    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
+  });
+
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
-    currentPage: 1, // placeholder, overridden by hook
-    pageSize, sortConfig,
+    currentPage, pageSize, sortConfig,
   });
 
-  const {
-    currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
-    handleLoadMore, desktopSentinelRef,
-  } = useInfiniteCustomers({
-    customers: list.customers,
-    totalCount: list.totalCount,
-    pageSize,
-    isMobile,
-    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
-  });
+  // Accumulate pages when data arrives
+  useEffect(() => {
+    accumulate(list.customers);
+  }, [list.customers, accumulate]);
 
   // Filter by alert type when a badge is clicked
   const allCustomers = useMemo(() => {
