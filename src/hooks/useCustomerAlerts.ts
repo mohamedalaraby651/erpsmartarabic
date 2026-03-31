@@ -10,7 +10,7 @@ interface CustomerAlert {
   message: string;
 }
 
-export function useCustomerAlerts() {
+export function useCustomerAlerts(enabled = true) {
   const { data: customers } = useQuery({
     queryKey: ['customer-alerts-data'],
     queryFn: async () => {
@@ -21,6 +21,7 @@ export function useCustomerAlerts() {
       return data || [];
     },
     staleTime: 300000,
+    enabled,
   });
 
   const { data: overdueInvoices } = useQuery({
@@ -35,6 +36,7 @@ export function useCustomerAlerts() {
       return data || [];
     },
     staleTime: 300000,
+    enabled,
   });
 
   const alerts = useMemo<CustomerAlert[]>(() => {
