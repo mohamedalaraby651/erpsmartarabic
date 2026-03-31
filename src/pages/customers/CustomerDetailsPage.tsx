@@ -79,8 +79,9 @@ const CustomerDetailsPage = () => {
   const mobileStats = [
     { icon: Wallet, value: `${detail.currentBalance.toLocaleString()}`, label: 'الرصيد', color: detail.balanceIsDebit ? 'text-destructive' : 'text-success' },
     { icon: FileText, value: detail.invoices.length, label: 'الفواتير', color: 'text-primary' },
-    { icon: CreditCard, value: `${detail.paymentRatio}%`, label: 'نسبة السداد', color: 'text-info' },
+    { icon: CreditCard, value: `${detail.paymentRatio.toFixed(0)}%`, label: 'نسبة السداد', color: 'text-info' },
     { icon: BarChart3, value: `${detail.totalPurchases.toLocaleString()}`, label: 'المشتريات', color: 'text-warning' },
+    { icon: Wallet, value: `${detail.totalOutstanding.toLocaleString()}`, label: 'المستحق', color: detail.totalOutstanding > 0 ? 'text-destructive' : 'text-success' },
   ];
 
   return (

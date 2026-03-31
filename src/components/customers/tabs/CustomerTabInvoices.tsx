@@ -43,8 +43,9 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   const summary = useMemo(() => {
     const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
     const totalPaid = invoices.reduce((s, i) => s + Number(i.paid_amount || 0), 0);
-    return { totalInvoiced, totalPaid, outstanding: totalInvoiced - totalPaid };
-  }, [invoices]);
+    const unlinkedPayments = totalPaymentsFromLedger != null ? Math.round((totalPaymentsFromLedger - totalPaid) * 100) / 100 : 0;
+    return { totalInvoiced, totalPaid, outstanding: totalInvoiced - totalPaid, unlinkedPayments };
+  }, [invoices, totalPaymentsFromLedger]);
 
   return (
     <Card>
