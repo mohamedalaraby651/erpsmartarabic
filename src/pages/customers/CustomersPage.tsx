@@ -93,29 +93,27 @@ const CustomersPage = () => {
 
   const pageSize = 20;
 
+  const {
+    currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
+    handleLoadMore, desktopSentinelRef, feedPage,
+  } = useInfiniteCustomers({
+    pageSize,
+    isMobile,
+    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
+  });
+
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
-    currentPage: 1, // managed by infinite hook below
-    pageSize, sortConfig,
+    currentPage, pageSize, sortConfig,
   });
 
-  const {
-    currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
-    handleLoadMore, desktopSentinelRef,
-  } = useInfiniteCustomers({
-    pageSize,
-    isMobile,
-    totalCount: list.totalCount,
-    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
-  });
-
-  // Feed page data into the accumulator
+  // Feed page data into the infinite scroll accumulator
   useEffect(() => {
-    // Hook manages accumulation internally — not needed here since we pass customers
-  }, []);
+    feedPage(list.customers, list.totalCount);
+  }, [list.customers, list.totalCount, feedPage]);
 
   // Filter by alert type when a badge is clicked
   const allCustomers = useMemo(() => {
