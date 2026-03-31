@@ -5,3 +5,4 @@ export { useBulkSelection } from './useBulkSelection';
 export { useCustomerDetail } from './useCustomerDetail';
 export { useDuplicateCheck } from './useDuplicateCheck';
 export { useCustomerNavigation, storeCustomerNavIds } from './useCustomerNavigation';
+export { useInfiniteCustomers } from './useInfiniteCustomers';
