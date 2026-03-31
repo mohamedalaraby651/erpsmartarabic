@@ -123,7 +123,7 @@ const CustomersPage = () => {
     return allCustomersRaw.filter(c => ids.has(c.id));
   }, [allCustomersRaw, alertFilterType, alertsByType]);
 
-  const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
+  const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage, sortConfig });
   const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
   const handleAddAdvanced = useCallback(() => { dialogRef.current?.openAdd(); }, []);
   const handleDeleteRequest = useCallback((id: string) => { dialogRef.current?.confirmDelete(id); }, []);
