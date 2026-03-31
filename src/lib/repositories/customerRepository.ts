@@ -1,6 +1,7 @@
 /**
- * Customer Repository — Single Data Access Layer
- * All Supabase calls for the customers domain are centralized here.
+ * Customer Repository — Core CRUD, Bulk Operations, Stats, Addresses, Categories
+ * Related entities → customerRelationsRepo
+ * Search & Export → customerSearchRepo
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -13,14 +14,6 @@ type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
 type CustomerAddress = Database['public']['Tables']['customer_addresses']['Row'];
 type CustomerAddressInsert = Database['public']['Tables']['customer_addresses']['Insert'];
 type CustomerCategory = Database['public']['Tables']['customer_categories']['Row'];
-type Invoice = Database['public']['Tables']['invoices']['Row'];
-type Payment = Database['public']['Tables']['payments']['Row'];
-type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
-type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
-type Quotation = Database['public']['Tables']['quotations']['Row'];
-type CustomerReminder = Database['public']['Tables']['customer_reminders']['Row'];
-type CustomerCommunication = Database['public']['Tables']['customer_communications']['Row'];
-type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
 
 /** Escape special chars for Postgres .ilike */
 function sanitizeSearch(input: string): string {
@@ -57,31 +50,10 @@ export interface BlockedCustomer {
   open_invoice_count: number;
 }
 
-export interface DuplicateResult {
-  id: string;
-  name: string;
-  phone: string | null;
-}
-
-export interface DuplicateDetectionResult {
-  id1: string;
-  name1: string;
-  phone1: string | null;
-  id2: string;
-  name2: string;
-  phone2: string | null;
-  similarity_score: number;
-  match_type: string;
-}
-
 // ============================================
-// Repository Methods
+// Filter Helper
 // ============================================
 
-/**
- * Apply filter predicates to a customer query.
- * Uses a typed helper to avoid `any`.
- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any[]) => any; neq: (...args: any[]) => any; gt: (...args: any[]) => any }>(
   query: T,
@@ -122,6 +94,10 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
   return q;
 }
 
+// ============================================
+// Repository
+// ============================================
+
 export const customerRepository = {
   // ============================================
   // Core CRUD
@@ -161,7 +137,6 @@ export const customerRepository = {
   },
 
   async create(payload: CustomerInsert): Promise<Customer> {
-    // Validate before sending to DB
     const parsed = customerWriteSchema.safeParse(payload);
     if (!parsed.success) {
       throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
@@ -176,7 +151,6 @@ export const customerRepository = {
   },
 
   async update(id: string, payload: CustomerUpdate): Promise<void> {
-    // Validate before sending to DB
     const parsed = customerWriteSchema.partial().safeParse(payload);
     if (!parsed.success) {
       throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
@@ -192,6 +166,14 @@ export const customerRepository = {
     const { error } = await supabase
       .from('customers')
       .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async updateImage(id: string, imageUrl: string | null): Promise<void> {
+    const { error } = await supabase
+      .from('customers')
+      .update({ image_url: imageUrl })
       .eq('id', id);
     if (error) throw error;
   },
@@ -249,140 +231,6 @@ export const customerRepository = {
     });
   },
 
-  async findDuplicatesRpc(): Promise<DuplicateDetectionResult[]> {
-    const { data, error } = await supabase.rpc('find_duplicate_customers');
-    if (error) throw error;
-    return (data || []) as DuplicateDetectionResult[];
-  },
-
-  async mergeCustomers(primaryId: string, duplicateId: string): Promise<{ success: boolean; message: string }> {
-    const { data, error } = await supabase.rpc('merge_customers_atomic', {
-      p_primary_id: primaryId,
-      p_duplicate_id: duplicateId,
-    });
-    if (error) throw error;
-    return data as { success: boolean; message: string };
-  },
-
-  // ============================================
-  // Search & Duplicates
-  // ============================================
-
-  async findDuplicates(
-    name: string | undefined,
-    phone: string | undefined,
-    excludeId?: string
-  ): Promise<{ nameDuplicates: DuplicateResult[]; phoneDuplicates: DuplicateResult[] }> {
-    let nameDuplicates: DuplicateResult[] = [];
-    let phoneDuplicates: DuplicateResult[] = [];
-
-    if (name && name.length >= 3) {
-      const s = sanitizeSearch(name);
-      let query = supabase
-        .from('customers')
-        .select('id, name, phone')
-        .ilike('name', `%${s}%`)
-        .limit(3);
-      if (excludeId) query = query.neq('id', excludeId);
-      const { data } = await query;
-      nameDuplicates = (data || []) as DuplicateResult[];
-    }
-
-    if (phone && phone.length >= 6) {
-      let query = supabase
-        .from('customers')
-        .select('id, name, phone')
-        .eq('phone', phone)
-        .limit(3);
-      if (excludeId) query = query.neq('id', excludeId);
-      const { data } = await query;
-      phoneDuplicates = (data || []) as DuplicateResult[];
-    }
-
-    return { nameDuplicates, phoneDuplicates };
-  },
-
-  async searchPreview(searchTerm: string): Promise<Customer[]> {
-    if (!searchTerm || searchTerm.length < 2) return [];
-    const s = sanitizeSearch(searchTerm);
-    const { data, error } = await supabase
-      .from('customers')
-      .select('id, name, phone, governorate, customer_type, image_url, current_balance, vip_level')
-      .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
-      .limit(5);
-    if (error) throw error;
-    return (data || []) as Customer[];
-  },
-
-  async searchForMerge(searchTerm: string): Promise<Customer[]> {
-    if (!searchTerm || searchTerm.length < 2) return [];
-    const s = sanitizeSearch(searchTerm);
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
-      .order('name')
-      .limit(20);
-    if (error) throw error;
-    return (data || []) as Customer[];
-  },
-
-  // ============================================
-  // Export & Prefetch
-  // ============================================
-
-  /** Cursor-based export — fetches all customers in batches */
-  async exportAll(onProgress?: (loaded: number) => void): Promise<{ data: Customer[]; isPartial: boolean }> {
-    const batchSize = 1000;
-    const maxRecords = 50000;
-    let allData: Customer[] = [];
-    let offset = 0;
-
-    while (offset < maxRecords) {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + batchSize - 1);
-      if (error) throw error;
-      if (!data || data.length === 0) break;
-      allData = allData.concat(data as Customer[]);
-      onProgress?.(allData.length);
-      if (data.length < batchSize) break;
-      offset += batchSize;
-    }
-
-    return { data: allData, isPartial: offset >= maxRecords };
-  },
-
-  async prefetchCustomer(id: string): Promise<Customer | null> {
-    const { data } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('id', id)
-      .single();
-    return data;
-  },
-
-  async prefetchAddresses(customerId: string) {
-    const { data } = await supabase
-      .from('customer_addresses')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('is_default', { ascending: false });
-    return data;
-  },
-
-  async countOpenInvoices(customerId: string): Promise<number> {
-    const { count, error } = await supabase
-      .from('invoices')
-      .select('*', { count: 'exact', head: true })
-      .eq('customer_id', customerId)
-      .in('payment_status', ['pending', 'partial']);
-    if (error) throw error;
-    return count || 0;
-  },
-
   // ============================================
   // Addresses
   // ============================================
@@ -431,180 +279,5 @@ export const customerRepository = {
       .order('name');
     if (error) throw error;
     return (data || []) as CustomerCategory[];
-  },
-
-  // ============================================
-  // Detail Page — Related Entities
-  // ============================================
-
-  async findInvoices(customerId: string): Promise<Invoice[]> {
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false })
-      .limit(500);
-    if (error) throw error;
-    return (data || []) as Invoice[];
-  },
-
-  async findInvoicesPaginated(customerId: string, page: number, pageSize: number): Promise<{ data: Invoice[]; count: number }> {
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    const { data, count, error } = await supabase
-      .from('invoices')
-      .select('*', { count: 'exact' })
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false })
-      .range(from, to);
-    if (error) throw error;
-    return { data: (data || []) as Invoice[], count: count || 0 };
-  },
-
-  async findPayments(customerId: string) {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('*, invoices:invoice_id(invoice_number)')
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false })
-      .limit(500);
-    if (error) throw error;
-    return (data || []) as (Payment & { invoices: { invoice_number: string } | null })[];
-  },
-
-  async findPaymentsPaginated(customerId: string, page: number, pageSize: number): Promise<{ data: (Payment & { invoices: { invoice_number: string } | null })[]; count: number }> {
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    const { data, count, error } = await supabase
-      .from('payments')
-      .select('*, invoices:invoice_id(invoice_number)', { count: 'exact' })
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false })
-      .range(from, to);
-    if (error) throw error;
-    return { data: (data || []) as (Payment & { invoices: { invoice_number: string } | null })[], count: count || 0 };
-  },
-
-  async findCreditNotes(customerId: string): Promise<CreditNote[]> {
-    const { data, error } = await supabase
-      .from('credit_notes')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false })
-      .limit(500);
-    if (error) throw error;
-    return (data || []) as CreditNote[];
-  },
-
-  async findSalesOrders(customerId: string): Promise<SalesOrder[]> {
-    const { data, error } = await supabase
-      .from('sales_orders')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false })
-      .limit(200);
-    if (error) throw error;
-    return (data || []) as SalesOrder[];
-  },
-
-  async findQuotations(customerId: string): Promise<Quotation[]> {
-    const { data, error } = await supabase
-      .from('quotations')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('created_at', { ascending: false })
-      .limit(200);
-    if (error) throw error;
-    return (data || []) as Quotation[];
-  },
-
-  async findActivities(customerId: string): Promise<ActivityLog[]> {
-    const { data, error } = await supabase
-      .from('activity_logs')
-      .select('*')
-      .eq('entity_type', 'customer')
-      .eq('entity_id', customerId)
-      .order('created_at', { ascending: false })
-      .limit(20);
-    if (error) throw error;
-    return (data || []) as ActivityLog[];
-  },
-
-  async updateImage(id: string, imageUrl: string | null): Promise<void> {
-    const { error } = await supabase
-      .from('customers')
-      .update({ image_url: imageUrl })
-      .eq('id', id);
-    if (error) throw error;
-  },
-
-  // ============================================
-  // Reminders
-  // ============================================
-
-  async findReminders(customerId: string): Promise<CustomerReminder[]> {
-    const { data, error } = await supabase
-      .from('customer_reminders')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('reminder_date', { ascending: true });
-    if (error) throw error;
-    return (data || []) as CustomerReminder[];
-  },
-
-  async createReminder(payload: { customer_id: string; reminder_date: string; note: string; created_by: string; recurrence?: string | null; linked_invoice_id?: string | null }): Promise<void> {
-    const { error } = await supabase
-      .from('customer_reminders')
-      .insert(payload);
-    if (error) throw error;
-  },
-
-  async updateReminder(id: string, payload: { is_completed: boolean; updated_at: string }): Promise<void> {
-    const { error } = await supabase
-      .from('customer_reminders')
-      .update(payload)
-      .eq('id', id);
-    if (error) throw error;
-  },
-
-  // ============================================
-  // Communications
-  // ============================================
-
-  async findCommunications(customerId: string): Promise<CustomerCommunication[]> {
-    const { data, error } = await supabase
-      .from('customer_communications')
-      .select('*')
-      .eq('customer_id', customerId)
-      .order('communication_date', { ascending: false });
-    if (error) throw error;
-    return (data || []) as CustomerCommunication[];
-  },
-
-  async createCommunication(payload: { customer_id: string; type: string; subject: string | null; note: string; created_by: string }): Promise<void> {
-    const { error } = await supabase
-      .from('customer_communications')
-      .insert(payload);
-    if (error) throw error;
-  },
-
-  // ============================================
-  // Import
-  // ============================================
-
-  async findAllNamesAndPhones(): Promise<{ name: string; phone: string | null }[]> {
-    const { data, error } = await supabase
-      .from('customers')
-      .select('name, phone')
-      .limit(10000);
-    if (error) throw error;
-    return (data || []) as { name: string; phone: string | null }[];
-  },
-
-  async insertCustomer(payload: CustomerInsert): Promise<void> {
-    const { error } = await supabase
-      .from('customers')
-      .insert(payload);
-    if (error) throw error;
   },
 };
