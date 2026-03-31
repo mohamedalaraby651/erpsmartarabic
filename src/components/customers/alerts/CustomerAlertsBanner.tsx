@@ -24,7 +24,7 @@ export const CustomerAlertsBanner = ({ alertsByType, totalAlerts, onFilterByType
   const { dismiss, isDismissed } = useDismissedAlerts();
   const [expandedType, setExpandedType] = useState<string>('');
   const soundPlayedRef = useRef(false);
-  const { settings } = (() => { try { return require('@/hooks/useAlertSettings').useAlertSettings(); } catch { return { settings: { soundEnabled: true } }; } })();
+  const { settings } = useAlertSettings();
 
   // Play sound on first render with alerts
   useEffect(() => {
