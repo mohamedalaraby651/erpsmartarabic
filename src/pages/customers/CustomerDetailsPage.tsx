@@ -41,7 +41,7 @@ import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 const tabIcons: Record<string, React.ElementType> = {
   addresses: MapPin, attachments: Paperclip, reminders: Bell,
   invoices: FileText, quotations: Globe, orders: ShoppingCart,
-  payments: CreditCard, financial: Wallet, statement: Printer, aging: Clock,
+  payments: CreditCard, 'credit-notes': FileText, financial: Wallet, statement: Printer, aging: Clock,
   analytics: BarChart3, communications: MessageSquare, activity: Activity,
 };
 
