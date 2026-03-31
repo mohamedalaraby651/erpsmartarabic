@@ -22,7 +22,7 @@ interface CustomerStatsGridProps {
 
 export const CustomerStatsGrid = memo(function CustomerStatsGrid({
   currentBalance, balanceIsDebit, creditLimit, creditUsagePercent,
-  totalPurchases, paymentRatio, invoiceCount, avgInvoiceValue,
+  totalPurchases, totalPayments, paymentRatio, invoiceCount, avgInvoiceValue,
   dso, totalOutstanding, lastPurchaseDate,
 }: CustomerStatsGridProps) {
   return (
