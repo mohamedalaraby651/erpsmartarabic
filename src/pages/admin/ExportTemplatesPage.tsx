@@ -210,7 +210,7 @@ const ExportTemplatesPage = () => {
           </CardContent>
         </Card>
       ) : (
-        Object.entries(groupedTemplates).map(([section, sectionTemplates]) => (
+        Object.entries(groupedTemplates).map(([section, sectionTemplates]: [string, typeof templates]) => (
           <Card key={section}>
             <CardHeader>
               <CardTitle className="text-lg">

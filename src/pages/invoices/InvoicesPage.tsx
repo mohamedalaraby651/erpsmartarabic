@@ -475,7 +475,7 @@ const InvoicesPage = () => {
                           <TooltipContent>نسخ الفاتورة</TooltipContent>
                         </Tooltip>
                         <DataTableActions
-                          onEdit={() => handleEdit(invoice)}
+                          onEdit={() => handleEdit(invoice as unknown as Invoice)}
                           onDelete={() => deleteMutation.mutate(invoice.id)}
                           canEdit={canEdit}
                           canDelete={canDelete}
