@@ -102,10 +102,13 @@ export default function AppLayout() {
     return <AppInitSkeleton />;
   }
 
+  // Check if we're on a customer detail page (has its own bottom nav)
+  const isCustomerDetail = /^\/customers\/[^/]+$/.test(location.pathname);
+
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-14">
+      <div className={cn("min-h-screen bg-background", !isCustomerDetail && "pb-14")}>
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
           <Suspense fallback={<PageSkeleton />}>
@@ -115,7 +118,7 @@ export default function AppLayout() {
           </Suspense>
         </main>
         <FABMenu pageContext={getPageContext()} />
-        <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
+        {!isCustomerDetail && <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />}
         <MobileDrawer
           open={mobileMenuOpen}
           onOpenChange={setMobileMenuOpen}

@@ -69,7 +69,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
         ) : (
           <>
             {/* Summary Bar */}
-            <div className="flex items-center gap-4 p-3 mb-4 rounded-lg bg-muted/50 border text-sm">
+            <div className="grid grid-cols-2 gap-2 p-3 mb-4 rounded-lg bg-muted/50 border text-sm">
               <div className="flex items-center gap-1.5">
                 <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-muted-foreground">الإجمالي:</span>
@@ -77,7 +77,6 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
                   {totalAmount.toLocaleString()} ج.م
                 </span>
               </div>
-              <div className="w-px h-4 bg-border" />
               <div className="flex items-center gap-1.5">
                 <Banknote className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">العدد:</span>

@@ -58,7 +58,7 @@ export const CustomerBottomNav = memo(function CustomerBottomNav({
 
   return (
     <>
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background border-t safe-area-pb">
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/50 shadow-[0_-4px_30px_-5px_rgba(0,0,0,0.1)] safe-area-bottom-compact">
         <div className="flex items-center justify-around h-14">
           {mainTabs.map((tab) => {
             const Icon = tab.icon;
