@@ -1,119 +1,113 @@
 
-# تحسينات البنية التحتية المشتركة — تقنية + بصرية
+
+# خارطة طريق التطوير المؤسسي — خطة التنفيذ الشاملة
+## Enterprise Upgrade Roadmap — Full Implementation Plan
 
 ---
 
-## المرحلة 1: نظام عناوين الصفحات (SEO + UX)
+## تحليل الوضع الحالي
 
-### المشكلة
-لا توجد أي صفحة تُغيّر `document.title` — كل الصفحات تعرض العنوان الافتراضي فقط. هذا يضر بـ:
-- تجربة المستخدم (التبويبات في المتصفح كلها بنفس الاسم)
-- SEO
-- إمكانية الوصول (Accessibility)
+بعد فحص الكود بالتفصيل، هذا ما هو **موجود فعلاً** مقابل ما هو **مطلوب**:
 
-### الحل
-- إنشاء hook `usePageTitle(title: string)` يضبط العنوان ديناميكياً مع اسم التطبيق
-- تطبيقه على كل الصفحات الرئيسية (~20 صفحة)
-
-### الملفات
-| الملف | التغيير |
-|---|---|
-| `src/hooks/usePageTitle.ts` | **جديد** — Hook بسيط |
-| كل صفحة في `src/pages/` | إضافة سطر واحد `usePageTitle('اسم الصفحة')` |
+| المحور | الوضع الحالي | المطلوب |
+|--------|-------------|---------|
+| `get_customer_stats` | RPC يمسح الجدول كاملاً | Materialized View + Cron Refresh |
+| Zod Validation | في `CustomerFormDialog` فقط | في Repository layer أيضاً |
+| Table Virtualization | `VirtualizedTable` موجود لكن `CustomerTableView` لا يستخدمه | تطبيقه على جدول العملاء |
+| Activity Log | يحفظ `old_values/new_values` كـ JSONB كامل | عرض الفروقات (Diff) بشكل بشري |
+| Smart Alerts | تنبيهات ثابتة (Credit, Overdue) | محرك تقييم ائتماني ديناميكي |
+| Statement RPC | موجود ويعمل | مكتمل - لا يحتاج تعديل |
+| Aging RPC | موجود ويعمل | مكتمل - لا يحتاج تعديل |
 
 ---
 
-## المرحلة 2: تحسين Sidebar Counts (أداء)
+## المراحل الأربعة
 
-### المشكلة
-`useSidebarCounts` يُطلق **7 استعلامات متزامنة** كل دقيقتين، منها واحد (`lowStock`) يجلب بيانات كاملة بدلاً من `count` فقط ثم يفلترها في الـ client. هذا:
-- يُهدر bandwidth (يجلب كل المنتجات مع مخزونها)
-- بطيء على قواعد البيانات الكبيرة
+### المرحلة 1: البنية التحتية وقواعد البيانات
+**الجهد المقدر: متوسط | الأثر: عالي جداً**
 
-### الحل
-- إنشاء RPC function واحدة `get_sidebar_counts()` تُرجع كل الأعداد في استعلام واحد
-- تحويل حساب Low Stock إلى الـ server بدلاً من الـ client
-- النتيجة: 7 استعلامات → 1 استعلام
+**1.1 — Materialized View لإحصائيات العملاء**
+- إنشاء `customer_stats_mv` كـ Materialized View يحسب: العدد الكلي، الأنواع، VIP، الأرصدة
+- إنشاء Cron Job عبر `pg_cron` يُحدث الـ View كل 5 دقائق (`REFRESH MATERIALIZED VIEW CONCURRENTLY`)
+- تعديل `get_customer_stats()` RPC ليقرأ من الـ View بدلاً من مسح الجدول
+- إضافة `UNIQUE INDEX` على الـ View لدعم `CONCURRENTLY`
 
-### الملفات
-| الملف | التغيير |
-|---|---|
-| Migration | **جديد** — `get_sidebar_counts()` RPC |
-| `src/hooks/useSidebarCounts.ts` | تبسيط إلى استعلام RPC واحد |
-
----
-
-## المرحلة 3: Error Boundary محسّن لكل صفحة
-
-### المشكلة الحالية
-- `AppErrorBoundary` موجود لكن يغلف التطبيق بالكامل فقط
-- `CustomerErrorBoundary` مكرر (نسخة خاصة)
-- باقي الصفحات (فواتير، منتجات، موردين...) **بدون** error boundary — خطأ في أي صفحة يُسقط التطبيق بالكامل
-
-### الحل
-- إضافة `PageErrorBoundary` — نسخة خفيفة من `AppErrorBoundary` بـ UI مبسط (inline بدل fullscreen)
-- إنشاء `PageWrapper` component يجمع: `PageErrorBoundary` + `usePageTitle` + padding + animation
-- حذف `CustomerErrorBoundary` واستخدام `PageWrapper` بدلاً منه
-- تطبيق `PageWrapper` تدريجياً على الصفحات الرئيسية
-
-### الملفات
-| الملف | التغيير |
-|---|---|
-| `src/components/shared/PageWrapper.tsx` | **جديد** — ErrorBoundary + Title + Layout |
-| `src/components/customers/CustomerErrorBoundary.tsx` | **حذف** |
-| `src/pages/customers/CustomerDetailsPage.tsx` | استبدال CustomerErrorBoundary بـ PageWrapper |
-| كل صفحة رئيسية | لف المحتوى بـ PageWrapper |
+**1.2 — أتمتة التصدير عبر Edge Function**
+- إنشاء Edge Function `export-customers` تولد CSV/Excel في الخلفية
+- رفع الملف إلى `documents` Storage Bucket
+- إرجاع رابط التحميل للمستخدم
+- تحرير متصفح المستخدم من عملية التصدير الثقيلة
 
 ---
 
-## المرحلة 4: تحسين Loading States (بصري)
+### المرحلة 2: هندسة الواجهات والأداء
+**الجهد المقدر: متوسط | الأثر: عالي**
 
-### المشكلة
-- `PageSkeleton` في AppLayout بسيط جداً (مربعات رمادية فقط)
-- كل صفحة تعرض Skeleton مختلف أو لا تعرض شيئاً
-- لا يوجد Shimmer effect موحد
+**2.1 — Zod في Repository Layer**
+- إنشاء `customerWriteSchema` في `validations.ts` (مُبسط من `customerSchema`)
+- تطبيقه في `customerRepository.create()` و `customerRepository.update()` قبل إرسال البيانات
+- ضمان End-to-End Type Safety: Form → Service → Repository → DB
 
-### الحل
-- تحسين `PageSkeleton` الافتراضي ليكون أجمل (shimmer + layout أقرب للمحتوى الحقيقي)
-- إضافة `PageLoadingState` component — skeleton أنيق مع header + filters + content area
-- استخدامه كـ fallback في كل `Suspense`
-
-### الملفات
-| الملف | التغيير |
-|---|---|
-| `src/components/shared/PageLoadingState.tsx` | **جديد** — Skeleton أنيق وموحد |
-| `src/components/layout/AppLayout.tsx` | استبدال PageSkeleton بـ PageLoadingState |
+**2.2 — Virtualization لجدول العملاء**
+- تعديل `CustomerTableView.tsx` لاستخدام `VirtualizedTable` المكون الموجود فعلاً
+- الحفاظ على Selection, Sorting, Keyboard Navigation
+- تقليل DOM Nodes من مئات الصفوف إلى ~20 مرئية
 
 ---
 
-## المرحلة 5: تحسينات بصرية مشتركة
+### المرحلة 3: الدقة المالية وذكاء الأعمال
+**الجهد المقدر: عالي | الأثر: حرج**
 
-### 5.1 تحسين Empty State العام
-- إنشاء `SharedEmptyState` component موحد بتصميم أجمل
-- أيقونة مع دوائر متداخلة + gradient خفيف + زر CTA واضح
-- يُستخدم كبديل للـ empty states البسيطة في الصفحات الأخرى
+**3.1 — محرك تقييم المخاطر الائتمانية (Health Score)**
+- إنشاء RPC `get_customer_health_score` يحسب:
+  - نسبة استخدام الائتمان (30% وزن)
+  - DSO مقارنة بشروط الدفع (30% وزن)
+  - نسبة الديون المتأخرة >90 يوم (40% وزن)
+- النتيجة: درجة 0-100 + تصنيف (Excellent / Good / Warning / Critical)
+- تعديل `CustomerSmartAlerts` لعرض التقييم وتوصيات آلية (مثل: "يُنصح بالتحويل لنقدي فقط")
 
-### 5.2 تحسين NotFound (404)
-- الصفحة الحالية بسيطة — تحسينها بتصميم أجمل مع illustration
+**3.2 — تحسين عرض KPIs**
+- دمج Health Score في `CustomerKPICards` و `CustomerFinancialSummary`
+- إضافة مؤشر بصري ملون (أخضر/أصفر/أحمر) بجانب اسم العميل
 
-### الملفات
-| الملف | التغيير |
-|---|---|
-| `src/components/shared/SharedEmptyState.tsx` | **جديد** |
-| `src/pages/NotFound.tsx` | تحسين بصري |
+---
+
+### المرحلة 4: تجربة المستخدم المتقدمة
+**الجهد المقدر: متوسط | الأثر: متوسط-عالي**
+
+**4.1 — سجل النشاط الذكي (Diff-Based)**
+- إنشاء مكون `ActivityDiffViewer` يقرأ `old_values` و `new_values` من `activity_logs`
+- يعرض التغييرات بشكل بشري: "تغيير حد الائتمان: 10,000 ← 15,000"
+- خريطة ترجمة لأسماء الحقول (field_name → اسم عربي)
+- تطبيقه في `CustomerTabActivity`
+
+**4.2 — Sales Pipeline المصغر**
+- إنشاء مكون `CustomerSalesPipeline` يعرض:
+  - عروض أسعار مفتوحة → أوامر بيع نشطة → فواتير معلقة
+  - بصرياً كـ Flow/Funnel مبسط
+- دمجه في التبويب المالي (Financial) كعرض سريع بدلاً من التنقل بين 3 تبويبات
 
 ---
 
 ## ملخص التأثير
 
-| التحسين | الأثر | الصعوبة |
-|---------|-------|---------|
-| Page Titles | كل الصفحات تحصل على عنوان مناسب | سهل |
-| Sidebar RPC | 7 استعلامات → 1 (أسرع بـ 5x) | متوسط |
-| PageWrapper + ErrorBoundary | حماية كل صفحة من الأعطال | متوسط |
-| Loading States | تجربة تحميل موحدة وأجمل | سهل |
-| Shared Empty State + 404 | تصميم بصري أفضل عبر النظام | سهل |
+```text
+┌─────────────────────────┬────────┬──────────┐
+│ التحسين                 │ الجهد  │ الأثر    │
+├─────────────────────────┼────────┼──────────┤
+│ Materialized View       │ منخفض  │ عالي جداً │
+│ Export Edge Function    │ متوسط  │ عالي     │
+│ Zod في Repository      │ منخفض  │ متوسط   │
+│ Table Virtualization    │ منخفض  │ عالي     │
+│ Health Score Engine     │ متوسط  │ حرج     │
+│ Activity Diff Viewer    │ متوسط  │ متوسط   │
+│ Sales Pipeline Widget   │ متوسط  │ متوسط   │
+└─────────────────────────┴────────┴──────────┘
+```
 
-**الملفات الجديدة:** 4
-**الملفات المعدلة:** ~25
-**الملفات المحذوفة:** 1
+## ملاحظات هندسية
+
+- **PostGIS**: ميزة مستقبلية ممتازة لكنها تحتاج بيانات إحداثيات العملاء أولاً — يُفضل تأجيلها لمرحلة لاحقة بعد جمع البيانات
+- **Offline-First (PersistQueryClient)**: البنية التحتية لـ PWA موجودة فعلاً — التطبيق الفعلي يحتاج اختبارات ميدانية مكثفة ويُفضل كمشروع منفصل
+- **WhatsApp Business API**: يحتاج حساب Meta Business وتكامل خارجي — مشروع مستقل
+
