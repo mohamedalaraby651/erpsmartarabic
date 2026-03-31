@@ -99,6 +99,17 @@ const CustomerDetailsPage = () => {
         onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
       />
 
+      {!isMobile && (
+        <CustomerStatsGrid
+          currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
+          creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
+          totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments}
+          paymentRatio={detail.paymentRatio}
+          invoiceCount={detail.invoices.length} avgInvoiceValue={detail.avgInvoiceValue}
+          dso={detail.dso} totalOutstanding={detail.totalOutstanding} lastPurchaseDate={detail.lastPurchaseDate}
+        />
+      )}
+
       {isMobile ? (
         <div className="space-y-4">
           {/* Mobile Profile Card */}
