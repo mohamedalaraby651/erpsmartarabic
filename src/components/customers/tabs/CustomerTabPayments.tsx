@@ -47,7 +47,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div>
           <CardTitle>المدفوعات</CardTitle>
           <CardDescription>سجل مدفوعات العميل ({payments.length})</CardDescription>
