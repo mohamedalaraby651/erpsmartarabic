@@ -32,7 +32,7 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
   const chips: FilterChipDef[] = [
     { id: 'active', label: 'نشط', count: stats.active, icon: UserCheck },
     { id: 'vip', label: 'VIP', count: stats.vip, icon: Crown },
-    { id: 'debtors', label: 'مدين', count: 0, icon: DollarSign }, // Will be enhanced later
+    { id: 'debtors', label: 'مدين', count: stats.debtors ?? 0, icon: DollarSign },
     { id: 'companies', label: 'شركات', count: stats.companies, icon: Building2 },
     { id: 'individuals', label: 'أفراد', count: stats.individuals, icon: Users },
     { id: 'inactive', label: 'غير نشط', count: stats.inactive, icon: UserX },

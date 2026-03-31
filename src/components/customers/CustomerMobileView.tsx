@@ -66,8 +66,22 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {/* View toggle */}
-      <div className="flex items-center justify-end mb-3 gap-1">
+      {/* Sort + View toggle */}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        {onSortChange && (
+          <Select value={sortKey || 'created_at'} onValueChange={onSortChange}>
+            <SelectTrigger className="w-auto h-8 text-xs gap-1 px-2">
+              <ArrowUpDown className="h-3 w-3" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created_at">تاريخ الإضافة</SelectItem>
+              <SelectItem value="name">الاسم</SelectItem>
+              <SelectItem value="current_balance">الرصيد</SelectItem>
+              <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <div className="flex items-center gap-1 border rounded-lg p-0.5 bg-background">
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}

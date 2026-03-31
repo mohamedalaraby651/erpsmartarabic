@@ -111,7 +111,7 @@ const CustomerGridCardInner = ({
                 {balance.toLocaleString()} ج.م
               </span>
             </div>
-            {creditLimit > 0 && creditUsage > 40 && (
+            {creditLimit > 0 && (
               <Progress value={creditUsage} className="h-1 mt-1.5" />
             )}
           </div>
