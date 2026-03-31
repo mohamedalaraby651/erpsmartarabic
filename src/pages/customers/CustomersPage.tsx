@@ -151,13 +151,19 @@ const CustomersPage = () => {
     setDesktopPages([]);
   }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction]);
 
-  // Desktop infinite scroll using shared hook
-  const desktopSentinelRef = useInfiniteScroll({
-    hasNextPage,
-    isFetchingNextPage,
-    onLoadMore: handleLoadMore,
-    enabled: !isMobile,
-  });
+  // Desktop infinite scroll observer
+  const desktopSentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isMobile || !hasNextPage || isFetchingNextPage) return;
+    const el = desktopSentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) handleLoadMore(); },
+      { threshold: 0.1, rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isMobile, hasNextPage, isFetchingNextPage, handleLoadMore, allCustomers.length]);
 
   const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
   const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
