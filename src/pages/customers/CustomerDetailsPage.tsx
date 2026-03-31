@@ -238,7 +238,7 @@ const CustomerDetailsPage = () => {
 
           <CustomerBottomNav activeTab={mobileTab} onTabChange={setMobileTab} />
           {/* Spacer for bottom nav */}
-          <div className="h-16" />
+          <div className="h-[72px]" />
         </div>
       ) : (
         <Tabs value={detail.activeTab} onValueChange={detail.setActiveTab} className="w-full">

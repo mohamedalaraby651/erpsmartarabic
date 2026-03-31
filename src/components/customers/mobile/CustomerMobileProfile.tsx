@@ -151,15 +151,15 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
 
         {/* Action buttons: primary + "more" sheet */}
         <div className="flex gap-2">
-          <Button size="sm" className="flex-1 h-10" onClick={onNewInvoice}>
+          <Button size="sm" className="flex-1 min-h-11" onClick={onNewInvoice}>
             <FileText className="h-4 w-4 ml-1.5" />فاتورة جديدة
           </Button>
-          <Button variant="outline" size="sm" className="flex-1 h-10" onClick={onStatement}>
+          <Button variant="outline" size="sm" className="flex-1 min-h-11" onClick={onStatement}>
             <Printer className="h-4 w-4 ml-1.5" />كشف حساب
           </Button>
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+              <Button variant="outline" size="icon" className="min-h-11 min-w-11 shrink-0">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </SheetTrigger>
