@@ -192,6 +192,7 @@ const App = () => (
                   <Route path="reports" element={<PlatformReportsPage />} />
                   <Route path="settings" element={<PlatformSettingsPage />} />
                 </Route>
+                <Route path="/index" element={<Navigate to="/" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
