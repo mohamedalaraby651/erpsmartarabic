@@ -9,6 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 const PaymentFormDialog = lazy(() => import("@/components/payments/PaymentFormDialog"));
 
 type Payment = Database['public']['Tables']['payments']['Row'];
+type PaymentWithInvoice = Payment & { invoices: { invoice_number: string } | null };
 
 const PAGE_SIZE = 20;
 
