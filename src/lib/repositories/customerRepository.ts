@@ -320,9 +320,9 @@ export const customerRepository = {
   // ============================================
 
   /** Cursor-based export — fetches all customers in batches */
-  async exportAll(): Promise<{ data: Customer[]; isPartial: boolean }> {
+  async exportAll(onProgress?: (loaded: number) => void): Promise<{ data: Customer[]; isPartial: boolean }> {
     const batchSize = 1000;
-    const maxRecords = 10000;
+    const maxRecords = 50000;
     let allData: Customer[] = [];
     let offset = 0;
 
