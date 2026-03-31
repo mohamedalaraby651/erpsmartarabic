@@ -104,6 +104,8 @@ const CustomersPage = () => {
       filters.setTypeFilter('individual');
     } else if (filterId === 'debtors') {
       filters.setStatusFilter('debtors');
+    } else if (filterId === 'farms') {
+      filters.setTypeFilter('farm');
     }
   }, [filters, resetAllQuickFilters]);
 

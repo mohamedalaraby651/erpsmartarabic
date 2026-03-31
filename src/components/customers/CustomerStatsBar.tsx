@@ -17,6 +17,7 @@ interface CustomerStatsBarProps {
     total: number;
     individuals: number;
     companies: number;
+    farms?: number;
     vip: number;
     totalBalance: number;
     active: number;
@@ -34,6 +35,7 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
     { id: 'vip', label: 'VIP', count: stats.vip, icon: Crown },
     { id: 'debtors', label: 'مدين', count: stats.debtors ?? 0, icon: DollarSign },
     { id: 'companies', label: 'شركات', count: stats.companies, icon: Building2 },
+    { id: 'farms', label: 'مزارع', count: stats.farms ?? 0, icon: Users },
     { id: 'individuals', label: 'أفراد', count: stats.individuals, icon: Users },
     { id: 'inactive', label: 'غير نشط', count: stats.inactive, icon: UserX },
   ];

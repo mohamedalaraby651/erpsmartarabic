@@ -90,7 +90,7 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
             {/* Avatar */}
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
-                <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="xl" />
+                <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="xl" shape="rounded-square" vipBorder={customer.vip_level} />
                 <div className="absolute -bottom-1 -left-1">
                   <ImageUpload
                     currentImageUrl={customer.image_url}
