@@ -174,7 +174,7 @@ const CustomersPage = () => {
 
       {isMobile ? (
         <div className="pb-20">
-          <CustomerMobileView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onEdit={handleEdit} onDelete={handleDeleteRequest} onRefresh={handleRefresh} />
+          <CustomerMobileView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onEdit={handleEdit} onDelete={handleDeleteRequest} onRefresh={handleRefresh} hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch} onClearFilters={filters.clearAllFilters} />
           {paginationBlock}
         </div>
       ) : (

@@ -104,6 +104,8 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
   // Bulk status update
   const bulkStatusMutation = useMutation({
     mutationFn: async ({ ids, isActive }: { ids: string[]; isActive: boolean }) => {
+      const hasPermission = await verifyPermissionOnServer('customers', 'edit');
+      if (!hasPermission) throw new Error('ليس لديك صلاحية تعديل العملاء');
       await customerRepository.bulkUpdateStatus(ids, isActive);
     },
     onSuccess: async (_data, { ids, isActive }) => {

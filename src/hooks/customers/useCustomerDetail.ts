@@ -70,7 +70,7 @@ export function useCustomerDetail(id: string | undefined) {
   const { data: activities = [] } = useQuery({
     queryKey: ['customer-activities', id],
     queryFn: () => customerRepository.findActivities(id!),
-    enabled: !!id && activeTab === 'activity',
+    enabled: !!id && (isMobile || activeTab === 'activity'),
   });
 
   const updateImageMutation = useMutation({

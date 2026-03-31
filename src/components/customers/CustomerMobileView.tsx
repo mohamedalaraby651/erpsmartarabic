@@ -56,6 +56,16 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   if (isLoading) return <MobileListSkeleton count={5} />;
 
   if (data.length === 0) {
+    if (hasActiveFilters) {
+      return (
+        <div className="text-center py-12">
+          <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">لا توجد نتائج</h3>
+          <p className="text-muted-foreground text-sm mb-6">لا يوجد عملاء يطابقون الفلاتر المحددة</p>
+          {onClearFilters && <Button variant="outline" onClick={onClearFilters}>إزالة الفلاتر</Button>}
+        </div>
+      );
+    }
     return <EmptyState icon={Users} title="لا يوجد عملاء" description="ابدأ بإضافة عميلك الأول" />;
   }
 
