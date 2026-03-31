@@ -160,6 +160,11 @@ const CustomerListCardInner = ({
                     'h-2 w-2 rounded-full shrink-0',
                     isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
                   )} />
+                  {alertCount && alertCount > 0 && (
+                    <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground shrink-0">
+                      {alertCount}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <span className="text-[11px] text-muted-foreground">
