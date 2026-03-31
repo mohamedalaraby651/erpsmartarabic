@@ -34,6 +34,7 @@ const CustomerPurchaseChart = lazy(() => import("@/components/customers/Customer
 const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAgingReport"));
 const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
+const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/CustomerTabCreditNotes").then(m => ({ default: m.CustomerTabCreditNotes })));
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 
