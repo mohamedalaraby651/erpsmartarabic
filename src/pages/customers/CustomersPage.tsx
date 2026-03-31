@@ -74,15 +74,43 @@ const CustomersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
+  // Mobile infinite scroll state
+  const [mobilePages, setMobilePages] = useState<Customer[][]>([]);
+  const [mobilePage, setMobilePage] = useState(1);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+
+  // Quick filter from stats bar
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
+
+  // Apply quick filter to actual filters
+  const handleQuickFilter = useCallback((filterId: string | null) => {
+    setQuickFilter(filterId);
+    if (!filterId) {
+      filters.setStatusFilter('all');
+      filters.setVipFilter('all');
+      filters.setTypeFilter('all');
+    } else if (filterId === 'active') {
+      filters.setStatusFilter('active');
+    } else if (filterId === 'inactive') {
+      filters.setStatusFilter('inactive');
+    } else if (filterId === 'vip') {
+      filters.setVipFilter('gold');
+    } else if (filterId === 'companies') {
+      filters.setTypeFilter('company');
+    } else if (filterId === 'individuals') {
+      filters.setTypeFilter('individual');
+    }
+  }, [filters]);
+
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
-    currentPage, pageSize, sortConfig,
+    currentPage: isMobile ? mobilePage : currentPage, pageSize, sortConfig,
   });
 
-  const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage, sortConfig });
+  const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage: isMobile ? mobilePage : currentPage, sortConfig });
 
   const totalPages = Math.ceil(list.totalCount / pageSize);
   const hasNextPage = currentPage < totalPages;
