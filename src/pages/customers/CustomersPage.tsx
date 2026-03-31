@@ -9,7 +9,7 @@ import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
 import { useAlertNotifier } from "@/hooks/useAlertNotifier";
-import { exportCustomersToExcel } from "@/lib/services/customerService";
+import { useCustomerExport } from "@/hooks/customers/useCustomerExport";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import type { Customer } from "@/lib/customerConstants";
