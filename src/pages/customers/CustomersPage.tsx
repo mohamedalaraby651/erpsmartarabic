@@ -212,7 +212,7 @@ const CustomersPage = () => {
         onDuplicates={() => dialogRef.current?.openDuplicates()}
         onMerge={() => dialogRef.current?.openMerge()}
         onImport={() => dialogRef.current?.openImport()}
-        onExportAll={handleExportAll}
+        onExportAll={() => setExportDialogOpen(true)}
         totalCount={totalStatsCount}
         filteredCount={filteredCount !== totalStatsCount ? filteredCount : undefined}
         searchQuery={isMobile ? filters.searchQuery : undefined}
