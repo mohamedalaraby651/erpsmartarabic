@@ -68,6 +68,7 @@ const CustomerListRowInner = ({
         'border border-transparent hover:border-border hover:bg-accent/50 hover:shadow-sm',
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
+        hasErrorAlert && 'bg-destructive/5',
       )}
     >
       {/* Avatar — always visible */}
