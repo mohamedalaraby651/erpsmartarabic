@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  CreditCard, TrendingUp, Wallet, FileText, BarChart3, Clock, Target, Calendar,
+  CreditCard, TrendingUp, Wallet, FileText, Clock, Target, Calendar,
 } from "lucide-react";
 
 interface CustomerStatsGridProps {
@@ -26,9 +26,10 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
   dso, totalOutstanding, lastPurchaseDate,
 }: CustomerStatsGridProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-8 gap-4">
+      {/* PRIMARY CARDS — col-span-2 on md for emphasis */}
       {/* Balance */}
-      <Card>
+      <Card className="md:col-span-2">
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-2">
             <div className={`p-2 rounded-lg ${balanceIsDebit ? 'bg-destructive/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20'}`}>
@@ -50,21 +51,23 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
         </CardContent>
       </Card>
 
-      {/* Total Purchases */}
-      <Card>
+      {/* Outstanding */}
+      <Card className="md:col-span-2">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10"><TrendingUp className="h-5 w-5 text-primary" /></div>
+            <div className={`p-2 rounded-lg ${totalOutstanding > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20'}`}>
+              <Target className={`h-5 w-5 ${totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`} />
+            </div>
             <div>
-              <p className="text-lg font-bold">{totalPurchases.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">إجمالي المشتريات</p>
+              <p className={`text-lg font-bold ${totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}>{totalOutstanding.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">المستحق</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Payment Ratio */}
-      <Card>
+      <Card className="md:col-span-2">
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-2">
             <div className={`p-2 rounded-lg ${paymentRatio >= 80 ? 'bg-emerald-500/10 dark:bg-emerald-500/20' : paymentRatio >= 50 ? 'bg-warning/10' : 'bg-destructive/10'}`}>
@@ -76,6 +79,33 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
             </div>
           </div>
           <Progress value={paymentRatio} className="h-1.5" />
+        </CardContent>
+      </Card>
+
+      {/* SECONDARY CARDS — standard single column */}
+      {/* Total Purchases */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10"><TrendingUp className="h-5 w-5 text-primary" /></div>
+            <div>
+              <p className="text-lg font-bold">{totalPurchases.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">المشتريات</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Total Payments */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20"><Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
+            <div>
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{totalPayments.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">المدفوعات</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -92,19 +122,6 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
         </CardContent>
       </Card>
 
-      {/* Total Payments */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20"><Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
-            <div>
-              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{totalPayments.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">إجمالي المدفوعات</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* DSO */}
       <Card>
         <CardContent className="p-4">
@@ -113,21 +130,6 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
             <div>
               <p className="text-lg font-bold">{dso !== null ? `${dso} يوم` : '-'}</p>
               <p className="text-xs text-muted-foreground">متوسط السداد</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Outstanding (المستحق) */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${totalOutstanding > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20'}`}>
-              <Target className={`h-5 w-5 ${totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`} />
-            </div>
-            <div>
-              <p className={`text-lg font-bold ${totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}>{totalOutstanding.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">المستحق</p>
             </div>
           </div>
         </CardContent>
