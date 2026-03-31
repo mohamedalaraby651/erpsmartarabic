@@ -211,12 +211,18 @@ const CustomersPage = () => {
 
       <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
 
-      {totalAlerts > 0 && (
+      {totalAlerts > 0 && !alertsDismissed && (
         <Card className="border-warning/50 bg-warning/5">
           <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              <span className="font-medium text-sm">تنبيهات ({totalAlerts})</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                <span className="font-medium text-sm">تنبيهات ({totalAlerts})</span>
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAlertsDismissed(true)}>
+                <span className="sr-only">إغلاق</span>
+                <span className="text-muted-foreground text-xs">✕</span>
+              </Button>
             </div>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {errorAlerts.slice(0, 3).map((alert, i) => (<p key={`e-${i}`} className="text-xs text-destructive">⚠️ {alert.message}</p>))}
