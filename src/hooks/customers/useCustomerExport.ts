@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { verifyPermissionOnServer } from '@/lib/api/secureOperations';
 import type { Customer } from '@/lib/customerConstants';
-import type { ExportOptions } from '@/components/customers/CustomerExportDialog';
+import type { ExportOptions } from '@/components/customers/dialogs/CustomerExportDialog';
 
 interface UseCustomerExportParams {
   filters: {

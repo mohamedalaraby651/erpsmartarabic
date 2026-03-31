@@ -10,9 +10,9 @@ import {
   Target, MoreHorizontal,
   Edit, Wallet, Globe, ShoppingCart, Receipt, UserCheck, UserX,
 } from "lucide-react";
-import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import ImageUpload from "@/components/shared/ImageUpload";
-import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
+import { CustomerKPICards } from "@/components/customers/details/CustomerKPICards";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";

@@ -1,8 +1,8 @@
 import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { HeroNavigation } from "./hero/HeroNavigation";
-import { HeroIdentity } from "./hero/HeroIdentity";
-import { HeroActions } from "./hero/HeroActions";
+import { HeroNavigation } from "@/components/customers/hero/HeroNavigation";
+import { HeroIdentity } from "@/components/customers/hero/HeroIdentity";
+import { HeroActions } from "@/components/customers/hero/HeroActions";
 import { CustomerKPICards } from "./CustomerKPICards";
 import CustomerQuickHistory from "./CustomerQuickHistory";
 import type { Customer } from "@/lib/customerConstants";

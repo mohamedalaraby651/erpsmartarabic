@@ -4,13 +4,13 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Crown, ChevronDown, UserCheck, UserX, Tag, Phone, Mail, MessageSquare, ExternalLink, User } from "lucide-react";
-import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import ImageUpload from "@/components/shared/ImageUpload";
 import { vipColors, vipLabels, vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { CustomerHealthBadge } from "@/components/customers/CustomerHealthBadge";
+import { CustomerHealthBadge } from "@/components/customers/details/CustomerHealthBadge";
 
 interface HeroIdentityProps {
   customer: Customer;

@@ -2,7 +2,7 @@ import React, { memo, useState, useCallback, useRef } from 'react';
 import { Phone, MapPin, DollarSign, Eye, FileText, CreditCard, ChevronDown, Crown, TrendingUp, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import CustomerAvatar from './CustomerAvatar';
+import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
 import { cn } from '@/lib/utils';
 import { vipColors, vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';

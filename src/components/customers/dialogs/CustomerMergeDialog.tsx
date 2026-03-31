@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Search, Merge, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { logErrorSafely } from "@/lib/errorHandler";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import type { Database } from "@/integrations/supabase/types";

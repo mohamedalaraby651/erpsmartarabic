@@ -4,10 +4,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
-import CustomerImportDialog from "@/components/customers/CustomerImportDialog";
-import CustomerMergeDialog from "@/components/customers/CustomerMergeDialog";
-import { DuplicateDetectionDialog } from "@/components/customers/DuplicateDetectionDialog";
+import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
+import CustomerImportDialog from "@/components/customers/dialogs/CustomerImportDialog";
+import CustomerMergeDialog from "@/components/customers/dialogs/CustomerMergeDialog";
+import { DuplicateDetectionDialog } from "@/components/customers/dialogs/DuplicateDetectionDialog";
 import { vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 

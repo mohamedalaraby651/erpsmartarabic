@@ -5,7 +5,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X, Phone, MapPin } from "lucide-react";
-import CustomerAvatar from "./CustomerAvatar";
+import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 
