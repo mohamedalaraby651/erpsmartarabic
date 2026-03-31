@@ -78,7 +78,6 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
-        onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         onKeyDown={handleKeyDown}
         className={cn(
           "pr-10 pl-10",
