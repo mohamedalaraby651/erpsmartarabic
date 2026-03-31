@@ -277,6 +277,8 @@ const CustomersPage = () => {
             onLoadMore={handleLoadMore}
             sortKey={sortConfig.key || 'created_at'}
             onSortChange={requestSort}
+            alertCountByCustomer={alertCountByCustomer}
+            errorCustomerIds={errorCustomerIds}
           />
         </div>
       ) : (
