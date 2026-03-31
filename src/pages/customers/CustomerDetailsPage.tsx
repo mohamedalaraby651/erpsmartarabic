@@ -79,8 +79,6 @@ const CustomerDetailsPage = () => {
   }
 
   const customer = detail.customer;
-  const mobileTabState = useState('financials');
-  const [mobileTab, setMobileTab] = mobileTabState;
 
   return (
     <div className="space-y-6 animate-fade-in">
