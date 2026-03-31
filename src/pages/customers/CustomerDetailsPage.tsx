@@ -312,15 +312,18 @@ const CustomerDetailsPage = () => {
         />
       </div>
 
-      <CustomerSmartAlerts
-        currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
-        invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
-        lastCommunicationAt={customer.last_communication_at}
-        onEditCreditLimit={() => setEditDialogOpen(true)}
-        onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
-        onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-        onContact={handleWhatsApp}
-      />
+      <div className="flex items-center gap-3 flex-wrap">
+        <CustomerSmartAlerts
+          currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+          invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
+          lastCommunicationAt={customer.last_communication_at}
+          onEditCreditLimit={() => setEditDialogOpen(true)}
+          onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
+          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+          onContact={handleWhatsApp}
+        />
+        <CustomerHealthBadge customerId={id!} />
+      </div>
 
       <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileSection('notes') : handleTabChange('notes')} />
 
