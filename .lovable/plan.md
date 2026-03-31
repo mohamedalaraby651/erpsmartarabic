@@ -1,90 +1,101 @@
 
 
-# إعادة تصميم صفحة العملاء — الموبايل (تحسين بصري شامل)
+# خطة تنفيذ التوصيات — قسم العملاء
 
-بناءً على إجاباتك: المشكلة الرئيسية هي **التصميم غير الجذاب**، تفضل **البطاقات القابلة للتوسيع**، الإجراء الأهم هو **فتح تفاصيل العميل**، وتريد **تغيير شكل الإحصائيات والفلاتر بالكامل**.
-
----
-
-## التغييرات المقترحة
-
-### 1. إعادة تصميم شريط الإحصائيات (CustomerStatsBar — mobile)
-
-**الحالي:** عداد أرقام بسيط + صف من Badge chips أفقية متشابهة الشكل واللون.
-
-**الجديد:** 
-- صف علوي: بطاقة رئيسية واحدة بعرض كامل تعرض **إجمالي العملاء** و**الرصيد المستحق** بتصميم gradient جذاب
-- صف سفلي: Quick Filter Chips بألوان مميزة لكل فئة (أخضر للنشط، ذهبي لـ VIP، أحمر للمدين، إلخ) مع أيقونة داخل كل chip وخلفية لونية خفيفة عند التفعيل — بدلاً من Badge موحد اللون
-
-### 2. إعادة تصميم شريط البحث والفلاتر (CustomerFiltersBar — mobile)
-
-**الحالي:** Card يحتوي input بحث + زر "الفلاتر" في نفس الصف — مظهر عادي.
-
-**الجديد:**
-- حقل بحث بتصميم أنيق مع خلفية muted/50 وحواف ناعمة وظل داخلي خفيف، بعرض كامل
-- زر الفلاتر يتحول إلى أيقونة دائرية أنيقة بجانب حقل البحث مع عداد الفلاتر النشطة
-- إزالة Card wrapper على الموبايل (مساحة ضائعة)
-
-### 3. إعادة تصميم بطاقة العميل (CustomerListCard)
-
-**الحالي:** بطاقة مع border-s-4 + محتوى كثيف + gradient خفيف.
-
-**الجديد:**
-- إزالة `bg-gradient-to-b from-primary/5` واستبداله بخلفية نظيفة بيضاء/داكنة
-- تحسين تباعد العناصر (padding أكبر من 12px إلى 16px)
-- جعل الـ Avatar أكبر قليلاً مع ظل أوضح
-- إعادة ترتيب الرصيد: نقله بجانب الاسم (أعلى يسار البطاقة) بدلاً من صف منفصل بالأسفل — يقلل ارتفاع البطاقة ويُبرز أهم معلومة
-- VIP badge بتصميم pill أنيق مع لون خلفية واضح بدلاً من badge صغير
-- شريط الائتمان: تحسين Progress bar بألوان تدريجية (أخضر → أصفر → أحمر حسب الاستهلاك)
-- **المحتوى الموسّع:** إعادة تصميم KPI cards بحواف أنعم وتدرجات لونية خفيفة بدل bg-muted/50 — وتكبير أزرار الإجراءات إلى min-h-11 (44px touch target)
-
-### 4. إعادة تصميم Header الصفحة (CustomerPageHeader — mobile)
-
-**الحالي:** عنوان "إدارة العملاء" + وصف + زر dropdown + زر إضافة.
-
-**الجديد:**
-- عنوان أصغر وأنظف بدون الوصف النصي (يأخذ مساحة على الموبايل)
-- أزرار MoreVertical و"إضافة عميل" بنفس الصف مع حجم 44px
-- إضافة لمسة gradient خفيفة للعنوان
-
-### 5. تحسين الحالة الفارغة (CustomerEmptyState)
-
-**الحالي:** أيقونة كبيرة + خطوات مرقمة — تصميم وظيفي لكن غير ملهم.
-
-**الجديد:**
-- رسم توضيحي أنيق (أيقونة مع دوائر متداخلة وتدرج لوني)
-- تقليص الخطوات إلى جملة واحدة مختصرة
-- زر الإضافة بتصميم بارز مع تأثير gradient
-
-### 6. تحسين Sort + View Toggle (داخل CustomerMobileView)
-
-**الحالي:** Select عادي + أزرار toggle صغيرة.
-
-**الجديد:**
-- دمج Sort و View في صف واحد بتصميم segment control أنيق
-- أيقونات أوضح وأكبر قليلاً
-
-### 7. تحسين التنبيهات (Alert Card)
-
-**الحالي:** Card بإطار أصفر — مظهر عادي.
-
-**الجديد:**
-- تصميم banner خفيف بدون Card wrapper — يأخذ مساحة أقل
-- خلفية gradient خفيفة (amber) مع أيقونة وزر إغلاق أنيق
+مقسمة إلى 4 مراحل مرتبة حسب الأولوية والتأثير.
 
 ---
 
-## الملفات المتأثرة
+## المرحلة 1: إصلاحات عالية الأولوية (وظيفية + أداء)
 
-| الملف | التغيير |
-|---|---|
-| `CustomerStatsBar.tsx` | إعادة تصميم القسم الموبايل بالكامل |
-| `CustomerFiltersBar.tsx` | تحسين شكل البحث والفلاتر للموبايل |
-| `CustomerListCard.tsx` | إعادة ترتيب العناصر وتحسين الألوان والتباعد |
-| `CustomerMobileView.tsx` | تحسين Sort/View toggle |
-| `CustomerPageHeader.tsx` | تبسيط وتحسين الهيدر للموبايل |
-| `CustomerEmptyState.tsx` | تحسين التصميم البصري |
-| `CustomersPage.tsx` | تحسين Alert card |
+### الخطوة 1.1 — تحويل `useCustomerAlerts` إلى Lazy Loading
+**الملف:** `src/hooks/useCustomerAlerts.ts` + `src/pages/customers/CustomersPage.tsx`
 
-**ملاحظة:** لا تغييرات في المنطق أو البيانات — فقط تحسينات بصرية وتخطيطية.
+- إضافة parameter `enabled` إلى `useCustomerAlerts(enabled: boolean)`
+- جعل الاستعلامين (`customers` + `overdueInvoices`) يعتمدان على `enabled`
+- في `CustomersPage.tsx`: تمرير `enabled={!alertsDismissed}` — بحيث لا تُجلب البيانات إذا كان المستخدم أغلق التنبيهات
+- النتيجة: توفير استعلامين على كل تحميل صفحة عند عدم الحاجة
+
+### الخطوة 1.2 — Server Pagination لتبويبات التفاصيل (الفواتير + المدفوعات)
+**الملفات:**
+- `src/lib/repositories/customerRepository.ts` — إضافة `findInvoicesPaginated(customerId, page, pageSize)` و `findPaymentsPaginated(customerId, page, pageSize)` مع `count: 'exact'`
+- `src/hooks/customers/useCustomerDetail.ts` — إضافة state لـ `invoicePage` و `paymentPage` مع استخدام الاستعلامات الجديدة
+- `src/components/customers/tabs/CustomerTabInvoices.tsx` — إضافة `ServerPagination` في أسفل التبويب
+- `src/components/customers/tabs/CustomerTabPayments.tsx` — نفس الشيء
+- الحفاظ على الاستعلامات الحالية (limit 500) للحسابات المالية في KPI/Financial Summary كما هي (لا تتأثر)
+
+### الخطوة 1.3 — إصلاح تصدير القالب ليشمل كل العملاء
+**الملف:** `src/pages/customers/CustomersPage.tsx`
+
+- تغيير `ExportWithTemplateButton` من `data={customers}` (25 عميل) إلى استدعاء `customerRepository.exportAll()` عند التصدير
+- أو: إخفاء زر القالب واستخدام `handleExportAll` فقط مع إضافة خيار اختيار التنسيق (Excel/CSV)
+
+---
+
+## المرحلة 2: تحسينات الأداء
+
+### الخطوة 2.1 — Cache لفحص الصلاحيات عند التصدير
+**الملف:** `src/pages/customers/CustomersPage.tsx`
+
+- نقل `verifyPermissionOnServer('customers', 'view')` إلى `useQuery` مع `staleTime: 300000` بدلاً من استدعائه عند كل نقرة تصدير
+- استخدام النتيجة المخزنة مؤقتاً في `handleExportAll`
+
+### الخطوة 2.2 — رفع حد التصدير أو إضافة تصدير خلفي
+**الملف:** `src/lib/repositories/customerRepository.ts` + `src/lib/services/customerService.ts`
+
+- رفع `maxRecords` من 10,000 إلى 50,000 مع تقسيم الدفعات
+- إضافة `onProgress` callback لعرض شريط تقدم أثناء التصدير الطويل
+- في `customerService.ts`: تحديث `exportCustomersToExcel` لعرض نسبة التقدم عبر `sonnerToast.loading`
+
+---
+
+## المرحلة 3: تحسينات تجربة البحث
+
+### الخطوة 3.1 — تقليل الاستعلامات المكررة في البحث
+**الملف:** `src/components/customers/CustomerSearchPreview.tsx`
+
+- استخدام نفس `queryKey` المستخدم في `useCustomerList` عندما يكون البحث متطابقاً — أو زيادة `staleTime` إلى 30 ثانية لتقليل الطلبات المتكررة
+- الأفضل: إبقاء SearchPreview كاستعلام مستقل (لأنه يجلب حقول مختلفة وأقل) مع رفع staleTime
+
+### الخطوة 3.2 — إصلاح onBlur race condition
+**الملف:** `src/components/customers/CustomerSearchPreview.tsx`
+
+- استبدال `setTimeout(() => setIsFocused(false), 200)` بـ `handleClickOutside` الموجود بالفعل
+- إزالة `onBlur` والاعتماد فقط على `mousedown` event listener الخارجي لإغلاق الـ dropdown
+- النتيجة: إزالة race condition مع الحفاظ على نفس السلوك
+
+---
+
+## المرحلة 4: تحسينات UX
+
+### الخطوة 4.1 — تقليل ازدحام هيدر Desktop
+**الملف:** `src/components/customers/CustomerPageHeader.tsx`
+
+- التأكد من أن الأزرار الثانوية (كشف المكررين، دمج، استيراد) مجمعة في dropdown "أدوات" (تم جزئياً)
+- إبقاء فقط: `إضافة عميل` + `تصدير Excel` + `⋮ أدوات` على Desktop
+- إزالة العنوان المكرر "قائمة العملاء (X)" من `CardHeader` في `CustomersPage.tsx` أو تبسيطه
+
+### الخطوة 4.2 — إزالة Card wrapper الزائد من الجدول
+**الملف:** `src/pages/customers/CustomersPage.tsx`
+
+- استبدال `<Card><CardHeader>...<CardContent>` بـ `<div>` بسيط مع الحفاظ على view mode toggle و sort selector
+- النتيجة: توفير مساحة عمودية وإزالة العنوان المكرر
+
+---
+
+## ملخص الملفات المتأثرة
+
+| الملف | المرحلة | التغيير |
+|---|---|---|
+| `useCustomerAlerts.ts` | 1.1 | إضافة `enabled` parameter |
+| `CustomersPage.tsx` | 1.1, 1.3, 4.1, 4.2 | Lazy alerts + إصلاح تصدير + تبسيط Card |
+| `customerRepository.ts` | 1.2, 2.2 | Paginated queries + رفع حد التصدير |
+| `useCustomerDetail.ts` | 1.2 | إضافة pagination state للتبويبات |
+| `CustomerTabInvoices.tsx` | 1.2 | إضافة ServerPagination |
+| `CustomerTabPayments.tsx` | 1.2 | إضافة ServerPagination |
+| `CustomerSearchPreview.tsx` | 3.1, 3.2 | رفع staleTime + إصلاح onBlur |
+| `customerService.ts` | 2.2 | شريط تقدم التصدير |
+| `CustomerPageHeader.tsx` | 4.1 | تنظيم أزرار Desktop |
+
+**إجمالي:** 9 ملفات، 4 مراحل، ~10 تغييرات مستقلة.
 
