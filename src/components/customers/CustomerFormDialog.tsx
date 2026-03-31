@@ -95,15 +95,15 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     onOpenChange(nextOpen);
   };
 
+  const clearDraftRef = useRef<(() => void) | null>(null);
+
   const confirmDiscard = () => {
     setUnsavedWarningOpen(false);
     pendingCloseRef.current = false;
     reset(defaultValues);
-    // clearDraft is called after it's initialized below via useFormDraft
-    try { clearDraftRef.current?.(); } catch {}
+    clearDraftRef.current?.();
     onOpenChange(false);
   };
-  const clearDraftRef = React.useRef<(() => void) | null>(null);
 
   const customerType = watch('customer_type');
   const watchedName = watch('name');
