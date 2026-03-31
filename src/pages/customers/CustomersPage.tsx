@@ -40,6 +40,8 @@ const CustomersPage = () => {
   const filters = useCustomerFilters();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportAllLoading, setExportAllLoading] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   useEffect(() => {
     const action = filters.searchParams.get('action');
