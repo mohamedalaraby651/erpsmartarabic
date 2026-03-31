@@ -30,7 +30,7 @@ export const FilterChips = forwardRef<HTMLDivElement, FilterChipsProps>(function
   const hasActiveFilters = activeChips.length > 0;
 
   return (
-    <div className={cn('py-2', className)}>
+    <div ref={ref} className={cn('py-2', className)}>
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex items-center gap-2 px-3">
           {hasActiveFilters && onClearAll && (
