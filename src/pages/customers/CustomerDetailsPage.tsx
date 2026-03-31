@@ -90,7 +90,7 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  const [mobileTab, setMobileTab] = useState('financial');
+  const [mobileSection, setMobileSection] = useState<MobileSectionId>('none');
 
   const detail = useCustomerDetail(id);
   const { prevId, nextId, goNext, goPrev } = useCustomerNavigation(id);
