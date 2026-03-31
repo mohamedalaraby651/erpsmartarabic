@@ -16,7 +16,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AppLayout = lazy(() => import("./components/layout/AppLayout"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const CustomersPage = lazy(() => import("./pages/customers/CustomersPage"));
+import CustomersPage from "./pages/customers/CustomersPage";
 const ProductsPage = lazy(() => import("./pages/products/ProductsPage"));
 const ProductDetailsPage = lazy(() => import("./pages/products/ProductDetailsPage"));
 const CategoriesPage = lazy(() => import("./pages/categories/CategoriesPage"));
