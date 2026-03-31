@@ -12,7 +12,7 @@ export interface SidebarCounts {
   pendingPurchaseOrders: number;
 }
 
-export function useSidebarCounts() {
+export function useSidebarCounts(enabled = true) {
   const { user } = useAuth();
 
   return useQuery({
