@@ -75,7 +75,7 @@ export const CustomerTabCreditNotes = memo(function CustomerTabCreditNotes({
                 <Badge className={statusColors[cn.status] || statusColors.draft}>
                   {statusLabels[cn.status] || cn.status}
                 </Badge>
-                <span className="font-bold text-sm">{cn.amount.toLocaleString()}</span>
+                <span className="font-bold text-sm">{cn.amount.toLocaleString()} ج.م</span>
               </div>
             </div>
           ))}

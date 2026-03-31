@@ -16,6 +16,8 @@ interface Quotation {
 }
 
 export const CustomerTabQuotations = memo(function CustomerTabQuotations({ quotations }: { quotations: Quotation[] }) {
+  const [qPage, setQPage] = useState(1);
+  const qTotalPages = Math.max(1, Math.ceil(quotations.length / Q_PAGE_SIZE));
   const summary = useMemo(() => {
     const total = quotations.length;
     const pending = quotations.filter(q => q.status === 'pending' || q.status === 'draft').length;

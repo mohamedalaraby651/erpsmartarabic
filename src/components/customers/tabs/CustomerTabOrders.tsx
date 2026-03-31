@@ -59,7 +59,7 @@ export const CustomerTabOrders = memo(function CustomerTabOrders({ salesOrders }
           <div className="text-center py-8"><ShoppingCart className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" /><p className="text-muted-foreground">لا توجد أوامر بيع</p></div>
         ) : (
           <div className="space-y-2">
-            {salesOrders.slice(0, 50).map((order) => (
+            {salesOrders.slice((oPage - 1) * O_PAGE_SIZE, oPage * O_PAGE_SIZE).map((order) => (
               <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                 <div>
                   <EntityLink type="sales-order" id={order.id}>{order.order_number}</EntityLink>
@@ -74,6 +74,13 @@ export const CustomerTabOrders = memo(function CustomerTabOrders({ salesOrders }
               </div>
             ))}
           </div>
+          {oTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button variant="outline" size="sm" disabled={oPage <= 1} onClick={() => setOPage(p => p - 1)}>السابق</Button>
+              <span className="text-sm text-muted-foreground">{oPage} / {oTotalPages}</span>
+              <Button variant="outline" size="sm" disabled={oPage >= oTotalPages} onClick={() => setOPage(p => p + 1)}>التالي</Button>
+            </div>
+          )}
         )}
       </CardContent>
     </Card>
