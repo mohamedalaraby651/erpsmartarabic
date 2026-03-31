@@ -13,6 +13,10 @@ export function useCustomerDetail(id: string | undefined) {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('financial');
+  const [invoicePage, setInvoicePage] = useState(1);
+  const [paymentPage, setPaymentPage] = useState(1);
+  const invoicePageSize = 20;
+  const paymentPageSize = 20;
 
   // === CORE queries (always loaded) ===
   const { data: customer, isLoading } = useQuery({
