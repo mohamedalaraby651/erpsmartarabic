@@ -132,10 +132,19 @@ const CustomersPage = () => {
     }
   }, [list.customers, mobilePage, desktopPage, isMobile]);
 
-  const allCustomers = useMemo(() => {
+  const allCustomersRaw = useMemo(() => {
     if (isMobile) return mobilePages.flat();
     return desktopPages.flat();
   }, [isMobile, mobilePages, desktopPages]);
+
+  // Filter by alert type when a badge is clicked
+  const allCustomers = useMemo(() => {
+    if (!alertFilterType) return allCustomersRaw;
+    const typeAlerts = alertsByType.get(alertFilterType);
+    if (!typeAlerts?.length) return allCustomersRaw;
+    const ids = new Set(typeAlerts.map(a => a.customerId));
+    return allCustomersRaw.filter(c => ids.has(c.id));
+  }, [allCustomersRaw, alertFilterType, alertsByType]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
