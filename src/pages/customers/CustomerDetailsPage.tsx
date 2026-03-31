@@ -252,7 +252,12 @@ const CustomerDetailsPage = () => {
             </TabsContent>
             <TabsContent value="aging" className="mt-6"><CustomerAgingReport invoices={detail.invoices} /></TabsContent>
             <TabsContent value="communications" className="mt-6"><CommunicationLogTab customerId={id!} /></TabsContent>
-            <TabsContent value="analytics" className="mt-6"><CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} /></TabsContent>
+            <TabsContent value="analytics" className="mt-6 space-y-4">
+              <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+              <AgingDonutChart invoices={detail.invoices} />
+              <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
+              <TopProductsChart customerId={id!} />
+            </TabsContent>
             <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
             <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>
           </Suspense>
