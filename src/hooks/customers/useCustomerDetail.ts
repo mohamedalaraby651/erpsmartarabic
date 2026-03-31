@@ -5,11 +5,13 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { calculateCustomerHealth } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
 
 export function useCustomerDetail(id: string | undefined) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('addresses');
 
   // === CORE queries (always loaded) ===
@@ -25,8 +27,8 @@ export function useCustomerDetail(id: string | undefined) {
     enabled: !!id,
   });
 
-  // === LAZY queries (loaded on tab open) ===
-  const invoicesNeeded = ['invoices', 'financial', 'statement', 'aging', 'analytics'].includes(activeTab);
+  // === LAZY queries (loaded on tab open, or all at once on mobile) ===
+  const invoicesNeeded = isMobile || ['invoices', 'financial', 'statement', 'aging', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: () => customerRepository.findInvoices(id!),
@@ -35,7 +37,7 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  const paymentsNeeded = ['payments', 'financial', 'statement', 'analytics'].includes(activeTab);
+  const paymentsNeeded = isMobile || ['payments', 'financial', 'statement', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRepository.findPayments(id!),
@@ -47,28 +49,28 @@ export function useCustomerDetail(id: string | undefined) {
   const { data: creditNotes = [] } = useQuery({
     queryKey: ['customer-credit-notes', id],
     queryFn: () => customerRepository.findCreditNotes(id!),
-    enabled: !!id && activeTab === 'statement',
+    enabled: !!id && (isMobile || activeTab === 'statement'),
     staleTime: 60000,
   });
 
   const { data: salesOrders = [] } = useQuery({
     queryKey: ['customer-sales-orders', id],
     queryFn: () => customerRepository.findSalesOrders(id!),
-    enabled: !!id && activeTab === 'orders',
+    enabled: !!id && (isMobile || activeTab === 'orders'),
     staleTime: 60000,
   });
 
   const { data: quotations = [] } = useQuery({
     queryKey: ['customer-quotations', id],
     queryFn: () => customerRepository.findQuotations(id!),
-    enabled: !!id && activeTab === 'quotations',
+    enabled: !!id && (isMobile || activeTab === 'quotations'),
     staleTime: 60000,
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ['customer-activities', id],
     queryFn: () => customerRepository.findActivities(id!),
-    enabled: !!id && activeTab === 'activity',
+    enabled: !!id && (isMobile || activeTab === 'activity'),
   });
 
   const updateImageMutation = useMutation({

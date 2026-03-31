@@ -1,5 +1,6 @@
 import React, { memo, useCallback } from "react";
-import { Phone, MapPin, DollarSign, Plus, Users } from "lucide-react";
+import { Phone, MapPin, DollarSign, Plus, Users, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import { vipLabels, typeLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
@@ -19,10 +20,13 @@ interface CustomerMobileViewProps {
   onEdit: (customer: Customer) => void;
   onDelete: (id: string) => void;
   onRefresh: () => Promise<void>;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
+  hasActiveFilters, onClearFilters,
 }: CustomerMobileViewProps) {
   const renderCard = useCallback((customer: Customer) => (
     <SwipeableRow
@@ -52,6 +56,16 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   if (isLoading) return <MobileListSkeleton count={5} />;
 
   if (data.length === 0) {
+    if (hasActiveFilters) {
+      return (
+        <div className="text-center py-12">
+          <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">لا توجد نتائج</h3>
+          <p className="text-muted-foreground text-sm mb-6">لا يوجد عملاء يطابقون الفلاتر المحددة</p>
+          {onClearFilters && <Button variant="outline" onClick={onClearFilters}>إزالة الفلاتر</Button>}
+        </div>
+      );
+    }
     return <EmptyState icon={Users} title="لا يوجد عملاء" description="ابدأ بإضافة عميلك الأول" />;
   }
 

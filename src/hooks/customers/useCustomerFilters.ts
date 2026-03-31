@@ -61,6 +61,7 @@ export function useCustomerFilters() {
   }, [updateFilter]);
 
   const clearAllFilters = useCallback(() => {
+    setSearchQuery('');
     setTypeFilter('all');
     setVipFilter('all');
     setGovernorateFilter('all');

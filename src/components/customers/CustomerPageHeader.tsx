@@ -1,7 +1,10 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Upload, Merge, ScanSearch, Download, Loader2 } from "lucide-react";
+import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical } from "lucide-react";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerPageHeaderProps {
@@ -27,7 +30,29 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
         <p className="text-sm text-muted-foreground">إدارة بيانات العملاء والتصنيفات</p>
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        {!isMobile && (
+        {isMobile ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="min-h-11 min-w-11">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={onImport}>
+                <Upload className="h-4 w-4 ml-2" />استيراد
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading}>
+                <Download className="h-4 w-4 ml-2" />تصدير الكل
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDuplicates}>
+                <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onMerge}>
+                <Merge className="h-4 w-4 ml-2" />دمج
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
           <>
             <Button variant="outline" size="sm" onClick={onDuplicates}>
               <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين

@@ -95,10 +95,13 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     onOpenChange(nextOpen);
   };
 
+  const clearDraftRef = useRef<(() => void) | null>(null);
+
   const confirmDiscard = () => {
     setUnsavedWarningOpen(false);
     pendingCloseRef.current = false;
     reset(defaultValues);
+    clearDraftRef.current?.();
     onOpenChange(false);
   };
 
@@ -136,6 +139,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     data: formData,
     enabled: !isEditing,
   });
+  clearDraftRef.current = clearDraft;
 
   useEffect(() => {
     if (hasDraft && !isEditing && open) {

@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import { canDeleteCustomer } from "@/lib/services/customerService";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { logErrorSafely } from "@/lib/errorHandler";
 import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
@@ -85,6 +86,8 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
   // Bulk VIP update
   const bulkVipMutation = useMutation({
     mutationFn: async ({ ids, vipLevel }: { ids: string[]; vipLevel: string }) => {
+      const hasPermission = await verifyPermissionOnServer('customers', 'edit');
+      if (!hasPermission) throw new Error('ليس لديك صلاحية تعديل العملاء');
       await customerRepository.bulkUpdateVip(ids, vipLevel);
     },
     onSuccess: async (_data, { ids, vipLevel }) => {
@@ -101,6 +104,8 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
   // Bulk status update
   const bulkStatusMutation = useMutation({
     mutationFn: async ({ ids, isActive }: { ids: string[]; isActive: boolean }) => {
+      const hasPermission = await verifyPermissionOnServer('customers', 'edit');
+      if (!hasPermission) throw new Error('ليس لديك صلاحية تعديل العملاء');
       await customerRepository.bulkUpdateStatus(ids, isActive);
     },
     onSuccess: async (_data, { ids, isActive }) => {
