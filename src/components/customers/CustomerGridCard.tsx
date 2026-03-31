@@ -48,9 +48,10 @@ const CustomerGridCardInner = ({
   return (
     <Card
       className={cn(
-        "cursor-pointer hover:shadow-md transition-all group relative",
+        "cursor-pointer hover:shadow-md transition-all group relative bg-gradient-to-b from-primary/5 to-transparent",
         isSelected && "ring-2 ring-primary",
-        isDeleting && "opacity-60 pointer-events-none"
+        isDeleting && "opacity-60 pointer-events-none",
+        customer.is_active === false && "opacity-60",
       )}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
