@@ -436,6 +436,19 @@ export const customerRepository = {
     return (data || []) as Invoice[];
   },
 
+  async findInvoicesPaginated(customerId: string, page: number, pageSize: number): Promise<{ data: Invoice[]; count: number }> {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact' })
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false })
+      .range(from, to);
+    if (error) throw error;
+    return { data: (data || []) as Invoice[], count: count || 0 };
+  },
+
   async findPayments(customerId: string) {
     const { data, error } = await supabase
       .from('payments')
@@ -445,6 +458,19 @@ export const customerRepository = {
       .limit(500);
     if (error) throw error;
     return (data || []) as (Payment & { invoices: { invoice_number: string } | null })[];
+  },
+
+  async findPaymentsPaginated(customerId: string, page: number, pageSize: number): Promise<{ data: (Payment & { invoices: { invoice_number: string } | null })[]; count: number }> {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, count, error } = await supabase
+      .from('payments')
+      .select('*, invoices:invoice_id(invoice_number)', { count: 'exact' })
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false })
+      .range(from, to);
+    if (error) throw error;
+    return { data: (data || []) as (Payment & { invoices: { invoice_number: string } | null })[], count: count || 0 };
   },
 
   async findCreditNotes(customerId: string): Promise<CreditNote[]> {

@@ -134,7 +134,9 @@ export async function exportCustomersToExcel(): Promise<void> {
     const { toast: sonnerToast } = await import('sonner');
     sonnerToast.loading('جاري تحميل بيانات جميع العملاء...', { id: toastId });
 
-    const result = await customerRepository.exportAll();
+    const result = await customerRepository.exportAll((loaded) => {
+      sonnerToast.loading(`جاري تحميل ${loaded.toLocaleString()} عميل...`, { id: toastId });
+    });
     const data = result.data;
     if (!data || data.length === 0) {
       sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });

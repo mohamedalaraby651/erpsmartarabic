@@ -135,6 +135,9 @@ export function useCustomerDetail(id: string | undefined) {
   const creditUsagePercent = creditLimit > 0 ? Math.min((currentBalance / creditLimit) * 100, 100) : 0;
   const balanceIsDebit = currentBalance > 0;
 
+  const goToInvoicePage = useCallback((p: number) => setInvoicePage(p), []);
+  const goToPaymentPage = useCallback((p: number) => setPaymentPage(p), []);
+
   return {
     customer, isLoading, addresses, invoices, payments, creditNotes,
     salesOrders, quotations, activities,
@@ -143,5 +146,8 @@ export function useCustomerDetail(id: string | undefined) {
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
     lastPurchaseDate, dso, clv, totalOutstanding,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
+    // Paginated data for tabs
+    paginatedInvoices, invoicePage, invoicePageSize, goToInvoicePage,
+    paginatedPayments, paymentPage, paymentPageSize, goToPaymentPage,
   };
 }

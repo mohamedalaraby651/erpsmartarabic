@@ -61,6 +61,7 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
     const handleClickOutside = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setIsFocused(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
