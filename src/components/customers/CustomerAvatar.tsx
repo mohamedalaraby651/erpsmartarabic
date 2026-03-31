@@ -7,6 +7,8 @@ interface CustomerAvatarProps {
   imageUrl?: string | null;
   customerType?: 'individual' | 'company' | 'farm' | string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  shape?: 'circle' | 'rounded-square';
+  vipBorder?: 'regular' | 'silver' | 'gold' | 'platinum' | string;
   className?: string;
 }
 
@@ -49,7 +51,14 @@ const typeConfig = {
   },
 };
 
-const CustomerAvatar = ({ name, imageUrl, customerType = 'individual', size = 'lg', className }: CustomerAvatarProps) => {
+const vipBorderColors: Record<string, string> = {
+  regular: 'border-border',
+  silver: 'border-zinc-400 dark:border-zinc-500',
+  gold: 'border-amber-500 dark:border-amber-400',
+  platinum: 'border-purple-500 dark:border-purple-400',
+};
+
+const CustomerAvatar = ({ name, imageUrl, customerType = 'individual', size = 'lg', shape = 'circle', vipBorder, className }: CustomerAvatarProps) => {
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -59,20 +68,33 @@ const CustomerAvatar = ({ name, imageUrl, customerType = 'individual', size = 'l
 
   const config = typeConfig[customerType as keyof typeof typeConfig] || typeConfig.individual;
   const TypeIcon = config.icon;
+  const isSquare = shape === 'rounded-square';
+  const borderColor = vipBorder ? (vipBorderColors[vipBorder] || vipBorderColors.regular) : '';
 
   return (
     <div className={cn('relative inline-block', className)}>
-      <Avatar className={cn(sizeClasses[size], 'border-4 border-background shadow-lg')}>
-        <AvatarImage src={imageUrl || undefined} alt={name} />
-        <AvatarFallback className={cn('text-white font-bold', config.gradient, size === 'xl' ? 'text-3xl' : size === 'lg' ? 'text-2xl' : size === 'md' ? 'text-lg' : 'text-sm')}>
+      <Avatar className={cn(
+        sizeClasses[size],
+        'border-4 shadow-lg',
+        isSquare ? 'rounded-xl' : 'rounded-full',
+        borderColor || 'border-background',
+      )}>
+        <AvatarImage src={imageUrl || undefined} alt={name} className={isSquare ? 'rounded-xl' : ''} />
+        <AvatarFallback className={cn(
+          'text-white font-bold',
+          config.gradient,
+          isSquare ? 'rounded-xl' : '',
+          size === 'xl' ? 'text-3xl' : size === 'lg' ? 'text-2xl' : size === 'md' ? 'text-lg' : 'text-sm',
+        )}>
           {initials}
         </AvatarFallback>
       </Avatar>
       {/* Type badge overlay */}
       <div className={cn(
-        'absolute rounded-full flex items-center justify-center text-white shadow-md border-2 border-background',
+        'absolute flex items-center justify-center text-white shadow-md border-2 border-background',
+        isSquare ? 'rounded-lg' : 'rounded-full',
         config.badgeBg,
-        badgeSizeClasses[size]
+        badgeSizeClasses[size],
       )}>
         <TypeIcon className={iconSizeClasses[size]} />
       </div>

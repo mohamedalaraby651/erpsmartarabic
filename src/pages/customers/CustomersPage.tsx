@@ -27,6 +27,7 @@ import { CustomerBulkActionsBar } from "@/components/customers/CustomerBulkActio
 import { CustomerDialogManager, type DialogManagerHandle } from "@/components/customers/CustomerDialogManager";
 import { CustomerPageHeader } from "@/components/customers/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/CustomerFilterDrawer";
+import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 
 const CustomersPage = () => {
@@ -73,21 +74,75 @@ const CustomersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
+  // Mobile infinite scroll state
+  const [mobilePages, setMobilePages] = useState<Customer[][]>([]);
+  const [mobilePage, setMobilePage] = useState(1);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+
+  // Quick filter from stats bar
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
+
+  // Apply quick filter to actual filters
+  const handleQuickFilter = useCallback((filterId: string | null) => {
+    setQuickFilter(filterId);
+    if (!filterId) {
+      filters.setStatusFilter('all');
+      filters.setVipFilter('all');
+      filters.setTypeFilter('all');
+    } else if (filterId === 'active') {
+      filters.setStatusFilter('active');
+    } else if (filterId === 'inactive') {
+      filters.setStatusFilter('inactive');
+    } else if (filterId === 'vip') {
+      filters.setVipFilter('gold');
+    } else if (filterId === 'companies') {
+      filters.setTypeFilter('company');
+    } else if (filterId === 'individuals') {
+      filters.setTypeFilter('individual');
+    }
+  }, [filters]);
+
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
-    currentPage, pageSize, sortConfig,
+    currentPage: isMobile ? mobilePage : currentPage, pageSize, sortConfig,
   });
 
-  const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage, sortConfig });
+  const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage: isMobile ? mobilePage : currentPage, sortConfig });
 
   const totalPages = Math.ceil(list.totalCount / pageSize);
-  const hasNextPage = currentPage < totalPages;
+  const hasNextPageDesktop = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
+  const mobileHasNextPage = mobilePage < totalPages;
 
-  useEffect(() => { setCurrentPage(1); }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
+  // Accumulate mobile pages
+  useEffect(() => {
+    if (isMobile && list.customers.length > 0) {
+      setMobilePages(prev => {
+        const updated = [...prev];
+        updated[mobilePage - 1] = list.customers;
+        return updated;
+      });
+      setIsFetchingNextPage(false);
+    }
+  }, [list.customers, mobilePage, isMobile]);
+
+  const allMobileCustomers = isMobile ? mobilePages.flat() : list.customers;
+
+  const handleLoadMore = useCallback(() => {
+    if (mobileHasNextPage && !isFetchingNextPage) {
+      setIsFetchingNextPage(true);
+      setMobilePage(prev => prev + 1);
+    }
+  }, [mobileHasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setMobilePage(1);
+    setMobilePages([]);
+  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
 
   const bulk = useBulkSelection(list.customers);
 
@@ -118,7 +173,7 @@ const CustomersPage = () => {
 
   const paginationBlock = list.totalCount > pageSize && (
     <div className="mt-4">
-      <ServerPagination currentPage={currentPage} totalPages={totalPages} totalCount={list.totalCount} pageSize={pageSize} onPageChange={goToPage} hasNextPage={hasNextPage} hasPrevPage={hasPrevPage} />
+      <ServerPagination currentPage={currentPage} totalPages={totalPages} totalCount={list.totalCount} pageSize={pageSize} onPageChange={goToPage} hasNextPage={hasNextPageDesktop} hasPrevPage={hasPrevPage} />
     </div>
   );
 
@@ -144,7 +199,7 @@ const CustomersPage = () => {
         />
       )}
 
-      <CustomerStatsBar stats={list.stats} isMobile={isMobile} />
+      <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
 
       {totalAlerts > 0 && (
         <Card className="border-warning/50 bg-warning/5">
@@ -175,8 +230,24 @@ const CustomersPage = () => {
 
       {isMobile ? (
         <div className="pb-20">
-          <CustomerMobileView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onEdit={handleEdit} onDelete={handleDeleteRequest} onRefresh={handleRefresh} hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch} onClearFilters={filters.clearAllFilters} />
-          {paginationBlock}
+          <CustomerMobileView
+            data={allMobileCustomers}
+            isLoading={list.isLoading}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            onNavigate={(id) => navigate(`/customers/${id}`)}
+            onEdit={handleEdit}
+            onDelete={handleDeleteRequest}
+            onRefresh={handleRefresh}
+            hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch}
+            onClearFilters={filters.clearAllFilters}
+            onAdd={canEdit ? handleAdd : undefined}
+            onImport={() => dialogRef.current?.openImport()}
+            onNewInvoice={handleNewInvoice}
+            hasNextPage={mobileHasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+          />
         </div>
       ) : (
         <Card>
@@ -208,24 +279,12 @@ const CustomersPage = () => {
                 <CustomerGridView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onEdit={handleEdit} onDelete={handleDeleteRequest} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} onToggleSelectAll={bulk.toggleSelectAll} isAllSelected={bulk.isAllSelected} hasSelection={bulk.hasSelection} onAdd={canEdit ? handleAdd : undefined} deletingId={deletingId} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch} onClearFilters={filters.clearAllFilters} />
               )
             ) : list.isLoading ? <TableSkeleton rows={5} columns={7} /> : list.customers.length === 0 ? (
-              filters.activeFiltersCount > 0 || filters.debouncedSearch ? (
-                <div className="text-center py-12">
-                  <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">لا توجد نتائج</h3>
-                  <p className="text-muted-foreground text-sm mb-6">لا يوجد عملاء يطابقون الفلاتر المحددة</p>
-                  <Button variant="outline" onClick={filters.clearAllFilters}>إزالة الفلاتر</Button>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">لا يوجد عملاء</h3>
-                  <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">ابدأ بإضافة عملائك لإدارة بياناتهم وتتبع معاملاتهم المالية</p>
-                  <div className="flex items-center justify-center gap-3">
-                    {canEdit && <Button onClick={handleAdd}><Plus className="h-4 w-4 ml-2" />إضافة عميل جديد</Button>}
-                    <Button variant="outline" onClick={() => dialogRef.current?.openImport()}><FileSpreadsheet className="h-4 w-4 ml-2" />استيراد من Excel</Button>
-                  </div>
-                </div>
-              )
+              <CustomerEmptyState
+                hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch}
+                onClearFilters={filters.clearAllFilters}
+                onAdd={canEdit ? handleAdd : undefined}
+                onImport={() => dialogRef.current?.openImport()}
+              />
             ) : (
               <CustomerTableView data={list.customers} sortConfig={sortConfig} onSort={requestSort} onNavigate={(id) => navigate(`/customers/${id}`)} onEdit={handleEdit} onDelete={handleDeleteRequest} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} canEdit={canEdit} canDelete={canDelete} deletingId={deletingId} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} onToggleSelectAll={bulk.toggleSelectAll} isAllSelected={bulk.isAllSelected} />
             )}
