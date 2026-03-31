@@ -10,6 +10,7 @@ import { useCustomerFilters, useBulkSelection } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
+import { useMemo } from "react";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
