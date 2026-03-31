@@ -119,7 +119,7 @@ export function useCustomerDetail(id: string | undefined) {
     activeTab, setActiveTab,
     updateImageMutation, deleteAddressMutation,
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
-    lastPurchaseDate, dso, clv,
+    lastPurchaseDate, dso, clv, totalOutstanding,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
   };
 }

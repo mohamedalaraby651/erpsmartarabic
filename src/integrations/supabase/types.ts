@@ -4132,6 +4132,10 @@ export type Database = {
       }
     }
     Functions: {
+      atomic_customer_balance_update: {
+        Args: { _amount: number; _customer_id: string }
+        Returns: undefined
+      }
       atomic_supplier_balance_update: {
         Args: { _amount: number; _supplier_id: string }
         Returns: undefined
