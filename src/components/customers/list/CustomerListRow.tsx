@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Phone, MapPin, FileText, CreditCard, Crown, MessageCircle, Edit2 } from 'lucide-react';
-import CustomerAvatar from './CustomerAvatar';
+import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
 import { cn } from '@/lib/utils';
 import { vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';

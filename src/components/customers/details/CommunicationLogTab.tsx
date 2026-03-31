@@ -11,7 +11,7 @@ import { MessageSquare, Plus, Phone, Mail, MapPin, MessagesSquare } from "lucide
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
 
 interface CommunicationLogTabProps {
   customerId: string;
@@ -48,12 +48,12 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
 
   const { data: communications = [], isLoading } = useQuery({
     queryKey: ['customer-communications', customerId],
-    queryFn: () => customerRepository.findCommunications(customerId),
+    queryFn: () => customerRelationsRepo.findCommunications(customerId),
     staleTime: 30000,
   });
 
   const addMutation = useMutation({
-    mutationFn: () => customerRepository.createCommunication({
+    mutationFn: () => customerRelationsRepo.createCommunication({
       customer_id: customerId,
       type: commType,
       subject: subject.trim() || null,

@@ -1,0 +1,10 @@
+export { default as CustomerFormDialog } from './CustomerFormDialog';
+export { CustomerQuickAddDialog } from './CustomerQuickAddDialog';
+export { default as CustomerAddressDialog } from './CustomerAddressDialog';
+export { CustomerDialogManager } from './CustomerDialogManager';
+export type { DialogManagerHandle } from './CustomerDialogManager';
+export { default as CustomerImportDialog } from './CustomerImportDialog';
+export { default as CustomerMergeDialog } from './CustomerMergeDialog';
+export { CustomerExportDialog } from './CustomerExportDialog';
+export type { ExportOptions } from './CustomerExportDialog';
+export { DuplicateDetectionDialog } from './DuplicateDetectionDialog';

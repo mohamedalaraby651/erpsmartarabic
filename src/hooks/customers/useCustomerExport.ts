@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
 import { verifyPermissionOnServer } from '@/lib/api/secureOperations';
 import type { Customer } from '@/lib/customerConstants';
-import type { ExportOptions } from '@/components/customers/CustomerExportDialog';
+import type { ExportOptions } from '@/components/customers/dialogs/CustomerExportDialog';
+import { customerRepository } from '@/lib/repositories/customerRepository';
+import { customerSearchRepo } from '@/lib/repositories/customerSearchRepo';
 
 interface UseCustomerExportParams {
   filters: {
@@ -61,7 +63,7 @@ export function useCustomerExport({ filters, sortConfig }: UseCustomerExportPara
         );
         data = result.data || [];
       } else {
-        const result = await customerRepository.exportAll((loaded) => {
+        const result = await customerSearchRepo.exportAll((loaded) => {
           sonnerToast.loading(`جاري تحميل ${loaded.toLocaleString()} عميل...`, { id: toastId });
         });
         data = (result.data || []) as Customer[];

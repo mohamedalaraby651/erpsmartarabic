@@ -5,6 +5,7 @@
 import { useCallback, useRef } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
 
@@ -80,12 +81,12 @@ export function useCustomerList(options: UseCustomerListOptions) {
     prefetchTimerRef.current = setTimeout(() => {
       queryClient.prefetchQuery({
         queryKey: ['customer', customerId],
-        queryFn: () => customerRepository.prefetchCustomer(customerId),
+        queryFn: () => customerSearchRepo.prefetchCustomer(customerId),
         staleTime: 60000,
       });
       queryClient.prefetchQuery({
         queryKey: ['customer-addresses', customerId],
-        queryFn: () => customerRepository.prefetchAddresses(customerId),
+        queryFn: () => customerSearchRepo.prefetchAddresses(customerId),
         staleTime: 60000,
       });
     }, 200);

@@ -5,9 +5,9 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X, Phone, MapPin } from "lucide-react";
-import CustomerAvatar from "./CustomerAvatar";
+import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 
 interface CustomerSearchPreviewProps {
   value: string;
@@ -25,7 +25,7 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
 
   const { data: results = [] } = useQuery({
     queryKey: ['customer-search-preview', debouncedSearch],
-    queryFn: () => customerRepository.searchPreview(debouncedSearch),
+    queryFn: () => customerSearchRepo.searchPreview(debouncedSearch),
     enabled: !!debouncedSearch && debouncedSearch.length >= 2,
     staleTime: 30000,
   });

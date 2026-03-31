@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
@@ -73,7 +74,7 @@ export function useCustomerDetail(id: string | undefined) {
   const invoicesNeeded = isMobile || ['invoices', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
-    queryFn: () => customerRepository.findInvoices(id!),
+    queryFn: () => customerRelationsRepo.findInvoices(id!),
     enabled: !!id && invoicesNeeded,
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -82,7 +83,7 @@ export function useCustomerDetail(id: string | undefined) {
   // Paginated invoices for display in tabs
   const { data: paginatedInvoices } = useQuery({
     queryKey: ['customer-invoices-paginated', id, invoicePage, invoicePageSize],
-    queryFn: () => customerRepository.findInvoicesPaginated(id!, invoicePage, invoicePageSize),
+    queryFn: () => customerRelationsRepo.findInvoicesPaginated(id!, invoicePage, invoicePageSize),
     enabled: !!id && (isMobile || activeTab === 'invoices'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -92,7 +93,7 @@ export function useCustomerDetail(id: string | undefined) {
   const paymentsNeeded = isMobile || ['payments', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
-    queryFn: () => customerRepository.findPayments(id!),
+    queryFn: () => customerRelationsRepo.findPayments(id!),
     enabled: !!id && paymentsNeeded,
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -101,7 +102,7 @@ export function useCustomerDetail(id: string | undefined) {
   // Paginated payments for display in tabs
   const { data: paginatedPayments } = useQuery({
     queryKey: ['customer-payments-paginated', id, paymentPage, paymentPageSize],
-    queryFn: () => customerRepository.findPaymentsPaginated(id!, paymentPage, paymentPageSize),
+    queryFn: () => customerRelationsRepo.findPaymentsPaginated(id!, paymentPage, paymentPageSize),
     enabled: !!id && (isMobile || activeTab === 'payments'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
@@ -110,28 +111,28 @@ export function useCustomerDetail(id: string | undefined) {
   // Credit notes for statement are now fetched by the StatementOfAccount RPC
   const { data: creditNotes = [] } = useQuery({
     queryKey: ['customer-credit-notes', id],
-    queryFn: () => customerRepository.findCreditNotes(id!),
+    queryFn: () => customerRelationsRepo.findCreditNotes(id!),
     enabled: !!id && (isMobile || ['credit-notes'].includes(activeTab)),
     staleTime: 60000,
   });
 
   const { data: salesOrders = [] } = useQuery({
     queryKey: ['customer-sales-orders', id],
-    queryFn: () => customerRepository.findSalesOrders(id!),
+    queryFn: () => customerRelationsRepo.findSalesOrders(id!),
     enabled: !!id && (isMobile || activeTab === 'orders'),
     staleTime: 60000,
   });
 
   const { data: quotations = [] } = useQuery({
     queryKey: ['customer-quotations', id],
-    queryFn: () => customerRepository.findQuotations(id!),
+    queryFn: () => customerRelationsRepo.findQuotations(id!),
     enabled: !!id && (isMobile || activeTab === 'quotations'),
     staleTime: 60000,
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ['customer-activities', id],
-    queryFn: () => customerRepository.findActivities(id!),
+    queryFn: () => customerRelationsRepo.findActivities(id!),
     enabled: !!id && (isMobile || activeTab === 'activity'),
   });
 

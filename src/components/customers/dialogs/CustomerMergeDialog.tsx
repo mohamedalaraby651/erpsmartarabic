@@ -8,9 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Search, Merge, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { logErrorSafely } from "@/lib/errorHandler";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -29,7 +29,7 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['merge-customers-search', searchQuery],
-    queryFn: () => customerRepository.searchForMerge(searchQuery),
+    queryFn: () => customerSearchRepo.searchForMerge(searchQuery),
     enabled: searchQuery.length >= 2,
   });
 
@@ -39,7 +39,7 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
   const mergeMutation = useMutation({
     mutationFn: async () => {
       if (!primaryId || !duplicateId) throw new Error('Missing IDs');
-      return customerRepository.mergeCustomers(primaryId, duplicateId);
+      return customerSearchRepo.mergeCustomers(primaryId, duplicateId);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });

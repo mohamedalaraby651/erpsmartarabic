@@ -27,10 +27,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Path } from "react-hook-form";
 
 // Sub-components
-import CustomerFormBasicInfo from "./form/CustomerFormBasicInfo";
-import CustomerFormContact from "./form/CustomerFormContact";
-import CustomerFormLocation from "./form/CustomerFormLocation";
-import CustomerFormFinancial from "./form/CustomerFormFinancial";
+import CustomerFormBasicInfo from "@/components/customers/form/CustomerFormBasicInfo";
+import CustomerFormContact from "@/components/customers/form/CustomerFormContact";
+import CustomerFormLocation from "@/components/customers/form/CustomerFormLocation";
+import CustomerFormFinancial from "@/components/customers/form/CustomerFormFinancial";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerCategory = Database['public']['Tables']['customer_categories']['Row'];

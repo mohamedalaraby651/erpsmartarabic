@@ -5,6 +5,7 @@
  */
 
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -31,7 +32,7 @@ export async function canModifyCustomer(): Promise<boolean> {
 
 /** Check if customer has open invoices preventing deletion */
 export async function validateBeforeDelete(customerId: string): Promise<{ canDelete: boolean; reason?: string }> {
-  const count = await customerRepository.countOpenInvoices(customerId);
+  const count = await customerSearchRepo.countOpenInvoices(customerId);
 
   if (count > 0) {
     return {
@@ -77,7 +78,7 @@ export async function exportCustomersToExcel(): Promise<void> {
     const { toast: sonnerToast } = await import('sonner');
     sonnerToast.loading('جاري تحميل بيانات جميع العملاء...', { id: toastId });
 
-    const result = await customerRepository.exportAll((loaded) => {
+    const result = await customerSearchRepo.exportAll((loaded) => {
       sonnerToast.loading(`جاري تحميل ${loaded.toLocaleString()} عميل...`, { id: toastId });
     });
     const data = result.data;

@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, CreditCard, Phone, MoreHorizontal } from "lucide-react";
-import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
 import type { Customer } from "@/lib/customerConstants";
 

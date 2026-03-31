@@ -10,15 +10,15 @@ import {
   CreditCard, Bell, MessageSquare, BarChart3, Globe, Clock, Printer,
   Wallet, StickyNote,
 } from "lucide-react";
-import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
-import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
+import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
+import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { useCustomerDetail, useCustomerNavigation } from "@/hooks/customers";
-import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
-import { CustomerSmartAlerts } from "@/components/customers/CustomerSmartAlerts";
-import { CustomerPinnedNote } from "@/components/customers/CustomerPinnedNote";
-import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
-import { CustomerHealthBadge } from "@/components/customers/CustomerHealthBadge";
+import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
+import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
+import { CustomerPinnedNote } from "@/components/customers/details/CustomerPinnedNote";
+import { CustomerKPICards } from "@/components/customers/details/CustomerKPICards";
+import { CustomerHealthBadge } from "@/components/customers/details/CustomerHealthBadge";
 import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
 import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStrip";
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
@@ -42,17 +42,17 @@ const CustomerTabQuotations = lazy(() => import("@/components/customers/tabs/Cus
 const CustomerTabOrders = lazy(() => import("@/components/customers/tabs/CustomerTabOrders").then(m => ({ default: m.CustomerTabOrders })));
 const CustomerTabActivity = lazy(() => import("@/components/customers/tabs/CustomerTabActivity").then(m => ({ default: m.CustomerTabActivity })));
 const CustomerTabAttachments = lazy(() => import("@/components/customers/tabs/CustomerTabAttachments").then(m => ({ default: m.CustomerTabAttachments })));
-const StatementOfAccount = lazy(() => import("@/components/customers/StatementOfAccount"));
-const CustomerFinancialSummary = lazy(() => import("@/components/customers/CustomerFinancialSummary"));
-const CustomerPurchaseChart = lazy(() => import("@/components/customers/CustomerPurchaseChart"));
+const StatementOfAccount = lazy(() => import("@/components/customers/details/StatementOfAccount"));
+const CustomerFinancialSummary = lazy(() => import("@/components/customers/details/CustomerFinancialSummary"));
+const CustomerPurchaseChart = lazy(() => import("@/components/customers/details/CustomerPurchaseChart"));
 const AgingDonutChart = lazy(() => import("@/components/customers/charts/AgingDonutChart").then(m => ({ default: m.AgingDonutChart })));
 const CashFlowLineChart = lazy(() => import("@/components/customers/charts/CashFlowLineChart").then(m => ({ default: m.CashFlowLineChart })));
 const TopProductsChart = lazy(() => import("@/components/customers/charts/TopProductsChart").then(m => ({ default: m.TopProductsChart })));
-const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAgingReport"));
-const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
-const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
+const CustomerAgingReport = lazy(() => import("@/components/customers/details/CustomerAgingReport"));
+const CommunicationLogTab = lazy(() => import("@/components/customers/details/CommunicationLogTab"));
+const CustomerReminderSection = lazy(() => import("@/components/customers/dialogs/CustomerReminderDialog"));
 const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/CustomerTabCreditNotes").then(m => ({ default: m.CustomerTabCreditNotes })));
-const CustomerSalesPipeline = lazy(() => import("@/components/customers/CustomerSalesPipeline").then(m => ({ default: m.CustomerSalesPipeline })));
+const CustomerSalesPipeline = lazy(() => import("@/components/customers/details/CustomerSalesPipeline").then(m => ({ default: m.CustomerSalesPipeline })));
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 

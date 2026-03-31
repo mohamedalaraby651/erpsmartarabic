@@ -4,7 +4,7 @@ import {
   Activity, Plus, Edit, Trash2, CreditCard, FileText, UserPlus,
   Settings, Eye, ArrowUpDown,
 } from "lucide-react";
-import { ActivityDiffViewer } from "@/components/customers/ActivityDiffViewer";
+import { ActivityDiffViewer } from "@/components/customers/details/ActivityDiffViewer";
 import type { Database } from "@/integrations/supabase/types";
 
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];

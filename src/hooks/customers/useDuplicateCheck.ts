@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export function useDuplicateCheck(name: string, phone: string, editingId?: string) {
@@ -8,7 +8,7 @@ export function useDuplicateCheck(name: string, phone: string, editingId?: strin
 
   const { data: duplicates } = useQuery({
     queryKey: ['duplicate-check', debouncedName, debouncedPhone, editingId],
-    queryFn: () => customerRepository.findDuplicates(
+    queryFn: () => customerSearchRepo.findDuplicates(
       debouncedName.length >= 3 ? debouncedName : undefined,
       debouncedPhone.length >= 6 ? debouncedPhone : undefined,
       editingId
