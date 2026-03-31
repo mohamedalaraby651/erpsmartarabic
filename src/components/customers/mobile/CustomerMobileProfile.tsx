@@ -56,7 +56,7 @@ interface CustomerMobileProfileProps {
 export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   customer, customerId, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
   onPrev, onNext, hasPrev, hasNext,
-  currentBalance = 0, balanceIsDebit = false, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
+  currentBalance = 0, balanceIsDebit = false, creditLimit, creditUsagePercent, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
   onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
 }: CustomerMobileProfileProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
