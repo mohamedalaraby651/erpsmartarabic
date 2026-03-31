@@ -164,7 +164,8 @@ const CustomersPage = () => {
   }, [isMobile, hasNextPage, isFetchingNextPage, handleLoadMore, allCustomers.length]);
 
   const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
-  const handleAdd = useCallback(() => { dialogRef.current?.openAdd(); }, []);
+  const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
+  const handleAddAdvanced = useCallback(() => { dialogRef.current?.openAdd(); }, []);
   const handleDeleteRequest = useCallback((id: string) => { dialogRef.current?.confirmDelete(id); }, []);
   const handleDeleteConfirm = useCallback((id: string) => {
     setDeletingId(id);
