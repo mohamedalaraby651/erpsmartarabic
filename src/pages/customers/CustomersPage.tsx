@@ -151,7 +151,7 @@ const CustomersPage = () => {
     setCurrentPage(1);
     setMobilePage(1);
     setMobilePages([]);
-  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
+  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction]);
 
   const bulk = useBulkSelection(list.customers);
 
