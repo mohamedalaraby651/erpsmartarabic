@@ -91,53 +91,28 @@ const CustomersPage = () => {
     else if (filterId === 'farms') filters.setTypeFilter('farm');
   }, [filters, resetAllQuickFilters]);
 
-  // Infinite scroll state
+  // Infinite scroll via extracted hook
   const pageSize = 20;
-  const [mobilePages, setMobilePages] = useState<Customer[][]>([]);
-  const [mobilePage, setMobilePage] = useState(1);
-  const [desktopPages, setDesktopPages] = useState<Customer[][]>([]);
-  const [desktopPage, setDesktopPage] = useState(1);
-  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
-
-  const currentPage = isMobile ? mobilePage : desktopPage;
 
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
-    currentPage, pageSize, sortConfig,
+    currentPage: 1, // placeholder, overridden by hook
+    pageSize, sortConfig,
   });
 
-  const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage, sortConfig });
-
-  const totalPages = Math.ceil(list.totalCount / pageSize);
-  const hasNextPage = currentPage < totalPages;
-
-  // Accumulate pages for infinite scroll
-  useEffect(() => {
-    if (list.customers.length > 0) {
-      if (isMobile) {
-        setMobilePages(prev => {
-          const updated = [...prev];
-          updated[mobilePage - 1] = list.customers;
-          return updated;
-        });
-      } else {
-        setDesktopPages(prev => {
-          const updated = [...prev];
-          updated[desktopPage - 1] = list.customers;
-          return updated;
-        });
-      }
-      setIsFetchingNextPage(false);
-    }
-  }, [list.customers, mobilePage, desktopPage, isMobile]);
-
-  const allCustomersRaw = useMemo(() => {
-    if (isMobile) return mobilePages.flat();
-    return desktopPages.flat();
-  }, [isMobile, mobilePages, desktopPages]);
+  const {
+    currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
+    handleLoadMore, desktopSentinelRef,
+  } = useInfiniteCustomers({
+    customers: list.customers,
+    totalCount: list.totalCount,
+    pageSize,
+    isMobile,
+    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
+  });
 
   // Filter by alert type when a badge is clicked
   const allCustomers = useMemo(() => {
@@ -147,36 +122,6 @@ const CustomersPage = () => {
     const ids = new Set(typeAlerts.map(a => a.customerId));
     return allCustomersRaw.filter(c => ids.has(c.id));
   }, [allCustomersRaw, alertFilterType, alertsByType]);
-
-  const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      setIsFetchingNextPage(true);
-      if (isMobile) setMobilePage(prev => prev + 1);
-      else setDesktopPage(prev => prev + 1);
-    }
-  }, [hasNextPage, isFetchingNextPage, isMobile]);
-
-  // Reset pages on filter/sort change
-  useEffect(() => {
-    setMobilePage(1);
-    setDesktopPage(1);
-    setMobilePages([]);
-    setDesktopPages([]);
-  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction]);
-
-  // Desktop infinite scroll observer
-  const desktopSentinelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (isMobile || !hasNextPage || isFetchingNextPage) return;
-    const el = desktopSentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) handleLoadMore(); },
-      { threshold: 0.1, rootMargin: '200px' },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isMobile, hasNextPage, isFetchingNextPage, handleLoadMore, allCustomers.length]);
 
   const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
   const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
