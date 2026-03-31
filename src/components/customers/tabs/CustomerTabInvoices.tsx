@@ -5,53 +5,51 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, ChevronLeft, ChevronRight, Wallet, AlertCircle, Search, CreditCard } from "lucide-react";
+import { FileText, Plus, Wallet, AlertCircle, Search, CreditCard } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
+import { ServerPagination } from "@/components/shared/ServerPagination";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 
-const PAGE_SIZE = 20;
-
 const statusConfig: Record<string, { label: string; className: string }> = {
-  paid: {
-    label: 'مدفوع',
-    className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-  },
-  partial: {
-    label: 'جزئي',
-    className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  },
-  pending: {
-    label: 'معلق',
-    className: 'bg-destructive/10 text-destructive',
-  },
-  unpaid: {
-    label: 'غير مدفوع',
-    className: 'bg-destructive/10 text-destructive',
-  },
-  overdue: {
-    label: 'متأخر',
-    className: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-  },
+  paid: { label: 'مدفوع', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  partial: { label: 'جزئي', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' },
+  pending: { label: 'معلق', className: 'bg-destructive/10 text-destructive' },
+  unpaid: { label: 'غير مدفوع', className: 'bg-destructive/10 text-destructive' },
+  overdue: { label: 'متأخر', className: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' },
 };
+
+interface CustomerTabInvoicesProps {
+  invoices: Invoice[];
+  customerId: string;
+  totalPaymentsFromLedger?: number;
+  onQuickPay?: (invoiceId: string) => void;
+  // Server pagination props (optional — uses client pagination as fallback)
+  paginatedData?: { data: Invoice[]; count: number };
+  currentPage?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+}
 
 export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   invoices,
   customerId,
   totalPaymentsFromLedger,
   onQuickPay,
-}: {
-  invoices: Invoice[];
-  customerId: string;
-  totalPaymentsFromLedger?: number;
-  onQuickPay?: (invoiceId: string) => void;
-}) {
+  paginatedData,
+  currentPage = 1,
+  pageSize = 20,
+  onPageChange,
+}: CustomerTabInvoicesProps) {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
+  const [clientPage, setClientPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  const useServerPagination = !!paginatedData && !!onPageChange;
+
+  // Client-side filtering (applied on full dataset for summary, on paginated data for display)
   const filtered = useMemo(() => {
     let result = invoices;
     if (statusFilter !== 'all') {
@@ -64,11 +62,22 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
     return result;
   }, [invoices, statusFilter, searchQuery]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // When using server pagination, display paginated data; otherwise client paginate
+  const hasClientFilters = statusFilter !== 'all' || searchQuery.trim() !== '';
+  const displayData = useMemo(() => {
+    if (useServerPagination && !hasClientFilters) {
+      return paginatedData.data;
+    }
+    // Client pagination fallback
+    return filtered.slice((clientPage - 1) * pageSize, clientPage * pageSize);
+  }, [useServerPagination, hasClientFilters, paginatedData, filtered, clientPage, pageSize]);
 
-  // Reset page on filter change
-  React.useEffect(() => { setPage(1); }, [statusFilter, searchQuery]);
+  const totalCount = useServerPagination && !hasClientFilters ? paginatedData.count : filtered.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const activePage = useServerPagination && !hasClientFilters ? currentPage : clientPage;
+  const handlePageChange = useServerPagination && !hasClientFilters ? onPageChange! : setClientPage;
+
+  React.useEffect(() => { setClientPage(1); }, [statusFilter, searchQuery]);
 
   const summary = useMemo(() => {
     const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
@@ -82,7 +91,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div>
           <CardTitle>الفواتير</CardTitle>
-          <CardDescription>سجل فواتير العميل ({invoices.length})</CardDescription>
+          <CardDescription>سجل فواتير العميل ({useServerPagination ? paginatedData.count : invoices.length})</CardDescription>
         </div>
         <Button size="sm" onClick={() => navigate('/invoices', { state: { prefillCustomerId: customerId } })}>
           <Plus className="h-4 w-4 ml-2" />فاتورة جديدة
@@ -90,7 +99,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
       </CardHeader>
 
       <CardContent>
-        {invoices.length === 0 ? (
+        {invoices.length === 0 && (!paginatedData || paginatedData.count === 0) ? (
           <div className="text-center py-8">
             <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
             <p className="text-muted-foreground mb-2">لا توجد فواتير لهذا العميل</p>
@@ -154,7 +163,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
 
             {/* Invoice List */}
             <div className="space-y-2">
-              {paged.map((invoice) => {
+              {displayData.map((invoice) => {
                 const paid = Number(invoice.paid_amount || 0);
                 const total = Number(invoice.total_amount);
                 const remaining = total - paid;
@@ -209,23 +218,21 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
               })}
             </div>
 
-            {filtered.length === 0 && invoices.length > 0 && (
+            {filtered.length === 0 && invoices.length > 0 && hasClientFilters && (
               <div className="text-center py-6 text-sm text-muted-foreground">لا توجد نتائج مطابقة للبحث</div>
             )}
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4">
-                <span className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</span>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <ServerPagination
+                currentPage={activePage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                hasNextPage={activePage < totalPages}
+                hasPrevPage={activePage > 1}
+              />
             )}
           </>
         )}

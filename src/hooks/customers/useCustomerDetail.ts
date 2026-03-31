@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
@@ -13,6 +13,10 @@ export function useCustomerDetail(id: string | undefined) {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('financial');
+  const [invoicePage, setInvoicePage] = useState(1);
+  const [paymentPage, setPaymentPage] = useState(1);
+  const invoicePageSize = 20;
+  const paymentPageSize = 20;
 
   // === CORE queries (always loaded) ===
   const { data: customer, isLoading } = useQuery({
@@ -37,11 +41,29 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
+  // Paginated invoices for display in tabs
+  const { data: paginatedInvoices } = useQuery({
+    queryKey: ['customer-invoices-paginated', id, invoicePage, invoicePageSize],
+    queryFn: () => customerRepository.findInvoicesPaginated(id!, invoicePage, invoicePageSize),
+    enabled: !!id && (isMobile || activeTab === 'invoices'),
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+
   const paymentsNeeded = isMobile || ['payments', 'financial', 'statement', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRepository.findPayments(id!),
     enabled: !!id && paymentsNeeded,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+
+  // Paginated payments for display in tabs
+  const { data: paginatedPayments } = useQuery({
+    queryKey: ['customer-payments-paginated', id, paymentPage, paymentPageSize],
+    queryFn: () => customerRepository.findPaymentsPaginated(id!, paymentPage, paymentPageSize),
+    enabled: !!id && (isMobile || activeTab === 'payments'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
   });
@@ -113,6 +135,9 @@ export function useCustomerDetail(id: string | undefined) {
   const creditUsagePercent = creditLimit > 0 ? Math.min((currentBalance / creditLimit) * 100, 100) : 0;
   const balanceIsDebit = currentBalance > 0;
 
+  const goToInvoicePage = useCallback((p: number) => setInvoicePage(p), []);
+  const goToPaymentPage = useCallback((p: number) => setPaymentPage(p), []);
+
   return {
     customer, isLoading, addresses, invoices, payments, creditNotes,
     salesOrders, quotations, activities,
@@ -121,5 +146,8 @@ export function useCustomerDetail(id: string | undefined) {
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
     lastPurchaseDate, dso, clv, totalOutstanding,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
+    // Paginated data for tabs
+    paginatedInvoices, invoicePage, invoicePageSize, goToInvoicePage,
+    paginatedPayments, paymentPage, paymentPageSize, goToPaymentPage,
   };
 }

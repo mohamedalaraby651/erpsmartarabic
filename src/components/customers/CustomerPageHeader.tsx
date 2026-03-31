@@ -1,16 +1,13 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical } from "lucide-react";
-import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerPageHeaderProps {
   isMobile: boolean;
   canEdit: boolean;
-  customers: Customer[];
   exportAllLoading: boolean;
   onAdd: () => void;
   onDuplicates: () => void;
@@ -20,7 +17,7 @@ interface CustomerPageHeaderProps {
 }
 
 export const CustomerPageHeader = memo(function CustomerPageHeader({
-  isMobile, canEdit, customers, exportAllLoading,
+  isMobile, canEdit, exportAllLoading,
   onAdd, onDuplicates, onMerge, onImport, onExportAll,
 }: CustomerPageHeaderProps) {
   if (isMobile) {
@@ -84,18 +81,9 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <ExportWithTemplateButton
-          section="customers" sectionLabel="العملاء" data={customers}
-          columns={[
-            { key: 'name', label: 'الاسم' }, { key: 'phone', label: 'الهاتف' },
-            { key: 'email', label: 'البريد الإلكتروني' }, { key: 'customer_type', label: 'النوع' },
-            { key: 'vip_level', label: 'مستوى VIP' }, { key: 'current_balance', label: 'الرصيد' },
-            { key: 'credit_limit', label: 'حد الائتمان' },
-          ]}
-        />
         <Button variant="outline" size="sm" disabled={exportAllLoading} onClick={onExportAll}>
           {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
-          تصدير الكل
+          تصدير Excel
         </Button>
         {canEdit && (
           <Button onClick={onAdd} className="flex-1 sm:flex-none">

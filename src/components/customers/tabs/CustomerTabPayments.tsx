@@ -2,16 +2,15 @@ import React, { memo, useState, lazy, Suspense, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Plus, ChevronLeft, ChevronRight, Wallet, Banknote } from "lucide-react";
+import { CreditCard, Plus, Wallet, Banknote } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
+import { ServerPagination } from "@/components/shared/ServerPagination";
 import type { Database } from "@/integrations/supabase/types";
 
 const PaymentFormDialog = lazy(() => import("@/components/payments/PaymentFormDialog"));
 
 type Payment = Database['public']['Tables']['payments']['Row'];
 type PaymentWithInvoice = Payment & { invoices: { invoice_number: string } | null };
-
-const PAGE_SIZE = 20;
 
 const methodLabels: Record<string, string> = {
   cash: 'نقدي',
@@ -27,18 +26,33 @@ const methodColors: Record<string, string> = {
   check: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
 };
 
+interface CustomerTabPaymentsProps {
+  payments: PaymentWithInvoice[];
+  customerId: string;
+  paginatedData?: { data: PaymentWithInvoice[]; count: number };
+  currentPage?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+}
+
 export const CustomerTabPayments = memo(function CustomerTabPayments({
   payments,
   customerId,
-}: {
-  payments: PaymentWithInvoice[];
-  customerId: string;
-}) {
-  const [page, setPage] = useState(1);
+  paginatedData,
+  currentPage = 1,
+  pageSize = 20,
+  onPageChange,
+}: CustomerTabPaymentsProps) {
+  const [clientPage, setClientPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const totalPages = Math.ceil(payments.length / PAGE_SIZE);
-  const paged = payments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const useServerPag = !!paginatedData && !!onPageChange;
+
+  const displayData = useServerPag ? paginatedData.data : payments.slice((clientPage - 1) * pageSize, clientPage * pageSize);
+  const totalCount = useServerPag ? paginatedData.count : payments.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const activePage = useServerPag ? currentPage : clientPage;
+  const handlePageChange = useServerPag ? onPageChange! : setClientPage;
 
   const totalAmount = useMemo(
     () => payments.reduce((sum, p) => sum + Number(p.amount), 0),
@@ -50,7 +64,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div>
           <CardTitle>المدفوعات</CardTitle>
-          <CardDescription>سجل مدفوعات العميل ({payments.length})</CardDescription>
+          <CardDescription>سجل مدفوعات العميل ({totalCount})</CardDescription>
         </div>
         <Button size="sm" onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 ml-2" />تسجيل دفعة
@@ -58,7 +72,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
       </CardHeader>
 
       <CardContent>
-        {payments.length === 0 ? (
+        {totalCount === 0 ? (
           <div className="text-center py-8">
             <CreditCard className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
             <p className="text-muted-foreground mb-2">لا توجد مدفوعات لهذا العميل</p>
@@ -80,13 +94,13 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
               <div className="flex items-center gap-1.5">
                 <Banknote className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">العدد:</span>
-                <span className="font-bold">{payments.length} دفعة</span>
+                <span className="font-bold">{totalCount} دفعة</span>
               </div>
             </div>
 
             {/* Payment List */}
             <div className="space-y-2">
-              {paged.map((payment) => (
+              {displayData.map((payment) => (
                 <div
                   key={payment.id}
                   className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -134,17 +148,15 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4">
-                <span className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</span>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <ServerPagination
+                currentPage={activePage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                hasNextPage={activePage < totalPages}
+                hasPrevPage={activePage > 1}
+              />
             )}
           </>
         )}

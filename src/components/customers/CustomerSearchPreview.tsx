@@ -27,7 +27,7 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
     queryKey: ['customer-search-preview', debouncedSearch],
     queryFn: () => customerRepository.searchPreview(debouncedSearch),
     enabled: !!debouncedSearch && debouncedSearch.length >= 2,
-    staleTime: 10000,
+    staleTime: 30000,
   });
 
   const showNoResults = isFocused && value.length >= 2 && debouncedSearch === value && results.length === 0;
@@ -61,6 +61,7 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
     const handleClickOutside = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setIsFocused(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -78,7 +79,6 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
-        onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         onKeyDown={handleKeyDown}
         className={cn(
           "pr-10 pl-10",
