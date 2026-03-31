@@ -1,98 +1,180 @@
 
 
-# خطة تحسين تبويبات المشتريات والمدفوعات — ملف العميل
-
-## المشاكل المكتشفة
-
-### تبويب المدفوعات (`CustomerTabPayments`)
-1. **بيانات شحيحة جداً** — يعرض فقط: رقم الدفعة، التاريخ، المبلغ. لا يعرض: طريقة الدفع، رقم المرجع، الفاتورة المرتبطة، الملاحظات
-2. **لا يوجد زر "تسجيل دفعة"** — تبويب الفواتير يحتوي على زر "فاتورة جديدة" لكن تبويب المدفوعات لا يحتوي على زر إضافة
-3. **لا يوجد ترقيم صفحات** — يعرض أول 50 فقط بدون pagination
-4. **لا يوجد ربط بالفاتورة** — لا يمكن النقر على الدفعة للانتقال لتفاصيلها أو فاتورتها
-5. **لا توجد ملخصات** — لا يعرض إجمالي المدفوعات أو عدد الدفعات
-
-### تبويب الفواتير (`CustomerTabInvoices`)
-6. **بيانات ناقصة** — يعرض: رقم الفاتورة، التاريخ، الحالة، المبلغ الإجمالي. لا يعرض: المبلغ المدفوع، المتبقي، تاريخ الاستحقاق، طريقة الدفع
-7. **لا يوجد ملخصات** — العدد موجود لكن لا يوجد إجمالي المبالغ أو المتبقي
-
-### إضافة من داخل صفحة العميل
-8. **المدفوعات** — لا يوجد زر إضافة. يجب استخدام `PaymentFormDialog` الموجود مع `prefillCustomerId`
-9. **الفواتير** — زر موجود لكنه يعمل بـ `navigate('/invoices')` بدلاً من فتح dialog مباشرة (مقبول كتصميم)
+# تقرير تحليل تضارب الأرقام المالية — وحدة العملاء
 
 ---
 
-## خطة التنفيذ
+## 1. السبب الجذري لتضارب الأرقام
 
-### 1. إعادة بناء `CustomerTabPayments.tsx`
-- إضافة زر **"تسجيل دفعة جديدة"** في Header مع `PaymentFormDialog` + `prefillCustomerId`
-- عرض بيانات كاملة لكل دفعة:
-  - رقم الدفعة (مع EntityLink إن وجد)
-  - التاريخ
-  - المبلغ
-  - **طريقة الدفع** (badge ملون: نقدي/تحويل/آجل)
-  - **رقم المرجع** (إن وجد)
-  - **رقم الفاتورة المرتبطة** (EntityLink للفاتورة)
-  - **الملاحظات** (tooltip أو سطر ثانوي)
-- إضافة **شريط ملخص** أعلى القائمة: إجمالي المدفوعات، عدد الدفعات
-- إضافة **ترقيم صفحات** (20 لكل صفحة) مثل تبويب الفواتير
-- Empty state مع زر "تسجيل أول دفعة"
+النظام يحسب الأرقام المالية من **3 مصادر مختلفة غير متزامنة**:
 
-### 2. تحسين `CustomerTabInvoices.tsx`
-- إضافة **المبلغ المدفوع والمتبقي** لكل فاتورة
-- إضافة **تاريخ الاستحقاق** (due_date)
-- إضافة **شريط ملخص**: إجمالي الفواتير، إجمالي المدفوع، إجمالي المتبقي
-- تحسين Badge الحالة بألوان أوضح (أخضر=مدفوع، أصفر=جزئي، أحمر=معلق)
+```text
+┌─────────────────────────────────────────────────────────┐
+│              3 مصادر = 3 أرقام مختلفة                    │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  1. customer.current_balance (عمود في DB)               │
+│     ← يُنقص عند الدفع (process-payment edge fn)        │
+│     ← لا يُزاد عند إنشاء فاتورة! ❌                    │
+│                                                         │
+│  2. calculateCustomerHealth() (حساب frontend)           │
+│     ← SUM(invoices.total_amount) = إجمالي المشتريات    │
+│     ← SUM(payments.amount) = إجمالي المدفوعات          │
+│     ← لا علاقة له بـ current_balance                    │
+│                                                         │
+│  3. CustomerTabInvoices summary (حساب frontend آخر)     │
+│     ← SUM(invoice.paid_amount) = المدفوع                │
+│     ← outstanding = total - paid_amount                 │
+│     ← يختلف عن #2 لأنه يستخدم paid_amount              │
+│       بدلاً من جدول payments                             │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
 
-### 3. تحديث `CustomerDetailsPage.tsx`
-- تمرير `customerId` لـ `CustomerTabPayments` لتمكين زر الإضافة
-- تحديث الاستدعاء في كل من Desktop tabs و Mobile sections
+### المشاكل الحرجة المكتشفة:
+
+**مشكلة 1 — `current_balance` لا يتأثر بالفواتير الجديدة**
+- عند إنشاء فاتورة: لا يوجد trigger أو edge function يزيد `current_balance`
+- عند الدفع: `process-payment` ينقص `current_balance`
+- **النتيجة**: `current_balance` يصبح سالباً بعد أول دفعة لأنه بدأ من 0
+
+**مشكلة 2 — `totalPurchases` في StatsGrid ≠ `totalInvoiced` في Tab**
+- `StatsGrid` يستخدم `calculateCustomerHealth()` → `SUM(invoices.total_amount)`
+- `TabInvoices` summary يستخدم نفس الحساب (متطابقان حالياً)
+- لكن `totalPayments` في StatsGrid = `SUM(payments.amount)` من جدول payments
+- بينما `totalPaid` في TabInvoices = `SUM(invoice.paid_amount)` من عمود الفاتورة
+- **إذا وُجدت دفعة بدون فاتورة مرتبطة**: الرقمان يختلفان
+
+**مشكلة 3 — Race condition في `process-payment`**
+```typescript
+// سطر 199 في process-payment/index.ts
+const newBalance = (customer.current_balance || 0) - paymentData.amount;
+```
+- يقرأ القيمة القديمة ثم يكتب الجديدة — إذا تمت دفعتان بالتوالي، واحدة ستُفقد
+- الحل: استخدام `current_balance - amount` في SQL مباشرة
+
+**مشكلة 4 — `reverse_payment_on_delete` عكسي أيضاً**
+```sql
+SET current_balance = current_balance - OLD.amount
+```
+- هذا **ينقص** الرصيد عند حذف الدفعة! المفروض **يزيده** (لأن الدفعة كانت تنقصه)
+- **خطأ في الاتجاه**: يجب أن يكون `current_balance + OLD.amount`
 
 ---
 
-## الملفات المتأثرة
+## 2. خطة الإصلاح الشاملة
 
-```text
-تعديل (3 ملفات):
-  src/components/customers/tabs/CustomerTabPayments.tsx  — إعادة بناء كاملة
-  src/components/customers/tabs/CustomerTabInvoices.tsx   — إضافة بيانات + ملخصات
-  src/pages/customers/CustomerDetailsPage.tsx             — تمرير customerId للمدفوعات
+### الإصلاح 1 — توحيد مصدر الحقيقة لـ `current_balance` (Migration)
+
+إنشاء trigger واحد على جدول `invoices` يزيد `current_balance` عند الإنشاء:
+
+```sql
+-- عند إنشاء/تعديل فاتورة → يُحدّث current_balance
+CREATE OR REPLACE FUNCTION update_customer_balance_on_invoice()
+RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE customers 
+    SET current_balance = current_balance + NEW.total_amount
+    WHERE id = NEW.customer_id;
+  ELSIF TG_OP = 'UPDATE' AND OLD.total_amount != NEW.total_amount THEN
+    UPDATE customers 
+    SET current_balance = current_balance + (NEW.total_amount - OLD.total_amount)
+    WHERE id = NEW.customer_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE customers 
+    SET current_balance = current_balance - OLD.total_amount
+    WHERE id = OLD.customer_id;
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
-## التصميم المرئي
-
-### تبويب المدفوعات (بعد التحسين)
-```text
-┌─────────────────────────────────────────────┐
-│ المدفوعات (15)              [+ تسجيل دفعة] │
-│ سجل مدفوعات العميل                          │
-├─────────────────────────────────────────────┤
-│ إجمالي: 125,000 ج.م  |  عدد: 15 دفعة      │
-├─────────────────────────────────────────────┤
-│ PAY-202603-001  |  15/3/2026  |  نقدي       │
-│ فاتورة: INV-001  |  مرجع: CHK-123          │
-│                              8,500 ج.م      │
-├─────────────────────────────────────────────┤
-│ PAY-202603-002  |  12/3/2026  |  تحويل بنكي │
-│ فاتورة: INV-003                              │
-│                             12,000 ج.م      │
-├─────────────────────────────────────────────┤
-│          صفحة 1 من 1     [→] [←]           │
-└─────────────────────────────────────────────┘
+إصلاح trigger حذف الدفعة (الاتجاه معكوس):
+```sql
+-- إصلاح: عند حذف دفعة يجب إعادة الرصيد (زيادة وليس نقصان)
+SET current_balance = current_balance + OLD.amount  -- كان: - OLD.amount ❌
 ```
 
-### تبويب الفواتير (بعد التحسين)
-```text
-┌─────────────────────────────────────────────┐
-│ الفواتير (25)              [+ فاتورة جديدة]│
-├─────────────────────────────────────────────┤
-│ إجمالي: 250,000  مدفوع: 125,000            │
-│ متبقي: 125,000 ج.م                          │
-├─────────────────────────────────────────────┤
-│ INV-001  |  15/3  |  استحقاق: 15/4          │
-│ [مدفوع]  25,000/25,000  |  متبقي: 0        │
-├─────────────────────────────────────────────┤
-│ INV-003  |  10/3  |  استحقاق: 10/4          │
-│ [جزئي]   8,000/20,000   |  متبقي: 12,000   │
-└─────────────────────────────────────────────┘
+إصلاح race condition في `process-payment`:
+```sql
+-- بدلاً من القراءة ثم الكتابة
+UPDATE customers 
+SET current_balance = current_balance - amount
+WHERE id = customer_id;
 ```
+
+تشغيل إعادة حساب لمرة واحدة لتصحيح الأرصدة الحالية:
+```sql
+UPDATE customers SET current_balance = (
+  COALESCE((SELECT SUM(total_amount) FROM invoices WHERE customer_id = customers.id), 0)
+  - COALESCE((SELECT SUM(amount) FROM payments WHERE customer_id = customers.id), 0)
+);
+```
+
+### الإصلاح 2 — توحيد حسابات Frontend
+
+تعديل `calculateCustomerHealth()` ليحسب "المتبقي" كرقم واحد متسق:
+
+```typescript
+// إضافة totalOutstanding
+const totalOutstanding = totalPurchases - totalPayments;
+```
+
+تعديل `CustomerTabInvoices` summary ليستخدم **نفس المنطق** أو يوضح الفرق:
+- حالياً: `outstanding = SUM(invoice.total_amount) - SUM(invoice.paid_amount)`
+- المشكلة: دفعات بدون فاتورة مرتبطة لا تظهر هنا
+- الحل: إضافة تنبيه "يوجد X دفعة غير مرتبطة بفواتير" عند وجود فرق
+
+### الإصلاح 3 — إضافة "المستحق" إلى StatsGrid
+
+حالياً StatsGrid يعرض: الرصيد، المشتريات، نسبة السداد، عدد الفواتير، المتوسط، DSO، CLV، آخر شراء.
+
+**المفقود**: لا يوجد رقم واحد واضح يقول "المستحق على العميل = المشتريات - المدفوعات".
+
+الحل: استبدال "قيمة العميل CLV" (التي تساوي `totalPurchases` — مكررة!) بـ **"المستحق"**:
+```text
+المستحق = totalPurchases - totalPayments
+```
+
+---
+
+## 3. الملفات المتأثرة
+
+```text
+Migration SQL جديد:
+  - trigger لتحديث current_balance عند إنشاء/تعديل/حذف فاتورة
+  - إصلاح reverse_payment_on_delete (+ بدلاً من -)
+  - إعادة حساب أرصدة العملاء الحالية (one-time fix)
+
+تعديل Edge Function:
+  supabase/functions/process-payment/index.ts
+    — استخدام SQL increment بدلاً من read-then-write
+
+تعديل Frontend (3 ملفات):
+  src/lib/services/customerService.ts
+    — إضافة totalOutstanding إلى CustomerHealthMetrics
+  src/hooks/customers/useCustomerDetail.ts
+    — تمرير totalOutstanding
+  src/components/customers/CustomerStatsGrid.tsx
+    — استبدال CLV بـ "المستحق" أو إضافته
+  src/components/customers/tabs/CustomerTabInvoices.tsx
+    — إضافة تنبيه "دفعات غير مرتبطة" عند وجود فرق
+```
+
+---
+
+## 4. ملخص التضارب والإصلاح
+
+| الرقم | المصدر الحالي | المشكلة | الإصلاح |
+|---|---|---|---|
+| الرصيد الحالي | `customer.current_balance` | لا يُزاد عند الفواتير | trigger على invoices |
+| إجمالي المشتريات | `SUM(invoices.total_amount)` | صحيح ✅ | — |
+| إجمالي المدفوعات (StatsGrid) | `SUM(payments.amount)` | صحيح ✅ | — |
+| المدفوع (Tab Invoices) | `SUM(invoice.paid_amount)` | يختلف عن payments table | توضيح + تنبيه |
+| المتبقي (Tab Invoices) | `total - paid_amount` | لا يشمل دفعات بدون فاتورة | تنبيه |
+| المستحق | **غير موجود!** | لا يُعرض كرقم مستقل | إضافة للـ StatsGrid |
+| حذف دفعة | `current_balance - amount` | اتجاه خاطئ! | `+ amount` |
+| Race condition | read-then-write | فقدان بيانات | SQL increment |
 
