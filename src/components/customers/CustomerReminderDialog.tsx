@@ -37,6 +37,8 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       reminder_date: reminderDate,
       note: reminderNote.trim(),
       created_by: user?.id || '',
+      recurrence: recurrence !== 'none' ? recurrence : null,
+      linked_invoice_id: linkedInvoiceId || null,
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-reminders', customerId] });
