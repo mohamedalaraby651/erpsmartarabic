@@ -1,11 +1,10 @@
-import React, { memo, useRef, useEffect, useState } from "react";
-import { LayoutGrid, LayoutList, Loader2, ArrowUpDown } from "lucide-react";
+import React, { memo, useRef, useEffect } from "react";
+import { Loader2, ArrowUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { CustomerListSkeleton } from "@/components/customers/CustomerListSkeleton";
-import { cn } from "@/lib/utils";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
@@ -37,7 +36,6 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 }: CustomerMobileViewProps) {
   const observerRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll observer
   useEffect(() => {
     if (!hasNextPage || !onLoadMore || isFetchingNextPage) return;
     const el = observerRef.current;

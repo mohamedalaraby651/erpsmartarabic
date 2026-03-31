@@ -26,7 +26,7 @@ import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { CustomerQuickAddDialog } from "@/components/customers/CustomerQuickAddDialog";
 import { CustomerExportDialog, type ExportOptions } from "@/components/customers/CustomerExportDialog";
 import { CustomerSavedViews } from "@/components/customers/CustomerSavedViews";
-import { CustomerColumnSettings } from "@/components/customers/CustomerColumnSettings";
+import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 
 const CustomersPage = () => {
@@ -39,9 +39,11 @@ const CustomersPage = () => {
 
   const filters = useCustomerFilters();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [exportAllLoading, setExportAllLoading] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+
+  // Column visibility
+  const { visibleColumns, setVisibleColumns } = useVisibleColumns();
 
   useEffect(() => {
     const action = filters.searchParams.get('action');
@@ -150,10 +152,10 @@ const CustomersPage = () => {
   }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction]);
 
   // Desktop infinite scroll observer
-  const observerRef = useRef<HTMLDivElement>(null);
+  const desktopSentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isMobile || !hasNextPage || isFetchingNextPage) return;
-    const el = observerRef.current;
+    const el = desktopSentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) handleLoadMore(); },
@@ -176,29 +178,121 @@ const CustomersPage = () => {
   const handleNewPayment = useCallback((customerId: string) => { navigate('/payments', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleRefresh = async () => { await list.refetch(); };
 
-  const handleExportAll = useCallback(async () => {
+  // Advanced export handler
+  const handleAdvancedExport = useCallback(async (options: ExportOptions) => {
     const hasPermission = await verifyPermissionOnServer('customers', 'view');
     if (!hasPermission) {
       const { toast: sonnerToast } = await import('sonner');
       sonnerToast.error('غير مصرح لك بتصدير بيانات العملاء');
       return;
     }
-    setExportAllLoading(true);
+
+    const { toast: sonnerToast } = await import('sonner');
+    const toastId = 'export-advanced';
+    sonnerToast.loading('جاري تحضير التصدير...', { id: toastId });
+
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.functions.invoke('export-customers');
-      if (!error && data?.url) {
-        window.open(data.url, '_blank');
-        const { toast: sonnerToast } = await import('sonner');
-        sonnerToast.success(`تم تصدير ${data.rowCount} عميل بنجاح`);
+      const { customerRepository } = await import('@/lib/repositories/customerRepository');
+
+      // Fetch data based on scope
+      let data: Customer[];
+      if (options.scope === 'filtered' && (filters.debouncedSearch || filters.typeFilter !== 'all' || filters.vipFilter !== 'all' || filters.governorateFilter !== 'all' || filters.statusFilter !== 'all')) {
+        const result = await customerRepository.findAll(
+          {
+            search: filters.debouncedSearch,
+            type: filters.typeFilter,
+            vip: filters.vipFilter,
+            governorate: filters.governorateFilter,
+            status: filters.statusFilter,
+            noCommDays: filters.noCommDays,
+            inactiveDays: filters.inactiveDays,
+          },
+          { key: sortConfig.key || 'created_at', direction: sortConfig.direction },
+          { page: 1, pageSize: 5000 }
+        );
+        data = result.data || [];
       } else {
-        await exportCustomersToExcel();
+        const result = await customerRepository.exportAll((loaded) => {
+          sonnerToast.loading(`جاري تحميل ${loaded.toLocaleString()} عميل...`, { id: toastId });
+        });
+        data = (result.data || []) as Customer[];
       }
+
+      if (!data.length) {
+        sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });
+        return;
+      }
+
+      // Column header map
+      const headerMap: Record<string, string> = {
+        name: 'الاسم', customer_type: 'النوع', vip_level: 'مستوى VIP',
+        phone: 'الهاتف', phone2: 'هاتف 2', email: 'البريد',
+        governorate: 'المحافظة', city: 'المدينة',
+        current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
+        is_active: 'الحالة', total_purchases_cached: 'إجمالي المشتريات',
+        last_activity_at: 'آخر نشاط', created_at: 'تاريخ الإضافة',
+        tax_number: 'الرقم الضريبي', notes: 'ملاحظات',
+      };
+
+      // Filter to selected columns only
+      const selectedCols = options.columns.filter(c => headerMap[c]);
+      const exportData = data.map(row => {
+        const mapped: Record<string, unknown> = {};
+        selectedCols.forEach(key => {
+          mapped[headerMap[key]] = (row as Record<string, unknown>)[key];
+        });
+        return mapped;
+      });
+
+      if (options.format === 'csv') {
+        // CSV export
+        const headers = selectedCols.map(c => headerMap[c]);
+        const csvRows = [headers.join(',')];
+        exportData.forEach(row => {
+          csvRows.push(headers.map(h => {
+            const val = row[h];
+            const str = val == null ? '' : String(val);
+            return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+          }).join(','));
+        });
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `customers_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (options.format === 'pdf') {
+        // PDF export
+        const { default: jsPDF } = await import('jspdf');
+        const { default: autoTable } = await import('jspdf-autotable');
+        const doc = new jsPDF({ orientation: 'landscape', putOnlyUsedFonts: true });
+        const headers = selectedCols.map(c => headerMap[c]);
+        const body = exportData.map(row => headers.map(h => String(row[h] ?? '')));
+        autoTable(doc, {
+          head: [headers],
+          body,
+          styles: { font: 'helvetica', fontSize: 8, halign: 'right' },
+          headStyles: { fillColor: [59, 130, 246] },
+        });
+        doc.save(`customers_${new Date().toISOString().slice(0, 10)}.pdf`);
+      } else {
+        // Excel export (default)
+        const XLSX = await import('xlsx');
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const headers = selectedCols.map(c => headerMap[c]);
+        ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length, 15) }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+        XLSX.writeFile(wb, `customers_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      }
+
+      sonnerToast.success(`تم تصدير ${data.length} عميل بنجاح`, { id: toastId });
     } catch {
-      await exportCustomersToExcel();
+      sonnerToast.error('حدث خطأ أثناء التصدير', { id: toastId });
     }
-    setExportAllLoading(false);
-  }, []);
+  }, [filters, sortConfig]);
 
   const filteredCount = list.totalCount;
   const totalStatsCount = list.stats.total;
@@ -208,7 +302,7 @@ const CustomersPage = () => {
     <div className="space-y-4 md:space-y-5">
       <CustomerPageHeader
         isMobile={isMobile} canEdit={canEdit}
-        exportAllLoading={exportAllLoading} onAdd={handleAdd}
+        exportAllLoading={false} onAdd={handleAdd}
         onDuplicates={() => dialogRef.current?.openDuplicates()}
         onMerge={() => dialogRef.current?.openMerge()}
         onImport={() => dialogRef.current?.openImport()}
@@ -298,7 +392,7 @@ const CustomersPage = () => {
                   setQuickFilter(null);
                 }}
               />
-              <CustomerColumnSettings />
+              <CustomerColumnSettings onChange={setVisibleColumns} />
               <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
                 <SelectTrigger className="w-40 h-9 text-xs">
                   <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
@@ -329,6 +423,7 @@ const CustomersPage = () => {
                 <CustomerListRow
                   key={customer.id}
                   customer={customer}
+                  visibleColumns={visibleColumns}
                   onNavigate={(id) => navigate(`/customers/${id}`)}
                   onEdit={canEdit ? handleEdit : undefined}
                   onNewInvoice={handleNewInvoice}
@@ -340,7 +435,7 @@ const CustomersPage = () => {
               ))}
 
               {/* Infinite scroll sentinel */}
-              <div ref={observerRef} className="h-10 flex items-center justify-center">
+              <div ref={desktopSentinelRef} className="h-10 flex items-center justify-center">
                 {isFetchingNextPage && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
               </div>
 
@@ -379,9 +474,7 @@ const CustomersPage = () => {
       <CustomerExportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
-        onExport={async (options) => {
-          await handleExportAll();
-        }}
+        onExport={handleAdvancedExport}
         totalCount={list.stats.total}
         filteredCount={list.totalCount}
       />
