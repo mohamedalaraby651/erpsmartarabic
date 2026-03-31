@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, ArrowUpDown } from "lucide-react";
+import { AlertTriangle, ArrowUpDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useCustomerFilters } from "@/hooks/customers";
@@ -23,8 +23,11 @@ import { CustomerDialogManager, type DialogManagerHandle } from "@/components/cu
 import { CustomerPageHeader } from "@/components/customers/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/CustomerFilterDrawer";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
+import { CustomerQuickAddDialog } from "@/components/customers/CustomerQuickAddDialog";
+import { CustomerExportDialog, type ExportOptions } from "@/components/customers/CustomerExportDialog";
+import { CustomerSavedViews } from "@/components/customers/CustomerSavedViews";
+import { CustomerColumnSettings } from "@/components/customers/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
-import { Loader2 } from "lucide-react";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
