@@ -75,5 +75,4 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
       <ScrollBar orientation="horizontal" className="invisible" />
     </ScrollArea>
   );
-  );
 });
