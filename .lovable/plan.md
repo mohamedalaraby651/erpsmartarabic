@@ -1,136 +1,206 @@
 
 
-# خطة التحسين الشاملة — صفحة تفاصيل العميل (الجولة الثالثة)
+# خطة شاملة لتطوير صفحة تفاصيل العميل
+
+بناءً على إجاباتك الـ 20، هذه خطة مفصلة ومقسمة لتحويل صفحة العميل إلى واجهة CRM مؤسسية متكاملة.
 
 ---
 
-## التحليل النقدي — المشاكل المكتشفة
+## الخطوة 1: التنبيهات الذكية (Smart Alerts)
 
-### مشكلة 1: غياب CLV (قيمة العميل مدى الحياة) من الإحصاءات
-`useCustomerDetail` يحسب `clv` عبر `calculateCustomerHealth` لكنه **لا يُرجعه** في الـ return object (سطر 116). القيمة محسوبة ومهملة تماماً — لا تظهر في StatsGrid ولا في بطاقات الموبايل ولا في الملخص المالي.
+إنشاء مكون `CustomerSmartAlerts.tsx` يعرض تنبيهات سياقية أعلى الصفحة (بعد البروفايل مباشرة):
 
-**الحل:** إضافة `clv` للـ return + عرضه في StatsGrid والموبايل.
+- **تجاوز حد الائتمان**: banner أحمر مع زر "تعديل حد الائتمان" (يظهر عندما `currentBalance >= creditLimit`)
+- **ديون متأخرة**: banner برتقالي مع زر "إرسال تذكير" (يظهر عندما توجد فواتير متأخرة 60+ يوم)
+- **عميل خامل**: banner أزرق مع زر "تواصل" أو "فاتورة جديدة" (يظهر عندما آخر فاتورة/تواصل > 30 يوم)
+- **عميل جديد بدون فواتير**: banner أخضر مع زر "إنشاء أول فاتورة"
 
----
+يعرض على Desktop وMobile، ويمكن إخفاؤه بزر X.
 
-### مشكلة 2: الملخص المالي (CustomerFinancialSummary) يعيد حساب KPIs بدلاً من استخدام القيم المحسوبة
-الملخص المالي يحسب `paymentRatio` و `creditUsage` و `avgInvoice` محلياً (سطور 26-28) رغم أن نفس القيم محسوبة بالفعل في `useCustomerDetail`. هذا يسبب:
-- تكرار منطق الحساب (DRY violation)
-- إمكانية تفاوت الأرقام بين StatsGrid والملخص المالي
-
-**الحل:** تمرير `paymentRatio`, `avgInvoiceValue`, `dso`, `clv` كـ props بدلاً من إعادة حسابها.
+**الملفات:** `src/components/customers/CustomerSmartAlerts.tsx` (جديد)، `CustomerDetailsPage.tsx` (تعديل)
 
 ---
 
-### مشكلة 3: كشف الحساب (StatementOfAccount) — `useMemo` يستدعي `setCurrentPage` داخله
-سطر 92: `useMemo(() => setCurrentPage(1), [dateFrom, dateTo])` — هذا anti-pattern: استدعاء setState داخل useMemo يسبب render إضافي وقد يتجاهله React في بعض الحالات.
+## الخطوة 2: دمج الإحصائيات في البروفايل
 
-**الحل:** استبداله بـ `useEffect`.
+**Desktop — HeroHeader:**
+- إضافة صف إحصائيات مدمج أسفل بيانات التواصل داخل `CustomerHeroHeader` (الرصيد، المستحق، نسبة السداد، المشتريات، عدد الفواتير) — كل رقم بأيقونة صغيرة ولون
+- إزالة `CustomerStatsGrid` المنفصل (دمجه في البروفايل حسب اختيارك)
 
----
+**Mobile — MobileProfile:**
+- إضافة 4 أرقام إحصائية مصغرة (الرصيد، المستحق، نسبة السداد، المشتريات) داخل بطاقة البروفايل كصف أفقي مضغوط
+- إزالة بطاقات `CustomerMobileStatCard` المنفصلة وزر "عرض الكل" (كانت تأخذ مساحة كبيرة)
 
-### مشكلة 4: الرسم البياني (CustomerPurchaseChart) لا يتكيف مع الموبايل
-ارتفاع ثابت 350px مع margins كبيرة (left: 20, right: 20). على شاشة 393px، المحور Y يقتطع مساحة كبيرة والأعمدة تصبح ضيقة جداً. لا يوجد أي responsive behavior.
-
-**الحل:** تقليل الارتفاع على الموبايل (250px)، تصغير margins، واستخدام `tick={{ fontSize: 9 }}` على الشاشات الصغيرة.
-
----
-
-### مشكلة 5: CommunicationLogTab يستخدم query مستقل خارج useCustomerDetail
-كل التبويبات الأخرى تستخدم بيانات من `useCustomerDetail` (lazy loaded)، لكن `CommunicationLogTab` ينشئ query خاص به (سطر 49-53). هذا يعني:
-- لا يستفيد من lazy loading المبني على `activeTab`
-- لا يتم invalidate عند تحديث بيانات العميل العامة
-
-**ملاحظة:** هذا مقبول معمارياً لأن الـ tab يحتاج mutation أيضاً، لكنه يحتاج `enabled` مرتبط بفتح التبويب.
+**الملفات:** `CustomerHeroHeader.tsx`، `CustomerMobileProfile.tsx`، `CustomerDetailsPage.tsx`
 
 ---
 
-### مشكلة 6: تبويبات الموبايل تدمج "التحليلات" مع "التواصل" و"النشاط" في تبويب واحد
-تبويب "التحليلات" على الموبايل (سطر 234-238) يعرض 3 مكونات ثقيلة:
-- `CustomerPurchaseChart` (رسم بياني)
-- `CommunicationLogTab` (قائمة + dialog)
-- `CustomerTabActivity` (timeline)
+## الخطوة 3: تغيير التبويب الافتراضي إلى "الملخص المالي"
 
-هذا يسبب scroll طويل جداً ويخلط بين الرسم البياني وسجل التواصل والنشاط.
+- تغيير `useState('addresses')` إلى `useState('financial')` في `useCustomerDetail`
+- تغيير `useState('financials')` إلى `useState('financial')` في `mobileTab`
 
-**الحل:** فصل "التواصل" إلى تبويب الموبايل "المزيد" أو إنشاء تبويب فرعي.
+**الملفات:** `useCustomerDetail.ts`، `CustomerDetailsPage.tsx`
 
 ---
 
-### مشكلة 7: لا يوجد مؤشر عدد (Badge count) على تبويبات الموبايل
-تبويبات الموبايل تعرض أيقونة + نص فقط. لا يوجد مؤشر لعدد الفواتير أو المدفوعات. المستخدم لا يعرف إذا كان هناك بيانات قبل فتح التبويب.
+## الخطوة 4: إجراءات سريعة شاملة (Quick Actions)
 
-**الحل:** إضافة badge صغير بالعدد بجانب اسم التبويب (مثل: "الفواتير (12)").
+توسيع أزرار الإجراءات في HeroHeader وMobileProfile لتشمل:
+- فاتورة جديدة (موجود)
+- كشف حساب (موجود)
+- تسجيل دفعة (جديد — ينتقل لصفحة المدفوعات مع prefill)
+- إشعار دائن (جديد)
+- عرض سعر (جديد)
+- أمر بيع (جديد)
+- واتساب/اتصال (موجود)
+- تعديل البيانات (موجود)
+- تجميد/تنشيط الحساب (جديد — تغيير `is_active`)
+- تغيير تصنيف VIP (جديد — inline dropdown)
 
----
+على Desktop: أزرار في عمود جانبي + dropdown "المزيد"
+على Mobile: أزرار رئيسية (فاتورة + كشف) + زر "..." يفتح sheet بباقي الإجراءات
 
-### مشكلة 8: StatsGrid — بطاقة "آخر شراء" تستخدم `text-sm` بينما الباقي `text-lg`
-سطر 144: `text-sm font-medium` بينما كل البطاقات الأخرى تستخدم `text-lg font-bold`. هذا يكسر التناسق البصري.
-
-**الحل:** توحيد الحجم لـ `text-lg font-bold`.
-
----
-
-### مشكلة 9: الإشعارات الدائنة (CustomerTabCreditNotes) بدون وحدة عملة
-سطر 57: `{totalReturns.toLocaleString()}` بدون "ج.م" — بينما كل Summary bars الأخرى تضيف الوحدة.
-
-**الحل:** إضافة "ج.م" بعد المبلغ.
-
----
-
-### مشكلة 10: عروض الأسعار وأوامر البيع — القوائم بدون ترقيم صفحات
-كلا التبويبين يستخدمان `slice(0, 50)` بدون pagination. إذا كان لدى العميل أكثر من 50 عرض سعر، يتم قصها بصمت بدون إشعار المستخدم.
-
-**الحل:** إضافة pagination مماثل للفواتير والمدفوعات.
+**الملفات:** `CustomerHeroHeader.tsx`، `CustomerMobileProfile.tsx`، `CustomerDetailsPage.tsx`
 
 ---
 
-## خطة التنفيذ المرحلية
+## الخطوة 5: التعديل المختلط (Inline + Dialog)
 
-### الخطوة 1: إصلاح البيانات والمنطق (useCustomerDetail + Financial Summary)
-- إضافة `clv` للـ return object في `useCustomerDetail`
-- تمرير `paymentRatio`, `avgInvoiceValue`, `dso`, `clv` كـ props إلى `CustomerFinancialSummary` بدلاً من إعادة حسابها
-- تحديث `CustomerFinancialSummary` لاستقبال القيم المحسوبة + إضافة بطاقة CLV
+- **Inline**: تصنيف VIP (dropdown مباشر في البروفايل)، حالة العميل (toggle نشط/غير نشط)
+- **Dialog**: باقي البيانات (الاسم، الهاتف، العنوان، إلخ) تبقى في `CustomerFormDialog` الحالي
 
-### الخطوة 2: إصلاح StatsGrid + بطاقات الموبايل
-- توحيد حجم الخط في بطاقة "آخر شراء" (`text-lg font-bold`)
-- إضافة بطاقة CLV في StatsGrid وبطاقات الموبايل
+إضافة زر تعديل صغير بجوار VIP badge وحالة العميل في HeroHeader.
 
-### الخطوة 3: إصلاح كشف الحساب (StatementOfAccount)
-- استبدال `useMemo(() => setCurrentPage(1))` بـ `useEffect`
-
-### الخطوة 4: تحسين الرسم البياني للموبايل (CustomerPurchaseChart)
-- ارتفاع responsive (250px على الموبايل، 350px على desktop)
-- تصغير margins و font-size على الشاشات الصغيرة
-
-### الخطوة 5: تحسين تبويبات الموبايل
-- إضافة badge count للتبويبات (عدد الفواتير، المدفوعات، إلخ)
-- نقل `CommunicationLogTab` من تبويب "التحليلات" إلى تبويب "المزيد"
-- تخفيف حمل تبويب "التحليلات" (يبقى فيه الرسم البياني + سجل النشاط فقط)
-
-### الخطوة 6: إضافة Pagination لعروض الأسعار وأوامر البيع
-- تطبيق نفس نمط الترقيم المستخدم في الفواتير والمدفوعات (PAGE_SIZE = 20)
-
-### الخطوة 7: إصلاح الإشعارات الدائنة
-- إضافة "ج.م" لوحدة العملة في Summary bar
+**الملفات:** `CustomerHeroHeader.tsx`، `CustomerMobileProfile.tsx`
 
 ---
 
-## الملفات المتأثرة
+## الخطوة 6: التنقل بين العملاء (تالي/سابق)
+
+إنشاء hook `useCustomerNavigation` يحفظ قائمة IDs من آخر بحث/فلتر في `sessionStorage`، ويوفر `nextId` و `prevId`.
+
+إضافة أزرار سهم (→ ←) بجوار اسم العميل في MobileDetailHeader وفي HeroHeader.
+
+**الملفات:** `src/hooks/customers/useCustomerNavigation.ts` (جديد)، `CustomerDetailsPage.tsx`، `MobileDetailHeader` (تعديل)
+
+---
+
+## الخطوة 7: تبويب البيانات الأساسية — إثراء
+
+تحويل تبويب "العناوين" الحالي إلى تبويب "البيانات الأساسية" يضم:
+1. **بطاقة تواصل سريعة**: الهاتف + البريد + واتساب بأزرار مباشرة
+2. **سجل آخر 5 تواصلات**: timeline مصغر من `communication_logs`
+3. **العناوين المتعددة**: العنوان الرئيسي + عنوان الشحن + عنوان الفواتير — مع إمكانية إضافة عناوين جديدة
+
+يتطلب تعديل `tabGroups` في `customerConstants.ts` لتغيير اسم التبويب الأول.
+
+**الملفات:** `src/components/customers/tabs/CustomerTabBasicInfo.tsx` (جديد)، `customerConstants.ts`، `CustomerDetailsPage.tsx`
+
+---
+
+## الخطوة 8: تبويب الفواتير — ميزات متقدمة
+
+إضافة إلى التبويب الحالي:
+1. **فلاتر متقدمة**: حسب الحالة (مدفوع/معلق/متأخر) + حسب التاريخ + بحث برقم الفاتورة
+2. **معاينة سريعة (Quick Preview)**: الضغط على فاتورة يفتح Sheet/Drawer يعرض تفاصيلها (العناصر، الإجمالي، حالة الدفع) بدون مغادرة الصفحة
+3. **دفع سريع**: زر "تسجيل دفعة" بجوار كل فاتورة غير مدفوعة يفتح dialog مصغر
+4. **Swipe Actions** (موبايل): سحب يسار يظهر خيارات (طباعة، إرسال، حذف)
+
+**الملفات:** `CustomerTabInvoices.tsx` (تعديل كبير)، `src/components/customers/InvoiceQuickPreview.tsx` (جديد)، `src/components/customers/QuickPaymentDialog.tsx` (جديد)
+
+---
+
+## الخطوة 9: تبويب الملاحظات الداخلية (جديد)
+
+إنشاء جدول `customer_notes` في قاعدة البيانات:
+```
+id, customer_id, user_id, content, is_pinned, created_at
+```
+مع RLS policy للمستخدمين المسجلين فقط.
+
+إنشاء تبويب يعرض الملاحظات كـ timeline (أحدث أولاً) مع:
+- حقل إضافة ملاحظة جديدة (textarea + زر إرسال)
+- إمكانية تثبيت ملاحظة مهمة (pin)
+- عرض اسم الموظف الذي كتب الملاحظة
+
+إضافته لـ `tabGroups` في مجموعة "الأساسي".
+
+**الملفات:** migration SQL (جديد)، `src/components/customers/tabs/CustomerTabNotes.tsx` (جديد)، `customerConstants.ts`، `CustomerDetailsPage.tsx`
+
+---
+
+## الخطوة 10: الرسوم البيانية — 4 أنواع في تبويب التحليلات
+
+1. **رسم المشتريات الشهرية** (موجود — Bar Chart)
+2. **رسم أعمار الديون** (جديد — Donut Chart): توزيع الديون حسب العمر (0-30, 30-60, 60-90, 90+)
+3. **رسم التدفق المالي** (جديد — Line Chart): مقارنة المشتريات vs المدفوعات عبر الزمن
+4. **تحليل المنتجات** (جديد — Horizontal Bar): أكثر 10 منتجات شراءً حسب الكمية أو المبلغ
+
+**الملفات:** `src/components/customers/charts/AgingDonutChart.tsx` (جديد)، `src/components/customers/charts/CashFlowLineChart.tsx` (جديد)، `src/components/customers/charts/TopProductsChart.tsx` (جديد)، تعديل تبويب analytics
+
+---
+
+## الخطوة 11: التذكيرات المتقدمة مع إشعارات
+
+تحديث نظام التذكيرات الحالي ليدعم:
+- تكرار (يومي، أسبوعي، شهري)
+- ربط التذكير بفاتورة محددة (اختياري)
+- إرسال push notification عند حلول الموعد (ربط مع `push_subscriptions` الموجود)
+- عرض التذكيرات القادمة كـ badges في التبويب
+
+**الملفات:** migration SQL لإضافة أعمدة (recurrence, linked_invoice_id)، `CustomerReminderDialog` (تعديل)
+
+---
+
+## الخطوة 12: التصدير والطباعة
+
+1. **PDF كشف حساب**: موجود جزئياً — التأكد من دعم RTL + لوجو الشركة
+2. **Excel شامل**: تصدير كل بيانات العميل (بيانات أساسية + فواتير + مدفوعات + أعمار ديون) في ملف Excel واحد بعدة sheets
+3. **طباعة مباشرة**: زر طباعة في كشف الحساب وتبويب الفواتير يستخدم `PrintTemplate` الموجود
+
+إضافة أزرار التصدير في HeroHeader (dropdown) وفي كل تبويب ذي صلة.
+
+**الملفات:** `CustomerHeroHeader.tsx`، `StatementOfAccount.tsx` (تعديل)، `src/lib/exports/customerExcelExport.ts` (جديد)
+
+---
+
+## ملخص الملفات
 
 ```text
-معدّلة (8):
-  src/hooks/customers/useCustomerDetail.ts     — إرجاع clv
-  src/components/customers/CustomerFinancialSummary.tsx — props جديدة + بطاقة CLV
-  src/components/customers/CustomerStatsGrid.tsx — بطاقة CLV + إصلاح font آخر شراء
-  src/components/customers/StatementOfAccount.tsx — useMemo → useEffect
-  src/components/customers/CustomerPurchaseChart.tsx — responsive chart
-  src/components/customers/tabs/CustomerTabQuotations.tsx — pagination
-  src/components/customers/tabs/CustomerTabOrders.tsx — pagination
-  src/components/customers/tabs/CustomerTabCreditNotes.tsx — وحدة عملة
-  src/pages/customers/CustomerDetailsPage.tsx — badge counts + إعادة توزيع تبويبات + تمرير props جديدة
-  src/components/customers/mobile/CustomerMobileStatCard.tsx — بطاقة CLV إضافية
+ملفات جديدة (9):
+  src/components/customers/CustomerSmartAlerts.tsx
+  src/components/customers/tabs/CustomerTabBasicInfo.tsx
+  src/components/customers/tabs/CustomerTabNotes.tsx
+  src/components/customers/InvoiceQuickPreview.tsx
+  src/components/customers/QuickPaymentDialog.tsx
+  src/components/customers/charts/AgingDonutChart.tsx
+  src/components/customers/charts/CashFlowLineChart.tsx
+  src/components/customers/charts/TopProductsChart.tsx
+  src/hooks/customers/useCustomerNavigation.ts
+
+ملفات معدلة (8):
+  src/pages/customers/CustomerDetailsPage.tsx
+  src/components/customers/CustomerHeroHeader.tsx
+  src/components/customers/mobile/CustomerMobileProfile.tsx
+  src/hooks/customers/useCustomerDetail.ts
+  src/lib/customerConstants.ts
+  src/components/customers/tabs/CustomerTabInvoices.tsx
+  src/components/customers/CustomerReminderDialog.tsx
+  src/components/customers/StatementOfAccount.tsx
+
+تعديلات قاعدة البيانات (2):
+  migration: إنشاء جدول customer_notes + RLS
+  migration: إضافة أعمدة recurrence + linked_invoice_id للتذكيرات
 ```
 
-لا تعديلات على قاعدة البيانات أو Edge Functions.
+---
+
+## ترتيب التنفيذ المقترح
+
+نظراً لاختيارك "كل شيء متساوي"، سيتم التنفيذ حسب التبعيات:
+1. الخطوات 1-3 (أساسيات: تنبيهات + دمج إحصائيات + تبويب افتراضي)
+2. الخطوات 4-6 (إجراءات + تعديل مختلط + تنقل)
+3. الخطوات 7-9 (تبويبات جديدة: بيانات أساسية + فواتير متقدمة + ملاحظات)
+4. الخطوات 10-12 (رسوم بيانية + تذكيرات + تصدير)
 
