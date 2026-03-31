@@ -190,7 +190,7 @@ const CustomersPage = () => {
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
       <CustomerPageHeader
-        isMobile={isMobile} canEdit={canEdit} customers={list.customers}
+        isMobile={isMobile} canEdit={canEdit}
         exportAllLoading={exportAllLoading} onAdd={handleAdd}
         onDuplicates={() => dialogRef.current?.openDuplicates()}
         onMerge={() => dialogRef.current?.openMerge()}
