@@ -26,6 +26,8 @@ interface CustomerMobileViewProps {
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
+  sortKey?: string;
+  onSortChange?: (key: string) => void;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
