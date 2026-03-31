@@ -5,6 +5,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { customerWriteSchema } from "@/lib/validations";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
@@ -160,6 +161,11 @@ export const customerRepository = {
   },
 
   async create(payload: CustomerInsert): Promise<Customer> {
+    // Validate before sending to DB
+    const parsed = customerWriteSchema.safeParse(payload);
+    if (!parsed.success) {
+      throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
+    }
     const { data, error } = await supabase
       .from('customers')
       .insert(payload)
@@ -170,6 +176,11 @@ export const customerRepository = {
   },
 
   async update(id: string, payload: CustomerUpdate): Promise<void> {
+    // Validate before sending to DB
+    const parsed = customerWriteSchema.partial().safeParse(payload);
+    if (!parsed.success) {
+      throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
+    }
     const { error } = await supabase
       .from('customers')
       .update(payload)

@@ -32,6 +32,33 @@ export const customerSchema = z.object({
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
 
+/**
+ * Write-side schema for Repository layer validation.
+ * Strips UI-only defaults and validates data before DB insert/update.
+ */
+export const customerWriteSchema = z.object({
+  name: z.string().trim().min(1, 'اسم العميل مطلوب').max(200),
+  customer_type: z.enum(['individual', 'company', 'farm']).optional(),
+  vip_level: z.enum(['regular', 'silver', 'gold', 'platinum']).optional(),
+  phone: z.string().regex(phoneRegex).max(20).optional().or(z.literal('')).or(z.literal(null)),
+  phone2: z.string().regex(phoneRegex).max(20).optional().or(z.literal('')).or(z.literal(null)),
+  email: z.string().email().max(255).optional().or(z.literal('')).or(z.literal(null)),
+  tax_number: z.string().max(50).optional().or(z.literal('')).or(z.literal(null)),
+  credit_limit: z.number().min(0).max(1000000000).optional().nullable(),
+  category_id: z.string().uuid().optional().or(z.literal('')).or(z.literal(null)),
+  notes: z.string().max(2000).optional().or(z.literal('')).or(z.literal(null)),
+  is_active: z.boolean().optional(),
+  governorate: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+  city: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+  discount_percentage: z.number().min(0).max(100).optional().nullable(),
+  contact_person: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+  contact_person_role: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+  payment_terms_days: z.number().int().min(0).max(365).optional().nullable(),
+  preferred_payment_method: z.string().optional().or(z.literal('')).or(z.literal(null)),
+  facebook_url: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+  website_url: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+}).passthrough(); // Allow tenant_id, image_url, etc.
+
 // Product validation schema
 export const productSchema = z.object({
   name: z.string().trim().min(1, 'اسم المنتج مطلوب').max(200, 'اسم المنتج طويل جداً'),

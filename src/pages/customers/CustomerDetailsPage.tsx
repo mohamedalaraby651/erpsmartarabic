@@ -18,6 +18,7 @@ import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
 import { CustomerSmartAlerts } from "@/components/customers/CustomerSmartAlerts";
 import { CustomerPinnedNote } from "@/components/customers/CustomerPinnedNote";
 import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
+import { CustomerHealthBadge } from "@/components/customers/CustomerHealthBadge";
 import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
 import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStrip";
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
@@ -51,6 +52,7 @@ const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAg
 const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
 const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/CustomerTabCreditNotes").then(m => ({ default: m.CustomerTabCreditNotes })));
+const CustomerSalesPipeline = lazy(() => import("@/components/customers/CustomerSalesPipeline").then(m => ({ default: m.CustomerSalesPipeline })));
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 
@@ -310,15 +312,18 @@ const CustomerDetailsPage = () => {
         />
       </div>
 
-      <CustomerSmartAlerts
-        currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
-        invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
-        lastCommunicationAt={customer.last_communication_at}
-        onEditCreditLimit={() => setEditDialogOpen(true)}
-        onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
-        onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-        onContact={handleWhatsApp}
-      />
+      <div className="flex items-center gap-3 flex-wrap">
+        <CustomerSmartAlerts
+          currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+          invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
+          lastCommunicationAt={customer.last_communication_at}
+          onEditCreditLimit={() => setEditDialogOpen(true)}
+          onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
+          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+          onContact={handleWhatsApp}
+        />
+        <CustomerHealthBadge customerId={id!} />
+      </div>
 
       <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileSection('notes') : handleTabChange('notes')} />
 
@@ -373,7 +378,10 @@ const CustomerDetailsPage = () => {
             <TabsContent value="orders" className="mt-6"><CustomerTabOrders salesOrders={detail.salesOrders} /></TabsContent>
             <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} customerId={id!} paginatedData={detail.paginatedPayments} currentPage={detail.paymentPage} pageSize={detail.paymentPageSize} onPageChange={detail.goToPaymentPage} /></TabsContent>
             <TabsContent value="credit-notes" className="mt-6"><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></TabsContent>
-            <TabsContent value="financial" className="mt-6">
+            <TabsContent value="financial" className="mt-6 space-y-4">
+              <Suspense fallback={<TabSkeleton />}>
+                <CustomerSalesPipeline quotations={detail.quotations} salesOrders={detail.salesOrders} invoices={detail.invoices} />
+              </Suspense>
               <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
             </TabsContent>
             <TabsContent value="statement" className="mt-6">

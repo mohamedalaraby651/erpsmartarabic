@@ -4264,6 +4264,10 @@ export type Database = {
         Args: { _customer_id: string }
         Returns: Json
       }
+      get_customer_health_score: {
+        Args: { _customer_id: string }
+        Returns: Json
+      }
       get_customer_statement: {
         Args: { _customer_id: string; _date_from?: string; _date_to?: string }
         Returns: {
@@ -4311,6 +4315,7 @@ export type Database = {
         Args: { _amount: number; _entity_type: string }
         Returns: boolean
       }
+      refresh_customer_stats_mv: { Args: never; Returns: undefined }
       switch_user_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
