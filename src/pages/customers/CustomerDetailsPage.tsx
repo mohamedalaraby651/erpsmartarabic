@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from "react";
+import { CustomerErrorBoundary } from "@/components/customers/CustomerErrorBoundary";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
