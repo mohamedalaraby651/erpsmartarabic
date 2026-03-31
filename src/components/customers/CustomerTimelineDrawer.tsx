@@ -53,7 +53,7 @@ interface CustomerTimelineDrawerProps {
 }
 
 export const CustomerTimelineDrawer = memo(function CustomerTimelineDrawer({
-  open, onOpenChange, filter, invoices, payments,
+  open, onOpenChange, filter, invoices, payments, creditNotes = [],
 }: CustomerTimelineDrawerProps) {
   const isMobile = useIsMobile();
 
