@@ -139,6 +139,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     data: formData,
     enabled: !isEditing,
   });
+  clearDraftRef.current = clearDraft;
 
   useEffect(() => {
     if (hasDraft && !isEditing && open) {
