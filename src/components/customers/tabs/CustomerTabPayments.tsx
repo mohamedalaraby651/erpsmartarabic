@@ -110,7 +110,9 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
                       <>
                         <span>•</span>
                         <span className="flex items-center gap-1">
-                          فاتورة: <EntityLink type="invoice" id={payment.invoice_id}>{payment.invoice_id.slice(0, 8)}</EntityLink>
+                          فاتورة: <EntityLink type="invoice" id={payment.invoice_id}>
+                            {payment.invoices?.invoice_number || payment.invoice_id.slice(0, 8)}
+                          </EntityLink>
                         </span>
                       </>
                     )}
