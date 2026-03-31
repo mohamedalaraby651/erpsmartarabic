@@ -74,6 +74,7 @@ export const tabGroups = [
     label: 'المالي',
     tabs: [
       { value: 'payments', label: 'المدفوعات', iconName: 'CreditCard' as const },
+      { value: 'credit-notes', label: 'إشعارات دائنة', iconName: 'FileText' as const },
       { value: 'financial', label: 'الملخص المالي', iconName: 'Wallet' as const },
       { value: 'statement', label: 'كشف الحساب', iconName: 'Printer' as const },
       { value: 'aging', label: 'أعمار الديون', iconName: 'Clock' as const },

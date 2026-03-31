@@ -20,7 +20,7 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const debouncedSearch = useDebounce(value, 200);
+  const debouncedSearch = useDebounce(value, 350);
 
   const { data: results = [] } = useQuery({
     queryKey: ['customer-search-preview', debouncedSearch],

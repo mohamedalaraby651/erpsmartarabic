@@ -145,9 +145,14 @@ export async function exportCustomersToExcel(): Promise<void> {
 
     const XLSX = await import('xlsx');
     const headers: Record<string, string> = {
-      name: 'الاسم', phone: 'الهاتف', email: 'البريد', customer_type: 'النوع',
-      vip_level: 'مستوى VIP', current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
-      governorate: 'المحافظة', city: 'المدينة', contact_person: 'المسؤول',
+      name: 'الاسم', phone: 'الهاتف', phone2: 'هاتف 2', email: 'البريد',
+      customer_type: 'النوع', vip_level: 'مستوى VIP',
+      current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
+      governorate: 'المحافظة', city: 'المدينة',
+      contact_person: 'المسؤول', contact_person_role: 'منصب المسؤول',
+      discount_percentage: 'نسبة الخصم %', payment_terms_days: 'شروط الدفع (أيام)',
+      preferred_payment_method: 'طريقة الدفع المفضلة',
+      tax_number: 'الرقم الضريبي', notes: 'ملاحظات',
       is_active: 'نشط', created_at: 'تاريخ الإنشاء',
     };
     const exportData = data.map(row => {
