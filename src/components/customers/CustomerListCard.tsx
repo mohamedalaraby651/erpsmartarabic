@@ -59,6 +59,8 @@ const CustomerListCardInner = ({
   isSelected,
   onSelect,
   selectionMode,
+  alertCount,
+  hasErrorAlert,
 }: CustomerListCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
