@@ -7,6 +7,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
   CreditCard, Bell, MessageSquare, BarChart3, Wallet, Globe, Clock, Printer,
+  TrendingUp, Target, Calendar,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
@@ -14,8 +15,9 @@ import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { useCustomerDetail } from "@/hooks/customers";
 import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
 import { CustomerStatsGrid } from "@/components/customers/CustomerStatsGrid";
+import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
+import { CustomerMobileStatCard } from "@/components/customers/mobile/CustomerMobileStatCard";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
-import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { tabGroups } from "@/lib/customerConstants";
 import type { CustomerAddress } from "@/lib/customerConstants";
