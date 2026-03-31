@@ -113,6 +113,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
                 onEdit={canEdit ? onEdit : undefined}
                 onDelete={canDelete ? onDelete : undefined}
                 onNewInvoice={onNewInvoice}
+                onNewPayment={onNewPayment}
               />
             </div>
           ))}
