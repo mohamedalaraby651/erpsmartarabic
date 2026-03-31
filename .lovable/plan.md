@@ -1,194 +1,151 @@
 
 
-# خطة الإصلاح الشاملة — وحدة العملاء (4 Sprints)
+# تقرير التدقيق الناقد الشامل — وحدة العملاء (مارس 2026)
+## بعد تنفيذ كافة الـ 4 Sprints
 
 ---
 
-## Sprint 1 — الأمان وسلامة الأنواع (5 مهام)
+## 1. الحالة المعمارية — ممتازة
 
-### 1.1 إصلاح `any` في `applyFilters`
-**الملف**: `src/lib/repositories/customerRepository.ts` سطر 76
-**التغيير**: استبدال `any` بالنوع الصحيح من Supabase:
-```typescript
-import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
-function applyFilters(
-  query: PostgrestFilterBuilder<Database['public'], Database['public']['Tables']['customers']['Row'], any>,
-  filters: CustomerFilters
-) { ... }
-```
+| المحور | النتيجة |
+|---|---|
+| Repository Pattern | 100% — صفر `supabase` imports في components أو hooks |
+| CQRS | 100% — `useCustomerList` (Read) + `useCustomerMutations` (Write) |
+| God Component | محلول — `CustomersPage` = 256 سطر (كان 610) |
+| Unified Actions | مكتمل — `CustomerActionMenu` بـ 3 variants |
+| Permission Checks | مكتمل — export + address delete + form save |
+| Mobile Parity | مكتمل — 13 قسم MobileDetailSection |
+| Stats Bar | مكتمل — يعرض active/inactive |
+| Smart Empty States | مكتمل — تمييز بين "لا بيانات" و"لا نتائج" |
+| Cursor Export | مكتمل — batches من 1000 حتى 10000 |
+| Search URL Sync | مكتمل — `setSearchQuery` يستدعي `syncToUrl` |
 
-### 1.2 إضافة return types صريحة للـ methods الناقصة
-**الملف**: `customerRepository.ts` سطور 419, 429, 463, 492
-**التغيير**: إضافة أنواع إرجاع صريحة لـ `findSalesOrders`, `findQuotations`, `findReminders`, `findCommunications` بدلاً من الاعتماد على الاستنتاج الضمني:
-```typescript
-async findSalesOrders(customerId: string): Promise<SalesOrder[]> { ... }
-async findQuotations(customerId: string): Promise<Quotation[]> { ... }
-```
-مع استيراد الأنواع من `Database['public']['Tables']`.
-
-### 1.3 إضافة Permission Check قبل حذف العناوين
-**الملف**: `src/hooks/customers/useCustomerDetail.ts` سطر 85-91
-**التغيير**: إضافة `verifyPermissionOnServer('customers', 'delete')` داخل `mutationFn` قبل استدعاء `customerRepository.deleteAddress()`. إذا فشل الفحص → throw error بدون تنفيذ الحذف.
-
-### 1.4 إضافة Permission Check قبل التصدير
-**الملف**: `src/pages/customers/CustomersPage.tsx` سطر 103
-**التغيير**: في `handleExportAll`، إضافة `verifyPermissionOnServer('customers', 'view')` قبل استدعاء `exportCustomersToExcel()`. عند الفشل → toast خطأ "غير مصرح بالتصدير".
-
-### 1.5 تحذير المستخدم عند تجاوز حد التصدير
-**الملف**: `src/lib/services/customerService.ts` سطر 127-167
-**التغيير**: بعد جلب البيانات، مقارنة `data.length` مع `limit`. إذا `data.length === limit` → عرض toast تحذيري: "تم تصدير أول 5,000 عميل فقط. للتصدير الكامل تواصل مع المسؤول."
+**خلاصة**: كل ما كان في الخطة السابقة تم تنفيذه بنجاح.
 
 ---
 
-## Sprint 2 — Mobile Parity + إصلاح النموذج (4 مهام)
+## 2. المشاكل المتبقية المكتشفة
 
-### 2.1 إضافة التبويبات المفقودة في Mobile Detail
-**الملف**: `src/pages/customers/CustomerDetailsPage.tsx` سطور 113-143
-**التغيير**: إضافة 5 أقسام `MobileDetailSection` مفقودة بنفس النمط الموجود:
-- عروض الأسعار (quotations) — priority: low
-- أوامر البيع (orders) — priority: low
-- أعمار الديون (aging) — priority: low
-- التحليلات (analytics) — priority: low
-- سجل النشاط (activity) — priority: low
+### 🔴 P0 — أمان ومنطق
 
-كل قسم يستخدم `Suspense` + نفس الـ lazy-loaded components الموجودة.
-
-### 2.2 إصلاح حقول الاتصال المكررة للشركات
-**الملف**: `src/components/customers/CustomerFormDialog.tsx` سطور 278-283
-**المشكلة**: عند اختيار "شركة" يظهر `CustomerFormContact` مرتين — مرة مع `showCompanyFields` ومرة بدونه.
-**الحل**: دمجهما في مكون واحد:
-```tsx
-<SectionHeader icon={Phone} title="معلومات الاتصال" />
-<CustomerFormContact 
-  showCompanyFields={customerType === 'company'} 
-  idPrefix="desktop" 
-/>
-```
-حذف سطر 282-283 (القسم المكرر).
-
-### 2.3 إزالة زر "العودة" المكرر على Desktop
-**الملف**: `src/pages/customers/CustomerDetailsPage.tsx`
-**المشكلة**: `MobileDetailHeader` يعرض زر العودة + `CustomerHeroHeader` يعرض زر "العودة للعملاء" (سطر 39 في HeroHeader). كلاهما مرئي على Desktop.
-**الحل**: في `CustomerDetailsPage`، لف `MobileDetailHeader` بشرط `isMobile` فقط، أو إخفاء زر العودة في `CustomerHeroHeader` عندما يكون الـ `MobileDetailHeader` مرئياً. الأفضل: إخفاء `CustomerHeroHeader` back button على mobile (`hidden md:flex`) لأن `MobileDetailHeader` يتولى ذلك.
-
-### 2.4 مزامنة البحث مع URL
-**الملف**: `src/hooks/customers/useCustomerFilters.ts`
-**المشكلة**: `setSearchQuery` لا يستدعي `syncToUrl`. البحث لا يظهر في URL.
-**الحل**: تعديل return object ليستخدم wrapper:
+**2.1 — `clearAllFilters` لا يمسح البحث**
+في `useCustomerFilters.ts` سطر 63-71، `clearAllFilters` يمسح كل الفلاتر **لكن لا يمسح `searchQuery`**:
 ```typescript
-setSearchQuery: (v: string) => { setSearchQuery(v); syncToUrl({ q: v }); }
+const clearAllFilters = useCallback(() => {
+  setTypeFilter('all');
+  // ... يمسح كل الفلاتر
+  setSearchParams({}, { replace: true });
+  // ❌ لا يستدعي setSearchQuery('')
+}, [setSearchParams]);
 ```
-ملاحظة: يجب الانتباه للـ debounce — الـ URL يجب أن يتحدث مع القيمة الفعلية وليس الـ debounced.
+**الأثر**: عند ضغط "إزالة الفلاتر" في empty state، البحث يبقى نشطاً والمستخدم يبقى يرى "لا توجد نتائج".
+
+**2.2 — `bulkVipMutation` بدون Permission Check**
+في `useCustomerMutations.ts` سطر 86-99، `bulkVipMutation` و `bulkStatusMutation` لا يتحققان من الصلاحيات (`verifyPermissionOnServer`) قبل التنفيذ. فقط `deleteMutation` يتحقق.
+
+**2.3 — Mobile Delete بدون `AlertDialog`**
+في `CustomerMobileView.tsx` سطر 31: `onDelete` يُستدعى مباشرة من `SwipeableRow` بدون تأكيد. في Table/Grid يمر عبر `dialogRef.current?.confirmDelete(id)`. على الموبايل، **لا يوجد تأكيد** — السحب يحذف مباشرة.
+
+**2.4 — `exportAll` يرجع `isPartial: false` عند 10000 سجل بالضبط**
+في `customerRepository.ts` سطر 330:
+```typescript
+return { data: allData, isPartial: offset >= maxRecords };
+```
+إذا كان هناك بالضبط 10000 عميل، `offset` = 10000 = `maxRecords`، فالتحذير **يظهر**. لكن إذا كان هناك 9999 عميل، آخر batch يعيد 999 < 1000 فيتوقف والـ offset = 9000 < 10000 = `isPartial: false`. هذا صحيح. لكن المشكلة: إذا كان هناك 10001 عميل، يتوقف عند 10000 و `isPartial: true` — صحيح. **لا مشكلة هنا**.
+
+### 🟠 P1 — UX ووظائف
+
+**2.5 — Mobile: لا يوجد Empty State ذكي**
+`CustomerMobileView.tsx` سطر 54-55 يعرض دائماً "لا يوجد عملاء - ابدأ بإضافة عميلك الأول" حتى عند وجود فلاتر نشطة. لا يميز بين عدم وجود بيانات وعدم مطابقة الفلاتر.
+
+**2.6 — Mobile: لا يوجد أزرار export/import/merge/duplicate**
+`CustomerPageHeader.tsx` سطر 30: `!isMobile` يخفي كل أزرار: التصدير، الاستيراد، كشف المكررين، الدمج. المستخدم على الموبايل لا يمكنه الوصول لأي من هذه الوظائف.
+
+**2.7 — `CustomerStatsGrid` — 8 أعمدة على `lg` = مزدحم**
+سطر 28: `lg:grid-cols-8` يعني 8 بطاقات في صف واحد على شاشة 1024px-1280px. كل بطاقة ~128-160px عرض. النصوص ستتقطع أو تتداخل.
+
+**2.8 — Lazy Loading في Detail لا يتوافق مع Mobile Sections**
+في `CustomerDetailsPage.tsx`، `useCustomerDetail` يعتمد على `activeTab` لتفعيل queries. لكن على الموبايل، كل الأقسام `MobileDetailSection` مرئية (بعضها مغلق). الأقسام المغلقة **لا تؤثر على `activeTab`** → بياناتها لا تُحمل حتى يُفتح القسم.
+
+**المشكلة**: عند فتح قسم "عروض الأسعار" على الموبايل، لا يتغير `activeTab` لأنه يُدار بـ `useState` ولا يتصل بـ `MobileDetailSection` → **البيانات لا تُجلب أبداً**.
+
+هذه مشكلة حرجة: على الموبايل، التبويبات التي تعتمد على `activeTab` للتحميل (quotations, orders, salesOrders, activities, creditNotes) **ستظهر فارغة دائماً** إلا إذا كان المستخدم قد فتح نفس التبويب على Desktop أولاً.
+
+**التحقق**: `useCustomerDetail` يفعّل queries حسب `activeTab`:
+- `invoicesNeeded` = `activeTab` in `['invoices', 'financial', 'statement', 'aging', 'analytics']`
+- `salesOrders` = `activeTab === 'orders'`
+- `quotations` = `activeTab === 'quotations'`
+- `activities` = `activeTab === 'activity'`
+
+على الموبايل، `activeTab` = `'addresses'` (القيمة الافتراضية) ولا يتغير أبداً لأن الموبايل لا يستخدم `<Tabs>`. **كل الأقسام المرتبطة بـ activeTab ستكون فارغة**.
+
+**ملاحظة**: الفواتير تعمل لأن `invoicesNeeded` يشمل `'financial'` و `'statement'` و `'aging'`... لكن `activeTab` = `'addresses'` → **الفواتير أيضاً لن تُحمل!**
+
+**هذه هي أخطر مشكلة في القسم حالياً.**
+
+**2.9 — `useCustomerDetail` لا يعالج حالة Mobile بشكل صحيح**
+الحل الصحيح: إما تمرير `isMobile` للـ hook ليفعّل كل queries مباشرة، أو ربط `MobileDetailSection` بـ `setActiveTab`.
+
+### 🟡 P2 — تحسينات
+
+**2.10 — Duplicate Detection Dialog لا يتعامل مع التحميل**
+عند فتح `DuplicateDetectionDialog`، إذا كان الـ RPC بطيئاً، لا يوجد عرض مرئي للتحميل (لم أتحقق من المكون الداخلي لكن الاستدعاء يمر عبر repository).
+
+**2.11 — `searchPreview` بدون debounce حقيقي**
+في `CustomerSearchPreview.tsx` سطر 23: `useDebounce(value, 200)` — الـ debounce 200ms قصير جداً. كل ضغطة مفتاح بعد 200ms تُطلق استعلاماً. المعيار 300-500ms للبحث المباشر.
+
+**2.12 — `CustomerFormDialog` لا يمسح draft عند الإلغاء**
+سطر 98-103: `confirmDiscard` يعمل `reset(defaultValues)` لكن لا يستدعي `clearDraft()`. المسودة تبقى محفوظة في `localStorage` ويتم استعادتها في المرة القادمة حتى لو اختار المستخدم "تجاهل التغييرات".
+
+**2.13 — لا يوجد Keyboard Shortcut للبحث**
+لا يوجد `/` أو `Ctrl+K` لتفعيل حقل البحث.
+
+**2.14 — Mobile: لا يمكن تبديل View Mode**
+على الموبايل يُعرض دائماً `CustomerMobileView`. لا يوجد خيار للتبديل إلى Grid/Table. هذا مقبول كتصميم لكنه يعني أن المستخدم مقيد بعرض واحد.
 
 ---
 
-## Sprint 3 — UI Parity وتحسينات UX (5 مهام)
+## 3. تقييم الجودة
 
-### 3.1 إضافة SelectAll في Grid mode
-**الملف**: `src/components/customers/CustomerGridView.tsx`
-**التغيير**: إضافة props `onToggleSelectAll` و `isAllSelected` ثم عرض `Checkbox` "تحديد الكل" فوق الـ grid:
-```tsx
-<div className="flex items-center gap-2 mb-3">
-  <Checkbox checked={isAllSelected} onCheckedChange={onToggleSelectAll} />
-  <span className="text-sm text-muted-foreground">تحديد الكل ({data.length})</span>
-</div>
-```
-تمرير `toggleSelectAll` و `isAllSelected` من `CustomersPage`.
-
-### 3.2 إضافة Active/Inactive counts في Stats Bar
-**الملف**: `src/hooks/customers/useCustomerList.ts` سطر 58-70
-**التغيير**: إضافة `active` و `inactive` من `get_customer_stats` RPC:
-```typescript
-active: d.active || 0,
-inactive: d.inactive || 0,
-```
-**الملف**: `src/components/customers/CustomerStatsBar.tsx`
-**التغيير**: إضافة stat جديد "نشط" و/أو "غير نشط" في المصفوفة. أو عرض "نشط/غير نشط" كـ badge فرعي تحت "إجمالي العملاء".
-
-### 3.3 Empty State ذكي حسب الفلاتر
-**الملف**: `src/pages/customers/CustomersPage.tsx` سطور 198-207
-**التغيير**: التحقق من `filters.activeFiltersCount > 0 || filters.debouncedSearch`:
-- إذا يوجد فلاتر نشطة → "لا توجد نتائج تطابق الفلاتر" + زر "إزالة الفلاتر"
-- إذا لا يوجد فلاتر → Empty state الحالي (إضافة عميل + استيراد)
-
-### 3.4 إضافة Status badge في Grid Cards
-**الملف**: `src/components/customers/CustomerGridCard.tsx`
-**التغيير**: إضافة badge "غير نشط" بجانب VIP badge عندما `customer.is_active === false`:
-```tsx
-{!customer.is_active && (
-  <Badge variant="outline" className="text-xs text-muted-foreground">غير نشط</Badge>
-)}
-```
-
-### 3.5 تنفيذ CustomerActionMenu variant mobile
-**الملف**: `src/components/customers/CustomerActionMenu.tsx` سطر 77-78
-**التغيير**: بدلاً من `return null`، تقديم مجموعة أزرار مناسبة للموبايل (icon buttons بحجم 44px). ثم استخدامه في `CustomerMobileView` عبر `DataCard` actions أو مباشرة.
-
----
-
-## Sprint 4 — الأداء والقابلية للتوسع (3 مهام)
-
-### 4.1 Cursor-based Export Pagination
-**الملف**: `src/lib/repositories/customerRepository.ts` method `exportAll`
-**التغيير**: تقسيم الاستعلام إلى batches من 1000:
-```typescript
-async exportAll(): Promise<Customer[]> {
-  const batchSize = 1000;
-  let allData: Customer[] = [];
-  let offset = 0;
-  while (true) {
-    const { data } = await supabase.from('customers').select('*')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + batchSize - 1);
-    if (!data || data.length === 0) break;
-    allData = allData.concat(data);
-    offset += batchSize;
-    if (data.length < batchSize) break;
-  }
-  return allData;
-}
-```
-**الملف**: `customerService.ts` `exportCustomersToExcel` — تحديث progress toast مع كل batch.
-
-### 4.2 إضافة Error Boundary لصفحة التفاصيل
-**الملف**: `src/pages/customers/CustomerDetailsPage.tsx`
-**التغيير**: لف كل `TabsContent` و `MobileDetailSection` بـ `ErrorBoundary` component (يمكن استخدام الموجود أو إنشاء `CustomerTabErrorBoundary` بسيط) لمنع تعطل الصفحة عند فشل تبويب واحد.
-
-### 4.3 تحسين `findAllNamesAndPhones` بإضافة limit
-**الملف**: `customerRepository.ts` سطر 513-518
-**المشكلة**: يجلب **كل** العملاء بدون limit. لنظام بـ 50,000+ عميل = بطء.
-**الحل**: إضافة `.limit(10000)` كحد أقصى، أو تحويلها لتقبل `search` param وترجع نتائج مفلترة فقط (حسب الاستخدام في Import dialog للتحقق من التكرارات).
-
----
-
-## ملخص التأثير المتوقع
-
-| المحور | قبل | بعد |
+| المحور | التقييم | السبب |
 |---|---|---|
-| Type Safety | 7/10 | 9/10 |
-| Security | 7/10 | 9/10 |
-| Mobile Parity | 6/10 | 9/10 |
-| UX Polish | 7/10 | 9/10 |
-| Scalability | 6/10 | 8/10 |
-| **الإجمالي** | **7.6/10** | **8.8/10** |
+| **Architecture** | 10/10 | Repository + CQRS + Component extraction مثالية |
+| **Security** | 8/10 | Permission checks ناقصة في bulk VIP/status |
+| **Type Safety** | 9/10 | `applyFilters` typed، return types صريحة |
+| **Mobile UX** | 5/10 | **البيانات لا تُحمل على الموبايل** (activeTab bug) |
+| **Desktop UX** | 9/10 | Smart empty states، keyboard nav، hover prefetch |
+| **Data Safety** | 8/10 | Unsaved changes جيد لكن draft لا يُمسح عند الإلغاء |
+| **Performance** | 8/10 | Lazy loading جيد (يعمل فقط على desktop) |
+| **Code Quality** | 9/10 | Memo, CQRS, clean separation |
+| **Scalability** | 8/10 | Cursor export محدود بـ 10K لكن مع تحذير |
 
-## ترتيب الملفات المتأثرة
+**التقييم الإجمالي: 8.2/10** — لكن مع bug حرج في Mobile (P0)
 
-```text
-تعديل (14 ملف):
-  src/lib/repositories/customerRepository.ts    — Type safety + cursor export + limit
-  src/lib/services/customerService.ts            — Export warning
-  src/hooks/customers/useCustomerDetail.ts       — Permission check + Error boundary
-  src/hooks/customers/useCustomerList.ts         — Active/Inactive stats
-  src/hooks/customers/useCustomerFilters.ts      — Search URL sync
-  src/pages/customers/CustomersPage.tsx          — Export permission + Smart empty state
-  src/pages/customers/CustomerDetailsPage.tsx    — Mobile tabs + Back button fix + Error boundary
-  src/components/customers/CustomerFormDialog.tsx — Fix duplicate contact section
-  src/components/customers/CustomerActionMenu.tsx — Mobile variant
-  src/components/customers/CustomerGridView.tsx   — SelectAll checkbox
-  src/components/customers/CustomerGridCard.tsx   — Status badge
-  src/components/customers/CustomerStatsBar.tsx   — Active/Inactive counts
-  src/components/customers/CustomerHeroHeader.tsx — Hide back on mobile
-  src/components/customers/CustomerMobileView.tsx — Use ActionMenu (optional)
-```
+---
+
+## 4. خطة الإصلاح المقترحة
+
+### الأولوية 1 — إصلاح Mobile Data Loading (حرج)
+**المشكلة**: `useCustomerDetail` يعتمد على `activeTab` لتفعيل queries. على الموبايل `activeTab` لا يتغير أبداً → البيانات لا تُحمل.
+
+**الحل**: تعديل `useCustomerDetail` ليقبل `isMobile` parameter. عند `isMobile = true`، يتم تفعيل كل queries بمجرد `!!id` بدون شرط `activeTab`.
+
+أو الحل الأفضل: ربط `MobileDetailSection` بـ callback يستدعي `setActiveTab` عند فتح القسم. هذا يحافظ على lazy loading.
+
+**الملفات المتأثرة**: `useCustomerDetail.ts` + `CustomerDetailsPage.tsx`
+
+### الأولوية 2 — إصلاح clearAllFilters + Mobile Empty State
+- `useCustomerFilters.ts`: إضافة `setSearchQuery('')` في `clearAllFilters`
+- `CustomerMobileView.tsx`: إضافة props `hasActiveFilters` + `onClearFilters` لعرض empty state ذكي
+
+### الأولوية 3 — Permission Checks للعمليات الجماعية
+- `useCustomerMutations.ts`: إضافة `verifyPermissionOnServer('customers', 'edit')` في `bulkVipMutation` و `bulkStatusMutation`
+
+### الأولوية 4 — إصلاح Mobile Delete Confirmation
+- `CustomersPage.tsx`: تمرير `handleDeleteRequest` (الذي يفتح AlertDialog) بدلاً من `handleDeleteConfirm` إلى `CustomerMobileView.onDelete`
+
+### الأولوية 5 — تحسينات UX
+- مسح draft عند `confirmDiscard` في `CustomerFormDialog`
+- إضافة أزرار export/import للموبايل (في dropdown menu)
+- تعديل `CustomerStatsGrid` من `lg:grid-cols-8` إلى `lg:grid-cols-4 xl:grid-cols-8`
 
