@@ -9,6 +9,7 @@ import MobileBottomNav from './MobileBottomNav';
 import MobileDrawer from './MobileDrawer';
 import { FABMenu } from '@/components/mobile/FABMenu';
 import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
+import { PageLoadingState } from '@/components/shared/PageLoadingState';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
