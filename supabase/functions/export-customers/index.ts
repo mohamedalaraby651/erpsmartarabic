@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No Authorization header')
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -19,65 +20,65 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
     // Verify user JWT
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     })
     const { data: { user }, error: authError } = await userClient.auth.getUser()
     if (authError || !user) {
+      console.error('Auth error:', authError?.message)
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    // Get tenant - try RPC first, then fallback to direct query
-    let tenantId: string | null = null
+    console.log('User authenticated:', user.id)
+
+    // Get tenant via service role (most reliable - bypasses RLS)
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey)
     
-    const { data: tenantData, error: tenantError } = await userClient.rpc('get_current_tenant')
-    if (!tenantError && tenantData) {
-      tenantId = tenantData
-    }
+    let tenantId: string | null = null
 
-    // Fallback: query user_tenants directly with service role
-    if (!tenantId) {
-      const adminClientForTenant = createClient(supabaseUrl, supabaseServiceKey)
-      const { data: utData } = await adminClientForTenant
-        .from('user_tenants')
-        .select('tenant_id')
-        .eq('user_id', user.id)
-        .eq('is_default', true)
-        .limit(1)
-        .single()
-      
-      if (utData?.tenant_id) {
-        tenantId = utData.tenant_id
-      }
-    }
+    // Query user_tenants directly with service role
+    const { data: defaultTenant, error: dtError } = await adminClient
+      .from('user_tenants')
+      .select('tenant_id')
+      .eq('user_id', user.id)
+      .eq('is_default', true)
+      .limit(1)
+      .maybeSingle()
 
-    // Final fallback: any tenant for this user
-    if (!tenantId) {
-      const adminClientForTenant = createClient(supabaseUrl, supabaseServiceKey)
-      const { data: utData } = await adminClientForTenant
+    console.log('Default tenant query:', { data: defaultTenant, error: dtError?.message })
+
+    if (defaultTenant?.tenant_id) {
+      tenantId = defaultTenant.tenant_id
+    } else {
+      // Fallback: any tenant for this user
+      const { data: anyTenant } = await adminClient
         .from('user_tenants')
         .select('tenant_id')
         .eq('user_id', user.id)
         .limit(1)
-        .single()
-      
-      if (utData?.tenant_id) {
-        tenantId = utData.tenant_id
+        .maybeSingle()
+
+      console.log('Any tenant fallback:', anyTenant)
+      if (anyTenant?.tenant_id) {
+        tenantId = anyTenant.tenant_id
       }
     }
 
     if (!tenantId) {
+      console.error('No tenant found for user:', user.id)
       return new Response(JSON.stringify({ error: 'No tenant found' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    // Use service role to fetch all customers for this tenant
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey)
+    console.log('Using tenant:', tenantId)
+
+    // Fetch all customers for this tenant
     const { data: customers, error: fetchError } = await adminClient
       .from('customers')
       .select('name, phone, email, customer_type, vip_level, governorate, city, current_balance, credit_limit, payment_terms_days, is_active, created_at, total_purchases_cached, invoice_count_cached')
@@ -85,10 +86,13 @@ Deno.serve(async (req) => {
       .order('name')
 
     if (fetchError) {
+      console.error('Fetch error:', fetchError.message)
       return new Response(JSON.stringify({ error: fetchError.message }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    console.log('Customers fetched:', customers?.length)
 
     // Build CSV with BOM for Arabic support
     const BOM = '\uFEFF'
@@ -122,7 +126,7 @@ Deno.serve(async (req) => {
     const fileName = `customers_export_${new Date().toISOString().slice(0, 10)}.csv`
     const filePath = `exports/${tenantId}/${fileName}`
 
-    // Upload to storage using Uint8Array instead of Blob for Deno compatibility
+    // Upload using Uint8Array for Deno compatibility
     const encoded = new TextEncoder().encode(csvContent)
     const { error: uploadError } = await adminClient.storage
       .from('documents')
@@ -132,6 +136,7 @@ Deno.serve(async (req) => {
       })
 
     if (uploadError) {
+      console.error('Upload error:', uploadError.message)
       return new Response(JSON.stringify({ error: `Upload failed: ${uploadError.message}` }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -141,6 +146,8 @@ Deno.serve(async (req) => {
     const { data: signedUrl } = await adminClient.storage
       .from('documents')
       .createSignedUrl(filePath, 3600)
+
+    console.log('Export complete, rows:', rows.length)
 
     return new Response(JSON.stringify({
       success: true,
@@ -152,6 +159,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   } catch (err) {
+    console.error('Unexpected error:', String(err))
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
