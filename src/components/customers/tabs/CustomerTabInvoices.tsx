@@ -88,6 +88,17 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 <span className="text-muted-foreground">المتبقي:</span>
                 <span className="font-bold text-destructive">{summary.outstanding.toLocaleString()} ج.م</span>
               </div>
+              {summary.unlinkedPayments > 0 && (
+                <>
+                  <div className="w-px h-4 bg-border hidden sm:block" />
+                  <div className="flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                      يوجد {summary.unlinkedPayments.toLocaleString()} ج.م دفعات غير مرتبطة بفواتير
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Invoice List */}
