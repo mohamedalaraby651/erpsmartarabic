@@ -234,10 +234,10 @@ const CustomersPage = () => {
 
       <CustomerFiltersBar
         searchQuery={filters.searchQuery} onSearchChange={filters.setSearchQuery}
-        typeFilter={filters.typeFilter} onTypeChange={filters.setTypeFilter}
-        vipFilter={filters.vipFilter} onVipChange={filters.setVipFilter}
-        governorateFilter={filters.governorateFilter} onGovernorateChange={filters.setGovernorateFilter}
-        statusFilter={filters.statusFilter} onStatusChange={filters.setStatusFilter}
+        typeFilter={filters.typeFilter} onTypeChange={(v) => { filters.setTypeFilter(v); setQuickFilter(null); }}
+        vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
+        governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
+        statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
         governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
         isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
         onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
