@@ -21,6 +21,7 @@ interface CustomerStatsBarProps {
     totalBalance: number;
     active: number;
     inactive: number;
+    debtors?: number;
   };
   isMobile: boolean;
   activeFilter?: string;
