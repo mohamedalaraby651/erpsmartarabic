@@ -10,6 +10,7 @@ import { vipColors, vipLabels, vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CustomerHealthBadge } from "@/components/customers/CustomerHealthBadge";
 
 interface HeroIdentityProps {
   customer: Customer;
