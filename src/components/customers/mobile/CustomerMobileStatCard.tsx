@@ -28,7 +28,7 @@ const colorMap = {
     valueText: 'text-destructive',
   },
   primary: {
-    border: 'border-r-primary',
+    border: 'border-s-primary',
     iconBg: 'bg-primary/10',
     iconText: 'text-primary',
     valueText: 'text-primary',
