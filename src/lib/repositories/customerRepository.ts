@@ -335,6 +335,7 @@ export const customerRepository = {
       if (error) throw error;
       if (!data || data.length === 0) break;
       allData = allData.concat(data as Customer[]);
+      onProgress?.(allData.length);
       if (data.length < batchSize) break;
       offset += batchSize;
     }
