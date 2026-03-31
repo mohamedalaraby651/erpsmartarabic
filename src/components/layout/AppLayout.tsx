@@ -9,6 +9,7 @@ import MobileBottomNav from './MobileBottomNav';
 import MobileDrawer from './MobileDrawer';
 import { FABMenu } from '@/components/mobile/FABMenu';
 import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
+import { PageLoadingState } from '@/components/shared/PageLoadingState';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -19,19 +20,9 @@ import PageTransition from '@/components/transitions/PageTransition';
 // Lazy load ShortcutsModal
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
 
-// Skeleton loader for page content
+// Use unified PageLoadingState as fallback
 function PageSkeleton() {
-  return (
-    <div className="p-4 space-y-4">
-      <div className="h-8 w-48 bg-muted rounded animate-pulse" />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-32 w-full rounded-lg bg-muted animate-pulse" />
-        ))}
-      </div>
-      <div className="h-64 w-full rounded-lg bg-muted animate-pulse" />
-    </div>
-  );
+  return <PageLoadingState />;
 }
 
 export default function AppLayout() {

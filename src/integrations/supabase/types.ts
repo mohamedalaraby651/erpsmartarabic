@@ -4262,6 +4262,7 @@ export type Database = {
       get_customer_stats: { Args: never; Returns: Json }
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
+      get_sidebar_counts: { Args: never; Returns: Json }
       get_user_tenants: { Args: { _user_id: string }; Returns: string[] }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {

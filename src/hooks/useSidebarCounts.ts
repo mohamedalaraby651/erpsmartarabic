@@ -12,91 +12,44 @@ export interface SidebarCounts {
   pendingPurchaseOrders: number;
 }
 
+/**
+ * Fetches all sidebar badge counts via a single RPC call
+ * instead of 7 separate queries.
+ */
 export function useSidebarCounts(enabled = true) {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ['sidebar-counts', user?.id],
     queryFn: async (): Promise<SidebarCounts> => {
-      const [
-        invoicesResult,
-        salesOrdersResult,
-        notificationsResult,
-        stockResult,
-        tasksResult,
-        quotationsResult,
-        purchaseOrdersResult,
-      ] = await Promise.all([
-        // Pending/Unpaid invoices
-        supabase
-          .from('invoices')
-          .select('id', { count: 'exact', head: true })
-          .in('payment_status', ['pending', 'partial']),
-        
-        // Pending sales orders
-        supabase
-          .from('sales_orders')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['pending', 'draft']),
-        
-        // Unread notifications
-        supabase
-          .from('notifications')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user?.id || '')
-          .eq('is_read', false),
-        
-        // Low stock products
-        supabase
-          .from('products')
-          .select('id, min_stock, product_stock(quantity)', { count: 'exact' })
-          .not('min_stock', 'is', null),
-        
-        // Open tasks
-        supabase
-          .from('tasks')
-          .select('id', { count: 'exact', head: true })
-          .eq('is_completed', false),
-        
-        // Pending quotations
-        supabase
-          .from('quotations')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['pending', 'draft']),
-        
-        // Pending purchase orders
-        supabase
-          .from('purchase_orders')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['pending', 'draft']),
-      ]);
+      const { data, error } = await supabase.rpc('get_sidebar_counts');
 
-      // Calculate low stock count
-      let lowStockCount = 0;
-      if (stockResult.data) {
-        interface ProductWithStock {
-          id: string;
-          min_stock: number | null;
-          product_stock: { quantity: number }[] | null;
-        }
-        lowStockCount = (stockResult.data as ProductWithStock[]).filter((product) => {
-          const totalStock = product.product_stock?.reduce((sum: number, s) => sum + (s.quantity || 0), 0) || 0;
-          return totalStock < (product.min_stock || 0);
-        }).length;
+      if (error) {
+        console.error('[useSidebarCounts] RPC error:', error.message);
+        return {
+          pendingInvoices: 0,
+          pendingSalesOrders: 0,
+          unreadNotifications: 0,
+          lowStockAlerts: 0,
+          openTasks: 0,
+          pendingQuotations: 0,
+          pendingPurchaseOrders: 0,
+        };
       }
 
+      const d = data as Record<string, number>;
       return {
-        pendingInvoices: invoicesResult.count || 0,
-        pendingSalesOrders: salesOrdersResult.count || 0,
-        unreadNotifications: notificationsResult.count || 0,
-        lowStockAlerts: lowStockCount,
-        openTasks: tasksResult.count || 0,
-        pendingQuotations: quotationsResult.count || 0,
-        pendingPurchaseOrders: purchaseOrdersResult.count || 0,
+        pendingInvoices: d.pending_invoices ?? 0,
+        pendingSalesOrders: d.pending_sales_orders ?? 0,
+        unreadNotifications: d.unread_notifications ?? 0,
+        lowStockAlerts: d.low_stock_alerts ?? 0,
+        openTasks: d.open_tasks ?? 0,
+        pendingQuotations: d.pending_quotations ?? 0,
+        pendingPurchaseOrders: d.pending_purchase_orders ?? 0,
       };
     },
     enabled: !!user?.id && enabled,
-    refetchInterval: 120000, // Refresh every 2 minutes
-    staleTime: 60000, // Cache for 1 minute
+    refetchInterval: 120000,
+    staleTime: 60000,
   });
 }
