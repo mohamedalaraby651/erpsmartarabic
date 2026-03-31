@@ -43,6 +43,8 @@ interface CustomerMobileProfileProps {
   totalOutstanding?: number;
   paymentRatio?: number;
   totalPurchases?: number;
+  invoices?: Invoice[];
+  payments?: Payment[];
   // Quick actions
   onNewPayment?: () => void;
   onNewQuotation?: () => void;
