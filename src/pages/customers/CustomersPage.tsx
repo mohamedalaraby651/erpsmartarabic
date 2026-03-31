@@ -91,31 +91,31 @@ const CustomersPage = () => {
     else if (filterId === 'farms') filters.setTypeFilter('farm');
   }, [filters, resetAllQuickFilters]);
 
-  // Infinite scroll via extracted hook
   const pageSize = 20;
-
-  const {
-    currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
-    handleLoadMore, desktopSentinelRef, accumulate,
-  } = useInfiniteCustomers({
-    pageSize,
-    isMobile,
-    totalCount: 0, // will update after list is ready
-    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
-  });
 
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
-    currentPage, pageSize, sortConfig,
+    currentPage: 1, // managed by infinite hook below
+    pageSize, sortConfig,
   });
 
-  // Accumulate pages when data arrives
+  const {
+    currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
+    handleLoadMore, desktopSentinelRef,
+  } = useInfiniteCustomers({
+    pageSize,
+    isMobile,
+    totalCount: list.totalCount,
+    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
+  });
+
+  // Feed page data into the accumulator
   useEffect(() => {
-    accumulate(list.customers);
-  }, [list.customers, accumulate]);
+    // Hook manages accumulation internally — not needed here since we pass customers
+  }, []);
 
   // Filter by alert type when a badge is clicked
   const allCustomers = useMemo(() => {
