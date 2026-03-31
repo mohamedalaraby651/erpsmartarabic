@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { ActivityDiffViewer } from "@/components/customers/ActivityDiffViewer";
 import type { Database } from "@/integrations/supabase/types";
-import type { Database } from "@/integrations/supabase/types";
 
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
 
