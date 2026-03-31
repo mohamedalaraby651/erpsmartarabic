@@ -109,6 +109,7 @@ const CustomerDetailsPage = () => {
           paymentRatio={detail.paymentRatio}
           invoiceCount={detail.invoices.length} avgInvoiceValue={detail.avgInvoiceValue}
           dso={detail.dso} totalOutstanding={detail.totalOutstanding} lastPurchaseDate={detail.lastPurchaseDate}
+          clv={detail.clv}
         />
       )}
 
@@ -199,8 +200,8 @@ const CustomerDetailsPage = () => {
             <div className="relative">
               <ScrollArea className="w-full">
                 <TabsList className="flex w-max h-10 bg-muted/50 p-1">
-                  <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير</TabsTrigger>
-                  <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات</TabsTrigger>
+                  <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير{detail.invoices.length > 0 && ` (${detail.invoices.length})`}</TabsTrigger>
+                  <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات{detail.payments.length > 0 && ` (${detail.payments.length})`}</TabsTrigger>
                   <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
                   <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
                   <TabsTrigger value="financial" className="text-xs px-3"><Wallet className="h-3.5 w-3.5 ml-1" />الملخص المالي</TabsTrigger>
@@ -229,14 +230,14 @@ const CustomerDetailsPage = () => {
                 <CustomerAgingReport invoices={detail.invoices} />
               </TabsContent>
               <TabsContent value="financial" className="mt-4">
-                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
+                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
               </TabsContent>
               <TabsContent value="analysis" className="mt-4 space-y-4">
                 <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-                <CommunicationLogTab customerId={id!} />
                 <CustomerTabActivity activities={detail.activities} />
               </TabsContent>
               <TabsContent value="more" className="mt-4 space-y-4">
+                <CommunicationLogTab customerId={id!} />
                 <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(addrId) => detail.deleteAddressMutation.mutate(addrId)} />
                 <CustomerReminderSection customerId={id!} />
                 <CustomerTabAttachments customerId={id!} />
@@ -276,7 +277,7 @@ const CustomerDetailsPage = () => {
             <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} customerId={id!} /></TabsContent>
             <TabsContent value="credit-notes" className="mt-6"><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></TabsContent>
             <TabsContent value="financial" className="mt-6">
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
+              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
             </TabsContent>
             <TabsContent value="statement" className="mt-6">
               <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />

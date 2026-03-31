@@ -18,12 +18,13 @@ interface CustomerStatsGridProps {
   dso: number | null;
   totalOutstanding: number;
   lastPurchaseDate: string | null;
+  clv?: number;
 }
 
 export const CustomerStatsGrid = memo(function CustomerStatsGrid({
   currentBalance, balanceIsDebit, creditLimit, creditUsagePercent,
   totalPurchases, totalPayments, paymentRatio, invoiceCount, avgInvoiceValue,
-  dso, totalOutstanding, lastPurchaseDate,
+  dso, totalOutstanding, lastPurchaseDate, clv,
 }: CustomerStatsGridProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-8 gap-4">
@@ -141,12 +142,27 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-muted"><Calendar className="h-5 w-5 text-muted-foreground" /></div>
             <div>
-              <p className="text-sm font-medium">{lastPurchaseDate ? new Date(lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}</p>
+              <p className="text-lg font-bold">{lastPurchaseDate ? new Date(lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}</p>
               <p className="text-xs text-muted-foreground">آخر شراء</p>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* CLV */}
+      {clv !== undefined && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10 dark:bg-amber-500/20"><TrendingUp className="h-5 w-5 text-amber-600 dark:text-amber-400" /></div>
+              <div>
+                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{clv.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">قيمة العميل (CLV)</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 });

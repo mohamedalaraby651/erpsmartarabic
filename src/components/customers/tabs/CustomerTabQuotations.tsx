@@ -1,8 +1,11 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Globe, TrendingUp, Clock as ClockIcon, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
+
+const Q_PAGE_SIZE = 20;
 
 interface Quotation {
   id: string;
@@ -13,6 +16,8 @@ interface Quotation {
 }
 
 export const CustomerTabQuotations = memo(function CustomerTabQuotations({ quotations }: { quotations: Quotation[] }) {
+  const [qPage, setQPage] = useState(1);
+  const qTotalPages = Math.max(1, Math.ceil(quotations.length / Q_PAGE_SIZE));
   const summary = useMemo(() => {
     const total = quotations.length;
     const pending = quotations.filter(q => q.status === 'pending' || q.status === 'draft').length;
@@ -62,8 +67,9 @@ export const CustomerTabQuotations = memo(function CustomerTabQuotations({ quota
         {quotations.length === 0 ? (
           <div className="text-center py-8"><Globe className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" /><p className="text-muted-foreground">لا توجد عروض أسعار</p></div>
         ) : (
+          <>
           <div className="space-y-2">
-            {quotations.slice(0, 50).map((q) => (
+            {quotations.slice((qPage - 1) * Q_PAGE_SIZE, qPage * Q_PAGE_SIZE).map((q) => (
               <div key={q.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                 <div>
                   <EntityLink type="quotation" id={q.id}>{q.quotation_number}</EntityLink>
@@ -78,6 +84,14 @@ export const CustomerTabQuotations = memo(function CustomerTabQuotations({ quota
               </div>
             ))}
           </div>
+          {qTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button variant="outline" size="sm" disabled={qPage <= 1} onClick={() => setQPage(p => p - 1)}>السابق</Button>
+              <span className="text-sm text-muted-foreground">{qPage} / {qTotalPages}</span>
+              <Button variant="outline" size="sm" disabled={qPage >= qTotalPages} onClick={() => setQPage(p => p + 1)}>التالي</Button>
+            </div>
+          )}
+        </>
         )}
       </CardContent>
     </Card>

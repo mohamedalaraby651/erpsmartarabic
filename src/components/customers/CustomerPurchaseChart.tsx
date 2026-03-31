@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Invoice {
   id: string;
@@ -22,6 +23,8 @@ interface CustomerPurchaseChartProps {
 }
 
 const CustomerPurchaseChart = ({ invoices, payments }: CustomerPurchaseChartProps) => {
+  const isMobile = useIsMobile();
+
   const chartData = useMemo(() => {
     const now = new Date();
     const months = Array.from({ length: 12 }, (_, i) => {
@@ -62,25 +65,31 @@ const CustomerPurchaseChart = ({ invoices, payments }: CustomerPurchaseChartProp
     );
   }
 
+  const chartHeight = isMobile ? 250 : 350;
+  const margins = isMobile
+    ? { top: 5, right: 8, left: 8, bottom: 5 }
+    : { top: 5, right: 20, left: 20, bottom: 5 };
+  const tickFontSize = isMobile ? 9 : 11;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>المشتريات والمدفوعات الشهرية (آخر 12 شهر)</CardTitle>
+        <CardTitle className={isMobile ? 'text-base' : ''}>المشتريات والمدفوعات الشهرية (آخر 12 شهر)</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={chartData} margin={margins}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis dataKey="month" className="text-xs" tick={{ fontSize: 11 }} />
-            <YAxis className="text-xs" tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+            <XAxis dataKey="month" className="text-xs" tick={{ fontSize: tickFontSize }} interval={isMobile ? 1 : 0} />
+            <YAxis className="text-xs" tick={{ fontSize: tickFontSize }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={isMobile ? 35 : 50} />
             <Tooltip
               formatter={(value: number, name: string) => [
                 `${value.toLocaleString()} ج.م`,
                 name === 'purchases' ? 'المشتريات' : 'المدفوعات'
               ]}
-              contentStyle={{ direction: 'rtl', borderRadius: '8px' }}
+              contentStyle={{ direction: 'rtl', borderRadius: '8px', fontSize: isMobile ? 12 : 14 }}
             />
-            <Legend formatter={(value) => value === 'purchases' ? 'المشتريات' : 'المدفوعات'} />
+            <Legend formatter={(value) => value === 'purchases' ? 'المشتريات' : 'المدفوعات'} wrapperStyle={{ fontSize: isMobile ? 11 : 14 }} />
             <Bar dataKey="purchases" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="purchases" />
             <Bar dataKey="payments" fill="hsl(var(--success, 142 71% 45%))" radius={[4, 4, 0, 0]} name="payments" />
           </BarChart>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, CreditCard, Percent, Clock, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, CreditCard, Percent, Clock, Wallet, Star, Timer } from "lucide-react";
 
 interface CustomerFinancialSummaryProps {
   totalPurchases: number;
@@ -11,6 +11,10 @@ interface CustomerFinancialSummaryProps {
   paymentTermsDays: number;
   invoiceCount: number;
   totalOutstanding?: number;
+  paymentRatio?: number;
+  avgInvoiceValue?: number;
+  dso?: number | null;
+  clv?: number;
 }
 
 const CustomerFinancialSummary = ({
@@ -22,10 +26,15 @@ const CustomerFinancialSummary = ({
   paymentTermsDays,
   invoiceCount,
   totalOutstanding,
+  paymentRatio: paymentRatioProp,
+  avgInvoiceValue: avgInvoiceProp,
+  dso,
+  clv,
 }: CustomerFinancialSummaryProps) => {
-  const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
+  // Use pre-calculated values if provided, otherwise fallback to local calc
+  const paymentRatio = paymentRatioProp ?? (totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0);
   const creditUsage = creditLimit > 0 ? (currentBalance / creditLimit) * 100 : 0;
-  const avgInvoice = invoiceCount > 0 ? totalPurchases / invoiceCount : 0;
+  const avgInvoice = avgInvoiceProp ?? (invoiceCount > 0 ? totalPurchases / invoiceCount : 0);
 
   const items = [
     {
@@ -70,6 +79,20 @@ const CustomerFinancialSummary = ({
       color: 'text-muted-foreground',
       bgColor: 'bg-muted',
     },
+    ...(dso !== undefined && dso !== null ? [{
+      icon: Timer,
+      label: 'متوسط أيام السداد (DSO)',
+      value: `${dso} يوم`,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-500/10',
+    }] : []),
+    ...(clv !== undefined ? [{
+      icon: Star,
+      label: 'قيمة العميل (CLV)',
+      value: `${clv.toLocaleString()} ج.م`,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-500/10',
+    }] : []),
   ];
 
   return (

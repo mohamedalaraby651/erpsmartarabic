@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,8 +88,7 @@ const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = []
     });
   }, [invoices, payments, creditNotes, dateFrom, dateTo]);
 
-  // Reset page when filters change
-  useMemo(() => setCurrentPage(1), [dateFrom, dateTo]);
+  useEffect(() => { setCurrentPage(1); }, [dateFrom, dateTo]);
 
   const totalPages = Math.ceil(statementData.length / PAGE_SIZE);
   const pagedData = statementData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
