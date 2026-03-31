@@ -13,9 +13,10 @@ interface CustomerSearchPreviewProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  mobileStyle?: boolean;
 }
 
-export function CustomerSearchPreview({ value, onChange, className }: CustomerSearchPreviewProps) {
+export function CustomerSearchPreview({ value, onChange, className, mobileStyle }: CustomerSearchPreviewProps) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -68,7 +69,10 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
 
   return (
     <div ref={wrapperRef} className={cn("relative flex-1", className)}>
-      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Search className={cn(
+        "absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4",
+        mobileStyle ? "text-muted-foreground/60" : "text-muted-foreground",
+      )} />
       <Input
         placeholder="بحث بالاسم، الهاتف، المحافظة..."
         value={value}
@@ -76,7 +80,10 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
         onFocus={() => setIsFocused(true)}
         onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         onKeyDown={handleKeyDown}
-        className="pr-10 pl-10"
+        className={cn(
+          "pr-10 pl-10",
+          mobileStyle && "h-11 rounded-xl bg-muted/50 border-transparent shadow-inner focus-visible:bg-background focus-visible:border-input",
+        )}
       />
       {value && (
         <Button
@@ -90,7 +97,7 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
       )}
 
       {isOpen && (
-        <div className="absolute top-full mt-1 inset-x-0 z-50 bg-popover border rounded-lg shadow-lg overflow-hidden" role="listbox">
+        <div className="absolute top-full mt-1 inset-x-0 z-50 bg-popover border rounded-xl shadow-lg overflow-hidden" role="listbox">
           {results.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               لا توجد نتائج مطابقة

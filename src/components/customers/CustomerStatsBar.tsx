@@ -1,8 +1,7 @@
 import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Users, Building2, Crown, DollarSign, UserCheck, UserX } from "lucide-react";
+import { Users, Building2, Crown, DollarSign, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FilterChipDef {
@@ -10,6 +9,8 @@ interface FilterChipDef {
   label: string;
   count: number;
   icon: React.ElementType;
+  activeClass: string;
+  inactiveClass: string;
 }
 
 interface CustomerStatsBarProps {
@@ -31,56 +32,76 @@ interface CustomerStatsBarProps {
 
 export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile, activeFilter, onFilterChange }: CustomerStatsBarProps) {
   const chips: FilterChipDef[] = [
-    { id: 'active', label: 'نشط', count: stats.active, icon: UserCheck },
-    { id: 'vip', label: 'VIP', count: stats.vip, icon: Crown },
-    { id: 'debtors', label: 'مدين', count: stats.debtors ?? 0, icon: DollarSign },
-    { id: 'companies', label: 'شركات', count: stats.companies, icon: Building2 },
-    { id: 'farms', label: 'مزارع', count: stats.farms ?? 0, icon: Users },
-    { id: 'individuals', label: 'أفراد', count: stats.individuals, icon: Users },
-    { id: 'inactive', label: 'غير نشط', count: stats.inactive, icon: UserX },
+    { id: 'active', label: 'نشط', count: stats.active, icon: UserCheck, activeClass: 'bg-emerald-500 text-white shadow-emerald-500/30', inactiveClass: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' },
+    { id: 'vip', label: 'VIP', count: stats.vip, icon: Crown, activeClass: 'bg-amber-500 text-white shadow-amber-500/30', inactiveClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' },
+    { id: 'debtors', label: 'مدين', count: stats.debtors ?? 0, icon: DollarSign, activeClass: 'bg-destructive text-white shadow-destructive/30', inactiveClass: 'bg-destructive/10 text-destructive border-destructive/20' },
+    { id: 'companies', label: 'شركات', count: stats.companies, icon: Building2, activeClass: 'bg-info text-white shadow-info/30', inactiveClass: 'bg-info/10 text-info border-info/20' },
+    { id: 'farms', label: 'مزارع', count: stats.farms ?? 0, icon: TrendingUp, activeClass: 'bg-primary text-primary-foreground shadow-primary/30', inactiveClass: 'bg-primary/10 text-primary border-primary/20' },
+    { id: 'individuals', label: 'أفراد', count: stats.individuals, icon: Users, activeClass: 'bg-secondary-foreground text-secondary shadow-foreground/20', inactiveClass: 'bg-secondary text-secondary-foreground border-border' },
+    { id: 'inactive', label: 'غير نشط', count: stats.inactive, icon: UserX, activeClass: 'bg-muted-foreground text-background shadow-muted-foreground/20', inactiveClass: 'bg-muted text-muted-foreground border-border' },
   ];
 
   if (isMobile) {
     return (
-      <div className="space-y-2">
-        {/* Main stat */}
-        <div className="flex items-center gap-2 px-1">
-          <Users className="h-5 w-5 text-primary" />
-          <span className="text-xl font-bold">{stats.total}</span>
-          <span className="text-sm text-muted-foreground">عميل</span>
-          {stats.totalBalance > 0 && (
-            <span className="mr-auto text-sm font-semibold text-destructive">
-              {stats.totalBalance.toLocaleString()} ج.م
-            </span>
-          )}
+      <div className="space-y-3">
+        {/* Hero summary card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-4 text-primary-foreground shadow-lg shadow-primary/20">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-12 -translate-y-12" />
+          <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full translate-x-8 translate-y-8" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-3xl font-bold leading-none">{stats.total}</p>
+                <p className="text-sm text-primary-foreground/80 mt-0.5">إجمالي العملاء</p>
+              </div>
+            </div>
+            {stats.totalBalance > 0 && (
+              <div className="text-left">
+                <p className="text-xl font-bold leading-none">{stats.totalBalance.toLocaleString()}</p>
+                <p className="text-xs text-primary-foreground/70 mt-0.5">ج.م مستحق</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Quick filter chips */}
+        {/* Colored filter chips */}
         {onFilterChange && (
           <ScrollArea className="w-full">
             <div className="flex gap-2 pb-1">
-              <Badge
-                variant={!activeFilter ? 'default' : 'outline'}
-                className="cursor-pointer shrink-0 px-3 py-1.5 text-xs"
+              <button
                 onClick={() => onFilterChange(null)}
+                className={cn(
+                  'shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-all duration-200',
+                  !activeFilter
+                    ? 'bg-foreground text-background shadow-md shadow-foreground/20 border-transparent'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-accent',
+                )}
               >
-                الكل {stats.total}
-              </Badge>
+                الكل
+              </button>
               {chips.map((chip) => (
-                <Badge
+                <button
                   key={chip.id}
-                  variant={activeFilter === chip.id ? 'default' : 'outline'}
-                  className={cn(
-                    'cursor-pointer shrink-0 px-3 py-1.5 text-xs transition-colors',
-                    activeFilter === chip.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-accent',
-                  )}
                   onClick={() => onFilterChange(activeFilter === chip.id ? null : chip.id)}
+                  className={cn(
+                    'shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-all duration-200',
+                    activeFilter === chip.id
+                      ? cn(chip.activeClass, 'shadow-md border-transparent')
+                      : cn(chip.inactiveClass, 'hover:shadow-sm'),
+                  )}
                 >
-                  <chip.icon className="h-3 w-3 ml-1" />
-                  {chip.label} {chip.count}
-                </Badge>
+                  <chip.icon className="h-3.5 w-3.5" />
+                  {chip.label}
+                  <span className={cn(
+                    'text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center',
+                    activeFilter === chip.id ? 'bg-white/25' : 'bg-current/10',
+                  )}>
+                    {chip.count}
+                  </span>
+                </button>
               ))}
             </div>
             <ScrollBar orientation="horizontal" className="invisible" />
