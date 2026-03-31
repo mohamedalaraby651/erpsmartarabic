@@ -199,7 +199,7 @@ const CustomersPage = () => {
         />
       )}
 
-      <CustomerStatsBar stats={list.stats} isMobile={isMobile} />
+      <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
 
       {totalAlerts > 0 && (
         <Card className="border-warning/50 bg-warning/5">
