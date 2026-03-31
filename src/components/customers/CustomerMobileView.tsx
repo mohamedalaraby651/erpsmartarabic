@@ -25,6 +25,7 @@ interface CustomerMobileViewProps {
 
 export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
+  hasActiveFilters, onClearFilters,
 }: CustomerMobileViewProps) {
   const renderCard = useCallback((customer: Customer) => (
     <SwipeableRow
