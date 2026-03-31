@@ -138,7 +138,7 @@ const CustomersPage = () => {
     }
   }, [list.customers, mobilePage, isMobile]);
 
-  const allMobileCustomers = isMobile ? mobilePages.flat() : list.customers;
+  const allMobileCustomers = useMemo(() => isMobile ? mobilePages.flat() : list.customers, [isMobile, mobilePages, list.customers]);
 
   const handleLoadMore = useCallback(() => {
     if (mobileHasNextPage && !isFetchingNextPage) {
