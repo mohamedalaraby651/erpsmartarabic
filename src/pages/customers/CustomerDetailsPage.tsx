@@ -107,7 +107,8 @@ const CustomerDetailsPage = () => {
         <CustomerStatsGrid
           currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
           creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
-          totalPurchases={detail.totalPurchases} paymentRatio={detail.paymentRatio}
+          totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments}
+          paymentRatio={detail.paymentRatio}
           invoiceCount={detail.invoices.length} avgInvoiceValue={detail.avgInvoiceValue}
           dso={detail.dso} totalOutstanding={detail.totalOutstanding} lastPurchaseDate={detail.lastPurchaseDate}
         />

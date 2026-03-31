@@ -92,14 +92,14 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
         </CardContent>
       </Card>
 
-      {/* Avg Invoice */}
+      {/* Total Payments */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-warning/10"><BarChart3 className="h-5 w-5 text-warning" /></div>
+            <div className="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20"><Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
             <div>
-              <p className="text-lg font-bold">{avgInvoiceValue.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">متوسط الفاتورة</p>
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{totalPayments.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">إجمالي المدفوعات</p>
             </div>
           </div>
         </CardContent>
