@@ -36,6 +36,9 @@ const CustomerTabAttachments = lazy(() => import("@/components/customers/tabs/Cu
 const StatementOfAccount = lazy(() => import("@/components/customers/StatementOfAccount"));
 const CustomerFinancialSummary = lazy(() => import("@/components/customers/CustomerFinancialSummary"));
 const CustomerPurchaseChart = lazy(() => import("@/components/customers/CustomerPurchaseChart"));
+const AgingDonutChart = lazy(() => import("@/components/customers/charts/AgingDonutChart").then(m => ({ default: m.AgingDonutChart })));
+const CashFlowLineChart = lazy(() => import("@/components/customers/charts/CashFlowLineChart").then(m => ({ default: m.CashFlowLineChart })));
+const TopProductsChart = lazy(() => import("@/components/customers/charts/TopProductsChart").then(m => ({ default: m.TopProductsChart })));
 const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAgingReport"));
 const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
