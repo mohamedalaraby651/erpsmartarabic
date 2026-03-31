@@ -40,7 +40,7 @@ const colorMap = {
     valueText: 'text-amber-600 dark:text-amber-400',
   },
   info: {
-    border: 'border-r-blue-500',
+    border: 'border-s-blue-500',
     iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
     iconText: 'text-blue-600 dark:text-blue-400',
     valueText: 'text-blue-600 dark:text-blue-400',
