@@ -35,8 +35,8 @@ const CustomersPage = () => {
   const navigate = useNavigate();
   const { userRole } = useAuth();
   const { isMobile } = useResponsiveView();
-  const { errorAlerts, warningAlerts, totalAlerts } = useCustomerAlerts();
   const [alertsDismissed, setAlertsDismissed] = useState(false);
+  const { errorAlerts, warningAlerts, totalAlerts } = useCustomerAlerts(!alertsDismissed);
   const dialogRef = useRef<DialogManagerHandle>(null);
 
   const filters = useCustomerFilters();
