@@ -26,7 +26,7 @@ import { CustomerPageHeader } from "@/components/customers/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/CustomerFilterDrawer";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { CustomerQuickAddDialog } from "@/components/customers/CustomerQuickAddDialog";
-import { CustomerExportDialog, type ExportOptions } from "@/components/customers/CustomerExportDialog";
+import { CustomerExportDialog } from "@/components/customers/CustomerExportDialog";
 import { CustomerSavedViews } from "@/components/customers/CustomerSavedViews";
 import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
