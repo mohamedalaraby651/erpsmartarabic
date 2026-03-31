@@ -10,15 +10,15 @@ import {
   CreditCard, Bell, MessageSquare, BarChart3, Globe, Clock, Printer,
   Wallet, StickyNote,
 } from "lucide-react";
-import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
-import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
+import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
+import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { useCustomerDetail, useCustomerNavigation } from "@/hooks/customers";
-import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
-import { CustomerSmartAlerts } from "@/components/customers/CustomerSmartAlerts";
-import { CustomerPinnedNote } from "@/components/customers/CustomerPinnedNote";
-import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
-import { CustomerHealthBadge } from "@/components/customers/CustomerHealthBadge";
+import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
+import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
+import { CustomerPinnedNote } from "@/components/customers/details/CustomerPinnedNote";
+import { CustomerKPICards } from "@/components/customers/details/CustomerKPICards";
+import { CustomerHealthBadge } from "@/components/customers/details/CustomerHealthBadge";
 import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
 import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStrip";
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
