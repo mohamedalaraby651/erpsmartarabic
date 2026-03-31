@@ -93,7 +93,7 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
           if (error) logErrorSafely('useAlertNotifier:insert', error.message);
         }
       } catch (err) {
-        logErrorSafely(err, 'useAlertNotifier:process');
+        logErrorSafely('useAlertNotifier:process', err);
       }
     }
   }, []);
