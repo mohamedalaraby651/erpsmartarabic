@@ -164,83 +164,101 @@ const CustomerDetailsPage = () => {
         invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
         lastCommunicationAt={customer.last_communication_at}
         onEditCreditLimit={() => setEditDialogOpen(true)}
-        onSendReminder={() => isMobile ? setMobileTab('more') : detail.setActiveTab('reminders')}
+        onSendReminder={() => isMobile ? setMobileSection('reminders') : detail.setActiveTab('reminders')}
         onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
         onContact={handleWhatsApp}
       />
 
-      <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileTab('notes') : detail.setActiveTab('notes')} />
+      <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileSection('notes') : detail.setActiveTab('notes')} />
       {isMobile ? (
         <div className="space-y-4">
-          <CustomerMobileProfile
-            customer={customer} customerId={id!}
-            onEdit={() => setEditDialogOpen(true)}
-            onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-            onStatement={() => setMobileTab('statement')}
-            onWhatsApp={handleWhatsApp}
-            onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
-            onPrev={goPrev} onNext={goNext} hasPrev={!!prevId} hasNext={!!nextId}
-            currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
-            totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio}
-            totalPurchases={detail.totalPurchases}
-            invoices={detail.invoices} payments={detail.payments}
-            onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
-            onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
-            onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
-            onNewCreditNote={() => setMobileTab('financials')}
-            onToggleActive={handleToggleActive}
-          />
+          {/* Show full hero header when no section is expanded */}
+          {mobileSection === 'none' ? (
+            <CustomerMobileProfile
+              customer={customer} customerId={id!}
+              onEdit={() => setEditDialogOpen(true)}
+              onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+              onStatement={() => setMobileSection('statement')}
+              onWhatsApp={handleWhatsApp}
+              onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
+              currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
+              creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
+              totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio}
+              totalPurchases={detail.totalPurchases}
+              invoices={detail.invoices} payments={detail.payments}
+              onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
+              onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
+              onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
+              onNewCreditNote={() => setMobileSection('invoices')}
+              onToggleActive={handleToggleActive}
+            />
+          ) : (
+            <CustomerCompressedHeader
+              customer={customer}
+              currentBalance={detail.currentBalance}
+              balanceIsDebit={detail.balanceIsDebit}
+              onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+              onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
+              onCall={() => {}}
+              onMoreActions={() => setEditDialogOpen(true)}
+            />
+          )}
 
-          <Tabs value={mobileTab} onValueChange={setMobileTab}>
-            {/* Active section title for "more" sub-tabs */}
-            {mobileTabLabels[mobileTab] && (
-              <div className="flex items-center gap-2 mb-2 px-1">
-                <div className="h-4 w-1 rounded-full bg-primary" />
-                <h2 className="text-sm font-semibold text-foreground">{mobileTabLabels[mobileTab]}</h2>
-              </div>
-            )}
+          {/* Icon Strip */}
+          <CustomerIconStrip activeSection={mobileSection} onSectionChange={setMobileSection} />
+
+          {/* Expanded Section Content */}
+          {mobileSection !== 'none' && (
             <Suspense fallback={<TabSkeleton />}>
-              <TabsContent value="financial" className="mt-4">
-                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-              </TabsContent>
-              <TabsContent value="financials" className="mt-4 space-y-4">
-                <CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={handleQuickPay} />
-                <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
-              </TabsContent>
-              <TabsContent value="payments-tab" className="mt-4">
+              {mobileSection === 'invoices' && (
+                <div className="space-y-4">
+                  <CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={handleQuickPay} />
+                  <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
+                </div>
+              )}
+              {mobileSection === 'payments' && (
                 <CustomerTabPayments payments={detail.payments} customerId={id!} />
-              </TabsContent>
-              <TabsContent value="sales" className="mt-4 space-y-4">
-                <CustomerTabQuotations quotations={detail.quotations} />
-                <CustomerTabOrders salesOrders={detail.salesOrders} />
-              </TabsContent>
-              <TabsContent value="statement" className="mt-4 space-y-4">
-                <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
-                <CustomerAgingReport invoices={detail.invoices} />
-              </TabsContent>
-              <TabsContent value="aging" className="mt-4">
-                <CustomerAgingReport invoices={detail.invoices} />
-              </TabsContent>
-              <TabsContent value="analysis" className="mt-4 space-y-4">
-                <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-                <AgingDonutChart invoices={detail.invoices} />
-                <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
-                <TopProductsChart customerId={id!} />
-                <CustomerTabActivity activities={detail.activities} />
-              </TabsContent>
-              <TabsContent value="more" className="mt-4">
+              )}
+              {mobileSection === 'info' && (
                 <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(addrId) => detail.deleteAddressMutation.mutate(addrId)} onWhatsApp={handleWhatsApp} />
-              </TabsContent>
-              <TabsContent value="notes" className="mt-4"><CustomerTabNotes customerId={id!} /></TabsContent>
-              <TabsContent value="reminders" className="mt-4"><CustomerReminderSection customerId={id!} /></TabsContent>
-              <TabsContent value="communications" className="mt-4"><CommunicationLogTab customerId={id!} /></TabsContent>
-              <TabsContent value="attachments" className="mt-4"><CustomerTabAttachments customerId={id!} /></TabsContent>
+              )}
+              {mobileSection === 'notes' && (
+                <CustomerTabNotes customerId={id!} />
+              )}
+              {mobileSection === 'analytics' && (
+                <div className="space-y-4">
+                  <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
+                  <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+                  <AgingDonutChart invoices={detail.invoices} />
+                  <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
+                  <TopProductsChart customerId={id!} />
+                </div>
+              )}
+              {mobileSection === 'sales' && (
+                <div className="space-y-4">
+                  <CustomerTabQuotations quotations={detail.quotations} />
+                  <CustomerTabOrders salesOrders={detail.salesOrders} />
+                </div>
+              )}
+              {mobileSection === 'statement' && (
+                <div className="space-y-4">
+                  <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
+                </div>
+              )}
+              {mobileSection === 'aging' && (
+                <CustomerAgingReport invoices={detail.invoices} />
+              )}
+              {mobileSection === 'reminders' && (
+                <CustomerReminderSection customerId={id!} />
+              )}
+              {mobileSection === 'communications' && (
+                <CommunicationLogTab customerId={id!} />
+              )}
+              {mobileSection === 'attachments' && (
+                <CustomerTabAttachments customerId={id!} />
+              )}
             </Suspense>
-          </Tabs>
-
-          <CustomerBottomNav activeTab={mobileTab} onTabChange={setMobileTab} />
-          {/* Spacer for bottom nav */}
-          <div className="h-[72px]" />
+          )}
         </div>
       ) : (
         <Tabs value={detail.activeTab} onValueChange={detail.setActiveTab} className="w-full">
