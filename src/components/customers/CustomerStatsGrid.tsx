@@ -24,7 +24,7 @@ interface CustomerStatsGridProps {
 export const CustomerStatsGrid = memo(function CustomerStatsGrid({
   currentBalance, balanceIsDebit, creditLimit, creditUsagePercent,
   totalPurchases, totalPayments, paymentRatio, invoiceCount, avgInvoiceValue,
-  dso, totalOutstanding, lastPurchaseDate,
+  dso, totalOutstanding, lastPurchaseDate, clv,
 }: CustomerStatsGridProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-8 gap-4">
