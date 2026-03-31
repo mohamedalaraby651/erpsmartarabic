@@ -18,6 +18,7 @@ interface CustomerStatsGridProps {
   dso: number | null;
   totalOutstanding: number;
   lastPurchaseDate: string | null;
+  clv?: number;
 }
 
 export const CustomerStatsGrid = memo(function CustomerStatsGrid({
