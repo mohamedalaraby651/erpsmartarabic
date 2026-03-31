@@ -23,6 +23,7 @@ interface CustomerMobileViewProps {
   onAdd?: () => void;
   onImport?: () => void;
   onNewInvoice?: (id: string) => void;
+  onNewPayment?: (id: string) => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
