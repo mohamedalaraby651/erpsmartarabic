@@ -161,6 +161,11 @@ export const customerRepository = {
   },
 
   async create(payload: CustomerInsert): Promise<Customer> {
+    // Validate before sending to DB
+    const parsed = customerWriteSchema.safeParse(payload);
+    if (!parsed.success) {
+      throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
+    }
     const { data, error } = await supabase
       .from('customers')
       .insert(payload)
