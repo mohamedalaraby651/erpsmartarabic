@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from "react";
-import { LayoutGrid, LayoutList, Loader2, Users, Search } from "lucide-react";
+import { LayoutGrid, LayoutList, Loader2, Users, Search, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/CustomerListCard";
 import CustomerGridCard from "@/components/customers/CustomerGridCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
