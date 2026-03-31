@@ -17,7 +17,7 @@ interface CustomerPageHeaderProps {
 }
 
 export const CustomerPageHeader = memo(function CustomerPageHeader({
-  isMobile, canEdit, customers, exportAllLoading,
+  isMobile, canEdit, exportAllLoading,
   onAdd, onDuplicates, onMerge, onImport, onExportAll,
 }: CustomerPageHeaderProps) {
   if (isMobile) {
