@@ -31,7 +31,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
   payments,
   customerId,
 }: {
-  payments: Payment[];
+  payments: PaymentWithInvoice[];
   customerId: string;
 }) {
   const [page, setPage] = useState(1);
