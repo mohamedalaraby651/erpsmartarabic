@@ -34,13 +34,14 @@ const CustomerPurchaseChart = lazy(() => import("@/components/customers/Customer
 const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAgingReport"));
 const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
+const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/CustomerTabCreditNotes").then(m => ({ default: m.CustomerTabCreditNotes })));
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 
 const tabIcons: Record<string, React.ElementType> = {
   addresses: MapPin, attachments: Paperclip, reminders: Bell,
   invoices: FileText, quotations: Globe, orders: ShoppingCart,
-  payments: CreditCard, financial: Wallet, statement: Printer, aging: Clock,
+  payments: CreditCard, 'credit-notes': FileText, financial: Wallet, statement: Printer, aging: Clock,
   analytics: BarChart3, communications: MessageSquare, activity: Activity,
 };
 
@@ -134,6 +135,9 @@ const CustomerDetailsPage = () => {
           <MobileDetailSection title="أوامر البيع" priority="low" icon={<ShoppingCart className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CustomerTabOrders salesOrders={detail.salesOrders} /></Suspense>
           </MobileDetailSection>
+          <MobileDetailSection title="إشعارات دائنة" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.creditNotes.length}>
+            <Suspense fallback={<TabFallback />}><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></Suspense>
+          </MobileDetailSection>
           <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} /></Suspense>
           </MobileDetailSection>
@@ -186,6 +190,7 @@ const CustomerDetailsPage = () => {
             <TabsContent value="quotations" className="mt-6"><CustomerTabQuotations quotations={detail.quotations} /></TabsContent>
             <TabsContent value="orders" className="mt-6"><CustomerTabOrders salesOrders={detail.salesOrders} /></TabsContent>
             <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} /></TabsContent>
+            <TabsContent value="credit-notes" className="mt-6"><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></TabsContent>
             <TabsContent value="financial" className="mt-6">
               <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} />
             </TabsContent>

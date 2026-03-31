@@ -77,11 +77,33 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
                   </Badge>
                 )}
               </div>
-              <p className="text-muted-foreground mb-3">
+              <p className="text-muted-foreground mb-1">
                 {customer.customer_type === 'company' ? 'شركة' : customer.customer_type === 'farm' ? 'مزرعة' : 'فرد'}
                 {customer.governorate && ` • ${customer.governorate}`}
                 {customer.city && ` - ${customer.city}`}
               </p>
+              <div className="flex flex-wrap gap-2 mb-3 text-xs">
+                {customer.payment_terms_days != null && Number(customer.payment_terms_days) > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    شروط الدفع: {customer.payment_terms_days} يوم
+                  </span>
+                )}
+                {customer.discount_percentage != null && Number(customer.discount_percentage) > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    خصم: {customer.discount_percentage}%
+                  </span>
+                )}
+                {customer.tax_number && (
+                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    ض.ر: {customer.tax_number}
+                  </span>
+                )}
+                {customer.preferred_payment_method && (
+                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    {customer.preferred_payment_method === 'cash' ? 'نقدي' : customer.preferred_payment_method === 'bank_transfer' ? 'تحويل بنكي' : customer.preferred_payment_method === 'credit' ? 'آجل' : customer.preferred_payment_method}
+                  </span>
+                )}
+              </div>
 
               {/* Contact Buttons */}
               <div className="flex flex-wrap gap-2 mb-4">

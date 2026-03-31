@@ -49,7 +49,7 @@ export function useCustomerDetail(id: string | undefined) {
   const { data: creditNotes = [] } = useQuery({
     queryKey: ['customer-credit-notes', id],
     queryFn: () => customerRepository.findCreditNotes(id!),
-    enabled: !!id && (isMobile || activeTab === 'statement'),
+    enabled: !!id && (isMobile || ['statement', 'credit-notes'].includes(activeTab)),
     staleTime: 60000,
   });
 
