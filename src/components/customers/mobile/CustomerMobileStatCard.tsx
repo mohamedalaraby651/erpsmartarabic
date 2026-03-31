@@ -34,7 +34,7 @@ const colorMap = {
     valueText: 'text-primary',
   },
   warning: {
-    border: 'border-r-amber-500',
+    border: 'border-s-amber-500',
     iconBg: 'bg-amber-500/10 dark:bg-amber-500/20',
     iconText: 'text-amber-600 dark:text-amber-400',
     valueText: 'text-amber-600 dark:text-amber-400',
