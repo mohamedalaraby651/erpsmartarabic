@@ -260,6 +260,7 @@ const CustomersPage = () => {
             onAdd={canEdit ? handleAdd : undefined}
             onImport={() => dialogRef.current?.openImport()}
             onNewInvoice={handleNewInvoice}
+            onNewPayment={handleNewPayment}
             hasNextPage={mobileHasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}

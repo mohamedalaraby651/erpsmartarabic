@@ -90,48 +90,60 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
       )}
 
       {isOpen && (
-        <div className="absolute top-full mt-1 inset-x-0 z-50 bg-popover border rounded-lg shadow-lg overflow-hidden">
-          {results.map((customer) => (
-            <button
-              key={customer.id}
-              className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-right"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                navigate(`/customers/${customer.id}`);
-                setIsOpen(false);
-              }}
-            >
-              <CustomerAvatar
-                name={customer.name}
-                imageUrl={customer.image_url}
-                customerType={customer.customer_type}
-                size="sm"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{customer.name}</p>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {customer.phone && (
-                    <span className="flex items-center gap-1">
-                      <Phone className="h-3 w-3" />
-                      {customer.phone}
-                    </span>
-                  )}
-                  {customer.governorate && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {customer.governorate}
-                    </span>
-                  )}
+        <div className="absolute top-full mt-1 inset-x-0 z-50 bg-popover border rounded-lg shadow-lg overflow-hidden" role="listbox">
+          {results.length === 0 ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              لا توجد نتائج مطابقة
+            </div>
+          ) : (
+            results.map((customer, index) => (
+              <button
+                key={customer.id}
+                role="option"
+                aria-selected={highlightedIndex === index}
+                className={cn(
+                  "w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-right",
+                  highlightedIndex === index && "bg-muted/50"
+                )}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  navigate(`/customers/${customer.id}`);
+                  setIsOpen(false);
+                }}
+                onMouseEnter={() => setHighlightedIndex(index)}
+              >
+                <CustomerAvatar
+                  name={customer.name}
+                  imageUrl={customer.image_url}
+                  customerType={customer.customer_type}
+                  size="sm"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{customer.name}</p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    {customer.phone && (
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {customer.phone}
+                      </span>
+                    )}
+                    {customer.governorate && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {customer.governorate}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <span className={cn(
-                "text-sm font-bold",
-                Number(customer.current_balance) > 0 ? 'text-destructive' : 'text-emerald-600'
-              )}>
-                {Number(customer.current_balance || 0).toLocaleString()}
-              </span>
-            </button>
-          ))}
+                <span className={cn(
+                  "text-sm font-bold",
+                  Number(customer.current_balance) > 0 ? 'text-destructive' : 'text-emerald-600'
+                )}>
+                  {Number(customer.current_balance || 0).toLocaleString()}
+                </span>
+              </button>
+            ))
+          )}
         </div>
       )}
     </div>
