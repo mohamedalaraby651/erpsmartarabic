@@ -72,13 +72,24 @@ export const CustomerTimelineDrawer = memo(function CustomerTimelineDrawer({
         method: pay.payment_method,
       }));
     } else if (filter === 'outstanding') {
+      // Build credit note totals per invoice
+      const creditByInvoice: Record<string, number> = {};
+      creditNotes.forEach(cn => {
+        creditByInvoice[cn.invoice_id] = (creditByInvoice[cn.invoice_id] || 0) + cn.amount;
+      });
       invoices
         .filter(inv => inv.payment_status !== 'paid')
-        .forEach(inv => items.push({
-          id: inv.id, date: inv.created_at, type: 'invoice',
-          amount: inv.total_amount - (inv.paid_amount || 0), label: inv.invoice_number,
-          status: inv.payment_status,
-        }));
+        .forEach(inv => {
+          const creditAmount = creditByInvoice[inv.id] || 0;
+          const outstanding = inv.total_amount - (inv.paid_amount || 0) - creditAmount;
+          if (outstanding > 0) {
+            items.push({
+              id: inv.id, date: inv.created_at, type: 'invoice',
+              amount: outstanding, label: inv.invoice_number,
+              status: inv.payment_status,
+            });
+          }
+        });
     }
 
     return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 30);

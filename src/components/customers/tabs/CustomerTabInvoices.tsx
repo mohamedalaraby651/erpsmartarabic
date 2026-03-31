@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, ChevronLeft, ChevronRight, Wallet, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileText, Plus, ChevronLeft, ChevronRight, Wallet, AlertCircle, Search, CreditCard } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -24,21 +26,49 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     label: 'معلق',
     className: 'bg-destructive/10 text-destructive',
   },
+  unpaid: {
+    label: 'غير مدفوع',
+    className: 'bg-destructive/10 text-destructive',
+  },
+  overdue: {
+    label: 'متأخر',
+    className: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  },
 };
 
 export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   invoices,
   customerId,
   totalPaymentsFromLedger,
+  onQuickPay,
 }: {
   invoices: Invoice[];
   customerId: string;
   totalPaymentsFromLedger?: number;
+  onQuickPay?: (invoiceId: string) => void;
 }) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(invoices.length / PAGE_SIZE);
-  const paged = invoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const filtered = useMemo(() => {
+    let result = invoices;
+    if (statusFilter !== 'all') {
+      result = result.filter(inv => inv.payment_status === statusFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(inv => inv.invoice_number.toLowerCase().includes(q));
+    }
+    return result;
+  }, [invoices, statusFilter, searchQuery]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset page on filter change
+  useMemo(() => setPage(1), [statusFilter, searchQuery]);
 
   const summary = useMemo(() => {
     const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
@@ -101,6 +131,32 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
               )}
             </div>
 
+            {/* Filters */}
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <div className="relative flex-1 min-w-[150px]">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="بحث برقم الفاتورة..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-9 h-9"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[130px] h-9">
+                  <SelectValue placeholder="الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">الكل</SelectItem>
+                  <SelectItem value="paid">مدفوع</SelectItem>
+                  <SelectItem value="partial">جزئي</SelectItem>
+                  <SelectItem value="unpaid">غير مدفوع</SelectItem>
+                  <SelectItem value="overdue">متأخر</SelectItem>
+                  <SelectItem value="pending">معلق</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Invoice List */}
             <div className="space-y-2">
               {paged.map((invoice) => {
@@ -116,7 +172,20 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                         <EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink>
                         <Badge className={status.className} variant="secondary">{status.label}</Badge>
                       </div>
-                      <span className="font-bold">{total.toLocaleString()} ج.م</span>
+                      <div className="flex items-center gap-2">
+                        {remaining > 0 && onQuickPay && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                            onClick={() => onQuickPay(invoice.id)}
+                          >
+                            <CreditCard className="h-3.5 w-3.5 ml-1" />
+                            سداد
+                          </Button>
+                        )}
+                        <span className="font-bold">{total.toLocaleString()} ج.م</span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
@@ -144,6 +213,10 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 );
               })}
             </div>
+
+            {filtered.length === 0 && invoices.length > 0 && (
+              <div className="text-center py-6 text-sm text-muted-foreground">لا توجد نتائج مطابقة للبحث</div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
