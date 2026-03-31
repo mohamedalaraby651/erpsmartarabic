@@ -107,10 +107,11 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
+  // Credit notes for statement are now fetched by the StatementOfAccount RPC
   const { data: creditNotes = [] } = useQuery({
     queryKey: ['customer-credit-notes', id],
     queryFn: () => customerRepository.findCreditNotes(id!),
-    enabled: !!id && (isMobile || ['statement', 'credit-notes'].includes(activeTab)),
+    enabled: !!id && (isMobile || ['credit-notes'].includes(activeTab)),
     staleTime: 60000,
   });
 
