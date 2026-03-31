@@ -111,7 +111,7 @@ export const CustomerTabActivity = memo(function CustomerTabActivity({ activitie
                       </div>
 
                       {/* Changes diff */}
-                      {renderChanges(activity.old_values, activity.new_values)}
+                      <ActivityDiffViewer oldValues={activity.old_values} newValues={activity.new_values} />
                     </div>
                   </div>
                 );
