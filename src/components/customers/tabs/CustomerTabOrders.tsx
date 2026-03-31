@@ -81,6 +81,7 @@ export const CustomerTabOrders = memo(function CustomerTabOrders({ salesOrders }
               <Button variant="outline" size="sm" disabled={oPage >= oTotalPages} onClick={() => setOPage(p => p + 1)}>التالي</Button>
             </div>
           )}
+        </>
         )}
       </CardContent>
     </Card>

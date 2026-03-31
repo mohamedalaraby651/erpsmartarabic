@@ -90,6 +90,7 @@ export const CustomerTabQuotations = memo(function CustomerTabQuotations({ quota
               <Button variant="outline" size="sm" disabled={qPage >= qTotalPages} onClick={() => setQPage(p => p + 1)}>التالي</Button>
             </div>
           )}
+        </>
         )}
       </CardContent>
     </Card>

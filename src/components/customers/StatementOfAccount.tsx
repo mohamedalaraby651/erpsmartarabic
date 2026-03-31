@@ -88,9 +88,7 @@ const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = []
     });
   }, [invoices, payments, creditNotes, dateFrom, dateTo]);
 
-  // Reset page when filters change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  
+  useEffect(() => { setCurrentPage(1); }, [dateFrom, dateTo]);
 
   const totalPages = Math.ceil(statementData.length / PAGE_SIZE);
   const pagedData = statementData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
