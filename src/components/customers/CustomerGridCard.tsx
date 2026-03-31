@@ -74,6 +74,8 @@ const CustomerGridCardInner = ({
             imageUrl={customer.image_url}
             customerType={customer.customer_type}
             size="lg"
+            shape="rounded-square"
+            vipBorder={customer.vip_level}
           />
           <div className="min-w-0 w-full">
             <h3 className="font-semibold text-sm truncate">{customer.name}</h3>
