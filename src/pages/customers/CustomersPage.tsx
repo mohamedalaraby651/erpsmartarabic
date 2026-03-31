@@ -370,6 +370,21 @@ const CustomersPage = () => {
         ref={dialogRef} onDeleteConfirm={handleDeleteConfirm}
         onBulkDelete={() => {}} onBulkVipUpdate={() => {}} bulkSelectedCount={0}
       />
+      <CustomerQuickAddDialog
+        open={quickAddOpen}
+        onOpenChange={setQuickAddOpen}
+        onOpenAdvanced={handleAddAdvanced}
+      />
+
+      <CustomerExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onExport={async (options) => {
+          await handleExportAll();
+        }}
+        totalCount={list.stats.total}
+        filteredCount={list.totalCount}
+      />
     </div>
     </PageWrapper>
   );
