@@ -1,12 +1,12 @@
-import React, { memo, useCallback, useState, useRef, useEffect } from "react";
-import { LayoutGrid, LayoutList, Loader2, Users, Search, ArrowUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { memo, useCallback, useState, useRef, useEffect, useMemo } from "react";
+import { LayoutGrid, LayoutList, Loader2, ArrowUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/CustomerListCard";
 import CustomerGridCard from "@/components/customers/CustomerGridCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
+import { cn } from "@/lib/utils";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
@@ -67,12 +67,12 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {/* Sort + View toggle */}
+      {/* Sort + View toggle — segment control style */}
       <div className="flex items-center justify-between mb-3 gap-2">
         {onSortChange && (
           <Select value={sortKey || 'created_at'} onValueChange={onSortChange}>
-            <SelectTrigger className="w-auto h-8 text-xs gap-1 px-2">
-              <ArrowUpDown className="h-3 w-3" />
+            <SelectTrigger className="w-auto h-9 text-xs gap-1.5 px-3 rounded-xl border-border bg-card shadow-sm">
+              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -83,30 +83,36 @@ export const CustomerMobileView = memo(function CustomerMobileView({
             </SelectContent>
           </Select>
         )}
-        <div className="flex items-center gap-1 border rounded-lg p-0.5 bg-background">
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="icon"
-            className="h-7 w-7"
+        <div className="flex items-center gap-0.5 border rounded-xl p-1 bg-muted/50 shadow-sm">
+          <button
             onClick={() => setViewMode('list')}
+            className={cn(
+              'flex items-center justify-center h-8 w-8 rounded-lg transition-all duration-200',
+              viewMode === 'list'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
           >
-            <LayoutList className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            size="icon"
-            className="h-7 w-7"
+            <LayoutList className="h-4 w-4" />
+          </button>
+          <button
             onClick={() => setViewMode('grid')}
+            className={cn(
+              'flex items-center justify-center h-8 w-8 rounded-lg transition-all duration-200',
+              viewMode === 'grid'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
           >
-            <LayoutGrid className="h-3.5 w-3.5" />
-          </Button>
+            <LayoutGrid className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
       {viewMode === 'list' ? (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {data.map((customer, i) => (
-            <div key={customer.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+            <div key={customer.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
               <CustomerListCard
                 customer={customer}
                 onNavigate={onNavigate}
@@ -119,9 +125,9 @@ export const CustomerMobileView = memo(function CustomerMobileView({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 min-[500px]:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 min-[500px]:grid-cols-3 gap-2.5">
           {data.map((customer, i) => (
-            <div key={customer.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+            <div key={customer.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
               <CustomerGridCard
                 customer={customer}
                 onClick={() => onNavigate(customer.id)}
