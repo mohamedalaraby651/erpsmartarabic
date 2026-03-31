@@ -5,11 +5,13 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { calculateCustomerHealth } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
 
 export function useCustomerDetail(id: string | undefined) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('addresses');
 
   // === CORE queries (always loaded) ===
