@@ -62,66 +62,9 @@ export async function validateBatchDelete(ids: string[]): Promise<{ canDelete: b
 // Business Calculations
 // ============================================
 
-interface CustomerHealthMetrics {
-  dso: number | null;
-  clv: number;
-  paymentRatio: number;
-  avgInvoiceValue: number;
-  totalPurchases: number;
-  totalPayments: number;
-  totalOutstanding: number;
-}
-
-/** Calculate customer financial health metrics */
-export function calculateCustomerHealth(
-  invoices: Invoice[],
-  payments: Payment[]
-): CustomerHealthMetrics {
-  const totalPurchases = invoices.reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0);
-  const totalPayments = payments.reduce((sum, pay) => sum + Number(pay.amount || 0), 0);
-  const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
-  const avgInvoiceValue = invoices.length > 0 ? totalPurchases / invoices.length : 0;
-
-  // DSO — uses due_date (fallback to created_at) vs actual payment dates
-  const paidInvoices = invoices.filter(inv => inv.payment_status === 'paid');
-  let dso: number | null = null;
-
-  if (paidInvoices.length > 0 && payments.length > 0) {
-    const paymentDatesByInvoice = new Map<string, string>();
-    for (const payment of payments) {
-      const invId = payment.invoice_id;
-      if (!invId) continue;
-      const existing = paymentDatesByInvoice.get(invId);
-      if (!existing || payment.payment_date > existing) {
-        paymentDatesByInvoice.set(invId, payment.payment_date);
-      }
-    }
-
-    let totalDays = 0;
-    let count = 0;
-    for (const inv of paidInvoices) {
-      const paidAt = paymentDatesByInvoice.get(inv.id);
-      if (!paidAt) continue;
-      const referenceDate = new Date(inv.due_date || inv.created_at).getTime();
-      const paid = new Date(paidAt).getTime();
-      totalDays += Math.max(0, (paid - referenceDate) / (1000 * 60 * 60 * 24));
-      count++;
-    }
-    dso = count > 0 ? Math.round(totalDays / count) : null;
-  }
-
-  const totalOutstanding = Math.round((totalPurchases - totalPayments) * 100) / 100;
-
-  return {
-    dso,
-    clv: totalPurchases, // Note: Credit Notes should be subtracted when available
-    paymentRatio,
-    avgInvoiceValue,
-    totalPurchases,
-    totalPayments,
-    totalOutstanding,
-  };
-}
+// Note: calculateCustomerHealth has been removed.
+// Financial metrics (DSO, CLV, etc.) are now computed server-side
+// via the `get_customer_financial_summary` RPC for better performance.
 
 // ============================================
 // Export

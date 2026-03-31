@@ -1,23 +1,10 @@
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { differenceInDays } from "date-fns";
-
-interface Invoice {
-  id: string;
-  invoice_number: string;
-  total_amount: number;
-  paid_amount: number | null;
-  payment_status: string;
-  due_date: string | null;
-  created_at: string;
-}
-
-interface CustomerAgingReportProps {
-  invoices: Invoice[];
-}
+import { supabase } from "@/integrations/supabase/client";
 
 interface AgingBucket {
   label: string;
@@ -28,43 +15,68 @@ interface AgingBucket {
   bgColor: string;
 }
 
-export default function CustomerAgingReport({ invoices }: CustomerAgingReportProps) {
-  const now = new Date();
+interface CustomerAgingReportProps {
+  customerId: string;
+}
 
-  const unpaidInvoices = invoices.filter(
-    (inv) => inv.payment_status !== 'paid'
-  );
-
-  const buckets: AgingBucket[] = [
-    { label: 'جاري', range: '0-30 يوم', amount: 0, count: 0, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500' },
-    { label: 'متأخر', range: '31-60 يوم', amount: 0, count: 0, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500' },
-    { label: 'متأخر جداً', range: '61-90 يوم', amount: 0, count: 0, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500' },
-    { label: 'خطر', range: '90+ يوم', amount: 0, count: 0, color: 'text-destructive', bgColor: 'bg-destructive' },
-  ];
-
-  unpaidInvoices.forEach((inv) => {
-    const refDate = inv.due_date || inv.created_at;
-    const days = differenceInDays(now, new Date(refDate));
-    const outstanding = Number(inv.total_amount) - Number(inv.paid_amount || 0);
-
-    if (days <= 30) {
-      buckets[0].amount += outstanding;
-      buckets[0].count++;
-    } else if (days <= 60) {
-      buckets[1].amount += outstanding;
-      buckets[1].count++;
-    } else if (days <= 90) {
-      buckets[2].amount += outstanding;
-      buckets[2].count++;
-    } else {
-      buckets[3].amount += outstanding;
-      buckets[3].count++;
-    }
+export default function CustomerAgingReport({ customerId }: CustomerAgingReportProps) {
+  const { data: agingData, isLoading } = useQuery({
+    queryKey: ['customer-aging', customerId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_customer_aging', { _customer_id: customerId });
+      if (error) throw error;
+      return data as Record<string, any>;
+    },
+    enabled: !!customerId,
+    staleTime: 60000,
   });
 
-  const totalOutstanding = buckets.reduce((s, b) => s + b.amount, 0);
+  const buckets: AgingBucket[] = [
+    {
+      label: 'جاري', range: '0-30 يوم',
+      amount: Number(agingData?.bucket_0_30?.amount || 0),
+      count: Number(agingData?.bucket_0_30?.count || 0),
+      color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500',
+    },
+    {
+      label: 'متأخر', range: '31-60 يوم',
+      amount: Number(agingData?.bucket_31_60?.amount || 0),
+      count: Number(agingData?.bucket_31_60?.count || 0),
+      color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500',
+    },
+    {
+      label: 'متأخر جداً', range: '61-90 يوم',
+      amount: Number(agingData?.bucket_61_90?.amount || 0),
+      count: Number(agingData?.bucket_61_90?.count || 0),
+      color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500',
+    },
+    {
+      label: 'خطر', range: '90+ يوم',
+      amount: Number(agingData?.bucket_90_plus?.amount || 0),
+      count: Number(agingData?.bucket_90_plus?.count || 0),
+      color: 'text-destructive', bgColor: 'bg-destructive',
+    },
+  ];
 
-  if (unpaidInvoices.length === 0) {
+  const totalOutstanding = Number(agingData?.total_outstanding || 0);
+  const totalCount = Number(agingData?.total_count || 0);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <div className="space-y-4 animate-pulse">
+            <div className="h-6 bg-muted rounded w-1/3" />
+            <div className="h-8 bg-muted rounded w-full" />
+            <div className="h-8 bg-muted rounded w-full" />
+            <div className="h-8 bg-muted rounded w-3/4" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (totalCount === 0) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
@@ -83,7 +95,7 @@ export default function CustomerAgingReport({ invoices }: CustomerAgingReportPro
           تقرير أعمار الديون
         </CardTitle>
         <CardDescription>
-          إجمالي المستحقات: {totalOutstanding.toLocaleString()} ج.م من {unpaidInvoices.length} فاتورة
+          إجمالي المستحقات: {totalOutstanding.toLocaleString()} ج.م من {totalCount} فاتورة
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

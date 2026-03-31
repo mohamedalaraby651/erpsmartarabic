@@ -266,10 +266,11 @@ export const customerRepository = {
     let phoneDuplicates: DuplicateResult[] = [];
 
     if (name && name.length >= 3) {
+      const s = sanitizeSearch(name);
       let query = supabase
         .from('customers')
         .select('id, name, phone')
-        .ilike('name', `%${name}%`)
+        .ilike('name', `%${s}%`)
         .limit(3);
       if (excludeId) query = query.neq('id', excludeId);
       const { data } = await query;

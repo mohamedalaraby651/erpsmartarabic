@@ -69,7 +69,8 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   // === LAZY queries (loaded on tab open) ===
-  const invoicesNeeded = isMobile || ['invoices', 'statement', 'aging', 'analytics'].includes(activeTab);
+  // Statement and Aging now use their own server-side RPCs, no need to load here
+  const invoicesNeeded = isMobile || ['invoices', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: () => customerRepository.findInvoices(id!),
@@ -87,7 +88,8 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  const paymentsNeeded = isMobile || ['payments', 'statement', 'analytics'].includes(activeTab);
+  // Statement now uses server-side RPC, no need to load payments for it
+  const paymentsNeeded = isMobile || ['payments', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRepository.findPayments(id!),
@@ -105,10 +107,11 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
+  // Credit notes for statement are now fetched by the StatementOfAccount RPC
   const { data: creditNotes = [] } = useQuery({
     queryKey: ['customer-credit-notes', id],
     queryFn: () => customerRepository.findCreditNotes(id!),
-    enabled: !!id && (isMobile || ['statement', 'credit-notes'].includes(activeTab)),
+    enabled: !!id && (isMobile || ['credit-notes'].includes(activeTab)),
     staleTime: 60000,
   });
 

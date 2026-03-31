@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,106 +8,74 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Printer, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
-
-interface StatementEntry {
-  date: string;
-  type: 'فاتورة' | 'دفعة' | 'مرتجع';
-  reference: string;
-  debit: number;
-  credit: number;
-  status: string;
-}
-
-interface CreditNote {
-  created_at: string;
-  credit_note_number: string;
-  amount: number;
-  status: string;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 interface StatementOfAccountProps {
   customerName: string;
-  invoices: Array<{ created_at: string; invoice_number: string; total_amount: number | null; payment_status: string }>;
-  payments: Array<{ payment_date: string; payment_number: string; amount: number | null }>;
-  creditNotes?: CreditNote[];
+  customerId: string;
+}
+
+interface StatementRow {
+  entry_date: string;
+  entry_type: string;
+  reference: string;
+  debit: number;
+  credit: number;
+  running_balance: number;
+  status: string;
 }
 
 const PAGE_SIZE = 20;
 
-const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = [] }: StatementOfAccountProps) => {
+const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProps) => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [isPrinting, setIsPrinting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const statementData = useMemo(() => {
-    const entries: StatementEntry[] = [];
+  // Server-side statement via RPC — no 500 record limit
+  const { data: statementData = [], isLoading } = useQuery({
+    queryKey: ['customer-statement', customerId, dateFrom, dateTo],
+    queryFn: async (): Promise<StatementRow[]> => {
+      const params: Record<string, unknown> = { _customer_id: customerId };
+      if (dateFrom) params._date_from = dateFrom;
+      if (dateTo) params._date_to = dateTo;
 
-    invoices.forEach(inv => {
-      entries.push({
-        date: inv.created_at,
-        type: 'فاتورة',
-        reference: inv.invoice_number,
-        debit: Number(inv.total_amount || 0),
-        credit: 0,
-        status: inv.payment_status === 'paid' ? 'مسدد' : inv.payment_status === 'partial' ? 'جزئي' : 'معلق',
-      });
-    });
-
-    payments.forEach(pay => {
-      entries.push({
-        date: pay.payment_date,
-        type: 'دفعة',
-        reference: pay.payment_number,
-        debit: 0,
-        credit: Number(pay.amount || 0),
-        status: 'مسدد',
-      });
-    });
-
-    creditNotes.forEach(cn => {
-      entries.push({
-        date: cn.created_at,
-        type: 'مرتجع',
-        reference: cn.credit_note_number,
-        debit: 0,
-        credit: Number(cn.amount || 0),
-        status: cn.status === 'approved' ? 'معتمد' : 'معلق',
-      });
-    });
-
-    entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    let filtered = entries;
-    if (dateFrom) filtered = filtered.filter(e => new Date(e.date) >= new Date(dateFrom));
-    if (dateTo) filtered = filtered.filter(e => new Date(e.date) <= new Date(dateTo + 'T23:59:59'));
-
-    let balance = 0;
-    return filtered.map(entry => {
-      balance += entry.debit - entry.credit;
-      return { ...entry, runningBalance: balance };
-    });
-  }, [invoices, payments, creditNotes, dateFrom, dateTo]);
+      const { data, error } = await supabase.rpc('get_customer_statement', params as any);
+      if (error) throw error;
+      return (data || []).map((row: any) => ({
+        entry_date: row.entry_date,
+        entry_type: row.entry_type,
+        reference: row.reference,
+        debit: Number(row.debit || 0),
+        credit: Number(row.credit || 0),
+        running_balance: Number(row.running_balance || 0),
+        status: row.status,
+      }));
+    },
+    enabled: !!customerId,
+    staleTime: 60000,
+  });
 
   useEffect(() => { setCurrentPage(1); }, [dateFrom, dateTo]);
 
   const totalPages = Math.ceil(statementData.length / PAGE_SIZE);
   const pagedData = statementData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const totalDebit = statementData.reduce((sum, e) => sum + e.debit, 0);
-  const totalCredit = statementData.reduce((sum, e) => sum + e.credit, 0);
+  const totalDebit = useMemo(() => statementData.reduce((sum, e) => sum + e.debit, 0), [statementData]);
+  const totalCredit = useMemo(() => statementData.reduce((sum, e) => sum + e.credit, 0), [statementData]);
   const finalBalance = totalDebit - totalCredit;
 
   const handlePrint = async () => {
     setIsPrinting(true);
     try {
       const formattedData = statementData.map(item => ({
-        date: new Date(item.date).toLocaleDateString('ar-EG'),
-        type: item.type,
+        date: new Date(item.entry_date).toLocaleDateString('ar-EG'),
+        type: item.entry_type,
         reference: item.reference,
         debit: item.debit > 0 ? item.debit.toLocaleString() : '-',
         credit: item.credit > 0 ? item.credit.toLocaleString() : '-',
-        runningBalance: item.runningBalance.toLocaleString(),
+        runningBalance: item.running_balance.toLocaleString(),
         status: item.status,
       }));
 
@@ -146,7 +115,7 @@ const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = []
           <Calendar className="h-5 w-5" />
           كشف الحساب
         </CardTitle>
-        <Button variant="outline" size="sm" onClick={handlePrint} disabled={isPrinting}>
+        <Button variant="outline" size="sm" onClick={handlePrint} disabled={isPrinting || isLoading}>
           {isPrinting ? <span className="h-4 w-4 ml-2 animate-spin border-2 border-current border-t-transparent rounded-full" /> : <Printer className="h-4 w-4 ml-2" />}
           تصدير PDF
         </Button>
@@ -181,7 +150,13 @@ const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = []
         </div>
 
         {/* Table */}
-        {statementData.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-3 py-4 animate-pulse">
+            <div className="h-10 bg-muted rounded-lg w-full" />
+            <div className="h-10 bg-muted rounded-lg w-full" />
+            <div className="h-10 bg-muted rounded-lg w-3/4" />
+          </div>
+        ) : statementData.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">لا توجد حركات في الفترة المحددة</div>
         ) : (
           <>
@@ -201,9 +176,9 @@ const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = []
                 <TableBody>
                   {pagedData.map((entry, i) => (
                     <TableRow key={i}>
-                      <TableCell className="text-sm">{new Date(entry.date).toLocaleDateString('ar-EG')}</TableCell>
+                      <TableCell className="text-sm">{new Date(entry.entry_date).toLocaleDateString('ar-EG')}</TableCell>
                       <TableCell>
-                        <Badge variant={getTypeBadgeVariant(entry.type)}>{entry.type}</Badge>
+                        <Badge variant={getTypeBadgeVariant(entry.entry_type)}>{entry.entry_type}</Badge>
                       </TableCell>
                       <TableCell className="font-medium">{entry.reference}</TableCell>
                       <TableCell className={entry.debit > 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}>
@@ -212,8 +187,8 @@ const StatementOfAccount = ({ customerName, invoices, payments, creditNotes = []
                       <TableCell className={entry.credit > 0 ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}>
                         {entry.credit > 0 ? entry.credit.toLocaleString() : '-'}
                       </TableCell>
-                      <TableCell className={`font-bold ${entry.runningBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
-                        {entry.runningBalance.toLocaleString()}
+                      <TableCell className={`font-bold ${entry.running_balance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                        {entry.running_balance.toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <Badge variant={entry.status === 'مسدد' || entry.status === 'معتمد' ? 'default' : 'secondary'}>{entry.status}</Badge>
