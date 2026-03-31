@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  CreditCard, TrendingUp, Wallet, FileText, Clock, Target, Calendar,
+  CreditCard, TrendingUp, Wallet, FileText, Clock, Target, Calendar, Percent,
 } from "lucide-react";
 
 interface CustomerStatsGridProps {
