@@ -46,7 +46,7 @@ const colorMap = {
     valueText: 'text-blue-600 dark:text-blue-400',
   },
   muted: {
-    border: 'border-r-muted-foreground/30',
+    border: 'border-s-muted-foreground/30',
     iconBg: 'bg-muted',
     iconText: 'text-muted-foreground',
     valueText: 'text-foreground',

@@ -71,7 +71,7 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-2">
             <div className={`p-2 rounded-lg ${paymentRatio >= 80 ? 'bg-emerald-500/10 dark:bg-emerald-500/20' : paymentRatio >= 50 ? 'bg-warning/10' : 'bg-destructive/10'}`}>
-              <Wallet className={`h-5 w-5 ${paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'}`} />
+              <Percent className={`h-5 w-5 ${paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'}`} />
             </div>
             <div>
               <p className="text-lg font-bold">{paymentRatio.toFixed(0)}%</p>
