@@ -29,9 +29,32 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
     staleTime: 10000,
   });
 
+  const showNoResults = isFocused && value.length >= 2 && debouncedSearch === value && results.length === 0;
+
   useEffect(() => {
-    setIsOpen(isFocused && results.length > 0 && value.length >= 2);
-  }, [results, isFocused, value]);
+    setIsOpen(isFocused && value.length >= 2 && (results.length > 0 || showNoResults));
+  }, [results, isFocused, value, showNoResults]);
+
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+  useEffect(() => { setHighlightedIndex(-1); }, [results]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!isOpen || results.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex(prev => (prev + 1) % results.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex(prev => (prev <= 0 ? results.length - 1 : prev - 1));
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      navigate(`/customers/${results[highlightedIndex].id}`);
+      setIsOpen(false);
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
+  }, [isOpen, results, highlightedIndex, navigate]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
