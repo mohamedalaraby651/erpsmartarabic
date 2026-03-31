@@ -12,7 +12,7 @@ export interface SidebarCounts {
   pendingPurchaseOrders: number;
 }
 
-export function useSidebarCounts() {
+export function useSidebarCounts(enabled = true) {
   const { user } = useAuth();
 
   return useQuery({
@@ -95,8 +95,8 @@ export function useSidebarCounts() {
         pendingPurchaseOrders: purchaseOrdersResult.count || 0,
       };
     },
-    enabled: !!user?.id,
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 10000,
+    enabled: !!user?.id && enabled,
+    refetchInterval: 120000, // Refresh every 2 minutes
+    staleTime: 60000, // Cache for 1 minute
   });
 }

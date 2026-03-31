@@ -2,7 +2,7 @@ import { memo, useMemo, useState, forwardRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
-import { useSidebarCounts } from '@/hooks/useSidebarCounts';
+import { useSidebarCounts, type SidebarCounts } from '@/hooks/useSidebarCounts';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -149,7 +149,7 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
   const navigate = useNavigate();
   const { signOut, userRole } = useAuth();
   const { favorites, isFavorite, toggleFavorite, removeFavorite } = useFavoritePages();
-  const { data: counts } = useSidebarCounts();
+  const { data: counts } = useSidebarCounts(open);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
 

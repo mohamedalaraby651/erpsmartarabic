@@ -138,7 +138,7 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
   }).slice(0, 4);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/50 shadow-[0_-4px_30px_-5px_rgba(0,0,0,0.1)] md:hidden safe-area-bottom-compact">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-sm border-t border-border/50 shadow-[0_-4px_30px_-5px_rgba(0,0,0,0.1)] md:hidden safe-area-bottom-compact">
       <div className="flex items-center justify-around h-14 px-1.5">
         {filteredItems.map((item) => {
           const isActive = location.pathname === item.href;

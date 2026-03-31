@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+/* Cairo font loaded via index.html <link> for non-blocking render */
 
 @tailwind base;
 @tailwind components;

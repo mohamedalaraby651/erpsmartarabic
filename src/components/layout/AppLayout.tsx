@@ -49,17 +49,11 @@ export default function AppLayout() {
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(preferences.sidebar_compact);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   // مزامنة حالة القائمة مع التفضيلات
   useEffect(() => {
     setSidebarCollapsed(preferences.sidebar_compact);
   }, [preferences.sidebar_compact]);
-
-  // Mark as hydrated after first render
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -98,11 +92,6 @@ export default function AppLayout() {
     return null;
   }
 
-  // Show skeleton while hydrating to prevent flash
-  if (!isHydrated) {
-    return <AppInitSkeleton />;
-  }
-
   // Mobile Layout
   if (isMobile) {
     return (
@@ -110,7 +99,7 @@ export default function AppLayout() {
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
           <Suspense fallback={<PageSkeleton />}>
-            <PageTransition key={location.pathname} direction="fade" duration="fast">
+            <PageTransition direction="fade" duration="fast">
               <Outlet />
             </PageTransition>
           </Suspense>
@@ -147,7 +136,7 @@ export default function AppLayout() {
           <AppHeader />
           <main className="p-6">
           <Suspense fallback={<PageSkeleton />}>
-            <PageTransition key={location.pathname} direction="fade" duration="fast">
+            <PageTransition direction="fade" duration="fast">
               <Outlet />
             </PageTransition>
           </Suspense>

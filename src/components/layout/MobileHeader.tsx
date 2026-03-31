@@ -18,24 +18,33 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
   const { isOnline } = useOnlineStatus();
   const [pendingCount, setPendingCount] = useState(0);
 
-  // Check pending offline operations
+  // Check pending offline operations via storage event instead of polling
   useEffect(() => {
     const checkPending = () => {
       try {
         const queue = localStorage.getItem('offline_mutation_queue');
         if (queue) {
           const parsed = JSON.parse(queue);
-          setPendingCount(Array.isArray(parsed) ? parsed.length : 0);
+          const count = Array.isArray(parsed) ? parsed.length : 0;
+          setPendingCount(prev => prev !== count ? count : prev);
         } else {
-          setPendingCount(0);
+          setPendingCount(prev => prev !== 0 ? 0 : prev);
         }
       } catch {
-        setPendingCount(0);
+        setPendingCount(prev => prev !== 0 ? 0 : prev);
       }
     };
     checkPending();
-    const interval = setInterval(checkPending, 5000);
-    return () => clearInterval(interval);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'offline_mutation_queue') checkPending();
+    };
+    window.addEventListener('storage', handleStorage);
+    // Fallback check every 30s instead of 5s
+    const interval = setInterval(checkPending, 30000);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
   }, []);
 
   const userInitials = user?.user_metadata?.full_name
@@ -63,7 +72,7 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 px-2.5 md:hidden safe-area-top shadow-sm">
+    <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/90 px-2.5 md:hidden safe-area-top shadow-sm">
       {/* Right Side - Menu Button First (RTL) */}
       <div className="flex items-center gap-0.5">
         {/* Menu Button - Grid Icon - Most prominent */}
