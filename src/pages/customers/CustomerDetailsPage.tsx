@@ -135,6 +135,9 @@ const CustomerDetailsPage = () => {
           <MobileDetailSection title="أوامر البيع" priority="low" icon={<ShoppingCart className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><CustomerTabOrders salesOrders={detail.salesOrders} /></Suspense>
           </MobileDetailSection>
+          <MobileDetailSection title="إشعارات دائنة" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.creditNotes.length}>
+            <Suspense fallback={<TabFallback />}><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></Suspense>
+          </MobileDetailSection>
           <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}><StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} /></Suspense>
           </MobileDetailSection>
