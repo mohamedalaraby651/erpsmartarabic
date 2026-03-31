@@ -877,6 +877,51 @@ export type Database = {
           },
         ]
       }
+      customer_notes: {
+        Row: {
+          content: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_pinned: boolean
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_pinned?: boolean
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_pinned?: boolean
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_reminders: {
         Row: {
           created_at: string
@@ -884,7 +929,9 @@ export type Database = {
           customer_id: string
           id: string
           is_completed: boolean
+          linked_invoice_id: string | null
           note: string
+          recurrence: string | null
           reminder_date: string
           tenant_id: string | null
           updated_at: string
@@ -895,7 +942,9 @@ export type Database = {
           customer_id: string
           id?: string
           is_completed?: boolean
+          linked_invoice_id?: string | null
           note: string
+          recurrence?: string | null
           reminder_date: string
           tenant_id?: string | null
           updated_at?: string
@@ -906,7 +955,9 @@ export type Database = {
           customer_id?: string
           id?: string
           is_completed?: boolean
+          linked_invoice_id?: string | null
           note?: string
+          recurrence?: string | null
           reminder_date?: string
           tenant_id?: string | null
           updated_at?: string
@@ -917,6 +968,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_reminders_linked_invoice_id_fkey"
+            columns: ["linked_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
           {

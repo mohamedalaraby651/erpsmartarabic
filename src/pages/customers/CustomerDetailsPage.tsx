@@ -1,29 +1,32 @@
 import { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
-  CreditCard, Bell, MessageSquare, BarChart3, Percent, Globe, Clock, Printer,
-  TrendingUp, Target, Calendar, ChevronDown, Wallet,
+  CreditCard, Bell, MessageSquare, BarChart3, Globe, Clock, Printer,
+  Wallet, StickyNote,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
-import { useCustomerDetail } from "@/hooks/customers";
+import { useCustomerDetail, useCustomerNavigation } from "@/hooks/customers";
 import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
-import { CustomerStatsGrid } from "@/components/customers/CustomerStatsGrid";
+import { CustomerSmartAlerts } from "@/components/customers/CustomerSmartAlerts";
 import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
-import { CustomerMobileStatCard } from "@/components/customers/mobile/CustomerMobileStatCard";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 import { tabGroups } from "@/lib/customerConstants";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 import type { CustomerAddress } from "@/lib/customerConstants";
 
 // Lazy-loaded tab components
-const CustomerTabAddresses = lazy(() => import("@/components/customers/tabs/CustomerTabAddresses").then(m => ({ default: m.CustomerTabAddresses })));
+const CustomerTabBasicInfo = lazy(() => import("@/components/customers/tabs/CustomerTabBasicInfo").then(m => ({ default: m.CustomerTabBasicInfo })));
+const CustomerTabNotes = lazy(() => import("@/components/customers/tabs/CustomerTabNotes").then(m => ({ default: m.CustomerTabNotes })));
 const CustomerTabInvoices = lazy(() => import("@/components/customers/tabs/CustomerTabInvoices").then(m => ({ default: m.CustomerTabInvoices })));
 const CustomerTabPayments = lazy(() => import("@/components/customers/tabs/CustomerTabPayments").then(m => ({ default: m.CustomerTabPayments })));
 const CustomerTabQuotations = lazy(() => import("@/components/customers/tabs/CustomerTabQuotations").then(m => ({ default: m.CustomerTabQuotations })));
@@ -41,7 +44,7 @@ const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/Cu
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 
 const tabIcons: Record<string, React.ElementType> = {
-  addresses: MapPin, attachments: Paperclip, reminders: Bell,
+  'basic-info': MapPin, notes: StickyNote, attachments: Paperclip, reminders: Bell,
   invoices: FileText, quotations: Globe, orders: ShoppingCart,
   payments: CreditCard, 'credit-notes': FileText, financial: Wallet, statement: Printer, aging: Clock,
   analytics: BarChart3, communications: MessageSquare, activity: Activity,
@@ -52,20 +55,32 @@ const TabFallback = () => <div className="flex items-center justify-center py-12
 const CustomerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const isMobile = useIsMobile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  const [mobileTab, setMobileTab] = useState('financials');
-  const [showAllStats, setShowAllStats] = useState(false);
+  const [mobileTab, setMobileTab] = useState('financial');
 
   const detail = useCustomerDetail(id);
+  const { prevId, nextId, goNext, goPrev } = useCustomerNavigation(id);
 
+  const updateFieldMutation = useMutation({
+    mutationFn: (updates: Record<string, unknown>) => customerRepository.update(id!, updates),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['customer', id] }); },
+    onError: () => { toast({ title: "حدث خطأ أثناء التحديث", variant: "destructive" }); },
+  });
+
+  const handleToggleActive = () => {
+    if (!detail.customer) return;
+    updateFieldMutation.mutate({ is_active: !detail.customer.is_active });
+  };
+  const handleChangeVip = (level: string) => { updateFieldMutation.mutate({ vip_level: level }); };
   const handleWhatsApp = () => {
     if (detail.customer?.phone) {
-      const phone = detail.customer.phone.replace(/\D/g, '');
-      window.open(`https://wa.me/${phone}`, '_blank');
+      window.open(`https://wa.me/${detail.customer.phone.replace(/\D/g, '')}`, '_blank');
     }
   };
 
@@ -98,113 +113,58 @@ const CustomerDetailsPage = () => {
           onStatement={() => detail.setActiveTab('statement')}
           onWhatsApp={handleWhatsApp}
           onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
+          onPrev={goPrev} onNext={goNext} hasPrev={!!prevId} hasNext={!!nextId}
+          currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
+          creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
+          totalPurchases={detail.totalPurchases} totalOutstanding={detail.totalOutstanding}
+          paymentRatio={detail.paymentRatio} invoiceCount={detail.invoices.length} dso={detail.dso}
+          onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
+          onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
+          onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
+          onNewCreditNote={() => detail.setActiveTab('credit-notes')}
+          onToggleActive={handleToggleActive} onChangeVip={handleChangeVip}
         />
       </div>
 
-      {!isMobile && (
-        <CustomerStatsGrid
-          currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
-          creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
-          totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments}
-          paymentRatio={detail.paymentRatio}
-          invoiceCount={detail.invoices.length} avgInvoiceValue={detail.avgInvoiceValue}
-          dso={detail.dso} totalOutstanding={detail.totalOutstanding} lastPurchaseDate={detail.lastPurchaseDate}
-          clv={detail.clv}
-        />
-      )}
+      <CustomerSmartAlerts
+        currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+        invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
+        lastCommunicationAt={customer.last_communication_at}
+        onEditCreditLimit={() => setEditDialogOpen(true)}
+        onSendReminder={() => isMobile ? setMobileTab('more') : detail.setActiveTab('reminders')}
+        onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+        onContact={handleWhatsApp}
+      />
 
       {isMobile ? (
         <div className="space-y-4">
-          {/* Mobile Profile Card */}
           <CustomerMobileProfile
-            customer={customer}
-            customerId={id!}
+            customer={customer} customerId={id!}
             onEdit={() => setEditDialogOpen(true)}
             onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
             onStatement={() => setMobileTab('statement')}
             onWhatsApp={handleWhatsApp}
             onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
+            onPrev={goPrev} onNext={goNext} hasPrev={!!prevId} hasNext={!!nextId}
+            currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
+            totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio}
+            totalPurchases={detail.totalPurchases}
+            onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
+            onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
+            onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
+            onNewCreditNote={() => setMobileTab('financials')}
+            onToggleActive={handleToggleActive}
           />
 
-          {/* Mobile Stats Cards - Priority: top 4 visible, rest expandable */}
-          <div className="grid grid-cols-2 gap-3">
-            <CustomerMobileStatCard
-              icon={CreditCard}
-              title="الرصيد الحالي"
-              value={`${detail.currentBalance.toLocaleString()} ج.م`}
-              color={detail.balanceIsDebit ? 'destructive' : 'emerald'}
-              progress={detail.creditLimit > 0 ? detail.creditUsagePercent : undefined}
-              progressLabel={detail.creditLimit > 0 ? `${detail.creditUsagePercent.toFixed(0)}% من الحد` : undefined}
-            />
-            <CustomerMobileStatCard
-              icon={Target}
-              title="المستحق"
-              value={`${detail.totalOutstanding.toLocaleString()} ج.م`}
-              color={detail.totalOutstanding > 0 ? 'destructive' : 'emerald'}
-            />
-            <CustomerMobileStatCard
-              icon={Percent}
-              title="نسبة السداد"
-              value={`${detail.paymentRatio.toFixed(0)}%`}
-              color={detail.paymentRatio >= 80 ? 'emerald' : detail.paymentRatio >= 50 ? 'warning' : 'destructive'}
-              progress={detail.paymentRatio}
-            />
-            <CustomerMobileStatCard
-              icon={TrendingUp}
-              title="إجمالي المشتريات"
-              value={`${detail.totalPurchases.toLocaleString()} ج.م`}
-              color="primary"
-            />
-            {showAllStats && (
-              <>
-                <CustomerMobileStatCard
-                  icon={FileText}
-                  title="الفواتير"
-                  value={detail.invoices.length}
-                  subtitle={`متوسط ${detail.avgInvoiceValue.toLocaleString()} ج.م`}
-                  color="info"
-                />
-                <CustomerMobileStatCard
-                  icon={Wallet}
-                  title="إجمالي المدفوعات"
-                  value={`${detail.totalPayments.toLocaleString()} ج.م`}
-                  color="emerald"
-                />
-                <CustomerMobileStatCard
-                  icon={Clock}
-                  title="متوسط السداد"
-                  value={detail.dso !== null ? `${detail.dso} يوم` : '-'}
-                  color="muted"
-                />
-                <CustomerMobileStatCard
-                  icon={Calendar}
-                  title="آخر شراء"
-                  value={detail.lastPurchaseDate ? new Date(detail.lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}
-                  color="muted"
-                />
-              </>
-            )}
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-xs text-muted-foreground"
-            onClick={() => setShowAllStats(!showAllStats)}
-          >
-            <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${showAllStats ? 'rotate-180' : ''}`} />
-            {showAllStats ? 'إخفاء التفاصيل' : 'عرض كل الإحصائيات'}
-          </Button>
-
-          {/* Mobile Tab Bar */}
           <Tabs value={mobileTab} onValueChange={setMobileTab}>
             <div className="relative">
               <ScrollArea className="w-full">
                 <TabsList className="flex w-max h-10 bg-muted/50 p-1">
+                  <TabsTrigger value="financial" className="text-xs px-3"><Wallet className="h-3.5 w-3.5 ml-1" />الملخص المالي</TabsTrigger>
                   <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير{detail.invoices.length > 0 && ` (${detail.invoices.length})`}</TabsTrigger>
                   <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات{detail.payments.length > 0 && ` (${detail.payments.length})`}</TabsTrigger>
                   <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
                   <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
-                  <TabsTrigger value="financial" className="text-xs px-3"><Wallet className="h-3.5 w-3.5 ml-1" />الملخص المالي</TabsTrigger>
                   <TabsTrigger value="analysis" className="text-xs px-3"><BarChart3 className="h-3.5 w-3.5 ml-1" />التحليلات</TabsTrigger>
                   <TabsTrigger value="more" className="text-xs px-3"><MapPin className="h-3.5 w-3.5 ml-1" />المزيد</TabsTrigger>
                 </TabsList>
@@ -214,6 +174,9 @@ const CustomerDetailsPage = () => {
             </div>
 
             <Suspense fallback={<TabFallback />}>
+              <TabsContent value="financial" className="mt-4">
+                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
+              </TabsContent>
               <TabsContent value="financials" className="mt-4 space-y-4">
                 <CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} />
                 <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
@@ -229,16 +192,14 @@ const CustomerDetailsPage = () => {
                 <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
                 <CustomerAgingReport invoices={detail.invoices} />
               </TabsContent>
-              <TabsContent value="financial" className="mt-4">
-                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-              </TabsContent>
               <TabsContent value="analysis" className="mt-4 space-y-4">
                 <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
                 <CustomerTabActivity activities={detail.activities} />
               </TabsContent>
               <TabsContent value="more" className="mt-4 space-y-4">
+                <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(addrId) => detail.deleteAddressMutation.mutate(addrId)} onWhatsApp={handleWhatsApp} />
+                <CustomerTabNotes customerId={id!} />
                 <CommunicationLogTab customerId={id!} />
-                <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(addrId) => detail.deleteAddressMutation.mutate(addrId)} />
                 <CustomerReminderSection customerId={id!} />
                 <CustomerTabAttachments customerId={id!} />
               </TabsContent>
@@ -267,9 +228,10 @@ const CustomerDetailsPage = () => {
           </ScrollArea>
 
           <Suspense fallback={<TabFallback />}>
-            <TabsContent value="addresses" className="mt-6">
-              <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(id) => detail.deleteAddressMutation.mutate(id)} />
+            <TabsContent value="basic-info" className="mt-6">
+              <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(aid) => detail.deleteAddressMutation.mutate(aid)} onWhatsApp={handleWhatsApp} />
             </TabsContent>
+            <TabsContent value="notes" className="mt-6"><CustomerTabNotes customerId={id!} /></TabsContent>
             <TabsContent value="reminders" className="mt-6"><CustomerReminderSection customerId={id!} /></TabsContent>
             <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} /></TabsContent>
             <TabsContent value="quotations" className="mt-6"><CustomerTabQuotations quotations={detail.quotations} /></TabsContent>
