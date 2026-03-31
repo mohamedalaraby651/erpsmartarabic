@@ -25,6 +25,7 @@ const stripIcons = [
   { id: 'statement' as const, label: 'كشف حساب', icon: Printer, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/40' },
   { id: 'aging' as const, label: 'أعمار ديون', icon: Clock, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/40' },
   { id: 'reminders' as const, label: 'تذكيرات', icon: Bell, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/40' },
+  { id: 'communications' as const, label: 'تواصل', icon: MessageSquare, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/40' },
   { id: 'attachments' as const, label: 'مرفقات', icon: Paperclip, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-900/40' },
 ] as const;
 
