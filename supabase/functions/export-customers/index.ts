@@ -31,9 +31,46 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Get tenant
-    const { data: tenantData } = await userClient.rpc('get_current_tenant')
-    if (!tenantData) {
+    // Get tenant - try RPC first, then fallback to direct query
+    let tenantId: string | null = null
+    
+    const { data: tenantData, error: tenantError } = await userClient.rpc('get_current_tenant')
+    if (!tenantError && tenantData) {
+      tenantId = tenantData
+    }
+
+    // Fallback: query user_tenants directly with service role
+    if (!tenantId) {
+      const adminClientForTenant = createClient(supabaseUrl, supabaseServiceKey)
+      const { data: utData } = await adminClientForTenant
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', user.id)
+        .eq('is_default', true)
+        .limit(1)
+        .single()
+      
+      if (utData?.tenant_id) {
+        tenantId = utData.tenant_id
+      }
+    }
+
+    // Final fallback: any tenant for this user
+    if (!tenantId) {
+      const adminClientForTenant = createClient(supabaseUrl, supabaseServiceKey)
+      const { data: utData } = await adminClientForTenant
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single()
+      
+      if (utData?.tenant_id) {
+        tenantId = utData.tenant_id
+      }
+    }
+
+    if (!tenantId) {
       return new Response(JSON.stringify({ error: 'No tenant found' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -44,7 +81,7 @@ Deno.serve(async (req) => {
     const { data: customers, error: fetchError } = await adminClient
       .from('customers')
       .select('name, phone, email, customer_type, vip_level, governorate, city, current_balance, credit_limit, payment_terms_days, is_active, created_at, total_purchases_cached, invoice_count_cached')
-      .eq('tenant_id', tenantData)
+      .eq('tenant_id', tenantId)
       .order('name')
 
     if (fetchError) {
@@ -55,7 +92,7 @@ Deno.serve(async (req) => {
 
     // Build CSV with BOM for Arabic support
     const BOM = '\uFEFF'
-    const headers = ['الاسم', 'الهاتف', 'البريد', 'النوع', 'VIP', 'المحافظة', 'المدينة', 'الرصيد', 'حد الائتمان', 'شروط الدفع', 'الحالة', 'تاريخ الإنشاء', 'إجمالي المشتريات', 'عدد الفواتير']
+    const csvHeaders = ['الاسم', 'الهاتف', 'البريد', 'النوع', 'VIP', 'المحافظة', 'المدينة', 'الرصيد', 'حد الائتمان', 'شروط الدفع', 'الحالة', 'تاريخ الإنشاء', 'إجمالي المشتريات', 'عدد الفواتير']
 
     const typeMap: Record<string, string> = { individual: 'فرد', company: 'شركة', farm: 'مزرعة' }
     const vipMap: Record<string, string> = { regular: 'عادي', silver: 'فضي', gold: 'ذهبي', platinum: 'بلاتيني' }
@@ -78,17 +115,18 @@ Deno.serve(async (req) => {
     ])
 
     const csvContent = BOM + [
-      headers.join(','),
+      csvHeaders.join(','),
       ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     ].join('\n')
 
     const fileName = `customers_export_${new Date().toISOString().slice(0, 10)}.csv`
-    const filePath = `exports/${tenantData}/${fileName}`
+    const filePath = `exports/${tenantId}/${fileName}`
 
-    // Upload to storage
+    // Upload to storage using Uint8Array instead of Blob for Deno compatibility
+    const encoded = new TextEncoder().encode(csvContent)
     const { error: uploadError } = await adminClient.storage
       .from('documents')
-      .upload(filePath, new Blob([csvContent], { type: 'text/csv;charset=utf-8' }), {
+      .upload(filePath, encoded, {
         contentType: 'text/csv;charset=utf-8',
         upsert: true,
       })
