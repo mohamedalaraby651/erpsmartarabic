@@ -36,6 +36,7 @@ const SupplierPaymentsPage = lazy(() => import("./pages/suppliers/SupplierPaymen
 const PurchaseOrdersPage = lazy(() => import("./pages/purchase-orders/PurchaseOrdersPage"));
 const PurchaseOrderDetailsPage = lazy(() => import("./pages/purchase-orders/PurchaseOrderDetailsPage"));
 const UnifiedSettingsPage = lazy(() => import("./pages/settings/UnifiedSettingsPage"));
+const CustomerAlertSettingsPage = lazy(() => import("./pages/settings/CustomerAlertSettings"));
 const SearchPage = lazy(() => import("./pages/search/SearchPage"));
 const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
 const TasksPage = lazy(() => import("./pages/tasks/TasksPage"));
@@ -142,6 +143,7 @@ const App = () => (
                   <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="settings" element={<UnifiedSettingsPage />} />
+                  <Route path="settings/alerts" element={<CustomerAlertSettingsPage />} />
                   <Route path="search" element={<SearchPage />} />
                   <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="tasks" element={<TasksPage />} />

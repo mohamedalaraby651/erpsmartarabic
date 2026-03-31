@@ -17,6 +17,8 @@ interface CustomerListRowProps {
   onRowHover?: (id: string) => void;
   onRowLeave?: () => void;
   visibleColumns?: string[];
+  alertCount?: number;
+  hasErrorAlert?: boolean;
 }
 
 const vipBorderAccent: Record<string, string> = {
@@ -36,7 +38,7 @@ const DEFAULT_COLUMNS = ['name', 'type', 'vip', 'phone', 'governorate', 'balance
 
 const CustomerListRowInner = ({
   customer, onNavigate, onEdit, onNewInvoice, onNewPayment, onWhatsApp,
-  onRowHover, onRowLeave, visibleColumns,
+  onRowHover, onRowLeave, visibleColumns, alertCount, hasErrorAlert,
 }: CustomerListRowProps) => {
   const [hovered, setHovered] = useState(false);
   const balance = Number(customer.current_balance || 0);
@@ -66,6 +68,7 @@ const CustomerListRowInner = ({
         'border border-transparent hover:border-border hover:bg-accent/50 hover:shadow-sm',
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
+        hasErrorAlert && 'bg-destructive/5',
       )}
     >
       {/* Avatar — always visible */}
@@ -83,6 +86,11 @@ const CustomerListRowInner = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <h3 className="font-semibold text-sm truncate">{customer.name}</h3>
+            {alertCount && alertCount > 0 ? (
+              <span className="inline-flex items-center justify-center min-w-[16px] h-4 rounded-full bg-destructive/10 text-destructive text-[10px] font-bold px-1">
+                {alertCount}
+              </span>
+            ) : null}
             {isVisible('status') && (
               <span className={cn(
                 'h-2 w-2 rounded-full shrink-0',

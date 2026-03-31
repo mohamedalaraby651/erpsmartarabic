@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowUpDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
-import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
+import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import type { Customer } from "@/lib/customerConstants";
+import { CustomerAlertsBanner } from "@/components/customers/alerts/CustomerAlertsBanner";
+import { CustomerAlertsMobileTrigger } from "@/components/customers/alerts/CustomerAlertsMobileTrigger";
 
 // Sub-components
 import { CustomerListRow } from "@/components/customers/CustomerListRow";
@@ -33,8 +35,8 @@ const CustomersPage = () => {
   const navigate = useNavigate();
   const { userRole } = useAuth();
   const { isMobile } = useResponsiveView();
-  const [alertsDismissed, setAlertsDismissed] = useState(false);
-  const { errorAlerts, warningAlerts, totalAlerts } = useCustomerAlerts(!alertsDismissed);
+  const [alertFilterType, setAlertFilterType] = useState<AlertType | null>(null);
+  const { alertsByType, totalAlerts, alertCountByCustomer, errorCustomerIds } = useCustomerAlerts();
   const dialogRef = useRef<DialogManagerHandle>(null);
 
   const filters = useCustomerFilters();
@@ -130,10 +132,19 @@ const CustomersPage = () => {
     }
   }, [list.customers, mobilePage, desktopPage, isMobile]);
 
-  const allCustomers = useMemo(() => {
+  const allCustomersRaw = useMemo(() => {
     if (isMobile) return mobilePages.flat();
     return desktopPages.flat();
   }, [isMobile, mobilePages, desktopPages]);
+
+  // Filter by alert type when a badge is clicked
+  const allCustomers = useMemo(() => {
+    if (!alertFilterType) return allCustomersRaw;
+    const typeAlerts = alertsByType.get(alertFilterType);
+    if (!typeAlerts?.length) return allCustomersRaw;
+    const ids = new Set(typeAlerts.map(a => a.customerId));
+    return allCustomersRaw.filter(c => ids.has(c.id));
+  }, [allCustomersRaw, alertFilterType, alertsByType]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -315,20 +326,14 @@ const CustomersPage = () => {
 
       <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
 
-      {totalAlerts > 0 && !alertsDismissed && (
-        <div className="flex items-center gap-3 rounded-xl bg-gradient-to-l from-warning/10 to-warning/5 border border-warning/20 px-4 py-2.5">
-          <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              {errorAlerts.slice(0, 2).map((alert, i) => (<span key={`e-${i}`} className="text-xs text-destructive">⚠️ {alert.message}</span>))}
-              {warningAlerts.slice(0, 2).map((alert, i) => (<span key={`w-${i}`} className="text-xs text-amber-600 dark:text-amber-400">⏰ {alert.message}</span>))}
-              {totalAlerts > 4 && <span className="text-xs text-muted-foreground">+{totalAlerts - 4} أخرى</span>}
-            </div>
-          </div>
-          <button onClick={() => setAlertsDismissed(true)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1">
-            <span className="text-sm">✕</span>
-          </button>
-        </div>
+      {/* Alert Banner - Desktop */}
+      {!isMobile && (
+        <CustomerAlertsBanner
+          alertsByType={alertsByType}
+          totalAlerts={totalAlerts}
+          onFilterByType={setAlertFilterType}
+          activeFilterType={alertFilterType}
+        />
       )}
 
       <CustomerFiltersBar
@@ -345,6 +350,14 @@ const CustomersPage = () => {
 
       {isMobile ? (
         <div className="pb-20">
+          {/* Mobile alert trigger */}
+          <div className="flex items-center justify-between mb-3">
+            <CustomerAlertsMobileTrigger
+              alertsByType={alertsByType}
+              totalAlerts={totalAlerts}
+              onFilterByType={setAlertFilterType}
+            />
+          </div>
           <CustomerMobileView
             data={allCustomers}
             isLoading={list.isLoading}
@@ -431,6 +444,8 @@ const CustomersPage = () => {
                   onWhatsApp={handleWhatsApp}
                   onRowHover={list.handleRowHover}
                   onRowLeave={list.handleRowLeave}
+                  alertCount={alertCountByCustomer.get(customer.id)}
+                  hasErrorAlert={errorCustomerIds.has(customer.id)}
                 />
               ))}
 
