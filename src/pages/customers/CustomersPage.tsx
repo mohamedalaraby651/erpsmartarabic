@@ -444,6 +444,8 @@ const CustomersPage = () => {
                   onWhatsApp={handleWhatsApp}
                   onRowHover={list.handleRowHover}
                   onRowLeave={list.handleRowLeave}
+                  alertCount={alertCountByCustomer.get(customer.id)}
+                  hasErrorAlert={errorCustomerIds.has(customer.id)}
                 />
               ))}
 

@@ -86,6 +86,11 @@ const CustomerListRowInner = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <h3 className="font-semibold text-sm truncate">{customer.name}</h3>
+            {alertCount && alertCount > 0 ? (
+              <span className="inline-flex items-center justify-center min-w-[16px] h-4 rounded-full bg-destructive/10 text-destructive text-[10px] font-bold px-1">
+                {alertCount}
+              </span>
+            ) : null}
             {isVisible('status') && (
               <span className={cn(
                 'h-2 w-2 rounded-full shrink-0',
