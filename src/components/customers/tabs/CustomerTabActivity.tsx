@@ -60,34 +60,7 @@ function getActionColor(action: string): string {
   return 'bg-primary/10 text-primary';
 }
 
-function renderChanges(oldValues: unknown, newValues: unknown): React.ReactNode {
-  if (!oldValues && !newValues) return null;
-  const oldObj = (typeof oldValues === 'object' && oldValues !== null ? oldValues : {}) as Record<string, unknown>;
-  const newObj = (typeof newValues === 'object' && newValues !== null ? newValues : {}) as Record<string, unknown>;
-
-  const changedKeys = Object.keys(newObj).filter(k => {
-    return JSON.stringify(oldObj[k]) !== JSON.stringify(newObj[k]);
-  });
-
-  if (changedKeys.length === 0) return null;
-
-  return (
-    <div className="mt-2 space-y-1">
-      {changedKeys.slice(0, 5).map(key => (
-        <div key={key} className="flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/50 rounded px-2 py-1">
-          <span className="font-medium text-foreground">{key}:</span>
-          {oldObj[key] !== undefined && (
-            <span className="line-through text-destructive/70">{String(oldObj[key])}</span>
-          )}
-          <span className="text-emerald-600 dark:text-emerald-400">→ {String(newObj[key])}</span>
-        </div>
-      ))}
-      {changedKeys.length > 5 && (
-        <p className="text-[10px] text-muted-foreground">+{changedKeys.length - 5} تغييرات أخرى</p>
-      )}
-    </div>
-  );
-}
+// renderChanges replaced by ActivityDiffViewer component
 
 export const CustomerTabActivity = memo(function CustomerTabActivity({ activities }: { activities: ActivityLog[] }) {
   return (
