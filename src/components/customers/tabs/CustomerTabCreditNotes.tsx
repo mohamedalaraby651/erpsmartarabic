@@ -54,7 +54,7 @@ export const CustomerTabCreditNotes = memo(function CustomerTabCreditNotes({
         <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2.5 mb-4 text-sm">
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">العدد: <span className="font-bold text-foreground">{creditNotes.length}</span></span>
-            <span className="text-muted-foreground">إجمالي المرتجعات: <span className="font-bold text-destructive">{totalReturns.toLocaleString()}</span></span>
+            <span className="text-muted-foreground">إجمالي المرتجعات: <span className="font-bold text-destructive">{totalReturns.toLocaleString()} ج.م</span></span>
           </div>
         </div>
         <div className="divide-y">
