@@ -72,11 +72,11 @@ export function prefetchCommonRoutes(): void {
   // Wait for the app to be fully interactive
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
-      prefetchRoutes(['dashboard', 'customers', 'products', 'invoices', 'settings']);
+      prefetchRoutes(['dashboard', 'customers']);
     }, { timeout: 5000 });
   } else {
     setTimeout(() => {
-      prefetchRoutes(['dashboard', 'customers', 'products', 'invoices', 'settings']);
+      prefetchRoutes(['dashboard', 'customers']);
     }, 3000);
   }
 }

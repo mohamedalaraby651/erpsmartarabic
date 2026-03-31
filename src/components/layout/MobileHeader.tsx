@@ -72,7 +72,7 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 px-2.5 md:hidden safe-area-top shadow-sm">
+    <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/90 px-2.5 md:hidden safe-area-top shadow-sm">
       {/* Right Side - Menu Button First (RTL) */}
       <div className="flex items-center gap-0.5">
         {/* Menu Button - Grid Icon - Most prominent */}

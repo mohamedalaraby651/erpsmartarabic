@@ -136,7 +136,7 @@ export default function AppLayout() {
           <AppHeader />
           <main className="p-6">
           <Suspense fallback={<PageSkeleton />}>
-            <PageTransition key={location.pathname} direction="fade" duration="fast">
+            <PageTransition direction="fade" duration="fast">
               <Outlet />
             </PageTransition>
           </Suspense>

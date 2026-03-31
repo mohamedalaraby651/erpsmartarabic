@@ -1,12 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 /**
  * Saves scroll position when leaving a list page and restores it on back navigation.
- * Uses sessionStorage keyed by pathname.
+ * Uses sessionStorage keyed by pathname. Throttled to avoid excessive writes.
  */
 export function useScrollRestoration() {
   const { pathname } = useLocation();
+  const lastWriteRef = useRef(0);
 
   useEffect(() => {
     const key = `scroll_${pathname}`;
@@ -14,7 +15,6 @@ export function useScrollRestoration() {
 
     if (saved) {
       const y = parseInt(saved, 10);
-      // Delay to allow DOM to render
       requestAnimationFrame(() => {
         window.scrollTo(0, y);
       });
@@ -22,6 +22,9 @@ export function useScrollRestoration() {
     }
 
     const handleScroll = () => {
+      const now = Date.now();
+      if (now - lastWriteRef.current < 200) return;
+      lastWriteRef.current = now;
       sessionStorage.setItem(key, String(window.scrollY));
     };
 
