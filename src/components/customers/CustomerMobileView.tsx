@@ -98,7 +98,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
       </div>
 
       {/* Infinite scroll sentinel */}
-      <div ref={sentinelRef} className="h-10 flex items-center justify-center mt-4">
+      <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
         {isFetchingNextPage && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
       </div>
 
