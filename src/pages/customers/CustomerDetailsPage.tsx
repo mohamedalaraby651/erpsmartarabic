@@ -117,7 +117,7 @@ const CustomerDetailsPage = () => {
             <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
-            <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} /></Suspense>
+            <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} customerId={id!} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}>
@@ -189,7 +189,7 @@ const CustomerDetailsPage = () => {
             <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></TabsContent>
             <TabsContent value="quotations" className="mt-6"><CustomerTabQuotations quotations={detail.quotations} /></TabsContent>
             <TabsContent value="orders" className="mt-6"><CustomerTabOrders salesOrders={detail.salesOrders} /></TabsContent>
-            <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} /></TabsContent>
+            <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} customerId={id!} /></TabsContent>
             <TabsContent value="credit-notes" className="mt-6"><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></TabsContent>
             <TabsContent value="financial" className="mt-6">
               <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} />
