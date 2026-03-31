@@ -75,6 +75,7 @@ export function CustomerSearchPreview({ value, onChange, className }: CustomerSe
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+        onKeyDown={handleKeyDown}
         className="pr-10 pl-10"
       />
       {value && (
