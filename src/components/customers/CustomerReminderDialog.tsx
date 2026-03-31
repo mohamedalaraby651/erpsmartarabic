@@ -96,6 +96,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                         {new Date(r.reminder_date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </span>
                       {isOverdue && <Badge variant="destructive" className="text-[10px] h-4">متأخر</Badge>}
+                      {r.recurrence && <Badge variant="outline" className="text-[10px] h-4">{r.recurrence === 'daily' ? 'يومي' : r.recurrence === 'weekly' ? 'أسبوعي' : 'شهري'}</Badge>}
                     </div>
                   </div>
                 </div>
