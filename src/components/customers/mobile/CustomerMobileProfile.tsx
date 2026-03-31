@@ -131,16 +131,20 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
 
         {/* Quick contact buttons */}
         <div className="flex gap-2 mb-4">
-          {customer.phone && (
-            <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" asChild>
-              <a href={`tel:${customer.phone}`}>
-                <Phone className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />اتصال
-              </a>
-            </Button>
-          )}
-          {customer.phone && (
-            <Button variant="outline" size="sm" className="flex-1 h-9 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp}>
-              <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
+          {customer.phone ? (
+            <>
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" asChild>
+                <a href={`tel:${customer.phone}`}>
+                  <Phone className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />اتصال
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp}>
+                <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" onClick={onEdit}>
+              <Phone className="h-3.5 w-3.5 ml-1 text-muted-foreground" />إضافة رقم هاتف
             </Button>
           )}
         </div>
