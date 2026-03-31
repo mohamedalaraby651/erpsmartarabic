@@ -194,18 +194,18 @@ serve(async (req) => {
       );
     }
 
-    // 5. Update customer balance
+    // 5. Update customer balance atomically (SQL increment to prevent race conditions)
     console.log('[process-payment] Updating customer balance...');
-    const newBalance = (customer.current_balance || 0) - paymentData.amount;
-    const { error: balanceError } = await supabaseAdmin
-      .from('customers')
-      .update({ current_balance: newBalance })
-      .eq('id', paymentData.customer_id);
+    const { error: balanceError } = await supabaseAdmin.rpc('atomic_customer_balance_update', {
+      _customer_id: paymentData.customer_id,
+      _amount: paymentData.amount,
+    });
 
     if (balanceError) {
       console.error('[process-payment] Error updating balance:', balanceError);
       // Don't fail - payment was created
     }
+    const newBalance = (customer.current_balance || 0) - paymentData.amount;
 
     // 6. Update invoice if provided
     if (invoice) {

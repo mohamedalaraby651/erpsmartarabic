@@ -110,6 +110,8 @@ export function calculateCustomerHealth(
     dso = count > 0 ? Math.round(totalDays / count) : null;
   }
 
+  const totalOutstanding = Math.round((totalPurchases - totalPayments) * 100) / 100;
+
   return {
     dso,
     clv: totalPurchases,
@@ -117,6 +119,7 @@ export function calculateCustomerHealth(
     avgInvoiceValue,
     totalPurchases,
     totalPayments,
+    totalOutstanding,
   };
 }
 
