@@ -25,6 +25,8 @@ interface CustomerListCardProps {
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   selectionMode?: boolean;
+  alertCount?: number;
+  hasErrorAlert?: boolean;
 }
 
 const vipBorderAccent: Record<string, string> = {
@@ -57,6 +59,8 @@ const CustomerListCardInner = ({
   isSelected,
   onSelect,
   selectionMode,
+  alertCount,
+  hasErrorAlert,
 }: CustomerListCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -98,6 +102,7 @@ const CustomerListCardInner = ({
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
         isSelected && 'ring-2 ring-primary bg-primary/5',
+        hasErrorAlert && 'bg-destructive/5',
       )}
       style={{ animationDelay: `${animationDelay}ms` }}
     >
@@ -155,6 +160,11 @@ const CustomerListCardInner = ({
                     'h-2 w-2 rounded-full shrink-0',
                     isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
                   )} />
+                  {alertCount && alertCount > 0 && (
+                    <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground shrink-0">
+                      {alertCount}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <span className="text-[11px] text-muted-foreground">

@@ -27,12 +27,15 @@ interface CustomerMobileViewProps {
   onLoadMore?: () => void;
   sortKey?: string;
   onSortChange?: (key: string) => void;
+  alertCountByCustomer?: Map<string, number>;
+  errorCustomerIds?: Set<string>;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
+  alertCountByCustomer, errorCustomerIds,
 }: CustomerMobileViewProps) {
   const observerRef = useRef<HTMLDivElement>(null);
 
@@ -92,6 +95,8 @@ export const CustomerMobileView = memo(function CustomerMobileView({
               onDelete={canDelete ? onDelete : undefined}
               onNewInvoice={onNewInvoice}
               onNewPayment={onNewPayment}
+              alertCount={alertCountByCustomer?.get(customer.id)}
+              hasErrorAlert={errorCustomerIds?.has(customer.id)}
             />
           </div>
         ))}

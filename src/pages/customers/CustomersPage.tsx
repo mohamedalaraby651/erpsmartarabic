@@ -9,8 +9,7 @@ import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
 import { useAlertNotifier } from "@/hooks/useAlertNotifier";
-import { exportCustomersToExcel } from "@/lib/services/customerService";
-import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { useCustomerExport } from "@/hooks/customers/useCustomerExport";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import type { Customer } from "@/lib/customerConstants";
 import { CustomerAlertsBanner } from "@/components/customers/alerts/CustomerAlertsBanner";
@@ -27,7 +26,7 @@ import { CustomerPageHeader } from "@/components/customers/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/CustomerFilterDrawer";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { CustomerQuickAddDialog } from "@/components/customers/CustomerQuickAddDialog";
-import { CustomerExportDialog, type ExportOptions } from "@/components/customers/CustomerExportDialog";
+import { CustomerExportDialog } from "@/components/customers/CustomerExportDialog";
 import { CustomerSavedViews } from "@/components/customers/CustomerSavedViews";
 import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
@@ -191,121 +190,19 @@ const CustomersPage = () => {
   const handleNewPayment = useCallback((customerId: string) => { navigate('/payments', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleRefresh = async () => { await list.refetch(); };
 
-  // Advanced export handler
-  const handleAdvancedExport = useCallback(async (options: ExportOptions) => {
-    const hasPermission = await verifyPermissionOnServer('customers', 'view');
-    if (!hasPermission) {
-      const { toast: sonnerToast } = await import('sonner');
-      sonnerToast.error('غير مصرح لك بتصدير بيانات العملاء');
-      return;
-    }
-
-    const { toast: sonnerToast } = await import('sonner');
-    const toastId = 'export-advanced';
-    sonnerToast.loading('جاري تحضير التصدير...', { id: toastId });
-
-    try {
-      const { customerRepository } = await import('@/lib/repositories/customerRepository');
-
-      // Fetch data based on scope
-      let data: Customer[];
-      if (options.scope === 'filtered' && (filters.debouncedSearch || filters.typeFilter !== 'all' || filters.vipFilter !== 'all' || filters.governorateFilter !== 'all' || filters.statusFilter !== 'all')) {
-        const result = await customerRepository.findAll(
-          {
-            search: filters.debouncedSearch,
-            type: filters.typeFilter,
-            vip: filters.vipFilter,
-            governorate: filters.governorateFilter,
-            status: filters.statusFilter,
-            noCommDays: filters.noCommDays,
-            inactiveDays: filters.inactiveDays,
-          },
-          { key: sortConfig.key || 'created_at', direction: sortConfig.direction },
-          { page: 1, pageSize: 5000 }
-        );
-        data = result.data || [];
-      } else {
-        const result = await customerRepository.exportAll((loaded) => {
-          sonnerToast.loading(`جاري تحميل ${loaded.toLocaleString()} عميل...`, { id: toastId });
-        });
-        data = (result.data || []) as Customer[];
-      }
-
-      if (!data.length) {
-        sonnerToast.error('لا توجد بيانات للتصدير', { id: toastId });
-        return;
-      }
-
-      // Column header map
-      const headerMap: Record<string, string> = {
-        name: 'الاسم', customer_type: 'النوع', vip_level: 'مستوى VIP',
-        phone: 'الهاتف', phone2: 'هاتف 2', email: 'البريد',
-        governorate: 'المحافظة', city: 'المدينة',
-        current_balance: 'الرصيد', credit_limit: 'حد الائتمان',
-        is_active: 'الحالة', total_purchases_cached: 'إجمالي المشتريات',
-        last_activity_at: 'آخر نشاط', created_at: 'تاريخ الإضافة',
-        tax_number: 'الرقم الضريبي', notes: 'ملاحظات',
-      };
-
-      // Filter to selected columns only
-      const selectedCols = options.columns.filter(c => headerMap[c]);
-      const exportData = data.map(row => {
-        const mapped: Record<string, unknown> = {};
-        selectedCols.forEach(key => {
-          mapped[headerMap[key]] = (row as Record<string, unknown>)[key];
-        });
-        return mapped;
-      });
-
-      if (options.format === 'csv') {
-        // CSV export
-        const headers = selectedCols.map(c => headerMap[c]);
-        const csvRows = [headers.join(',')];
-        exportData.forEach(row => {
-          csvRows.push(headers.map(h => {
-            const val = row[h];
-            const str = val == null ? '' : String(val);
-            return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
-          }).join(','));
-        });
-        const BOM = '\uFEFF';
-        const blob = new Blob([BOM + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `customers_${new Date().toISOString().slice(0, 10)}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-      } else if (options.format === 'pdf') {
-        // PDF export
-        const { default: jsPDF } = await import('jspdf');
-        const { default: autoTable } = await import('jspdf-autotable');
-        const doc = new jsPDF({ orientation: 'landscape', putOnlyUsedFonts: true });
-        const headers = selectedCols.map(c => headerMap[c]);
-        const body = exportData.map(row => headers.map(h => String(row[h] ?? '')));
-        autoTable(doc, {
-          head: [headers],
-          body,
-          styles: { font: 'helvetica', fontSize: 8, halign: 'right' },
-          headStyles: { fillColor: [59, 130, 246] },
-        });
-        doc.save(`customers_${new Date().toISOString().slice(0, 10)}.pdf`);
-      } else {
-        // Excel export (default)
-        const XLSX = await import('xlsx');
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const headers = selectedCols.map(c => headerMap[c]);
-        ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length, 15) }));
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
-        XLSX.writeFile(wb, `customers_${new Date().toISOString().slice(0, 10)}.xlsx`);
-      }
-
-      sonnerToast.success(`تم تصدير ${data.length} عميل بنجاح`, { id: toastId });
-    } catch {
-      sonnerToast.error('حدث خطأ أثناء التصدير', { id: toastId });
-    }
-  }, [filters, sortConfig]);
+  // Advanced export handler (extracted to hook)
+  const { handleExport: handleAdvancedExport } = useCustomerExport({
+    filters: {
+      debouncedSearch: filters.debouncedSearch,
+      typeFilter: filters.typeFilter,
+      vipFilter: filters.vipFilter,
+      governorateFilter: filters.governorateFilter,
+      statusFilter: filters.statusFilter,
+      noCommDays: filters.noCommDays ? Number(filters.noCommDays) : undefined,
+      inactiveDays: filters.inactiveDays ? Number(filters.inactiveDays) : undefined,
+    },
+    sortConfig,
+  });
 
   const filteredCount = list.totalCount;
   const totalStatsCount = list.stats.total;
@@ -380,6 +277,8 @@ const CustomersPage = () => {
             onLoadMore={handleLoadMore}
             sortKey={sortConfig.key || 'created_at'}
             onSortChange={requestSort}
+            alertCountByCustomer={alertCountByCustomer}
+            errorCustomerIds={errorCustomerIds}
           />
         </div>
       ) : (
