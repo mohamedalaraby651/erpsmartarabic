@@ -10,6 +10,7 @@ import { vipColors, vipLabels, vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CustomerHealthBadge } from "@/components/customers/CustomerHealthBadge";
 
 interface HeroIdentityProps {
   customer: Customer;
@@ -46,6 +47,7 @@ export const HeroIdentity = memo(function HeroIdentity({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3 flex-wrap mb-2">
           <h1 className="text-2xl font-bold">{customer.name}</h1>
+          <CustomerHealthBadge customerId={customerId} compact />
           
           {/* Inline VIP dropdown */}
           {onChangeVip ? (
