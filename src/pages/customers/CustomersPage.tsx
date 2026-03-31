@@ -8,6 +8,7 @@ import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
+import { useAlertNotifier } from "@/hooks/useAlertNotifier";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { PageWrapper } from "@/components/shared/PageWrapper";
