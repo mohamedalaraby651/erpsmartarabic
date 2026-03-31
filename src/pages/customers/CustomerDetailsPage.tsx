@@ -18,6 +18,7 @@ import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
 import { CustomerSmartAlerts } from "@/components/customers/CustomerSmartAlerts";
 import { CustomerPinnedNote } from "@/components/customers/CustomerPinnedNote";
 import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
+import { CustomerHealthBadge } from "@/components/customers/CustomerHealthBadge";
 import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
 import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStrip";
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
