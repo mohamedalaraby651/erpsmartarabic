@@ -8,7 +8,7 @@ import { Crown, Phone, MapPin, DollarSign } from "lucide-react";
 import CustomerAvatar from "./CustomerAvatar";
 import { CustomerActionMenu } from "./CustomerActionMenu";
 import { cn } from "@/lib/utils";
-import { vipColors, vipLabels } from "@/lib/customerConstants";
+import { vipColors, vipLabels, getBalanceColor } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import { Checkbox } from "@/components/ui/checkbox";
 
