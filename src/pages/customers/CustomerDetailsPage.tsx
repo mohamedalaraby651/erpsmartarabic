@@ -58,6 +58,7 @@ const CustomerDetailsPage = () => {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
   const [mobileTab, setMobileTab] = useState('financials');
+  const [showAllStats, setShowAllStats] = useState(false);
 
   const detail = useCustomerDetail(id);
 
