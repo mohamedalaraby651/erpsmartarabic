@@ -16,37 +16,37 @@ interface CustomerMobileStatCardProps {
 
 const colorMap = {
   emerald: {
-    border: 'border-r-emerald-500',
+    border: 'border-s-emerald-500',
     iconBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
     iconText: 'text-emerald-600 dark:text-emerald-400',
     valueText: 'text-emerald-600 dark:text-emerald-400',
   },
   destructive: {
-    border: 'border-r-destructive',
+    border: 'border-s-destructive',
     iconBg: 'bg-destructive/10',
     iconText: 'text-destructive',
     valueText: 'text-destructive',
   },
   primary: {
-    border: 'border-r-primary',
+    border: 'border-s-primary',
     iconBg: 'bg-primary/10',
     iconText: 'text-primary',
     valueText: 'text-primary',
   },
   warning: {
-    border: 'border-r-amber-500',
+    border: 'border-s-amber-500',
     iconBg: 'bg-amber-500/10 dark:bg-amber-500/20',
     iconText: 'text-amber-600 dark:text-amber-400',
     valueText: 'text-amber-600 dark:text-amber-400',
   },
   info: {
-    border: 'border-r-blue-500',
+    border: 'border-s-blue-500',
     iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
     iconText: 'text-blue-600 dark:text-blue-400',
     valueText: 'text-blue-600 dark:text-blue-400',
   },
   muted: {
-    border: 'border-r-muted-foreground/30',
+    border: 'border-s-muted-foreground/30',
     iconBg: 'bg-muted',
     iconText: 'text-muted-foreground',
     valueText: 'text-foreground',
@@ -59,7 +59,7 @@ export const CustomerMobileStatCard = memo(function CustomerMobileStatCard({
   const colors = colorMap[color];
 
   return (
-    <Card className={cn("border-r-4", colors.border)}>
+    <Card className={cn("border-s-4", colors.border)}>
       <CardContent className="p-3.5">
         <div className="flex items-center gap-3">
           <div className={cn("p-2.5 rounded-xl shrink-0", colors.iconBg)}>

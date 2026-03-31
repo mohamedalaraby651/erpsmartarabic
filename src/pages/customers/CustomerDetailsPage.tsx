@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
-  CreditCard, Bell, MessageSquare, BarChart3, Wallet, Globe, Clock, Printer,
-  TrendingUp, Target, Calendar,
+  CreditCard, Bell, MessageSquare, BarChart3, Percent, Globe, Clock, Printer,
+  TrendingUp, Target, Calendar, ChevronDown, Wallet,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
@@ -58,6 +58,7 @@ const CustomerDetailsPage = () => {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
   const [mobileTab, setMobileTab] = useState('financials');
+  const [showAllStats, setShowAllStats] = useState(false);
 
   const detail = useCustomerDetail(id);
 
@@ -88,15 +89,17 @@ const CustomerDetailsPage = () => {
         action={<Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}><Edit className="h-4 w-4" /></Button>}
       />
 
-      <CustomerHeroHeader
-        customer={customer} customerId={id!}
-        invoices={detail.invoices} payments={detail.payments}
-        onBack={() => navigate('/customers')} onEdit={() => setEditDialogOpen(true)}
-        onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-        onStatement={() => detail.setActiveTab('statement')}
-        onWhatsApp={handleWhatsApp}
-        onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
-      />
+      <div className="hidden md:block">
+        <CustomerHeroHeader
+          customer={customer} customerId={id!}
+          invoices={detail.invoices} payments={detail.payments}
+          onBack={() => navigate('/customers')} onEdit={() => setEditDialogOpen(true)}
+          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+          onStatement={() => detail.setActiveTab('statement')}
+          onWhatsApp={handleWhatsApp}
+          onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
+        />
+      </div>
 
       {!isMobile && (
         <CustomerStatsGrid
@@ -122,7 +125,7 @@ const CustomerDetailsPage = () => {
             onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
           />
 
-          {/* Mobile Stats Cards - 2 columns grid */}
+          {/* Mobile Stats Cards - Priority: top 4 visible, rest expandable */}
           <div className="grid grid-cols-2 gap-3">
             <CustomerMobileStatCard
               icon={CreditCard}
@@ -139,7 +142,7 @@ const CustomerDetailsPage = () => {
               color={detail.totalOutstanding > 0 ? 'destructive' : 'emerald'}
             />
             <CustomerMobileStatCard
-              icon={Wallet}
+              icon={Percent}
               title="نسبة السداد"
               value={`${detail.paymentRatio.toFixed(0)}%`}
               color={detail.paymentRatio >= 80 ? 'emerald' : detail.paymentRatio >= 50 ? 'warning' : 'destructive'}
@@ -151,46 +154,63 @@ const CustomerDetailsPage = () => {
               value={`${detail.totalPurchases.toLocaleString()} ج.م`}
               color="primary"
             />
-            <CustomerMobileStatCard
-              icon={FileText}
-              title="الفواتير"
-              value={detail.invoices.length}
-              subtitle={`متوسط ${detail.avgInvoiceValue.toLocaleString()} ج.م`}
-              color="info"
-            />
-            <CustomerMobileStatCard
-              icon={Wallet}
-              title="إجمالي المدفوعات"
-              value={`${detail.totalPayments.toLocaleString()} ج.م`}
-              color="emerald"
-            />
-            <CustomerMobileStatCard
-              icon={Clock}
-              title="متوسط السداد"
-              value={detail.dso !== null ? `${detail.dso} يوم` : '-'}
-              color="muted"
-            />
-            <CustomerMobileStatCard
-              icon={Calendar}
-              title="آخر شراء"
-              value={detail.lastPurchaseDate ? new Date(detail.lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}
-              color="muted"
-            />
+            {showAllStats && (
+              <>
+                <CustomerMobileStatCard
+                  icon={FileText}
+                  title="الفواتير"
+                  value={detail.invoices.length}
+                  subtitle={`متوسط ${detail.avgInvoiceValue.toLocaleString()} ج.م`}
+                  color="info"
+                />
+                <CustomerMobileStatCard
+                  icon={Wallet}
+                  title="إجمالي المدفوعات"
+                  value={`${detail.totalPayments.toLocaleString()} ج.م`}
+                  color="emerald"
+                />
+                <CustomerMobileStatCard
+                  icon={Clock}
+                  title="متوسط السداد"
+                  value={detail.dso !== null ? `${detail.dso} يوم` : '-'}
+                  color="muted"
+                />
+                <CustomerMobileStatCard
+                  icon={Calendar}
+                  title="آخر شراء"
+                  value={detail.lastPurchaseDate ? new Date(detail.lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}
+                  color="muted"
+                />
+              </>
+            )}
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => setShowAllStats(!showAllStats)}
+          >
+            <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${showAllStats ? 'rotate-180' : ''}`} />
+            {showAllStats ? 'إخفاء التفاصيل' : 'عرض كل الإحصائيات'}
+          </Button>
 
           {/* Mobile Tab Bar */}
           <Tabs value={mobileTab} onValueChange={setMobileTab}>
-            <ScrollArea className="w-full">
-              <TabsList className="flex w-max h-10 bg-muted/50 p-1">
-                <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير</TabsTrigger>
-                <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات</TabsTrigger>
-                <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
-                <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
-                <TabsTrigger value="analysis" className="text-xs px-3"><BarChart3 className="h-3.5 w-3.5 ml-1" />التحليلات</TabsTrigger>
-                <TabsTrigger value="more" className="text-xs px-3"><MapPin className="h-3.5 w-3.5 ml-1" />المزيد</TabsTrigger>
-              </TabsList>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <div className="relative">
+              <ScrollArea className="w-full">
+                <TabsList className="flex w-max h-10 bg-muted/50 p-1">
+                  <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير</TabsTrigger>
+                  <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات</TabsTrigger>
+                  <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
+                  <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
+                  <TabsTrigger value="financial" className="text-xs px-3"><Wallet className="h-3.5 w-3.5 ml-1" />الملخص المالي</TabsTrigger>
+                  <TabsTrigger value="analysis" className="text-xs px-3"><BarChart3 className="h-3.5 w-3.5 ml-1" />التحليلات</TabsTrigger>
+                  <TabsTrigger value="more" className="text-xs px-3"><MapPin className="h-3.5 w-3.5 ml-1" />المزيد</TabsTrigger>
+                </TabsList>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
+            </div>
 
             <Suspense fallback={<TabFallback />}>
               <TabsContent value="financials" className="mt-4 space-y-4">
@@ -207,6 +227,8 @@ const CustomerDetailsPage = () => {
               <TabsContent value="statement" className="mt-4 space-y-4">
                 <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
                 <CustomerAgingReport invoices={detail.invoices} />
+              </TabsContent>
+              <TabsContent value="financial" className="mt-4">
                 <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
               </TabsContent>
               <TabsContent value="analysis" className="mt-4 space-y-4">
