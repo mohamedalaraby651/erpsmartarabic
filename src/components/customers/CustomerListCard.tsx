@@ -25,6 +25,8 @@ interface CustomerListCardProps {
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   selectionMode?: boolean;
+  alertCount?: number;
+  hasErrorAlert?: boolean;
 }
 
 const vipBorderAccent: Record<string, string> = {
