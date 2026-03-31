@@ -264,30 +264,27 @@ const CustomersPage = () => {
           />
         </div>
       ) : (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>قائمة العملاء ({list.totalCount})</CardTitle>
-              <div className="flex items-center gap-2">
-                {viewMode === 'grid' && (
-                  <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
-                    <SelectTrigger className="w-40 h-8 text-xs"><ArrowUpDown className="h-3.5 w-3.5 ml-1" /><SelectValue placeholder="ترتيب حسب" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
-                      <SelectItem value="name">الاسم</SelectItem>
-                      <SelectItem value="current_balance">الرصيد</SelectItem>
-                      <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-                <div className="flex items-center gap-1 border rounded-lg p-0.5">
-                  <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('table')} title="عرض جدول"><LayoutList className="h-4 w-4" /></Button>
-                  <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('grid')} title="عرض بطاقات"><LayoutGrid className="h-4 w-4" /></Button>
-                </div>
+      <div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm text-muted-foreground">{list.totalCount} عميل</span>
+            <div className="flex items-center gap-2">
+              {viewMode === 'grid' && (
+                <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
+                  <SelectTrigger className="w-40 h-8 text-xs"><ArrowUpDown className="h-3.5 w-3.5 ml-1" /><SelectValue placeholder="ترتيب حسب" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
+                    <SelectItem value="name">الاسم</SelectItem>
+                    <SelectItem value="current_balance">الرصيد</SelectItem>
+                    <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="flex items-center gap-1 border rounded-lg p-0.5">
+                <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('table')} title="عرض جدول"><LayoutList className="h-4 w-4" /></Button>
+                <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('grid')} title="عرض بطاقات"><LayoutGrid className="h-4 w-4" /></Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
             {viewMode === 'grid' ? (
               list.isLoading ? <CustomerGridSkeleton /> : (
                 <CustomerGridView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onEdit={handleEdit} onDelete={handleDeleteRequest} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} onToggleSelectAll={bulk.toggleSelectAll} isAllSelected={bulk.isAllSelected} hasSelection={bulk.hasSelection} onAdd={canEdit ? handleAdd : undefined} deletingId={deletingId} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch} onClearFilters={filters.clearAllFilters} />
