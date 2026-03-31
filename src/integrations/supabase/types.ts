@@ -3965,29 +3965,6 @@ export type Database = {
       }
     }
     Views: {
-      customer_stats_mv: {
-        Row: {
-          active: number | null
-          companies: number | null
-          debtors: number | null
-          farms: number | null
-          inactive: number | null
-          individuals: number | null
-          tenant_id: string | null
-          total: number | null
-          total_balance: number | null
-          vip: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customers_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       employees_safe: {
         Row: {
           address: string | null
