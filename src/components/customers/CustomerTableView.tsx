@@ -4,14 +4,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Building2, Users, Crown } from "lucide-react";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { CustomerActionMenu } from "@/components/customers/CustomerActionMenu";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
+import { VirtualizedTable, VirtualColumn } from "@/components/table/VirtualizedTable";
 import { vipColors, vipLabels, getBalanceColor } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
+
+const VIRTUALIZATION_THRESHOLD = 80;
 
 interface CustomerTableViewProps {
   data: Customer[];
@@ -41,6 +43,7 @@ export const CustomerTableView = memo(function CustomerTableView({
 }: CustomerTableViewProps) {
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const tableRef = useRef<HTMLDivElement>(null);
+  const shouldVirtualize = data.length > VIRTUALIZATION_THRESHOLD;
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (data.length === 0) return;
@@ -74,13 +77,115 @@ export const CustomerTableView = memo(function CustomerTableView({
     }
   }, [data, focusedIndex, onNavigate, onToggleSelect, selectedIds, canDelete, onDelete]);
 
-  // Scroll focused row into view
+  // Scroll focused row into view (non-virtualized only)
   useEffect(() => {
-    if (focusedIndex < 0 || !tableRef.current) return;
+    if (focusedIndex < 0 || !tableRef.current || shouldVirtualize) return;
     const rows = tableRef.current.querySelectorAll('tbody tr');
     rows[focusedIndex]?.scrollIntoView({ block: 'nearest' });
-  }, [focusedIndex]);
+  }, [focusedIndex, shouldVirtualize]);
 
+  // Virtualized rendering
+  if (shouldVirtualize) {
+    const columns: VirtualColumn<Customer>[] = [
+      ...(canDelete ? [{
+        key: 'select' as string,
+        header: <Checkbox checked={isAllSelected} onCheckedChange={(c: boolean | 'indeterminate') => onToggleSelectAll(!!c)} />,
+        width: '40px',
+        cell: (customer: Customer) => (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={selectedIds.has(customer.id)}
+              onCheckedChange={(c) => onToggleSelect(customer.id, !!c)}
+            />
+          </div>
+        ),
+      }] : []),
+      {
+        key: 'name',
+        header: <DataTableHeader label="الاسم" sortKey="name" sortConfig={sortConfig} onSort={onSort} />,
+        cell: (customer: Customer) => (
+          <div className="flex items-center gap-3">
+            <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="sm" />
+            <div>
+              <p className="font-medium">{customer.name}</p>
+              {customer.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: 'customer_type',
+        header: 'النوع',
+        cell: (customer: Customer) => (
+          <Badge variant="outline">
+            {customer.customer_type === 'company' ? <><Building2 className="h-3 w-3 ml-1" /> شركة</> : customer.customer_type === 'farm' ? <>مزرعة</> : <><Users className="h-3 w-3 ml-1" /> فرد</>}
+          </Badge>
+        ),
+      },
+      { key: 'phone', header: 'الهاتف', cell: (c: Customer) => <>{c.phone || '-'}</> },
+      { key: 'governorate', header: 'المحافظة', cell: (c: Customer) => <span className="text-sm text-muted-foreground">{c.governorate || '-'}</span> },
+      {
+        key: 'vip_level',
+        header: 'مستوى VIP',
+        cell: (customer: Customer) => (
+          <Badge className={vipColors[customer.vip_level] || vipColors.regular}>
+            <Crown className="h-3 w-3 ml-1" />
+            {vipLabels[customer.vip_level] || vipLabels.regular}
+          </Badge>
+        ),
+      },
+      {
+        key: 'current_balance',
+        header: <DataTableHeader label="الرصيد" sortKey="current_balance" sortConfig={sortConfig} onSort={onSort} />,
+        cell: (customer: Customer) => (
+          <span className={getBalanceColor(Number(customer.current_balance), Number(customer.credit_limit))}>
+            {Number(customer.current_balance).toLocaleString()} ج.م
+          </span>
+        ),
+      },
+      {
+        key: 'is_active',
+        header: 'الحالة',
+        cell: (customer: Customer) => (
+          <Badge variant={customer.is_active ? "default" : "secondary"}>{customer.is_active ? "نشط" : "غير نشط"}</Badge>
+        ),
+      },
+      {
+        key: 'actions',
+        header: 'إجراءات',
+        className: 'text-left',
+        cell: (customer: Customer) => (
+          <div onClick={(e) => e.stopPropagation()}>
+            <CustomerActionMenu
+              customer={customer}
+              variant="table"
+              canEdit={canEdit}
+              canDelete={canDelete}
+              isDeleting={deletingId === customer.id}
+              onView={() => onNavigate(customer.id)}
+              onEdit={() => onEdit(customer)}
+              onDelete={() => onDelete(customer.id)}
+              onNewInvoice={() => onNewInvoice(customer.id)}
+              onWhatsApp={() => customer.phone && onWhatsApp(customer.phone)}
+            />
+          </div>
+        ),
+      },
+    ];
+
+    return (
+      <VirtualizedTable
+        data={data}
+        columns={columns}
+        rowHeight={56}
+        maxHeight={700}
+        onRowClick={(customer) => onNavigate(customer.id)}
+        getRowKey={(customer) => customer.id}
+      />
+    );
+  }
+
+  // Non-virtualized (original) rendering for small datasets
   return (
     <div
       ref={tableRef}
