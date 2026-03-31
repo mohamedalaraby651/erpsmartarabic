@@ -102,6 +102,7 @@ const CustomerListCardInner = ({
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
         isSelected && 'ring-2 ring-primary bg-primary/5',
+        hasErrorAlert && 'bg-destructive/5',
       )}
       style={{ animationDelay: `${animationDelay}ms` }}
     >
