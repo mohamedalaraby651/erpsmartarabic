@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import { canDeleteCustomer } from "@/lib/services/customerService";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { logErrorSafely } from "@/lib/errorHandler";
 import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
