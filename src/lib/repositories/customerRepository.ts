@@ -93,9 +93,21 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
     q = q.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`) as typeof q;
   }
   if (type && type !== 'all') q = q.eq('customer_type', type) as typeof q;
-  if (vip && vip !== 'all') q = q.eq('vip_level', vip) as typeof q;
+  if (vip && vip !== 'all') {
+    if (vip === 'non-regular') {
+      q = q.neq('vip_level', 'regular') as typeof q;
+    } else {
+      q = q.eq('vip_level', vip) as typeof q;
+    }
+  }
   if (governorate && governorate !== 'all') q = q.eq('governorate', governorate) as typeof q;
-  if (status && status !== 'all') q = q.eq('is_active', status === 'active') as typeof q;
+  if (status && status !== 'all') {
+    if (status === 'debtors') {
+      q = q.gt('current_balance', 0) as typeof q;
+    } else {
+      q = q.eq('is_active', status === 'active') as typeof q;
+    }
+  }
   if (noCommDays) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - Number(noCommDays));

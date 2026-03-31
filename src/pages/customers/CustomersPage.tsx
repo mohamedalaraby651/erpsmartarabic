@@ -252,6 +252,8 @@ const CustomersPage = () => {
             hasNextPage={mobileHasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
+            sortKey={sortConfig.key || 'created_at'}
+            onSortChange={requestSort}
           />
         </div>
       ) : (
