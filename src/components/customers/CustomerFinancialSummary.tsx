@@ -10,6 +10,7 @@ interface CustomerFinancialSummaryProps {
   discountPercentage: number;
   paymentTermsDays: number;
   invoiceCount: number;
+  totalOutstanding?: number;
 }
 
 const CustomerFinancialSummary = ({
