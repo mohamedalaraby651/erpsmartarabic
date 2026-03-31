@@ -27,6 +27,7 @@ import { CustomerBulkActionsBar } from "@/components/customers/CustomerBulkActio
 import { CustomerDialogManager, type DialogManagerHandle } from "@/components/customers/CustomerDialogManager";
 import { CustomerPageHeader } from "@/components/customers/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/CustomerFilterDrawer";
+import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 
 const CustomersPage = () => {
