@@ -109,6 +109,7 @@ const CustomerDetailsPage = () => {
           paymentRatio={detail.paymentRatio}
           invoiceCount={detail.invoices.length} avgInvoiceValue={detail.avgInvoiceValue}
           dso={detail.dso} totalOutstanding={detail.totalOutstanding} lastPurchaseDate={detail.lastPurchaseDate}
+          clv={detail.clv}
         />
       )}
 
