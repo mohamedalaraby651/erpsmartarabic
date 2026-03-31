@@ -377,9 +377,9 @@ const CustomerDetailsPage = () => {
               <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
             </TabsContent>
             <TabsContent value="statement" className="mt-6">
-              <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
+              <StatementOfAccount customerName={customer.name} customerId={id!} />
             </TabsContent>
-            <TabsContent value="aging" className="mt-6"><CustomerAgingReport invoices={detail.invoices} /></TabsContent>
+            <TabsContent value="aging" className="mt-6"><CustomerAgingReport customerId={id!} /></TabsContent>
             <TabsContent value="communications" className="mt-6"><CommunicationLogTab customerId={id!} /></TabsContent>
             <TabsContent value="analytics" className="mt-6 space-y-4">
               <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
