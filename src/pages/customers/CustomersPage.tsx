@@ -124,6 +124,8 @@ const CustomersPage = () => {
   }, [allCustomersRaw, alertFilterType, alertsByType]);
 
   const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage, sortConfig });
+
+  const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
   const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
   const handleAddAdvanced = useCallback(() => { dialogRef.current?.openAdd(); }, []);
   const handleDeleteRequest = useCallback((id: string) => { dialogRef.current?.confirmDelete(id); }, []);
