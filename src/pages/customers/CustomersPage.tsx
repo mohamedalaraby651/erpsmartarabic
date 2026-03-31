@@ -113,10 +113,36 @@ const CustomersPage = () => {
   const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage: isMobile ? mobilePage : currentPage, sortConfig });
 
   const totalPages = Math.ceil(list.totalCount / pageSize);
-  const hasNextPage = currentPage < totalPages;
+  const hasNextPageDesktop = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
+  const mobileHasNextPage = mobilePage < totalPages;
 
-  useEffect(() => { setCurrentPage(1); }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
+  // Accumulate mobile pages
+  useEffect(() => {
+    if (isMobile && list.customers.length > 0) {
+      setMobilePages(prev => {
+        const updated = [...prev];
+        updated[mobilePage - 1] = list.customers;
+        return updated;
+      });
+      setIsFetchingNextPage(false);
+    }
+  }, [list.customers, mobilePage, isMobile]);
+
+  const allMobileCustomers = isMobile ? mobilePages.flat() : list.customers;
+
+  const handleLoadMore = useCallback(() => {
+    if (mobileHasNextPage && !isFetchingNextPage) {
+      setIsFetchingNextPage(true);
+      setMobilePage(prev => prev + 1);
+    }
+  }, [mobileHasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setMobilePage(1);
+    setMobilePages([]);
+  }, [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays]);
 
   const bulk = useBulkSelection(list.customers);
 
