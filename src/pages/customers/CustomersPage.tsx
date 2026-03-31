@@ -16,19 +16,19 @@ import { CustomerAlertsBanner } from "@/components/customers/alerts/CustomerAler
 import { CustomerAlertsMobileTrigger } from "@/components/customers/alerts/CustomerAlertsMobileTrigger";
 
 // Sub-components
-import { CustomerListRow } from "@/components/customers/CustomerListRow";
-import { CustomerMobileView } from "@/components/customers/CustomerMobileView";
-import { CustomerStatsBar } from "@/components/customers/CustomerStatsBar";
-import { CustomerFiltersBar } from "@/components/customers/CustomerFiltersBar";
-import { CustomerListSkeleton } from "@/components/customers/CustomerListSkeleton";
-import { CustomerDialogManager, type DialogManagerHandle } from "@/components/customers/CustomerDialogManager";
-import { CustomerPageHeader } from "@/components/customers/CustomerPageHeader";
-import { CustomerFilterDrawer } from "@/components/customers/CustomerFilterDrawer";
-import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
-import { CustomerQuickAddDialog } from "@/components/customers/CustomerQuickAddDialog";
-import { CustomerExportDialog } from "@/components/customers/CustomerExportDialog";
-import { CustomerSavedViews } from "@/components/customers/CustomerSavedViews";
-import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/CustomerColumnSettings";
+import { CustomerListRow } from "@/components/customers/list/CustomerListRow";
+import { CustomerMobileView } from "@/components/customers/list/CustomerMobileView";
+import { CustomerStatsBar } from "@/components/customers/list/CustomerStatsBar";
+import { CustomerFiltersBar } from "@/components/customers/filters/CustomerFiltersBar";
+import { CustomerListSkeleton } from "@/components/customers/list/CustomerListSkeleton";
+import { CustomerDialogManager, type DialogManagerHandle } from "@/components/customers/dialogs/CustomerDialogManager";
+import { CustomerPageHeader } from "@/components/customers/list/CustomerPageHeader";
+import { CustomerFilterDrawer } from "@/components/customers/filters/CustomerFilterDrawer";
+import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
+import { CustomerQuickAddDialog } from "@/components/customers/dialogs/CustomerQuickAddDialog";
+import { CustomerExportDialog } from "@/components/customers/dialogs/CustomerExportDialog";
+import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedViews";
+import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/list/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 
 const CustomersPage = () => {

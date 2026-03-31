@@ -42,17 +42,17 @@ const CustomerTabQuotations = lazy(() => import("@/components/customers/tabs/Cus
 const CustomerTabOrders = lazy(() => import("@/components/customers/tabs/CustomerTabOrders").then(m => ({ default: m.CustomerTabOrders })));
 const CustomerTabActivity = lazy(() => import("@/components/customers/tabs/CustomerTabActivity").then(m => ({ default: m.CustomerTabActivity })));
 const CustomerTabAttachments = lazy(() => import("@/components/customers/tabs/CustomerTabAttachments").then(m => ({ default: m.CustomerTabAttachments })));
-const StatementOfAccount = lazy(() => import("@/components/customers/StatementOfAccount"));
-const CustomerFinancialSummary = lazy(() => import("@/components/customers/CustomerFinancialSummary"));
-const CustomerPurchaseChart = lazy(() => import("@/components/customers/CustomerPurchaseChart"));
+const StatementOfAccount = lazy(() => import("@/components/customers/details/StatementOfAccount"));
+const CustomerFinancialSummary = lazy(() => import("@/components/customers/details/CustomerFinancialSummary"));
+const CustomerPurchaseChart = lazy(() => import("@/components/customers/details/CustomerPurchaseChart"));
 const AgingDonutChart = lazy(() => import("@/components/customers/charts/AgingDonutChart").then(m => ({ default: m.AgingDonutChart })));
 const CashFlowLineChart = lazy(() => import("@/components/customers/charts/CashFlowLineChart").then(m => ({ default: m.CashFlowLineChart })));
 const TopProductsChart = lazy(() => import("@/components/customers/charts/TopProductsChart").then(m => ({ default: m.TopProductsChart })));
-const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAgingReport"));
-const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
-const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
+const CustomerAgingReport = lazy(() => import("@/components/customers/details/CustomerAgingReport"));
+const CommunicationLogTab = lazy(() => import("@/components/customers/details/CommunicationLogTab"));
+const CustomerReminderSection = lazy(() => import("@/components/customers/dialogs/CustomerReminderDialog"));
 const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/CustomerTabCreditNotes").then(m => ({ default: m.CustomerTabCreditNotes })));
-const CustomerSalesPipeline = lazy(() => import("@/components/customers/CustomerSalesPipeline").then(m => ({ default: m.CustomerSalesPipeline })));
+const CustomerSalesPipeline = lazy(() => import("@/components/customers/details/CustomerSalesPipeline").then(m => ({ default: m.CustomerSalesPipeline })));
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 
