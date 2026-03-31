@@ -162,7 +162,21 @@ const CustomersPage = () => {
       return;
     }
     setExportAllLoading(true);
-    await exportCustomersToExcel();
+    try {
+      // Try server-side export first
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('export-customers');
+      if (!error && data?.url) {
+        window.open(data.url, '_blank');
+        const { toast: sonnerToast } = await import('sonner');
+        sonnerToast.success(`تم تصدير ${data.rowCount} عميل بنجاح`);
+      } else {
+        // Fallback to client-side export
+        await exportCustomersToExcel();
+      }
+    } catch {
+      await exportCustomersToExcel();
+    }
     setExportAllLoading(false);
   }, []);
   const handleBulkDelete = useCallback(() => { mutations.bulkDeleteMutation.mutate(Array.from(bulk.selectedIds)); bulk.clearSelection(); }, [mutations.bulkDeleteMutation, bulk]);
