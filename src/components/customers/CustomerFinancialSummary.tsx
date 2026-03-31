@@ -10,6 +10,7 @@ interface CustomerFinancialSummaryProps {
   discountPercentage: number;
   paymentTermsDays: number;
   invoiceCount: number;
+  totalOutstanding?: number;
 }
 
 const CustomerFinancialSummary = ({
@@ -20,6 +21,7 @@ const CustomerFinancialSummary = ({
   discountPercentage,
   paymentTermsDays,
   invoiceCount,
+  totalOutstanding,
 }: CustomerFinancialSummaryProps) => {
   const paymentRatio = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
   const creditUsage = creditLimit > 0 ? (currentBalance / creditLimit) * 100 : 0;
@@ -42,10 +44,10 @@ const CustomerFinancialSummary = ({
     },
     {
       icon: Wallet,
-      label: 'الرصيد المستحق',
-      value: `${currentBalance.toLocaleString()} ج.م`,
-      color: currentBalance > 0 ? 'text-destructive' : 'text-emerald-600',
-      bgColor: currentBalance > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10',
+      label: 'المستحق',
+      value: `${(totalOutstanding ?? (totalPurchases - totalPayments)).toLocaleString()} ج.م`,
+      color: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'text-destructive' : 'text-emerald-600',
+      bgColor: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10',
     },
     {
       icon: CreditCard,

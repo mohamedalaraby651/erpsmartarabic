@@ -29,9 +29,11 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   invoices,
   customerId,
+  totalPaymentsFromLedger,
 }: {
   invoices: Invoice[];
   customerId: string;
+  totalPaymentsFromLedger?: number;
 }) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -41,8 +43,9 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   const summary = useMemo(() => {
     const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
     const totalPaid = invoices.reduce((s, i) => s + Number(i.paid_amount || 0), 0);
-    return { totalInvoiced, totalPaid, outstanding: totalInvoiced - totalPaid };
-  }, [invoices]);
+    const unlinkedPayments = totalPaymentsFromLedger != null ? Math.round((totalPaymentsFromLedger - totalPaid) * 100) / 100 : 0;
+    return { totalInvoiced, totalPaid, outstanding: totalInvoiced - totalPaid, unlinkedPayments };
+  }, [invoices, totalPaymentsFromLedger]);
 
   return (
     <Card>
@@ -85,6 +88,17 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 <span className="text-muted-foreground">المتبقي:</span>
                 <span className="font-bold text-destructive">{summary.outstanding.toLocaleString()} ج.م</span>
               </div>
+              {summary.unlinkedPayments > 0 && (
+                <>
+                  <div className="w-px h-4 bg-border hidden sm:block" />
+                  <div className="flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                      يوجد {summary.unlinkedPayments.toLocaleString()} ج.م دفعات غير مرتبطة بفواتير
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Invoice List */}

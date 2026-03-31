@@ -422,14 +422,14 @@ export const customerRepository = {
     return (data || []) as Invoice[];
   },
 
-  async findPayments(customerId: string): Promise<Payment[]> {
+  async findPayments(customerId: string) {
     const { data, error } = await supabase
       .from('payments')
-      .select('*')
+      .select('*, invoices:invoice_id(invoice_number)')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return (data || []) as Payment[];
+    return (data || []) as (Payment & { invoices: { invoice_number: string } | null })[];
   },
 
   async findCreditNotes(customerId: string): Promise<CreditNote[]> {

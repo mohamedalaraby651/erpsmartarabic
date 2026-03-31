@@ -9,6 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 const PaymentFormDialog = lazy(() => import("@/components/payments/PaymentFormDialog"));
 
 type Payment = Database['public']['Tables']['payments']['Row'];
+type PaymentWithInvoice = Payment & { invoices: { invoice_number: string } | null };
 
 const PAGE_SIZE = 20;
 
@@ -30,7 +31,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
   payments,
   customerId,
 }: {
-  payments: Payment[];
+  payments: PaymentWithInvoice[];
   customerId: string;
 }) {
   const [page, setPage] = useState(1);
@@ -109,7 +110,9 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
                       <>
                         <span>•</span>
                         <span className="flex items-center gap-1">
-                          فاتورة: <EntityLink type="invoice" id={payment.invoice_id}>{payment.invoice_id.slice(0, 8)}</EntityLink>
+                          فاتورة: <EntityLink type="invoice" id={payment.invoice_id}>
+                            {payment.invoices?.invoice_number || payment.invoice_id.slice(0, 8)}
+                          </EntityLink>
                         </span>
                       </>
                     )}

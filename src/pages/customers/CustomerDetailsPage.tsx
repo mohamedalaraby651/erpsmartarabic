@@ -79,8 +79,9 @@ const CustomerDetailsPage = () => {
   const mobileStats = [
     { icon: Wallet, value: `${detail.currentBalance.toLocaleString()}`, label: 'الرصيد', color: detail.balanceIsDebit ? 'text-destructive' : 'text-success' },
     { icon: FileText, value: detail.invoices.length, label: 'الفواتير', color: 'text-primary' },
-    { icon: CreditCard, value: `${detail.paymentRatio}%`, label: 'نسبة السداد', color: 'text-info' },
+    { icon: CreditCard, value: `${detail.paymentRatio.toFixed(0)}%`, label: 'نسبة السداد', color: 'text-info' },
     { icon: BarChart3, value: `${detail.totalPurchases.toLocaleString()}`, label: 'المشتريات', color: 'text-warning' },
+    { icon: Wallet, value: `${detail.totalOutstanding.toLocaleString()}`, label: 'المستحق', color: detail.totalOutstanding > 0 ? 'text-destructive' : 'text-success' },
   ];
 
   return (
@@ -114,14 +115,14 @@ const CustomerDetailsPage = () => {
       {isMobile ? (
         <div className="space-y-3">
           <MobileDetailSection title="الفواتير" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.invoices.length}>
-            <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></Suspense>
+            <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
             <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} customerId={id!} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}>
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} />
+              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
             </Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="العناوين" priority="low" icon={<MapPin className="h-4 w-4" />} badge={detail.addresses.length}>
@@ -186,13 +187,13 @@ const CustomerDetailsPage = () => {
               <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(id) => detail.deleteAddressMutation.mutate(id)} />
             </TabsContent>
             <TabsContent value="reminders" className="mt-6"><CustomerReminderSection customerId={id!} /></TabsContent>
-            <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></TabsContent>
+            <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} /></TabsContent>
             <TabsContent value="quotations" className="mt-6"><CustomerTabQuotations quotations={detail.quotations} /></TabsContent>
             <TabsContent value="orders" className="mt-6"><CustomerTabOrders salesOrders={detail.salesOrders} /></TabsContent>
             <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} customerId={id!} /></TabsContent>
             <TabsContent value="credit-notes" className="mt-6"><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></TabsContent>
             <TabsContent value="financial" className="mt-6">
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} />
+              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
             </TabsContent>
             <TabsContent value="statement" className="mt-6">
               <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
