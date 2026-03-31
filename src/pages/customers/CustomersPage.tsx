@@ -173,7 +173,7 @@ const CustomersPage = () => {
 
   const paginationBlock = list.totalCount > pageSize && (
     <div className="mt-4">
-      <ServerPagination currentPage={currentPage} totalPages={totalPages} totalCount={list.totalCount} pageSize={pageSize} onPageChange={goToPage} hasNextPage={hasNextPage} hasPrevPage={hasPrevPage} />
+      <ServerPagination currentPage={currentPage} totalPages={totalPages} totalCount={list.totalCount} pageSize={pageSize} onPageChange={goToPage} hasNextPage={hasNextPageDesktop} hasPrevPage={hasPrevPage} />
     </div>
   );
 
