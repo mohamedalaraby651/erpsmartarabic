@@ -272,6 +272,7 @@ const CustomerDetailsPage = () => {
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
     </div>
+    </CustomerErrorBoundary>
   );
 };
 
