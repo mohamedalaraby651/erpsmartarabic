@@ -47,7 +47,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div>
           <CardTitle>المدفوعات</CardTitle>
           <CardDescription>سجل مدفوعات العميل ({payments.length})</CardDescription>
@@ -103,7 +103,7 @@ export const CustomerTabPayments = memo(function CustomerTabPayments({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+                  <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground flex-wrap">
                     <span>{new Date(payment.payment_date).toLocaleDateString('ar-EG')}</span>
                     {payment.invoice_id && (
                       <>

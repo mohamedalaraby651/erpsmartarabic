@@ -109,7 +109,7 @@ export default function AppLayout() {
   if (isMobile) {
     return (
       <div className={cn("min-h-screen bg-background", !isCustomerDetail && "pb-14")}>
-        <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
+        {!isCustomerDetail && <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />}
         <main className="p-3">
           <Suspense fallback={<PageSkeleton />}>
             <PageTransition key={location.pathname} direction="fade" duration="fast">
@@ -117,7 +117,7 @@ export default function AppLayout() {
             </PageTransition>
           </Suspense>
         </main>
-        <FABMenu pageContext={getPageContext()} />
+        {!isCustomerDetail && <FABMenu pageContext={getPageContext()} />}
         {!isCustomerDetail && <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />}
         <MobileDrawer
           open={mobileMenuOpen}

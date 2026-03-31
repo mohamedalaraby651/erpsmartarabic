@@ -56,7 +56,7 @@ interface CustomerMobileProfileProps {
 export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   customer, customerId, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
   onPrev, onNext, hasPrev, hasNext,
-  currentBalance = 0, balanceIsDebit = false, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
+  currentBalance = 0, balanceIsDebit = false, creditLimit, creditUsagePercent, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
   onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
 }: CustomerMobileProfileProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -127,6 +127,26 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             payments={payments}
             compact
           />
+          {/* Credit usage indicator */}
+          {creditLimit != null && creditLimit > 0 && creditUsagePercent != null && (
+            <div className="mt-2 p-2 rounded-lg bg-muted/50 border text-xs">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <Target className="h-3 w-3" />
+                  حد الائتمان: {creditLimit.toLocaleString()} ج.م
+                </span>
+                <span className={cn("font-bold", creditUsagePercent > 90 ? "text-destructive" : creditUsagePercent > 70 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
+                  {creditUsagePercent.toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all", creditUsagePercent > 90 ? "bg-destructive" : creditUsagePercent > 70 ? "bg-amber-500" : "bg-emerald-500")}
+                  style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick contact buttons */}

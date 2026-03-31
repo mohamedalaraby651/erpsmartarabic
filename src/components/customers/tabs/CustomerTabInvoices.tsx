@@ -68,7 +68,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Reset page on filter change
-  useMemo(() => setPage(1), [statusFilter, searchQuery]);
+  React.useEffect(() => { setPage(1); }, [statusFilter, searchQuery]);
 
   const summary = useMemo(() => {
     const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
@@ -79,7 +79,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div>
           <CardTitle>الفواتير</CardTitle>
           <CardDescription>سجل فواتير العميل ({invoices.length})</CardDescription>
@@ -172,7 +172,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                            className="min-h-9 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
                             onClick={() => onQuickPay(invoice.id)}
                           >
                             <CreditCard className="h-3.5 w-3.5 ml-1" />
@@ -183,7 +183,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+                    <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground flex-wrap">
                       <span>{new Date(invoice.created_at).toLocaleDateString('ar-EG')}</span>
                       {invoice.due_date && (
                         <>
