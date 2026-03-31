@@ -20,7 +20,9 @@ import { CustomerSmartAlerts } from "@/components/customers/CustomerSmartAlerts"
 import { CustomerPinnedNote } from "@/components/customers/CustomerPinnedNote";
 import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
 import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
-import { CustomerBottomNav } from "@/components/customers/mobile/CustomerBottomNav";
+import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStrip";
+import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
+import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
