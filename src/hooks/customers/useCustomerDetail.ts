@@ -2,11 +2,23 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
-import { calculateCustomerHealth } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";
+
+interface FinancialSummary {
+  totalPurchases: number;
+  totalPayments: number;
+  totalOutstanding: number;
+  totalCreditNotes: number;
+  invoiceCount: number;
+  avgInvoiceValue: number;
+  paymentRatio: number;
+  dso: number | null;
+  clv: number;
+}
 
 export function useCustomerDetail(id: string | undefined) {
   const { toast } = useToast();
@@ -18,7 +30,7 @@ export function useCustomerDetail(id: string | undefined) {
   const invoicePageSize = 20;
   const paymentPageSize = 20;
 
-  // === CORE queries (always loaded) ===
+  // === CORE: customer data ===
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: () => customerRepository.findById(id!),
@@ -31,8 +43,33 @@ export function useCustomerDetail(id: string | undefined) {
     enabled: !!id,
   });
 
-  // === LAZY queries (loaded on tab open, or all at once on mobile) ===
-  const invoicesNeeded = isMobile || ['invoices', 'financial', 'statement', 'aging', 'analytics'].includes(activeTab);
+  // === FINANCIAL SUMMARY via server-side RPC (replaces client-side calculation) ===
+  const { data: financialSummary } = useQuery({
+    queryKey: ['customer-financial-summary', id],
+    queryFn: async (): Promise<FinancialSummary> => {
+      const { data, error } = await supabase.rpc('get_customer_financial_summary', {
+        _customer_id: id!,
+      });
+      if (error) throw error;
+      const d = data as Record<string, number | null>;
+      return {
+        totalPurchases: d.total_purchases ?? 0,
+        totalPayments: d.total_payments ?? 0,
+        totalOutstanding: d.total_outstanding ?? 0,
+        totalCreditNotes: d.total_credit_notes ?? 0,
+        invoiceCount: d.invoice_count ?? 0,
+        avgInvoiceValue: d.avg_invoice_value ?? 0,
+        paymentRatio: d.payment_ratio ?? 0,
+        dso: d.dso ?? null,
+        clv: d.clv ?? 0,
+      };
+    },
+    enabled: !!id,
+    staleTime: 60000,
+  });
+
+  // === LAZY queries (loaded on tab open) ===
+  const invoicesNeeded = isMobile || ['invoices', 'statement', 'aging', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: () => customerRepository.findInvoices(id!),
@@ -50,7 +87,7 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  const paymentsNeeded = isMobile || ['payments', 'financial', 'statement', 'analytics'].includes(activeTab);
+  const paymentsNeeded = isMobile || ['payments', 'statement', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRepository.findPayments(id!),
@@ -125,9 +162,15 @@ export function useCustomerDetail(id: string | undefined) {
     },
   });
 
-  // Computed stats via domain service
-  const healthMetrics = calculateCustomerHealth(invoices, payments);
-  const { totalPurchases, totalPayments, paymentRatio, avgInvoiceValue, dso, clv, totalOutstanding } = healthMetrics;
+  // Use server-computed stats (fallback to 0 if not loaded yet)
+  const fs = financialSummary;
+  const totalPurchases = fs?.totalPurchases ?? 0;
+  const totalPayments = fs?.totalPayments ?? 0;
+  const paymentRatio = fs?.paymentRatio ?? 0;
+  const avgInvoiceValue = fs?.avgInvoiceValue ?? 0;
+  const dso = fs?.dso ?? null;
+  const clv = fs?.clv ?? 0;
+  const totalOutstanding = fs?.totalOutstanding ?? 0;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
 
   const creditLimit = Number(customer?.credit_limit || 0);

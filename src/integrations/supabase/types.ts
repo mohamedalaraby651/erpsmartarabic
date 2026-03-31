@@ -4259,6 +4259,10 @@ export type Database = {
         Returns: string
       }
       get_current_tenant: { Args: never; Returns: string }
+      get_customer_financial_summary: {
+        Args: { _customer_id: string }
+        Returns: Json
+      }
       get_customer_stats: { Args: never; Returns: Json }
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
