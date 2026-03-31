@@ -86,6 +86,8 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
   // Bulk VIP update
   const bulkVipMutation = useMutation({
     mutationFn: async ({ ids, vipLevel }: { ids: string[]; vipLevel: string }) => {
+      const hasPermission = await verifyPermissionOnServer('customers', 'edit');
+      if (!hasPermission) throw new Error('ليس لديك صلاحية تعديل العملاء');
       await customerRepository.bulkUpdateVip(ids, vipLevel);
     },
     onSuccess: async (_data, { ids, vipLevel }) => {
