@@ -10,7 +10,7 @@ import {
   ArrowRight, ArrowLeft, Edit, Phone, Mail, MessageSquare, FileText, Printer,
   ExternalLink, User, Crown, CreditCard, Target, Percent, TrendingUp,
   Wallet, Clock, Tag, MoreVertical, ShoppingCart, Globe, Receipt,
-  UserCheck, UserX, ChevronDown,
+  UserCheck, UserX, ChevronDown, Download,
 } from "lucide-react";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
@@ -273,6 +273,14 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
                       <Receipt className="h-4 w-4 ml-2" />إشعار دائن
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => {
+                    import('@/lib/exports/customerExcelExport').then(m => {
+                      m.exportCustomerToExcel({ customer, invoices, payments, creditNotes: [] });
+                    });
+                  }}>
+                    <Download className="h-4 w-4 ml-2" />تصدير Excel
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

@@ -22,6 +22,8 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reminderDate, setReminderDate] = useState('');
   const [reminderNote, setReminderNote] = useState('');
+  const [recurrence, setRecurrence] = useState<string>('none');
+  const [linkedInvoiceId, setLinkedInvoiceId] = useState<string>('');
 
   const { data: reminders = [] } = useQuery({
     queryKey: ['customer-reminders', customerId],
@@ -35,6 +37,8 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       reminder_date: reminderDate,
       note: reminderNote.trim(),
       created_by: user?.id || '',
+      recurrence: recurrence !== 'none' ? recurrence : null,
+      linked_invoice_id: linkedInvoiceId || null,
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-reminders', customerId] });
@@ -42,6 +46,8 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       setDialogOpen(false);
       setReminderDate('');
       setReminderNote('');
+      setRecurrence('none');
+      setLinkedInvoiceId('');
     },
     onError: () => toast.error('فشل إضافة التذكير'),
   });
@@ -90,6 +96,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                         {new Date(r.reminder_date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </span>
                       {isOverdue && <Badge variant="destructive" className="text-[10px] h-4">متأخر</Badge>}
+                      {r.recurrence && <Badge variant="outline" className="text-[10px] h-4">{r.recurrence === 'daily' ? 'يومي' : r.recurrence === 'weekly' ? 'أسبوعي' : 'شهري'}</Badge>}
                     </div>
                   </div>
                 </div>
@@ -131,6 +138,15 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
             <div>
               <label className="text-sm font-medium">الملاحظة</label>
               <Textarea value={reminderNote} onChange={(e) => setReminderNote(e.target.value)} placeholder="مثال: الاتصال لمتابعة عرض السعر..." rows={3} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">التكرار</label>
+              <select className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm" value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                <option value="none">بدون تكرار</option>
+                <option value="daily">يومي</option>
+                <option value="weekly">أسبوعي</option>
+                <option value="monthly">شهري</option>
+              </select>
             </div>
           </div>
           <DialogFooter>

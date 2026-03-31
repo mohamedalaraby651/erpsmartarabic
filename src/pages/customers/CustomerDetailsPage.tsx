@@ -36,6 +36,9 @@ const CustomerTabAttachments = lazy(() => import("@/components/customers/tabs/Cu
 const StatementOfAccount = lazy(() => import("@/components/customers/StatementOfAccount"));
 const CustomerFinancialSummary = lazy(() => import("@/components/customers/CustomerFinancialSummary"));
 const CustomerPurchaseChart = lazy(() => import("@/components/customers/CustomerPurchaseChart"));
+const AgingDonutChart = lazy(() => import("@/components/customers/charts/AgingDonutChart").then(m => ({ default: m.AgingDonutChart })));
+const CashFlowLineChart = lazy(() => import("@/components/customers/charts/CashFlowLineChart").then(m => ({ default: m.CashFlowLineChart })));
+const TopProductsChart = lazy(() => import("@/components/customers/charts/TopProductsChart").then(m => ({ default: m.TopProductsChart })));
 const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAgingReport"));
 const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
@@ -194,6 +197,9 @@ const CustomerDetailsPage = () => {
               </TabsContent>
               <TabsContent value="analysis" className="mt-4 space-y-4">
                 <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+                <AgingDonutChart invoices={detail.invoices} />
+                <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
+                <TopProductsChart customerId={id!} />
                 <CustomerTabActivity activities={detail.activities} />
               </TabsContent>
               <TabsContent value="more" className="mt-4 space-y-4">
@@ -246,7 +252,12 @@ const CustomerDetailsPage = () => {
             </TabsContent>
             <TabsContent value="aging" className="mt-6"><CustomerAgingReport invoices={detail.invoices} /></TabsContent>
             <TabsContent value="communications" className="mt-6"><CommunicationLogTab customerId={id!} /></TabsContent>
-            <TabsContent value="analytics" className="mt-6"><CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} /></TabsContent>
+            <TabsContent value="analytics" className="mt-6 space-y-4">
+              <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+              <AgingDonutChart invoices={detail.invoices} />
+              <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
+              <TopProductsChart customerId={id!} />
+            </TabsContent>
             <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
             <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>
           </Suspense>

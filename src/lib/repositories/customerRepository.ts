@@ -496,7 +496,7 @@ export const customerRepository = {
     return (data || []) as CustomerReminder[];
   },
 
-  async createReminder(payload: { customer_id: string; reminder_date: string; note: string; created_by: string }): Promise<void> {
+  async createReminder(payload: { customer_id: string; reminder_date: string; note: string; created_by: string; recurrence?: string | null; linked_invoice_id?: string | null }): Promise<void> {
     const { error } = await supabase
       .from('customer_reminders')
       .insert(payload);
