@@ -273,6 +273,14 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
                       <Receipt className="h-4 w-4 ml-2" />إشعار دائن
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => {
+                    import('@/lib/exports/customerExcelExport').then(m => {
+                      m.exportCustomerToExcel({ customer, invoices, payments, creditNotes: [] });
+                    });
+                  }}>
+                    <Download className="h-4 w-4 ml-2" />تصدير Excel
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
