@@ -52,6 +52,7 @@ const CustomerAgingReport = lazy(() => import("@/components/customers/CustomerAg
 const CommunicationLogTab = lazy(() => import("@/components/customers/CommunicationLogTab"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/CustomerReminderDialog"));
 const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/CustomerTabCreditNotes").then(m => ({ default: m.CustomerTabCreditNotes })));
+const CustomerSalesPipeline = lazy(() => import("@/components/customers/CustomerSalesPipeline").then(m => ({ default: m.CustomerSalesPipeline })));
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 
