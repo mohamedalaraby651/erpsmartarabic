@@ -205,7 +205,14 @@ serve(async (req) => {
       console.error('[process-payment] Error updating balance:', balanceError);
       // Don't fail - payment was created
     }
-    const newBalance = (customer.current_balance || 0) - paymentData.amount;
+
+    // Query the real balance after atomic update
+    const { data: updatedCustomer } = await supabaseAdmin
+      .from('customers')
+      .select('current_balance')
+      .eq('id', paymentData.customer_id)
+      .single();
+    const newBalance = updatedCustomer?.current_balance ?? 0;
 
     // 6. Update invoice if provided
     if (invoice) {

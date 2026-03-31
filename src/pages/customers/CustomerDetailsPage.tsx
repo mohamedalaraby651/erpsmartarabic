@@ -81,6 +81,7 @@ const CustomerDetailsPage = () => {
     { icon: FileText, value: detail.invoices.length, label: 'الفواتير', color: 'text-primary' },
     { icon: CreditCard, value: `${detail.paymentRatio.toFixed(0)}%`, label: 'نسبة السداد', color: 'text-info' },
     { icon: BarChart3, value: `${detail.totalPurchases.toLocaleString()}`, label: 'المشتريات', color: 'text-warning' },
+    { icon: Wallet, value: `${detail.totalPayments.toLocaleString()}`, label: 'المدفوعات', color: 'text-emerald-600' },
     { icon: Wallet, value: `${detail.totalOutstanding.toLocaleString()}`, label: 'المستحق', color: detail.totalOutstanding > 0 ? 'text-destructive' : 'text-success' },
   ];
 
@@ -106,7 +107,8 @@ const CustomerDetailsPage = () => {
         <CustomerStatsGrid
           currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
           creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
-          totalPurchases={detail.totalPurchases} paymentRatio={detail.paymentRatio}
+          totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments}
+          paymentRatio={detail.paymentRatio}
           invoiceCount={detail.invoices.length} avgInvoiceValue={detail.avgInvoiceValue}
           dso={detail.dso} totalOutstanding={detail.totalOutstanding} lastPurchaseDate={detail.lastPurchaseDate}
         />
