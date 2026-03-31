@@ -58,6 +58,7 @@ export const CustomerTabOrders = memo(function CustomerTabOrders({ salesOrders }
         {salesOrders.length === 0 ? (
           <div className="text-center py-8"><ShoppingCart className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" /><p className="text-muted-foreground">لا توجد أوامر بيع</p></div>
         ) : (
+          <>
           <div className="space-y-2">
             {salesOrders.slice((oPage - 1) * O_PAGE_SIZE, oPage * O_PAGE_SIZE).map((order) => (
               <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">

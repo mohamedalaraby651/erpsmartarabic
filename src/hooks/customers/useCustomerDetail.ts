@@ -121,6 +121,5 @@ export function useCustomerDetail(id: string | undefined) {
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
     lastPurchaseDate, dso, clv, totalOutstanding,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
-    creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
   };
 }

@@ -67,6 +67,7 @@ export const CustomerTabQuotations = memo(function CustomerTabQuotations({ quota
         {quotations.length === 0 ? (
           <div className="text-center py-8"><Globe className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" /><p className="text-muted-foreground">لا توجد عروض أسعار</p></div>
         ) : (
+          <>
           <div className="space-y-2">
             {quotations.slice((qPage - 1) * Q_PAGE_SIZE, qPage * Q_PAGE_SIZE).map((q) => (
               <div key={q.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
