@@ -1,3 +1,4 @@
+import React, { forwardRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,13 +20,13 @@ interface FilterChipsProps {
   className?: string;
 }
 
-export function FilterChips({
+export const FilterChips = forwardRef<HTMLDivElement, FilterChipsProps>(function FilterChips({
   chips,
   activeChips,
   onToggle,
   onClearAll,
   className,
-}: FilterChipsProps) {
+}, ref) {
   const hasActiveFilters = activeChips.length > 0;
 
   return (
