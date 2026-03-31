@@ -88,7 +88,8 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  const paymentsNeeded = isMobile || ['payments', 'statement', 'analytics'].includes(activeTab);
+  // Statement now uses server-side RPC, no need to load payments for it
+  const paymentsNeeded = isMobile || ['payments', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRepository.findPayments(id!),
