@@ -122,7 +122,7 @@ const CustomerDetailsPage = () => {
           </MobileDetailSection>
           <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}>
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} />
+              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
             </Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="العناوين" priority="low" icon={<MapPin className="h-4 w-4" />} badge={detail.addresses.length}>
