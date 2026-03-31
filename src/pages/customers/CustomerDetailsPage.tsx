@@ -155,6 +155,7 @@ const CustomerDetailsPage = () => {
             currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
             totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio}
             totalPurchases={detail.totalPurchases}
+            invoices={detail.invoices} payments={detail.payments}
             onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
             onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
             onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
