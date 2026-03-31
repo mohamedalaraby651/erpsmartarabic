@@ -57,7 +57,26 @@ const tabIcons: Record<string, React.ElementType> = {
   analytics: BarChart3, communications: MessageSquare, activity: Activity,
 };
 
-const TabFallback = () => <div className="flex items-center justify-center py-12"><div className="h-6 w-6 animate-spin border-2 border-primary border-t-transparent rounded-full" /></div>;
+const TabSkeleton = () => (
+  <div className="space-y-3 py-4 animate-pulse">
+    <div className="h-10 bg-muted rounded-lg w-full" />
+    <div className="h-24 bg-muted rounded-lg w-full" />
+    <div className="h-16 bg-muted rounded-lg w-full" />
+    <div className="h-16 bg-muted rounded-lg w-3/4" />
+  </div>
+);
+
+const mobileTabLabels: Record<string, string> = {
+  more: 'البيانات الأساسية',
+  notes: 'الملاحظات',
+  reminders: 'التذكيرات',
+  communications: 'التواصل',
+  attachments: 'المرفقات',
+  sales: 'المبيعات',
+  analysis: 'الرسوم البيانية',
+  statement: 'كشف الحساب',
+  aging: 'أعمار الديون',
+};
 
 const CustomerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
