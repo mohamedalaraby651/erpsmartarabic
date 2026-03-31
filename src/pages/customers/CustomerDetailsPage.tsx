@@ -200,8 +200,8 @@ const CustomerDetailsPage = () => {
             <div className="relative">
               <ScrollArea className="w-full">
                 <TabsList className="flex w-max h-10 bg-muted/50 p-1">
-                  <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير</TabsTrigger>
-                  <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات</TabsTrigger>
+                  <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير{detail.invoices.length > 0 && ` (${detail.invoices.length})`}</TabsTrigger>
+                  <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات{detail.payments.length > 0 && ` (${detail.payments.length})`}</TabsTrigger>
                   <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
                   <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
                   <TabsTrigger value="financial" className="text-xs px-3"><Wallet className="h-3.5 w-3.5 ml-1" />الملخص المالي</TabsTrigger>
