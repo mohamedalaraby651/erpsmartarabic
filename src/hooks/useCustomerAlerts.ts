@@ -38,6 +38,18 @@ const PRIORITY: Record<AlertType, number> = {
   new_customer: 8,
 };
 
+// Typed joined invoice row
+interface InvoiceWithCustomer {
+  id: string;
+  customer_id: string;
+  invoice_number: string;
+  total_amount: number;
+  paid_amount: number | null;
+  due_date: string | null;
+  created_at: string;
+  customers: { name: string; phone: string | null } | null;
+}
+
 export function useCustomerAlerts(enabled = true) {
   const { settings } = useAlertSettings();
 
@@ -59,11 +71,11 @@ export function useCustomerAlerts(enabled = true) {
     queryFn: async () => {
       const { data } = await supabase
         .from('invoices')
-        .select('id, customer_id, invoice_number, total_amount, paid_amount, due_date, customers(name, phone)')
+        .select('id, customer_id, invoice_number, total_amount, paid_amount, due_date, created_at, customers(name, phone)')
         .neq('payment_status', 'paid')
         .not('due_date', 'is', null)
         .lt('due_date', new Date().toISOString());
-      return data || [];
+      return (data || []) as unknown as InvoiceWithCustomer[];
     },
     staleTime: 300000,
     enabled,
@@ -76,12 +88,12 @@ export function useCustomerAlerts(enabled = true) {
       const futureDate = new Date(now.getTime() + settings.upcomingDueDays * 86400000);
       const { data } = await supabase
         .from('invoices')
-        .select('id, customer_id, invoice_number, total_amount, paid_amount, due_date, customers(name, phone)')
+        .select('id, customer_id, invoice_number, total_amount, paid_amount, due_date, created_at, customers(name, phone)')
         .neq('payment_status', 'paid')
         .not('due_date', 'is', null)
         .gte('due_date', now.toISOString())
         .lte('due_date', futureDate.toISOString());
-      return data || [];
+      return (data || []) as unknown as InvoiceWithCustomer[];
     },
     staleTime: 300000,
     enabled: enabled && settings.enableUpcomingDue,
@@ -103,11 +115,11 @@ export function useCustomerAlerts(enabled = true) {
       if (!recentInvoices) return new Map<string, { recent: number; previous: number; name: string; phone: string | null }>();
 
       const map = new Map<string, { recent: number; previous: number; name: string; phone: string | null }>();
-      recentInvoices.forEach(inv => {
+      (recentInvoices as unknown as InvoiceWithCustomer[]).forEach(inv => {
         const entry = map.get(inv.customer_id) || {
           recent: 0, previous: 0,
-          name: (inv as any).customers?.name || '',
-          phone: (inv as any).customers?.phone || null,
+          name: inv.customers?.name || '',
+          phone: inv.customers?.phone || null,
         };
         const created = new Date(inv.created_at).getTime();
         if (created >= thirtyDaysAgo.getTime()) {
@@ -150,14 +162,13 @@ export function useCustomerAlerts(enabled = true) {
     if (settings.enableOverduePayment) {
       overdueInvoices?.forEach(inv => {
         const daysOverdue = Math.floor((Date.now() - new Date(inv.due_date!).getTime()) / 86400000);
-        const custData = (inv as any).customers;
-        const customerName = custData?.name || 'عميل';
+        const customerName = inv.customers?.name || 'عميل';
         const sev: AlertSeverity = daysOverdue > settings.overdueDaysThreshold ? 'error' : 'warning';
         if (shouldInclude(sev)) {
           result.push({
             type: 'overdue_payment', severity: sev, priority: PRIORITY.overdue_payment,
             customerId: inv.customer_id, customerName,
-            customerPhone: custData?.phone,
+            customerPhone: inv.customers?.phone,
             amount: Number(inv.total_amount || 0) - Number(inv.paid_amount || 0),
             message: `فاتورة ${inv.invoice_number} متأخرة ${daysOverdue} يوم — ${customerName}`,
           });
@@ -187,12 +198,11 @@ export function useCustomerAlerts(enabled = true) {
     if (settings.enableUpcomingDue && shouldInclude('warning')) {
       upcomingInvoices?.forEach(inv => {
         const daysUntil = Math.ceil((new Date(inv.due_date!).getTime() - Date.now()) / 86400000);
-        const custData = (inv as any).customers;
-        const customerName = custData?.name || 'عميل';
+        const customerName = inv.customers?.name || 'عميل';
         result.push({
           type: 'upcoming_due', severity: 'warning', priority: PRIORITY.upcoming_due,
           customerId: inv.customer_id, customerName,
-          customerPhone: custData?.phone,
+          customerPhone: inv.customers?.phone,
           amount: Number(inv.total_amount || 0) - Number(inv.paid_amount || 0),
           message: `فاتورة ${inv.invoice_number} تستحق خلال ${daysUntil} يوم — ${customerName}`,
         });

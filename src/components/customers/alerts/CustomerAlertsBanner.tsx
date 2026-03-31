@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Settings, ChevronDown, ChevronUp, AlertOctagon, Clock, TrendingUp, CalendarClock, Crown, TrendingDown, UserMinus, UserPlus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, AlertOctagon, Clock, TrendingUp, CalendarClock, Crown, TrendingDown, UserMinus, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { useDismissedAlerts, useAlertSettings } from '@/hooks/useAlertSettings';
+import { useDismissedAlerts } from '@/hooks/useAlertSettings';
 import { AlertItemActions } from './AlertItemActions';
 import { ALERT_TYPE_CONFIG, ALERT_TYPE_ORDER } from './AlertTypeConfig';
 import type { AlertType, CustomerAlert } from '@/hooks/useCustomerAlerts';
@@ -23,33 +23,13 @@ export const CustomerAlertsBanner = ({ alertsByType, totalAlerts, onFilterByType
   const navigate = useNavigate();
   const { dismiss, isDismissed } = useDismissedAlerts();
   const [expandedType, setExpandedType] = useState<string>('');
-  const soundPlayedRef = useRef(false);
-  const { settings } = useAlertSettings();
 
-  // Play sound on first render with alerts
-  useEffect(() => {
-    if (totalAlerts > 0 && !soundPlayedRef.current && settings?.soundEnabled) {
-      soundPlayedRef.current = true;
-      try {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 800;
-        gain.gain.value = 0.05;
-        osc.start();
-        osc.stop(ctx.currentTime + 0.1);
-      } catch { /* ignore */ }
-    }
-  }, [totalAlerts, settings?.soundEnabled]);
+  // Sound is now handled exclusively by useAlertNotifier — no duplicate here
 
   if (totalAlerts === 0) return null;
 
   const handleBadgeClick = (type: AlertType) => {
-    // Toggle accordion
     setExpandedType(prev => prev === type ? '' : type);
-    // Toggle filter
     if (onFilterByType) {
       onFilterByType(activeFilterType === type ? null : type);
     }
@@ -63,7 +43,6 @@ export const CustomerAlertsBanner = ({ alertsByType, totalAlerts, onFilterByType
           const typeAlerts = alertsByType.get(type);
           if (!typeAlerts?.length) return null;
 
-          // Filter out dismissed
           const visibleAlerts = typeAlerts.filter(a => !isDismissed(`${a.type}-${a.customerId}`));
           if (visibleAlerts.length === 0) return null;
 
