@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, ArrowUpDown } from "lucide-react";
+import { AlertTriangle, ArrowUpDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useCustomerFilters } from "@/hooks/customers";
@@ -23,8 +23,11 @@ import { CustomerDialogManager, type DialogManagerHandle } from "@/components/cu
 import { CustomerPageHeader } from "@/components/customers/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/CustomerFilterDrawer";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
+import { CustomerQuickAddDialog } from "@/components/customers/CustomerQuickAddDialog";
+import { CustomerExportDialog, type ExportOptions } from "@/components/customers/CustomerExportDialog";
+import { CustomerSavedViews } from "@/components/customers/CustomerSavedViews";
+import { CustomerColumnSettings } from "@/components/customers/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
-import { Loader2 } from "lucide-react";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
@@ -37,6 +40,8 @@ const CustomersPage = () => {
   const filters = useCustomerFilters();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [exportAllLoading, setExportAllLoading] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   useEffect(() => {
     const action = filters.searchParams.get('action');
@@ -159,7 +164,8 @@ const CustomersPage = () => {
   }, [isMobile, hasNextPage, isFetchingNextPage, handleLoadMore, allCustomers.length]);
 
   const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
-  const handleAdd = useCallback(() => { dialogRef.current?.openAdd(); }, []);
+  const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
+  const handleAddAdvanced = useCallback(() => { dialogRef.current?.openAdd(); }, []);
   const handleDeleteRequest = useCallback((id: string) => { dialogRef.current?.confirmDelete(id); }, []);
   const handleDeleteConfirm = useCallback((id: string) => {
     setDeletingId(id);
@@ -206,7 +212,7 @@ const CustomersPage = () => {
         onDuplicates={() => dialogRef.current?.openDuplicates()}
         onMerge={() => dialogRef.current?.openMerge()}
         onImport={() => dialogRef.current?.openImport()}
-        onExportAll={handleExportAll}
+        onExportAll={() => setExportDialogOpen(true)}
         totalCount={totalStatsCount}
         filteredCount={filteredCount !== totalStatsCount ? filteredCount : undefined}
         searchQuery={isMobile ? filters.searchQuery : undefined}
@@ -269,21 +275,43 @@ const CustomersPage = () => {
         </div>
       ) : (
         <div>
-          {/* Sort dropdown */}
+          {/* Toolbar: sort + saved views + column settings */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">{list.totalCount} عميل</span>
-            <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
-              <SelectTrigger className="w-40 h-8 text-xs">
-                <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
-                <SelectValue placeholder="ترتيب حسب" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
-                <SelectItem value="name">الاسم</SelectItem>
-                <SelectItem value="current_balance">الرصيد</SelectItem>
-                <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <CustomerSavedViews
+                currentFilters={{
+                  type: filters.typeFilter,
+                  vip: filters.vipFilter,
+                  governorate: filters.governorateFilter,
+                  status: filters.statusFilter,
+                  noCommDays: filters.noCommDays,
+                  inactiveDays: filters.inactiveDays,
+                }}
+                onApplyView={(viewFilters) => {
+                  filters.setTypeFilter(viewFilters.type);
+                  filters.setVipFilter(viewFilters.vip);
+                  filters.setGovernorateFilter(viewFilters.governorate);
+                  filters.setStatusFilter(viewFilters.status);
+                  filters.setNoCommDays(viewFilters.noCommDays);
+                  filters.setInactiveDays(viewFilters.inactiveDays);
+                  setQuickFilter(null);
+                }}
+              />
+              <CustomerColumnSettings />
+              <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
+                <SelectTrigger className="w-40 h-9 text-xs">
+                  <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
+                  <SelectValue placeholder="ترتيب حسب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
+                  <SelectItem value="name">الاسم</SelectItem>
+                  <SelectItem value="current_balance">الرصيد</SelectItem>
+                  <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {list.isLoading && allCustomers.length === 0 ? (
@@ -341,6 +369,21 @@ const CustomersPage = () => {
       <CustomerDialogManager
         ref={dialogRef} onDeleteConfirm={handleDeleteConfirm}
         onBulkDelete={() => {}} onBulkVipUpdate={() => {}} bulkSelectedCount={0}
+      />
+      <CustomerQuickAddDialog
+        open={quickAddOpen}
+        onOpenChange={setQuickAddOpen}
+        onOpenAdvanced={handleAddAdvanced}
+      />
+
+      <CustomerExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onExport={async (options) => {
+          await handleExportAll();
+        }}
+        totalCount={list.stats.total}
+        filteredCount={list.totalCount}
       />
     </div>
     </PageWrapper>
