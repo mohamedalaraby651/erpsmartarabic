@@ -15,14 +15,14 @@ interface CustomerStatsGridProps {
   invoiceCount: number;
   avgInvoiceValue: number;
   dso: number | null;
-  clv: number;
+  totalOutstanding: number;
   lastPurchaseDate: string | null;
 }
 
 export const CustomerStatsGrid = memo(function CustomerStatsGrid({
   currentBalance, balanceIsDebit, creditLimit, creditUsagePercent,
   totalPurchases, paymentRatio, invoiceCount, avgInvoiceValue,
-  dso, clv, lastPurchaseDate,
+  dso, totalOutstanding, lastPurchaseDate,
 }: CustomerStatsGridProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-4">
