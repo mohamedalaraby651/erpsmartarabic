@@ -92,11 +92,6 @@ export default function AppLayout() {
     return null;
   }
 
-  // Show skeleton while hydrating to prevent flash
-  if (!isHydrated) {
-    return <AppInitSkeleton />;
-  }
-
   // Mobile Layout
   if (isMobile) {
     return (
