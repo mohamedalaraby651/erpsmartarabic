@@ -95,7 +95,7 @@ export function useSidebarCounts(enabled = true) {
         pendingPurchaseOrders: purchaseOrdersResult.count || 0,
       };
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && enabled,
     refetchInterval: 120000, // Refresh every 2 minutes
     staleTime: 60000, // Cache for 1 minute
   });

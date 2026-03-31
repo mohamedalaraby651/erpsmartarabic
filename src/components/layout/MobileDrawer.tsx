@@ -149,7 +149,7 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
   const navigate = useNavigate();
   const { signOut, userRole } = useAuth();
   const { favorites, isFavorite, toggleFavorite, removeFavorite } = useFavoritePages();
-  const { data: counts } = useSidebarCounts();
+  const { data: counts } = useSidebarCounts(open);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
 
