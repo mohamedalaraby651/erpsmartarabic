@@ -71,4 +71,4 @@ export const FilterChips = forwardRef<HTMLDivElement, FilterChipsProps>(function
       </ScrollArea>
     </div>
   );
-}
+});

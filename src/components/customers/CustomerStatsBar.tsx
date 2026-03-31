@@ -90,21 +90,29 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
     );
   }
 
-  // Desktop: keep original grid layout
-  const items = [
-    { icon: Users, value: stats.total, label: 'إجمالي العملاء', color: 'text-primary', bg: 'bg-primary/10' },
-    { icon: UserCheck, value: stats.active, label: 'نشط', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
-    { icon: UserX, value: stats.inactive, label: 'غير نشط', color: 'text-muted-foreground', bg: 'bg-muted' },
-    { icon: Users, value: stats.individuals, label: 'أفراد', color: 'text-info', bg: 'bg-info/10' },
-    { icon: Building2, value: stats.companies, label: 'شركات', color: 'text-secondary-foreground', bg: 'bg-secondary' },
-    { icon: Crown, value: stats.vip, label: 'عملاء VIP', color: 'text-warning', bg: 'bg-warning/10' },
-    { icon: DollarSign, value: stats.totalBalance.toLocaleString(), label: 'الأرصدة المستحقة', color: stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400', bg: stats.totalBalance > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+  // Desktop: clickable stat cards with filter support
+  const desktopItems = [
+    { id: null, icon: Users, value: stats.total, label: 'إجمالي العملاء', color: 'text-primary', bg: 'bg-primary/10' },
+    { id: 'active', icon: UserCheck, value: stats.active, label: 'نشط', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+    { id: 'inactive', icon: UserX, value: stats.inactive, label: 'غير نشط', color: 'text-muted-foreground', bg: 'bg-muted' },
+    { id: 'individuals', icon: Users, value: stats.individuals, label: 'أفراد', color: 'text-info', bg: 'bg-info/10' },
+    { id: 'companies', icon: Building2, value: stats.companies, label: 'شركات', color: 'text-secondary-foreground', bg: 'bg-secondary' },
+    { id: 'vip', icon: Crown, value: stats.vip, label: 'عملاء VIP', color: 'text-warning', bg: 'bg-warning/10' },
+    { id: 'debtors', icon: DollarSign, value: stats.totalBalance.toLocaleString(), label: 'الأرصدة المستحقة', color: stats.totalBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400', bg: stats.totalBalance > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20' },
   ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-      {items.map((stat, i) => (
-        <Card key={i}>
+      {desktopItems.map((stat, i) => (
+        <Card
+          key={i}
+          className={cn(
+            "transition-all",
+            onFilterChange && "cursor-pointer hover:shadow-md hover:border-primary/30",
+            activeFilter === stat.id && stat.id !== null && "ring-2 ring-primary border-primary"
+          )}
+          onClick={() => onFilterChange?.(activeFilter === stat.id ? null : stat.id)}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stat.bg}`}><stat.icon className={`h-5 w-5 ${stat.color}`} /></div>

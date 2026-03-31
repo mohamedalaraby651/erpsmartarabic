@@ -54,15 +54,24 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
           </DropdownMenu>
         ) : (
           <>
-            <Button variant="outline" size="sm" onClick={onDuplicates}>
-              <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين
-            </Button>
-            <Button variant="outline" size="sm" onClick={onMerge}>
-              <Merge className="h-4 w-4 ml-2" />دمج
-            </Button>
-            <Button variant="outline" size="sm" onClick={onImport}>
-              <Upload className="h-4 w-4 ml-2" />استيراد
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MoreVertical className="h-4 w-4 ml-2" />أدوات
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={onDuplicates}>
+                  <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onMerge}>
+                  <Merge className="h-4 w-4 ml-2" />دمج
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onImport}>
+                  <Upload className="h-4 w-4 ml-2" />استيراد
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <ExportWithTemplateButton
               section="customers" sectionLabel="العملاء" data={customers}
               columns={[
@@ -74,7 +83,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
             />
             <Button variant="outline" size="sm" disabled={exportAllLoading} onClick={onExportAll}>
               {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
-              تصدير الكل (Excel)
+              تصدير الكل
             </Button>
           </>
         )}
