@@ -176,6 +176,11 @@ export const customerRepository = {
   },
 
   async update(id: string, payload: CustomerUpdate): Promise<void> {
+    // Validate before sending to DB
+    const parsed = customerWriteSchema.partial().safeParse(payload);
+    if (!parsed.success) {
+      throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
+    }
     const { error } = await supabase
       .from('customers')
       .update(payload)

@@ -1,9 +1,11 @@
-import React, { memo, useMemo } from "react";
+import React, { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Activity, Plus, Edit, Trash2, CreditCard, FileText, UserPlus,
   Settings, Eye, ArrowUpDown,
 } from "lucide-react";
+import { ActivityDiffViewer } from "@/components/customers/ActivityDiffViewer";
+import type { Database } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
