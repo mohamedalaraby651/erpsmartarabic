@@ -59,7 +59,7 @@ export const CustomerMobileStatCard = memo(function CustomerMobileStatCard({
   const colors = colorMap[color];
 
   return (
-    <Card className={cn("border-r-4", colors.border)}>
+    <Card className={cn("border-s-4", colors.border)}>
       <CardContent className="p-3.5">
         <div className="flex items-center gap-3">
           <div className={cn("p-2.5 rounded-xl shrink-0", colors.iconBg)}>
