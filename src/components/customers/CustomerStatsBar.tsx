@@ -38,32 +38,10 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
     { id: 'inactive', label: 'غير نشط', count: stats.inactive, icon: UserX },
   ];
 
-  const renderChip = (chip: FilterChipDef | null) => {
-    const isAll = chip === null;
-    const isActive = isAll ? !activeFilter : activeFilter === chip?.id;
-
-    return (
-      <button
-        key={isAll ? 'all' : chip!.id}
-        onClick={() => onFilterChange?.(isAll ? null : (activeFilter === chip!.id ? null : chip!.id))}
-        className={cn(
-          'shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-200',
-          isActive
-            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-            : 'bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground',
-        )}
-      >
-        {!isAll && <chip!.icon className="h-3.5 w-3.5" />}
-        {isAll ? 'الكل' : chip!.label}
-        <span className={cn(
-          'text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1',
-          isActive ? 'bg-primary-foreground/20' : 'bg-muted',
-        )}>
-          {isAll ? stats.total : chip!.count}
-        </span>
-      </button>
-    );
-  };
+  const allChips: Array<{ id: string | null; label: string; count: number; Icon?: React.ElementType }> = [
+    { id: null, label: 'الكل', count: stats.total },
+    ...chips.map(c => ({ id: c.id, label: c.label, count: c.count, Icon: c.icon })),
+  ];
 
   return (
     <ScrollArea className="w-full">
