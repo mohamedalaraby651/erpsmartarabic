@@ -95,6 +95,8 @@ export const CustomerMobileView = memo(function CustomerMobileView({
               onDelete={canDelete ? onDelete : undefined}
               onNewInvoice={onNewInvoice}
               onNewPayment={onNewPayment}
+              alertCount={alertCountByCustomer?.get(customer.id)}
+              hasErrorAlert={errorCustomerIds?.has(customer.id)}
             />
           </div>
         ))}
