@@ -55,7 +55,8 @@ export const tabGroups = [
     id: 'basic',
     label: 'الأساسي',
     tabs: [
-      { value: 'addresses', label: 'العناوين', iconName: 'MapPin' as const },
+      { value: 'basic-info', label: 'البيانات الأساسية', iconName: 'MapPin' as const },
+      { value: 'notes', label: 'الملاحظات', iconName: 'StickyNote' as const },
       { value: 'attachments', label: 'المرفقات', iconName: 'Paperclip' as const },
       { value: 'reminders', label: 'التذكيرات', iconName: 'Bell' as const },
     ],
