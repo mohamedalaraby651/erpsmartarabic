@@ -25,6 +25,7 @@ import type { MobileSectionId } from "@/components/customers/mobile/CustomerIcon
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { tabGroups } from "@/lib/customerConstants";
 import { customerRepository } from "@/lib/repositories/customerRepository";
@@ -96,6 +97,7 @@ function MobileCustomerView({
   setSelectedAddress, setAddressDialogOpen,
 }: MobileCustomerViewProps) {
   const heroRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [showCompressed, setShowCompressed] = useState(false);
 
   useEffect(() => {
@@ -103,36 +105,32 @@ function MobileCustomerView({
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => setShowCompressed(!entry.isIntersecting),
-      { threshold: 0, rootMargin: '-60px 0px 0px 0px' }
+      { threshold: 0, rootMargin: '-48px 0px 0px 0px' }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  return (
-    <div className="space-y-4">
-      {/* Sticky compressed header — visible only when hero scrolls out */}
-      {showCompressed && (
-        <div className="sticky top-0 z-30 animate-fade-in">
-          <CustomerCompressedHeader
-            customer={customer}
-            currentBalance={detail.currentBalance}
-            balanceIsDebit={detail.balanceIsDebit}
-            onNewInvoice={onNewInvoice}
-            onNewPayment={onNewPayment}
-            onCall={() => {}}
-            onMoreActions={onEdit}
-          />
-        </div>
-      )}
+  const openCall = () => {
+    if (customer.phone) window.open(`tel:${customer.phone}`);
+  };
 
+  const selectSection = (s: MobileSectionId) => {
+    setMobileSection(s);
+    if (s !== 'none') {
+      requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  };
+
+  return (
+    <div className="space-y-3">
       {/* Full Hero header — always rendered */}
       <div ref={heroRef}>
         <CustomerMobileProfile
           customer={customer} customerId={customerId}
           onEdit={onEdit}
           onNewInvoice={onNewInvoice}
-          onStatement={() => setMobileSection('statement')}
+          onStatement={() => selectSection('statement')}
           onWhatsApp={onWhatsApp}
           onImageUpdate={onImageUpdate}
           currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
@@ -143,64 +141,82 @@ function MobileCustomerView({
           onNewPayment={onNewPayment}
           onNewQuotation={onNewQuotation}
           onNewOrder={onNewOrder}
-          onNewCreditNote={() => setMobileSection('invoices')}
+          onNewCreditNote={() => selectSection('invoices')}
           onToggleActive={onToggleActive}
         />
       </div>
 
-      {/* Icon Strip */}
-      <CustomerIconStrip activeSection={mobileSection} onSectionChange={setMobileSection} />
+      {/* Sticky container: compressed header (when scrolled) + icon strip (always) */}
+      <div className="sticky top-0 z-30 -mx-3 px-3 bg-background pb-1 space-y-1.5">
+        <div className={cn(
+          "transition-all duration-200 overflow-hidden",
+          showCompressed ? "max-h-40 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+        )}>
+          <CustomerCompressedHeader
+            customer={customer}
+            currentBalance={detail.currentBalance}
+            balanceIsDebit={detail.balanceIsDebit}
+            onNewInvoice={onNewInvoice}
+            onNewPayment={onNewPayment}
+            onCall={customer.phone ? openCall : undefined}
+            onMoreActions={onEdit}
+          />
+        </div>
+        <CustomerIconStrip activeSection={mobileSection} onSectionChange={selectSection} />
+      </div>
 
       {/* Expanded Section Content */}
-      {mobileSection !== 'none' && (
-        <Suspense fallback={<TabSkeleton />}>
-          {mobileSection === 'invoices' && (
-            <div className="space-y-4">
-              <CustomerTabInvoices invoices={detail.invoices} customerId={customerId} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={onQuickPay} />
-              <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
-            </div>
-          )}
-          {mobileSection === 'payments' && (
-            <CustomerTabPayments payments={detail.payments} customerId={customerId} />
-          )}
-          {mobileSection === 'info' && (
-            <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(addrId) => detail.deleteAddressMutation.mutate(addrId)} onWhatsApp={onWhatsApp} />
-          )}
-          {mobileSection === 'notes' && (
-            <CustomerTabNotes customerId={customerId} />
-          )}
-          {mobileSection === 'analytics' && (
-            <div className="space-y-4">
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-              <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-              <AgingDonutChart invoices={detail.invoices} />
-              <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
-              <TopProductsChart customerId={customerId} />
-            </div>
-          )}
-          {mobileSection === 'sales' && (
-            <div className="space-y-4">
-              <CustomerTabQuotations quotations={detail.quotations} />
-              <CustomerTabOrders salesOrders={detail.salesOrders} />
-            </div>
-          )}
-          {mobileSection === 'statement' && (
-            <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
-          )}
-          {mobileSection === 'aging' && (
-            <CustomerAgingReport invoices={detail.invoices} />
-          )}
-          {mobileSection === 'reminders' && (
-            <CustomerReminderSection customerId={customerId} />
-          )}
-          {mobileSection === 'communications' && (
-            <CommunicationLogTab customerId={customerId} />
-          )}
-          {mobileSection === 'attachments' && (
-            <CustomerTabAttachments customerId={customerId} />
-          )}
-        </Suspense>
-      )}
+      <div ref={sectionRef}>
+        {mobileSection !== 'none' && (
+          <Suspense fallback={<TabSkeleton />}>
+            {mobileSection === 'invoices' && (
+              <div className="space-y-4">
+                <CustomerTabInvoices invoices={detail.invoices} customerId={customerId} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={onQuickPay} />
+                <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
+              </div>
+            )}
+            {mobileSection === 'payments' && (
+              <CustomerTabPayments payments={detail.payments} customerId={customerId} />
+            )}
+            {mobileSection === 'info' && (
+              <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(addrId) => detail.deleteAddressMutation.mutate(addrId)} onWhatsApp={onWhatsApp} />
+            )}
+            {mobileSection === 'notes' && (
+              <CustomerTabNotes customerId={customerId} />
+            )}
+            {mobileSection === 'analytics' && (
+              <div className="space-y-4">
+                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
+                <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+                <AgingDonutChart invoices={detail.invoices} />
+                <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
+                <TopProductsChart customerId={customerId} />
+              </div>
+            )}
+            {mobileSection === 'sales' && (
+              <div className="space-y-4">
+                <CustomerTabQuotations quotations={detail.quotations} />
+                <CustomerTabOrders salesOrders={detail.salesOrders} />
+              </div>
+            )}
+            {mobileSection === 'statement' && (
+              <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
+            )}
+            {mobileSection === 'aging' && (
+              <CustomerAgingReport invoices={detail.invoices} />
+            )}
+            {mobileSection === 'reminders' && (
+              <CustomerReminderSection customerId={customerId} />
+            )}
+            {mobileSection === 'communications' && (
+              <CommunicationLogTab customerId={customerId} />
+            )}
+            {mobileSection === 'attachments' && (
+              <CustomerTabAttachments customerId={customerId} />
+            )}
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 }
@@ -259,7 +275,6 @@ const CustomerDetailsPage = () => {
       <MobileDetailHeader
         title={customer.name}
         backTo="/customers"
-        action={<Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}><Edit className="h-4 w-4" /></Button>}
       />
 
       <div className="hidden md:block">

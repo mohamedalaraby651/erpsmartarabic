@@ -14,9 +14,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 
-// Lazy load ShortcutsModal and PageTransition
+import PageTransition from '@/components/transitions/PageTransition';
+
+// Lazy load ShortcutsModal
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
-const PageTransition = lazy(() => import('@/components/transitions/PageTransition'));
 
 // Skeleton loader for page content
 function PageSkeleton() {
@@ -102,14 +103,11 @@ export default function AppLayout() {
     return <AppInitSkeleton />;
   }
 
-  // Check if we're on a customer detail page (has its own bottom nav)
-  const isCustomerDetail = /^\/customers\/[^/]+$/.test(location.pathname);
-
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className={cn("min-h-screen bg-background", !isCustomerDetail && "pb-14")}>
-        {!isCustomerDetail && <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />}
+      <div className="min-h-screen bg-background pb-14">
+        <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
           <Suspense fallback={<PageSkeleton />}>
             <PageTransition key={location.pathname} direction="fade" duration="fast">
@@ -117,8 +115,8 @@ export default function AppLayout() {
             </PageTransition>
           </Suspense>
         </main>
-        {!isCustomerDetail && <FABMenu pageContext={getPageContext()} />}
-        {!isCustomerDetail && <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />}
+        <FABMenu pageContext={getPageContext()} />
+        <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
         <MobileDrawer
           open={mobileMenuOpen}
           onOpenChange={setMobileMenuOpen}
@@ -148,11 +146,11 @@ export default function AppLayout() {
         >
           <AppHeader />
           <main className="p-6">
-            <Suspense fallback={<PageSkeleton />}>
-              <PageTransition key={location.pathname} direction="fade" duration="fast">
-                <Outlet />
-              </PageTransition>
-            </Suspense>
+          <Suspense fallback={<PageSkeleton />}>
+            <PageTransition key={location.pathname} direction="fade" duration="fast">
+              <Outlet />
+            </PageTransition>
+          </Suspense>
           </main>
         </div>
       </div>
