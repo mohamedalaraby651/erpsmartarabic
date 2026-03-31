@@ -1,165 +1,156 @@
+
+
 # خطة إعادة هيكلة قسم العملاء
 
-## الوضع الحالي
-- **96 ملف** | **~11,000 سطر** كود
-- **48 ملف** في المجلد الجذري `src/components/customers/` — مسطح جداً
-- **4 مكونات ميتة** لا تُستخدم في أي مكان (1,112 سطر مهدرة)
-- **دالة تصدير مكررة** في `customerService.ts` لم تعد مستخدمة
-- **MobileCustomerView** مكتوبة داخل `CustomerDetailsPage.tsx` (120 سطر)
-- أنواع TypeScript مكررة في عدة ملفات
+## الهدف
+تنظيم 48 ملف مبعثر في مجلد واحد إلى مجلدات فرعية متخصصة، حذف الكود الميت (~700 سطر)، وتقسيم الملفات الكبيرة.
 
-## المرحلة 1: حذف الكود الميت (Dead Code Removal)
+---
 
-### 1.1 حذف مكونات غير مستخدمة
-| الملف | السطور | السبب |
-|-------|--------|-------|
-| `CustomerTableView.tsx` | 286 | لم يعد مستخدماً — استُبدل بـ `CustomerListRow` |
-| `CustomerGridView.tsx` | 111 | لم يعد مستخدماً — يستورد `CustomerGridCard` فقط |
-| `CustomerGridCard.tsx` | 140 | مستخدم فقط من `CustomerGridView` المحذوف |
-| `CustomerGridSkeleton.tsx` | 32 | skeleton لعرض الشبكة المحذوف |
-| `CustomerStatsGrid.tsx` | 168 | لم يعد مستخدماً — استُبدل بـ `CustomerStatsBar` |
-| **المجموع** | **737 سطر** | |
+## المرحلة 1: حذف الكود الميت (5 ملفات + دالة)
 
-### 1.2 إزالة دالة التصدير القديمة
-- `exportCustomersToExcel` في `customerService.ts` — استُبدلت بـ `useCustomerExport` hook
+حذف الملفات التالية — تم التأكد أنها غير مستوردة في أي مكان:
+
+| الملف | السطور |
+|-------|--------|
+| `CustomerTableView.tsx` | ~180 |
+| `CustomerGridView.tsx` | ~120 |
+| `CustomerGridCard.tsx` | ~150 |
+| `CustomerGridSkeleton.tsx` | ~30 |
+| `CustomerStatsGrid.tsx` | ~100 |
+
+حذف دالة `exportCustomersToExcel` من `customerService.ts` (السطور 73-126) — تم استبدالها بـ `useCustomerExport` hook.
+
+---
 
 ## المرحلة 2: إعادة تنظيم المجلدات
 
-### الهيكل الحالي (48 ملف في الجذر)
-```
-src/components/customers/
-├── alerts/          (4 ملفات) ✅
-├── charts/          (3 ملفات) ✅
-├── form/            (4 ملفات) ✅
-├── hero/            (3 ملفات) ✅
-├── mobile/          (4 ملفات) ✅
-├── tabs/            (9 ملفات) ✅
-└── 48 ملف في الجذر ❌
-```
+نقل الملفات من `src/components/customers/` المسطح إلى مجلدات فرعية:
 
-### الهيكل المقترح
-```
+```text
 src/components/customers/
-├── alerts/          → بدون تغيير (4 ملفات)
-├── charts/          → بدون تغيير (3 ملفات)
-├── form/            → بدون تغيير (4 ملفات)
-├── hero/            → بدون تغيير (3 ملفات)
-├── mobile/          → + MobileCustomerView من DetailsPage (5 ملفات)
-├── tabs/            → بدون تغيير (9 ملفات)
-├── list/            → جديد: مكونات القائمة
-│   ├── CustomerListCard.tsx
+├── list/                    ← مكونات صفحة القائمة
 │   ├── CustomerListRow.tsx
+│   ├── CustomerListCard.tsx
 │   ├── CustomerListSkeleton.tsx
 │   ├── CustomerMobileView.tsx
+│   ├── CustomerStatsBar.tsx
 │   ├── CustomerEmptyState.tsx
-│   └── index.ts
-├── details/         → جديد: مكونات التفاصيل
-│   ├── CustomerSmartAlerts.tsx
-│   ├── CustomerKPICards.tsx
-│   ├── CustomerPinnedNote.tsx
-│   ├── CustomerTimelineDrawer.tsx
-│   ├── CustomerAgingReport.tsx
-│   ├── CustomerFinancialSummary.tsx
-│   ├── CustomerPurchaseChart.tsx
-│   ├── CommunicationLogTab.tsx
-│   ├── ActivityDiffViewer.tsx
-│   ├── StatementOfAccount.tsx
-│   ├── CustomerReminderDialog.tsx
-│   ├── CustomerSalesPipeline.tsx
-│   ├── CustomerQuickHistory.tsx
-│   ├── CustomerHealthBadge.tsx
-│   └── index.ts
-├── dialogs/         → جديد: النوافذ المنبثقة
-│   ├── CustomerFormDialog.tsx
-│   ├── CustomerDialogManager.tsx
-│   ├── CustomerQuickAddDialog.tsx
-│   ├── CustomerAddressDialog.tsx
-│   ├── CustomerMergeDialog.tsx
-│   ├── CustomerImportDialog.tsx
-│   ├── CustomerExportDialog.tsx
-│   ├── DuplicateDetectionDialog.tsx
-│   └── index.ts
-├── filters/         → جديد: مكونات الفلترة والترتيب
-│   ├── CustomerFiltersBar.tsx
-│   ├── CustomerFilterDrawer.tsx
 │   ├── CustomerSavedViews.tsx
 │   ├── CustomerColumnSettings.tsx
+│   ├── CustomerPageHeader.tsx
+│   └── index.ts
+│
+├── details/                 ← مكونات صفحة التفاصيل
+│   ├── CustomerHeroHeader.tsx
+│   ├── CustomerKPICards.tsx
+│   ├── CustomerHealthBadge.tsx
+│   ├── CustomerPinnedNote.tsx
+│   ├── CustomerSmartAlerts.tsx
+│   ├── CustomerFinancialSummary.tsx
+│   ├── CustomerSalesPipeline.tsx
+│   ├── CustomerQuickHistory.tsx
+│   ├── CustomerTimelineDrawer.tsx
+│   ├── CustomerPurchaseChart.tsx
+│   ├── CustomerAgingReport.tsx
+│   ├── CustomerErrorBoundary.tsx
+│   ├── ActivityDiffViewer.tsx
+│   ├── CommunicationLogTab.tsx
+│   ├── StatementOfAccount.tsx
+│   └── index.ts
+│
+├── dialogs/                 ← نوافذ الحوار
+│   ├── CustomerFormDialog.tsx
+│   ├── CustomerQuickAddDialog.tsx
+│   ├── CustomerAddressDialog.tsx
+│   ├── CustomerDialogManager.tsx
+│   ├── CustomerImportDialog.tsx
+│   ├── CustomerMergeDialog.tsx
+│   ├── CustomerExportDialog.tsx
+│   ├── CustomerReminderDialog.tsx
+│   ├── DuplicateDetectionDialog.tsx
+│   └── index.ts
+│
+├── filters/                 ← الفلاتر
+│   ├── CustomerFiltersBar.tsx
+│   ├── CustomerFilterDrawer.tsx
 │   ├── CustomerSearchPreview.tsx
 │   └── index.ts
-├── shared/          → جديد: المشتركة
+│
+├── shared/                  ← مكونات مشتركة
 │   ├── CustomerAvatar.tsx
 │   ├── CustomerActionMenu.tsx
-│   ├── CustomerErrorBoundary.tsx
 │   └── index.ts
-├── CustomerPageHeader.tsx   → يبقى في الجذر (مستوى صفحة)
-├── CustomerStatsBar.tsx     → يبقى في الجذر (مستوى صفحة)
-└── CustomerHeroHeader.tsx   → يبقى في الجذر (مستوى صفحة)
+│
+├── alerts/                  ← (موجود بالفعل)
+├── charts/                  ← (موجود بالفعل)
+├── form/                    ← (موجود بالفعل)
+├── hero/                    ← (موجود بالفعل)
+├── mobile/                  ← (موجود بالفعل)
+└── tabs/                    ← (موجود بالفعل)
 ```
 
-## المرحلة 3: استخراج المكونات الكبيرة
+---
 
-### 3.1 استخراج MobileCustomerView من CustomerDetailsPage
-- **الملف**: `CustomerDetailsPage.tsx` (411 سطر)
-- **المكون**: `MobileCustomerView` (الأسطر 76-221 = 145 سطر)
-- **النقل إلى**: `src/components/customers/mobile/MobileCustomerDetailView.tsx`
-- **النتيجة**: `CustomerDetailsPage` ينخفض من 411 → ~270 سطر
+## المرحلة 3: تقسيم Repository الكبير
 
-### 3.2 استخراج منطق الـ Infinite Scroll من CustomersPage
-- **الملف**: `CustomersPage.tsx` (402 سطر)
-- **المنطق**: أسطر 93-178 (إدارة الصفحات + IntersectionObserver)
-- **النقل إلى**: `src/hooks/customers/useInfiniteCustomers.ts`
-- **النتيجة**: `CustomersPage` ينخفض من 402 → ~320 سطر
+تقسيم `customerRepository.ts` (610 سطر) إلى 3 ملفات:
 
-## المرحلة 4: تنظيف الأنواع والثوابت
+| الملف الجديد | المحتوى | السطور |
+|-------------|---------|--------|
+| `customerRepository.ts` | Core CRUD + Bulk + Stats + Categories + applyFilters | ~250 |
+| `customerRelationsRepo.ts` | Invoices, Payments, Credit Notes, Orders, Quotations, Activities, Reminders, Communications | ~220 |
+| `customerSearchRepo.ts` | Search, Duplicates, Export, Prefetch, Import | ~140 |
 
-### 4.1 توحيد تعريفات الأنواع
-- `customerRepository.ts` يعرّف `Customer` محلياً (سطر 10)
-- `customerConstants.ts` يصدّر `Customer` type
-- `CustomerFormDialog.tsx` يعرّف `Customer` محلياً (سطر 35)
-- **الحل**: استخدام `import type { Customer } from '@/lib/customerConstants'` في كل مكان
+كل ملف يصدّر object، ويتم إعادة تصديرها من `index.ts` في `src/lib/repositories/`.
 
-### 4.2 نقل ألوان VIP المكررة
-- `vipBorderAccent` معرّف في كل من `CustomerListCard.tsx` (سطر 32) و `CustomerListRow.tsx` (سطر 24)
-- **الحل**: نقلها إلى `customerConstants.ts`
+---
 
-## المرحلة 5: تنظيف Repository
+## المرحلة 4: استخراج hook التمرير اللانهائي
 
-### 5.1 فصل customerRepository.ts (610 سطر)
-```
-src/lib/repositories/
-├── customerRepository.ts      → CRUD + Filters + Stats (300 سطر)
-├── customerRelationsRepo.ts   → Invoices, Payments, Orders, etc. (200 سطر)
-└── customerSearchRepo.ts      → Search, Duplicates, Export (110 سطر)
-```
+استخراج منطق infinite scroll (~60 سطر) من `CustomersPage.tsx` إلى hook جديد:
 
-## المرحلة 6: تحديث barrel exports
+**ملف جديد:** `src/hooks/customers/useInfiniteCustomers.ts`
 
-### إنشاء ملفات index.ts لكل مجلد جديد
-لتسهيل الاستيراد:
-```typescript
-// قبل
-import { CustomerListRow } from "@/components/customers/CustomerListRow";
-import { CustomerMobileView } from "@/components/customers/CustomerMobileView";
+يشمل: `mobilePages`, `desktopPages`, `handleLoadMore`, `desktopSentinelRef`, وإعادة التعيين عند تغيير الفلاتر.
 
-// بعد
-import { CustomerListRow, CustomerMobileView } from "@/components/customers/list";
-```
+هذا يقلل `CustomersPage.tsx` من ~400 سطر إلى ~320 سطر.
+
+---
+
+## المرحلة 5: تحديث جميع الاستيرادات
+
+تحديث الاستيرادات في الملفات التالية لتعكس المسارات الجديدة:
+- `CustomersPage.tsx` (~15 import)
+- `CustomerDetailsPage.tsx` (~20 import)
+- `CustomerPageHeader.tsx` (SearchPreview)
+- `CustomerFiltersBar.tsx` (SearchPreview)
+- `CustomerHeroHeader.tsx` (QuickHistory)
+- `hero/HeroIdentity.tsx` (HealthBadge)
+
+---
+
+## المرحلة 6: إضافة barrel exports
+
+إنشاء `index.ts` في كل مجلد فرعي جديد (`list/`, `details/`, `dialogs/`, `filters/`, `shared/`) لتنظيف الاستيرادات.
+
+---
 
 ## ملخص التأثير
 
-| المقياس | قبل | بعد | التحسن |
-|---------|-----|-----|--------|
-| ملفات في الجذر | 48 | 3 | -94% |
-| كود ميت | 737 سطر | 0 | -100% |
-| أكبر ملف صفحة | 411 سطر | ~270 سطر | -34% |
-| أكبر repository | 610 سطر | ~300 سطر | -51% |
-| أنواع مكررة | 4 أماكن | 1 مكان | موحد |
-| ثوابت مكررة | 2 أماكن | 1 مكان | موحد |
+| المقياس | قبل | بعد |
+|---------|------|------|
+| ملفات في الجذر | 48 | 0 |
+| ملفات ميتة | 5 | 0 |
+| كود ميت (سطور) | ~700 | 0 |
+| حجم Repository | 610 سطر | 250 + 220 + 140 |
+| حجم CustomersPage | ~400 سطر | ~320 سطر |
 
 ## ترتيب التنفيذ
-1. **المرحلة 1** — حذف الكود الميت (أسرع مكسب)
-2. **المرحلة 4** — توحيد الأنواع (يجب قبل النقل)
-3. **المرحلة 2** — إعادة تنظيم المجلدات
-4. **المرحلة 3** — استخراج المكونات الكبيرة
-5. **المرحلة 5** — فصل Repository
-6. **المرحلة 6** — barrel exports
+1. حذف الكود الميت (المرحلة 1)
+2. إنشاء المجلدات ونقل الملفات (المرحلة 2)
+3. تقسيم Repository (المرحلة 3)
+4. استخراج useInfiniteCustomers (المرحلة 4)
+5. تحديث الاستيرادات (المرحلة 5)
+6. إضافة barrel exports (المرحلة 6)
+
