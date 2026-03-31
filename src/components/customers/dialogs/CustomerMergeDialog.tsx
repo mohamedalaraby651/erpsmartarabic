@@ -10,7 +10,7 @@ import { AlertTriangle, Search, Merge, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { logErrorSafely } from "@/lib/errorHandler";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 import type { Database } from "@/integrations/supabase/types";
 
 type Customer = Database['public']['Tables']['customers']['Row'];

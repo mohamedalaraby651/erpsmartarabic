@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import type { Customer, CustomerAddress } from "@/lib/customerConstants";

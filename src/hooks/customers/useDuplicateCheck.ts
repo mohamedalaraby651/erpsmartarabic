@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export function useDuplicateCheck(name: string, phone: string, editingId?: string) {

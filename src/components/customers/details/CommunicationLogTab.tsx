@@ -11,7 +11,7 @@ import { MessageSquare, Plus, Phone, Mail, MapPin, MessagesSquare } from "lucide
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
 
 interface CommunicationLogTabProps {
   customerId: string;
