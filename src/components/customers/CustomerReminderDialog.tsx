@@ -46,6 +46,8 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       setDialogOpen(false);
       setReminderDate('');
       setReminderNote('');
+      setRecurrence('none');
+      setLinkedInvoiceId('');
     },
     onError: () => toast.error('فشل إضافة التذكير'),
   });
