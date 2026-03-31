@@ -172,7 +172,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                            className="min-h-9 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
                             onClick={() => onQuickPay(invoice.id)}
                           >
                             <CreditCard className="h-3.5 w-3.5 ml-1" />
