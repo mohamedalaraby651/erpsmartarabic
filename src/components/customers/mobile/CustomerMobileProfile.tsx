@@ -13,9 +13,14 @@ import {
 } from "lucide-react";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import ImageUpload from "@/components/shared/ImageUpload";
+import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
+import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+
+type Invoice = Database['public']['Tables']['invoices']['Row'];
+type Payment = Database['public']['Tables']['payments']['Row'];
 
 interface CustomerMobileProfileProps {
   customer: Customer;
@@ -38,6 +43,8 @@ interface CustomerMobileProfileProps {
   totalOutstanding?: number;
   paymentRatio?: number;
   totalPurchases?: number;
+  invoices?: Invoice[];
+  payments?: Payment[];
   // Quick actions
   onNewPayment?: () => void;
   onNewQuotation?: () => void;
@@ -49,7 +56,7 @@ interface CustomerMobileProfileProps {
 export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   customer, customerId, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
   onPrev, onNext, hasPrev, hasNext,
-  currentBalance = 0, balanceIsDebit = false, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0,
+  currentBalance = 0, balanceIsDebit = false, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
   onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
 }: CustomerMobileProfileProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -109,12 +116,17 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           )}
         </div>
 
-        {/* Embedded Mini Stats */}
-        <div className="grid grid-cols-4 gap-2 mb-4 p-2.5 rounded-lg bg-muted/30 border">
-          <MiniStat icon={CreditCard} label="الرصيد" value={`${currentBalance.toLocaleString()}`} color={balanceIsDebit ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'} />
-          <MiniStat icon={Target} label="المستحق" value={`${totalOutstanding.toLocaleString()}`} color={totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'} />
-          <MiniStat icon={Percent} label="السداد" value={`${paymentRatio.toFixed(0)}%`} color={paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'} />
-          <MiniStat icon={TrendingUp} label="المشتريات" value={`${totalPurchases >= 1000 ? `${(totalPurchases / 1000).toFixed(0)}K` : totalPurchases.toLocaleString()}`} color="text-primary" />
+        {/* KPI Cards */}
+        <div className="mb-4">
+          <CustomerKPICards
+            currentBalance={currentBalance}
+            balanceIsDebit={balanceIsDebit}
+            totalOutstanding={totalOutstanding}
+            totalPurchases={totalPurchases}
+            invoices={invoices}
+            payments={payments}
+            compact
+          />
         </div>
 
         {/* Quick contact buttons */}

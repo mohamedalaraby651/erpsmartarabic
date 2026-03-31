@@ -15,6 +15,7 @@ import {
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
 import ImageUpload from "@/components/shared/ImageUpload";
+import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
 import { vipColors, vipLabels, vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
@@ -220,14 +221,16 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
                 )}
               </div>
 
-              {/* Embedded Stats Row */}
-              <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-4 p-3 rounded-lg bg-muted/30 border">
-                <StatMini icon={CreditCard} label="الرصيد" value={`${currentBalance.toLocaleString()}`} color={balanceIsDebit ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'} extra={creditLimit > 0 ? <Progress value={creditUsagePercent} className="h-1 mt-1" /> : undefined} />
-                <StatMini icon={Target} label="المستحق" value={`${totalOutstanding.toLocaleString()}`} color={totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'} />
-                <StatMini icon={Percent} label="نسبة السداد" value={`${paymentRatio.toFixed(0)}%`} color={paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'} />
-                <StatMini icon={TrendingUp} label="المشتريات" value={`${totalPurchases.toLocaleString()}`} color="text-primary" />
-                <StatMini icon={FileText} label="الفواتير" value={`${invoiceCount}`} color="text-info" />
-                <StatMini icon={Clock} label="متوسط السداد" value={dso !== null && dso !== undefined ? `${dso} يوم` : '-'} color="text-muted-foreground" />
+              {/* KPI Cards */}
+              <div className="mb-4">
+                <CustomerKPICards
+                  currentBalance={currentBalance}
+                  balanceIsDebit={balanceIsDebit}
+                  totalOutstanding={totalOutstanding}
+                  totalPurchases={totalPurchases}
+                  invoices={invoices}
+                  payments={payments}
+                />
               </div>
 
               <CustomerQuickHistory invoices={invoices} payments={payments} />
