@@ -27,7 +27,7 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
     queryKey: ['customer-search-preview', debouncedSearch],
     queryFn: () => customerRepository.searchPreview(debouncedSearch),
     enabled: !!debouncedSearch && debouncedSearch.length >= 2,
-    staleTime: 10000,
+    staleTime: 30000,
   });
 
   const showNoResults = isFocused && value.length >= 2 && debouncedSearch === value && results.length === 0;
