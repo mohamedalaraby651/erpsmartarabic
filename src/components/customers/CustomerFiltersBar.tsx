@@ -25,6 +25,8 @@ interface CustomerFiltersBarProps {
   onOpenDrawer: () => void;
   onClearFilter: (key: string) => void;
   onClearAll: () => void;
+  noCommDays?: string;
+  inactiveDays?: string;
 }
 
 export const CustomerFiltersBar = memo(function CustomerFiltersBar({
@@ -33,7 +35,19 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
   governorateFilter, onGovernorateChange, statusFilter, onStatusChange,
   governorates, activeFiltersCount, isMobile, onOpenDrawer,
   onClearFilter, onClearAll,
+  noCommDays, inactiveDays,
 }: CustomerFiltersBarProps) {
+  const chips = [
+    ...(typeFilter !== 'all' ? [{ id: 'type', label: `النوع: ${typeLabels[typeFilter] || typeFilter}`, value: typeFilter }] : []),
+    ...(vipFilter !== 'all' ? [{ id: 'vip', label: `VIP: ${vipLabels[vipFilter] || vipFilter}`, value: vipFilter }] : []),
+    ...(governorateFilter !== 'all' ? [{ id: 'gov', label: `المحافظة: ${governorateFilter}`, value: governorateFilter }] : []),
+    ...(statusFilter !== 'all' ? [{ id: 'status', label: statusFilter === 'active' ? 'نشط' : 'غير نشط', value: statusFilter }] : []),
+    ...(noCommDays ? [{ id: 'noComm', label: `بدون تواصل منذ ${noCommDays} يوم`, value: noCommDays }] : []),
+    ...(inactiveDays ? [{ id: 'inactive', label: `بدون نشاط منذ ${inactiveDays} يوم`, value: inactiveDays }] : []),
+  ];
+
+  const activeChipIds = chips.map(c => c.id);
+
   return (
     <Card>
       <CardContent className="p-3 md:p-4">
@@ -90,21 +104,11 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
             </>
           )}
         </div>
-        {activeFiltersCount > 0 && (
+        {activeChipIds.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             <FilterChips
-              chips={[
-                ...(typeFilter !== 'all' ? [{ id: 'type', label: `النوع: ${typeLabels[typeFilter] || typeFilter}`, value: typeFilter }] : []),
-                ...(vipFilter !== 'all' ? [{ id: 'vip', label: `VIP: ${vipLabels[vipFilter] || vipFilter}`, value: vipFilter }] : []),
-                ...(governorateFilter !== 'all' ? [{ id: 'gov', label: `المحافظة: ${governorateFilter}`, value: governorateFilter }] : []),
-                ...(statusFilter !== 'all' ? [{ id: 'status', label: statusFilter === 'active' ? 'نشط' : 'غير نشط', value: statusFilter }] : []),
-              ]}
-              activeChips={[
-                ...(typeFilter !== 'all' ? ['type'] : []),
-                ...(vipFilter !== 'all' ? ['vip'] : []),
-                ...(governorateFilter !== 'all' ? ['gov'] : []),
-                ...(statusFilter !== 'all' ? ['status'] : []),
-              ]}
+              chips={chips}
+              activeChips={activeChipIds}
               onToggle={(chipId) => onClearFilter(chipId)}
               onClearAll={onClearAll}
             />

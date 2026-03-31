@@ -7,6 +7,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
   CreditCard, Bell, MessageSquare, BarChart3, Wallet, Globe, Clock, Printer,
+  TrendingUp, Target, Calendar,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
@@ -14,8 +15,9 @@ import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { useCustomerDetail } from "@/hooks/customers";
 import { CustomerHeroHeader } from "@/components/customers/CustomerHeroHeader";
 import { CustomerStatsGrid } from "@/components/customers/CustomerStatsGrid";
+import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
+import { CustomerMobileStatCard } from "@/components/customers/mobile/CustomerMobileStatCard";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
-import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { tabGroups } from "@/lib/customerConstants";
 import type { CustomerAddress } from "@/lib/customerConstants";
@@ -55,6 +57,7 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
+  const [mobileTab, setMobileTab] = useState('financials');
 
   const detail = useCustomerDetail(id);
 
@@ -76,14 +79,6 @@ const CustomerDetailsPage = () => {
   }
 
   const customer = detail.customer;
-  const mobileStats = [
-    { icon: Wallet, value: `${detail.currentBalance.toLocaleString()}`, label: 'الرصيد', color: detail.balanceIsDebit ? 'text-destructive' : 'text-success' },
-    { icon: FileText, value: detail.invoices.length, label: 'الفواتير', color: 'text-primary' },
-    { icon: CreditCard, value: `${detail.paymentRatio.toFixed(0)}%`, label: 'نسبة السداد', color: 'text-info' },
-    { icon: BarChart3, value: `${detail.totalPurchases.toLocaleString()}`, label: 'المشتريات', color: 'text-warning' },
-    { icon: Wallet, value: `${detail.totalPayments.toLocaleString()}`, label: 'المدفوعات', color: 'text-emerald-600' },
-    { icon: Wallet, value: `${detail.totalOutstanding.toLocaleString()}`, label: 'المستحق', color: detail.totalOutstanding > 0 ? 'text-destructive' : 'text-success' },
-  ];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -103,7 +98,7 @@ const CustomerDetailsPage = () => {
         onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
       />
 
-      {isMobile ? <MobileStatsScroll stats={mobileStats} /> : (
+      {!isMobile && (
         <CustomerStatsGrid
           currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
           creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
@@ -115,53 +110,117 @@ const CustomerDetailsPage = () => {
       )}
 
       {isMobile ? (
-        <div className="space-y-3">
-          <MobileDetailSection title="الفواتير" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.invoices.length}>
-            <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
-            <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} customerId={id!} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />}>
+        <div className="space-y-4">
+          {/* Mobile Profile Card */}
+          <CustomerMobileProfile
+            customer={customer}
+            customerId={id!}
+            onEdit={() => setEditDialogOpen(true)}
+            onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+            onStatement={() => setMobileTab('statement')}
+            onWhatsApp={handleWhatsApp}
+            onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
+          />
+
+          {/* Mobile Stats Cards - 2 columns grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <CustomerMobileStatCard
+              icon={CreditCard}
+              title="الرصيد الحالي"
+              value={`${detail.currentBalance.toLocaleString()} ج.م`}
+              color={detail.balanceIsDebit ? 'destructive' : 'emerald'}
+              progress={detail.creditLimit > 0 ? detail.creditUsagePercent : undefined}
+              progressLabel={detail.creditLimit > 0 ? `${detail.creditUsagePercent.toFixed(0)}% من الحد` : undefined}
+            />
+            <CustomerMobileStatCard
+              icon={Target}
+              title="المستحق"
+              value={`${detail.totalOutstanding.toLocaleString()} ج.م`}
+              color={detail.totalOutstanding > 0 ? 'destructive' : 'emerald'}
+            />
+            <CustomerMobileStatCard
+              icon={Wallet}
+              title="نسبة السداد"
+              value={`${detail.paymentRatio.toFixed(0)}%`}
+              color={detail.paymentRatio >= 80 ? 'emerald' : detail.paymentRatio >= 50 ? 'warning' : 'destructive'}
+              progress={detail.paymentRatio}
+            />
+            <CustomerMobileStatCard
+              icon={TrendingUp}
+              title="إجمالي المشتريات"
+              value={`${detail.totalPurchases.toLocaleString()} ج.م`}
+              color="primary"
+            />
+            <CustomerMobileStatCard
+              icon={FileText}
+              title="الفواتير"
+              value={detail.invoices.length}
+              subtitle={`متوسط ${detail.avgInvoiceValue.toLocaleString()} ج.م`}
+              color="info"
+            />
+            <CustomerMobileStatCard
+              icon={Wallet}
+              title="إجمالي المدفوعات"
+              value={`${detail.totalPayments.toLocaleString()} ج.م`}
+              color="emerald"
+            />
+            <CustomerMobileStatCard
+              icon={Clock}
+              title="متوسط السداد"
+              value={detail.dso !== null ? `${detail.dso} يوم` : '-'}
+              color="muted"
+            />
+            <CustomerMobileStatCard
+              icon={Calendar}
+              title="آخر شراء"
+              value={detail.lastPurchaseDate ? new Date(detail.lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}
+              color="muted"
+            />
+          </div>
+
+          {/* Mobile Tab Bar */}
+          <Tabs value={mobileTab} onValueChange={setMobileTab}>
+            <ScrollArea className="w-full">
+              <TabsList className="flex w-max h-10 bg-muted/50 p-1">
+                <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير</TabsTrigger>
+                <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات</TabsTrigger>
+                <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
+                <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
+                <TabsTrigger value="analysis" className="text-xs px-3"><BarChart3 className="h-3.5 w-3.5 ml-1" />التحليلات</TabsTrigger>
+                <TabsTrigger value="more" className="text-xs px-3"><MapPin className="h-3.5 w-3.5 ml-1" />المزيد</TabsTrigger>
+              </TabsList>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
             <Suspense fallback={<TabFallback />}>
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
+              <TabsContent value="financials" className="mt-4 space-y-4">
+                <CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} />
+                <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
+              </TabsContent>
+              <TabsContent value="payments-tab" className="mt-4">
+                <CustomerTabPayments payments={detail.payments} customerId={id!} />
+              </TabsContent>
+              <TabsContent value="sales" className="mt-4 space-y-4">
+                <CustomerTabQuotations quotations={detail.quotations} />
+                <CustomerTabOrders salesOrders={detail.salesOrders} />
+              </TabsContent>
+              <TabsContent value="statement" className="mt-4 space-y-4">
+                <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
+                <CustomerAgingReport invoices={detail.invoices} />
+                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} />
+              </TabsContent>
+              <TabsContent value="analysis" className="mt-4 space-y-4">
+                <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
+                <CommunicationLogTab customerId={id!} />
+                <CustomerTabActivity activities={detail.activities} />
+              </TabsContent>
+              <TabsContent value="more" className="mt-4 space-y-4">
+                <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(addrId) => detail.deleteAddressMutation.mutate(addrId)} />
+                <CustomerReminderSection customerId={id!} />
+                <CustomerTabAttachments customerId={id!} />
+              </TabsContent>
             </Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="العناوين" priority="low" icon={<MapPin className="h-4 w-4" />} badge={detail.addresses.length}>
-            <Suspense fallback={<TabFallback />}>
-              <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(id) => detail.deleteAddressMutation.mutate(id)} />
-            </Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="عروض الأسعار" priority="low" icon={<Globe className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CustomerTabQuotations quotations={detail.quotations} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="أوامر البيع" priority="low" icon={<ShoppingCart className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CustomerTabOrders salesOrders={detail.salesOrders} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="إشعارات دائنة" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.creditNotes.length}>
-            <Suspense fallback={<TabFallback />}><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="كشف الحساب" priority="low" icon={<FileText className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="أعمار الديون" priority="low" icon={<Clock className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CustomerAgingReport invoices={detail.invoices} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="سجل التواصل" priority="medium" icon={<MessageSquare className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CommunicationLogTab customerId={id!} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="التذكيرات" priority="medium" icon={<Bell className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CustomerReminderSection customerId={id!} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="التحليلات" priority="low" icon={<BarChart3 className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CustomerTabAttachments customerId={id!} /></Suspense>
-          </MobileDetailSection>
-          <MobileDetailSection title="سجل النشاط" priority="low" icon={<Activity className="h-4 w-4" />}>
-            <Suspense fallback={<TabFallback />}><CustomerTabActivity activities={detail.activities} /></Suspense>
-          </MobileDetailSection>
+          </Tabs>
         </div>
       ) : (
         <Tabs value={detail.activeTab} onValueChange={detail.setActiveTab} className="w-full">
