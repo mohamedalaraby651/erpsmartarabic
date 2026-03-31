@@ -183,7 +183,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+                    <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground flex-wrap">
                       <span>{new Date(invoice.created_at).toLocaleDateString('ar-EG')}</span>
                       {invoice.due_date && (
                         <>
