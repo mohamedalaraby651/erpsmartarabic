@@ -317,20 +317,14 @@ const CustomersPage = () => {
 
       <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
 
-      {totalAlerts > 0 && !alertsDismissed && (
-        <div className="flex items-center gap-3 rounded-xl bg-gradient-to-l from-warning/10 to-warning/5 border border-warning/20 px-4 py-2.5">
-          <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              {errorAlerts.slice(0, 2).map((alert, i) => (<span key={`e-${i}`} className="text-xs text-destructive">⚠️ {alert.message}</span>))}
-              {warningAlerts.slice(0, 2).map((alert, i) => (<span key={`w-${i}`} className="text-xs text-amber-600 dark:text-amber-400">⏰ {alert.message}</span>))}
-              {totalAlerts > 4 && <span className="text-xs text-muted-foreground">+{totalAlerts - 4} أخرى</span>}
-            </div>
-          </div>
-          <button onClick={() => setAlertsDismissed(true)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1">
-            <span className="text-sm">✕</span>
-          </button>
-        </div>
+      {/* Alert Banner - Desktop */}
+      {!isMobile && (
+        <CustomerAlertsBanner
+          alertsByType={alertsByType}
+          totalAlerts={totalAlerts}
+          onFilterByType={setAlertFilterType}
+          activeFilterType={alertFilterType}
+        />
       )}
 
       <CustomerFiltersBar
