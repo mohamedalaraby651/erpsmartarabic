@@ -230,8 +230,24 @@ const CustomersPage = () => {
 
       {isMobile ? (
         <div className="pb-20">
-          <CustomerMobileView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onEdit={handleEdit} onDelete={handleDeleteRequest} onRefresh={handleRefresh} hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch} onClearFilters={filters.clearAllFilters} />
-          {paginationBlock}
+          <CustomerMobileView
+            data={allMobileCustomers}
+            isLoading={list.isLoading}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            onNavigate={(id) => navigate(`/customers/${id}`)}
+            onEdit={handleEdit}
+            onDelete={handleDeleteRequest}
+            onRefresh={handleRefresh}
+            hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch}
+            onClearFilters={filters.clearAllFilters}
+            onAdd={canEdit ? handleAdd : undefined}
+            onImport={() => dialogRef.current?.openImport()}
+            onNewInvoice={handleNewInvoice}
+            hasNextPage={mobileHasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={handleLoadMore}
+          />
         </div>
       ) : (
         <Card>
