@@ -170,6 +170,7 @@ const CustomersPage = () => {
         governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
         isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
         onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
+        noCommDays={filters.noCommDays} inactiveDays={filters.inactiveDays}
       />
 
       {isMobile ? (
