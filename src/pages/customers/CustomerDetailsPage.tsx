@@ -115,7 +115,7 @@ const CustomerDetailsPage = () => {
       {isMobile ? (
         <div className="space-y-3">
           <MobileDetailSection title="الفواتير" priority="medium" icon={<FileText className="h-4 w-4" />} badge={detail.invoices.length}>
-            <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></Suspense>
+            <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
             <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} customerId={id!} /></Suspense>
