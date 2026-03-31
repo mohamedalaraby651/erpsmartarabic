@@ -90,7 +90,7 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
 
         if (filtered.length > 0) {
           const { error } = await supabase.from('notifications').insert(filtered);
-          if (error) logErrorSafely(error, 'useAlertNotifier:insert');
+          if (error) logErrorSafely(error.message, 'useAlertNotifier:insert');
         }
       } catch (err) {
         logErrorSafely(err, 'useAlertNotifier:process');

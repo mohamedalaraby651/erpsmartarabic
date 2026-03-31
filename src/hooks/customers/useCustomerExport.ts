@@ -53,8 +53,8 @@ export function useCustomerExport({ filters, sortConfig }: UseCustomerExportPara
             vip: filters.vipFilter,
             governorate: filters.governorateFilter,
             status: filters.statusFilter,
-            noCommDays: filters.noCommDays,
-            inactiveDays: filters.inactiveDays,
+            noCommDays: filters.noCommDays as number | undefined,
+            inactiveDays: filters.inactiveDays as number | undefined,
           },
           { key: sortConfig.key || 'created_at', direction: sortConfig.direction },
           { page: 1, pageSize: 5000 }
