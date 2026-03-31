@@ -1,11 +1,10 @@
-import React, { memo } from "react";
+import React, { memo, useRef, useEffect } from "react";
 import { Loader2, ArrowUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { CustomerListSkeleton } from "@/components/customers/CustomerListSkeleton";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
@@ -35,12 +34,19 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
 }: CustomerMobileViewProps) {
-  const sentinelRef = useInfiniteScroll({
-    hasNextPage: !!hasNextPage,
-    isFetchingNextPage: !!isFetchingNextPage,
-    onLoadMore: onLoadMore || (() => {}),
-    enabled: !!hasNextPage && !!onLoadMore,
-  });
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || !onLoadMore || isFetchingNextPage) return;
+    const el = observerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) onLoadMore(); },
+      { threshold: 0.1, rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, onLoadMore, isFetchingNextPage, data.length]);
 
   if (isLoading && data.length === 0) return <CustomerListSkeleton count={6} />;
 
