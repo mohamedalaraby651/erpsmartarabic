@@ -11,6 +11,7 @@ interface CustomerStatsGridProps {
   creditLimit: number;
   creditUsagePercent: number;
   totalPurchases: number;
+  totalPayments: number;
   paymentRatio: number;
   invoiceCount: number;
   avgInvoiceValue: number;
