@@ -12,7 +12,7 @@ export function useCustomerDetail(id: string | undefined) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState('addresses');
+  const [activeTab, setActiveTab] = useState('financial');
 
   // === CORE queries (always loaded) ===
   const { data: customer, isLoading } = useQuery({

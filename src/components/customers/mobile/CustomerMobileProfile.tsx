@@ -2,11 +2,13 @@ import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, FileText, Printer, Phone, MessageSquare, MapPin } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Crown, FileText, Printer, Phone, MessageSquare, MapPin, CreditCard, Target, Percent, TrendingUp } from "lucide-react";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import ImageUpload from "@/components/shared/ImageUpload";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
+import { cn } from "@/lib/utils";
 
 interface CustomerMobileProfileProps {
   customer: Customer;
@@ -16,10 +18,20 @@ interface CustomerMobileProfileProps {
   onStatement: () => void;
   onWhatsApp: () => void;
   onImageUpdate: (url: string | null) => void;
+  // Embedded stats
+  currentBalance?: number;
+  balanceIsDebit?: boolean;
+  creditLimit?: number;
+  creditUsagePercent?: number;
+  totalOutstanding?: number;
+  paymentRatio?: number;
+  totalPurchases?: number;
 }
 
 export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   customer, customerId, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
+  currentBalance = 0, balanceIsDebit = false, creditLimit = 0, creditUsagePercent = 0,
+  totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0,
 }: CustomerMobileProfileProps) {
   return (
     <Card className="border-0 shadow-lg bg-gradient-to-b from-primary/5 via-background to-background overflow-hidden">
@@ -71,6 +83,34 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           )}
         </div>
 
+        {/* Embedded Mini Stats — 4 compact stats in a row */}
+        <div className="grid grid-cols-4 gap-2 mb-4 p-2.5 rounded-lg bg-muted/30 border">
+          <MiniStat
+            icon={CreditCard}
+            label="الرصيد"
+            value={`${currentBalance.toLocaleString()}`}
+            color={balanceIsDebit ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}
+          />
+          <MiniStat
+            icon={Target}
+            label="المستحق"
+            value={`${totalOutstanding.toLocaleString()}`}
+            color={totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}
+          />
+          <MiniStat
+            icon={Percent}
+            label="السداد"
+            value={`${paymentRatio.toFixed(0)}%`}
+            color={paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'}
+          />
+          <MiniStat
+            icon={TrendingUp}
+            label="المشتريات"
+            value={`${totalPurchases >= 1000 ? `${(totalPurchases / 1000).toFixed(0)}K` : totalPurchases.toLocaleString()}`}
+            color="text-primary"
+          />
+        </div>
+
         {/* Quick contact buttons */}
         <div className="flex gap-2 mb-4">
           {customer.phone && (
@@ -104,3 +144,18 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
     </Card>
   );
 });
+
+function MiniStat({ icon: Icon, label, value, color }: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  color: string;
+}) {
+  return (
+    <div className="text-center min-w-0">
+      <Icon className={cn("h-3.5 w-3.5 mx-auto mb-0.5", color)} />
+      <p className={cn("text-xs font-bold leading-tight", color)}>{value}</p>
+      <p className="text-[9px] text-muted-foreground truncate">{label}</p>
+    </div>
+  );
+}

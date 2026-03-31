@@ -2,9 +2,11 @@ import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   ArrowRight, Edit, Phone, Mail, MessageSquare, FileText, Printer,
-  ExternalLink, User, Crown,
+  ExternalLink, User, Crown, CreditCard, Target, Percent, TrendingUp,
+  Wallet, Clock, Tag,
 } from "lucide-react";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
@@ -12,7 +14,6 @@ import ImageUpload from "@/components/shared/ImageUpload";
 import { vipColors, vipLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
-import { Tag } from "lucide-react";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
@@ -28,11 +29,23 @@ interface CustomerHeroHeaderProps {
   onStatement: () => void;
   onWhatsApp: () => void;
   onImageUpdate: (url: string | null) => void;
+  // Embedded stats
+  currentBalance?: number;
+  balanceIsDebit?: boolean;
+  creditLimit?: number;
+  creditUsagePercent?: number;
+  totalPurchases?: number;
+  totalOutstanding?: number;
+  paymentRatio?: number;
+  invoiceCount?: number;
+  dso?: number | null;
 }
 
 export const CustomerHeroHeader = memo(function CustomerHeroHeader({
   customer, customerId, invoices, payments,
   onBack, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
+  currentBalance = 0, balanceIsDebit = false, creditLimit = 0, creditUsagePercent = 0,
+  totalPurchases = 0, totalOutstanding = 0, paymentRatio = 0, invoiceCount = 0, dso,
 }: CustomerHeroHeaderProps) {
   return (
     <>
@@ -142,6 +155,39 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
                 )}
               </div>
 
+              {/* Embedded Stats Row */}
+              <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-4 p-3 rounded-lg bg-muted/30 border">
+                <StatMini
+                  icon={CreditCard}
+                  label="الرصيد"
+                  value={`${currentBalance.toLocaleString()}`}
+                  color={balanceIsDebit ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}
+                  extra={creditLimit > 0 ? (
+                    <Progress value={creditUsagePercent} className="h-1 mt-1" />
+                  ) : undefined}
+                />
+                <StatMini
+                  icon={Target}
+                  label="المستحق"
+                  value={`${totalOutstanding.toLocaleString()}`}
+                  color={totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}
+                />
+                <StatMini
+                  icon={Percent}
+                  label="نسبة السداد"
+                  value={`${paymentRatio.toFixed(0)}%`}
+                  color={paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'}
+                />
+                <StatMini icon={TrendingUp} label="المشتريات" value={`${totalPurchases.toLocaleString()}`} color="text-primary" />
+                <StatMini icon={FileText} label="الفواتير" value={`${invoiceCount}`} color="text-info" />
+                <StatMini
+                  icon={Clock}
+                  label="متوسط السداد"
+                  value={dso !== null && dso !== undefined ? `${dso} يوم` : '-'}
+                  color="text-muted-foreground"
+                />
+              </div>
+
               <CustomerQuickHistory invoices={invoices} payments={payments} />
             </div>
 
@@ -163,3 +209,23 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
     </>
   );
 });
+
+/** Compact stat mini-card for embedding inside the hero header */
+function StatMini({ icon: Icon, label, value, color, extra }: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  color: string;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 mb-0.5">
+        <Icon className={`h-3.5 w-3.5 shrink-0 ${color}`} />
+        <span className="text-[10px] text-muted-foreground truncate">{label}</span>
+      </div>
+      <p className={`text-sm font-bold leading-tight ${color}`}>{value}</p>
+      {extra}
+    </div>
+  );
+}
