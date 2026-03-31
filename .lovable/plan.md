@@ -1,40 +1,61 @@
+مراجعة ونقد التنفيذ الحالي
 
+## المشاكل المكتشفة
 
-# خطة تحسين واجهة العميل على الموبايل
+### 1. خطأ Runtime: فشل تحميل PageTransition
 
-## ملخص التغييرات
+هناك خطأ في تحميل `PageTransition.tsx` ديناميكياً. الملف موجود وسليم، لكن الخطأ يشير لمشكلة في الـ build/cache. الحل: إعادة بناء المشروع أو تحويل الاستيراد من lazy إلى استيراد مباشر في `AppLayout.tsx`.
 
-بناءً على ملاحظاتك، سنجري 3 تعديلات رئيسية:
+### 2. الهيدر المضغوط يظهر/يختفي بشكل مفاجئ (بدون smooth transition)
 
-1. **الهيدر**: يبقى كاملاً (Hero) دائماً ويتحول لهيدر مضغوط فقط عند التمرير لأسفل (sticky compressed header) — بدلاً من الانضغاط عند فتح قسم.
+عند التمرير، يظهر `CustomerCompressedHeader` بـ `animate-fade-in` فقط عند الظهور، لكن عند العودة للأعلى يختفي فجأة (conditional render بدون exit animation). هذا يسبب "وميض" بصري مزعج.
 
-2. **شريط الأيقونات**: عرض كل الأقسام العشرة في شريط واحد قابل للتمرير أفقياً — بدون زر "المزيد" نهائياً.
+### 3. الهيدر المضغوط لا يكون sticky فعلياً بشكل صحيح
 
-3. **بطاقة العميل**: إرجاع `CustomerMobileProfile` الكاملة بكل بياناتها (صورة، اسم، VIP، حالة، موقع، KPIs، حد ائتمان، أزرار اتصال وإجراءات) مع إزالة أسهم التنقل بين العملاء فقط.
+الـ `sticky top-0` موضوع داخل `div.space-y-4` الذي هو محتوى عادي (ليس scroll container). في حالة أن الصفحة الكاملة هي الـ scroll container، الـ sticky يعمل فقط إذا كان الأب ليس `overflow: hidden`. يجب التأكد من أن سلسلة الآباء لا تمنع الـ sticky.
+
+### 4. `onCall` و `onMoreActions` في CompressedHeader بقيم غير مفيدة
+
+```typescript
+onCall={() => {}}        // لا يفعل شيئاً
+onMoreActions={onEdit}   // يفتح تعديل بدل قائمة إجراءات
+```
+
+- `onCall` فارغ رغم أن العميل لديه هاتف — يجب ربطه بـ `tel:` مباشرة
+- `onMoreActions` يفتح نموذج التعديل بدلاً من فتح sheet الإجراءات السريعة
+
+### 5. شريط الأيقونات لا يتثبت (not sticky)
+
+عند التمرير لأسفل في قسم طويل (مثل الفواتير)، شريط الأيقونات يختفي مع التمرير. يجب أن يكون sticky تحت الهيدر المضغوط لسهولة التنقل بين الأقسام.
+
+### 6. لا يوجد scroll-to-section عند اختيار قسم
+
+عند الضغط على أيقونة في الشريط، المحتوى يظهر لكن لا يتم التمرير تلقائياً إليه — خاصة إذا كان الهيدر الكامل يحجب المحتوى الجديد.
+
+### 7. `MobileDetailHeader` يظهر مع الهيدر الكامل = تكرار
+
+`MobileDetailHeader` (سطر 259) يعرض اسم العميل وزر تعديل، والـ `CustomerMobileProfile` يعرض نفس المعلومات. هذا تكرار بصري.
+
+### 8. لا يوجد مؤشر بصري للقسم المفتوح في الشريط عند التمرير
+
+عندما يكون المستخدم في قسم طويل ويتمرر، لا يعرف أي قسم مفتوح لأن الشريط اختفى.
 
 ---
 
-## التفاصيل التقنية
-
-### 1. تعديل `CustomerIconStrip.tsx`
-- إزالة عنصر "المزيد" (`more`) وإزالة `moreSheetGroups` والـ `Sheet` بالكامل.
-- إضافة كل الأقسام العشرة مباشرة في مصفوفة `stripIcons`:
-  - فواتير، مدفوعات، بيانات، ملاحظات، تحليلات، مبيعات، كشف حساب، أعمار ديون، تذكيرات، مرفقات
-- جعل الشريط `overflow-x-auto` مع `flex-nowrap` ليكون قابلاً للتمرير الأفقي.
-- تحديث `MobileSectionId` لتشمل كل الأقسام.
-
-### 2. تعديل `CustomerDetailsPage.tsx` (القسم الموبايل)
-- إزالة منطق التبديل بين `CustomerMobileProfile` و `CustomerCompressedHeader` بناءً على `mobileSection`.
-- عرض `CustomerMobileProfile` دائماً (بدون `onPrev`/`onNext`).
-- إضافة سلوك sticky: عند التمرير لأسفل بمقدار معين، يظهر `CustomerCompressedHeader` كعنصر ثابت في أعلى الشاشة.
-- شريط الأيقونات يبقى تحت الهيدر مباشرة، والمحتوى يتوسع أسفله.
-
-### 3. تعديل `CustomerMobileProfile.tsx`
-- إزالة props التنقل (`onPrev`, `onNext`, `hasPrev`, `hasNext`) والأسهم من العرض.
-- إبقاء كل شيء آخر كما هو (الصورة، VIP، KPIs، حد الائتمان، أزرار الاتصال والإجراءات).
+## خطة الإصلاح
 
 ### الملفات المتأثرة
-- `src/components/customers/mobile/CustomerIconStrip.tsx` — إعادة كتابة بـ 10 أيقونات + تمرير أفقي
-- `src/pages/customers/CustomerDetailsPage.tsx` — منطق الهيدر الثابت عند التمرير
-- `src/components/customers/mobile/CustomerMobileProfile.tsx` — إزالة التنقل بين العملاء
 
+- `src/pages/customers/CustomerDetailsPage.tsx`
+- `src/components/customers/mobile/CustomerCompressedHeader.tsx`
+- `src/components/layout/AppLayout.tsx` (لإصلاح خطأ PageTransition)
+
+### التعديلات المطلوبة
+
+1. **إصلاح PageTransition**: تحويل من lazy import إلى import مباشر في AppLayout لتجنب خطأ التحميل الديناميكي.
+2. **جعل شريط الأيقونات sticky**: وضعه مع الهيدر المضغوط في container واحد sticky، بحيث عند التمرير يظهر الهيدر المضغوط + الشريط معاً.
+3. **إصلاح onCall و onMoreActions**: ربط `onCall` بـ `window.open(tel:...)` وربط `onMoreActions` بفتح sheet الإجراءات.
+4. **إضافة scroll-into-view**: عند اختيار قسم من الشريط، عمل `scrollIntoView` للمحتوى.
+5. **إزالة تكرار MobileDetailHeader**: الاكتفاء بزر الرجوع فقط بدون عنوان وزر تعديل مكرر.
+6. تحسين ألوان وعرض الايقونات 
+7. ارجاع الشريط الثابت الخاصة بالمشروع ككل 
