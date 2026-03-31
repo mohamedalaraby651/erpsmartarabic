@@ -417,7 +417,8 @@ export const customerRepository = {
       .from('invoices')
       .select('*')
       .eq('customer_id', customerId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
     if (error) throw error;
     return (data || []) as Invoice[];
   },
@@ -427,7 +428,8 @@ export const customerRepository = {
       .from('payments')
       .select('*, invoices:invoice_id(invoice_number)')
       .eq('customer_id', customerId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
     if (error) throw error;
     return (data || []) as (Payment & { invoices: { invoice_number: string } | null })[];
   },
@@ -437,7 +439,8 @@ export const customerRepository = {
       .from('credit_notes')
       .select('*')
       .eq('customer_id', customerId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
     if (error) throw error;
     return (data || []) as CreditNote[];
   },
@@ -447,7 +450,8 @@ export const customerRepository = {
       .from('sales_orders')
       .select('*')
       .eq('customer_id', customerId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(200);
     if (error) throw error;
     return (data || []) as SalesOrder[];
   },
@@ -457,7 +461,8 @@ export const customerRepository = {
       .from('quotations')
       .select('*')
       .eq('customer_id', customerId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(200);
     if (error) throw error;
     return (data || []) as Quotation[];
   },

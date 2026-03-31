@@ -294,17 +294,3 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
   );
 });
 
-function StatMini({ icon: Icon, label, value, color, extra }: {
-  icon: React.ElementType; label: string; value: string; color: string; extra?: React.ReactNode;
-}) {
-  return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5 mb-0.5">
-        <Icon className={`h-3.5 w-3.5 shrink-0 ${color}`} />
-        <span className="text-[10px] text-muted-foreground truncate">{label}</span>
-      </div>
-      <p className={`text-sm font-bold leading-tight ${color}`}>{value}</p>
-      {extra}
-    </div>
-  );
-}

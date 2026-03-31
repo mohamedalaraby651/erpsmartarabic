@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from "react";
+import { CustomerErrorBoundary } from "@/components/customers/CustomerErrorBoundary";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -102,7 +103,12 @@ const CustomerDetailsPage = () => {
 
   const customer = detail.customer;
 
+  const handleQuickPay = (invoiceId: string) => {
+    navigate('/payments', { state: { prefillCustomerId: id, prefillInvoiceId: invoiceId } });
+  };
+
   return (
+    <CustomerErrorBoundary>
     <div className="space-y-6 animate-fade-in">
       <MobileDetailHeader
         title={customer.name}
@@ -170,7 +176,7 @@ const CustomerDetailsPage = () => {
                 <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
               </TabsContent>
               <TabsContent value="financials" className="mt-4 space-y-4">
-                <CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} />
+                <CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={handleQuickPay} />
                 <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
               </TabsContent>
               <TabsContent value="payments-tab" className="mt-4">
@@ -238,7 +244,7 @@ const CustomerDetailsPage = () => {
             </TabsContent>
             <TabsContent value="notes" className="mt-6"><CustomerTabNotes customerId={id!} /></TabsContent>
             <TabsContent value="reminders" className="mt-6"><CustomerReminderSection customerId={id!} /></TabsContent>
-            <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} /></TabsContent>
+            <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={handleQuickPay} /></TabsContent>
             <TabsContent value="quotations" className="mt-6"><CustomerTabQuotations quotations={detail.quotations} /></TabsContent>
             <TabsContent value="orders" className="mt-6"><CustomerTabOrders salesOrders={detail.salesOrders} /></TabsContent>
             <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} customerId={id!} /></TabsContent>
@@ -266,6 +272,7 @@ const CustomerDetailsPage = () => {
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
     </div>
+    </CustomerErrorBoundary>
   );
 };
 
