@@ -29,7 +29,7 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['merge-customers-search', searchQuery],
-    queryFn: () => customerRepository.searchForMerge(searchQuery),
+    queryFn: () => customerSearchRepo.searchForMerge(searchQuery),
     enabled: searchQuery.length >= 2,
   });
 
@@ -39,7 +39,7 @@ const CustomerMergeDialog = ({ open, onOpenChange }: CustomerMergeDialogProps) =
   const mergeMutation = useMutation({
     mutationFn: async () => {
       if (!primaryId || !duplicateId) throw new Error('Missing IDs');
-      return customerRepository.mergeCustomers(primaryId, duplicateId);
+      return customerSearchRepo.mergeCustomers(primaryId, duplicateId);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });

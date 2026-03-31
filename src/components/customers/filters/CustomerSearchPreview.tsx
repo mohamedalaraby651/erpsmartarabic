@@ -25,7 +25,7 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
 
   const { data: results = [] } = useQuery({
     queryKey: ['customer-search-preview', debouncedSearch],
-    queryFn: () => customerRepository.searchPreview(debouncedSearch),
+    queryFn: () => customerSearchRepo.searchPreview(debouncedSearch),
     enabled: !!debouncedSearch && debouncedSearch.length >= 2,
     staleTime: 30000,
   });

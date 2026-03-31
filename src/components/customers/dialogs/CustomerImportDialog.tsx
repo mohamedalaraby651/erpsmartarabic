@@ -91,7 +91,7 @@ const CustomerImportDialog = ({ open, onOpenChange }: CustomerImportDialogProps)
 
   const importMutation = useMutation({
     mutationFn: async (rows: ImportRow[]) => {
-      const existing = await customerRepository.findAllNamesAndPhones();
+      const existing = await customerSearchRepo.findAllNamesAndPhones();
       const existingNames = new Set(existing.map(c => c.name.toLowerCase().trim()));
       const existingPhones = new Set(existing.filter(c => c.phone).map(c => c.phone!));
 
@@ -107,7 +107,7 @@ const CustomerImportDialog = ({ open, onOpenChange }: CustomerImportDialogProps)
         }
 
         try {
-          await customerRepository.insertCustomer({
+          await customerSearchRepo.insertCustomer({
             name: row.name.trim(),
             phone: row.phone?.trim() || null,
             email: row.email?.trim() || null,

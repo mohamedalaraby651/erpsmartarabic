@@ -19,7 +19,7 @@ export const DuplicateDetectionDialog = ({ open, onOpenChange }: DuplicateDetect
 
   const { data: duplicates = [], isLoading } = useQuery({
     queryKey: ['duplicate-customers'],
-    queryFn: () => customerRepository.findDuplicatesRpc(),
+    queryFn: () => customerSearchRepo.findDuplicatesRpc(),
     enabled: open,
   });
 

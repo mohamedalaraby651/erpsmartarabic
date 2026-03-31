@@ -63,7 +63,7 @@ export function useCustomerExport({ filters, sortConfig }: UseCustomerExportPara
         );
         data = result.data || [];
       } else {
-        const result = await customerRepository.exportAll((loaded) => {
+        const result = await customerSearchRepo.exportAll((loaded) => {
           sonnerToast.loading(`جاري تحميل ${loaded.toLocaleString()} عميل...`, { id: toastId });
         });
         data = (result.data || []) as Customer[];

@@ -81,12 +81,12 @@ export function useCustomerList(options: UseCustomerListOptions) {
     prefetchTimerRef.current = setTimeout(() => {
       queryClient.prefetchQuery({
         queryKey: ['customer', customerId],
-        queryFn: () => customerRepository.prefetchCustomer(customerId),
+        queryFn: () => customerSearchRepo.prefetchCustomer(customerId),
         staleTime: 60000,
       });
       queryClient.prefetchQuery({
         queryKey: ['customer-addresses', customerId],
-        queryFn: () => customerRepository.prefetchAddresses(customerId),
+        queryFn: () => customerSearchRepo.prefetchAddresses(customerId),
         staleTime: 60000,
       });
     }, 200);

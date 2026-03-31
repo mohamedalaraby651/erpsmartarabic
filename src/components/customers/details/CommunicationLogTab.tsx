@@ -48,12 +48,12 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
 
   const { data: communications = [], isLoading } = useQuery({
     queryKey: ['customer-communications', customerId],
-    queryFn: () => customerRepository.findCommunications(customerId),
+    queryFn: () => customerRelationsRepo.findCommunications(customerId),
     staleTime: 30000,
   });
 
   const addMutation = useMutation({
-    mutationFn: () => customerRepository.createCommunication({
+    mutationFn: () => customerRelationsRepo.createCommunication({
       customer_id: customerId,
       type: commType,
       subject: subject.trim() || null,

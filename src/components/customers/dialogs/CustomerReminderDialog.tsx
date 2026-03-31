@@ -27,12 +27,12 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
 
   const { data: reminders = [] } = useQuery({
     queryKey: ['customer-reminders', customerId],
-    queryFn: () => customerRepository.findReminders(customerId),
+    queryFn: () => customerRelationsRepo.findReminders(customerId),
     staleTime: 30000,
   });
 
   const addMutation = useMutation({
-    mutationFn: () => customerRepository.createReminder({
+    mutationFn: () => customerRelationsRepo.createReminder({
       customer_id: customerId,
       reminder_date: reminderDate,
       note: reminderNote.trim(),
@@ -54,7 +54,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
-      customerRepository.updateReminder(id, { is_completed: completed, updated_at: new Date().toISOString() }),
+      customerRelationsRepo.updateReminder(id, { is_completed: completed, updated_at: new Date().toISOString() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-reminders', customerId] });
     },
