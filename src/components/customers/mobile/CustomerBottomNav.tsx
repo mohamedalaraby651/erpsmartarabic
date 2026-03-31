@@ -36,6 +36,7 @@ const moreGroups = [
       { value: 'notes', label: 'الملاحظات', icon: StickyNote },
       { value: 'reminders', label: 'التذكيرات', icon: Bell },
       { value: 'communications', label: 'التواصل', icon: MessageSquare },
+      { value: 'attachments', label: 'المرفقات', icon: Paperclip },
     ],
   },
   {

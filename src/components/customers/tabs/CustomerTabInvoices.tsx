@@ -218,10 +218,10 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
               <div className="flex items-center justify-between pt-4">
                 <span className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</span>
                 <div className="flex gap-1">
-                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                 </div>

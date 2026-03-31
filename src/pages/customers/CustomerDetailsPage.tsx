@@ -190,7 +190,14 @@ const CustomerDetailsPage = () => {
           />
 
           <Tabs value={mobileTab} onValueChange={setMobileTab}>
-            <Suspense fallback={<TabFallback />}>
+            {/* Active section title for "more" sub-tabs */}
+            {mobileTabLabels[mobileTab] && (
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <div className="h-4 w-1 rounded-full bg-primary" />
+                <h2 className="text-sm font-semibold text-foreground">{mobileTabLabels[mobileTab]}</h2>
+              </div>
+            )}
+            <Suspense fallback={<TabSkeleton />}>
               <TabsContent value="financial" className="mt-4">
                 <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
               </TabsContent>
@@ -219,16 +226,13 @@ const CustomerDetailsPage = () => {
                 <TopProductsChart customerId={id!} />
                 <CustomerTabActivity activities={detail.activities} />
               </TabsContent>
-              <TabsContent value="more" className="mt-4 space-y-4">
+              <TabsContent value="more" className="mt-4">
                 <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(addrId) => detail.deleteAddressMutation.mutate(addrId)} onWhatsApp={handleWhatsApp} />
-                <CustomerTabNotes customerId={id!} />
-                <CommunicationLogTab customerId={id!} />
-                <CustomerReminderSection customerId={id!} />
-                <CustomerTabAttachments customerId={id!} />
               </TabsContent>
               <TabsContent value="notes" className="mt-4"><CustomerTabNotes customerId={id!} /></TabsContent>
               <TabsContent value="reminders" className="mt-4"><CustomerReminderSection customerId={id!} /></TabsContent>
               <TabsContent value="communications" className="mt-4"><CommunicationLogTab customerId={id!} /></TabsContent>
+              <TabsContent value="attachments" className="mt-4"><CustomerTabAttachments customerId={id!} /></TabsContent>
             </Suspense>
           </Tabs>
 
