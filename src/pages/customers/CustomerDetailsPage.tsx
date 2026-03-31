@@ -68,17 +68,6 @@ const TabSkeleton = () => (
   </div>
 );
 
-const mobileTabLabels: Record<string, string> = {
-  more: 'البيانات الأساسية',
-  notes: 'الملاحظات',
-  reminders: 'التذكيرات',
-  communications: 'التواصل',
-  attachments: 'المرفقات',
-  sales: 'المبيعات',
-  analysis: 'الرسوم البيانية',
-  statement: 'كشف الحساب',
-  aging: 'أعمار الديون',
-};
 
 const CustomerDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
