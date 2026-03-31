@@ -114,7 +114,7 @@ export function calculateCustomerHealth(
 
   return {
     dso,
-    clv: totalPurchases,
+    clv: totalPurchases, // Note: Credit Notes should be subtracted when available
     paymentRatio,
     avgInvoiceValue,
     totalPurchases,

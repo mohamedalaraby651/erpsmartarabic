@@ -218,10 +218,10 @@ const CustomerListCardInner = ({
             </div>
 
             {/* Last activity */}
-            {customer.last_transaction_date && (
+            {(customer.last_activity_at || customer.last_transaction_date) && (
               <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
                 <FileText className="h-3 w-3" />
-                <span>آخر معاملة: {new Date(customer.last_transaction_date).toLocaleDateString('ar-EG')}</span>
+                <span>آخر نشاط: {new Date(customer.last_activity_at || customer.last_transaction_date!).toLocaleDateString('ar-EG')}</span>
                 {invoiceCount > 0 && <span className="mr-auto">{invoiceCount} فاتورة</span>}
               </div>
             )}
