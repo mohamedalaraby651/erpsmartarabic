@@ -1,9 +1,6 @@
 import React, { memo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { CustomerSearchPreview } from "@/components/customers/CustomerSearchPreview";
 import { FilterChips } from "@/components/filters/FilterChips";
 import { vipLabels, typeLabels } from "@/lib/customerConstants";
@@ -53,12 +50,6 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <CustomerSearchPreview
-            value={searchQuery}
-            onChange={onSearchChange}
-            className="flex-1"
-            mobileStyle
-          />
           <button
             onClick={onOpenDrawer}
             className={cn(
@@ -90,62 +81,76 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
     );
   }
 
+  // Desktop: integrated row without Card wrapper
   return (
-    <Card>
-      <CardContent className="p-3 md:p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <CustomerSearchPreview value={searchQuery} onChange={onSearchChange} />
-          <>
-            <Select value={typeFilter} onValueChange={onTypeChange}>
-              <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="نوع العميل" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="individual">فرد</SelectItem>
-                <SelectItem value="company">شركة</SelectItem>
-                <SelectItem value="farm">مزرعة</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={vipFilter} onValueChange={onVipChange}>
-              <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="مستوى VIP" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="regular">عادي</SelectItem>
-                <SelectItem value="silver">فضي</SelectItem>
-                <SelectItem value="gold">ذهبي</SelectItem>
-                <SelectItem value="platinum">بلاتيني</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={governorateFilter} onValueChange={onGovernorateChange}>
-              <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="المحافظة" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل المحافظات</SelectItem>
-                {governorates.map((gov) => (
-                  <SelectItem key={gov} value={gov}>{gov}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={onStatusChange}>
-              <SelectTrigger className="w-full sm:w-32"><SelectValue placeholder="الحالة" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="active">نشط</SelectItem>
-                <SelectItem value="inactive">غير نشط</SelectItem>
-                <SelectItem value="debtors">مدين</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <CustomerSearchPreview value={searchQuery} onChange={onSearchChange} className="max-w-sm" />
+        <Select value={typeFilter} onValueChange={onTypeChange}>
+          <SelectTrigger className="w-36 h-9 text-xs"><SelectValue placeholder="نوع العميل" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الأنواع</SelectItem>
+            <SelectItem value="individual">فرد</SelectItem>
+            <SelectItem value="company">شركة</SelectItem>
+            <SelectItem value="farm">مزرعة</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={vipFilter} onValueChange={onVipChange}>
+          <SelectTrigger className="w-32 h-9 text-xs"><SelectValue placeholder="VIP" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">الكل</SelectItem>
+            <SelectItem value="regular">عادي</SelectItem>
+            <SelectItem value="silver">فضي</SelectItem>
+            <SelectItem value="gold">ذهبي</SelectItem>
+            <SelectItem value="platinum">بلاتيني</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={governorateFilter} onValueChange={onGovernorateChange}>
+          <SelectTrigger className="w-36 h-9 text-xs"><SelectValue placeholder="المحافظة" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل المحافظات</SelectItem>
+            {governorates.map((gov) => (
+              <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={onStatusChange}>
+          <SelectTrigger className="w-28 h-9 text-xs"><SelectValue placeholder="الحالة" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">الكل</SelectItem>
+            <SelectItem value="active">نشط</SelectItem>
+            <SelectItem value="inactive">غير نشط</SelectItem>
+            <SelectItem value="debtors">مدين</SelectItem>
+          </SelectContent>
+        </Select>
+        <button
+          onClick={onOpenDrawer}
+          className={cn(
+            'flex items-center gap-1.5 px-3 h-9 rounded-lg border text-xs transition-all',
+            activeFiltersCount > 0
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card text-muted-foreground border-border hover:bg-accent',
+          )}
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          متقدم
+          {activeFiltersCount > 0 && (
+            <span className="bg-primary-foreground/20 text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
+      </div>
+      {activeChipIds.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <FilterChips
+            chips={chips}
+            activeChips={activeChipIds}
+            onToggle={(chipId) => onClearFilter(chipId)}
+            onClearAll={onClearAll}
+          />
         </div>
-        {activeChipIds.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            <FilterChips
-              chips={chips}
-              activeChips={activeChipIds}
-              onToggle={(chipId) => onClearFilter(chipId)}
-              onClearAll={onClearAll}
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 });
