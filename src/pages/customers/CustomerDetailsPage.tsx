@@ -234,10 +234,10 @@ const CustomerDetailsPage = () => {
               </TabsContent>
               <TabsContent value="analysis" className="mt-4 space-y-4">
                 <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-                <CommunicationLogTab customerId={id!} />
                 <CustomerTabActivity activities={detail.activities} />
               </TabsContent>
               <TabsContent value="more" className="mt-4 space-y-4">
+                <CommunicationLogTab customerId={id!} />
                 <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(addrId) => detail.deleteAddressMutation.mutate(addrId)} />
                 <CustomerReminderSection customerId={id!} />
                 <CustomerTabAttachments customerId={id!} />
