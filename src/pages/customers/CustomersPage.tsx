@@ -279,24 +279,12 @@ const CustomersPage = () => {
                 <CustomerGridView data={list.customers} isLoading={list.isLoading} canEdit={canEdit} canDelete={canDelete} onNavigate={(id) => navigate(`/customers/${id}`)} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onEdit={handleEdit} onDelete={handleDeleteRequest} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} onToggleSelectAll={bulk.toggleSelectAll} isAllSelected={bulk.isAllSelected} hasSelection={bulk.hasSelection} onAdd={canEdit ? handleAdd : undefined} deletingId={deletingId} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch} onClearFilters={filters.clearAllFilters} />
               )
             ) : list.isLoading ? <TableSkeleton rows={5} columns={7} /> : list.customers.length === 0 ? (
-              filters.activeFiltersCount > 0 || filters.debouncedSearch ? (
-                <div className="text-center py-12">
-                  <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">لا توجد نتائج</h3>
-                  <p className="text-muted-foreground text-sm mb-6">لا يوجد عملاء يطابقون الفلاتر المحددة</p>
-                  <Button variant="outline" onClick={filters.clearAllFilters}>إزالة الفلاتر</Button>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">لا يوجد عملاء</h3>
-                  <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">ابدأ بإضافة عملائك لإدارة بياناتهم وتتبع معاملاتهم المالية</p>
-                  <div className="flex items-center justify-center gap-3">
-                    {canEdit && <Button onClick={handleAdd}><Plus className="h-4 w-4 ml-2" />إضافة عميل جديد</Button>}
-                    <Button variant="outline" onClick={() => dialogRef.current?.openImport()}><FileSpreadsheet className="h-4 w-4 ml-2" />استيراد من Excel</Button>
-                  </div>
-                </div>
-              )
+              <CustomerEmptyState
+                hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch}
+                onClearFilters={filters.clearAllFilters}
+                onAdd={canEdit ? handleAdd : undefined}
+                onImport={() => dialogRef.current?.openImport()}
+              />
             ) : (
               <CustomerTableView data={list.customers} sortConfig={sortConfig} onSort={requestSort} onNavigate={(id) => navigate(`/customers/${id}`)} onEdit={handleEdit} onDelete={handleDeleteRequest} onNewInvoice={handleNewInvoice} onWhatsApp={handleWhatsApp} onRowHover={list.handleRowHover} onRowLeave={list.handleRowLeave} canEdit={canEdit} canDelete={canDelete} deletingId={deletingId} selectedIds={bulk.selectedIds} onToggleSelect={bulk.toggleSelect} onToggleSelectAll={bulk.toggleSelectAll} isAllSelected={bulk.isAllSelected} />
             )}
