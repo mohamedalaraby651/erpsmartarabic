@@ -117,7 +117,7 @@ const CustomerDetailsPage = () => {
             <Suspense fallback={<TabFallback />}><CustomerTabInvoices invoices={detail.invoices} customerId={id!} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />} badge={detail.payments.length}>
-            <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} /></Suspense>
+            <Suspense fallback={<TabFallback />}><CustomerTabPayments payments={detail.payments} customerId={id!} /></Suspense>
           </MobileDetailSection>
           <MobileDetailSection title="الملخص المالي" priority="medium" icon={<Wallet className="h-4 w-4" />}>
             <Suspense fallback={<TabFallback />}>
