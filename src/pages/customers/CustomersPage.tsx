@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-// Card imports removed — desktop uses plain div now
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutGrid, LayoutList, AlertTriangle, Users, FileSpreadsheet, ArrowUpDown, Search } from "lucide-react";
@@ -14,6 +13,7 @@ import { useMemo } from "react";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { PageWrapper } from "@/components/shared/PageWrapper";
 import type { Customer } from "@/lib/customerConstants";
 
 // Sub-components
@@ -76,15 +76,12 @@ const CustomersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
-  // Mobile infinite scroll state
   const [mobilePages, setMobilePages] = useState<Customer[][]>([]);
   const [mobilePage, setMobilePage] = useState(1);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
 
-  // Quick filter from stats bar
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
 
-  // Apply quick filter to actual filters
   const resetAllQuickFilters = useCallback(() => {
     filters.setStatusFilter('all');
     filters.setVipFilter('all');
@@ -94,21 +91,13 @@ const CustomersPage = () => {
   const handleQuickFilter = useCallback((filterId: string | null) => {
     setQuickFilter(filterId);
     resetAllQuickFilters();
-    if (filterId === 'active') {
-      filters.setStatusFilter('active');
-    } else if (filterId === 'inactive') {
-      filters.setStatusFilter('inactive');
-    } else if (filterId === 'vip') {
-      filters.setVipFilter('non-regular');
-    } else if (filterId === 'companies') {
-      filters.setTypeFilter('company');
-    } else if (filterId === 'individuals') {
-      filters.setTypeFilter('individual');
-    } else if (filterId === 'debtors') {
-      filters.setStatusFilter('debtors');
-    } else if (filterId === 'farms') {
-      filters.setTypeFilter('farm');
-    }
+    if (filterId === 'active') filters.setStatusFilter('active');
+    else if (filterId === 'inactive') filters.setStatusFilter('inactive');
+    else if (filterId === 'vip') filters.setVipFilter('non-regular');
+    else if (filterId === 'companies') filters.setTypeFilter('company');
+    else if (filterId === 'individuals') filters.setTypeFilter('individual');
+    else if (filterId === 'debtors') filters.setStatusFilter('debtors');
+    else if (filterId === 'farms') filters.setTypeFilter('farm');
   }, [filters, resetAllQuickFilters]);
 
   const list = useCustomerList({
@@ -126,7 +115,6 @@ const CustomersPage = () => {
   const hasPrevPage = currentPage > 1;
   const mobileHasNextPage = mobilePage < totalPages;
 
-  // Accumulate mobile pages
   useEffect(() => {
     if (isMobile && list.customers.length > 0) {
       setMobilePages(prev => {
@@ -188,7 +176,8 @@ const CustomersPage = () => {
   );
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-fade-in">
+    <PageWrapper title="العملاء">
+    <div className="space-y-4 md:space-y-6">
       <CustomerPageHeader
         isMobile={isMobile} canEdit={canEdit}
         exportAllLoading={exportAllLoading} onAdd={handleAdd}
@@ -320,6 +309,7 @@ const CustomersPage = () => {
         onBulkVipUpdate={handleBulkVipUpdate} bulkSelectedCount={bulk.selectedIds.size}
       />
     </div>
+    </PageWrapper>
   );
 };
 

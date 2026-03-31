@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { CustomerErrorBoundary } from "@/components/customers/CustomerErrorBoundary";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStr
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
+import { PageWrapper } from "@/components/shared/PageWrapper";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -124,7 +124,6 @@ function MobileCustomerView({
 
   return (
     <div className="space-y-3">
-      {/* Full Hero header — always rendered */}
       <div ref={heroRef}>
         <CustomerMobileProfile
           customer={customer} customerId={customerId}
@@ -146,7 +145,6 @@ function MobileCustomerView({
         />
       </div>
 
-      {/* Sticky container: compressed header (when scrolled) + icon strip (always) */}
       <div className="sticky top-0 z-30 -mx-3 px-3 bg-background pb-1 space-y-1.5">
         <div className={cn(
           "transition-all duration-200 overflow-hidden",
@@ -165,7 +163,6 @@ function MobileCustomerView({
         <CustomerIconStrip activeSection={mobileSection} onSectionChange={selectSection} />
       </div>
 
-      {/* Expanded Section Content */}
       <div ref={sectionRef}>
         {mobileSection !== 'none' && (
           <Suspense fallback={<TabSkeleton />}>
@@ -226,6 +223,7 @@ const CustomerDetailsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const isMobile = useIsMobile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -235,6 +233,19 @@ const CustomerDetailsPage = () => {
 
   const detail = useCustomerDetail(id);
   const { prevId, nextId, goNext, goPrev } = useCustomerNavigation(id);
+
+  // === URL sync for active tab (desktop) ===
+  const urlTab = searchParams.get('tab');
+  useEffect(() => {
+    if (urlTab && !isMobile) {
+      detail.setActiveTab(urlTab);
+    }
+  }, [urlTab, isMobile]);
+
+  const handleTabChange = (tab: string) => {
+    detail.setActiveTab(tab);
+    setSearchParams({ tab }, { replace: true });
+  };
 
   const updateFieldMutation = useMutation({
     mutationFn: (updates: Record<string, unknown>) => customerRepository.update(id!, updates),
@@ -270,8 +281,8 @@ const CustomerDetailsPage = () => {
   };
 
   return (
-    <CustomerErrorBoundary>
-    <div className="space-y-6 animate-fade-in">
+    <PageWrapper title={customer.name}>
+    <div className="space-y-6">
       <MobileDetailHeader
         title={customer.name}
         backTo="/customers"
@@ -283,7 +294,7 @@ const CustomerDetailsPage = () => {
           invoices={detail.invoices} payments={detail.payments}
           onBack={() => navigate('/customers')} onEdit={() => setEditDialogOpen(true)}
           onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-          onStatement={() => detail.setActiveTab('statement')}
+          onStatement={() => handleTabChange('statement')}
           onWhatsApp={handleWhatsApp}
           onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
           onPrev={goPrev} onNext={goNext} hasPrev={!!prevId} hasNext={!!nextId}
@@ -294,7 +305,7 @@ const CustomerDetailsPage = () => {
           onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
-          onNewCreditNote={() => detail.setActiveTab('credit-notes')}
+          onNewCreditNote={() => handleTabChange('credit-notes')}
           onToggleActive={handleToggleActive} onChangeVip={handleChangeVip}
         />
       </div>
@@ -304,12 +315,12 @@ const CustomerDetailsPage = () => {
         invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
         lastCommunicationAt={customer.last_communication_at}
         onEditCreditLimit={() => setEditDialogOpen(true)}
-        onSendReminder={() => isMobile ? setMobileSection('reminders') : detail.setActiveTab('reminders')}
+        onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
         onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
         onContact={handleWhatsApp}
       />
 
-      <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileSection('notes') : detail.setActiveTab('notes')} />
+      <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileSection('notes') : handleTabChange('notes')} />
 
       {isMobile ? (
         <MobileCustomerView
@@ -331,7 +342,7 @@ const CustomerDetailsPage = () => {
           setAddressDialogOpen={setAddressDialogOpen}
         />
       ) : (
-        <Tabs value={detail.activeTab} onValueChange={detail.setActiveTab} className="w-full">
+        <Tabs value={detail.activeTab} onValueChange={handleTabChange} className="w-full">
           <ScrollArea className="w-full">
             <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
               {tabGroups.map((group, gi) => (
@@ -385,7 +396,7 @@ const CustomerDetailsPage = () => {
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
     </div>
-    </CustomerErrorBoundary>
+    </PageWrapper>
   );
 };
 
