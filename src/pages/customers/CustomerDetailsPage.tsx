@@ -197,10 +197,10 @@ function MobileCustomerView({
               </div>
             )}
             {mobileSection === 'statement' && (
-              <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
+              <StatementOfAccount customerName={customer.name} customerId={customerId} />
             )}
             {mobileSection === 'aging' && (
-              <CustomerAgingReport invoices={detail.invoices} />
+              <CustomerAgingReport customerId={customerId} />
             )}
             {mobileSection === 'reminders' && (
               <CustomerReminderSection customerId={customerId} />
