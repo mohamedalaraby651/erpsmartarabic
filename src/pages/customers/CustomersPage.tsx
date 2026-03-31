@@ -8,6 +8,7 @@ import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
+import { useAlertNotifier } from "@/hooks/useAlertNotifier";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { PageWrapper } from "@/components/shared/PageWrapper";
@@ -33,10 +34,11 @@ import { egyptGovernorates } from "@/lib/egyptLocations";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
   const { isMobile } = useResponsiveView();
   const [alertFilterType, setAlertFilterType] = useState<AlertType | null>(null);
-  const { alertsByType, totalAlerts, alertCountByCustomer, errorCustomerIds } = useCustomerAlerts();
+  const { alerts, alertsByType, totalAlerts, alertCountByCustomer, errorCustomerIds } = useCustomerAlerts();
+  useAlertNotifier(alerts, user?.id);
   const dialogRef = useRef<DialogManagerHandle>(null);
 
   const filters = useCustomerFilters();
