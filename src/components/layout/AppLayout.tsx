@@ -14,9 +14,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 
-// Lazy load ShortcutsModal and PageTransition
+import PageTransition from '@/components/transitions/PageTransition';
+
+// Lazy load ShortcutsModal
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
-const PageTransition = lazy(() => import('@/components/transitions/PageTransition'));
 
 // Skeleton loader for page content
 function PageSkeleton() {
