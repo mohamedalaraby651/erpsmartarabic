@@ -11,7 +11,6 @@ import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { PageWrapper } from "@/components/shared/PageWrapper";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import type { Customer } from "@/lib/customerConstants";
 
 // Sub-components
