@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
+import { useInfiniteCustomers } from "@/hooks/customers/useInfiniteCustomers";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
 import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
 import { useAlertNotifier } from "@/hooks/useAlertNotifier";
