@@ -1,9 +1,11 @@
 import React, { memo, useState } from 'react';
-import { Phone, MapPin, Eye, FileText, CreditCard, Crown, MessageCircle, Edit2 } from 'lucide-react';
+import { Phone, MapPin, FileText, CreditCard, Crown, MessageCircle, Edit2 } from 'lucide-react';
 import CustomerAvatar from './CustomerAvatar';
 import { cn } from '@/lib/utils';
 import { vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 interface CustomerListRowProps {
   customer: Customer;
@@ -19,16 +21,18 @@ interface CustomerListRowProps {
 
 const vipBorderAccent: Record<string, string> = {
   regular: 'border-s-transparent',
-  silver: 'border-s-zinc-400 dark:border-s-zinc-500',
+  silver: 'border-s-muted-foreground/40',
   gold: 'border-s-amber-500 dark:border-s-amber-400',
   platinum: 'border-s-purple-500 dark:border-s-purple-400',
 };
 
 const vipPillStyle: Record<string, string> = {
-  silver: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+  silver: 'bg-muted text-muted-foreground',
   gold: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
   platinum: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
 };
+
+const DEFAULT_COLUMNS = ['name', 'type', 'vip', 'phone', 'governorate', 'balance', 'status'];
 
 const CustomerListRowInner = ({
   customer, onNavigate, onEdit, onNewInvoice, onNewPayment, onWhatsApp,
@@ -39,6 +43,9 @@ const CustomerListRowInner = ({
   const creditLimit = Number(customer.credit_limit || 0);
   const isActive = customer.is_active !== false;
   const balanceColor = getBalanceColor(balance, creditLimit);
+  const cols = visibleColumns || DEFAULT_COLUMNS;
+
+  const isVisible = (key: string) => cols.includes(key);
 
   const handleMouseEnter = () => {
     setHovered(true);
@@ -61,7 +68,7 @@ const CustomerListRowInner = ({
         !isActive && 'opacity-60',
       )}
     >
-      {/* Avatar */}
+      {/* Avatar — always visible */}
       <CustomerAvatar
         name={customer.name}
         imageUrl={customer.image_url}
@@ -72,32 +79,38 @@ const CustomerListRowInner = ({
       />
 
       {/* Name + type + VIP */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <h3 className="font-semibold text-sm truncate">{customer.name}</h3>
-          <span className={cn(
-            'h-2 w-2 rounded-full shrink-0',
-            isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
-          )} />
+      {isVisible('name') && (
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-sm truncate">{customer.name}</h3>
+            {isVisible('status') && (
+              <span className={cn(
+                'h-2 w-2 rounded-full shrink-0',
+                isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+              )} />
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {isVisible('type') && (
+              <span className="text-[11px] text-muted-foreground">
+                {typeLabels[customer.customer_type] || customer.customer_type}
+              </span>
+            )}
+            {isVisible('vip') && customer.vip_level !== 'regular' && (
+              <span className={cn(
+                'inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full',
+                vipPillStyle[customer.vip_level],
+              )}>
+                <Crown className="h-2.5 w-2.5" />
+                {vipLabels[customer.vip_level]}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-[11px] text-muted-foreground">
-            {typeLabels[customer.customer_type] || customer.customer_type}
-          </span>
-          {customer.vip_level !== 'regular' && (
-            <span className={cn(
-              'inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full',
-              vipPillStyle[customer.vip_level],
-            )}>
-              <Crown className="h-2.5 w-2.5" />
-              {vipLabels[customer.vip_level]}
-            </span>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Phone */}
-      {customer.phone && (
+      {isVisible('phone') && customer.phone && (
         <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground shrink-0" dir="ltr">
           <Phone className="h-3 w-3" />
           {customer.phone}
@@ -105,20 +118,70 @@ const CustomerListRowInner = ({
       )}
 
       {/* Governorate */}
-      {customer.governorate && (
+      {isVisible('governorate') && customer.governorate && (
         <div className="hidden xl:flex items-center gap-1 text-xs text-muted-foreground shrink-0">
           <MapPin className="h-3 w-3" />
           {customer.governorate}
         </div>
       )}
 
+      {/* Credit Limit */}
+      {isVisible('credit_limit') && (
+        <div className="hidden xl:block text-xs text-muted-foreground shrink-0 w-20 text-left tabular-nums">
+          {creditLimit > 0 ? creditLimit.toLocaleString() : '—'}
+        </div>
+      )}
+
+      {/* Last Activity */}
+      {isVisible('last_activity') && (
+        <div className="hidden xl:block text-[11px] text-muted-foreground shrink-0 w-24">
+          {customer.last_activity_at
+            ? format(new Date(customer.last_activity_at), 'd MMM yyyy', { locale: ar })
+            : '—'}
+        </div>
+      )}
+
+      {/* Total Purchases */}
+      {isVisible('purchases') && (
+        <div className="hidden xl:block text-xs text-muted-foreground shrink-0 w-24 text-left tabular-nums">
+          {Number(customer.total_purchases_cached || 0).toLocaleString()}
+        </div>
+      )}
+
+      {/* Payment Ratio */}
+      {isVisible('payment_ratio') && (
+        <div className="hidden xl:block text-xs shrink-0 w-16 text-left tabular-nums">
+          {(() => {
+            const tp = Number(customer.total_purchases_cached || 0);
+            const ratio = tp > 0 ? Math.round(((tp - balance) / tp) * 100) : 100;
+            return (
+              <span className={cn(
+                ratio >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                ratio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'
+              )}>
+                {ratio}%
+              </span>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Created At */}
+      {isVisible('created_at') && (
+        <div className="hidden xl:block text-[11px] text-muted-foreground shrink-0 w-24">
+          {format(new Date(customer.created_at), 'd MMM yyyy', { locale: ar })}
+        </div>
+      )}
+
       {/* Balance */}
-      <div className="text-left shrink-0 w-24">
-        <p className={cn('font-bold text-sm tabular-nums', balanceColor)}>
-          {balance.toLocaleString()}
-        </p>
-        <p className="text-[10px] text-muted-foreground">ج.م</p>
-      </div>
+      {isVisible('balance') && (
+        <div className="text-left shrink-0 w-24">
+          <p className={cn('font-bold text-sm tabular-nums', balanceColor)}>
+            {balance.toLocaleString()}
+          </p>
+          <p className="text-[10px] text-muted-foreground">ج.م</p>
+        </div>
+      )}
 
       {/* Hover actions */}
       <div className={cn(

@@ -1,11 +1,11 @@
-import React, { memo, useRef, useEffect, useState } from "react";
-import { LayoutGrid, LayoutList, Loader2, ArrowUpDown } from "lucide-react";
+import React, { memo } from "react";
+import { Loader2, ArrowUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
 import { CustomerListSkeleton } from "@/components/customers/CustomerListSkeleton";
-import { cn } from "@/lib/utils";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
@@ -35,20 +35,12 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
 }: CustomerMobileViewProps) {
-  const observerRef = useRef<HTMLDivElement>(null);
-
-  // Infinite scroll observer
-  useEffect(() => {
-    if (!hasNextPage || !onLoadMore || isFetchingNextPage) return;
-    const el = observerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) onLoadMore(); },
-      { threshold: 0.1, rootMargin: '200px' },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, onLoadMore, isFetchingNextPage, data.length]);
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage: !!isFetchingNextPage,
+    onLoadMore: onLoadMore || (() => {}),
+    enabled: !!hasNextPage && !!onLoadMore,
+  });
 
   if (isLoading && data.length === 0) return <CustomerListSkeleton count={6} />;
 
@@ -100,7 +92,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
       </div>
 
       {/* Infinite scroll sentinel */}
-      <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
+      <div ref={sentinelRef} className="h-10 flex items-center justify-center mt-4">
         {isFetchingNextPage && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
       </div>
 
