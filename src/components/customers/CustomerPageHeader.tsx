@@ -4,12 +4,10 @@ import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical } from
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerPageHeaderProps {
   isMobile: boolean;
   canEdit: boolean;
-  customers: Customer[];
   exportAllLoading: boolean;
   onAdd: () => void;
   onDuplicates: () => void;
