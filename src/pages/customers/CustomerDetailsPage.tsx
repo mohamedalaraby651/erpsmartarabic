@@ -196,17 +196,21 @@ const CustomerDetailsPage = () => {
 
           {/* Mobile Tab Bar */}
           <Tabs value={mobileTab} onValueChange={setMobileTab}>
-            <ScrollArea className="w-full">
-              <TabsList className="flex w-max h-10 bg-muted/50 p-1">
-                <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير</TabsTrigger>
-                <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات</TabsTrigger>
-                <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
-                <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
-                <TabsTrigger value="analysis" className="text-xs px-3"><BarChart3 className="h-3.5 w-3.5 ml-1" />التحليلات</TabsTrigger>
-                <TabsTrigger value="more" className="text-xs px-3"><MapPin className="h-3.5 w-3.5 ml-1" />المزيد</TabsTrigger>
-              </TabsList>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <div className="relative">
+              <ScrollArea className="w-full">
+                <TabsList className="flex w-max h-10 bg-muted/50 p-1">
+                  <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير</TabsTrigger>
+                  <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات</TabsTrigger>
+                  <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
+                  <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
+                  <TabsTrigger value="financial" className="text-xs px-3"><Wallet className="h-3.5 w-3.5 ml-1" />الملخص المالي</TabsTrigger>
+                  <TabsTrigger value="analysis" className="text-xs px-3"><BarChart3 className="h-3.5 w-3.5 ml-1" />التحليلات</TabsTrigger>
+                  <TabsTrigger value="more" className="text-xs px-3"><MapPin className="h-3.5 w-3.5 ml-1" />المزيد</TabsTrigger>
+                </TabsList>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
+            </div>
 
             <Suspense fallback={<TabFallback />}>
               <TabsContent value="financials" className="mt-4 space-y-4">
