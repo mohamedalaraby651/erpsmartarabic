@@ -68,7 +68,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Reset page on filter change
-  useMemo(() => setPage(1), [statusFilter, searchQuery]);
+  React.useEffect(() => { setPage(1); }, [statusFilter, searchQuery]);
 
   const summary = useMemo(() => {
     const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
