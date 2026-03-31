@@ -8,7 +8,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
   CreditCard, Bell, MessageSquare, BarChart3, Globe, Clock, Printer,
-  Wallet,
+  Wallet, StickyNote,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/CustomerAddressDialog";
@@ -25,7 +25,8 @@ import { customerRepository } from "@/lib/repositories/customerRepository";
 import type { CustomerAddress } from "@/lib/customerConstants";
 
 // Lazy-loaded tab components
-const CustomerTabAddresses = lazy(() => import("@/components/customers/tabs/CustomerTabAddresses").then(m => ({ default: m.CustomerTabAddresses })));
+const CustomerTabBasicInfo = lazy(() => import("@/components/customers/tabs/CustomerTabBasicInfo").then(m => ({ default: m.CustomerTabBasicInfo })));
+const CustomerTabNotes = lazy(() => import("@/components/customers/tabs/CustomerTabNotes").then(m => ({ default: m.CustomerTabNotes })));
 const CustomerTabInvoices = lazy(() => import("@/components/customers/tabs/CustomerTabInvoices").then(m => ({ default: m.CustomerTabInvoices })));
 const CustomerTabPayments = lazy(() => import("@/components/customers/tabs/CustomerTabPayments").then(m => ({ default: m.CustomerTabPayments })));
 const CustomerTabQuotations = lazy(() => import("@/components/customers/tabs/CustomerTabQuotations").then(m => ({ default: m.CustomerTabQuotations })));
@@ -43,7 +44,7 @@ const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/Cu
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 
 const tabIcons: Record<string, React.ElementType> = {
-  addresses: MapPin, attachments: Paperclip, reminders: Bell,
+  'basic-info': MapPin, notes: StickyNote, attachments: Paperclip, reminders: Bell,
   invoices: FileText, quotations: Globe, orders: ShoppingCart,
   payments: CreditCard, 'credit-notes': FileText, financial: Wallet, statement: Printer, aging: Clock,
   analytics: BarChart3, communications: MessageSquare, activity: Activity,
@@ -66,30 +67,20 @@ const CustomerDetailsPage = () => {
   const detail = useCustomerDetail(id);
   const { prevId, nextId, goNext, goPrev } = useCustomerNavigation(id);
 
-  // Inline mutations for VIP and status
   const updateFieldMutation = useMutation({
     mutationFn: (updates: Record<string, unknown>) => customerRepository.update(id!, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer', id] });
-    },
-    onError: () => {
-      toast({ title: "حدث خطأ أثناء التحديث", variant: "destructive" });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['customer', id] }); },
+    onError: () => { toast({ title: "حدث خطأ أثناء التحديث", variant: "destructive" }); },
   });
 
   const handleToggleActive = () => {
     if (!detail.customer) return;
     updateFieldMutation.mutate({ is_active: !detail.customer.is_active });
   };
-
-  const handleChangeVip = (level: string) => {
-    updateFieldMutation.mutate({ vip_level: level });
-  };
-
+  const handleChangeVip = (level: string) => { updateFieldMutation.mutate({ vip_level: level }); };
   const handleWhatsApp = () => {
     if (detail.customer?.phone) {
-      const phone = detail.customer.phone.replace(/\D/g, '');
-      window.open(`https://wa.me/${phone}`, '_blank');
+      window.open(`https://wa.me/${detail.customer.phone.replace(/\D/g, '')}`, '_blank');
     }
   };
 
@@ -113,7 +104,6 @@ const CustomerDetailsPage = () => {
         action={<Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}><Edit className="h-4 w-4" /></Button>}
       />
 
-      {/* Desktop Hero Header */}
       <div className="hidden md:block">
         <CustomerHeroHeader
           customer={customer} customerId={id!}
@@ -132,12 +122,10 @@ const CustomerDetailsPage = () => {
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
           onNewCreditNote={() => detail.setActiveTab('credit-notes')}
-          onToggleActive={handleToggleActive}
-          onChangeVip={handleChangeVip}
+          onToggleActive={handleToggleActive} onChangeVip={handleChangeVip}
         />
       </div>
 
-      {/* Smart Alerts */}
       <CustomerSmartAlerts
         currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
         invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
@@ -168,7 +156,6 @@ const CustomerDetailsPage = () => {
             onToggleActive={handleToggleActive}
           />
 
-          {/* Mobile Tab Bar */}
           <Tabs value={mobileTab} onValueChange={setMobileTab}>
             <div className="relative">
               <ScrollArea className="w-full">
@@ -210,8 +197,9 @@ const CustomerDetailsPage = () => {
                 <CustomerTabActivity activities={detail.activities} />
               </TabsContent>
               <TabsContent value="more" className="mt-4 space-y-4">
+                <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(addrId) => detail.deleteAddressMutation.mutate(addrId)} onWhatsApp={handleWhatsApp} />
+                <CustomerTabNotes customerId={id!} />
                 <CommunicationLogTab customerId={id!} />
-                <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(addrId) => detail.deleteAddressMutation.mutate(addrId)} />
                 <CustomerReminderSection customerId={id!} />
                 <CustomerTabAttachments customerId={id!} />
               </TabsContent>
@@ -240,9 +228,10 @@ const CustomerDetailsPage = () => {
           </ScrollArea>
 
           <Suspense fallback={<TabFallback />}>
-            <TabsContent value="addresses" className="mt-6">
-              <CustomerTabAddresses addresses={detail.addresses} onAdd={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEdit={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDelete={(aid) => detail.deleteAddressMutation.mutate(aid)} />
+            <TabsContent value="basic-info" className="mt-6">
+              <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(aid) => detail.deleteAddressMutation.mutate(aid)} onWhatsApp={handleWhatsApp} />
             </TabsContent>
+            <TabsContent value="notes" className="mt-6"><CustomerTabNotes customerId={id!} /></TabsContent>
             <TabsContent value="reminders" className="mt-6"><CustomerReminderSection customerId={id!} /></TabsContent>
             <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} /></TabsContent>
             <TabsContent value="quotations" className="mt-6"><CustomerTabQuotations quotations={detail.quotations} /></TabsContent>
