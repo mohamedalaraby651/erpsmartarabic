@@ -17,6 +17,8 @@ interface CustomerListRowProps {
   onRowHover?: (id: string) => void;
   onRowLeave?: () => void;
   visibleColumns?: string[];
+  alertCount?: number;
+  hasErrorAlert?: boolean;
 }
 
 const vipBorderAccent: Record<string, string> = {
