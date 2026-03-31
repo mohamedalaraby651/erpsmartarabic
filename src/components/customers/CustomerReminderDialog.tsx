@@ -139,6 +139,15 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
               <label className="text-sm font-medium">الملاحظة</label>
               <Textarea value={reminderNote} onChange={(e) => setReminderNote(e.target.value)} placeholder="مثال: الاتصال لمتابعة عرض السعر..." rows={3} />
             </div>
+            <div>
+              <label className="text-sm font-medium">التكرار</label>
+              <select className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm" value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+                <option value="none">بدون تكرار</option>
+                <option value="daily">يومي</option>
+                <option value="weekly">أسبوعي</option>
+                <option value="monthly">شهري</option>
+              </select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>إلغاء</Button>
