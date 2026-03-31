@@ -1,101 +1,119 @@
 
-
-# خطة تنفيذ التوصيات — قسم العملاء
-
-مقسمة إلى 4 مراحل مرتبة حسب الأولوية والتأثير.
+# تحسينات البنية التحتية المشتركة — تقنية + بصرية
 
 ---
 
-## المرحلة 1: إصلاحات عالية الأولوية (وظيفية + أداء)
+## المرحلة 1: نظام عناوين الصفحات (SEO + UX)
 
-### الخطوة 1.1 — تحويل `useCustomerAlerts` إلى Lazy Loading
-**الملف:** `src/hooks/useCustomerAlerts.ts` + `src/pages/customers/CustomersPage.tsx`
+### المشكلة
+لا توجد أي صفحة تُغيّر `document.title` — كل الصفحات تعرض العنوان الافتراضي فقط. هذا يضر بـ:
+- تجربة المستخدم (التبويبات في المتصفح كلها بنفس الاسم)
+- SEO
+- إمكانية الوصول (Accessibility)
 
-- إضافة parameter `enabled` إلى `useCustomerAlerts(enabled: boolean)`
-- جعل الاستعلامين (`customers` + `overdueInvoices`) يعتمدان على `enabled`
-- في `CustomersPage.tsx`: تمرير `enabled={!alertsDismissed}` — بحيث لا تُجلب البيانات إذا كان المستخدم أغلق التنبيهات
-- النتيجة: توفير استعلامين على كل تحميل صفحة عند عدم الحاجة
+### الحل
+- إنشاء hook `usePageTitle(title: string)` يضبط العنوان ديناميكياً مع اسم التطبيق
+- تطبيقه على كل الصفحات الرئيسية (~20 صفحة)
 
-### الخطوة 1.2 — Server Pagination لتبويبات التفاصيل (الفواتير + المدفوعات)
-**الملفات:**
-- `src/lib/repositories/customerRepository.ts` — إضافة `findInvoicesPaginated(customerId, page, pageSize)` و `findPaymentsPaginated(customerId, page, pageSize)` مع `count: 'exact'`
-- `src/hooks/customers/useCustomerDetail.ts` — إضافة state لـ `invoicePage` و `paymentPage` مع استخدام الاستعلامات الجديدة
-- `src/components/customers/tabs/CustomerTabInvoices.tsx` — إضافة `ServerPagination` في أسفل التبويب
-- `src/components/customers/tabs/CustomerTabPayments.tsx` — نفس الشيء
-- الحفاظ على الاستعلامات الحالية (limit 500) للحسابات المالية في KPI/Financial Summary كما هي (لا تتأثر)
-
-### الخطوة 1.3 — إصلاح تصدير القالب ليشمل كل العملاء
-**الملف:** `src/pages/customers/CustomersPage.tsx`
-
-- تغيير `ExportWithTemplateButton` من `data={customers}` (25 عميل) إلى استدعاء `customerRepository.exportAll()` عند التصدير
-- أو: إخفاء زر القالب واستخدام `handleExportAll` فقط مع إضافة خيار اختيار التنسيق (Excel/CSV)
+### الملفات
+| الملف | التغيير |
+|---|---|
+| `src/hooks/usePageTitle.ts` | **جديد** — Hook بسيط |
+| كل صفحة في `src/pages/` | إضافة سطر واحد `usePageTitle('اسم الصفحة')` |
 
 ---
 
-## المرحلة 2: تحسينات الأداء
+## المرحلة 2: تحسين Sidebar Counts (أداء)
 
-### الخطوة 2.1 — Cache لفحص الصلاحيات عند التصدير
-**الملف:** `src/pages/customers/CustomersPage.tsx`
+### المشكلة
+`useSidebarCounts` يُطلق **7 استعلامات متزامنة** كل دقيقتين، منها واحد (`lowStock`) يجلب بيانات كاملة بدلاً من `count` فقط ثم يفلترها في الـ client. هذا:
+- يُهدر bandwidth (يجلب كل المنتجات مع مخزونها)
+- بطيء على قواعد البيانات الكبيرة
 
-- نقل `verifyPermissionOnServer('customers', 'view')` إلى `useQuery` مع `staleTime: 300000` بدلاً من استدعائه عند كل نقرة تصدير
-- استخدام النتيجة المخزنة مؤقتاً في `handleExportAll`
+### الحل
+- إنشاء RPC function واحدة `get_sidebar_counts()` تُرجع كل الأعداد في استعلام واحد
+- تحويل حساب Low Stock إلى الـ server بدلاً من الـ client
+- النتيجة: 7 استعلامات → 1 استعلام
 
-### الخطوة 2.2 — رفع حد التصدير أو إضافة تصدير خلفي
-**الملف:** `src/lib/repositories/customerRepository.ts` + `src/lib/services/customerService.ts`
-
-- رفع `maxRecords` من 10,000 إلى 50,000 مع تقسيم الدفعات
-- إضافة `onProgress` callback لعرض شريط تقدم أثناء التصدير الطويل
-- في `customerService.ts`: تحديث `exportCustomersToExcel` لعرض نسبة التقدم عبر `sonnerToast.loading`
-
----
-
-## المرحلة 3: تحسينات تجربة البحث
-
-### الخطوة 3.1 — تقليل الاستعلامات المكررة في البحث
-**الملف:** `src/components/customers/CustomerSearchPreview.tsx`
-
-- استخدام نفس `queryKey` المستخدم في `useCustomerList` عندما يكون البحث متطابقاً — أو زيادة `staleTime` إلى 30 ثانية لتقليل الطلبات المتكررة
-- الأفضل: إبقاء SearchPreview كاستعلام مستقل (لأنه يجلب حقول مختلفة وأقل) مع رفع staleTime
-
-### الخطوة 3.2 — إصلاح onBlur race condition
-**الملف:** `src/components/customers/CustomerSearchPreview.tsx`
-
-- استبدال `setTimeout(() => setIsFocused(false), 200)` بـ `handleClickOutside` الموجود بالفعل
-- إزالة `onBlur` والاعتماد فقط على `mousedown` event listener الخارجي لإغلاق الـ dropdown
-- النتيجة: إزالة race condition مع الحفاظ على نفس السلوك
+### الملفات
+| الملف | التغيير |
+|---|---|
+| Migration | **جديد** — `get_sidebar_counts()` RPC |
+| `src/hooks/useSidebarCounts.ts` | تبسيط إلى استعلام RPC واحد |
 
 ---
 
-## المرحلة 4: تحسينات UX
+## المرحلة 3: Error Boundary محسّن لكل صفحة
 
-### الخطوة 4.1 — تقليل ازدحام هيدر Desktop
-**الملف:** `src/components/customers/CustomerPageHeader.tsx`
+### المشكلة الحالية
+- `AppErrorBoundary` موجود لكن يغلف التطبيق بالكامل فقط
+- `CustomerErrorBoundary` مكرر (نسخة خاصة)
+- باقي الصفحات (فواتير، منتجات، موردين...) **بدون** error boundary — خطأ في أي صفحة يُسقط التطبيق بالكامل
 
-- التأكد من أن الأزرار الثانوية (كشف المكررين، دمج، استيراد) مجمعة في dropdown "أدوات" (تم جزئياً)
-- إبقاء فقط: `إضافة عميل` + `تصدير Excel` + `⋮ أدوات` على Desktop
-- إزالة العنوان المكرر "قائمة العملاء (X)" من `CardHeader` في `CustomersPage.tsx` أو تبسيطه
+### الحل
+- إضافة `PageErrorBoundary` — نسخة خفيفة من `AppErrorBoundary` بـ UI مبسط (inline بدل fullscreen)
+- إنشاء `PageWrapper` component يجمع: `PageErrorBoundary` + `usePageTitle` + padding + animation
+- حذف `CustomerErrorBoundary` واستخدام `PageWrapper` بدلاً منه
+- تطبيق `PageWrapper` تدريجياً على الصفحات الرئيسية
 
-### الخطوة 4.2 — إزالة Card wrapper الزائد من الجدول
-**الملف:** `src/pages/customers/CustomersPage.tsx`
-
-- استبدال `<Card><CardHeader>...<CardContent>` بـ `<div>` بسيط مع الحفاظ على view mode toggle و sort selector
-- النتيجة: توفير مساحة عمودية وإزالة العنوان المكرر
+### الملفات
+| الملف | التغيير |
+|---|---|
+| `src/components/shared/PageWrapper.tsx` | **جديد** — ErrorBoundary + Title + Layout |
+| `src/components/customers/CustomerErrorBoundary.tsx` | **حذف** |
+| `src/pages/customers/CustomerDetailsPage.tsx` | استبدال CustomerErrorBoundary بـ PageWrapper |
+| كل صفحة رئيسية | لف المحتوى بـ PageWrapper |
 
 ---
 
-## ملخص الملفات المتأثرة
+## المرحلة 4: تحسين Loading States (بصري)
 
-| الملف | المرحلة | التغيير |
-|---|---|---|
-| `useCustomerAlerts.ts` | 1.1 | إضافة `enabled` parameter |
-| `CustomersPage.tsx` | 1.1, 1.3, 4.1, 4.2 | Lazy alerts + إصلاح تصدير + تبسيط Card |
-| `customerRepository.ts` | 1.2, 2.2 | Paginated queries + رفع حد التصدير |
-| `useCustomerDetail.ts` | 1.2 | إضافة pagination state للتبويبات |
-| `CustomerTabInvoices.tsx` | 1.2 | إضافة ServerPagination |
-| `CustomerTabPayments.tsx` | 1.2 | إضافة ServerPagination |
-| `CustomerSearchPreview.tsx` | 3.1, 3.2 | رفع staleTime + إصلاح onBlur |
-| `customerService.ts` | 2.2 | شريط تقدم التصدير |
-| `CustomerPageHeader.tsx` | 4.1 | تنظيم أزرار Desktop |
+### المشكلة
+- `PageSkeleton` في AppLayout بسيط جداً (مربعات رمادية فقط)
+- كل صفحة تعرض Skeleton مختلف أو لا تعرض شيئاً
+- لا يوجد Shimmer effect موحد
 
-**إجمالي:** 9 ملفات، 4 مراحل، ~10 تغييرات مستقلة.
+### الحل
+- تحسين `PageSkeleton` الافتراضي ليكون أجمل (shimmer + layout أقرب للمحتوى الحقيقي)
+- إضافة `PageLoadingState` component — skeleton أنيق مع header + filters + content area
+- استخدامه كـ fallback في كل `Suspense`
 
+### الملفات
+| الملف | التغيير |
+|---|---|
+| `src/components/shared/PageLoadingState.tsx` | **جديد** — Skeleton أنيق وموحد |
+| `src/components/layout/AppLayout.tsx` | استبدال PageSkeleton بـ PageLoadingState |
+
+---
+
+## المرحلة 5: تحسينات بصرية مشتركة
+
+### 5.1 تحسين Empty State العام
+- إنشاء `SharedEmptyState` component موحد بتصميم أجمل
+- أيقونة مع دوائر متداخلة + gradient خفيف + زر CTA واضح
+- يُستخدم كبديل للـ empty states البسيطة في الصفحات الأخرى
+
+### 5.2 تحسين NotFound (404)
+- الصفحة الحالية بسيطة — تحسينها بتصميم أجمل مع illustration
+
+### الملفات
+| الملف | التغيير |
+|---|---|
+| `src/components/shared/SharedEmptyState.tsx` | **جديد** |
+| `src/pages/NotFound.tsx` | تحسين بصري |
+
+---
+
+## ملخص التأثير
+
+| التحسين | الأثر | الصعوبة |
+|---------|-------|---------|
+| Page Titles | كل الصفحات تحصل على عنوان مناسب | سهل |
+| Sidebar RPC | 7 استعلامات → 1 (أسرع بـ 5x) | متوسط |
+| PageWrapper + ErrorBoundary | حماية كل صفحة من الأعطال | متوسط |
+| Loading States | تجربة تحميل موحدة وأجمل | سهل |
+| Shared Empty State + 404 | تصميم بصري أفضل عبر النظام | سهل |
+
+**الملفات الجديدة:** 4
+**الملفات المعدلة:** ~25
+**الملفات المحذوفة:** 1
