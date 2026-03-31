@@ -103,7 +103,12 @@ const CustomerDetailsPage = () => {
 
   const customer = detail.customer;
 
+  const handleQuickPay = (invoiceId: string) => {
+    navigate('/payments', { state: { prefillCustomerId: id, prefillInvoiceId: invoiceId } });
+  };
+
   return (
+    <CustomerErrorBoundary>
     <div className="space-y-6 animate-fade-in">
       <MobileDetailHeader
         title={customer.name}
