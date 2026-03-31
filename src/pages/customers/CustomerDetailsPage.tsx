@@ -88,15 +88,17 @@ const CustomerDetailsPage = () => {
         action={<Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}><Edit className="h-4 w-4" /></Button>}
       />
 
-      <CustomerHeroHeader
-        customer={customer} customerId={id!}
-        invoices={detail.invoices} payments={detail.payments}
-        onBack={() => navigate('/customers')} onEdit={() => setEditDialogOpen(true)}
-        onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-        onStatement={() => detail.setActiveTab('statement')}
-        onWhatsApp={handleWhatsApp}
-        onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
-      />
+      <div className="hidden md:block">
+        <CustomerHeroHeader
+          customer={customer} customerId={id!}
+          invoices={detail.invoices} payments={detail.payments}
+          onBack={() => navigate('/customers')} onEdit={() => setEditDialogOpen(true)}
+          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+          onStatement={() => detail.setActiveTab('statement')}
+          onWhatsApp={handleWhatsApp}
+          onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
+        />
+      </div>
 
       {!isMobile && (
         <CustomerStatsGrid
