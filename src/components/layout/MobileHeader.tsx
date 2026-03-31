@@ -18,24 +18,33 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
   const { isOnline } = useOnlineStatus();
   const [pendingCount, setPendingCount] = useState(0);
 
-  // Check pending offline operations
+  // Check pending offline operations via storage event instead of polling
   useEffect(() => {
     const checkPending = () => {
       try {
         const queue = localStorage.getItem('offline_mutation_queue');
         if (queue) {
           const parsed = JSON.parse(queue);
-          setPendingCount(Array.isArray(parsed) ? parsed.length : 0);
+          const count = Array.isArray(parsed) ? parsed.length : 0;
+          setPendingCount(prev => prev !== count ? count : prev);
         } else {
-          setPendingCount(0);
+          setPendingCount(prev => prev !== 0 ? 0 : prev);
         }
       } catch {
-        setPendingCount(0);
+        setPendingCount(prev => prev !== 0 ? 0 : prev);
       }
     };
     checkPending();
-    const interval = setInterval(checkPending, 5000);
-    return () => clearInterval(interval);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'offline_mutation_queue') checkPending();
+    };
+    window.addEventListener('storage', handleStorage);
+    // Fallback check every 30s instead of 5s
+    const interval = setInterval(checkPending, 30000);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(interval);
+    };
   }, []);
 
   const userInitials = user?.user_metadata?.full_name
