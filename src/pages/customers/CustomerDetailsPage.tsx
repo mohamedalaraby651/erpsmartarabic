@@ -165,22 +165,6 @@ const CustomerDetailsPage = () => {
           />
 
           <Tabs value={mobileTab} onValueChange={setMobileTab}>
-            <div className="relative">
-              <ScrollArea className="w-full">
-                <TabsList className="flex w-max h-10 bg-muted/50 p-1">
-                  <TabsTrigger value="financial" className="text-xs px-3"><Wallet className="h-3.5 w-3.5 ml-1" />الملخص المالي</TabsTrigger>
-                  <TabsTrigger value="financials" className="text-xs px-3"><FileText className="h-3.5 w-3.5 ml-1" />الفواتير{detail.invoices.length > 0 && ` (${detail.invoices.length})`}</TabsTrigger>
-                  <TabsTrigger value="payments-tab" className="text-xs px-3"><CreditCard className="h-3.5 w-3.5 ml-1" />المدفوعات{detail.payments.length > 0 && ` (${detail.payments.length})`}</TabsTrigger>
-                  <TabsTrigger value="sales" className="text-xs px-3"><ShoppingCart className="h-3.5 w-3.5 ml-1" />المبيعات</TabsTrigger>
-                  <TabsTrigger value="statement" className="text-xs px-3"><Printer className="h-3.5 w-3.5 ml-1" />كشف الحساب</TabsTrigger>
-                  <TabsTrigger value="analysis" className="text-xs px-3"><BarChart3 className="h-3.5 w-3.5 ml-1" />التحليلات</TabsTrigger>
-                  <TabsTrigger value="more" className="text-xs px-3"><MapPin className="h-3.5 w-3.5 ml-1" />المزيد</TabsTrigger>
-                </TabsList>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
-            </div>
-
             <Suspense fallback={<TabFallback />}>
               <TabsContent value="financial" className="mt-4">
                 <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
@@ -200,6 +184,9 @@ const CustomerDetailsPage = () => {
                 <StatementOfAccount customerName={customer.name} invoices={detail.invoices} payments={detail.payments} creditNotes={detail.creditNotes} />
                 <CustomerAgingReport invoices={detail.invoices} />
               </TabsContent>
+              <TabsContent value="aging" className="mt-4">
+                <CustomerAgingReport invoices={detail.invoices} />
+              </TabsContent>
               <TabsContent value="analysis" className="mt-4 space-y-4">
                 <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
                 <AgingDonutChart invoices={detail.invoices} />
@@ -214,8 +201,15 @@ const CustomerDetailsPage = () => {
                 <CustomerReminderSection customerId={id!} />
                 <CustomerTabAttachments customerId={id!} />
               </TabsContent>
+              <TabsContent value="notes" className="mt-4"><CustomerTabNotes customerId={id!} /></TabsContent>
+              <TabsContent value="reminders" className="mt-4"><CustomerReminderSection customerId={id!} /></TabsContent>
+              <TabsContent value="communications" className="mt-4"><CommunicationLogTab customerId={id!} /></TabsContent>
             </Suspense>
           </Tabs>
+
+          <CustomerBottomNav activeTab={mobileTab} onTabChange={setMobileTab} />
+          {/* Spacer for bottom nav */}
+          <div className="h-16" />
         </div>
       ) : (
         <Tabs value={detail.activeTab} onValueChange={detail.setActiveTab} className="w-full">
