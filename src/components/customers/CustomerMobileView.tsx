@@ -19,6 +19,8 @@ interface CustomerMobileViewProps {
   onEdit: (customer: Customer) => void;
   onDelete: (id: string) => void;
   onRefresh: () => Promise<void>;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
