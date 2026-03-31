@@ -33,7 +33,7 @@ interface CustomerMobileViewProps {
 export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice,
-  hasNextPage, isFetchingNextPage, onLoadMore,
+  hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
 }: CustomerMobileViewProps) {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const observerRef = useRef<HTMLDivElement>(null);
