@@ -142,6 +142,7 @@ const CustomerDetailsPage = () => {
         onContact={handleWhatsApp}
       />
 
+      <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileTab('notes') : detail.setActiveTab('notes')} />
       {isMobile ? (
         <div className="space-y-4">
           <CustomerMobileProfile
