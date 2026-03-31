@@ -69,7 +69,8 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   // === LAZY queries (loaded on tab open) ===
-  const invoicesNeeded = isMobile || ['invoices', 'statement', 'aging', 'analytics'].includes(activeTab);
+  // Statement and Aging now use their own server-side RPCs, no need to load here
+  const invoicesNeeded = isMobile || ['invoices', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: () => customerRepository.findInvoices(id!),
