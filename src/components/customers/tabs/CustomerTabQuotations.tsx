@@ -1,8 +1,11 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Globe, TrendingUp, Clock as ClockIcon, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
+
+const Q_PAGE_SIZE = 20;
 
 interface Quotation {
   id: string;
