@@ -41,12 +41,15 @@ const statusLabels: Record<string, string> = {
   paid: 'مدفوع', partial: 'جزئي', unpaid: 'غير مدفوع', overdue: 'متأخر',
 };
 
+type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
+
 interface CustomerTimelineDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   filter: KPIFilter;
   invoices: Invoice[];
   payments: Payment[];
+  creditNotes?: CreditNote[];
 }
 
 export const CustomerTimelineDrawer = memo(function CustomerTimelineDrawer({
