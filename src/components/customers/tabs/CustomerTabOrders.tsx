@@ -16,6 +16,8 @@ interface SalesOrder {
 }
 
 export const CustomerTabOrders = memo(function CustomerTabOrders({ salesOrders }: { salesOrders: SalesOrder[] }) {
+  const [oPage, setOPage] = useState(1);
+  const oTotalPages = Math.max(1, Math.ceil(salesOrders.length / O_PAGE_SIZE));
   const summary = useMemo(() => {
     const total = salesOrders.length;
     const completed = salesOrders.filter(o => o.status === 'completed').length;
