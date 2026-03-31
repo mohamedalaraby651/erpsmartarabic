@@ -117,14 +117,16 @@ export const CustomerStatsGrid = memo(function CustomerStatsGrid({
         </CardContent>
       </Card>
 
-      {/* CLV */}
+      {/* Outstanding (المستحق) */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-accent"><Target className="h-5 w-5 text-accent-foreground" /></div>
+            <div className={`p-2 rounded-lg ${totalOutstanding > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20'}`}>
+              <Target className={`h-5 w-5 ${totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`} />
+            </div>
             <div>
-              <p className="text-lg font-bold">{clv.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">قيمة العميل (CLV)</p>
+              <p className={`text-lg font-bold ${totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}>{totalOutstanding.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">المستحق</p>
             </div>
           </div>
         </CardContent>

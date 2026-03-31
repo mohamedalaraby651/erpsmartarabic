@@ -107,7 +107,7 @@ const CustomerDetailsPage = () => {
           creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
           totalPurchases={detail.totalPurchases} paymentRatio={detail.paymentRatio}
           invoiceCount={detail.invoices.length} avgInvoiceValue={detail.avgInvoiceValue}
-          dso={detail.dso} clv={detail.clv} lastPurchaseDate={detail.lastPurchaseDate}
+          dso={detail.dso} totalOutstanding={detail.totalOutstanding} lastPurchaseDate={detail.lastPurchaseDate}
         />
       )}
 
