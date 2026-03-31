@@ -107,7 +107,7 @@ const CustomerGridCardInner = ({
           <div className="w-full pt-2 border-t">
             <div className="flex items-center justify-center gap-1.5">
               <DollarSign className="h-3.5 w-3.5" />
-              <span className={cn("font-bold text-sm", balance > 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400")}>
+              <span className={cn("font-bold text-sm", getBalanceColor(balance, creditLimit))}>
                 {balance.toLocaleString()} ج.م
               </span>
             </div>
