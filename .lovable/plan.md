@@ -1,151 +1,262 @@
 
-
-# تقرير التدقيق الناقد الشامل — وحدة العملاء (مارس 2026)
-## بعد تنفيذ كافة الـ 4 Sprints
+# تقرير التدقيق الشامل النهائي — وحدة العملاء (مارس 2026)
+## بعد تنفيذ كافة الإصلاحات السابقة — مراجعة ملف بملف
 
 ---
 
-## 1. الحالة المعمارية — ممتازة
+## 1. ملخص الحالة المعمارية — ممتازة ✅
 
 | المحور | النتيجة |
 |---|---|
-| Repository Pattern | 100% — صفر `supabase` imports في components أو hooks |
-| CQRS | 100% — `useCustomerList` (Read) + `useCustomerMutations` (Write) |
-| God Component | محلول — `CustomersPage` = 256 سطر (كان 610) |
-| Unified Actions | مكتمل — `CustomerActionMenu` بـ 3 variants |
-| Permission Checks | مكتمل — export + address delete + form save |
-| Mobile Parity | مكتمل — 13 قسم MobileDetailSection |
-| Stats Bar | مكتمل — يعرض active/inactive |
-| Smart Empty States | مكتمل — تمييز بين "لا بيانات" و"لا نتائج" |
-| Cursor Export | مكتمل — batches من 1000 حتى 10000 |
-| Search URL Sync | مكتمل — `setSearchQuery` يستدعي `syncToUrl` |
-
-**خلاصة**: كل ما كان في الخطة السابقة تم تنفيذه بنجاح.
+| Repository Pattern | ✅ 100% — كل استدعاءات Supabase في `customerRepository.ts` |
+| CQRS | ✅ `useCustomerList` (Read) + `useCustomerMutations` (Write) |
+| Component Decomposition | ✅ `CustomersPage` = 256 سطر، النموذج مقسم لـ 4 مكونات فرعية |
+| Lazy Loading | ✅ 13 TabsContent كلها `React.lazy` |
+| Mobile Parity | ✅ كل الأقسام متوفرة + بيانات تُحمل تلقائياً (`isMobile`) |
+| Permission Checks | ✅ حذف + تعديل + تصدير + عمليات جماعية |
+| Smart Empty States | ✅ تمييز بين "لا بيانات" و"لا نتائج" في كل الأوضاع |
+| Search URL Sync | ✅ `setSearchQuery` يمزامن مع URL |
+| Draft Protection | ✅ `clearDraft` عند تجاهل التغييرات |
+| Delete Confirmation | ✅ عبر `handleDeleteRequest` → `AlertDialog` حتى على الموبايل |
 
 ---
 
 ## 2. المشاكل المتبقية المكتشفة
 
-### 🔴 P0 — أمان ومنطق
+### 🔴 P0 — حرج
 
-**2.1 — `clearAllFilters` لا يمسح البحث**
-في `useCustomerFilters.ts` سطر 63-71، `clearAllFilters` يمسح كل الفلاتر **لكن لا يمسح `searchQuery`**:
-```typescript
-const clearAllFilters = useCallback(() => {
-  setTypeFilter('all');
-  // ... يمسح كل الفلاتر
-  setSearchParams({}, { replace: true });
-  // ❌ لا يستدعي setSearchQuery('')
-}, [setSearchParams]);
+**2.1 — `CustomerStatsGrid` — 8 أعمدة على `lg` = ازدحام**
+**الملف**: `CustomerStatsGrid.tsx` سطر 28
+```tsx
+<div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
 ```
-**الأثر**: عند ضغط "إزالة الفلاتر" في empty state، البحث يبقى نشطاً والمستخدم يبقى يرى "لا توجد نتائج".
+على شاشة 1024px، كل بطاقة ~128px عرض. النصوص العربية ستتقطع.
+**الحل**: `lg:grid-cols-4 xl:grid-cols-8`
 
-**2.2 — `bulkVipMutation` بدون Permission Check**
-في `useCustomerMutations.ts` سطر 86-99، `bulkVipMutation` و `bulkStatusMutation` لا يتحققان من الصلاحيات (`verifyPermissionOnServer`) قبل التنفيذ. فقط `deleteMutation` يتحقق.
-
-**2.3 — Mobile Delete بدون `AlertDialog`**
-في `CustomerMobileView.tsx` سطر 31: `onDelete` يُستدعى مباشرة من `SwipeableRow` بدون تأكيد. في Table/Grid يمر عبر `dialogRef.current?.confirmDelete(id)`. على الموبايل، **لا يوجد تأكيد** — السحب يحذف مباشرة.
-
-**2.4 — `exportAll` يرجع `isPartial: false` عند 10000 سجل بالضبط**
-في `customerRepository.ts` سطر 330:
-```typescript
-return { data: allData, isPartial: offset >= maxRecords };
+**2.2 — `searchPreview` debounce 200ms قصير جداً**
+**الملف**: `CustomerSearchPreview.tsx` سطر 23
+```tsx
+const debouncedSearch = useDebounce(value, 200);
 ```
-إذا كان هناك بالضبط 10000 عميل، `offset` = 10000 = `maxRecords`، فالتحذير **يظهر**. لكن إذا كان هناك 9999 عميل، آخر batch يعيد 999 < 1000 فيتوقف والـ offset = 9000 < 10000 = `isPartial: false`. هذا صحيح. لكن المشكلة: إذا كان هناك 10001 عميل، يتوقف عند 10000 و `isPartial: true` — صحيح. **لا مشكلة هنا**.
+كل ضغطة مفتاح بعد 200ms تطلق استعلاماً. المعيار 300-500ms.
+**الحل**: تغيير إلى `useDebounce(value, 350)`
 
-### 🟠 P1 — UX ووظائف
+### 🟠 P1 — UX ناقص / ميزات مفقودة
 
-**2.5 — Mobile: لا يوجد Empty State ذكي**
-`CustomerMobileView.tsx` سطر 54-55 يعرض دائماً "لا يوجد عملاء - ابدأ بإضافة عميلك الأول" حتى عند وجود فلاتر نشطة. لا يميز بين عدم وجود بيانات وعدم مطابقة الفلاتر.
+**2.3 — لا يوجد تبويب "إشعارات الائتمان" (Credit Notes) منفصل**
+صفحة التفاصيل تعرض Credit Notes فقط ضمن "كشف الحساب". لا يوجد تبويب مستقل لعرض وإدارة إشعارات الائتمان (مرتجعات).
+**الأثر**: المستخدم لا يمكنه الوصول السريع لمرتجعات العميل.
 
-**2.6 — Mobile: لا يوجد أزرار export/import/merge/duplicate**
-`CustomerPageHeader.tsx` سطر 30: `!isMobile` يخفي كل أزرار: التصدير، الاستيراد، كشف المكررين، الدمج. المستخدم على الموبايل لا يمكنه الوصول لأي من هذه الوظائف.
+**2.4 — لا يوجد Keyboard Shortcut للبحث**
+لا يوجد `/` أو `Ctrl+K` لتفعيل حقل البحث. هذه ميزة أساسية في أي نظام CRM.
 
-**2.7 — `CustomerStatsGrid` — 8 أعمدة على `lg` = مزدحم**
-سطر 28: `lg:grid-cols-8` يعني 8 بطاقات في صف واحد على شاشة 1024px-1280px. كل بطاقة ~128-160px عرض. النصوص ستتقطع أو تتداخل.
+**2.5 — `CustomerFormBasicInfo` لا يعرض حقل "حالة النشاط" بصرياً**
+حقل `is_active` موجود في `CustomerFormFinancial` (Switch) لكن عند تعديل عميل، يحتاج المستخدم للتمرير حتى نهاية النموذج لمعرفة إذا كان العميل نشطاً. الأفضل وضع Badge أو مؤشر مرئي في أعلى النموذج.
 
-**2.8 — Lazy Loading في Detail لا يتوافق مع Mobile Sections**
-في `CustomerDetailsPage.tsx`، `useCustomerDetail` يعتمد على `activeTab` لتفعيل queries. لكن على الموبايل، كل الأقسام `MobileDetailSection` مرئية (بعضها مغلق). الأقسام المغلقة **لا تؤثر على `activeTab`** → بياناتها لا تُحمل حتى يُفتح القسم.
+**2.6 — Export يفتقر لأعمدة مهمة**
+**الملف**: `customerService.ts` سطر 147-152
+أعمدة التصدير ناقصة:
+- `phone2` (هاتف إضافي)
+- `contact_person` + `contact_person_role`
+- `payment_terms_days`
+- `discount_percentage`
+- `last_activity_at`
+- `last_communication_at`
+- `total_purchases_cached`
+- `invoice_count_cached`
+- `notes`
 
-**المشكلة**: عند فتح قسم "عروض الأسعار" على الموبايل، لا يتغير `activeTab` لأنه يُدار بـ `useState` ولا يتصل بـ `MobileDetailSection` → **البيانات لا تُجلب أبداً**.
+**2.7 — لا يوجد فلتر حسب التصنيف (Category)**
+`CustomerFiltersBar` يوفر فلاتر: النوع، VIP، المحافظة، الحالة. لكن لا يوجد فلتر حسب التصنيف (`category_id`) رغم وجود جدول `customer_categories` وحقل في النموذج.
 
-هذه مشكلة حرجة: على الموبايل، التبويبات التي تعتمد على `activeTab` للتحميل (quotations, orders, salesOrders, activities, creditNotes) **ستظهر فارغة دائماً** إلا إذا كان المستخدم قد فتح نفس التبويب على Desktop أولاً.
+**2.8 — لا يوجد فلتر حسب "نطاق الرصيد"**
+لا يمكن تصفية العملاء حسب الرصيد (مثلاً: عملاء رصيدهم > 10,000 ج.م). هذا ضروري لإدارة الذمم المدينة.
 
-**التحقق**: `useCustomerDetail` يفعّل queries حسب `activeTab`:
-- `invoicesNeeded` = `activeTab` in `['invoices', 'financial', 'statement', 'aging', 'analytics']`
-- `salesOrders` = `activeTab === 'orders'`
-- `quotations` = `activeTab === 'quotations'`
-- `activities` = `activeTab === 'activity'`
+**2.9 — صفحة التفاصيل لا تعرض "التصنيف" في Hero Header**
+`CustomerHeroHeader.tsx` يعرض: النوع، VIP، الحالة، قائمة أسعار مخصصة. لكن **لا يعرض التصنيف** (`category_id`). يجب جلب اسم التصنيف وعرضه كـ Badge.
 
-على الموبايل، `activeTab` = `'addresses'` (القيمة الافتراضية) ولا يتغير أبداً لأن الموبايل لا يستخدم `<Tabs>`. **كل الأقسام المرتبطة بـ activeTab ستكون فارغة**.
+**2.10 — لا يوجد "آخر نشاط" في القائمة الرئيسية**
+جدول العملاء يعرض: الاسم، النوع، الهاتف، المحافظة، VIP، الرصيد، الحالة. لكن لا يعرض `last_activity_at` أو `last_transaction_date`. هذا مهم لتحديد العملاء الخاملين بصرياً.
 
-**ملاحظة**: الفواتير تعمل لأن `invoicesNeeded` يشمل `'financial'` و `'statement'` و `'aging'`... لكن `activeTab` = `'addresses'` → **الفواتير أيضاً لن تُحمل!**
+**2.11 — عدد الفواتير/إجمالي المشتريات غير مرئي في القائمة**
+الأعمدة المخزنة `invoice_count_cached` و `total_purchases_cached` لا تُعرض في الجدول أو Grid. هذه معلومات أساسية لتقييم أهمية العميل من القائمة مباشرة.
 
-**هذه هي أخطر مشكلة في القسم حالياً.**
+**2.12 — لا يوجد زر "طباعة ملف العميل"**
+في صفحة التفاصيل يوجد "كشف حساب" + "فاتورة جديدة" لكن لا يوجد زر لطباعة/تصدير ملف العميل الكامل (PDF يتضمن البيانات الأساسية + الملخص المالي + العناوين).
 
-**2.9 — `useCustomerDetail` لا يعالج حالة Mobile بشكل صحيح**
-الحل الصحيح: إما تمرير `isMobile` للـ hook ليفعّل كل queries مباشرة، أو ربط `MobileDetailSection` بـ `setActiveTab`.
+**2.13 — Hero Header لا يعرض "مدة السداد" و"نسبة الخصم"**
+هاتان المعلومتان مهمتان لأي مندوب مبيعات يفتح ملف العميل ليتحقق من الشروط التجارية قبل إنشاء فاتورة.
 
 ### 🟡 P2 — تحسينات
 
-**2.10 — Duplicate Detection Dialog لا يتعامل مع التحميل**
-عند فتح `DuplicateDetectionDialog`، إذا كان الـ RPC بطيئاً، لا يوجد عرض مرئي للتحميل (لم أتحقق من المكون الداخلي لكن الاستدعاء يمر عبر repository).
+**2.14 — `CustomerFormLocation` لا يدعم "عنوان تفصيلي"**
+النموذج يتيح اختيار المحافظة والمدينة فقط. لا يوجد حقل "عنوان تفصيلي" أو "علامة مميزة". العناوين التفصيلية موجودة فقط في `customer_addresses`. يفتقر النموذج الأساسي لحقل عنوان.
 
-**2.11 — `searchPreview` بدون debounce حقيقي**
-في `CustomerSearchPreview.tsx` سطر 23: `useDebounce(value, 200)` — الـ debounce 200ms قصير جداً. كل ضغطة مفتاح بعد 200ms تُطلق استعلاماً. المعيار 300-500ms للبحث المباشر.
+**2.15 — `CustomerAvatar` لا يميز الشركات عن الأفراد بصرياً في القائمة**
+كلا النوعين يستخدمان نفس الشكل الدائري. الشركات يمكن عرضها بشكل مربع (rounded-lg بدل rounded-full) للتمييز البصري السريع.
 
-**2.12 — `CustomerFormDialog` لا يمسح draft عند الإلغاء**
-سطر 98-103: `confirmDiscard` يعمل `reset(defaultValues)` لكن لا يستدعي `clearDraft()`. المسودة تبقى محفوظة في `localStorage` ويتم استعادتها في المرة القادمة حتى لو اختار المستخدم "تجاهل التغييرات".
+**2.16 — لا يوجد "ملاحظات سريعة" مرئية في القائمة**
+حقل `notes` موجود لكن لا يظهر في الجدول ولا Grid ولا Mobile View. عند hover أو كـ tooltip يمكن عرض أول 50 حرفاً.
 
-**2.13 — لا يوجد Keyboard Shortcut للبحث**
-لا يوجد `/` أو `Ctrl+K` لتفعيل حقل البحث.
+**2.17 — `CustomerQuickHistory` في Hero Header قد يكون بطيئاً**
+يعتمد على `invoices` و `payments` المحملة. إذا كان العميل لديه 500+ فاتورة، الحساب يتم في كل render. يفضل `useMemo`.
 
-**2.14 — Mobile: لا يمكن تبديل View Mode**
-على الموبايل يُعرض دائماً `CustomerMobileView`. لا يوجد خيار للتبديل إلى Grid/Table. هذا مقبول كتصميم لكنه يعني أن المستخدم مقيد بعرض واحد.
+**2.18 — Grid Card لا تعرض عدد الفواتير**
+`CustomerGridCard.tsx` يعرض: الاسم، VIP، الهاتف، المحافظة، الرصيد. لكن لا يعرض عدد الفواتير أو تاريخ آخر تعامل. هذه معلومات حيوية.
+
+**2.19 — Mobile View لا تعرض "آخر تعامل"**
+`CustomerMobileView.tsx` DataCard fields: الهاتف، المحافظة، الرصيد. ينقصها: تاريخ آخر نشاط أو عدد الفواتير.
 
 ---
 
-## 3. تقييم الجودة
+## 3. تحليل الملفات واحداً واحداً
+
+### صفحات (Pages)
+
+| الملف | الحالة | ملاحظات |
+|---|---|---|
+| `CustomersPage.tsx` (256 سطر) | ✅ جيد | بنية واضحة، فصل المسؤوليات ممتاز |
+| `CustomerDetailsPage.tsx` (210 سطر) | ✅ جيد | Lazy loading ممتاز، ينقص تبويب Credit Notes |
+
+### Hooks
+
+| الملف | الحالة | ملاحظات |
+|---|---|---|
+| `useCustomerFilters.ts` | ✅ مصلح | `clearAllFilters` يمسح البحث الآن |
+| `useCustomerList.ts` | ✅ جيد | Prefetch + Stats |
+| `useCustomerMutations.ts` | ✅ مصلح | Permission checks في كل العمليات |
+| `useCustomerDetail.ts` | ✅ مصلح | `isMobile` يحمل كل البيانات |
+| `useBulkSelection.ts` | ✅ جيد | — |
+| `useDuplicateCheck.ts` | ✅ جيد | — |
+
+### Components
+
+| الملف | الحالة | ملاحظات |
+|---|---|---|
+| `CustomerFormDialog.tsx` | ✅ جيد | Wizard + Draft + Permission |
+| `CustomerFormBasicInfo.tsx` | ✅ جيد | ينقص مؤشر الحالة |
+| `CustomerFormContact.tsx` | ✅ مصلح | قسم واحد فقط |
+| `CustomerFormLocation.tsx` | ⚠️ ناقص | لا يوجد حقل عنوان تفصيلي |
+| `CustomerFormFinancial.tsx` | ✅ جيد | — |
+| `CustomerTableView.tsx` | ⚠️ ناقص | أعمدة مفقودة: آخر نشاط، عدد الفواتير |
+| `CustomerGridView.tsx` | ✅ جيد | Select All موجود |
+| `CustomerGridCard.tsx` | ⚠️ ناقص | لا يعرض عدد الفواتير / آخر تعامل |
+| `CustomerMobileView.tsx` | ⚠️ ناقص | لا يعرض آخر تعامل |
+| `CustomerHeroHeader.tsx` | ⚠️ ناقص | لا يعرض التصنيف / شروط الدفع |
+| `CustomerStatsGrid.tsx` | ⚠️ مزدحم | 8 أعمدة على lg |
+| `CustomerStatsBar.tsx` | ✅ جيد | — |
+| `CustomerActionMenu.tsx` | ✅ مصلح | 3 variants تعمل |
+| `CustomerPageHeader.tsx` | ✅ مصلح | أزرار موبايل متوفرة |
+| `CustomerFiltersBar.tsx` | ⚠️ ناقص | لا فلتر تصنيف أو رصيد |
+| `CustomerSearchPreview.tsx` | ⚠️ | debounce 200ms قصير |
+| `CustomerDialogManager.tsx` | ✅ جيد | — |
+| `CustomerAddressDialog.tsx` | ✅ جيد | — |
+| `CustomerBulkActionsBar.tsx` | ✅ جيد | — |
+| `CustomerFilterDrawer.tsx` | ⚠️ | لا يتضمن فلتر التصنيف |
+
+### Repository & Services
+
+| الملف | الحالة | ملاحظات |
+|---|---|---|
+| `customerRepository.ts` (554 سطر) | ✅ جيد | Typed + Cursor export + limit |
+| `customerService.ts` | ⚠️ ناقص | أعمدة التصدير ناقصة |
+| `customerConstants.ts` | ✅ جيد | — |
+| `validations.ts` (customer section) | ✅ جيد | Zod schema كامل |
+
+### Database
+
+| الجانب | الحالة | ملاحظات |
+|---|---|---|
+| `get_customer_stats` RPC | ✅ | يحسب active/inactive/farms |
+| `find_duplicate_customers` RPC | ✅ | مع `pg_trgm` similarity |
+| `merge_customers_atomic` RPC | ✅ | Atomic transaction |
+| `batch_validate_delete` RPC | ✅ | يمنع حذف عملاء بفواتير |
+| `update_customer_cached_stats` Trigger | ✅ | يحدث totals تلقائياً |
+| `reverse_payment_on_delete` Trigger | ✅ | يعكس الأرصدة |
+| `update_customer_last_communication` Trigger | ✅ | — |
+| RLS Policies | ✅ | Tenant-aware |
+| فهرسة (Indexing) | ⚠️ غير مؤكد | يجب التحقق من فهارس `name`, `phone`, `governorate` |
+
+---
+
+## 4. تقييم الجودة المحدث
 
 | المحور | التقييم | السبب |
 |---|---|---|
 | **Architecture** | 10/10 | Repository + CQRS + Component extraction مثالية |
-| **Security** | 8/10 | Permission checks ناقصة في bulk VIP/status |
-| **Type Safety** | 9/10 | `applyFilters` typed، return types صريحة |
-| **Mobile UX** | 5/10 | **البيانات لا تُحمل على الموبايل** (activeTab bug) |
-| **Desktop UX** | 9/10 | Smart empty states، keyboard nav، hover prefetch |
-| **Data Safety** | 8/10 | Unsaved changes جيد لكن draft لا يُمسح عند الإلغاء |
-| **Performance** | 8/10 | Lazy loading جيد (يعمل فقط على desktop) |
-| **Code Quality** | 9/10 | Memo, CQRS, clean separation |
-| **Scalability** | 8/10 | Cursor export محدود بـ 10K لكن مع تحذير |
+| **Security** | 9.5/10 | Permission checks شاملة + Financial limits |
+| **Type Safety** | 9/10 | Typed filters + return types |
+| **Mobile UX** | 8/10 | كل الأقسام موجودة، ينقص بعض البيانات في Cards |
+| **Desktop UX** | 8/10 | ينقص أعمدة في الجدول + فلاتر إضافية |
+| **Data Safety** | 9/10 | AlertDialog + Draft + Validation |
+| **Performance** | 8.5/10 | Lazy loading + Prefetch + Cursor export |
+| **Code Quality** | 9/10 | Clean separation + Memo + Constants |
+| **Customer Profile Completeness** | 7/10 | **ينقص عدة بيانات مهمة في العرض** |
+| **Scalability** | 8/10 | Cursor export + limit 10K |
 
-**التقييم الإجمالي: 8.2/10** — لكن مع bug حرج في Mobile (P0)
+**التقييم الإجمالي: 8.6/10**
 
 ---
 
-## 4. خطة الإصلاح المقترحة
+## 5. خطة الإصلاح المقترحة — 3 مراحل
 
-### الأولوية 1 — إصلاح Mobile Data Loading (حرج)
-**المشكلة**: `useCustomerDetail` يعتمد على `activeTab` لتفعيل queries. على الموبايل `activeTab` لا يتغير أبداً → البيانات لا تُحمل.
+### المرحلة 1 — إصلاحات فورية (P0/P1 حرجة)
 
-**الحل**: تعديل `useCustomerDetail` ليقبل `isMobile` parameter. عند `isMobile = true`، يتم تفعيل كل queries بمجرد `!!id` بدون شرط `activeTab`.
+| # | المهمة | الملفات |
+|---|---|---|
+| 1.1 | إصلاح StatsGrid من `lg:grid-cols-8` → `lg:grid-cols-4 xl:grid-cols-8` | `CustomerStatsGrid.tsx` |
+| 1.2 | رفع debounce SearchPreview من 200ms → 350ms | `CustomerSearchPreview.tsx` |
+| 1.3 | إضافة فلتر التصنيف (Category) | `CustomerFiltersBar.tsx` + `CustomerFilterDrawer.tsx` + `useCustomerFilters.ts` + `customerRepository.ts` |
+| 1.4 | إضافة أعمدة "آخر نشاط" و "عدد الفواتير" في الجدول | `CustomerTableView.tsx` |
+| 1.5 | إضافة أعمدة التصدير الناقصة | `customerService.ts` |
 
-أو الحل الأفضل: ربط `MobileDetailSection` بـ callback يستدعي `setActiveTab` عند فتح القسم. هذا يحافظ على lazy loading.
+### المرحلة 2 — تعزيز ملف العميل (Customer Profile)
 
-**الملفات المتأثرة**: `useCustomerDetail.ts` + `CustomerDetailsPage.tsx`
+| # | المهمة | الملفات |
+|---|---|---|
+| 2.1 | عرض التصنيف + شروط الدفع + نسبة الخصم في Hero Header | `CustomerHeroHeader.tsx` |
+| 2.2 | إضافة تبويب "إشعارات الائتمان" في صفحة التفاصيل | `CustomerDetailsPage.tsx` + `tabs/CustomerTabCreditNotes.tsx` (جديد) |
+| 2.3 | إضافة Keyboard Shortcut (`/` أو `Ctrl+K`) لتفعيل البحث | `CustomersPage.tsx` + `CustomerFiltersBar.tsx` |
+| 2.4 | إضافة "آخر تعامل" و"عدد الفواتير" في Grid Card و Mobile Card | `CustomerGridCard.tsx` + `CustomerMobileView.tsx` |
+| 2.5 | إضافة زر "طباعة ملف العميل" PDF | `CustomerHeroHeader.tsx` + service جديد |
 
-### الأولوية 2 — إصلاح clearAllFilters + Mobile Empty State
-- `useCustomerFilters.ts`: إضافة `setSearchQuery('')` في `clearAllFilters`
-- `CustomerMobileView.tsx`: إضافة props `hasActiveFilters` + `onClearFilters` لعرض empty state ذكي
+### المرحلة 3 — تحسينات UX متقدمة
 
-### الأولوية 3 — Permission Checks للعمليات الجماعية
-- `useCustomerMutations.ts`: إضافة `verifyPermissionOnServer('customers', 'edit')` في `bulkVipMutation` و `bulkStatusMutation`
+| # | المهمة | الملفات |
+|---|---|---|
+| 3.1 | فلتر "نطاق الرصيد" (Min/Max) | `CustomerFilterDrawer.tsx` + `useCustomerFilters.ts` + `customerRepository.ts` |
+| 3.2 | تمييز بصري بين الشركات والأفراد في Avatar | `CustomerAvatar.tsx` |
+| 3.3 | عرض tooltip ملاحظات في الجدول عند hover | `CustomerTableView.tsx` |
+| 3.4 | إضافة مؤشر "نشط/غير نشط" في أعلى نموذج التعديل | `CustomerFormDialog.tsx` |
+| 3.5 | إضافة حقل "عنوان تفصيلي" في نموذج الموقع | `CustomerFormLocation.tsx` |
 
-### الأولوية 4 — إصلاح Mobile Delete Confirmation
-- `CustomersPage.tsx`: تمرير `handleDeleteRequest` (الذي يفتح AlertDialog) بدلاً من `handleDeleteConfirm` إلى `CustomerMobileView.onDelete`
+---
 
-### الأولوية 5 — تحسينات UX
-- مسح draft عند `confirmDiscard` في `CustomerFormDialog`
-- إضافة أزرار export/import للموبايل (في dropdown menu)
-- تعديل `CustomerStatsGrid` من `lg:grid-cols-8` إلى `lg:grid-cols-4 xl:grid-cols-8`
+## 6. البيانات المطلوبة في ملف العميل المتكامل
 
+### الحد الأدنى — ما هو موجود ✅
+- ✅ الاسم + النوع + VIP + الصورة
+- ✅ الهاتف (2) + البريد + فيسبوك + الموقع
+- ✅ المحافظة + المدينة
+- ✅ الحد الائتماني + نسبة الخصم + مدة السداد + طريقة الدفع
+- ✅ الرقم الضريبي + الشخص المسؤول + منصبه
+- ✅ التصنيف + الملاحظات + حالة النشاط
+- ✅ العناوين المتعددة
+- ✅ الفواتير + المدفوعات + كشف الحساب
+- ✅ عروض الأسعار + أوامر البيع
+- ✅ أعمار الديون + التحليلات
+- ✅ سجل التواصل + التذكيرات
+- ✅ المرفقات + سجل النشاط
+
+### ما ينقص عرضه ⚠️ (موجود في DB لكن غير معروض بشكل كافي)
+- ⚠️ التصنيف في Hero Header
+- ⚠️ شروط الدفع + نسبة الخصم في Hero Header
+- ⚠️ إشعارات الائتمان كتبويب مستقل
+- ⚠️ آخر نشاط في القوائم
+- ⚠️ عدد الفواتير + إجمالي المشتريات في القوائم
+- ⚠️ الملاحظات في القوائم (tooltip)
+- ⚠️ طباعة ملف العميل PDF
+
+### ما ينقص كفلاتر ⚠️
+- ⚠️ فلتر التصنيف
+- ⚠️ فلتر نطاق الرصيد
