@@ -16,7 +16,7 @@ interface CustomerMobileStatCardProps {
 
 const colorMap = {
   emerald: {
-    border: 'border-r-emerald-500',
+    border: 'border-s-emerald-500',
     iconBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
     iconText: 'text-emerald-600 dark:text-emerald-400',
     valueText: 'text-emerald-600 dark:text-emerald-400',
