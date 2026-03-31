@@ -17,6 +17,7 @@ interface CustomerStatsBarProps {
     total: number;
     individuals: number;
     companies: number;
+    farms?: number;
     vip: number;
     totalBalance: number;
     active: number;
