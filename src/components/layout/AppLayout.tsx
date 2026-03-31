@@ -49,17 +49,11 @@ export default function AppLayout() {
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(preferences.sidebar_compact);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   // مزامنة حالة القائمة مع التفضيلات
   useEffect(() => {
     setSidebarCollapsed(preferences.sidebar_compact);
   }, [preferences.sidebar_compact]);
-
-  // Mark as hydrated after first render
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
