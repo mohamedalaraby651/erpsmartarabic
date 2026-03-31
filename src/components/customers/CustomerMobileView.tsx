@@ -1,15 +1,12 @@
-import React, { memo, useCallback } from "react";
-import { Phone, MapPin, DollarSign, Plus, Users, Search } from "lucide-react";
+import React, { memo, useCallback, useState, useRef, useEffect } from "react";
+import { LayoutGrid, LayoutList, Loader2, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import CustomerAvatar from "@/components/customers/CustomerAvatar";
-import { vipLabels, typeLabels } from "@/lib/customerConstants";
-import type { Customer } from "@/lib/customerConstants";
-import { DataCard } from "@/components/mobile/DataCard";
-import { SwipeableRow } from "@/components/mobile/SwipeableRow";
+import CustomerListCard from "@/components/customers/CustomerListCard";
+import CustomerGridCard from "@/components/customers/CustomerGridCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
-import { VirtualizedList } from "@/components/table/VirtualizedList";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { CustomerEmptyState } from "@/components/customers/CustomerEmptyState";
+import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
   data: Customer[];
@@ -22,64 +19,106 @@ interface CustomerMobileViewProps {
   onRefresh: () => Promise<void>;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  onAdd?: () => void;
+  onImport?: () => void;
+  onNewInvoice?: (id: string) => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
-  hasActiveFilters, onClearFilters,
+  hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice,
+  hasNextPage, isFetchingNextPage, onLoadMore,
 }: CustomerMobileViewProps) {
-  const renderCard = useCallback((customer: Customer) => (
-    <SwipeableRow
-      key={customer.id}
-      onEdit={canEdit ? () => onEdit(customer) : undefined}
-      onDelete={canDelete ? () => onDelete(customer.id) : undefined}
-      onCall={customer.phone ? () => window.open(`tel:${customer.phone}`) : undefined}
-    >
-      <DataCard
-        title={customer.name}
-        subtitle={typeLabels[customer.customer_type] || customer.customer_type}
-        icon={<CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="sm" />}
-        badge={{ text: vipLabels[customer.vip_level] || customer.vip_level, variant: customer.vip_level === 'regular' ? 'secondary' : 'default' }}
-        fields={[
-          ...(customer.phone ? [{ label: 'الهاتف', value: customer.phone, icon: <Phone className="h-3 w-3" /> }] : []),
-          ...(customer.governorate ? [{ label: 'المحافظة', value: customer.governorate, icon: <MapPin className="h-3 w-3" /> }] : []),
-          { label: 'الرصيد', value: <span className={Number(customer.current_balance) > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}>{Number(customer.current_balance || 0).toLocaleString()} ج.م</span>, icon: <DollarSign className="h-3 w-3" /> },
-        ]}
-        onClick={() => onNavigate(customer.id)}
-        onView={() => onNavigate(customer.id)}
-        onEdit={canEdit ? () => onEdit(customer) : undefined}
-        onDelete={canDelete ? () => onDelete(customer.id) : undefined}
-      />
-    </SwipeableRow>
-  ), [canEdit, canDelete, onEdit, onDelete, onNavigate]);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const observerRef = useRef<HTMLDivElement>(null);
 
-  if (isLoading) return <MobileListSkeleton count={5} />;
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!hasNextPage || !onLoadMore || isFetchingNextPage) return;
+    const el = observerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) onLoadMore(); },
+      { threshold: 0.1, rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, onLoadMore, isFetchingNextPage, data.length]);
+
+  if (isLoading && data.length === 0) return <MobileListSkeleton count={5} />;
 
   if (data.length === 0) {
-    if (hasActiveFilters) {
-      return (
-        <div className="text-center py-12">
-          <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">لا توجد نتائج</h3>
-          <p className="text-muted-foreground text-sm mb-6">لا يوجد عملاء يطابقون الفلاتر المحددة</p>
-          {onClearFilters && <Button variant="outline" onClick={onClearFilters}>إزالة الفلاتر</Button>}
-        </div>
-      );
-    }
-    return <EmptyState icon={Users} title="لا يوجد عملاء" description="ابدأ بإضافة عميلك الأول" />;
-  }
-
-  if (data.length > 50) {
     return (
-      <PullToRefresh onRefresh={onRefresh}>
-        <VirtualizedList data={data} renderItem={renderCard} getItemKey={(c) => c.id} itemHeight={140} maxHeight={window.innerHeight - 280} gap={12} className="px-1" />
-      </PullToRefresh>
+      <CustomerEmptyState
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={onClearFilters}
+        onAdd={canEdit ? onAdd : undefined}
+        onImport={onImport}
+      />
     );
   }
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      <div className="space-y-3">{data.map(renderCard)}</div>
+      {/* View toggle */}
+      <div className="flex items-center justify-end mb-3 gap-1">
+        <div className="flex items-center gap-1 border rounded-lg p-0.5 bg-background">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setViewMode('list')}
+          >
+            <LayoutList className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'ghost'}
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setViewMode('grid')}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {viewMode === 'list' ? (
+        <div className="space-y-3">
+          {data.map((customer, i) => (
+            <div key={customer.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+              <CustomerListCard
+                customer={customer}
+                onNavigate={onNavigate}
+                onEdit={canEdit ? onEdit : undefined}
+                onDelete={canDelete ? onDelete : undefined}
+                onNewInvoice={onNewInvoice}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 min-[500px]:grid-cols-3 gap-3">
+          {data.map((customer, i) => (
+            <div key={customer.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
+              <CustomerGridCard
+                customer={customer}
+                onClick={() => onNavigate(customer.id)}
+                onEdit={canEdit ? () => onEdit(customer) : undefined}
+                onDelete={canDelete ? () => onDelete(customer.id) : undefined}
+                onNewInvoice={onNewInvoice ? () => onNewInvoice(customer.id) : undefined}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Infinite scroll sentinel */}
+      <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
+        {isFetchingNextPage && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+      </div>
     </PullToRefresh>
   );
 });
