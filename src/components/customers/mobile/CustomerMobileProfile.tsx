@@ -109,12 +109,17 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           )}
         </div>
 
-        {/* Embedded Mini Stats */}
-        <div className="grid grid-cols-4 gap-2 mb-4 p-2.5 rounded-lg bg-muted/30 border">
-          <MiniStat icon={CreditCard} label="الرصيد" value={`${currentBalance.toLocaleString()}`} color={balanceIsDebit ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'} />
-          <MiniStat icon={Target} label="المستحق" value={`${totalOutstanding.toLocaleString()}`} color={totalOutstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'} />
-          <MiniStat icon={Percent} label="السداد" value={`${paymentRatio.toFixed(0)}%`} color={paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'} />
-          <MiniStat icon={TrendingUp} label="المشتريات" value={`${totalPurchases >= 1000 ? `${(totalPurchases / 1000).toFixed(0)}K` : totalPurchases.toLocaleString()}`} color="text-primary" />
+        {/* KPI Cards */}
+        <div className="mb-4">
+          <CustomerKPICards
+            currentBalance={currentBalance}
+            balanceIsDebit={balanceIsDebit}
+            totalOutstanding={totalOutstanding}
+            totalPurchases={totalPurchases}
+            invoices={invoices}
+            payments={payments}
+            compact
+          />
         </div>
 
         {/* Quick contact buttons */}

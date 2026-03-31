@@ -15,6 +15,7 @@ import {
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import CustomerQuickHistory from "@/components/customers/CustomerQuickHistory";
 import ImageUpload from "@/components/shared/ImageUpload";
+import { CustomerKPICards } from "@/components/customers/CustomerKPICards";
 import { vipColors, vipLabels, vipOptions } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
