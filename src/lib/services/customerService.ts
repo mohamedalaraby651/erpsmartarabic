@@ -69,6 +69,7 @@ interface CustomerHealthMetrics {
   avgInvoiceValue: number;
   totalPurchases: number;
   totalPayments: number;
+  totalOutstanding: number;
 }
 
 /** Calculate customer financial health metrics */
