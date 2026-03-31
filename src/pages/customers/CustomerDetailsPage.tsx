@@ -25,6 +25,7 @@ import type { MobileSectionId } from "@/components/customers/mobile/CustomerIcon
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { tabGroups } from "@/lib/customerConstants";
 import { customerRepository } from "@/lib/repositories/customerRepository";
