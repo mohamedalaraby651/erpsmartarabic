@@ -29,9 +29,11 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   invoices,
   customerId,
+  totalPaymentsFromLedger,
 }: {
   invoices: Invoice[];
   customerId: string;
+  totalPaymentsFromLedger?: number;
 }) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
