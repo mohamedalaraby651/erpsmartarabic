@@ -125,7 +125,7 @@ const CustomerDetailsPage = () => {
             onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
           />
 
-          {/* Mobile Stats Cards - 2 columns grid */}
+          {/* Mobile Stats Cards - Priority: top 4 visible, rest expandable */}
           <div className="grid grid-cols-2 gap-3">
             <CustomerMobileStatCard
               icon={CreditCard}
@@ -142,7 +142,7 @@ const CustomerDetailsPage = () => {
               color={detail.totalOutstanding > 0 ? 'destructive' : 'emerald'}
             />
             <CustomerMobileStatCard
-              icon={Wallet}
+              icon={Percent}
               title="نسبة السداد"
               value={`${detail.paymentRatio.toFixed(0)}%`}
               color={detail.paymentRatio >= 80 ? 'emerald' : detail.paymentRatio >= 50 ? 'warning' : 'destructive'}
@@ -154,32 +154,45 @@ const CustomerDetailsPage = () => {
               value={`${detail.totalPurchases.toLocaleString()} ج.م`}
               color="primary"
             />
-            <CustomerMobileStatCard
-              icon={FileText}
-              title="الفواتير"
-              value={detail.invoices.length}
-              subtitle={`متوسط ${detail.avgInvoiceValue.toLocaleString()} ج.م`}
-              color="info"
-            />
-            <CustomerMobileStatCard
-              icon={Wallet}
-              title="إجمالي المدفوعات"
-              value={`${detail.totalPayments.toLocaleString()} ج.م`}
-              color="emerald"
-            />
-            <CustomerMobileStatCard
-              icon={Clock}
-              title="متوسط السداد"
-              value={detail.dso !== null ? `${detail.dso} يوم` : '-'}
-              color="muted"
-            />
-            <CustomerMobileStatCard
-              icon={Calendar}
-              title="آخر شراء"
-              value={detail.lastPurchaseDate ? new Date(detail.lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}
-              color="muted"
-            />
+            {showAllStats && (
+              <>
+                <CustomerMobileStatCard
+                  icon={FileText}
+                  title="الفواتير"
+                  value={detail.invoices.length}
+                  subtitle={`متوسط ${detail.avgInvoiceValue.toLocaleString()} ج.م`}
+                  color="info"
+                />
+                <CustomerMobileStatCard
+                  icon={Wallet}
+                  title="إجمالي المدفوعات"
+                  value={`${detail.totalPayments.toLocaleString()} ج.م`}
+                  color="emerald"
+                />
+                <CustomerMobileStatCard
+                  icon={Clock}
+                  title="متوسط السداد"
+                  value={detail.dso !== null ? `${detail.dso} يوم` : '-'}
+                  color="muted"
+                />
+                <CustomerMobileStatCard
+                  icon={Calendar}
+                  title="آخر شراء"
+                  value={detail.lastPurchaseDate ? new Date(detail.lastPurchaseDate).toLocaleDateString('ar-EG') : '-'}
+                  color="muted"
+                />
+              </>
+            )}
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => setShowAllStats(!showAllStats)}
+          >
+            <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${showAllStats ? 'rotate-180' : ''}`} />
+            {showAllStats ? 'إخفاء التفاصيل' : 'عرض كل الإحصائيات'}
+          </Button>
 
           {/* Mobile Tab Bar */}
           <Tabs value={mobileTab} onValueChange={setMobileTab}>
