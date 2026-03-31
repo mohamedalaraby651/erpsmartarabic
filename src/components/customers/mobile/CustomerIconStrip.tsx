@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export type MobileSectionId =
   | 'none' | 'invoices' | 'payments' | 'info' | 'notes' | 'analytics'
-  | 'sales' | 'statement' | 'aging' | 'reminders' | 'attachments';
+  | 'sales' | 'statement' | 'aging' | 'reminders' | 'communications' | 'attachments';
 
 interface CustomerIconStripProps {
   activeSection: MobileSectionId;
