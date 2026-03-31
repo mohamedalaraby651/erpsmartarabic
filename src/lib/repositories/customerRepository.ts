@@ -82,7 +82,7 @@ export interface DuplicateDetectionResult {
  * Uses a typed helper to avoid `any`.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any[]) => any }>(
+function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any[]) => any; neq: (...args: any[]) => any; gt: (...args: any[]) => any }>(
   query: T,
   filters: CustomerFilters
 ): T {
