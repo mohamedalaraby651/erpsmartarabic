@@ -41,11 +41,29 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
+  // Paginated invoices for display in tabs
+  const { data: paginatedInvoices } = useQuery({
+    queryKey: ['customer-invoices-paginated', id, invoicePage, invoicePageSize],
+    queryFn: () => customerRepository.findInvoicesPaginated(id!, invoicePage, invoicePageSize),
+    enabled: !!id && (isMobile || activeTab === 'invoices'),
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+
   const paymentsNeeded = isMobile || ['payments', 'financial', 'statement', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRepository.findPayments(id!),
     enabled: !!id && paymentsNeeded,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+
+  // Paginated payments for display in tabs
+  const { data: paginatedPayments } = useQuery({
+    queryKey: ['customer-payments-paginated', id, paymentPage, paymentPageSize],
+    queryFn: () => customerRepository.findPaymentsPaginated(id!, paymentPage, paymentPageSize),
+    enabled: !!id && (isMobile || activeTab === 'payments'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
   });
