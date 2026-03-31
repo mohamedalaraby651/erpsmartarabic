@@ -409,4 +409,3 @@ const CustomerDetailsPage = () => {
 };
 
 export default CustomerDetailsPage;
-// rebuild-trigger
