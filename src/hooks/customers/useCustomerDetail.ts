@@ -105,7 +105,7 @@ export function useCustomerDetail(id: string | undefined) {
 
   // Computed stats via domain service
   const healthMetrics = calculateCustomerHealth(invoices, payments);
-  const { totalPurchases, totalPayments, paymentRatio, avgInvoiceValue, dso, clv } = healthMetrics;
+  const { totalPurchases, totalPayments, paymentRatio, avgInvoiceValue, dso, clv, totalOutstanding } = healthMetrics;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
 
   const creditLimit = Number(customer?.credit_limit || 0);
@@ -119,7 +119,7 @@ export function useCustomerDetail(id: string | undefined) {
     activeTab, setActiveTab,
     updateImageMutation, deleteAddressMutation,
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
-    lastPurchaseDate, dso, clv,
+    lastPurchaseDate, dso, clv, totalOutstanding,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
   };
 }
