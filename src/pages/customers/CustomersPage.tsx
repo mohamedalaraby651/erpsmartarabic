@@ -164,6 +164,7 @@ const CustomersPage = () => {
   }, [mutations.deleteMutation]);
   const handleNewInvoice = useCallback((customerId: string) => { navigate('/invoices', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleWhatsApp = useCallback((phone: string) => { window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank'); }, []);
+  const handleNewPayment = useCallback((customerId: string) => { navigate('/payments', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleRefresh = async () => { await list.refetch(); };
   const handleExportAll = useCallback(async () => {
     const hasPermission = await verifyPermissionOnServer('customers', 'view');
