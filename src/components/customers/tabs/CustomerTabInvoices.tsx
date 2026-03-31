@@ -101,49 +101,44 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
         ) : (
           <>
             {/* Summary Bar */}
-            <div className="flex items-center gap-4 p-3 mb-4 rounded-lg bg-muted/50 border text-sm flex-wrap">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-4 p-3 mb-4 rounded-lg bg-muted/50 border text-sm">
               <div className="flex items-center gap-1.5">
                 <Wallet className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">الإجمالي:</span>
                 <span className="font-bold">{summary.totalInvoiced.toLocaleString()} ج.م</span>
               </div>
-              <div className="w-px h-4 bg-border hidden sm:block" />
               <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground">المدفوع:</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">{summary.totalPaid.toLocaleString()} ج.م</span>
               </div>
-              <div className="w-px h-4 bg-border hidden sm:block" />
               <div className="flex items-center gap-1.5">
                 <AlertCircle className="h-4 w-4 text-destructive" />
                 <span className="text-muted-foreground">المتبقي:</span>
                 <span className="font-bold text-destructive">{summary.outstanding.toLocaleString()} ج.م</span>
               </div>
               {summary.unlinkedPayments > 0 && (
-                <>
-                  <div className="w-px h-4 bg-border hidden sm:block" />
-                  <div className="flex items-center gap-1.5">
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <span className="text-xs text-amber-600 dark:text-amber-400">
-                      يوجد {summary.unlinkedPayments.toLocaleString()} ج.م دفعات غير مرتبطة بفواتير
-                    </span>
-                  </div>
-                </>
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <span className="text-xs text-amber-600 dark:text-amber-400">
+                    {summary.unlinkedPayments.toLocaleString()} ج.م غير مرتبطة
+                  </span>
+                </div>
               )}
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <div className="relative flex-1 min-w-[150px]">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
+              <div className="relative flex-1">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="بحث برقم الفاتورة..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-9 h-9"
+                  className="pr-9 min-h-11 sm:h-9"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[130px] h-9">
+                <SelectTrigger className="w-full sm:w-[130px] min-h-11 sm:h-9">
                   <SelectValue placeholder="الحالة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -223,10 +218,10 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
               <div className="flex items-center justify-between pt-4">
                 <span className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</span>
                 <div className="flex gap-1">
-                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                  <Button variant="outline" size="icon" className="min-h-11 min-w-11" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                 </div>

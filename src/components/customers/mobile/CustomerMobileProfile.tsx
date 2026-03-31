@@ -67,11 +67,11 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
         {/* Navigation arrows */}
         {(hasPrev || hasNext) && (
           <div className="flex items-center justify-between mb-3">
-            <Button variant="ghost" size="icon" disabled={!hasPrev} onClick={onPrev} className="h-8 w-8">
-              <ArrowRight className="h-4 w-4" />
+            <Button variant="ghost" size="icon" disabled={!hasPrev} onClick={onPrev} className="min-h-11 min-w-11">
+              <ArrowRight className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" disabled={!hasNext} onClick={onNext} className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="ghost" size="icon" disabled={!hasNext} onClick={onNext} className="min-h-11 min-w-11">
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           </div>
         )}
@@ -131,16 +131,20 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
 
         {/* Quick contact buttons */}
         <div className="flex gap-2 mb-4">
-          {customer.phone && (
-            <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" asChild>
-              <a href={`tel:${customer.phone}`}>
-                <Phone className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />اتصال
-              </a>
-            </Button>
-          )}
-          {customer.phone && (
-            <Button variant="outline" size="sm" className="flex-1 h-9 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp}>
-              <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
+          {customer.phone ? (
+            <>
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" asChild>
+                <a href={`tel:${customer.phone}`}>
+                  <Phone className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />اتصال
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp}>
+                <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" onClick={onEdit}>
+              <Phone className="h-3.5 w-3.5 ml-1 text-muted-foreground" />إضافة رقم هاتف
             </Button>
           )}
         </div>
@@ -178,17 +182,6 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   );
 });
 
-function MiniStat({ icon: Icon, label, value, color }: {
-  icon: React.ElementType; label: string; value: string; color: string;
-}) {
-  return (
-    <div className="text-center min-w-0">
-      <Icon className={cn("h-3.5 w-3.5 mx-auto mb-0.5", color)} />
-      <p className={cn("text-xs font-bold leading-tight", color)}>{value}</p>
-      <p className="text-[9px] text-muted-foreground truncate">{label}</p>
-    </div>
-  );
-}
 
 function SheetAction({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
   return (
