@@ -67,11 +67,11 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
         {/* Navigation arrows */}
         {(hasPrev || hasNext) && (
           <div className="flex items-center justify-between mb-3">
-            <Button variant="ghost" size="icon" disabled={!hasPrev} onClick={onPrev} className="h-8 w-8">
-              <ArrowRight className="h-4 w-4" />
+            <Button variant="ghost" size="icon" disabled={!hasPrev} onClick={onPrev} className="min-h-11 min-w-11">
+              <ArrowRight className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" disabled={!hasNext} onClick={onNext} className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="ghost" size="icon" disabled={!hasNext} onClick={onNext} className="min-h-11 min-w-11">
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           </div>
         )}
