@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowUpDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
-import { useCustomerAlerts } from "@/hooks/useCustomerAlerts";
+import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
 import { exportCustomersToExcel } from "@/lib/services/customerService";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import type { Customer } from "@/lib/customerConstants";
+import { CustomerAlertsBanner } from "@/components/customers/alerts/CustomerAlertsBanner";
+import { CustomerAlertsMobileTrigger } from "@/components/customers/alerts/CustomerAlertsMobileTrigger";
 
 // Sub-components
 import { CustomerListRow } from "@/components/customers/CustomerListRow";
