@@ -1,5 +1,6 @@
 import React, { memo, useCallback } from "react";
-import { Phone, MapPin, DollarSign, Plus, Users } from "lucide-react";
+import { Phone, MapPin, DollarSign, Plus, Users, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import CustomerAvatar from "@/components/customers/CustomerAvatar";
 import { vipLabels, typeLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
