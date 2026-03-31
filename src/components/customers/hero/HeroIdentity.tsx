@@ -47,6 +47,7 @@ export const HeroIdentity = memo(function HeroIdentity({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3 flex-wrap mb-2">
           <h1 className="text-2xl font-bold">{customer.name}</h1>
+          <CustomerHealthBadge customerId={customerId} compact />
           
           {/* Inline VIP dropdown */}
           {onChangeVip ? (
