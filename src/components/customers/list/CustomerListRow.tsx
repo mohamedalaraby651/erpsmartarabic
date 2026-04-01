@@ -75,6 +75,18 @@ const CustomerListRowInner = ({
         hasErrorAlert && 'bg-destructive/5',
       )}
     >
+      {/* Bulk selection checkbox */}
+      {onToggleSelect && (
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={(checked) => {
+            onToggleSelect(customer.id, !!checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0"
+        />
+      )}
+
       {/* Avatar — always visible */}
       <CustomerAvatar
         name={customer.name}
