@@ -200,7 +200,7 @@ export function useCustomerDetail(id: string | undefined) {
 
   return {
     customer, isLoading, addresses, invoices, payments, creditNotes,
-    salesOrders, quotations, activities,
+    salesOrders, quotations, activities, chartData,
     activeTab, setActiveTab,
     updateImageMutation, deleteAddressMutation,
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
