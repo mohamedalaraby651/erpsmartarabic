@@ -340,7 +340,7 @@ export default function SyncStatusPage() {
             <CardContent>
               {pendingCount === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-green-500" />
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-success" />
                   <p>لا توجد عمليات معلقة</p>
                   <p className="text-sm mt-1">كل البيانات متزامنة</p>
                 </div>
