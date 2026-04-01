@@ -96,7 +96,10 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       try {
         await customerRepository.logBulkOperation('bulk_vip_update', ids, { vip_level: vipLevel });
-      } catch (logErr) { logErrorSafely('bulkVip:audit', logErr); }
+      } catch (logErr) {
+        logErrorSafely('bulkVip:audit', logErr);
+        toast.warning('تعذّر تسجيل العملية في سجل التدقيق');
+      }
       toast.success('تم تحديث مستوى VIP بنجاح');
     },
     onError: () => toast.error('فشل تحديث مستوى VIP'),
