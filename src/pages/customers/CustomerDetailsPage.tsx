@@ -250,9 +250,13 @@ const CustomerDetailsPage = () => {
   };
 
   const updateFieldMutation = useMutation({
-    mutationFn: (updates: Record<string, unknown>) => customerRepository.update(id!, updates),
+    mutationFn: async (updates: Record<string, unknown>) => {
+      const hasPermission = await verifyPermissionOnServer('customers', 'edit');
+      if (!hasPermission) throw new Error('ليس لديك صلاحية تعديل العملاء');
+      return customerRepository.update(id!, updates);
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['customer', id] }); },
-    onError: () => { toast({ title: "حدث خطأ أثناء التحديث", variant: "destructive" }); },
+    onError: (err) => { toast({ title: err instanceof Error ? err.message : "حدث خطأ أثناء التحديث", variant: "destructive" }); },
   });
 
   const handleToggleActive = () => {

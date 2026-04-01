@@ -180,6 +180,10 @@ export const customerSearchRepo = {
   },
 
   async insertCustomer(payload: CustomerInsert): Promise<void> {
+    const parsed = customerWriteSchema.safeParse(payload);
+    if (!parsed.success) {
+      throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
+    }
     const { error } = await supabase
       .from('customers')
       .insert(payload);

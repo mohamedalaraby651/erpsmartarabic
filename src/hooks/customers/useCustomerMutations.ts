@@ -117,7 +117,10 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       try {
         await customerRepository.logBulkOperation('bulk_status_update', ids, { is_active: isActive });
-      } catch (logErr) { logErrorSafely('bulkStatus:audit', logErr); }
+      } catch (logErr) {
+        logErrorSafely('bulkStatus:audit', logErr);
+        toast.warning('تعذّر تسجيل العملية في سجل التدقيق');
+      }
       toast.success('تم تحديث حالة العملاء بنجاح');
     },
     onError: () => toast.error('فشل تحديث الحالة'),
