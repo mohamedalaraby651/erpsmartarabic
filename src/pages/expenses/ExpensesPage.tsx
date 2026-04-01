@@ -233,8 +233,8 @@ export default function ExpensesPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg">
-                <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <div className="p-2 bg-warning/10 rounded-lg">
+                <Clock className="h-5 w-5 text-warning" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">معلقة ({stats?.pendingCount || 0})</p>
@@ -247,12 +247,12 @@ export default function ExpensesPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="p-2 bg-success/10 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-success" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">معتمدة</p>
-                <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{(stats?.approved || 0).toLocaleString()} ج.م</p>
+                <p className="text-xl font-bold text-success">{(stats?.approved || 0).toLocaleString()} ج.م</p>
               </div>
             </div>
           </CardContent>
