@@ -196,7 +196,7 @@ const AttendancePage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10"><Users className="h-5 w-5 text-emerald-600" /></div>
+              <div className="p-2 rounded-lg bg-success/10"><Users className="h-5 w-5 text-success" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">سجلات الشهر</p>
                 <p className="text-2xl font-bold">{monthlyStats.totalRecords}</p>
