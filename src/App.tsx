@@ -8,7 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReloadPrompt } from "@/components/offline/ReloadPrompt";
 import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
-import CustomerDetailsPage from "./pages/customers/CustomerDetailsPage";
+const CustomerDetailsPage = lazy(() => import("./pages/customers/CustomerDetailsPage"));
 
 // Lazy load pages for better performance
 const LandingPage = lazy(() => import("./pages/landing/LandingPage"));
