@@ -93,8 +93,8 @@ export default function InstallPage() {
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-primary/10">
         <Card className="max-w-md w-full text-center">
           <CardHeader>
-            <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            <div className="mx-auto w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-10 h-10 text-success" />
             </div>
             <CardTitle className="text-2xl">التطبيق مثبت بالفعل! 🎉</CardTitle>
             <CardDescription className="text-lg">

@@ -358,7 +358,7 @@ export default function ExpensesPage() {
                         <Button 
                           size="icon" 
                           variant="ghost"
-                          className="h-8 w-8 text-emerald-600 dark:text-emerald-400"
+                          className="h-8 w-8 text-success"
                           onClick={() => handleApprove(expense.id)}
                           disabled={approveMutation.isPending}
                         >
