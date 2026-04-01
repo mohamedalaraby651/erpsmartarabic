@@ -218,7 +218,7 @@ export default function SupplierPaymentsPage() {
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium">{payment.payment_number}</TableCell>
                         <TableCell>{payment.suppliers?.name}</TableCell>
-                        <TableCell className="font-semibold text-emerald-600">
+                        <TableCell className="font-semibold text-success">
                           {payment.amount.toLocaleString()} ج.م
                         </TableCell>
                         <TableCell>

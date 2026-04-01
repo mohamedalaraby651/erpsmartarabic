@@ -125,7 +125,7 @@ export default function PlatformAuth() {
         </Card>
 
         <div className="text-center mt-6 space-y-3">
-          <div className="flex items-center gap-2 justify-center text-sm text-amber-500 bg-amber-500/10 rounded-lg p-3">
+          <div className="flex items-center gap-2 justify-center text-sm text-warning bg-warning/10 rounded-lg p-3">
             <Shield className="h-4 w-4" />
             <span>هذه المنطقة مخصصة لمسؤولي المنصة فقط</span>
           </div>

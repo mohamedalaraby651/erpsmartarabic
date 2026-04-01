@@ -379,11 +379,11 @@ export default function SyncStatusPage() {
                       >
                         <div className="flex items-center gap-3">
                           {log.status === 'success' ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            <CheckCircle2 className="h-5 w-5 text-success" />
                           ) : log.status === 'failed' ? (
-                            <XCircle className="h-5 w-5 text-red-500" />
+                            <XCircle className="h-5 w-5 text-destructive" />
                           ) : (
-                            <Clock className="h-5 w-5 text-yellow-500" />
+                            <Clock className="h-5 w-5 text-warning" />
                           )}
                           <div>
                             <p className="font-medium">
