@@ -297,7 +297,7 @@ const CustomersPage = () => {
                   key={customer.id}
                   customer={customer}
                   visibleColumns={visibleColumns}
-                  onNavigate={(id) => navigate(`/customers/${id}`)}
+                  onNavigate={handleNavigateToCustomer}
                   onEdit={canEdit ? handleEdit : undefined}
                   onNewInvoice={handleNewInvoice}
                   onNewPayment={handleNewPayment}
@@ -306,6 +306,8 @@ const CustomersPage = () => {
                   onRowLeave={list.handleRowLeave}
                   alertCount={alertCountByCustomer.get(customer.id)}
                   hasErrorAlert={errorCustomerIds.has(customer.id)}
+                  isSelected={bulk.selectedIds.has(customer.id)}
+                  onToggleSelect={bulk.toggleSelect}
                 />
               ))}
 
