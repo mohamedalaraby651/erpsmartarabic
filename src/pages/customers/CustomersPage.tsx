@@ -128,6 +128,14 @@ const CustomersPage = () => {
 
   const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage, sortConfig });
 
+  // Bulk selection
+  const bulk = useBulkSelection(allCustomers);
+
+  const handleNavigateToCustomer = useCallback((customerId: string) => {
+    storeCustomerNavIds(allCustomers.map(c => c.id));
+    navigate(`/customers/${customerId}`);
+  }, [allCustomers, navigate]);
+
   const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
   const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
   const handleAddAdvanced = useCallback(() => { dialogRef.current?.openAdd(); }, []);
