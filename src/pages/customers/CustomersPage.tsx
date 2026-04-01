@@ -327,6 +327,22 @@ const CustomersPage = () => {
         </div>
       )}
 
+      {/* Floating Bulk Action Bar */}
+      {bulk.hasSelection && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background border border-border shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4">
+          <span className="text-sm font-medium">{bulk.selectedIds.size} عميل محدد</span>
+          <Button size="sm" variant="destructive" onClick={() => dialogRef.current?.openBulkDelete()}>
+            <Trash2 className="h-3.5 w-3.5 ml-1" /> حذف
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => dialogRef.current?.openBulkVip()}>
+            <Crown className="h-3.5 w-3.5 ml-1" /> VIP
+          </Button>
+          <Button size="sm" variant="ghost" onClick={bulk.clearSelection}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
       <CustomerFilterDrawer
         open={filters.filterDrawerOpen} onOpenChange={filters.setFilterDrawerOpen}
         activeFiltersCount={filters.activeFiltersCount}
