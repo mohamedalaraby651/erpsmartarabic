@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { customerWriteSchema } from "@/lib/validations";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
@@ -14,11 +15,6 @@ type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
 type CustomerAddress = Database['public']['Tables']['customer_addresses']['Row'];
 type CustomerAddressInsert = Database['public']['Tables']['customer_addresses']['Insert'];
 type CustomerCategory = Database['public']['Tables']['customer_categories']['Row'];
-
-/** Escape special chars for Postgres .ilike */
-function sanitizeSearch(input: string): string {
-  return input.replace(/[%_\\]/g, '\\$&');
-}
 
 // ============================================
 // Query Types

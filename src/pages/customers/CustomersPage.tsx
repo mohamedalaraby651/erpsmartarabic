@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowUpDown, Loader2, Trash2, Crown, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useInfiniteCustomers } from "@/hooks/customers/useInfiniteCustomers";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
+import { useBulkSelection } from "@/hooks/customers/useBulkSelection";
+import { storeCustomerNavIds } from "@/hooks/customers/useCustomerNavigation";
 import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
 import { useAlertNotifier } from "@/hooks/useAlertNotifier";
 import { useCustomerExport } from "@/hooks/customers/useCustomerExport";
@@ -126,6 +129,14 @@ const CustomersPage = () => {
 
   const mutations = useCustomerMutations({ filterKey: list.filterKey, currentPage, sortConfig });
 
+  // Bulk selection
+  const bulk = useBulkSelection(allCustomers);
+
+  const handleNavigateToCustomer = useCallback((customerId: string) => {
+    storeCustomerNavIds(allCustomers.map(c => c.id));
+    navigate(`/customers/${customerId}`);
+  }, [allCustomers, navigate]);
+
   const handleEdit = useCallback((customer: Customer) => { dialogRef.current?.openEdit(customer); }, []);
   const handleAdd = useCallback(() => { setQuickAddOpen(true); }, []);
   const handleAddAdvanced = useCallback(() => { dialogRef.current?.openAdd(); }, []);
@@ -211,7 +222,7 @@ const CustomersPage = () => {
             isLoading={list.isLoading}
             canEdit={canEdit}
             canDelete={canDelete}
-            onNavigate={(id) => navigate(`/customers/${id}`)}
+            onNavigate={handleNavigateToCustomer}
             onEdit={handleEdit}
             onDelete={handleDeleteRequest}
             onRefresh={handleRefresh}
@@ -287,7 +298,7 @@ const CustomersPage = () => {
                   key={customer.id}
                   customer={customer}
                   visibleColumns={visibleColumns}
-                  onNavigate={(id) => navigate(`/customers/${id}`)}
+                  onNavigate={handleNavigateToCustomer}
                   onEdit={canEdit ? handleEdit : undefined}
                   onNewInvoice={handleNewInvoice}
                   onNewPayment={handleNewPayment}
@@ -296,6 +307,8 @@ const CustomersPage = () => {
                   onRowLeave={list.handleRowLeave}
                   alertCount={alertCountByCustomer.get(customer.id)}
                   hasErrorAlert={errorCustomerIds.has(customer.id)}
+                  isSelected={bulk.selectedIds.has(customer.id)}
+                  onToggleSelect={bulk.toggleSelect}
                 />
               ))}
 
@@ -314,6 +327,22 @@ const CustomersPage = () => {
         </div>
       )}
 
+      {/* Floating Bulk Action Bar */}
+      {bulk.hasSelection && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background border border-border shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4">
+          <span className="text-sm font-medium">{bulk.selectedIds.size} عميل محدد</span>
+          <Button size="sm" variant="destructive" onClick={() => dialogRef.current?.openBulkDelete()}>
+            <Trash2 className="h-3.5 w-3.5 ml-1" /> حذف
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => dialogRef.current?.openBulkVip()}>
+            <Crown className="h-3.5 w-3.5 ml-1" /> VIP
+          </Button>
+          <Button size="sm" variant="ghost" onClick={bulk.clearSelection}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
       <CustomerFilterDrawer
         open={filters.filterDrawerOpen} onOpenChange={filters.setFilterDrawerOpen}
         activeFiltersCount={filters.activeFiltersCount}
@@ -328,7 +357,9 @@ const CustomersPage = () => {
 
       <CustomerDialogManager
         ref={dialogRef} onDeleteConfirm={handleDeleteConfirm}
-        onBulkDelete={() => {}} onBulkVipUpdate={() => {}} bulkSelectedCount={0}
+        onBulkDelete={() => { mutations.bulkDeleteMutation.mutate([...bulk.selectedIds], { onSuccess: () => bulk.clearSelection() }); }}
+        onBulkVipUpdate={(vipLevel) => { mutations.bulkVipMutation.mutate({ ids: [...bulk.selectedIds], vipLevel }, { onSuccess: () => bulk.clearSelection() }); }}
+        bulkSelectedCount={bulk.selectedIds.size}
       />
       <CustomerQuickAddDialog
         open={quickAddOpen}

@@ -5,14 +5,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
+import { customerWriteSchema } from "@/lib/validations";
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
-
-/** Escape special chars for Postgres .ilike */
-function sanitizeSearch(input: string): string {
-  return input.replace(/[%_\\]/g, '\\$&');
-}
 
 export interface DuplicateResult {
   id: string;
@@ -183,6 +180,10 @@ export const customerSearchRepo = {
   },
 
   async insertCustomer(payload: CustomerInsert): Promise<void> {
+    const parsed = customerWriteSchema.safeParse(payload);
+    if (!parsed.success) {
+      throw new Error(`بيانات غير صالحة: ${parsed.error.issues.map(i => i.message).join(', ')}`);
+    }
     const { error } = await supabase
       .from('customers')
       .insert(payload);

@@ -4260,6 +4260,7 @@ export type Database = {
       }
       get_current_tenant: { Args: never; Returns: string }
       get_customer_aging: { Args: { _customer_id: string }; Returns: Json }
+      get_customer_chart_data: { Args: { _customer_id: string }; Returns: Json }
       get_customer_financial_summary: {
         Args: { _customer_id: string }
         Returns: Json

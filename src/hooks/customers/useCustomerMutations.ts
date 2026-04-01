@@ -71,6 +71,7 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
         await customerRepository.logBulkOperation('bulk_delete', ids, { count: ids.length });
       } catch (logErr) {
         logErrorSafely('bulkDelete:audit', logErr);
+        toast.warning('تعذّر تسجيل العملية في سجل التدقيق');
       }
     },
     onSuccess: () => {
@@ -95,7 +96,10 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       try {
         await customerRepository.logBulkOperation('bulk_vip_update', ids, { vip_level: vipLevel });
-      } catch (logErr) { logErrorSafely('bulkVip:audit', logErr); }
+      } catch (logErr) {
+        logErrorSafely('bulkVip:audit', logErr);
+        toast.warning('تعذّر تسجيل العملية في سجل التدقيق');
+      }
       toast.success('تم تحديث مستوى VIP بنجاح');
     },
     onError: () => toast.error('فشل تحديث مستوى VIP'),
@@ -113,7 +117,10 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
       queryClient.invalidateQueries({ queryKey: ['customers-stats'] });
       try {
         await customerRepository.logBulkOperation('bulk_status_update', ids, { is_active: isActive });
-      } catch (logErr) { logErrorSafely('bulkStatus:audit', logErr); }
+      } catch (logErr) {
+        logErrorSafely('bulkStatus:audit', logErr);
+        toast.warning('تعذّر تسجيل العملية في سجل التدقيق');
+      }
       toast.success('تم تحديث حالة العملاء بنجاح');
     },
     onError: () => toast.error('فشل تحديث الحالة'),

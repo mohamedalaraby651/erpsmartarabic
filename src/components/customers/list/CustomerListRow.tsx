@@ -1,5 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Phone, MapPin, FileText, CreditCard, Crown, MessageCircle, Edit2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
 import { cn } from '@/lib/utils';
 import { vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
@@ -19,6 +20,8 @@ interface CustomerListRowProps {
   visibleColumns?: string[];
   alertCount?: number;
   hasErrorAlert?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string, checked: boolean) => void;
 }
 
 const vipBorderAccent: Record<string, string> = {
@@ -39,6 +42,7 @@ const DEFAULT_COLUMNS = ['name', 'type', 'vip', 'phone', 'governorate', 'balance
 const CustomerListRowInner = ({
   customer, onNavigate, onEdit, onNewInvoice, onNewPayment, onWhatsApp,
   onRowHover, onRowLeave, visibleColumns, alertCount, hasErrorAlert,
+  isSelected, onToggleSelect,
 }: CustomerListRowProps) => {
   const [hovered, setHovered] = useState(false);
   const balance = Number(customer.current_balance || 0);
@@ -71,6 +75,18 @@ const CustomerListRowInner = ({
         hasErrorAlert && 'bg-destructive/5',
       )}
     >
+      {/* Bulk selection checkbox */}
+      {onToggleSelect && (
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={(checked) => {
+            onToggleSelect(customer.id, !!checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0"
+        />
+      )}
+
       {/* Avatar — always visible */}
       <CustomerAvatar
         name={customer.name}

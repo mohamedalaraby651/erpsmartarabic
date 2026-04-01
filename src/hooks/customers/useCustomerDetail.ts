@@ -70,7 +70,7 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   // === LAZY queries (loaded on tab open) ===
-  // Statement and Aging now use their own server-side RPCs, no need to load here
+  // Non-paginated invoices: needed for charts, alerts, hero header stats
   const invoicesNeeded = isMobile || ['invoices', 'analytics'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
@@ -80,7 +80,7 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  // Paginated invoices for display in tabs
+  // Paginated invoices for display in invoices tab only
   const { data: paginatedInvoices } = useQuery({
     queryKey: ['customer-invoices-paginated', id, invoicePage, invoicePageSize],
     queryFn: () => customerRelationsRepo.findInvoicesPaginated(id!, invoicePage, invoicePageSize),
@@ -89,7 +89,7 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  // Statement now uses server-side RPC, no need to load payments for it
+  // Non-paginated payments: needed for charts, hero header
   const paymentsNeeded = isMobile || ['payments', 'analytics'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
@@ -99,12 +99,25 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  // Paginated payments for display in tabs
+  // Paginated payments for display in payments tab only
   const { data: paginatedPayments } = useQuery({
     queryKey: ['customer-payments-paginated', id, paymentPage, paymentPageSize],
     queryFn: () => customerRelationsRepo.findPaymentsPaginated(id!, paymentPage, paymentPageSize),
     enabled: !!id && (isMobile || activeTab === 'payments'),
     staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+
+  // === CHART DATA via server-side RPC (aggregated monthly data — no record limits) ===
+  const { data: chartData } = useQuery({
+    queryKey: ['customer-chart-data', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_customer_chart_data', { _customer_id: id! });
+      if (error) throw error;
+      return data as { monthly_data: Array<{ month: string; invoice_total: number; invoice_count: number; payment_total: number; payment_count: number }>; top_products: Array<{ product_name: string; total_quantity: number; total_revenue: number }> };
+    },
+    enabled: !!id && (isMobile || activeTab === 'analytics'),
+    staleTime: 120000,
     refetchOnWindowFocus: false,
   });
 
@@ -187,7 +200,7 @@ export function useCustomerDetail(id: string | undefined) {
 
   return {
     customer, isLoading, addresses, invoices, payments, creditNotes,
-    salesOrders, quotations, activities,
+    salesOrders, quotations, activities, chartData,
     activeTab, setActiveTab,
     updateImageMutation, deleteAddressMutation,
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
