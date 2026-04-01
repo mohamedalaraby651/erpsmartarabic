@@ -221,7 +221,7 @@ const CustomersPage = () => {
             isLoading={list.isLoading}
             canEdit={canEdit}
             canDelete={canDelete}
-            onNavigate={(id) => navigate(`/customers/${id}`)}
+            onNavigate={handleNavigateToCustomer}
             onEdit={handleEdit}
             onDelete={handleDeleteRequest}
             onRefresh={handleRefresh}
