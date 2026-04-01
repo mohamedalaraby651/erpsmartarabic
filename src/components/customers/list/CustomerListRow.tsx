@@ -1,5 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Phone, MapPin, FileText, CreditCard, Crown, MessageCircle, Edit2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
 import { cn } from '@/lib/utils';
 import { vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
@@ -19,6 +20,8 @@ interface CustomerListRowProps {
   visibleColumns?: string[];
   alertCount?: number;
   hasErrorAlert?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string, checked: boolean) => void;
 }
 
 const vipBorderAccent: Record<string, string> = {
