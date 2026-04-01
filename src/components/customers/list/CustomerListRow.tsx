@@ -42,6 +42,7 @@ const DEFAULT_COLUMNS = ['name', 'type', 'vip', 'phone', 'governorate', 'balance
 const CustomerListRowInner = ({
   customer, onNavigate, onEdit, onNewInvoice, onNewPayment, onWhatsApp,
   onRowHover, onRowLeave, visibleColumns, alertCount, hasErrorAlert,
+  isSelected, onToggleSelect,
 }: CustomerListRowProps) => {
   const [hovered, setHovered] = useState(false);
   const balance = Number(customer.current_balance || 0);
