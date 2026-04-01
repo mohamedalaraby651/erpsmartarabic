@@ -8,6 +8,8 @@ import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useInfiniteCustomers } from "@/hooks/customers/useInfiniteCustomers";
 import { useCustomerMutations } from "@/hooks/customers/useCustomerMutations";
+import { useBulkSelection } from "@/hooks/customers/useBulkSelection";
+import { storeCustomerNavIds } from "@/hooks/customers/useCustomerNavigation";
 import { useCustomerAlerts, type AlertType } from "@/hooks/useCustomerAlerts";
 import { useAlertNotifier } from "@/hooks/useAlertNotifier";
 import { useCustomerExport } from "@/hooks/customers/useCustomerExport";
