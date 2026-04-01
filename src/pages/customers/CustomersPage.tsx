@@ -340,7 +340,9 @@ const CustomersPage = () => {
 
       <CustomerDialogManager
         ref={dialogRef} onDeleteConfirm={handleDeleteConfirm}
-        onBulkDelete={() => {}} onBulkVipUpdate={() => {}} bulkSelectedCount={0}
+        onBulkDelete={() => { mutations.bulkDeleteMutation.mutate([...bulk.selectedIds], { onSuccess: () => bulk.clearSelection() }); }}
+        onBulkVipUpdate={(vipLevel) => { mutations.bulkVipMutation.mutate({ ids: [...bulk.selectedIds], vipLevel }, { onSuccess: () => bulk.clearSelection() }); }}
+        bulkSelectedCount={bulk.selectedIds.size}
       />
       <CustomerQuickAddDialog
         open={quickAddOpen}
