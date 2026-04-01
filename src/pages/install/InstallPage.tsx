@@ -342,31 +342,31 @@ export default function InstallPage() {
           <CardContent>
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
                 <span>وصول سريع من الشاشة الرئيسية</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
                 <span>يعمل بدون اتصال بالإنترنت</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
                 <span>تجربة ملء الشاشة بدون شريط المتصفح</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
                 <span>تحديثات تلقائية في الخلفية</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
                 <span>لا يحتاج مساحة تخزين كبيرة (~5 ميجابايت)</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
                 <span>فتح ملفات Excel و PDF مباشرة (PWA 2025)</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
                 <span>استقبال المشاركات من تطبيقات أخرى</span>
               </li>
             </ul>
