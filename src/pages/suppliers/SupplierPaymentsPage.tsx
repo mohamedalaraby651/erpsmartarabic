@@ -113,8 +113,8 @@ export default function SupplierPaymentsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg">
-                <Wallet className="h-5 w-5 text-emerald-600" />
+              <div className="p-2 bg-success/10 rounded-lg">
+                <Wallet className="h-5 w-5 text-success" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">إجمالي المدفوعات</p>
