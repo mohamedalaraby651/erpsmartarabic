@@ -71,6 +71,7 @@ export function useCustomerMutations(options: UseCustomerMutationsOptions) {
         await customerRepository.logBulkOperation('bulk_delete', ids, { count: ids.length });
       } catch (logErr) {
         logErrorSafely('bulkDelete:audit', logErr);
+        toast.warning('تعذّر تسجيل العملية في سجل التدقيق');
       }
     },
     onSuccess: () => {
