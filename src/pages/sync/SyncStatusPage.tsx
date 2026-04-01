@@ -210,12 +210,12 @@ export default function SyncStatusPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isOnline ? (
-                <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Wifi className="h-6 w-6 text-green-500" />
+                <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
+                  <Wifi className="h-6 w-6 text-success" />
                 </div>
               ) : (
-                <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                  <WifiOff className="h-6 w-6 text-red-500" />
+                <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <WifiOff className="h-6 w-6 text-destructive" />
                 </div>
               )}
               <div>
