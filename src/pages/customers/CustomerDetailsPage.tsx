@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { tabGroups } from "@/lib/customerConstants";
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import type { CustomerAddress } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 
