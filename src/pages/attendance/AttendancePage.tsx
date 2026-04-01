@@ -207,7 +207,7 @@ const AttendancePage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10"><Timer className="h-5 w-5 text-blue-600" /></div>
+              <div className="p-2 rounded-lg bg-info/10"><Timer className="h-5 w-5 text-info" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">ساعات العمل</p>
                 <p className="text-2xl font-bold">{monthlyStats.totalHours}</p>
