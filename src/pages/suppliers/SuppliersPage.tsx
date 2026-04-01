@@ -47,9 +47,9 @@ const categoryLabels: Record<string, string> = {
 };
 
 const getBalanceColor = (balance: number, creditLimit: number) => {
-  if (balance <= 0) return 'text-emerald-600';
+  if (balance <= 0) return 'text-success';
   if (creditLimit > 0 && balance >= creditLimit * 0.5) return 'text-destructive';
-  if (balance > 0) return 'text-amber-600';
+  if (balance > 0) return 'text-warning';
   return '';
 };
 

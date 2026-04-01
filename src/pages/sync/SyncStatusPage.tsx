@@ -175,7 +175,7 @@ export default function SyncStatusPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
-        return <Badge className="bg-green-500">ناجح</Badge>;
+        return <Badge className="bg-success">ناجح</Badge>;
       case 'partial':
         return <Badge className="bg-yellow-500">جزئي</Badge>;
       case 'failed':
@@ -210,12 +210,12 @@ export default function SyncStatusPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isOnline ? (
-                <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <Wifi className="h-6 w-6 text-green-500" />
+                <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
+                  <Wifi className="h-6 w-6 text-success" />
                 </div>
               ) : (
-                <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                  <WifiOff className="h-6 w-6 text-red-500" />
+                <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <WifiOff className="h-6 w-6 text-destructive" />
                 </div>
               )}
               <div>
@@ -340,7 +340,7 @@ export default function SyncStatusPage() {
             <CardContent>
               {pendingCount === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-green-500" />
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-success" />
                   <p>لا توجد عمليات معلقة</p>
                   <p className="text-sm mt-1">كل البيانات متزامنة</p>
                 </div>
@@ -379,11 +379,11 @@ export default function SyncStatusPage() {
                       >
                         <div className="flex items-center gap-3">
                           {log.status === 'success' ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            <CheckCircle2 className="h-5 w-5 text-success" />
                           ) : log.status === 'failed' ? (
-                            <XCircle className="h-5 w-5 text-red-500" />
+                            <XCircle className="h-5 w-5 text-destructive" />
                           ) : (
-                            <Clock className="h-5 w-5 text-yellow-500" />
+                            <Clock className="h-5 w-5 text-warning" />
                           )}
                           <div>
                             <p className="font-medium">

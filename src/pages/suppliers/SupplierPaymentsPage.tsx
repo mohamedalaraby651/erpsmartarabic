@@ -113,8 +113,8 @@ export default function SupplierPaymentsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg">
-                <Wallet className="h-5 w-5 text-emerald-600" />
+              <div className="p-2 bg-success/10 rounded-lg">
+                <Wallet className="h-5 w-5 text-success" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">إجمالي المدفوعات</p>
@@ -126,8 +126,8 @@ export default function SupplierPaymentsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Calendar className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-info/10 rounded-lg">
+                <Calendar className="h-5 w-5 text-info" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">عدد العمليات</p>
@@ -218,7 +218,7 @@ export default function SupplierPaymentsPage() {
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium">{payment.payment_number}</TableCell>
                         <TableCell>{payment.suppliers?.name}</TableCell>
-                        <TableCell className="font-semibold text-emerald-600">
+                        <TableCell className="font-semibold text-success">
                           {payment.amount.toLocaleString()} ج.م
                         </TableCell>
                         <TableCell>

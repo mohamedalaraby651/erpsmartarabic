@@ -1,42 +1,25 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useServerPagination } from '@/hooks/useServerPagination';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ServerPagination } from '@/components/shared/ServerPagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Search, MoreHorizontal, Eye, Edit, Trash2, Users, UserCheck, UserX, Calendar, Briefcase } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { verifyPermissionOnServer } from '@/lib/api/secureOperations';
+import { useEmployeesList, statusLabels } from '@/hooks/employees/useEmployeesList';
+import type { Employee } from '@/hooks/employees/useEmployeesList';
 import EmployeeFormDialog from '@/components/employees/EmployeeFormDialog';
 import { ExportWithTemplateButton } from '@/components/export/ExportWithTemplateButton';
 import { DataCard } from '@/components/mobile/DataCard';
@@ -44,163 +27,22 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MobileListSkeleton, MobileStatSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
-import { VirtualizedTable, VirtualColumn } from '@/components/table/VirtualizedTable';
 import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
-
-interface Employee {
-  id: string;
-  employee_number: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  image_url: string | null;
-  job_title: string | null;
-  department: string | null;
-  employment_status: string | null;
-  hire_date: string | null;
-  base_salary: number | null;
-  created_at: string;
-}
-
-const statusLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  active: { label: 'نشط', variant: 'default' },
-  on_leave: { label: 'في إجازة', variant: 'secondary' },
-  terminated: { label: 'منتهي', variant: 'destructive' },
-};
-
-const VIRTUALIZATION_THRESHOLD = 50;
-
-const PAGE_SIZE = 25;
 
 export default function EmployeesPage() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const [searchParamsState, setSearchParamsState] = useSearchParams();
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 300);
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
-
-  // Handle action parameter from URL (FAB/QuickActions)
-  useEffect(() => {
-    const action = searchParamsState.get('action');
-    if (action === 'new' || action === 'create') {
-      setDialogOpen(true);
-      setSearchParamsState({}, { replace: true });
-    }
-  }, [searchParamsState, setSearchParamsState]);
-
-  // Count query
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: ['employees-count', debouncedSearch, departmentFilter, statusFilter],
-    queryFn: async () => {
-      let query = supabase.from('employees').select('*', { count: 'exact', head: true });
-      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
-      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
-      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    },
-  });
-
-  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
-
-  const { data: employees = [], isLoading, refetch } = useQuery({
-    queryKey: ['employees', debouncedSearch, departmentFilter, statusFilter, pagination.currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('employees')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
-      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
-      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Employee[];
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const hasPermission = await verifyPermissionOnServer('employees', 'delete');
-      if (!hasPermission) throw new Error('UNAUTHORIZED');
-      const { error } = await supabase.from('employees').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: 'تم حذف الموظف بنجاح' });
-      setDeleteDialogOpen(false);
-    },
-    onError: (error) => {
-      if (error.message === 'UNAUTHORIZED') {
-        toast({ title: 'غير مصرح', description: 'ليس لديك صلاحية حذف الموظفين', variant: 'destructive' });
-      } else {
-        toast({ title: 'خطأ في حذف الموظف', variant: 'destructive' });
-      }
-    },
-  });
-
-  // Get unique departments
-  const departments = [...new Set(employees.map(e => e.department).filter(Boolean))];
-
-  // Filter employees
-  const filteredEmployees = employees.filter(emp => {
-    const matchesSearch = !search || 
-      emp.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      emp.employee_number.toLowerCase().includes(search.toLowerCase()) ||
-      emp.email?.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesDepartment = departmentFilter === 'all' || emp.department === departmentFilter;
-    const matchesStatus = statusFilter === 'all' || emp.employment_status === statusFilter;
-    
-    return matchesSearch && matchesDepartment && matchesStatus;
-  });
-
-  // Stats
-  const totalEmployees = employees.length;
-  const activeEmployees = employees.filter(e => e.employment_status === 'active').length;
-  const onLeaveEmployees = employees.filter(e => e.employment_status === 'on_leave').length;
-  const thisMonthHires = employees.filter(e => {
-    if (!e.hire_date) return false;
-    const hireDate = new Date(e.hire_date);
-    const now = new Date();
-    return hireDate.getMonth() === now.getMonth() && hireDate.getFullYear() === now.getFullYear();
-  }).length;
-
-  const handleEdit = useCallback((employee: Employee) => {
-    setSelectedEmployee(employee);
-    setDialogOpen(true);
-  }, []);
-
-  const handleDelete = useCallback((id: string) => {
-    setEmployeeToDelete(id);
-    setDeleteDialogOpen(true);
-  }, []);
-
-  const confirmDelete = useCallback(() => {
-    if (employeeToDelete) {
-      deleteMutation.mutate(employeeToDelete);
-    }
-  }, [employeeToDelete, deleteMutation]);
-
-  const handleAdd = useCallback(() => {
-    setSelectedEmployee(null);
-    setDialogOpen(true);
-  }, []);
-
-  const handleRefresh = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
+  const {
+    filteredEmployees, totalCount, isLoading,
+    totalEmployees, activeEmployees, onLeaveEmployees, thisMonthHires,
+    search, setSearch, departmentFilter, setDepartmentFilter,
+    statusFilter, setStatusFilter, departments,
+    pagination, PAGE_SIZE,
+    dialogOpen, setDialogOpen, selectedEmployee,
+    deleteDialogOpen, setDeleteDialogOpen,
+    handleEdit, handleDelete, confirmDelete, handleAdd, handleRefresh,
+    shouldVirtualize, exportColumns,
+  } = useEmployeesList();
 
   const statItems = useMemo(() => [
     { label: 'الإجمالي', value: totalEmployees, icon: Users, color: 'text-primary', bgColor: 'bg-primary/10' },
@@ -209,21 +51,6 @@ export default function EmployeesPage() {
     { label: 'هذا الشهر', value: thisMonthHires, icon: Calendar, color: 'text-info', bgColor: 'bg-info/10' },
   ], [totalEmployees, activeEmployees, onLeaveEmployees, thisMonthHires]);
 
-  const exportColumns = useMemo(() => [
-    { key: 'employee_number', label: 'رقم الموظف' },
-    { key: 'full_name', label: 'الاسم الكامل' },
-    { key: 'email', label: 'البريد الإلكتروني' },
-    { key: 'phone', label: 'الهاتف' },
-    { key: 'job_title', label: 'المسمى الوظيفي' },
-    { key: 'department', label: 'القسم' },
-    { key: 'employment_status', label: 'الحالة' },
-    { key: 'hire_date', label: 'تاريخ التعيين' },
-    { key: 'base_salary', label: 'الراتب الأساسي' },
-  ], []);
-
-  const shouldVirtualize = filteredEmployees.length > VIRTUALIZATION_THRESHOLD;
-
-  // Memoized mobile item renderer
   const renderMobileEmployeeItem = useCallback((employee: Employee) => (
     <DataCard
       title={employee.full_name}
@@ -245,7 +72,6 @@ export default function EmployeesPage() {
     />
   ), [navigate, handleEdit, handleDelete]);
 
-  // Mobile View
   const renderMobileView = () => {
     if (isLoading) {
       return (
@@ -259,7 +85,6 @@ export default function EmployeesPage() {
     return (
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="space-y-4">
-          {/* Mobile Stats */}
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
             {statItems.map((stat, i) => (
               <Card key={i} className="min-w-[140px] shrink-0">
@@ -278,36 +103,15 @@ export default function EmployeesPage() {
             ))}
           </div>
 
-          {/* Search */}
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="بحث بالاسم أو الرقم..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-10"
-            />
+            <Input placeholder="بحث بالاسم أو الرقم..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
           </div>
 
-          {/* Employees List */}
           {filteredEmployees.length === 0 ? (
-            <EmptyState
-              icon={Users}
-              title="لا يوجد موظفين"
-              description="ابدأ بإضافة موظف جديد"
-              action={{
-                label: "إضافة موظف",
-                onClick: handleAdd,
-                icon: Plus,
-              }}
-            />
+            <EmptyState icon={Users} title="لا يوجد موظفين" description="ابدأ بإضافة موظف جديد" action={{ label: "إضافة موظف", onClick: handleAdd, icon: Plus }} />
           ) : shouldVirtualize ? (
-            <VirtualizedMobileList
-              data={filteredEmployees}
-              renderItem={renderMobileEmployeeItem}
-              getItemKey={(emp) => emp.id}
-              itemHeight={140}
-            />
+            <VirtualizedMobileList data={filteredEmployees} renderItem={renderMobileEmployeeItem} getItemKey={(emp) => emp.id} itemHeight={140} />
           ) : (
             <div className="space-y-3">
               {filteredEmployees.map((employee) => (
@@ -320,25 +124,10 @@ export default function EmployeesPage() {
     );
   };
 
-  // Desktop View
   const renderTableView = () => {
-    if (isLoading) {
-      return <TableSkeleton rows={5} columns={6} />;
-    }
-
+    if (isLoading) return <TableSkeleton rows={5} columns={6} />;
     if (filteredEmployees.length === 0) {
-      return (
-        <EmptyState
-          icon={Users}
-          title="لا يوجد موظفين"
-          description="ابدأ بإضافة موظف جديد"
-          action={{
-            label: "إضافة موظف",
-            onClick: handleAdd,
-            icon: Plus,
-          }}
-        />
-      );
+      return <EmptyState icon={Users} title="لا يوجد موظفين" description="ابدأ بإضافة موظف جديد" action={{ label: "إضافة موظف", onClick: handleAdd, icon: Plus }} />;
     }
 
     return (
@@ -378,27 +167,11 @@ export default function EmployeesPage() {
               </TableCell>
               <TableCell>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => navigate(`/employees/${employee.id}`)}>
-                      <Eye className="h-4 w-4 ml-2" />
-                      عرض التفاصيل
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleEdit(employee)}>
-                      <Edit className="h-4 w-4 ml-2" />
-                      تعديل
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleDelete(employee.id)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4 ml-2" />
-                      حذف
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/employees/${employee.id}`)}><Eye className="h-4 w-4 ml-2" />عرض التفاصيل</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEdit(employee)}><Edit className="h-4 w-4 ml-2" />تعديل</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDelete(employee.id)} className="text-destructive"><Trash2 className="h-4 w-4 ml-2" />حذف</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -411,7 +184,6 @@ export default function EmployeesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">الموظفين</h1>
@@ -419,12 +191,7 @@ export default function EmployeesPage() {
         </div>
         <div className="flex gap-2">
           {!isMobile && (
-            <ExportWithTemplateButton
-              section="employees"
-              sectionLabel="الموظفين"
-              data={filteredEmployees}
-              columns={exportColumns}
-            />
+            <ExportWithTemplateButton section="employees" sectionLabel="الموظفين" data={filteredEmployees} columns={exportColumns} />
           )}
           <Button onClick={handleAdd} size={isMobile ? "sm" : "default"}>
             <Plus className="h-4 w-4 ml-2" />
@@ -433,10 +200,8 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {/* Content */}
       {isMobile ? renderMobileView() : (
         <>
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {statItems.map((stat, i) => (
               <Card key={i}>
@@ -455,32 +220,20 @@ export default function EmployeesPage() {
             ))}
           </div>
 
-          {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="بحث بالاسم أو الرقم أو البريد..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pr-10"
-              />
+              <Input placeholder="بحث بالاسم أو الرقم أو البريد..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
             </div>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="القسم" />
-              </SelectTrigger>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="القسم" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الأقسام</SelectItem>
-                {departments.map(dept => (
-                  <SelectItem key={dept} value={dept!}>{dept}</SelectItem>
-                ))}
+                {departments.map(dept => (<SelectItem key={dept} value={dept!}>{dept}</SelectItem>))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="الحالة" />
-              </SelectTrigger>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="الحالة" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الحالات</SelectItem>
                 <SelectItem value="active">نشط</SelectItem>
@@ -490,47 +243,24 @@ export default function EmployeesPage() {
             </Select>
           </div>
 
-          {/* Table */}
-          <Card>
-            <CardContent className="p-0">
-              {renderTableView()}
-            </CardContent>
-          </Card>
+          <Card><CardContent className="p-0">{renderTableView()}</CardContent></Card>
         </>
       )}
 
-      {/* Dialogs */}
-      <EmployeeFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        employee={selectedEmployee}
-      />
-
+      <EmployeeFormDialog open={dialogOpen} onOpenChange={setDialogOpen} employee={selectedEmployee} />
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف هذا الموظف نهائياً. هذا الإجراء لا يمكن التراجع عنه.
-            </AlertDialogDescription>
+            <AlertDialogDescription>سيتم حذف هذا الموظف نهائياً. هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
-              حذف
-            </AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">حذف</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <ServerPagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={totalCount}
-        pageSize={PAGE_SIZE}
-        onPageChange={pagination.goToPage}
-        hasNextPage={pagination.hasNextPage}
-        hasPrevPage={pagination.hasPrevPage}
-      />
+      <ServerPagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} totalCount={totalCount} pageSize={PAGE_SIZE} onPageChange={pagination.goToPage} hasNextPage={pagination.hasNextPage} hasPrevPage={pagination.hasPrevPage} />
     </div>
   );
 }

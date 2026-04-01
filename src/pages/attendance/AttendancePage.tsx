@@ -196,7 +196,7 @@ const AttendancePage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10"><Users className="h-5 w-5 text-emerald-600" /></div>
+              <div className="p-2 rounded-lg bg-success/10"><Users className="h-5 w-5 text-success" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">سجلات الشهر</p>
                 <p className="text-2xl font-bold">{monthlyStats.totalRecords}</p>
@@ -207,7 +207,7 @@ const AttendancePage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10"><Timer className="h-5 w-5 text-blue-600" /></div>
+              <div className="p-2 rounded-lg bg-info/10"><Timer className="h-5 w-5 text-info" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">ساعات العمل</p>
                 <p className="text-2xl font-bold">{monthlyStats.totalHours}</p>
@@ -218,7 +218,7 @@ const AttendancePage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10"><FileText className="h-5 w-5 text-amber-600" /></div>
+              <div className="p-2 rounded-lg bg-warning/10"><FileText className="h-5 w-5 text-warning" /></div>
               <div>
                 <p className="text-sm text-muted-foreground">إجازات معلقة</p>
                 <p className="text-2xl font-bold">{monthlyStats.pendingLeaves}</p>
