@@ -175,7 +175,7 @@ export default function SyncStatusPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
-        return <Badge className="bg-green-500">ناجح</Badge>;
+        return <Badge className="bg-success">ناجح</Badge>;
       case 'partial':
         return <Badge className="bg-yellow-500">جزئي</Badge>;
       case 'failed':
