@@ -11,6 +11,7 @@ export function useCustomerFilters() {
   const [vipFilter, setVipFilter] = useState(searchParams.get('vip') || "all");
   const [governorateFilter, setGovernorateFilter] = useState(searchParams.get('gov') || "all");
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || "all");
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('cat') || "all");
   const [noCommDays, setNoCommDays] = useState(searchParams.get('noComm') || "");
   const [inactiveDays, setInactiveDays] = useState(searchParams.get('inactive') || "");
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -20,6 +21,7 @@ export function useCustomerFilters() {
   const [tempVip, setTempVip] = useState("all");
   const [tempGovernorate, setTempGovernorate] = useState("all");
   const [tempStatus, setTempStatus] = useState("all");
+  const [tempCategory, setTempCategory] = useState("all");
   const [tempNoCommDays, setTempNoCommDays] = useState("");
   const [tempInactiveDays, setTempInactiveDays] = useState("");
 
