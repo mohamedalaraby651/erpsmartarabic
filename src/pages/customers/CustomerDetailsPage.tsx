@@ -395,10 +395,18 @@ const CustomerDetailsPage = () => {
             <TabsContent value="aging" className="mt-6"><CustomerAgingReport customerId={id!} /></TabsContent>
             <TabsContent value="communications" className="mt-6"><CommunicationLogTab customerId={id!} /></TabsContent>
             <TabsContent value="analytics" className="mt-6 space-y-4">
-              <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-              <AgingDonutChart invoices={detail.invoices} />
-              <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
-              <TopProductsChart customerId={id!} />
+              <ChartErrorBoundary title="المشتريات والمدفوعات">
+                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="أعمار الديون">
+                <AgingDonutChart customerId={id!} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="التدفق المالي">
+                <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="المنتجات">
+                <TopProductsChart topProducts={detail.chartData?.top_products} />
+              </ChartErrorBoundary>
             </TabsContent>
             <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
             <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>
