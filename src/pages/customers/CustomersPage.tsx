@@ -103,7 +103,7 @@ const CustomersPage = () => {
   } = useInfiniteCustomers({
     pageSize,
     isMobile,
-    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
+    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.categoryFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
   });
 
   const list = useCustomerList({
