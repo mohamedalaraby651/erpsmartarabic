@@ -57,7 +57,7 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
   filters: CustomerFilters
 ): T {
   let q = query;
-  const { search, type, vip, governorate, status, noCommDays, inactiveDays } = filters;
+  const { search, type, vip, governorate, status, category, noCommDays, inactiveDays } = filters;
   if (search) {
     const s = sanitizeSearch(search);
     q = q.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`) as typeof q;
