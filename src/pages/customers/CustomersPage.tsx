@@ -203,6 +203,7 @@ const CustomersPage = () => {
         vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
         governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
         statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
+        categoryFilter={filters.categoryFilter} onCategoryChange={(v) => { filters.setCategoryFilter(v); setQuickFilter(null); }}
         governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
         isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
         onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
