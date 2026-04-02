@@ -250,7 +250,7 @@ const CustomersPage = () => {
               {allCustomers.length > 0 && (
                 <Checkbox
                   checked={bulk.isAllSelected}
-                  onCheckedChange={() => bulk.toggleSelectAll()}
+                  onCheckedChange={(checked) => bulk.toggleSelectAll(!!checked)}
                   aria-label="تحديد الكل"
                   className="h-4 w-4"
                 />
