@@ -90,7 +90,7 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   // Non-paginated payments: needed for charts, hero header
-  const paymentsNeeded = isMobile || ['payments', 'analytics'].includes(activeTab);
+  const paymentsNeeded = isMobile || ['payments'].includes(activeTab);
   const { data: payments = [] } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRelationsRepo.findPayments(id!),
