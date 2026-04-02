@@ -27,10 +27,10 @@ export function useCustomerList(options: UseCustomerListOptions) {
   const queryClient = useQueryClient();
   const {
     debouncedSearch, typeFilter, vipFilter, governorateFilter,
-    statusFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig,
+    statusFilter, categoryFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig,
   } = options;
 
-  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays];
+  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays];
 
   // Main list query
   const { data: queryResult, isLoading, refetch } = useQuery({
