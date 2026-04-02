@@ -93,10 +93,11 @@ export function useCustomerFilters() {
     setVipFilter(tempVip);
     setGovernorateFilter(tempGovernorate);
     setStatusFilter(tempStatus);
+    setCategoryFilter(tempCategory);
     setNoCommDays(tempNoCommDays);
     setInactiveDays(tempInactiveDays);
-    syncToUrl({ type: tempType, vip: tempVip, gov: tempGovernorate, status: tempStatus, noComm: tempNoCommDays, inactive: tempInactiveDays });
-  }, [tempType, tempVip, tempGovernorate, tempStatus, tempNoCommDays, tempInactiveDays, syncToUrl]);
+    syncToUrl({ type: tempType, vip: tempVip, gov: tempGovernorate, status: tempStatus, cat: tempCategory, noComm: tempNoCommDays, inactive: tempInactiveDays });
+  }, [tempType, tempVip, tempGovernorate, tempStatus, tempCategory, tempNoCommDays, tempInactiveDays, syncToUrl]);
 
   const resetDrawerFilters = useCallback(() => {
     setTempType('all');
