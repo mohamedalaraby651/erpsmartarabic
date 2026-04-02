@@ -110,6 +110,7 @@ const CustomersPage = () => {
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
+    categoryFilter: filters.categoryFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
     currentPage, pageSize, sortConfig,
   });
