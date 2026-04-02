@@ -104,6 +104,7 @@ export function useCustomerFilters() {
     setTempVip('all');
     setTempGovernorate('all');
     setTempStatus('all');
+    setTempCategory('all');
     setTempNoCommDays('');
     setTempInactiveDays('');
   }, []);
