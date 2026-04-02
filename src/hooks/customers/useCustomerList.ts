@@ -15,6 +15,7 @@ interface UseCustomerListOptions {
   vipFilter: string;
   governorateFilter: string;
   statusFilter: string;
+  categoryFilter?: string;
   noCommDays?: string;
   inactiveDays?: string;
   currentPage: number;
