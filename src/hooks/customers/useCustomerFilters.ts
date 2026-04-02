@@ -122,6 +122,7 @@ export function useCustomerFilters() {
     vipFilter, setVipFilter: (v: string) => updateFilter('vip', v),
     governorateFilter, setGovernorateFilter: (v: string) => updateFilter('gov', v),
     statusFilter, setStatusFilter: (v: string) => updateFilter('status', v),
+    categoryFilter, setCategoryFilter: (v: string) => updateFilter('cat', v),
     noCommDays, setNoCommDays: (v: string) => updateFilter('noComm', v),
     inactiveDays, setInactiveDays: (v: string) => updateFilter('inactive', v),
     clearFilter, clearAllFilters, activeFiltersCount,
