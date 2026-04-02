@@ -4323,6 +4323,23 @@ export type Database = {
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
       get_sidebar_counts: { Args: never; Returns: Json }
+      get_supplier_chart_data: { Args: { _supplier_id: string }; Returns: Json }
+      get_supplier_financial_summary: {
+        Args: { _supplier_id: string }
+        Returns: Json
+      }
+      get_supplier_statement: {
+        Args: { _date_from?: string; _date_to?: string; _supplier_id: string }
+        Returns: {
+          credit: number
+          debit: number
+          entry_date: string
+          entry_type: string
+          reference: string
+          running_balance: number
+          status: string
+        }[]
+      }
       get_user_tenants: { Args: { _user_id: string }; Returns: string[] }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
