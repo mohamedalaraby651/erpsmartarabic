@@ -130,6 +130,7 @@ export function useCustomerFilters() {
     filterDrawerOpen, setFilterDrawerOpen,
     tempType, setTempType, tempVip, setTempVip,
     tempGovernorate, setTempGovernorate, tempStatus, setTempStatus,
+    tempCategory, setTempCategory,
     tempNoCommDays, setTempNoCommDays, tempInactiveDays, setTempInactiveDays,
     openDrawerWithCurrentValues, applyDrawerFilters, resetDrawerFilters,
     // URL
