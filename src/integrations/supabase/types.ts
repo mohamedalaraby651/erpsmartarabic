@@ -3863,6 +3863,44 @@ export type Database = {
           },
         ]
       }
+      user_saved_views: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          section: string
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name: string
+          section?: string
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          section?: string
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_saved_views_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_sidebar_settings: {
         Row: {
           collapsed_sections: string[] | null
