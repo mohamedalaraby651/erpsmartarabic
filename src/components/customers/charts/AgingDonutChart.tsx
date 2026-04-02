@@ -1,46 +1,44 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { differenceInDays } from "date-fns";
-
-interface Invoice {
-  id: string;
-  total_amount: number;
-  paid_amount: number | null;
-  due_date: string | null;
-  created_at: string;
-  payment_status: string;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 const AGING_BUCKETS = [
-  { key: '0-30', label: '0-30 يوم', color: 'hsl(var(--primary))' },
-  { key: '31-60', label: '31-60 يوم', color: 'hsl(45 93% 47%)' },
-  { key: '61-90', label: '61-90 يوم', color: 'hsl(25 95% 53%)' },
-  { key: '90+', label: '90+ يوم', color: 'hsl(0 84% 60%)' },
+  { key: 'bucket_0_30', label: '0-30 يوم', color: 'hsl(var(--primary))' },
+  { key: 'bucket_31_60', label: '31-60 يوم', color: 'hsl(var(--warning))' },
+  { key: 'bucket_61_90', label: '61-90 يوم', color: 'hsl(var(--info))' },
+  { key: 'bucket_90_plus', label: '90+ يوم', color: 'hsl(var(--destructive))' },
 ];
 
-export function AgingDonutChart({ invoices }: { invoices: Invoice[] }) {
-  const data = useMemo(() => {
-    const now = new Date();
-    const buckets: Record<string, number> = { '0-30': 0, '31-60': 0, '61-90': 0, '90+': 0 };
+interface AgingDonutChartProps {
+  customerId: string;
+}
 
-    invoices
-      .filter(i => i.payment_status !== 'paid')
-      .forEach(inv => {
-        const remaining = Number(inv.total_amount) - Number(inv.paid_amount || 0);
-        if (remaining <= 0) return;
-        const ref = inv.due_date || inv.created_at;
-        const days = differenceInDays(now, new Date(ref));
-        if (days <= 30) buckets['0-30'] += remaining;
-        else if (days <= 60) buckets['31-60'] += remaining;
-        else if (days <= 90) buckets['61-90'] += remaining;
-        else buckets['90+'] += remaining;
-      });
+export function AgingDonutChart({ customerId }: AgingDonutChartProps) {
+  const { data: agingData } = useQuery({
+    queryKey: ['customer-aging-chart', customerId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_customer_aging', { _customer_id: customerId });
+      if (error) throw error;
+      return data as Record<string, { amount: number; count: number }> & { total_outstanding: number };
+    },
+    enabled: !!customerId,
+    staleTime: 120000,
+  });
 
-    return AGING_BUCKETS.map(b => ({ name: b.label, value: Math.round(buckets[b.key]), color: b.color })).filter(d => d.value > 0);
-  }, [invoices]);
+  const chartPieces = useMemo(() => {
+    if (!agingData) return [];
+    return AGING_BUCKETS
+      .map(b => ({
+        name: b.label,
+        value: Math.round(Number((agingData as any)[b.key]?.amount ?? 0)),
+        color: b.color,
+      }))
+      .filter(d => d.value > 0);
+  }, [agingData]);
 
-  if (data.length === 0) {
+  if (chartPieces.length === 0) {
     return (
       <Card>
         <CardHeader><CardTitle className="text-base">توزيع أعمار الديون</CardTitle></CardHeader>
@@ -55,8 +53,8 @@ export function AgingDonutChart({ invoices }: { invoices: Invoice[] }) {
       <CardContent>
         <ResponsiveContainer width="100%" height={260}>
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="value" nameKey="name" paddingAngle={3}>
-              {data.map((d, i) => <Cell key={i} fill={d.color} />)}
+            <Pie data={chartPieces} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="value" nameKey="name" paddingAngle={3}>
+              {chartPieces.map((d, i) => <Cell key={i} fill={d.color} />)}
             </Pie>
             <Tooltip formatter={(v: number) => `${v.toLocaleString()} ج.م`} contentStyle={{ direction: 'rtl', borderRadius: '8px', fontSize: 12 }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
