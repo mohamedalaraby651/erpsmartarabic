@@ -308,8 +308,8 @@ const CustomerDetailsPage = () => {
           onPrev={goPrev} onNext={goNext} hasPrev={!!prevId} hasNext={!!nextId}
           currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
           creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
-          totalPurchases={detail.totalPurchases} totalOutstanding={detail.totalOutstanding}
-          paymentRatio={detail.paymentRatio} invoiceCount={detail.invoices.length} dso={detail.dso}
+           totalPurchases={detail.totalPurchases} totalOutstanding={detail.totalOutstanding}
+           paymentRatio={detail.paymentRatio} invoiceCount={detail.invoiceCount} dso={detail.dso}
           onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
