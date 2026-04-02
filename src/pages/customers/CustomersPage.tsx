@@ -245,7 +245,17 @@ const CustomersPage = () => {
         <div>
           {/* Toolbar: sort + saved views + column settings */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">{list.totalCount} عميل</span>
+            <div className="flex items-center gap-2">
+              {allCustomers.length > 0 && (
+                <Checkbox
+                  checked={bulk.isAllSelected}
+                  onCheckedChange={() => bulk.toggleSelectAll()}
+                  aria-label="تحديد الكل"
+                  className="h-4 w-4"
+                />
+              )}
+              <span className="text-xs text-muted-foreground">{list.totalCount} عميل</span>
+            </div>
             <div className="flex items-center gap-2">
               <CustomerSavedViews
                 currentFilters={{
