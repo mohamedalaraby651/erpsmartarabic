@@ -25,6 +25,7 @@ import type { MobileSectionId } from "@/components/customers/mobile/CustomerIcon
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { PageWrapper } from "@/components/shared/PageWrapper";
+import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
