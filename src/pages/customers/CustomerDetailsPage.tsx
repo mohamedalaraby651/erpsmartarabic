@@ -422,4 +422,14 @@ const CustomerDetailsPage = () => {
   );
 };
 
-export default CustomerDetailsPage;
+import { CustomerErrorBoundary } from "@/components/customers/details/CustomerErrorBoundary";
+
+function CustomerDetailsPageWrapped() {
+  return (
+    <CustomerErrorBoundary>
+      <CustomerDetailsPage />
+    </CustomerErrorBoundary>
+  );
+}
+
+export default CustomerDetailsPageWrapped;
