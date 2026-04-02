@@ -71,6 +71,7 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
     }
   }
   if (governorate && governorate !== 'all') q = q.eq('governorate', governorate) as typeof q;
+  if (category && category !== 'all') q = q.eq('category_id', category) as typeof q;
   if (status && status !== 'all') {
     if (status === 'debtors') {
       q = q.gt('current_balance', 0) as typeof q;
