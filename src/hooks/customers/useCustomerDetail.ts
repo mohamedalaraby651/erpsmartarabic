@@ -71,7 +71,7 @@ export function useCustomerDetail(id: string | undefined) {
 
   // === LAZY queries (loaded on tab open) ===
   // Non-paginated invoices: needed for charts, alerts, hero header stats
-  const invoicesNeeded = isMobile || ['invoices', 'analytics'].includes(activeTab);
+  const invoicesNeeded = isMobile || ['invoices', 'financial'].includes(activeTab);
   const { data: invoices = [] } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: () => customerRelationsRepo.findInvoices(id!),
