@@ -26,6 +26,7 @@ export interface CustomerFilters {
   vip?: string;
   governorate?: string;
   status?: string;
+  category?: string;
   noCommDays?: string;
   inactiveDays?: string;
 }
