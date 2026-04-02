@@ -1,140 +1,172 @@
 
 
-# تقرير المشاكل الحالية في قسم العملاء
+# خطة نقل تحسينات العملاء إلى قسم الموردين
 
 ---
 
-## المشاكل المكتشفة
+## الوضع الحالي
 
-### 1. الرسوم البيانية لا تستخدم RPC الجديد `get_customer_chart_data`
-**الأثر: دقة بيانات مقطوعة + RPC غير مُستخدم**
+| الميزة | العملاء | الموردين |
+|--------|---------|----------|
+| Repository Layer | `customerRepository` + `customerRelationsRepo` + `customerSearchRepo` | لا يوجد — استعلامات مباشرة في الصفحات |
+| Custom Hooks | 10 hooks متخصصة | لا يوجد — كل المنطق في الصفحة |
+| Server-side RPCs | `get_customer_financial_summary`, `get_customer_chart_data`, `get_customer_aging`, `get_customer_statement` | لا يوجد |
+| Component Structure | 11 مجلد فرعي منظم | 12 ملف مسطح |
+| Bulk Selection | مفعّل مع Select All + floating bar | غير موجود |
+| Prev/Next Navigation | `useCustomerNavigation` | غير موجود |
+| Hero Header + KPIs | بطاقة متكاملة مع KPIs تفاعلية | header بسيط بدون KPIs |
+| Financial Summary | RPC server-side | حساب client-side من purchase_orders |
+| Charts | 4 رسوم بيانية تعتمد على RPC | رسم بياني واحد يعتمد على بيانات خام |
+| Smart Alerts | 8 أنواع تنبيهات | تنبيه واحد بسيط (رصيد مرتفع) |
+| Error Boundaries | مفعّل | غير موجود |
+| Saved Views | محفوظة في قاعدة البيانات | غير موجود |
+| Statement | RPC `get_customer_statement` مع running balance | حساب يدوي في الصفحة |
+| Pagination | Server-side paginated tabs | لا يوجد pagination في التفاصيل |
+| Permission Checks | `verifyPermissionOnServer` | تحقق client-side فقط |
+| Infinite Scroll (List) | `useInfiniteCustomers` | `ServerPagination` (مقبول) |
+| Import Validation | Zod schema | بدون validation |
+| Sanitized Search | `sanitizeSearch` utility | بدون sanitization |
 
-رغم إنشاء `chartData` في `useCustomerDetail.ts` (سطر 112-122) عبر RPC `get_customer_chart_data`، **لا يتم استخدامه في أي مكان**. الرسوم البيانية الأربعة لا تزال تعتمد على `detail.invoices` و `detail.payments` (المحدودة بـ 500 سجل):
+---
 
-- `CustomerPurchaseChart` — يستقبل `invoices` و `payments` كـ props
-- `AgingDonutChart` — يستقبل `invoices` كـ props  
-- `CashFlowLineChart` — يستقبل `invoices` و `payments` كـ props
-- `TopProductsChart` — يجلب بياناته بنفسه عبر استعلامين مباشرين (بدون حد لكن بدون استخدام RPC)
+## خطة التنفيذ
 
-**في `CustomerDetailsPage.tsx`** (سطر 397-401):
+### المرحلة 1: البنية التحتية — Repository + Hooks + RPCs
+
+**1.1 — إنشاء Supplier Repository**
+- إنشاء `src/lib/repositories/supplierRepository.ts`
+- نقل جميع استعلامات Supabase من `SuppliersPage.tsx` و `SupplierDetailsPage.tsx`
+- تطبيق `sanitizeSearch` على البحث
+- دعم الفلاتر: search, governorate, category, status
+
+**1.2 — إنشاء Supplier Relations Repo**
+- إنشاء `src/lib/repositories/supplierRelationsRepo.ts`
+- وظائف: `findPurchaseOrders`, `findPayments`, `findProducts`, `findActivities`, `findAttachments`
+- دعم pagination لكل وظيفة
+
+**1.3 — إنشاء RPCs للموردين**
+- `get_supplier_financial_summary`: إجمالي المشتريات، المدفوعات، الرصيد، عدد الطلبات، متوسط قيمة الطلب، DSO
+- `get_supplier_chart_data`: بيانات شهرية مُجمّعة + أعلى المنتجات المشتراة
+- `get_supplier_statement`: كشف حساب مع running balance (مثل `get_customer_statement`)
+
+**1.4 — إنشاء Hooks متخصصة**
+- `src/hooks/suppliers/useSupplierDetail.ts` — hook رئيسي لصفحة التفاصيل
+- `src/hooks/suppliers/useSupplierList.ts` — منطق القائمة
+- `src/hooks/suppliers/useSupplierFilters.ts` — إدارة الفلاتر
+- `src/hooks/suppliers/useSupplierMutations.ts` — عمليات CRUD مع audit logging
+- `src/hooks/suppliers/useBulkSupplierSelection.ts` — تحديد جماعي
+- `src/hooks/suppliers/useSupplierNavigation.ts` — تنقل سابق/تالي
+- `src/hooks/suppliers/index.ts` — barrel export
+
+---
+
+### المرحلة 2: تنظيم المكونات في مجلدات
+
+**2.1 — إعادة هيكلة `src/components/suppliers/`**
+
+```text
+suppliers/
+├── hero/
+│   ├── SupplierHeroHeader.tsx      (جديد — بطاقة متكاملة مع KPIs)
+│   ├── SupplierHeroIdentity.tsx    (جديد)
+│   └── SupplierHeroActions.tsx     (جديد)
+├── charts/
+│   ├── SupplierPurchasesChart.tsx  (تعديل — يستخدم RPC)
+│   ├── SupplierAgingChart.tsx      (جديد)
+│   └── SupplierCashFlowChart.tsx   (جديد)
+├── tabs/
+│   ├── SupplierInfoTab.tsx         (نقل)
+│   ├── SupplierFinancialSummary.tsx(تعديل — يستخدم RPC)
+│   ├── SupplierPaymentsTab.tsx     (تعديل — pagination)
+│   ├── SupplierProductsTab.tsx     (نقل)
+│   ├── SupplierRatingTab.tsx       (نقل)
+│   └── SupplierActivityTab.tsx     (نقل)
+├── list/
+│   ├── SupplierListRow.tsx         (جديد — مع checkbox)
+│   ├── SupplierStatsBar.tsx        (جديد — smart filter chips)
+│   ├── SupplierSavedViews.tsx      (جديد)
+│   └── SupplierMobileView.tsx      (جديد)
+├── dialogs/
+│   ├── SupplierFormDialog.tsx      (نقل)
+│   ├── SupplierPaymentDialog.tsx   (نقل)
+│   └── SupplierImportDialog.tsx    (نقل)
+└── alerts/
+    └── SupplierAlertsBanner.tsx    (جديد)
 ```
-<CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-<AgingDonutChart invoices={detail.invoices} />
-<CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
-```
-
-**الإصلاح**: تعديل الرسوم البيانية لاستقبال `chartData` من RPC بدل الفواتير الخام.
 
 ---
 
-### 2. جلب مزدوج: `findInvoices(500)` + `findInvoicesPaginated` لا يزال موجوداً
-**الأثر: طلبات شبكة مضاعفة**
+### المرحلة 3: ترقية صفحة القائمة `SuppliersPage.tsx`
 
-في `useCustomerDetail.ts` (سطور 73-109):
-- `findInvoices` يجلب 500 فاتورة (سطر 77)
-- `findInvoicesPaginated` يجلب صفحة واحدة (سطر 86)
-- نفس المشكلة مع `findPayments` (سطر 96) + `findPaymentsPaginated` (سطر 104)
-
-الفواتير غير المُقسمة تُستخدم في: Hero Header، Smart Alerts، Financial Summary (`invoiceCount`)، والرسوم البيانية. هذا يعني أن إزالتها تتطلب أولاً نقل كل هذه الاعتماديات إلى RPCs.
-
----
-
-### 3. `TopProductsChart` يجلب بيانات بشكل مستقل بدل استخدام RPC
-**الأثر: استعلامان إضافيان غير ضروريين**
-
-في `TopProductsChart.tsx` (سطر 14-31): يستعلم عن `invoices` ثم `invoice_items` بشكل منفصل. RPC `get_customer_chart_data` يُعيد `top_products` جاهزة لكنها لا تُستخدم.
+- استخدام hooks بدل الاستعلامات المباشرة
+- إضافة Smart Filter Chips (نشط، مدين، حسب التصنيف)
+- إضافة Bulk Selection مع Select All checkbox + floating action bar
+- إضافة `storeSupplierNavIds` عند النقر على مورد
+- إضافة Saved Views (تستخدم جدول `user_saved_views` مع section = 'suppliers')
+- إضافة `sanitizeSearch` للبحث
+- لف الصفحة بـ `ErrorBoundary`
+- إضافة فحص صلاحيات server-side بدل client-side
 
 ---
 
-### 4. لا يوجد "تحديد الكل" (Select All) في واجهة القائمة
-**الأثر: UX ناقص للعمليات الجماعية**
+### المرحلة 4: ترقية صفحة التفاصيل `SupplierDetailsPage.tsx`
 
-`useBulkSelection` يوفر `toggleSelectAll` و `isAllSelected`، لكن لا يوجد checkbox header في القائمة ولا في شريط الأدوات لتفعيل "تحديد الكل". يجب على المستخدم تحديد كل عميل يدوياً.
-
----
-
-### 5. لا يوجد `ErrorBoundary` في صفحات العملاء
-**الأثر: أي خطأ React يُسقط الصفحة بالكامل**
-
-لا يوجد `ErrorBoundary` يحمي `CustomersPage` أو `CustomerDetailsPage`. خطأ في رسم بياني واحد يُسقط الصفحة كاملة.
-
----
-
-### 6. `CustomerHeroHeader` و `CustomerMobileProfile` يستقبلان مصفوفة الفواتير/المدفوعات الكاملة
-**الأثر: أداء — تمرير 500 سجل كـ props لمكونات العرض**
-
-في `CustomerDetailsPage.tsx` (سطر 301):
-```
-invoices={detail.invoices} payments={detail.payments}
-```
-هذه تُستخدم فقط لعرض `CustomerQuickHistory` و `CustomerKPICards` — يمكن استبدالها ببيانات مُجمّعة من `financialSummary` RPC.
+- استخدام `useSupplierDetail` hook
+- استبدال `SupplierProfileHeader` بـ `SupplierHeroHeader` مع KPIs تفاعلية
+- الملخص المالي يعتمد على RPC بدل حساب client-side
+- إضافة رسوم بيانية: Aging + CashFlow (من RPC)
+- تعديل `SupplierPurchasesChart` لاستخدام `chartData` من RPC
+- إضافة Prev/Next navigation
+- إضافة Smart Alerts (رصيد مرتفع، تجاوز ائتمان، طلبات متأخرة، عدم نشاط)
+- إضافة server-side permission check لعمليات التعديل
+- كشف الحساب يستخدم RPC `get_supplier_statement`
+- Tabs مع lazy loading
+- لف كل tab بـ `ChartErrorBoundary`
+- Pagination لقوائم الطلبات والمدفوعات
 
 ---
 
-### 7. `CustomerSavedViews` يستخدم `localStorage`
-**الأثر: المشاهدات المحفوظة تضيع عند تغيير الجهاز/المتصفح**
+### المرحلة 5: الأمان وسلامة البيانات
 
-في `CustomerSavedViews.tsx` — البيانات محفوظة محلياً فقط.
-
----
-
-### 8. لا يوجد فلتر حسب الفئة (Category)
-**الأثر: ميزة مفقودة رغم وجود جدول `customer_categories`**
-
-`CustomerFiltersBar` لا يتضمن فلتر الفئة رغم أن `customerRepository.findCategories()` موجود.
+- إضافة `verifyPermissionOnServer('suppliers', 'edit')` لعمليات التعديل
+- إضافة `verifyPermissionOnServer('suppliers', 'delete')` (موجود في `supplierService.ts`)
+- إضافة Zod validation للاستيراد
+- تطبيق `sanitizeSearch` على جميع الاستعلامات
+- إضافة `toast.warning` عند فشل audit logging
 
 ---
 
-### 9. ألوان hardcoded في الرسوم البيانية
-**الأثر: عدم التوافق مع Dark Mode**
+## ملخص الملفات
 
-- `CashFlowLineChart.tsx` سطر 64: `stroke="hsl(142 71% 45%)"` — لون ثابت بدل design token
-- `AgingDonutChart.tsx` سطر 18-19: ألوان ثابتة `hsl(45 93% 47%)` و `hsl(25 95% 53%)`
-
----
-
-## خطة الإصلاح
-
-### المرحلة 1: ربط RPC بالرسوم البيانية (الأولوية القصوى — دقة البيانات)
-
-| المهمة | الملف | التغيير |
-|--------|-------|---------|
-| تعديل `CustomerPurchaseChart` | `CustomerPurchaseChart.tsx` | استقبال `chartData.monthly_data` بدل `invoices/payments` |
-| تعديل `AgingDonutChart` | `AgingDonutChart.tsx` | استقبال بيانات aging من RPC (يتطلب إضافة aging_data إلى RPC) أو إبقاءها على الفواتير |
-| تعديل `CashFlowLineChart` | `CashFlowLineChart.tsx` | استقبال `chartData.monthly_data` بدل `invoices/payments` |
-| تعديل `TopProductsChart` | `TopProductsChart.tsx` | استقبال `chartData.top_products` بدل الاستعلام المستقل |
-| تمرير `chartData` | `CustomerDetailsPage.tsx` | تمرير `detail.chartData` للرسوم البيانية في analytics tab |
-
-### المرحلة 2: إزالة الاعتماد على الفواتير الخام في المكونات غير الضرورية
-
-| المهمة | الملف | التغيير |
-|--------|-------|---------|
-| تقليل props في `CustomerHeroHeader` | `CustomerHeroHeader.tsx` + `CustomerDetailsPage.tsx` | إزالة `invoices/payments` props واستبدالها بالبيانات المُجمّعة الموجودة |
-| تقليل props في `CustomerMobileProfile` | `CustomerMobileProfile.tsx` | نفس المنطق |
-
-### المرحلة 3: UX + حماية
-
-| المهمة | الملف | التغيير |
-|--------|-------|---------|
-| إضافة "تحديد الكل" | `CustomersPage.tsx` | إضافة Checkbox في toolbar مربوط بـ `bulk.toggleSelectAll` |
-| إضافة `ErrorBoundary` | `CustomersPage.tsx` + `CustomerDetailsPage.tsx` | لف المكونات الرئيسية بـ ErrorBoundary |
-| إصلاح ألوان hardcoded | `CashFlowLineChart.tsx` + `AgingDonutChart.tsx` | استخدام CSS variables |
-
-### المرحلة 4: تحسينات اختيارية
-
-| المهمة | الملف | التغيير |
-|--------|-------|---------|
-| إضافة فلتر الفئة | `CustomerFiltersBar.tsx` | إضافة dropdown للفئات |
-| نقل Saved Views للقاعدة | `CustomerSavedViews.tsx` + migration | إنشاء جدول `user_saved_views` |
+| الملف | النوع |
+|-------|-------|
+| `src/lib/repositories/supplierRepository.ts` | إنشاء |
+| `src/lib/repositories/supplierRelationsRepo.ts` | إنشاء |
+| `src/hooks/suppliers/useSupplierDetail.ts` | إنشاء |
+| `src/hooks/suppliers/useSupplierList.ts` | إنشاء |
+| `src/hooks/suppliers/useSupplierFilters.ts` | إنشاء |
+| `src/hooks/suppliers/useSupplierMutations.ts` | إنشاء |
+| `src/hooks/suppliers/useBulkSupplierSelection.ts` | إنشاء |
+| `src/hooks/suppliers/useSupplierNavigation.ts` | إنشاء |
+| `src/hooks/suppliers/index.ts` | إنشاء |
+| Migration: 3 RPCs | إنشاء |
+| `src/components/suppliers/hero/*` | إنشاء (3 ملفات) |
+| `src/components/suppliers/charts/*` | إنشاء + تعديل (3 ملفات) |
+| `src/components/suppliers/list/*` | إنشاء (4 ملفات) |
+| `src/components/suppliers/alerts/*` | إنشاء |
+| `src/pages/suppliers/SuppliersPage.tsx` | إعادة كتابة |
+| `src/pages/suppliers/SupplierDetailsPage.tsx` | إعادة كتابة |
+| Existing components | نقل إلى مجلدات فرعية |
 
 ---
 
 ## التبعيات
 
 ```text
-Phase 1 (Charts→RPC) → مستقل
-Phase 2 (Remove raw data) → يعتمد على Phase 1
-Phase 3 (UX) → مستقل
-Phase 4 (Optional) → مستقل
+Phase 1 (Repos + RPCs + Hooks) → مستقل، يُنفذ أولاً
+Phase 2 (Component Structure) → مستقل
+Phase 3 (List Page) → يعتمد على Phase 1 + 2
+Phase 4 (Detail Page) → يعتمد على Phase 1 + 2
+Phase 5 (Security) → يُنفذ مع Phase 3 + 4
 ```
 
