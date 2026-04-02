@@ -1,9 +1,11 @@
 import React, { memo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SlidersHorizontal } from "lucide-react";
 import { CustomerSearchPreview } from "@/components/customers/filters/CustomerSearchPreview";
 import { FilterChips } from "@/components/filters/FilterChips";
 import { vipLabels, typeLabels } from "@/lib/customerConstants";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 import { cn } from "@/lib/utils";
 
 interface CustomerFiltersBarProps {
@@ -17,6 +19,8 @@ interface CustomerFiltersBarProps {
   onGovernorateChange: (v: string) => void;
   statusFilter: string;
   onStatusChange: (v: string) => void;
+  categoryFilter?: string;
+  onCategoryChange?: (v: string) => void;
   governorates: readonly string[];
   activeFiltersCount: number;
   isMobile: boolean;
@@ -31,15 +35,25 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
   searchQuery, onSearchChange,
   typeFilter, onTypeChange, vipFilter, onVipChange,
   governorateFilter, onGovernorateChange, statusFilter, onStatusChange,
+  categoryFilter, onCategoryChange,
   governorates, activeFiltersCount, isMobile, onOpenDrawer,
   onClearFilter, onClearAll,
   noCommDays, inactiveDays,
 }: CustomerFiltersBarProps) {
+  const { data: categories = [] } = useQuery({
+    queryKey: ['customer-categories'],
+    queryFn: () => customerRepository.findCategories(),
+    staleTime: 300000,
+  });
+
+  const categoryName = categories.find(c => c.id === categoryFilter)?.name;
+
   const chips = [
     ...(typeFilter !== 'all' ? [{ id: 'type', label: `النوع: ${typeLabels[typeFilter] || typeFilter}`, value: typeFilter }] : []),
     ...(vipFilter !== 'all' ? [{ id: 'vip', label: `VIP: ${vipLabels[vipFilter] || vipFilter}`, value: vipFilter }] : []),
     ...(governorateFilter !== 'all' ? [{ id: 'gov', label: `المحافظة: ${governorateFilter}`, value: governorateFilter }] : []),
     ...(statusFilter !== 'all' ? [{ id: 'status', label: statusFilter === 'active' ? 'نشط' : statusFilter === 'debtors' ? 'مدين' : 'غير نشط', value: statusFilter }] : []),
+    ...(categoryFilter && categoryFilter !== 'all' ? [{ id: 'cat', label: `الفئة: ${categoryName || categoryFilter}`, value: categoryFilter }] : []),
     ...(noCommDays ? [{ id: 'noComm', label: `بدون تواصل منذ ${noCommDays} يوم`, value: noCommDays }] : []),
     ...(inactiveDays ? [{ id: 'inactive', label: `بدون نشاط منذ ${inactiveDays} يوم`, value: inactiveDays }] : []),
   ];
@@ -114,6 +128,17 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
             ))}
           </SelectContent>
         </Select>
+        {categories.length > 0 && onCategoryChange && (
+          <Select value={categoryFilter || 'all'} onValueChange={onCategoryChange}>
+            <SelectTrigger className="w-36 h-9 text-xs"><SelectValue placeholder="الفئة" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الفئات</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Select value={statusFilter} onValueChange={onStatusChange}>
           <SelectTrigger className="w-28 h-9 text-xs"><SelectValue placeholder="الحالة" /></SelectTrigger>
           <SelectContent>
