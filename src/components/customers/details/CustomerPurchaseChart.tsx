@@ -1,56 +1,37 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface Invoice {
-  id: string;
-  total_amount: number;
-  created_at: string;
-}
-
-interface Payment {
-  id: string;
-  amount: number;
-  payment_date: string;
+interface MonthlyData {
+  month: string;
+  invoice_total: number;
+  payment_total: number;
 }
 
 interface CustomerPurchaseChartProps {
-  invoices: Invoice[];
-  payments: Payment[];
+  monthlyData?: MonthlyData[];
 }
 
-const CustomerPurchaseChart = ({ invoices, payments }: CustomerPurchaseChartProps) => {
+const CustomerPurchaseChart = ({ monthlyData = [] }: CustomerPurchaseChartProps) => {
   const isMobile = useIsMobile();
 
   const chartData = useMemo(() => {
-    const now = new Date();
-    const months = Array.from({ length: 12 }, (_, i) => {
-      const date = subMonths(now, 11 - i);
-      const start = startOfMonth(date);
-      const end = endOfMonth(date);
+    if (!monthlyData.length) return [];
+    return monthlyData
+      .slice()
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .slice(-12)
+      .map(d => ({
+        month: format(parseISO(d.month + '-01'), 'MMM yyyy', { locale: ar }),
+        purchases: Math.round(d.invoice_total),
+        payments: Math.round(d.payment_total),
+      }));
+  }, [monthlyData]);
 
-      const monthInvoices = invoices.filter(inv =>
-        isWithinInterval(new Date(inv.created_at), { start, end })
-      );
-      const monthPayments = payments.filter(pay =>
-        isWithinInterval(new Date(pay.payment_date), { start, end })
-      );
-
-      return {
-        month: format(date, 'MMM yyyy', { locale: ar }),
-        purchases: monthInvoices.reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0),
-        payments: monthPayments.reduce((sum, pay) => sum + Number(pay.amount || 0), 0),
-      };
-    });
-    return months;
-  }, [invoices, payments]);
-
-  const hasData = chartData.some(d => d.purchases > 0 || d.payments > 0);
-
-  if (!hasData) {
+  if (chartData.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -91,7 +72,7 @@ const CustomerPurchaseChart = ({ invoices, payments }: CustomerPurchaseChartProp
             />
             <Legend formatter={(value) => value === 'purchases' ? 'المشتريات' : 'المدفوعات'} wrapperStyle={{ fontSize: isMobile ? 11 : 14 }} />
             <Bar dataKey="purchases" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="purchases" />
-            <Bar dataKey="payments" fill="hsl(var(--success, 142 71% 45%))" radius={[4, 4, 0, 0]} name="payments" />
+            <Bar dataKey="payments" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="payments" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

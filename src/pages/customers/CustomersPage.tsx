@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUpDown, Loader2, Trash2, Crown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -102,13 +103,14 @@ const CustomersPage = () => {
   } = useInfiniteCustomers({
     pageSize,
     isMobile,
-    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
+    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.categoryFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
   });
 
   const list = useCustomerList({
     debouncedSearch: filters.debouncedSearch,
     typeFilter: filters.typeFilter, vipFilter: filters.vipFilter,
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
+    categoryFilter: filters.categoryFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
     currentPage, pageSize, sortConfig,
   });
@@ -201,6 +203,7 @@ const CustomersPage = () => {
         vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
         governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
         statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
+        categoryFilter={filters.categoryFilter} onCategoryChange={(v) => { filters.setCategoryFilter(v); setQuickFilter(null); }}
         governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
         isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
         onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
@@ -245,7 +248,17 @@ const CustomersPage = () => {
         <div>
           {/* Toolbar: sort + saved views + column settings */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">{list.totalCount} عميل</span>
+            <div className="flex items-center gap-2">
+              {allCustomers.length > 0 && (
+                <Checkbox
+                  checked={bulk.isAllSelected}
+                  onCheckedChange={(checked) => bulk.toggleSelectAll(!!checked)}
+                  aria-label="تحديد الكل"
+                  className="h-4 w-4"
+                />
+              )}
+              <span className="text-xs text-muted-foreground">{list.totalCount} عميل</span>
+            </div>
             <div className="flex items-center gap-2">
               <CustomerSavedViews
                 currentFilters={{

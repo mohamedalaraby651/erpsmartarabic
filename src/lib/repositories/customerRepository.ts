@@ -26,6 +26,7 @@ export interface CustomerFilters {
   vip?: string;
   governorate?: string;
   status?: string;
+  category?: string;
   noCommDays?: string;
   inactiveDays?: string;
 }
@@ -56,7 +57,7 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
   filters: CustomerFilters
 ): T {
   let q = query;
-  const { search, type, vip, governorate, status, noCommDays, inactiveDays } = filters;
+  const { search, type, vip, governorate, status, category, noCommDays, inactiveDays } = filters;
   if (search) {
     const s = sanitizeSearch(search);
     q = q.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`) as typeof q;
@@ -70,6 +71,7 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
     }
   }
   if (governorate && governorate !== 'all') q = q.eq('governorate', governorate) as typeof q;
+  if (category && category !== 'all') q = q.eq('category_id', category) as typeof q;
   if (status && status !== 'all') {
     if (status === 'debtors') {
       q = q.gt('current_balance', 0) as typeof q;

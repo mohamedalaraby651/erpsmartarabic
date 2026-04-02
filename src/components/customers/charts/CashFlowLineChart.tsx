@@ -1,42 +1,36 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";
 
-interface CashFlowLineChartProps {
-  invoices: { total_amount: number; created_at: string }[];
-  payments: { amount: number; payment_date: string }[];
+interface MonthlyData {
+  month: string;
+  invoice_total: number;
+  payment_total: number;
 }
 
-export function CashFlowLineChart({ invoices, payments }: CashFlowLineChartProps) {
+interface CashFlowLineChartProps {
+  monthlyData?: MonthlyData[];
+}
+
+export function CashFlowLineChart({ monthlyData = [] }: CashFlowLineChartProps) {
   const data = useMemo(() => {
-    const now = new Date();
+    if (!monthlyData.length) return [];
+    const sorted = monthlyData.slice().sort((a, b) => a.month.localeCompare(b.month)).slice(-12);
     let cumPurchases = 0;
     let cumPayments = 0;
 
-    return Array.from({ length: 12 }, (_, i) => {
-      const date = subMonths(now, 11 - i);
-      const start = startOfMonth(date);
-      const end = endOfMonth(date);
-
-      const mPurchases = invoices
-        .filter(inv => isWithinInterval(new Date(inv.created_at), { start, end }))
-        .reduce((s, inv) => s + Number(inv.total_amount || 0), 0);
-      const mPayments = payments
-        .filter(p => isWithinInterval(new Date(p.payment_date), { start, end }))
-        .reduce((s, p) => s + Number(p.amount || 0), 0);
-
-      cumPurchases += mPurchases;
-      cumPayments += mPayments;
-
+    return sorted.map(d => {
+      cumPurchases += d.invoice_total;
+      cumPayments += d.payment_total;
       return {
-        month: format(date, 'MMM yy', { locale: ar }),
+        month: format(parseISO(d.month + '-01'), 'MMM yy', { locale: ar }),
         المشتريات_التراكمية: Math.round(cumPurchases),
         المدفوعات_التراكمية: Math.round(cumPayments),
       };
     });
-  }, [invoices, payments]);
+  }, [monthlyData]);
 
   const hasData = data.some(d => d.المشتريات_التراكمية > 0 || d.المدفوعات_التراكمية > 0);
 
@@ -61,7 +55,7 @@ export function CashFlowLineChart({ invoices, payments }: CashFlowLineChartProps
             <Tooltip formatter={(v: number) => `${v.toLocaleString()} ج.م`} contentStyle={{ direction: 'rtl', borderRadius: '8px', fontSize: 12 }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Line type="monotone" dataKey="المشتريات_التراكمية" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="المدفوعات_التراكمية" stroke="hsl(142 71% 45%)" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="المدفوعات_التراكمية" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>

@@ -1,51 +1,25 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
 
-interface TopProductsChartProps {
-  customerId: string;
+interface TopProduct {
+  product_name: string;
+  total_quantity: number;
+  total_revenue: number;
 }
 
-export function TopProductsChart({ customerId }: TopProductsChartProps) {
-  const { data: items = [] } = useQuery({
-    queryKey: ['customer-top-products', customerId],
-    queryFn: async () => {
-      // Get invoice IDs for this customer
-      const { data: invoices } = await supabase
-        .from('invoices')
-        .select('id')
-        .eq('customer_id', customerId);
+interface TopProductsChartProps {
+  topProducts?: TopProduct[];
+}
 
-      if (!invoices?.length) return [];
-
-      const invoiceIds = invoices.map(i => i.id);
-
-      const { data } = await supabase
-        .from('invoice_items')
-        .select('product_id, quantity, total_price, products(name)')
-        .in('invoice_id', invoiceIds);
-
-      return data || [];
-    },
-    staleTime: 60000,
-  });
-
+export function TopProductsChart({ topProducts = [] }: TopProductsChartProps) {
   const chartData = useMemo(() => {
-    const map = new Map<string, { name: string; total: number; qty: number }>();
-    items.forEach((item: any) => {
-      const name = item.products?.name || 'غير معروف';
-      const existing = map.get(item.product_id) || { name, total: 0, qty: 0 };
-      existing.total += Number(item.total_price || 0);
-      existing.qty += Number(item.quantity || 0);
-      map.set(item.product_id, existing);
-    });
-    return Array.from(map.values())
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 10)
-      .map(p => ({ name: p.name.length > 20 ? p.name.slice(0, 20) + '…' : p.name, المبلغ: Math.round(p.total), الكمية: p.qty }));
-  }, [items]);
+    return topProducts.slice(0, 10).map(p => ({
+      name: p.product_name.length > 20 ? p.product_name.slice(0, 20) + '…' : p.product_name,
+      المبلغ: Math.round(p.total_revenue),
+      الكمية: p.total_quantity,
+    }));
+  }, [topProducts]);
 
   if (chartData.length === 0) {
     return (

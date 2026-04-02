@@ -188,6 +188,7 @@ export function useCustomerDetail(id: string | undefined) {
   const dso = fs?.dso ?? null;
   const clv = fs?.clv ?? 0;
   const totalOutstanding = fs?.totalOutstanding ?? 0;
+  const invoiceCount = fs?.invoiceCount ?? 0;
   const lastPurchaseDate = invoices.length > 0 ? invoices[0].created_at : null;
 
   const creditLimit = Number(customer?.credit_limit || 0);
@@ -204,7 +205,7 @@ export function useCustomerDetail(id: string | undefined) {
     activeTab, setActiveTab,
     updateImageMutation, deleteAddressMutation,
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
-    lastPurchaseDate, dso, clv, totalOutstanding,
+    lastPurchaseDate, dso, clv, totalOutstanding, invoiceCount,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
     // Paginated data for tabs
     paginatedInvoices, invoicePage, invoicePageSize, goToInvoicePage,

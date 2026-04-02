@@ -25,6 +25,7 @@ import type { MobileSectionId } from "@/components/customers/mobile/CustomerIcon
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { PageWrapper } from "@/components/shared/PageWrapper";
+import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -186,11 +187,11 @@ function MobileCustomerView({
             )}
             {mobileSection === 'analytics' && (
               <div className="space-y-4">
-                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-                <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-                <AgingDonutChart invoices={detail.invoices} />
-                <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
-                <TopProductsChart customerId={customerId} />
+                <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoiceCount} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
+                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
+                <AgingDonutChart customerId={customerId} />
+                <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
+                <TopProductsChart topProducts={detail.chartData?.top_products} />
               </div>
             )}
             {mobileSection === 'sales' && (
@@ -307,8 +308,8 @@ const CustomerDetailsPage = () => {
           onPrev={goPrev} onNext={goNext} hasPrev={!!prevId} hasNext={!!nextId}
           currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
           creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
-          totalPurchases={detail.totalPurchases} totalOutstanding={detail.totalOutstanding}
-          paymentRatio={detail.paymentRatio} invoiceCount={detail.invoices.length} dso={detail.dso}
+           totalPurchases={detail.totalPurchases} totalOutstanding={detail.totalOutstanding}
+           paymentRatio={detail.paymentRatio} invoiceCount={detail.invoiceCount} dso={detail.dso}
           onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
@@ -387,7 +388,7 @@ const CustomerDetailsPage = () => {
               <Suspense fallback={<TabSkeleton />}>
                 <CustomerSalesPipeline quotations={detail.quotations} salesOrders={detail.salesOrders} invoices={detail.invoices} />
               </Suspense>
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoices.length} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
+              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoiceCount} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
             </TabsContent>
             <TabsContent value="statement" className="mt-6">
               <StatementOfAccount customerName={customer.name} customerId={id!} />
@@ -395,10 +396,18 @@ const CustomerDetailsPage = () => {
             <TabsContent value="aging" className="mt-6"><CustomerAgingReport customerId={id!} /></TabsContent>
             <TabsContent value="communications" className="mt-6"><CommunicationLogTab customerId={id!} /></TabsContent>
             <TabsContent value="analytics" className="mt-6 space-y-4">
-              <CustomerPurchaseChart invoices={detail.invoices} payments={detail.payments} />
-              <AgingDonutChart invoices={detail.invoices} />
-              <CashFlowLineChart invoices={detail.invoices} payments={detail.payments} />
-              <TopProductsChart customerId={id!} />
+              <ChartErrorBoundary title="المشتريات والمدفوعات">
+                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="أعمار الديون">
+                <AgingDonutChart customerId={id!} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="التدفق المالي">
+                <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="المنتجات">
+                <TopProductsChart topProducts={detail.chartData?.top_products} />
+              </ChartErrorBoundary>
             </TabsContent>
             <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
             <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>

@@ -11,6 +11,7 @@ export function useCustomerFilters() {
   const [vipFilter, setVipFilter] = useState(searchParams.get('vip') || "all");
   const [governorateFilter, setGovernorateFilter] = useState(searchParams.get('gov') || "all");
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || "all");
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('cat') || "all");
   const [noCommDays, setNoCommDays] = useState(searchParams.get('noComm') || "");
   const [inactiveDays, setInactiveDays] = useState(searchParams.get('inactive') || "");
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -20,6 +21,7 @@ export function useCustomerFilters() {
   const [tempVip, setTempVip] = useState("all");
   const [tempGovernorate, setTempGovernorate] = useState("all");
   const [tempStatus, setTempStatus] = useState("all");
+  const [tempCategory, setTempCategory] = useState("all");
   const [tempNoCommDays, setTempNoCommDays] = useState("");
   const [tempInactiveDays, setTempInactiveDays] = useState("");
 
@@ -34,6 +36,7 @@ export function useCustomerFilters() {
       vip: overrides.vip ?? vipFilter,
       gov: overrides.gov ?? governorateFilter,
       status: overrides.status ?? statusFilter,
+      cat: overrides.cat ?? categoryFilter,
       noComm: overrides.noComm ?? noCommDays,
       inactive: overrides.inactive ?? inactiveDays,
     };
@@ -42,15 +45,16 @@ export function useCustomerFilters() {
     if (vals.vip !== 'all') params.vip = vals.vip;
     if (vals.gov !== 'all') params.gov = vals.gov;
     if (vals.status !== 'all') params.status = vals.status;
+    if (vals.cat !== 'all') params.cat = vals.cat;
     if (vals.noComm) params.noComm = vals.noComm;
     if (vals.inactive) params.inactive = vals.inactive;
     setSearchParams(params, { replace: true });
-  }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays, setSearchParams]);
+  }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays, setSearchParams]);
 
   const updateFilter = useCallback((key: string, value: string) => {
     const setters: Record<string, (v: string) => void> = {
       type: setTypeFilter, vip: setVipFilter, gov: setGovernorateFilter, status: setStatusFilter,
-      noComm: setNoCommDays, inactive: setInactiveDays,
+      cat: setCategoryFilter, noComm: setNoCommDays, inactive: setInactiveDays,
     };
     setters[key]?.(value);
     syncToUrl({ [key]: value });
@@ -66,6 +70,7 @@ export function useCustomerFilters() {
     setVipFilter('all');
     setGovernorateFilter('all');
     setStatusFilter('all');
+    setCategoryFilter('all');
     setNoCommDays('');
     setInactiveDays('');
     setSearchParams({}, { replace: true });
@@ -76,10 +81,11 @@ export function useCustomerFilters() {
     setTempVip(vipFilter);
     setTempGovernorate(governorateFilter);
     setTempStatus(statusFilter);
+    setTempCategory(categoryFilter);
     setTempNoCommDays(noCommDays);
     setTempInactiveDays(inactiveDays);
     setFilterDrawerOpen(true);
-  }, [typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays]);
+  }, [typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays]);
 
   // Fixed: now syncs to URL after applying drawer filters
   const applyDrawerFilters = useCallback(() => {
@@ -87,24 +93,26 @@ export function useCustomerFilters() {
     setVipFilter(tempVip);
     setGovernorateFilter(tempGovernorate);
     setStatusFilter(tempStatus);
+    setCategoryFilter(tempCategory);
     setNoCommDays(tempNoCommDays);
     setInactiveDays(tempInactiveDays);
-    syncToUrl({ type: tempType, vip: tempVip, gov: tempGovernorate, status: tempStatus, noComm: tempNoCommDays, inactive: tempInactiveDays });
-  }, [tempType, tempVip, tempGovernorate, tempStatus, tempNoCommDays, tempInactiveDays, syncToUrl]);
+    syncToUrl({ type: tempType, vip: tempVip, gov: tempGovernorate, status: tempStatus, cat: tempCategory, noComm: tempNoCommDays, inactive: tempInactiveDays });
+  }, [tempType, tempVip, tempGovernorate, tempStatus, tempCategory, tempNoCommDays, tempInactiveDays, syncToUrl]);
 
   const resetDrawerFilters = useCallback(() => {
     setTempType('all');
     setTempVip('all');
     setTempGovernorate('all');
     setTempStatus('all');
+    setTempCategory('all');
     setTempNoCommDays('');
     setTempInactiveDays('');
   }, []);
 
   const activeFiltersCount = useMemo(
-    () => [typeFilter, vipFilter, governorateFilter, statusFilter].filter(f => f !== 'all').length
+    () => [typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter].filter(f => f !== 'all').length
       + (noCommDays ? 1 : 0) + (inactiveDays ? 1 : 0),
-    [typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays]
+    [typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays]
   );
 
   return {
@@ -114,6 +122,7 @@ export function useCustomerFilters() {
     vipFilter, setVipFilter: (v: string) => updateFilter('vip', v),
     governorateFilter, setGovernorateFilter: (v: string) => updateFilter('gov', v),
     statusFilter, setStatusFilter: (v: string) => updateFilter('status', v),
+    categoryFilter, setCategoryFilter: (v: string) => updateFilter('cat', v),
     noCommDays, setNoCommDays: (v: string) => updateFilter('noComm', v),
     inactiveDays, setInactiveDays: (v: string) => updateFilter('inactive', v),
     clearFilter, clearAllFilters, activeFiltersCount,
@@ -121,6 +130,7 @@ export function useCustomerFilters() {
     filterDrawerOpen, setFilterDrawerOpen,
     tempType, setTempType, tempVip, setTempVip,
     tempGovernorate, setTempGovernorate, tempStatus, setTempStatus,
+    tempCategory, setTempCategory,
     tempNoCommDays, setTempNoCommDays, tempInactiveDays, setTempInactiveDays,
     openDrawerWithCurrentValues, applyDrawerFilters, resetDrawerFilters,
     // URL

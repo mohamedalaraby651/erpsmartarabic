@@ -15,6 +15,7 @@ interface UseCustomerListOptions {
   vipFilter: string;
   governorateFilter: string;
   statusFilter: string;
+  categoryFilter?: string;
   noCommDays?: string;
   inactiveDays?: string;
   currentPage: number;
@@ -26,10 +27,10 @@ export function useCustomerList(options: UseCustomerListOptions) {
   const queryClient = useQueryClient();
   const {
     debouncedSearch, typeFilter, vipFilter, governorateFilter,
-    statusFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig,
+    statusFilter, categoryFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig,
   } = options;
 
-  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, noCommDays, inactiveDays];
+  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays];
 
   // Main list query
   const { data: queryResult, isLoading, refetch } = useQuery({
@@ -42,6 +43,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
         vip: vipFilter,
         governorate: governorateFilter,
         status: statusFilter,
+        category: categoryFilter,
         noCommDays,
         inactiveDays,
       },
