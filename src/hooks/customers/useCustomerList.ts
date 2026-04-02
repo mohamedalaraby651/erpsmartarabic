@@ -43,6 +43,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
         vip: vipFilter,
         governorate: governorateFilter,
         status: statusFilter,
+        category: categoryFilter,
         noCommDays,
         inactiveDays,
       },
