@@ -193,6 +193,39 @@ export const paymentSchema = z.object({
 
 export type PaymentFormData = z.infer<typeof paymentSchema>;
 
+/**
+ * Write-side schema for Supplier Repository layer validation.
+ */
+export const supplierWriteSchema = z.object({
+  name: z.string().trim().min(1, 'اسم المورد مطلوب').max(200),
+  contact_person: z.string().max(100).optional().or(z.literal('')).or(z.literal(null)),
+  phone: z.string().regex(phoneRegex).max(20).optional().or(z.literal('')).or(z.literal(null)),
+  phone2: z.string().regex(phoneRegex).max(20).optional().or(z.literal('')).or(z.literal(null)),
+  email: z.string().email().max(255).optional().or(z.literal('')).or(z.literal(null)),
+  address: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+  tax_number: z.string().max(50).optional().or(z.literal('')).or(z.literal(null)),
+  notes: z.string().max(2000).optional().or(z.literal('')).or(z.literal(null)),
+  is_active: z.boolean().optional(),
+  credit_limit: z.number().min(0).max(1000000000).optional().nullable(),
+  discount_percentage: z.number().min(0).max(100).optional().nullable(),
+  payment_terms_days: z.number().int().min(0).max(365).optional().nullable(),
+  governorate: z.string().max(500).optional().or(z.literal('')).or(z.literal(null)),
+  category: z.string().max(200).optional().or(z.literal('')).or(z.literal(null)),
+}).passthrough();
+
+/**
+ * Import-side schema for supplier import validation.
+ */
+export const supplierImportSchema = z.object({
+  name: z.string().trim().min(1, 'اسم المورد مطلوب').max(200),
+  phone: z.string().max(20).optional().or(z.literal('')),
+  email: z.string().email('بريد إلكتروني غير صالح').max(255).optional().or(z.literal('')),
+  contact_person: z.string().max(100).optional().or(z.literal('')),
+  address: z.string().max(500).optional().or(z.literal('')),
+  tax_number: z.string().max(50).optional().or(z.literal('')),
+  notes: z.string().max(2000).optional().or(z.literal('')),
+});
+
 // Supplier validation schema
 export const supplierSchema = z.object({
   name: z.string().trim().min(1, 'اسم المورد مطلوب').max(200, 'اسم المورد طويل جداً'),

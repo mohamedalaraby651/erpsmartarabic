@@ -4323,6 +4323,7 @@ export type Database = {
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
       get_sidebar_counts: { Args: never; Returns: Json }
+      get_supplier_aging: { Args: { _supplier_id: string }; Returns: Json }
       get_supplier_chart_data: { Args: { _supplier_id: string }; Returns: Json }
       get_supplier_financial_summary: {
         Args: { _supplier_id: string }
