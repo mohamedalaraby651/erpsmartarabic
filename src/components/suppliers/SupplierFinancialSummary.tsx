@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { DollarSign, TrendingUp, CreditCard, Clock, Percent } from "lucide-react";
+import { DollarSign, TrendingUp, CreditCard, Clock, Percent, BarChart3, Timer } from "lucide-react";
 
 interface SupplierFinancialSummaryProps {
   totalPurchases: number;
@@ -9,6 +9,8 @@ interface SupplierFinancialSummaryProps {
   creditLimit: number;
   paymentTermsDays: number;
   discountPercentage: number;
+  dso?: number | null;
+  paymentRatio?: number;
 }
 
 const SupplierFinancialSummary = ({
@@ -18,8 +20,10 @@ const SupplierFinancialSummary = ({
   creditLimit,
   paymentTermsDays,
   discountPercentage,
+  dso,
+  paymentRatio: externalPaymentRatio,
 }: SupplierFinancialSummaryProps) => {
-  const paymentRate = totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0;
+  const paymentRate = externalPaymentRatio ?? (totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0);
   const creditUsage = creditLimit > 0 ? (currentBalance / creditLimit) * 100 : 0;
 
   const items = [
@@ -28,6 +32,7 @@ const SupplierFinancialSummary = ({
     { icon: DollarSign, label: 'الرصيد المستحق', value: `${currentBalance.toLocaleString()} ج.م`, color: currentBalance > 0 ? 'text-destructive' : 'text-success' },
     { icon: Clock, label: 'مدة السداد', value: paymentTermsDays > 0 ? `${paymentTermsDays} يوم` : 'غير محدد', color: 'text-muted-foreground' },
     { icon: Percent, label: 'نسبة الخصم', value: `${discountPercentage}%`, color: 'text-info' },
+    { icon: Timer, label: 'متوسط أيام السداد (DSO)', value: dso != null ? `${dso} يوم` : 'غير متاح', color: 'text-muted-foreground' },
   ];
 
   return (
@@ -52,7 +57,7 @@ const SupplierFinancialSummary = ({
         {/* نسبة السداد */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>نسبة السداد</span>
+            <span className="flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> نسبة السداد</span>
             <span className="font-medium">{paymentRate.toFixed(1)}%</span>
           </div>
           <Progress value={Math.min(paymentRate, 100)} className="h-2" />
