@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { sanitizeSearch } from "@/lib/utils/sanitize";
+import { supplierWriteSchema } from "@/lib/validations";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type SupplierInsert = Database['public']['Tables']['suppliers']['Insert'];
@@ -102,9 +103,10 @@ export const supplierRepository = {
   },
 
   async create(payload: SupplierInsert): Promise<Supplier> {
+    const validated = supplierWriteSchema.parse(payload);
     const { data, error } = await supabase
       .from('suppliers')
-      .insert(payload)
+      .insert({ ...payload, ...validated })
       .select()
       .single();
     if (error) throw error;
@@ -112,9 +114,10 @@ export const supplierRepository = {
   },
 
   async update(id: string, payload: SupplierUpdate): Promise<void> {
+    const validated = supplierWriteSchema.partial().parse(payload);
     const { error } = await supabase
       .from('suppliers')
-      .update(payload)
+      .update({ ...payload, ...validated })
       .eq('id', id);
     if (error) throw error;
   },

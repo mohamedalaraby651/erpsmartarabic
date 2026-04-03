@@ -12,6 +12,8 @@ interface FinancialSummary {
   totalPayments: number;
   totalOutstanding: number;
   orderCount: number;
+  pendingOrderCount: number;
+  lastOrderDate: string | null;
   avgOrderValue: number;
   paymentRatio: number;
   dso: number | null;
@@ -48,6 +50,8 @@ export function useSupplierDetail(id: string | undefined) {
         totalPayments: d.total_payments ?? 0,
         totalOutstanding: d.total_outstanding ?? 0,
         orderCount: d.order_count ?? 0,
+        pendingOrderCount: d.pending_order_count ?? 0,
+        lastOrderDate: (d.last_order_date as unknown as string) ?? null,
         avgOrderValue: d.avg_order_value ?? 0,
         paymentRatio: d.payment_ratio ?? 0,
         dso: d.dso ?? null,
@@ -73,16 +77,7 @@ export function useSupplierDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  // === LAZY queries ===
-  const ordersNeeded = isMobile || ['orders'].includes(activeTab);
-  const { data: purchaseOrders = [] } = useQuery({
-    queryKey: ['supplier-purchase-orders', id],
-    queryFn: () => supplierRelationsRepo.findPurchaseOrders(id!),
-    enabled: !!id && ordersNeeded,
-    staleTime: 60000,
-    refetchOnWindowFocus: false,
-  });
-
+  // === LAZY queries (paginated only) ===
   const { data: paginatedOrders } = useQuery({
     queryKey: ['supplier-orders-paginated', id, orderPage, orderPageSize],
     queryFn: () => supplierRelationsRepo.findPurchaseOrdersPaginated(id!, orderPage, orderPageSize),
@@ -121,31 +116,32 @@ export function useSupplierDetail(id: string | undefined) {
     },
   });
 
-  // Derived values
+  // Derived values from RPC (no more redundant fetches)
   const fs = financialSummary;
   const totalPurchases = fs?.totalPurchases ?? 0;
   const totalPayments = fs?.totalPayments ?? 0;
   const totalOutstanding = fs?.totalOutstanding ?? 0;
   const orderCount = fs?.orderCount ?? 0;
+  const pendingOrderCount = fs?.pendingOrderCount ?? 0;
   const avgOrderValue = fs?.avgOrderValue ?? 0;
   const paymentRatio = fs?.paymentRatio ?? 0;
   const dso = fs?.dso ?? null;
+  const lastOrderDate = fs?.lastOrderDate ?? null;
 
   const currentBalance = Number(supplier?.current_balance || 0);
   const creditLimit = Number(supplier?.credit_limit || 0);
   const hasHighBalance = currentBalance > 50000;
   const creditExceeded = creditLimit > 0 && currentBalance >= creditLimit;
-  const lastOrderDate = purchaseOrders.length > 0 ? purchaseOrders[0].created_at : null;
 
   const goToOrderPage = useCallback((p: number) => setOrderPage(p), []);
   const goToPaymentPage = useCallback((p: number) => setPaymentPage(p), []);
 
   return {
-    supplier, isLoading, purchaseOrders, activities, chartData,
+    supplier, isLoading, activities, chartData,
     activeTab, setActiveTab,
     updateRatingMutation,
     totalPurchases, totalPayments, totalOutstanding, orderCount,
-    avgOrderValue, paymentRatio, dso,
+    pendingOrderCount, avgOrderValue, paymentRatio, dso,
     currentBalance, creditLimit, hasHighBalance, creditExceeded, lastOrderDate,
     // Paginated
     paginatedOrders, orderPage, orderPageSize, goToOrderPage,

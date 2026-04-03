@@ -30,6 +30,8 @@ import { ServerPagination } from "@/components/shared/ServerPagination";
 import SupplierHeroHeader from "@/components/suppliers/hero/SupplierHeroHeader";
 import SupplierAlertsBanner from "@/components/suppliers/alerts/SupplierAlertsBanner";
 import SupplierPurchasesChartRPC from "@/components/suppliers/charts/SupplierPurchasesChartRPC";
+import { SupplierAgingChart } from "@/components/suppliers/charts/SupplierAgingChart";
+import { SupplierCashFlowChart } from "@/components/suppliers/charts/SupplierCashFlowChart";
 import SupplierInfoTab from "@/components/suppliers/SupplierInfoTab";
 import SupplierFinancialSummary from "@/components/suppliers/SupplierFinancialSummary";
 import SupplierPaymentsTab from "@/components/suppliers/SupplierPaymentsTab";
@@ -55,10 +57,10 @@ const SupplierDetailsPage = () => {
   const nav = useSupplierNavigation(id);
 
   const {
-    supplier, isLoading, purchaseOrders, chartData,
+    supplier, isLoading, chartData,
     activeTab, setActiveTab, updateRatingMutation,
     totalPurchases, totalPayments, totalOutstanding, orderCount,
-    avgOrderValue, paymentRatio, dso,
+    pendingOrderCount, avgOrderValue, paymentRatio, dso,
     currentBalance, creditLimit, hasHighBalance, lastOrderDate,
     paginatedOrders, orderPage, orderPageSize, goToOrderPage,
     paginatedPayments, paymentPage, paymentPageSize, goToPaymentPage,
@@ -102,8 +104,6 @@ const SupplierDetailsPage = () => {
     }
   };
 
-  const pendingOrders = purchaseOrders.filter(o => o.status === 'pending' || o.status === 'draft');
-
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
       draft: { label: 'مسودة', variant: 'secondary' }, pending: { label: 'معلق', variant: 'outline' },
@@ -131,10 +131,13 @@ const SupplierDetailsPage = () => {
     { icon: CreditCard, value: `${currentBalance.toLocaleString()}`, label: 'الرصيد', color: hasHighBalance ? 'text-destructive' : 'text-success' },
   ];
 
-  // Paginated orders data
+  // Paginated data
   const ordersData = paginatedOrders?.data || [];
   const ordersCount = paginatedOrders?.count || 0;
   const ordersTotalPages = Math.ceil(ordersCount / orderPageSize);
+
+  const paymentsData = paginatedPayments?.data || [];
+  const paymentsCount = paginatedPayments?.count || 0;
 
   return (
     <div className="space-y-6">
@@ -161,7 +164,7 @@ const SupplierDetailsPage = () => {
       <SupplierAlertsBanner
         currentBalance={currentBalance}
         creditLimit={creditLimit}
-        pendingOrderCount={pendingOrders.length}
+        pendingOrderCount={pendingOrderCount}
         lastOrderDate={lastOrderDate}
       />
 
@@ -172,10 +175,10 @@ const SupplierDetailsPage = () => {
             <SupplierInfoTab supplier={supplier} />
           </MobileDetailSection>
           <MobileDetailSection title="الملخص المالي" priority="medium" icon={<CreditCard className="h-4 w-4" />}>
-            <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} />
+            <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} dso={dso} paymentRatio={paymentRatio} />
           </MobileDetailSection>
           <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />}>
-            <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} />
+            <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} payments={paymentsData} totalCount={paymentsCount} currentPage={paymentPage} pageSize={paymentPageSize} onPageChange={goToPaymentPage} />
           </MobileDetailSection>
           <MobileDetailSection title="المنتجات" priority="low" icon={<Package className="h-4 w-4" />}>
             <SupplierProductsTab supplierId={id!} />
@@ -214,7 +217,7 @@ const SupplierDetailsPage = () => {
 
           <TabsContent value="financial" className="mt-6">
             <ChartErrorBoundary title="الملخص المالي">
-              <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} />
+              <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} dso={dso} paymentRatio={paymentRatio} />
             </ChartErrorBoundary>
           </TabsContent>
 
@@ -254,11 +257,23 @@ const SupplierDetailsPage = () => {
           </TabsContent>
 
           <TabsContent value="payments" className="mt-6">
-            <ChartErrorBoundary title="المدفوعات"><SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} /></ChartErrorBoundary>
+            <ChartErrorBoundary title="المدفوعات">
+              <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} payments={paymentsData} totalCount={paymentsCount} currentPage={paymentPage} pageSize={paymentPageSize} onPageChange={goToPaymentPage} />
+            </ChartErrorBoundary>
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
-            <SupplierPurchasesChartRPC chartData={chartData} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ChartErrorBoundary title="المشتريات الشهرية">
+                <SupplierPurchasesChartRPC chartData={chartData} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="توزيع أعمار المستحقات">
+                <SupplierAgingChart supplierId={id!} />
+              </ChartErrorBoundary>
+              <ChartErrorBoundary title="التدفق المالي التراكمي">
+                <SupplierCashFlowChart monthlyData={chartData?.monthly_data} />
+              </ChartErrorBoundary>
+            </div>
           </TabsContent>
 
           <TabsContent value="products" className="mt-6">
