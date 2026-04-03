@@ -114,9 +114,10 @@ export const supplierRepository = {
   },
 
   async update(id: string, payload: SupplierUpdate): Promise<void> {
+    const validated = supplierWriteSchema.partial().parse(payload);
     const { error } = await supabase
       .from('suppliers')
-      .update(payload)
+      .update({ ...payload, ...validated })
       .eq('id', id);
     if (error) throw error;
   },
