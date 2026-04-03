@@ -79,6 +79,12 @@ export default function SupplierImportDialog({ open, onOpenChange }: Props) {
       const importResults: ImportResult[] = [];
 
       for (const row of rows) {
+        // Zod validation
+        const validation = supplierImportSchema.safeParse(row);
+        if (!validation.success) {
+          const msg = validation.error.issues[0]?.message || 'بيانات غير صالحة';
+          importResults.push({ row, status: 'error', message: msg }); continue;
+        }
         if (existingNames.has(row.name.toLowerCase().trim())) {
           importResults.push({ row, status: 'duplicate', message: 'مورد مكرر' }); continue;
         }
