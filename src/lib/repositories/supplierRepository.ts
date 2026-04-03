@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { sanitizeSearch } from "@/lib/utils/sanitize";
+import { supplierWriteSchema } from "@/lib/validations";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type SupplierInsert = Database['public']['Tables']['suppliers']['Insert'];
