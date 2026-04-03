@@ -103,9 +103,10 @@ export const supplierRepository = {
   },
 
   async create(payload: SupplierInsert): Promise<Supplier> {
+    const validated = supplierWriteSchema.parse(payload);
     const { data, error } = await supabase
       .from('suppliers')
-      .insert(payload)
+      .insert({ ...payload, ...validated })
       .select()
       .single();
     if (error) throw error;
