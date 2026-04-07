@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import {
   ArrowRight, Truck, ClipboardList, Paperclip, Info,
-  CreditCard, Package, Star, Activity, ShoppingCart, BarChart3,
+  CreditCard, Package, Star, Activity, ShoppingCart, BarChart3, Printer,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
@@ -20,28 +20,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
-import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
-import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { useIsMobile } from "@/hooks/use-mobile";
-import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
 import { ServerPagination } from "@/components/shared/ServerPagination";
+import { PageWrapper } from "@/components/shared/PageWrapper";
+import { Loader2 } from "lucide-react";
 
 import SupplierHeroHeader from "@/components/suppliers/hero/SupplierHeroHeader";
 import SupplierAlertsBanner from "@/components/suppliers/alerts/SupplierAlertsBanner";
-import SupplierPurchasesChartRPC from "@/components/suppliers/charts/SupplierPurchasesChartRPC";
-import { SupplierAgingChart } from "@/components/suppliers/charts/SupplierAgingChart";
-import { SupplierCashFlowChart } from "@/components/suppliers/charts/SupplierCashFlowChart";
-import SupplierInfoTab from "@/components/suppliers/SupplierInfoTab";
-import SupplierFinancialSummary from "@/components/suppliers/SupplierFinancialSummary";
-import SupplierPaymentsTab from "@/components/suppliers/SupplierPaymentsTab";
-import SupplierProductsTab from "@/components/suppliers/SupplierProductsTab";
-import SupplierRatingTab from "@/components/suppliers/SupplierRatingTab";
-import SupplierActivityTab from "@/components/suppliers/SupplierActivityTab";
+import { SupplierMobileProfile } from "@/components/suppliers/mobile/SupplierMobileProfile";
+import { SupplierCompressedHeader } from "@/components/suppliers/mobile/SupplierCompressedHeader";
+import { SupplierIconStrip } from "@/components/suppliers/mobile/SupplierIconStrip";
+import type { SupplierMobileSectionId } from "@/components/suppliers/mobile/SupplierIconStrip";
 import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
 import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog";
 
 import { useSupplierDetail, useSupplierNavigation } from "@/hooks/suppliers";
+
+// Lazy-loaded tabs
+const SupplierInfoTab = lazy(() => import("@/components/suppliers/SupplierInfoTab"));
+const SupplierFinancialSummary = lazy(() => import("@/components/suppliers/SupplierFinancialSummary"));
+const SupplierPaymentsTab = lazy(() => import("@/components/suppliers/SupplierPaymentsTab"));
+const SupplierProductsTab = lazy(() => import("@/components/suppliers/SupplierProductsTab"));
+const SupplierRatingTab = lazy(() => import("@/components/suppliers/SupplierRatingTab"));
+const SupplierActivityTab = lazy(() => import("@/components/suppliers/SupplierActivityTab"));
+const SupplierPurchasesChartRPC = lazy(() => import("@/components/suppliers/charts/SupplierPurchasesChartRPC"));
+const SupplierAgingChart = lazy(() => import("@/components/suppliers/charts/SupplierAgingChart").then(m => ({ default: m.SupplierAgingChart })));
+const SupplierCashFlowChart = lazy(() => import("@/components/suppliers/charts/SupplierCashFlowChart").then(m => ({ default: m.SupplierCashFlowChart })));
+
+const TabFallback = () => <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
 const SupplierDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,22 +56,43 @@ const SupplierDetailsPage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [isPrintingStatement, setIsPrintingStatement] = useState(false);
+  const [mobileSection, setMobileSection] = useState<SupplierMobileSectionId>('none');
+  const [showCompressed, setShowCompressed] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  // URL tab sync
+  const activeTab = searchParams.get('tab') || 'info';
+  const setActiveTab = useCallback((tab: string) => {
+    setSearchParams({ tab }, { replace: true });
+  }, [setSearchParams]);
 
   const detail = useSupplierDetail(id);
   const nav = useSupplierNavigation(id);
 
   const {
     supplier, isLoading, chartData,
-    activeTab, setActiveTab, updateRatingMutation,
+    updateRatingMutation,
     totalPurchases, totalPayments, totalOutstanding, orderCount,
     pendingOrderCount, avgOrderValue, paymentRatio, dso,
     currentBalance, creditLimit, hasHighBalance, lastOrderDate,
     paginatedOrders, orderPage, orderPageSize, goToOrderPage,
     paginatedPayments, paymentPage, paymentPageSize, goToPaymentPage,
   } = detail;
+
+  // Compressed header on scroll (mobile)
+  useEffect(() => {
+    if (!isMobile || !heroRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowCompressed(!entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(heroRef.current);
+    return () => observer.disconnect();
+  }, [isMobile, supplier]);
 
   const handleCreatePurchaseOrder = () => navigate('/purchase-orders', { state: { prefillSupplierId: id } });
 
@@ -125,190 +153,246 @@ const SupplierDetailsPage = () => {
     );
   }
 
-  const mobileStats = [
-    { icon: ShoppingCart, value: orderCount, label: 'الطلبات', color: 'text-primary' },
-    { icon: Package, value: `${totalPurchases.toLocaleString()}`, label: 'المشتريات', color: 'text-info' },
-    { icon: CreditCard, value: `${currentBalance.toLocaleString()}`, label: 'الرصيد', color: hasHighBalance ? 'text-destructive' : 'text-success' },
-  ];
-
-  // Paginated data
   const ordersData = paginatedOrders?.data || [];
   const ordersCount = paginatedOrders?.count || 0;
   const ordersTotalPages = Math.ceil(ordersCount / orderPageSize);
-
   const paymentsData = paginatedPayments?.data || [];
   const paymentsCount = paginatedPayments?.count || 0;
 
-  return (
-    <div className="space-y-6">
-      <MobileDetailHeader title={supplier.name} backTo="/suppliers" action={<Button variant="outline" size="sm" className="min-h-11 min-w-11" onClick={() => setEditDialogOpen(true)}>تعديل</Button>} />
-      {!isMobile && <Button variant="ghost" onClick={() => navigate('/suppliers')} className="mb-2"><ArrowRight className="h-4 w-4 ml-2" />العودة للموردين</Button>}
-
-      <SupplierHeroHeader
-        supplier={supplier}
-        onEdit={() => setEditDialogOpen(true)}
-        onCreatePurchaseOrder={handleCreatePurchaseOrder}
-        onRecordPayment={() => setPaymentDialogOpen(true)}
-        onPrintStatement={handlePrintStatement}
-        isPrintingStatement={isPrintingStatement}
-        totalPurchases={totalPurchases}
-        totalPayments={totalPayments}
-        totalOutstanding={totalOutstanding}
-        orderCount={orderCount}
-        onPrev={nav.goPrev}
-        onNext={nav.goNext}
-        hasPrev={!!nav.prevId}
-        hasNext={!!nav.nextId}
-      />
-
-      <SupplierAlertsBanner
-        currentBalance={currentBalance}
-        creditLimit={creditLimit}
-        pendingOrderCount={pendingOrderCount}
-        lastOrderDate={lastOrderDate}
-      />
-
-      {isMobile ? (
-        <div className="space-y-3 mt-4">
-          <MobileStatsScroll stats={mobileStats} />
-          <MobileDetailSection title="معلومات المورد" priority="medium" icon={<Info className="h-4 w-4" />}>
-            <SupplierInfoTab supplier={supplier} />
-          </MobileDetailSection>
-          <MobileDetailSection title="الملخص المالي" priority="medium" icon={<CreditCard className="h-4 w-4" />}>
-            <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} dso={dso} paymentRatio={paymentRatio} />
-          </MobileDetailSection>
-          <MobileDetailSection title="المدفوعات" priority="medium" icon={<CreditCard className="h-4 w-4" />}>
-            <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} payments={paymentsData} totalCount={paymentsCount} currentPage={paymentPage} pageSize={paymentPageSize} onPageChange={goToPaymentPage} />
-          </MobileDetailSection>
-          <MobileDetailSection title="المنتجات" priority="low" icon={<Package className="h-4 w-4" />}>
-            <SupplierProductsTab supplierId={id!} />
-          </MobileDetailSection>
-          <MobileDetailSection title="التقييم" priority="low" icon={<Star className="h-4 w-4" />}>
-            <SupplierRatingTab supplierId={id!} currentRating={(supplier as any).rating || 0} onRatingChange={(r) => updateRatingMutation.mutate(r)} />
-          </MobileDetailSection>
-          <MobileDetailSection title="النشاطات" priority="low" icon={<Activity className="h-4 w-4" />}>
-            <SupplierActivityTab supplierId={id!} />
-          </MobileDetailSection>
-          <MobileDetailSection title="المرفقات" priority="low" icon={<Paperclip className="h-4 w-4" />}>
-            <FileUpload entityType="supplier" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'supplier', id] })} />
-            <AttachmentsList entityType="supplier" entityId={id!} />
-          </MobileDetailSection>
+  const renderMobileSection = () => {
+    switch (mobileSection) {
+      case 'info': return <Suspense fallback={<TabFallback />}><SupplierInfoTab supplier={supplier} /></Suspense>;
+      case 'financial': return <Suspense fallback={<TabFallback />}><SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} dso={dso} paymentRatio={paymentRatio} /></Suspense>;
+      case 'orders': return (
+        <Card>
+          <CardContent className="p-4">
+            {ordersData.length > 0 ? ordersData.map(order => (
+              <div key={order.id} className="flex items-center justify-between py-3 border-b last:border-0 cursor-pointer" onClick={() => navigate(`/purchase-orders/${order.id}`)}>
+                <div>
+                  <p className="font-mono text-sm font-medium">{order.order_number}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString('ar-EG')}</p>
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-sm">{Number(order.total_amount).toLocaleString()} ج.م</p>
+                  {getStatusBadge(order.status)}
+                </div>
+              </div>
+            )) : <p className="text-center text-muted-foreground py-8">لا توجد أوامر شراء</p>}
+          </CardContent>
+        </Card>
+      );
+      case 'payments': return <Suspense fallback={<TabFallback />}><SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} payments={paymentsData} totalCount={paymentsCount} currentPage={paymentPage} pageSize={paymentPageSize} onPageChange={goToPaymentPage} /></Suspense>;
+      case 'analytics': return (
+        <div className="space-y-4">
+          <Suspense fallback={<TabFallback />}><SupplierPurchasesChartRPC chartData={chartData} /></Suspense>
+          <Suspense fallback={<TabFallback />}><SupplierAgingChart supplierId={id!} /></Suspense>
+          <Suspense fallback={<TabFallback />}><SupplierCashFlowChart monthlyData={chartData?.monthly_data} /></Suspense>
         </div>
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-          <ScrollArea className="w-full">
-            <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
-              <TabsTrigger value="info" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Info className="h-3.5 w-3.5" />معلومات المورد</TabsTrigger>
-              <TabsTrigger value="financial" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><CreditCard className="h-3.5 w-3.5" />الملخص المالي</TabsTrigger>
-              <TabsTrigger value="orders" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><ShoppingCart className="h-3.5 w-3.5" />أوامر الشراء ({ordersCount})</TabsTrigger>
-              <TabsTrigger value="payments" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><CreditCard className="h-3.5 w-3.5" />المدفوعات</TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><BarChart3 className="h-3.5 w-3.5" />التحليلات</TabsTrigger>
-              <TabsTrigger value="products" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Package className="h-3.5 w-3.5" />المنتجات</TabsTrigger>
-              <TabsTrigger value="rating" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Star className="h-3.5 w-3.5" />التقييم</TabsTrigger>
-              <TabsTrigger value="activity" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Activity className="h-3.5 w-3.5" />النشاطات</TabsTrigger>
-              <TabsTrigger value="attachments" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Paperclip className="h-3.5 w-3.5" />المرفقات</TabsTrigger>
-            </TabsList>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+      );
+      case 'products': return <Suspense fallback={<TabFallback />}><SupplierProductsTab supplierId={id!} /></Suspense>;
+      case 'rating': return <Suspense fallback={<TabFallback />}><SupplierRatingTab supplierId={id!} currentRating={(supplier as any).rating || 0} onRatingChange={(r) => updateRatingMutation.mutate(r)} /></Suspense>;
+      case 'activity': return <Suspense fallback={<TabFallback />}><SupplierActivityTab supplierId={id!} /></Suspense>;
+      case 'attachments': return (
+        <div className="space-y-4">
+          <FileUpload entityType="supplier" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'supplier', id] })} />
+          <AttachmentsList entityType="supplier" entityId={id!} />
+        </div>
+      );
+      case 'statement': return (
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Printer className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground mb-4">اضغط لطباعة كشف الحساب</p>
+            <Button onClick={handlePrintStatement} disabled={isPrintingStatement}>
+              {isPrintingStatement ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Printer className="h-4 w-4 ml-2" />}
+              طباعة كشف الحساب
+            </Button>
+          </CardContent>
+        </Card>
+      );
+      default: return null;
+    }
+  };
 
-          <TabsContent value="info" className="mt-6">
-            <ChartErrorBoundary title="معلومات المورد"><SupplierInfoTab supplier={supplier} /></ChartErrorBoundary>
-          </TabsContent>
+  return (
+    <PageWrapper title={`المورد: ${supplier.name}`}>
+      <div className="space-y-4">
+        {!isMobile && (
+          <Button variant="ghost" onClick={() => navigate('/suppliers')} className="mb-2">
+            <ArrowRight className="h-4 w-4 ml-2" />العودة للموردين
+          </Button>
+        )}
 
-          <TabsContent value="financial" className="mt-6">
-            <ChartErrorBoundary title="الملخص المالي">
-              <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} dso={dso} paymentRatio={paymentRatio} />
-            </ChartErrorBoundary>
-          </TabsContent>
+        {/* Mobile: Compressed sticky header */}
+        {isMobile && showCompressed && (
+          <div className="sticky top-0 z-30 -mx-4 px-4 pt-2 pb-1 bg-background/95 backdrop-blur-sm">
+            <SupplierCompressedHeader
+              supplier={supplier}
+              currentBalance={currentBalance}
+              onCreateOrder={handleCreatePurchaseOrder}
+              onRecordPayment={() => setPaymentDialogOpen(true)}
+              onMoreActions={() => setEditDialogOpen(true)}
+            />
+          </div>
+        )}
 
-          <TabsContent value="orders" className="mt-6">
-            <ChartErrorBoundary title="أوامر الشراء">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div><CardTitle>أوامر الشراء</CardTitle><CardDescription>سجل أوامر الشراء من هذا المورد</CardDescription></div>
-                  <Button onClick={handleCreatePurchaseOrder} size="sm" className="gap-2"><ShoppingCart className="h-4 w-4" />أمر شراء جديد</Button>
-                </CardHeader>
-                <CardContent>
-                  {ordersData.length > 0 ? (
-                    <>
-                      <Table>
-                        <TableHeader><TableRow><TableHead>رقم الأمر</TableHead><TableHead>التاريخ</TableHead><TableHead>المبلغ</TableHead><TableHead>الحالة</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                          {ordersData.map(order => (
-                            <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/purchase-orders/${order.id}`)}>
-                              <TableCell className="font-medium font-mono">{order.order_number}</TableCell>
-                              <TableCell>{new Date(order.created_at).toLocaleDateString('ar-EG')}</TableCell>
-                              <TableCell className="font-bold">{Number(order.total_amount).toLocaleString()} ج.م</TableCell>
-                              <TableCell>{getStatusBadge(order.status)}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <div className="mt-4">
-                        <ServerPagination currentPage={orderPage} totalPages={ordersTotalPages} totalCount={ordersCount} pageSize={orderPageSize} onPageChange={goToOrderPage} hasNextPage={orderPage < ordersTotalPages} hasPrevPage={orderPage > 1} />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-8"><ClipboardList className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" /><p className="text-muted-foreground">لا توجد أوامر شراء</p></div>
-                  )}
-                </CardContent>
-              </Card>
-            </ChartErrorBoundary>
-          </TabsContent>
+        {/* Hero */}
+        <div ref={heroRef}>
+          {isMobile ? (
+            <SupplierMobileProfile
+              supplier={supplier}
+              onEdit={() => setEditDialogOpen(true)}
+              onCreatePurchaseOrder={handleCreatePurchaseOrder}
+              onRecordPayment={() => setPaymentDialogOpen(true)}
+              onPrintStatement={handlePrintStatement}
+              totalPurchases={totalPurchases}
+              totalPayments={totalPayments}
+              totalOutstanding={totalOutstanding}
+              orderCount={orderCount}
+            />
+          ) : (
+            <SupplierHeroHeader
+              supplier={supplier}
+              onEdit={() => setEditDialogOpen(true)}
+              onCreatePurchaseOrder={handleCreatePurchaseOrder}
+              onRecordPayment={() => setPaymentDialogOpen(true)}
+              onPrintStatement={handlePrintStatement}
+              isPrintingStatement={isPrintingStatement}
+              totalPurchases={totalPurchases}
+              totalPayments={totalPayments}
+              totalOutstanding={totalOutstanding}
+              orderCount={orderCount}
+              onPrev={nav.goPrev}
+              onNext={nav.goNext}
+              hasPrev={!!nav.prevId}
+              hasNext={!!nav.nextId}
+            />
+          )}
+        </div>
 
-          <TabsContent value="payments" className="mt-6">
-            <ChartErrorBoundary title="المدفوعات">
-              <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} payments={paymentsData} totalCount={paymentsCount} currentPage={paymentPage} pageSize={paymentPageSize} onPageChange={goToPaymentPage} />
-            </ChartErrorBoundary>
-          </TabsContent>
+        <SupplierAlertsBanner
+          currentBalance={currentBalance}
+          creditLimit={creditLimit}
+          pendingOrderCount={pendingOrderCount}
+          lastOrderDate={lastOrderDate}
+        />
 
-          <TabsContent value="analytics" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ChartErrorBoundary title="المشتريات الشهرية">
-                <SupplierPurchasesChartRPC chartData={chartData} />
+        {isMobile ? (
+          <div className="space-y-3">
+            <SupplierIconStrip activeSection={mobileSection} onSectionChange={setMobileSection} />
+            {mobileSection !== 'none' && (
+              <div className="animate-fade-in">{renderMobileSection()}</div>
+            )}
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+            <ScrollArea className="w-full">
+              <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
+                <TabsTrigger value="info" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Info className="h-3.5 w-3.5" />معلومات المورد</TabsTrigger>
+                <TabsTrigger value="financial" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><CreditCard className="h-3.5 w-3.5" />الملخص المالي</TabsTrigger>
+                <TabsTrigger value="orders" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><ShoppingCart className="h-3.5 w-3.5" />أوامر الشراء ({ordersCount})</TabsTrigger>
+                <TabsTrigger value="payments" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><CreditCard className="h-3.5 w-3.5" />المدفوعات</TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><BarChart3 className="h-3.5 w-3.5" />التحليلات</TabsTrigger>
+                <TabsTrigger value="products" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Package className="h-3.5 w-3.5" />المنتجات</TabsTrigger>
+                <TabsTrigger value="rating" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Star className="h-3.5 w-3.5" />التقييم</TabsTrigger>
+                <TabsTrigger value="activity" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Activity className="h-3.5 w-3.5" />النشاطات</TabsTrigger>
+                <TabsTrigger value="attachments" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Paperclip className="h-3.5 w-3.5" />المرفقات</TabsTrigger>
+              </TabsList>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
+            <TabsContent value="info" className="mt-6">
+              <ChartErrorBoundary title="معلومات المورد"><Suspense fallback={<TabFallback />}><SupplierInfoTab supplier={supplier} /></Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="financial" className="mt-6">
+              <ChartErrorBoundary title="الملخص المالي"><Suspense fallback={<TabFallback />}>
+                <SupplierFinancialSummary totalPurchases={totalPurchases} totalPayments={totalPayments} currentBalance={currentBalance} creditLimit={creditLimit} paymentTermsDays={supplier.payment_terms_days || 0} discountPercentage={supplier.discount_percentage || 0} dso={dso} paymentRatio={paymentRatio} />
+              </Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="orders" className="mt-6">
+              <ChartErrorBoundary title="أوامر الشراء">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div><CardTitle>أوامر الشراء</CardTitle><CardDescription>سجل أوامر الشراء من هذا المورد</CardDescription></div>
+                    <Button onClick={handleCreatePurchaseOrder} size="sm" className="gap-2"><ShoppingCart className="h-4 w-4" />أمر شراء جديد</Button>
+                  </CardHeader>
+                  <CardContent>
+                    {ordersData.length > 0 ? (
+                      <>
+                        <Table>
+                          <TableHeader><TableRow><TableHead>رقم الأمر</TableHead><TableHead>التاريخ</TableHead><TableHead>المبلغ</TableHead><TableHead>الحالة</TableHead></TableRow></TableHeader>
+                          <TableBody>
+                            {ordersData.map(order => (
+                              <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/purchase-orders/${order.id}`)}>
+                                <TableCell className="font-medium font-mono">{order.order_number}</TableCell>
+                                <TableCell>{new Date(order.created_at).toLocaleDateString('ar-EG')}</TableCell>
+                                <TableCell className="font-bold">{Number(order.total_amount).toLocaleString()} ج.م</TableCell>
+                                <TableCell>{getStatusBadge(order.status)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        <div className="mt-4">
+                          <ServerPagination currentPage={orderPage} totalPages={ordersTotalPages} totalCount={ordersCount} pageSize={orderPageSize} onPageChange={goToOrderPage} hasNextPage={orderPage < ordersTotalPages} hasPrevPage={orderPage > 1} />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8"><ClipboardList className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" /><p className="text-muted-foreground">لا توجد أوامر شراء</p></div>
+                    )}
+                  </CardContent>
+                </Card>
               </ChartErrorBoundary>
-              <ChartErrorBoundary title="توزيع أعمار المستحقات">
-                <SupplierAgingChart supplierId={id!} />
+            </TabsContent>
+
+            <TabsContent value="payments" className="mt-6">
+              <ChartErrorBoundary title="المدفوعات"><Suspense fallback={<TabFallback />}>
+                <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} payments={paymentsData} totalCount={paymentsCount} currentPage={paymentPage} pageSize={paymentPageSize} onPageChange={goToPaymentPage} />
+              </Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ChartErrorBoundary title="المشتريات الشهرية"><Suspense fallback={<TabFallback />}><SupplierPurchasesChartRPC chartData={chartData} /></Suspense></ChartErrorBoundary>
+                <ChartErrorBoundary title="توزيع أعمار المستحقات"><Suspense fallback={<TabFallback />}><SupplierAgingChart supplierId={id!} /></Suspense></ChartErrorBoundary>
+                <ChartErrorBoundary title="التدفق المالي التراكمي"><Suspense fallback={<TabFallback />}><SupplierCashFlowChart monthlyData={chartData?.monthly_data} /></Suspense></ChartErrorBoundary>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="products" className="mt-6">
+              <ChartErrorBoundary title="المنتجات"><Suspense fallback={<TabFallback />}><SupplierProductsTab supplierId={id!} /></Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="rating" className="mt-6">
+              <ChartErrorBoundary title="التقييم"><Suspense fallback={<TabFallback />}><SupplierRatingTab supplierId={id!} currentRating={(supplier as any).rating || 0} onRatingChange={(r) => updateRatingMutation.mutate(r)} /></Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="activity" className="mt-6">
+              <ChartErrorBoundary title="النشاطات"><Suspense fallback={<TabFallback />}><SupplierActivityTab supplierId={id!} /></Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="attachments" className="mt-6">
+              <ChartErrorBoundary title="المرفقات">
+                <Card>
+                  <CardHeader><CardTitle className="flex items-center gap-2"><Paperclip className="h-5 w-5" />المستندات والمرفقات</CardTitle></CardHeader>
+                  <CardContent className="space-y-4">
+                    <FileUpload entityType="supplier" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'supplier', id] })} />
+                    <AttachmentsList entityType="supplier" entityId={id!} />
+                  </CardContent>
+                </Card>
               </ChartErrorBoundary>
-              <ChartErrorBoundary title="التدفق المالي التراكمي">
-                <SupplierCashFlowChart monthlyData={chartData?.monthly_data} />
-              </ChartErrorBoundary>
-            </div>
-          </TabsContent>
+            </TabsContent>
+          </Tabs>
+        )}
 
-          <TabsContent value="products" className="mt-6">
-            <ChartErrorBoundary title="المنتجات"><SupplierProductsTab supplierId={id!} /></ChartErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="rating" className="mt-6">
-            <ChartErrorBoundary title="التقييم"><SupplierRatingTab supplierId={id!} currentRating={(supplier as any).rating || 0} onRatingChange={(r) => updateRatingMutation.mutate(r)} /></ChartErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="activity" className="mt-6">
-            <ChartErrorBoundary title="النشاطات"><SupplierActivityTab supplierId={id!} /></ChartErrorBoundary>
-          </TabsContent>
-
-          <TabsContent value="attachments" className="mt-6">
-            <ChartErrorBoundary title="المرفقات">
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Paperclip className="h-5 w-5" />المستندات والمرفقات</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  <FileUpload entityType="supplier" entityId={id!} onUploadComplete={() => queryClient.invalidateQueries({ queryKey: ['attachments', 'supplier', id] })} />
-                  <AttachmentsList entityType="supplier" entityId={id!} />
-                </CardContent>
-              </Card>
-            </ChartErrorBoundary>
-          </TabsContent>
-        </Tabs>
-      )}
-
-      <SupplierFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} supplier={supplier} />
-      <SupplierPaymentDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} supplier={supplier} />
-    </div>
+        <SupplierFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} supplier={supplier} />
+        <SupplierPaymentDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} supplier={supplier} />
+      </div>
+    </PageWrapper>
   );
 };
 
-// Wrap with error boundary
 import { ChartErrorBoundary as PageErrorBoundary } from "@/components/shared/ChartErrorBoundary";
 const SupplierDetailsPageWithErrorBoundary = () => (
   <PageErrorBoundary title="تفاصيل المورد"><SupplierDetailsPage /></PageErrorBoundary>
