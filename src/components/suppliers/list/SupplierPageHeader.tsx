@@ -18,7 +18,7 @@ interface SupplierPageHeaderProps {
 }
 
 export const SupplierPageHeader = memo(function SupplierPageHeader({
-  isMobile, canEdit, onAdd, onImport, totalCount = 0,
+  isMobile, canEdit, onAdd, onImport, onExport, totalCount = 0,
   searchQuery, onSearchChange,
 }: SupplierPageHeaderProps) {
   const countLabel = `${totalCount}`;
