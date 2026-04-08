@@ -36,6 +36,8 @@ import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
 import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog";
 
 import { useSupplierDetail, useSupplierNavigation } from "@/hooks/suppliers";
+import { useAuth } from "@/hooks/useAuth";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 
 // Lazy-loaded tabs
 const SupplierInfoTab = lazy(() => import("@/components/suppliers/SupplierInfoTab"));
