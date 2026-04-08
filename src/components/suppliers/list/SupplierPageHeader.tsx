@@ -11,13 +11,14 @@ interface SupplierPageHeaderProps {
   canEdit: boolean;
   onAdd: () => void;
   onImport: () => void;
+  onExport?: () => void;
   totalCount?: number;
   searchQuery?: string;
   onSearchChange?: (v: string) => void;
 }
 
 export const SupplierPageHeader = memo(function SupplierPageHeader({
-  isMobile, canEdit, onAdd, onImport, totalCount = 0,
+  isMobile, canEdit, onAdd, onImport, onExport, totalCount = 0,
   searchQuery, onSearchChange,
 }: SupplierPageHeaderProps) {
   const countLabel = `${totalCount}`;
@@ -50,6 +51,7 @@ export const SupplierPageHeader = memo(function SupplierPageHeader({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={onImport}><Upload className="h-4 w-4 ml-2" />استيراد</DropdownMenuItem>
+                {onExport && <DropdownMenuItem onClick={onExport}><Download className="h-4 w-4 ml-2" />تصدير</DropdownMenuItem>}
               </DropdownMenuContent>
             </DropdownMenu>
             {canEdit && (
@@ -83,6 +85,7 @@ export const SupplierPageHeader = memo(function SupplierPageHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={onImport}><Upload className="h-4 w-4 ml-2" />استيراد</DropdownMenuItem>
+            {onExport && <DropdownMenuItem onClick={onExport}><Download className="h-4 w-4 ml-2" />تصدير</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
         {canEdit && (

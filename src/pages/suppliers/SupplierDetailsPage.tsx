@@ -36,6 +36,8 @@ import SupplierFormDialog from "@/components/suppliers/SupplierFormDialog";
 import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog";
 
 import { useSupplierDetail, useSupplierNavigation } from "@/hooks/suppliers";
+import { useAuth } from "@/hooks/useAuth";
+import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 
 // Lazy-loaded tabs
 const SupplierInfoTab = lazy(() => import("@/components/suppliers/SupplierInfoTab"));
@@ -56,6 +58,8 @@ const SupplierDetailsPage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { userRole } = useAuth();
+  const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const [searchParams, setSearchParams] = useSearchParams();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);

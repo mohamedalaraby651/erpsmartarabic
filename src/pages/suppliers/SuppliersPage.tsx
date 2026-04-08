@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
@@ -17,12 +16,17 @@ import { SupplierMobileView } from "@/components/suppliers/list/SupplierMobileVi
 import SupplierSavedViews from "@/components/suppliers/list/SupplierSavedViews";
 import { SupplierFiltersBar } from "@/components/suppliers/filters/SupplierFiltersBar";
 import { SupplierFilterDrawer } from "@/components/suppliers/filters/SupplierFilterDrawer";
+import { SupplierQuickAddDialog } from "@/components/suppliers/dialogs/SupplierQuickAddDialog";
+import { SupplierExportDialog } from "@/components/suppliers/dialogs/SupplierExportDialog";
+import { SupplierAlertsBannerList } from "@/components/suppliers/alerts/SupplierAlertsBannerList";
 
-import { useSupplierList, useSupplierFilters, useSupplierMutations, storeSupplierNavIds } from "@/hooks/suppliers";
+import { useSupplierList, useSupplierFilters, useSupplierMutations, useSupplierAlerts, storeSupplierNavIds } from "@/hooks/suppliers";
 import { useBulkSelection } from "@/hooks/customers";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { generatePDF } from "@/lib/pdfGenerator";
+import * as XLSX from "xlsx";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -50,6 +54,8 @@ const SuppliersPage = () => {
   const [tempCat, setTempCat] = useState('all');
   const [tempStatus, setTempStatus] = useState('all');
   const [statsChipFilter, setStatsChipFilter] = useState<string | null>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';
@@ -65,10 +71,7 @@ const SuppliersPage = () => {
 
   // Stats chip filter → real filter mapping
   useEffect(() => {
-    if (!statsChipFilter) {
-      // Only reset if it was previously set by chip
-      return;
-    }
+    if (!statsChipFilter) return;
     if (['active', 'inactive', 'debtors'].includes(statsChipFilter)) {
       setStatusFilter(statsChipFilter);
       setCategoryFilter('all');
@@ -100,6 +103,8 @@ const SuppliersPage = () => {
     filterKey, currentPage, sortConfig,
   });
 
+  const { alertsByType, totalAlerts } = useSupplierAlerts(suppliers);
+
   const bulk = useBulkSelection(suppliers);
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -108,7 +113,6 @@ const SuppliersPage = () => {
   }, [navigate]);
 
   const handleEdit = useCallback((supplier: Supplier) => {
-    // Will be handled by dialog manager in future
     navigate(`/suppliers/${supplier.id}`);
   }, [navigate]);
 
@@ -150,7 +154,6 @@ const SuppliersPage = () => {
     return c;
   }, [governorateFilter, categoryFilter, statusFilter]);
 
-  // Stats for chips
   const stats = useMemo(() => ({
     total: totalCount,
     active: suppliers.filter(s => s.is_active).length,
@@ -194,18 +197,61 @@ const SuppliersPage = () => {
     setFilterDrawerOpen(true);
   }, [governorateFilter, categoryFilter, statusFilter]);
 
+  const handleExport = useCallback(async (options: { format: string; scope: string; columns: string[] }) => {
+    const data = suppliers.map(s => {
+      const row: Record<string, unknown> = {};
+      for (const col of options.columns) {
+        row[col] = (s as Record<string, unknown>)[col];
+      }
+      return row;
+    });
+
+    const LABEL_MAP: Record<string, string> = {
+      name: 'اسم المورد', contact_person: 'جهة الاتصال', phone: 'الهاتف', phone2: 'هاتف 2',
+      email: 'البريد', governorate: 'المحافظة', city: 'المدينة', category: 'التصنيف',
+      current_balance: 'الرصيد', credit_limit: 'حد الائتمان', is_active: 'الحالة',
+      rating: 'التقييم', payment_terms_days: 'أيام السداد', discount_percentage: 'نسبة الخصم',
+      tax_number: 'الرقم الضريبي', notes: 'ملاحظات', created_at: 'تاريخ الإضافة',
+    };
+
+    if (options.format === 'pdf') {
+      await generatePDF({
+        title: 'قائمة الموردين',
+        data,
+        columns: options.columns.map(k => ({ key: k, label: LABEL_MAP[k] || k })),
+        includeCompanyInfo: true,
+        includeLogo: true,
+      });
+    } else {
+      const ws = XLSX.utils.json_to_sheet(data.map(row => {
+        const labeled: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(row)) {
+          labeled[LABEL_MAP[k] || k] = v;
+        }
+        return labeled;
+      }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'الموردين');
+      XLSX.writeFile(wb, `suppliers.${options.format === 'csv' ? 'csv' : 'xlsx'}`);
+    }
+  }, [suppliers]);
+
   return (
     <PageWrapper title="إدارة الموردين">
       <div className="space-y-4">
         <SupplierPageHeader
           isMobile={isMobile}
           canEdit={canEdit}
-          onAdd={handleAdd}
+          onAdd={() => setQuickAddOpen(true)}
           onImport={() => {}}
+          onExport={() => setExportOpen(true)}
           totalCount={totalCount}
           searchQuery={isMobile ? searchQuery : undefined}
           onSearchChange={isMobile ? setSearchQuery : undefined}
         />
+
+        {/* Alerts Banner */}
+        <SupplierAlertsBannerList alertsByType={alertsByType} totalAlerts={totalAlerts} />
 
         <SupplierStatsBar
           stats={stats}
@@ -281,16 +327,10 @@ const SuppliersPage = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>قائمة الموردين ({totalCount})</CardTitle>
-                <ExportWithTemplateButton section="suppliers" sectionLabel="الموردين" data={suppliers} columns={[
-                  { key: 'name', label: 'اسم المورد' }, { key: 'contact_person', label: 'جهة الاتصال' },
-                  { key: 'phone', label: 'الهاتف' }, { key: 'governorate', label: 'المحافظة' },
-                  { key: 'current_balance', label: 'الرصيد' }, { key: 'is_active', label: 'الحالة' },
-                ]} />
               </CardHeader>
               <CardContent>
                 {isLoading ? <TableSkeleton rows={5} columns={8} /> : (
                   <div className="space-y-0.5">
-                    {/* Header row with select all */}
                     <div className="flex items-center gap-3 px-3 py-2 text-xs text-muted-foreground font-medium border-b">
                       <Checkbox checked={bulk.isAllSelected} onCheckedChange={(checked) => bulk.toggleSelectAll(!!checked)} className="shrink-0" />
                       <span className="flex-1">المورد</span>
@@ -306,7 +346,7 @@ const SuppliersPage = () => {
                         <SupplierListRow
                           key={supplier.id}
                           supplier={supplier}
-                          onNavigate={(id) => handleRowClick(supplier)}
+                          onNavigate={() => handleRowClick(supplier)}
                           onEdit={canEdit ? handleEdit : undefined}
                           onNewOrder={(id) => navigate('/purchase-orders', { state: { prefillSupplierId: id } })}
                           onNewPayment={(id) => navigate(`/suppliers/${id}?tab=payments`)}
@@ -344,6 +384,20 @@ const SuppliersPage = () => {
           setTempCategory={setTempCat}
           tempStatus={tempStatus}
           setTempStatus={setTempStatus}
+        />
+
+        <SupplierQuickAddDialog
+          open={quickAddOpen}
+          onOpenChange={setQuickAddOpen}
+          onOpenAdvanced={handleAdd}
+        />
+
+        <SupplierExportDialog
+          open={exportOpen}
+          onOpenChange={setExportOpen}
+          onExport={handleExport}
+          totalCount={totalCount}
+          filteredCount={suppliers.length}
         />
       </div>
     </PageWrapper>
