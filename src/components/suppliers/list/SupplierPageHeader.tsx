@@ -11,6 +11,7 @@ interface SupplierPageHeaderProps {
   canEdit: boolean;
   onAdd: () => void;
   onImport: () => void;
+  onExport?: () => void;
   totalCount?: number;
   searchQuery?: string;
   onSearchChange?: (v: string) => void;
