@@ -51,6 +51,7 @@ export const SupplierPageHeader = memo(function SupplierPageHeader({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={onImport}><Upload className="h-4 w-4 ml-2" />استيراد</DropdownMenuItem>
+                {onExport && <DropdownMenuItem onClick={onExport}><Download className="h-4 w-4 ml-2" />تصدير</DropdownMenuItem>}
               </DropdownMenuContent>
             </DropdownMenu>
             {canEdit && (
@@ -84,6 +85,7 @@ export const SupplierPageHeader = memo(function SupplierPageHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={onImport}><Upload className="h-4 w-4 ml-2" />استيراد</DropdownMenuItem>
+            {onExport && <DropdownMenuItem onClick={onExport}><Download className="h-4 w-4 ml-2" />تصدير</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
         {canEdit && (
