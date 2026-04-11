@@ -12,6 +12,7 @@ import {
 import {
   ArrowRight, Truck, ClipboardList, Paperclip, Info,
   CreditCard, Package, Star, Activity, ShoppingCart, BarChart3, Printer,
+  StickyNote, FileText, Clock, Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
@@ -24,9 +25,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { PageWrapper } from "@/components/shared/PageWrapper";
-import { Loader2 } from "lucide-react";
 
 import SupplierHeroHeader from "@/components/suppliers/hero/SupplierHeroHeader";
+import SupplierPinnedNote from "@/components/suppliers/hero/SupplierPinnedNote";
 import SupplierAlertsBanner from "@/components/suppliers/alerts/SupplierAlertsBanner";
 import { SupplierMobileProfile } from "@/components/suppliers/mobile/SupplierMobileProfile";
 import { SupplierCompressedHeader } from "@/components/suppliers/mobile/SupplierCompressedHeader";
@@ -37,7 +38,6 @@ import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog"
 
 import { useSupplierDetail, useSupplierNavigation } from "@/hooks/suppliers";
 import { useAuth } from "@/hooks/useAuth";
-import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 
 // Lazy-loaded tabs
 const SupplierInfoTab = lazy(() => import("@/components/suppliers/SupplierInfoTab"));
@@ -49,6 +49,9 @@ const SupplierActivityTab = lazy(() => import("@/components/suppliers/SupplierAc
 const SupplierPurchasesChartRPC = lazy(() => import("@/components/suppliers/charts/SupplierPurchasesChartRPC"));
 const SupplierAgingChart = lazy(() => import("@/components/suppliers/charts/SupplierAgingChart").then(m => ({ default: m.SupplierAgingChart })));
 const SupplierCashFlowChart = lazy(() => import("@/components/suppliers/charts/SupplierCashFlowChart").then(m => ({ default: m.SupplierCashFlowChart })));
+const SupplierNotesTab = lazy(() => import("@/components/suppliers/tabs/SupplierNotesTab"));
+const SupplierStatementTab = lazy(() => import("@/components/suppliers/tabs/SupplierStatementTab"));
+const SupplierAgingReport = lazy(() => import("@/components/suppliers/tabs/SupplierAgingReport"));
 
 const TabFallback = () => <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
@@ -68,7 +71,6 @@ const SupplierDetailsPage = () => {
   const [showCompressed, setShowCompressed] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
-  // URL tab sync
   const activeTab = searchParams.get('tab') || 'info';
   const setActiveTab = useCallback((tab: string) => {
     setSearchParams({ tab }, { replace: true });
@@ -87,7 +89,6 @@ const SupplierDetailsPage = () => {
     paginatedPayments, paymentPage, paymentPageSize, goToPaymentPage,
   } = detail;
 
-  // Compressed header on scroll (mobile)
   useEffect(() => {
     if (!isMobile || !heroRef.current) return;
     const observer = new IntersectionObserver(
@@ -109,12 +110,10 @@ const SupplierDetailsPage = () => {
       const entries = (data || []) as Array<{ entry_date: string; entry_type: string; reference: string; debit: number; credit: number; running_balance: number; status: string }>;
       const formatted = entries.map(e => ({
         date: new Date(e.entry_date).toLocaleDateString('ar-EG'),
-        type: e.entry_type,
-        reference: e.reference,
+        type: e.entry_type, reference: e.reference,
         debit: e.debit > 0 ? e.debit.toLocaleString() : '-',
         credit: e.credit > 0 ? e.credit.toLocaleString() : '-',
-        balance: e.running_balance.toLocaleString(),
-        status: e.status,
+        balance: e.running_balance.toLocaleString(), status: e.status,
       }));
       await generatePDF({
         title: `كشف حساب المورد: ${supplier.name}`,
@@ -202,18 +201,8 @@ const SupplierDetailsPage = () => {
           <AttachmentsList entityType="supplier" entityId={id!} />
         </div>
       );
-      case 'statement': return (
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Printer className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">اضغط لطباعة كشف الحساب</p>
-            <Button onClick={handlePrintStatement} disabled={isPrintingStatement}>
-              {isPrintingStatement ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Printer className="h-4 w-4 ml-2" />}
-              طباعة كشف الحساب
-            </Button>
-          </CardContent>
-        </Card>
-      );
+      case 'statement': return <Suspense fallback={<TabFallback />}><SupplierStatementTab supplierId={id!} supplierName={supplier.name} /></Suspense>;
+      case 'notes': return <Suspense fallback={<TabFallback />}><SupplierNotesTab supplierId={id!} /></Suspense>;
       default: return null;
     }
   };
@@ -227,7 +216,6 @@ const SupplierDetailsPage = () => {
           </Button>
         )}
 
-        {/* Mobile: Compressed sticky header */}
         {isMobile && showCompressed && (
           <div className="sticky top-0 z-30 -mx-4 px-4 pt-2 pb-1 bg-background/95 backdrop-blur-sm">
             <SupplierCompressedHeader
@@ -240,7 +228,6 @@ const SupplierDetailsPage = () => {
           </div>
         )}
 
-        {/* Hero */}
         <div ref={heroRef}>
           {isMobile ? (
             <SupplierMobileProfile
@@ -274,6 +261,9 @@ const SupplierDetailsPage = () => {
           )}
         </div>
 
+        {/* Pinned Note */}
+        <SupplierPinnedNote supplierId={id!} />
+
         <SupplierAlertsBanner
           currentBalance={currentBalance}
           creditLimit={creditLimit}
@@ -296,6 +286,9 @@ const SupplierDetailsPage = () => {
                 <TabsTrigger value="financial" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><CreditCard className="h-3.5 w-3.5" />الملخص المالي</TabsTrigger>
                 <TabsTrigger value="orders" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><ShoppingCart className="h-3.5 w-3.5" />أوامر الشراء ({ordersCount})</TabsTrigger>
                 <TabsTrigger value="payments" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><CreditCard className="h-3.5 w-3.5" />المدفوعات</TabsTrigger>
+                <TabsTrigger value="statement" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><FileText className="h-3.5 w-3.5" />كشف الحساب</TabsTrigger>
+                <TabsTrigger value="aging" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Clock className="h-3.5 w-3.5" />أعمار المستحقات</TabsTrigger>
+                <TabsTrigger value="notes" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><StickyNote className="h-3.5 w-3.5" />الملاحظات</TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><BarChart3 className="h-3.5 w-3.5" />التحليلات</TabsTrigger>
                 <TabsTrigger value="products" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Package className="h-3.5 w-3.5" />المنتجات</TabsTrigger>
                 <TabsTrigger value="rating" className="gap-1.5 whitespace-nowrap text-xs px-2.5"><Star className="h-3.5 w-3.5" />التقييم</TabsTrigger>
@@ -353,6 +346,24 @@ const SupplierDetailsPage = () => {
             <TabsContent value="payments" className="mt-6">
               <ChartErrorBoundary title="المدفوعات"><Suspense fallback={<TabFallback />}>
                 <SupplierPaymentsTab supplierId={id!} onAddPayment={() => setPaymentDialogOpen(true)} payments={paymentsData} totalCount={paymentsCount} currentPage={paymentPage} pageSize={paymentPageSize} onPageChange={goToPaymentPage} />
+              </Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="statement" className="mt-6">
+              <ChartErrorBoundary title="كشف الحساب"><Suspense fallback={<TabFallback />}>
+                <SupplierStatementTab supplierId={id!} supplierName={supplier.name} />
+              </Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="aging" className="mt-6">
+              <ChartErrorBoundary title="أعمار المستحقات"><Suspense fallback={<TabFallback />}>
+                <SupplierAgingReport supplierId={id!} />
+              </Suspense></ChartErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="notes" className="mt-6">
+              <ChartErrorBoundary title="الملاحظات"><Suspense fallback={<TabFallback />}>
+                <SupplierNotesTab supplierId={id!} />
               </Suspense></ChartErrorBoundary>
             </TabsContent>
 

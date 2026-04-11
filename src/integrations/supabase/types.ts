@@ -3252,22 +3252,28 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_pinned: boolean
           note: string
           supplier_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_pinned?: boolean
           note: string
           supplier_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_pinned?: boolean
           note?: string
           supplier_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -4326,6 +4332,10 @@ export type Database = {
       get_supplier_aging: { Args: { _supplier_id: string }; Returns: Json }
       get_supplier_chart_data: { Args: { _supplier_id: string }; Returns: Json }
       get_supplier_financial_summary: {
+        Args: { _supplier_id: string }
+        Returns: Json
+      }
+      get_supplier_health_score: {
         Args: { _supplier_id: string }
         Returns: Json
       }
