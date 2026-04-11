@@ -1,7 +1,7 @@
 import { memo } from "react";
 import {
   Info, CreditCard, BarChart3, ShoppingCart, Package,
-  Star, Activity, Paperclip, Printer,
+  Star, Activity, Paperclip, Printer, StickyNote,
 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
