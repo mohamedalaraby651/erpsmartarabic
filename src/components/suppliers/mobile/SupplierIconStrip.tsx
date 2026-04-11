@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export type SupplierMobileSectionId =
   | 'none' | 'info' | 'financial' | 'orders' | 'payments'
-  | 'analytics' | 'products' | 'rating' | 'activity' | 'attachments' | 'statement';
+  | 'analytics' | 'products' | 'rating' | 'activity' | 'attachments' | 'statement' | 'notes';
 
 interface SupplierIconStripProps {
   activeSection: SupplierMobileSectionId;
@@ -26,6 +26,7 @@ const stripIcons = [
   { id: 'activity' as const, label: 'نشاطات', icon: Activity, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/40' },
   { id: 'attachments' as const, label: 'مرفقات', icon: Paperclip, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-900/40' },
   { id: 'statement' as const, label: 'كشف حساب', icon: Printer, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/40' },
+  { id: 'notes' as const, label: 'ملاحظات', icon: StickyNote, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-100 dark:bg-pink-900/40' },
 ] as const;
 
 export const SupplierIconStrip = memo(function SupplierIconStrip({
