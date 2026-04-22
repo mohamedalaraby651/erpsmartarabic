@@ -291,6 +291,59 @@ export type Database = {
           },
         ]
       }
+      audit_trail: {
+        Row: {
+          after_value: Json | null
+          before_value: Json | null
+          changed_fields: string[] | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          operation: string
+          record_id: string
+          table_name: string
+          tenant_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          after_value?: Json | null
+          before_value?: Json | null
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          operation: string
+          record_id: string
+          table_name: string
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          after_value?: Json | null
+          before_value?: Json | null
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_trail_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_name: string
@@ -1113,6 +1166,59 @@ export type Database = {
           },
         ]
       }
+      domain_events: {
+        Row: {
+          aggregate_id: string | null
+          aggregate_type: string | null
+          attempts: number
+          created_at: string
+          emitted_by: string | null
+          event_type: string
+          id: string
+          last_error: string | null
+          payload: Json
+          processed_at: string | null
+          status: string
+          tenant_id: string | null
+        }
+        Insert: {
+          aggregate_id?: string | null
+          aggregate_type?: string | null
+          attempts?: number
+          created_at?: string
+          emitted_by?: string | null
+          event_type: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+          tenant_id?: string | null
+        }
+        Update: {
+          aggregate_id?: string | null
+          aggregate_type?: string | null
+          attempts?: number
+          created_at?: string
+          emitted_by?: string | null
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null
@@ -1918,6 +2024,41 @@ export type Database = {
           },
           {
             foreignKeyName: "payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permission_matrix_cache: {
+        Row: {
+          computed_at: string
+          expires_at: string
+          id: string
+          matrix: Json
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          expires_at?: string
+          id?: string
+          matrix?: Json
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          expires_at?: string
+          id?: string
+          matrix?: Json
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_matrix_cache_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -3122,6 +3263,50 @@ export type Database = {
           },
         ]
       }
+      slow_queries_log: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          endpoint: string
+          id: string
+          metadata: Json | null
+          query_name: string | null
+          tenant_id: string | null
+          threshold_ms: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms: number
+          endpoint: string
+          id?: string
+          metadata?: Json | null
+          query_name?: string | null
+          tenant_id?: string | null
+          threshold_ms?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          endpoint?: string
+          id?: string
+          metadata?: Json | null
+          query_name?: string | null
+          tenant_id?: string | null
+          threshold_ms?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slow_queries_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sod_rules: {
         Row: {
           conflicting_actions: Json
@@ -4271,6 +4456,16 @@ export type Database = {
         }
         Returns: Json
       }
+      compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
+      emit_event: {
+        Args: {
+          _aggregate_id: string
+          _aggregate_type: string
+          _event_type: string
+          _payload?: Json
+        }
+        Returns: string
+      }
       find_duplicate_customers: {
         Args: { p_tenant_id?: string }
         Returns: {
@@ -4302,6 +4497,16 @@ export type Database = {
         Args: { _amount: number; _entity_type: string }
         Returns: string
       }
+      get_ar_aging_mv: {
+        Args: never
+        Returns: unknown[]
+        SetofOptions: {
+          from: "*"
+          to: "mv_ar_aging"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_current_tenant: { Args: never; Returns: string }
       get_customer_aging: { Args: { _customer_id: string }; Returns: Json }
       get_customer_chart_data: { Args: { _customer_id: string }; Returns: Json }
@@ -4326,8 +4531,29 @@ export type Database = {
         }[]
       }
       get_customer_stats: { Args: never; Returns: Json }
+      get_inventory_valuation_mv: {
+        Args: never
+        Returns: unknown[]
+        SetofOptions: {
+          from: "*"
+          to: "mv_inventory_valuation"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_permission_matrix: { Args: { _user_id?: string }; Returns: Json }
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
+      get_sales_summary_mv: {
+        Args: never
+        Returns: unknown[]
+        SetofOptions: {
+          from: "*"
+          to: "mv_sales_summary"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_sidebar_counts: { Args: never; Returns: Json }
       get_supplier_aging: { Args: { _supplier_id: string }; Returns: Json }
       get_supplier_chart_data: { Args: { _supplier_id: string }; Returns: Json }
@@ -4374,6 +4600,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_slow_query: {
+        Args: {
+          _duration_ms: number
+          _endpoint: string
+          _metadata?: Json
+          _query_name?: string
+        }
+        Returns: undefined
+      }
       merge_customers_atomic: {
         Args: { p_duplicate_id: string; p_primary_id: string }
         Returns: Json
@@ -4383,6 +4618,7 @@ export type Database = {
         Returns: boolean
       }
       refresh_customer_stats_mv: { Args: never; Returns: undefined }
+      refresh_enterprise_mvs: { Args: never; Returns: undefined }
       switch_user_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
