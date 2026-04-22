@@ -46,6 +46,7 @@ const CustomizationsPage = lazy(() => import("./pages/admin/CustomizationsPage")
 const UsersPage = lazy(() => import("./pages/admin/UsersPage"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const ActivityLogPage = lazy(() => import("./pages/admin/ActivityLogPage"));
+const AuditTrailPage = lazy(() => import("./pages/admin/AuditTrailPage"));
 const RoleLimitsPage = lazy(() => import("./pages/admin/RoleLimitsPage"));
 const BackupPage = lazy(() => import("./pages/admin/BackupPage"));
 const ExportTemplatesPage = lazy(() => import("./pages/admin/ExportTemplatesPage"));
@@ -153,6 +154,7 @@ const App = () => (
                   <Route path="admin/users" element={<UsersPage />} />
                   <Route path="admin/dashboard" element={<AdminDashboard />} />
                   <Route path="admin/activity-log" element={<ActivityLogPage />} />
+                  <Route path="admin/audit-trail" element={<AuditTrailPage />} />
                   <Route path="admin/role-limits" element={<RoleLimitsPage />} />
                   <Route path="admin/backup" element={<BackupPage />} />
                   <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
