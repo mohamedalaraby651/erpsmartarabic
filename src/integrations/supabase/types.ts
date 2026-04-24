@@ -1176,6 +1176,7 @@ export type Database = {
           event_type: string
           id: string
           last_error: string | null
+          next_retry_at: string | null
           payload: Json
           processed_at: string | null
           status: string
@@ -1190,6 +1191,7 @@ export type Database = {
           event_type: string
           id?: string
           last_error?: string | null
+          next_retry_at?: string | null
           payload?: Json
           processed_at?: string | null
           status?: string
@@ -1204,6 +1206,7 @@ export type Database = {
           event_type?: string
           id?: string
           last_error?: string | null
+          next_retry_at?: string | null
           payload?: Json
           processed_at?: string | null
           status?: string
@@ -4456,6 +4459,30 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_pending_events: {
+        Args: { _batch_size?: number }
+        Returns: {
+          aggregate_id: string | null
+          aggregate_type: string | null
+          attempts: number
+          created_at: string
+          emitted_by: string | null
+          event_type: string
+          id: string
+          last_error: string | null
+          next_retry_at: string | null
+          payload: Json
+          processed_at: string | null
+          status: string
+          tenant_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "domain_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
       emit_event: {
         Args: {
@@ -4609,6 +4636,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_event_processed: {
+        Args: { _error?: string; _event_id: string; _new_status: string }
+        Returns: undefined
+      }
       merge_customers_atomic: {
         Args: { p_duplicate_id: string; p_primary_id: string }
         Returns: Json
@@ -4617,6 +4648,7 @@ export type Database = {
         Args: { _amount: number; _entity_type: string }
         Returns: boolean
       }
+      purge_old_audit_records: { Args: never; Returns: undefined }
       refresh_customer_stats_mv: { Args: never; Returns: undefined }
       refresh_enterprise_mvs: { Args: never; Returns: undefined }
       switch_user_tenant: {
