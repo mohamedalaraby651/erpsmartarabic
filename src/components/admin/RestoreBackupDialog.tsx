@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle, RotateCcw, History } from 'lucide-react';
+import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle, RotateCcw, History, ShieldAlert, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { parseBackupFile, type ParsedBackup } from '@/lib/services/backupRestoreParser';
@@ -21,6 +21,41 @@ import {
   summarize,
   type RestoreReportInput,
 } from '@/lib/services/backupRestoreReport';
+
+/**
+ * Tables that the backend treats as SENSITIVE — restoring them can affect
+ * access control, fiscal periods, accounting baselines, or company config.
+ * They appear in the dialog only when the user explicitly opts in, AND only
+ * platform admins can actually push them through.
+ *
+ * Keep in sync with `SENSITIVE_TABLES` in
+ * supabase/functions/restore-backup/index.ts
+ */
+const SENSITIVE_TABLE_NAMES = new Set<string>([
+  'custom_roles',
+  'role_section_permissions',
+  'role_limits',
+  'user_tenants',
+  'company_settings',
+  'approval_chains',
+  'fiscal_periods',
+  'chart_of_accounts',
+]);
+
+/**
+ * Tables the backend will NEVER restore. We don't even show them as options.
+ * Keep in sync with `FORBIDDEN_TABLES` server-side.
+ */
+const FORBIDDEN_TABLE_NAMES = new Set<string>([
+  'tenants',
+  'user_roles',
+  'platform_admins',
+  'audit_trail',
+  'activity_logs',
+  'restore_snapshots',
+  'domain_events',
+  'event_metrics',
+]);
 
 type RestoreMode = 'append' | 'upsert' | 'replace';
 type Step = 'configure' | 'review' | 'results';
@@ -41,6 +76,8 @@ interface RestoreResult {
   foreign_tenant_ids?: string[];
   error_sample?: string;
   error_messages?: string[];
+  truncated?: number;
+  is_sensitive?: boolean;
 }
 
 const MODE_LABELS: Record<RestoreMode, { title: string; effect: string; tone: 'default' | 'warning' | 'destructive' }> = {
@@ -82,38 +119,81 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
   } | null>(null);
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [rollbackDone, setRollbackDone] = useState(false);
+  /** Opt-in: user wants to see + select sensitive tables. */
+  const [allowSensitive, setAllowSensitive] = useState(false);
+  /** Opt-in confirmation: user accepts the risk. */
+  const [confirmSensitive, setConfirmSensitive] = useState(false);
+  /** Per-table row caps. Undefined = no cap. 0 = none, N = first N. */
+  const [rowLimits, setRowLimits] = useState<Record<string, number | undefined>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const knownTableNames = useMemo(() => new Set(knownTables.map((t) => t.name)), [knownTables]);
 
-  // Only show parsed entries whose key is a known business table.
-  const availableTables = useMemo(() => {
-    if (!parsed) return [];
-    return Object.entries(parsed)
-      .filter(([k]) => knownTableNames.has(k))
-      .map(([k, rows]) => ({
-        name: k,
-        label: knownTables.find((t) => t.name === k)?.label ?? k,
-        count: rows.length,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'ar'));
-  }, [parsed, knownTableNames, knownTables]);
+  // Tables present in the file. Split into three buckets:
+  //   - regular   → safe business tables, shown by default
+  //   - sensitive → shown only when allowSensitive is on
+  //   - forbidden → never shown, just counted for the warning line
+  const fileBuckets = useMemo(() => {
+    if (!parsed) {
+      return { regular: [] as { name: string; label: string; count: number }[], sensitive: [] as { name: string; label: string; count: number }[], forbidden: [] as string[], unknown: [] as string[] };
+    }
+    const regular: { name: string; label: string; count: number }[] = [];
+    const sensitive: { name: string; label: string; count: number }[] = [];
+    const forbidden: string[] = [];
+    const unknown: string[] = [];
+    for (const [k, rows] of Object.entries(parsed)) {
+      const count = Array.isArray(rows) ? rows.length : 0;
+      if (FORBIDDEN_TABLE_NAMES.has(k)) {
+        forbidden.push(k);
+        continue;
+      }
+      if (SENSITIVE_TABLE_NAMES.has(k)) {
+        sensitive.push({ name: k, label: knownTables.find((t) => t.name === k)?.label ?? k, count });
+        continue;
+      }
+      if (knownTableNames.has(k)) {
+        regular.push({ name: k, label: knownTables.find((t) => t.name === k)?.label ?? k, count });
+        continue;
+      }
+      unknown.push(k);
+    }
+    regular.sort((a, b) => a.label.localeCompare(b.label, 'ar'));
+    sensitive.sort((a, b) => a.label.localeCompare(b.label, 'ar'));
+    return { regular, sensitive, forbidden, unknown };
+  }, [parsed, knownTables, knownTableNames]);
 
-  const ignoredKeys = useMemo(() => {
-    if (!parsed) return [];
-    return Object.keys(parsed).filter((k) => !knownTableNames.has(k));
-  }, [parsed, knownTableNames]);
+  // The list the user may actually pick from = regular + (sensitive if opted in).
+  const availableTables = useMemo(() => {
+    return allowSensitive
+      ? [...fileBuckets.regular, ...fileBuckets.sensitive]
+      : fileBuckets.regular;
+  }, [fileBuckets, allowSensitive]);
+
+  const ignoredKeys = useMemo(() => fileBuckets.unknown, [fileBuckets]);
+
+  const hasSensitiveSelected = useMemo(
+    () => selectedTables.some((t) => SENSITIVE_TABLE_NAMES.has(t)),
+    [selectedTables],
+  );
 
   const selectedSummary = useMemo(() => {
     if (!parsed) return [];
     return selectedTables
-      .map((name) => ({
-        name,
-        label: knownTables.find((t) => t.name === name)?.label ?? name,
-        count: parsed[name]?.length ?? 0,
-      }))
+      .map((name) => {
+        const totalInFile = parsed[name]?.length ?? 0;
+        const cap = rowLimits[name];
+        const effective = typeof cap === 'number' && cap >= 0 && cap < totalInFile ? cap : totalInFile;
+        return {
+          name,
+          label: knownTables.find((t) => t.name === name)?.label ?? name,
+          count: effective,
+          totalInFile,
+          truncated: totalInFile - effective,
+          isSensitive: SENSITIVE_TABLE_NAMES.has(name),
+        };
+      })
       .sort((a, b) => b.count - a.count);
-  }, [parsed, selectedTables, knownTables]);
+  }, [parsed, selectedTables, knownTables, rowLimits]);
 
   const totalSelectedRows = selectedSummary.reduce((s, r) => s + r.count, 0);
 
@@ -128,6 +208,9 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     setResults(null);
     setReportMeta(null);
     setRollbackDone(false);
+    setAllowSensitive(false);
+    setConfirmSensitive(false);
+    setRowLimits({});
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -145,9 +228,17 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     try {
       const data = await parseBackupFile(f);
       setParsed(data);
-      // Auto-select all known tables that have rows.
+      // Auto-select known REGULAR tables that have rows. Sensitive tables
+      // are intentionally NOT auto-selected — the user must opt in first.
       const auto = Object.entries(data)
-        .filter(([k, v]) => knownTableNames.has(k) && Array.isArray(v) && v.length > 0)
+        .filter(
+          ([k, v]) =>
+            knownTableNames.has(k) &&
+            !SENSITIVE_TABLE_NAMES.has(k) &&
+            !FORBIDDEN_TABLE_NAMES.has(k) &&
+            Array.isArray(v) &&
+            v.length > 0,
+        )
         .map(([k]) => k);
       setSelectedTables(auto);
     } catch (err) {
@@ -174,8 +265,35 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       toast.error('يجب تأكيد الاستبدال الكامل أولاً');
       return;
     }
+    if (hasSensitiveSelected && !confirmSensitive) {
+      toast.error('يجب تأكيد استعادة الجداول الحساسة قبل المتابعة');
+      return;
+    }
     setFinalConfirmText('');
     setStep('review');
+  };
+
+  /** Toggle the sensitive opt-in. Turning it off also unselects sensitive tables. */
+  const toggleAllowSensitive = (next: boolean) => {
+    setAllowSensitive(next);
+    if (!next) {
+      setConfirmSensitive(false);
+      setSelectedTables((prev) => prev.filter((t) => !SENSITIVE_TABLE_NAMES.has(t)));
+    }
+  };
+
+  /** Set or clear a per-table row cap. Empty/0/NaN clears the cap. */
+  const setRowLimit = (table: string, value: string) => {
+    const n = Number.parseInt(value, 10);
+    setRowLimits((prev) => {
+      const next = { ...prev };
+      if (!Number.isFinite(n) || n <= 0) {
+        delete next[table];
+      } else {
+        next[table] = n;
+      }
+      return next;
+    });
   };
 
   const handleRestore = async () => {
@@ -187,11 +305,20 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       const filteredData: ParsedBackup = {};
       for (const t of selectedTables) filteredData[t] = parsed[t] ?? [];
 
+      // Only forward row_limits for tables actually selected.
+      const limitsToSend: Record<string, number> = {};
+      for (const t of selectedTables) {
+        const cap = rowLimits[t];
+        if (typeof cap === 'number' && cap > 0) limitsToSend[t] = cap;
+      }
+
       const { data, error } = await supabase.functions.invoke('restore-backup', {
         body: {
           data: filteredData,
           tables: selectedTables,
           mode,
+          allow_sensitive: hasSensitiveSelected ? true : undefined,
+          row_limits: Object.keys(limitsToSend).length > 0 ? limitsToSend : undefined,
           confirm_replace: mode === 'replace' ? confirmReplace : undefined,
         },
       });
@@ -392,20 +519,45 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   )}
                 </div>
 
-                {parsed && availableTables.length > 0 && (
+                {parsed && (fileBuckets.regular.length > 0 || fileBuckets.sensitive.length > 0) && (
                   <>
                     <Separator />
+
+                    {/* Forbidden tables warning — strictly informational. */}
+                    {fileBuckets.forbidden.length > 0 && (
+                      <Alert variant="destructive">
+                        <Lock className="h-4 w-4" />
+                        <AlertTitle>جداول محظورة في الملف</AlertTitle>
+                        <AlertDescription className="text-xs space-y-1">
+                          <div>
+                            تم اكتشاف {fileBuckets.forbidden.length} جدول لا يمكن استعادته من هذه الواجهة
+                            مهما كانت صلاحياتك (حماية للنظام والتدقيق):
+                          </div>
+                          <code className="text-[11px] block bg-destructive/10 rounded p-2 break-all">
+                            {fileBuckets.forbidden.join(', ')}
+                          </code>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label>الجداول المتوفرة ({availableTables.length})</Label>
+                        <Label>
+                          الجداول العادية ({fileBuckets.regular.length})
+                        </Label>
                         <div className="flex gap-2">
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSelectedTables(availableTables.map((t) => t.name))}
+                            onClick={() =>
+                              setSelectedTables((prev) => {
+                                const keepSensitive = prev.filter((t) => SENSITIVE_TABLE_NAMES.has(t));
+                                return [...new Set([...keepSensitive, ...fileBuckets.regular.map((t) => t.name)])];
+                              })
+                            }
                           >
-                            تحديد الكل
+                            تحديد العادية
                           </Button>
                           <Button
                             type="button"
@@ -418,7 +570,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                         </div>
                       </div>
                       <div className="border rounded-md divide-y max-h-48 overflow-auto">
-                        {availableTables.map((t) => (
+                        {fileBuckets.regular.map((t) => (
                           <label
                             key={t.name}
                             className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/40"
@@ -433,6 +585,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                             </Badge>
                           </label>
                         ))}
+                        {fileBuckets.regular.length === 0 && (
+                          <div className="px-3 py-3 text-xs text-muted-foreground">
+                            لا توجد جداول عادية في هذا الملف.
+                          </div>
+                        )}
                       </div>
 
                       {ignoredKeys.length > 0 && (
@@ -441,6 +598,77 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                         </p>
                       )}
                     </div>
+
+                    {/* Sensitive tables tier — opt-in. */}
+                    {fileBuckets.sensitive.length > 0 && (
+                      <>
+                        <Separator />
+                        <div className="rounded-md border border-warning/40 bg-warning/5 p-3 space-y-3">
+                          <div className="flex items-start gap-2">
+                            <ShieldAlert className="h-4 w-4 text-warning mt-0.5" />
+                            <div className="flex-1 space-y-1">
+                              <div className="text-sm font-medium">
+                                جداول حساسة في الملف ({fileBuckets.sensitive.length})
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                هذه الجداول تتحكم في الصلاحيات، الإعدادات، أو الفترات المالية.
+                                استعادتها قد تؤثر على وصول المستخدمين أو دقة المحاسبة.
+                                مخفية افتراضياً — يجب تفعيل الخيار صراحة، وتتطلب صلاحية مدير منصة عند التنفيذ.
+                              </p>
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={allowSensitive}
+                              onCheckedChange={(v) => toggleAllowSensitive(v === true)}
+                            />
+                            <span className="text-sm font-medium">
+                              السماح بعرض واختيار الجداول الحساسة
+                            </span>
+                          </label>
+
+                          {allowSensitive && (
+                            <>
+                              <div className="border rounded-md divide-y max-h-40 overflow-auto bg-background">
+                                {fileBuckets.sensitive.map((t) => (
+                                  <label
+                                    key={t.name}
+                                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/40"
+                                  >
+                                    <Checkbox
+                                      checked={selectedTables.includes(t.name)}
+                                      onCheckedChange={() => toggleTable(t.name)}
+                                    />
+                                    <ShieldAlert className="h-3.5 w-3.5 text-warning" />
+                                    <span className="flex-1 text-sm">{t.label}</span>
+                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                      {t.name}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {t.count} سجل
+                                    </Badge>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {hasSensitiveSelected && (
+                                <label className="flex items-start gap-2 cursor-pointer rounded bg-warning/10 p-2">
+                                  <Checkbox
+                                    checked={confirmSensitive}
+                                    onCheckedChange={(v) => setConfirmSensitive(v === true)}
+                                    className="mt-0.5"
+                                  />
+                                  <span className="text-xs">
+                                    أفهم أن استعادة هذه الجداول قد تغير صلاحيات المستخدمين أو
+                                    البيانات المرجعية، وقد تتطلب صلاحية مدير منصة على الخادم.
+                                  </span>
+                                </label>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </>
+                    )}
 
                     <Separator />
                     <div className="space-y-2">
@@ -499,11 +727,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   </>
                 )}
 
-                {parsed && availableTables.length === 0 && (
+                {parsed && fileBuckets.regular.length === 0 && fileBuckets.sensitive.length === 0 && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      لم يتم العثور على أي جدول معروف في الملف. تأكد من أن الملف صادر من هذا النظام.
+                      لم يتم العثور على أي جدول قابل للاستعادة في الملف. تأكد من أن الملف صادر من هذا النظام.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -545,23 +773,69 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   <AlertDescription className="text-xs">{modeMeta.effect}</AlertDescription>
                 </Alert>
 
-                {/* Tables summary */}
+                {/* Sensitive selection warning in review. */}
+                {hasSensitiveSelected && (
+                  <Alert className="border-warning/50 bg-warning/5">
+                    <ShieldAlert className="h-4 w-4 text-warning" />
+                    <AlertTitle>الاستعادة تشمل جداول حساسة</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      تم تفعيل خيار الجداول الحساسة. الخادم سيتحقق مرة أخرى أنك مدير منصة
+                      قبل تنفيذ هذه الاستعادة.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Tables summary with optional row caps */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>الجداول التي سيتم استعادتها ({selectedSummary.length})</Label>
                     <Badge variant="secondary" className="text-xs">
-                      الإجمالي: {totalSelectedRows} سجل
+                      الإجمالي الفعلي: {totalSelectedRows} سجل
                     </Badge>
                   </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    يمكنك تحديد حد أقصى للسجلات المستعادة من كل جدول (يُؤخذ أول N سجل من الملف). اتركه فارغاً لاستعادة الكل.
+                  </p>
                   <div className="border rounded-md divide-y max-h-64 overflow-auto">
                     {selectedSummary.map((t) => (
-                      <div key={t.name} className="px-3 py-2 flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                        <span className="flex-1">{t.label}</span>
-                        <span className="text-xs text-muted-foreground">{t.name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {t.count} سجل
-                        </Badge>
+                      <div key={t.name} className="px-3 py-2 space-y-1.5">
+                        <div className="flex items-center gap-2 text-sm">
+                          {t.isSensitive ? (
+                            <ShieldAlert className="h-3.5 w-3.5 text-warning" />
+                          ) : (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                          )}
+                          <span className="flex-1">{t.label}</span>
+                          <span className="text-xs text-muted-foreground">{t.name}</span>
+                          {t.isSensitive && (
+                            <Badge variant="outline" className="text-[10px] border-warning text-warning">
+                              حساس
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className="text-xs">
+                            {t.count} / {t.totalInFile} سجل
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 mr-6">
+                          <Label htmlFor={`limit-${t.name}`} className="text-[11px] text-muted-foreground">
+                            حد أقصى:
+                          </Label>
+                          <Input
+                            id={`limit-${t.name}`}
+                            type="number"
+                            min={1}
+                            max={t.totalInFile}
+                            placeholder={`${t.totalInFile} (الكل)`}
+                            value={rowLimits[t.name] ?? ''}
+                            onChange={(e) => setRowLimit(t.name, e.target.value)}
+                            className="h-7 w-32 text-xs"
+                          />
+                          {t.truncated > 0 && (
+                            <span className="text-[11px] text-warning">
+                              سيتم تخطّي {t.truncated} سجل
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -749,9 +1023,15 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                             : 'text-destructive';
                       return (
                         <div key={r.table} className="px-3 py-2 space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <StatusIcon className={`h-4 w-4 ${statusClass}`} />
                             <span className="flex-1 font-medium">{label}</span>
+                            {r.is_sensitive && (
+                              <Badge variant="outline" className="text-[10px] border-warning text-warning">
+                                <ShieldAlert className="h-3 w-3 ml-1" />
+                                حساس
+                              </Badge>
+                            )}
                             {r.inserted > 0 && (
                               <Badge variant="default" className="text-xs">
                                 نجح: {r.inserted}
@@ -760,6 +1040,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                             {r.skipped > 0 && (
                               <Badge variant="secondary" className="text-xs">
                                 تجاهل: {r.skipped}
+                              </Badge>
+                            )}
+                            {(r.truncated ?? 0) > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                مقتطع: {r.truncated}
                               </Badge>
                             )}
                             {r.errors > 0 && (
@@ -888,7 +1173,8 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   isParsing ||
                   !parsed ||
                   selectedTables.length === 0 ||
-                  (mode === 'replace' && !confirmReplace)
+                  (mode === 'replace' && !confirmReplace) ||
+                  (hasSensitiveSelected && !confirmSensitive)
                 }
               >
                 مراجعة قبل التنفيذ

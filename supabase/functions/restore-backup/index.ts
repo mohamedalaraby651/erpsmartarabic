@@ -35,8 +35,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Whitelist of tables that may be restored. System / auth / audit tables
-// are intentionally excluded.
+// Whitelist of regular business tables that may be restored at any time.
 const ALLOWED_TABLES = new Set<string>([
   "customers",
   "customer_addresses",
@@ -70,6 +69,36 @@ const ALLOWED_TABLES = new Set<string>([
   "cash_registers",
 ]);
 
+// Sensitive tables — restoring these can affect access control, audit
+// integrity, or platform-level data. They are BLOCKED by default and only
+// allowed when the caller:
+//   1. Is a platform admin (has_role 'admin'), AND
+//   2. Explicitly sets `allow_sensitive: true` in the request body.
+// Owner-of-tenant alone is NOT enough.
+const SENSITIVE_TABLES = new Set<string>([
+  "custom_roles",
+  "role_section_permissions",
+  "role_limits",
+  "user_tenants",
+  "company_settings",
+  "approval_chains",
+  "fiscal_periods",
+  "chart_of_accounts",
+]);
+
+// Tables that are NEVER restorable through this endpoint, no matter who asks.
+// They are platform-level or tamper-evident logs.
+const FORBIDDEN_TABLES = new Set<string>([
+  "tenants",
+  "user_roles",
+  "platform_admins",
+  "audit_trail",
+  "activity_logs",
+  "restore_snapshots",
+  "domain_events",
+  "event_metrics",
+]);
+
 type Mode = "append" | "upsert" | "replace";
 
 interface RestoreBody {
@@ -77,6 +106,17 @@ interface RestoreBody {
   tables: string[];
   mode: Mode;
   confirm_replace?: boolean;
+  /**
+   * Opt-in flag required to restore tables in SENSITIVE_TABLES.
+   * Even with this flag, the caller must be a platform admin.
+   */
+  allow_sensitive?: boolean;
+  /**
+   * Optional per-table row caps. Keys are table names, values are the
+   * maximum number of rows from `data[table]` to actually restore.
+   * Anything beyond the cap is left in the file and reported as `truncated`.
+   */
+  row_limits?: Record<string, number>;
 }
 
 interface TableResult {
@@ -95,6 +135,10 @@ interface TableResult {
   error_sample?: string;
   /** All distinct error messages collected during chunked inserts. */
   error_messages?: string[];
+  /** Rows skipped because the caller capped this table via row_limits. */
+  truncated?: number;
+  /** True when the table is in SENSITIVE_TABLES (surface in report). */
+  is_sensitive?: boolean;
 }
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -198,14 +242,60 @@ serve(async (req) => {
       );
     }
 
-    // Validate table names against whitelist BEFORE any write.
-    const blocked = tables.filter((t) => !ALLOWED_TABLES.has(t));
+    // Validate table names BEFORE any write. Three tiers:
+    //   1. FORBIDDEN_TABLES → always rejected (system / audit / platform).
+    //   2. SENSITIVE_TABLES → require platform admin AND `allow_sensitive`.
+    //   3. ALLOWED_TABLES   → restorable for any authorized caller.
+    //   anything else       → unknown table, rejected.
+    const forbidden = tables.filter((t) => FORBIDDEN_TABLES.has(t));
+    if (forbidden.length > 0) {
+      return jsonResponse(
+        {
+          success: false,
+          error: `جداول محظورة لا يمكن استعادتها أبداً: ${forbidden.join(", ")}`,
+          code: "TABLE_FORBIDDEN",
+          forbidden_tables: forbidden,
+        },
+        400,
+      );
+    }
+
+    const sensitiveRequested = tables.filter((t) => SENSITIVE_TABLES.has(t));
+    if (sensitiveRequested.length > 0) {
+      if (!isAdmin) {
+        return jsonResponse(
+          {
+            success: false,
+            error: `استعادة جداول حساسة (${sensitiveRequested.join(", ")}) تتطلب صلاحية مدير منصة.`,
+            code: "SENSITIVE_REQUIRES_ADMIN",
+            sensitive_tables: sensitiveRequested,
+          },
+          403,
+        );
+      }
+      if (body.allow_sensitive !== true) {
+        return jsonResponse(
+          {
+            success: false,
+            error: `يجب تفعيل خيار "السماح بالجداول الحساسة" صراحة لاستعادة: ${sensitiveRequested.join(", ")}`,
+            code: "SENSITIVE_OPT_IN_REQUIRED",
+            sensitive_tables: sensitiveRequested,
+          },
+          400,
+        );
+      }
+    }
+
+    const blocked = tables.filter(
+      (t) => !ALLOWED_TABLES.has(t) && !SENSITIVE_TABLES.has(t),
+    );
     if (blocked.length > 0) {
       return jsonResponse(
         {
           success: false,
-          error: `جداول غير مسموح باستعادتها: ${blocked.join(", ")}`,
+          error: `جداول غير معروفة أو غير مسموح باستعادتها: ${blocked.join(", ")}`,
           code: "TABLE_BLOCKED",
+          blocked_tables: blocked,
         },
         400,
       );
@@ -274,13 +364,18 @@ serve(async (req) => {
     const results: TableResult[] = [];
 
     for (const table of tables) {
-      const rows = Array.isArray(data[table]) ? data[table] : [];
+      const allRows = Array.isArray(data[table]) ? data[table] : [];
+      const cap = body.row_limits?.[table];
+      const isCapped = typeof cap === "number" && cap >= 0 && cap < allRows.length;
+      const rows = isCapped ? allRows.slice(0, cap) : allRows;
       const result: TableResult = {
         table,
         inserted: 0,
         skipped: 0,
         errors: 0,
         rejected_foreign_tenant: 0,
+        truncated: isCapped ? allRows.length - rows.length : 0,
+        is_sensitive: SENSITIVE_TABLES.has(table),
       };
 
       // Tenant-scope enforcement (defense in depth):
