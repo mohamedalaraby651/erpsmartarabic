@@ -166,6 +166,9 @@ const MetricsPage = () => {
             </div>
           </div>
 
+          {/* Event Dispatcher Pipeline */}
+          <EventDispatcherCard />
+
           {/* API Latency Chart */}
           <Card>
             <CardHeader>
