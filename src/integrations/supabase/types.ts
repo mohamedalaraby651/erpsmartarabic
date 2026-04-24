@@ -4565,6 +4565,10 @@ export type Database = {
       }
     }
     Functions: {
+      _has_posted_journal: {
+        Args: { _source_id: string; _source_type: string }
+        Returns: boolean
+      }
       admin_requeue_event: { Args: { _event_id: string }; Returns: undefined }
       atomic_customer_balance_update: {
         Args: { _amount: number; _customer_id: string }
