@@ -119,6 +119,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     setConfirmReplace(false);
     setFinalConfirmText('');
     setResults(null);
+    setReportMeta(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
