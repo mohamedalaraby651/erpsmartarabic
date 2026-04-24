@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenant } from '@/hooks/useTenant';
 import { toast } from 'sonner';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 
@@ -104,6 +105,7 @@ export function FileUpload({
   disabled = false,
 }: FileUploadProps) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -130,6 +132,10 @@ export function FileUpload({
 
   const uploadFile = useCallback(async (file: File) => {
     if (!user || !validateFile(file)) return;
+    if (!tenantId) {
+      toast.error('تعذّر تحديد الشركة الحالية');
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -137,7 +143,7 @@ export function FileUpload({
     try {
       const fileType = getFileType(file);
       const fileExtension = file.name.split('.').pop();
-      const fileName = `${entityType}/${entityId}/${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
+      const fileName = `${tenantId}/${entityType}/${entityId}/${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
 
       // Simulate progress
       const progressInterval = setInterval(() => {
@@ -203,7 +209,7 @@ export function FileUpload({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [user, entityType, entityId, onUploadComplete, validateFile]);
+  }, [user, tenantId, entityType, entityId, onUploadComplete, validateFile]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
