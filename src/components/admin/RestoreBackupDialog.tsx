@@ -226,9 +226,17 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     try {
       const data = await parseBackupFile(f);
       setParsed(data);
-      // Auto-select all known tables that have rows.
+      // Auto-select known REGULAR tables that have rows. Sensitive tables
+      // are intentionally NOT auto-selected — the user must opt in first.
       const auto = Object.entries(data)
-        .filter(([k, v]) => knownTableNames.has(k) && Array.isArray(v) && v.length > 0)
+        .filter(
+          ([k, v]) =>
+            knownTableNames.has(k) &&
+            !SENSITIVE_TABLE_NAMES.has(k) &&
+            !FORBIDDEN_TABLE_NAMES.has(k) &&
+            Array.isArray(v) &&
+            v.length > 0,
+        )
         .map(([k]) => k);
       setSelectedTables(auto);
     } catch (err) {
