@@ -155,7 +155,7 @@ export default function UsersPage() {
     });
   }, [users, searchQuery, roleFilter]);
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!users) return;
     const data = users.map(user => {
       const profile = user.profiles as { full_name?: string; phone?: string } | null;
