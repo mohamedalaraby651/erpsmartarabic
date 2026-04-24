@@ -84,6 +84,13 @@ interface TableResult {
   inserted: number;
   skipped: number;
   errors: number;
+  /**
+   * Rows rejected because their `tenant_id` belonged to another tenant
+   * (cross-tenant injection attempt). These rows are NEVER written.
+   */
+  rejected_foreign_tenant: number;
+  /** Distinct foreign tenant IDs found in this table (for the report). */
+  foreign_tenant_ids?: string[];
   /** First error message (back-compat). */
   error_sample?: string;
   /** All distinct error messages collected during chunked inserts. */
