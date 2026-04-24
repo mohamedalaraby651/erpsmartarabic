@@ -35,8 +35,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Whitelist of tables that may be restored. System / auth / audit tables
-// are intentionally excluded.
+// Whitelist of regular business tables that may be restored at any time.
 const ALLOWED_TABLES = new Set<string>([
   "customers",
   "customer_addresses",
@@ -68,6 +67,36 @@ const ALLOWED_TABLES = new Set<string>([
   "employees",
   "bank_accounts",
   "cash_registers",
+]);
+
+// Sensitive tables — restoring these can affect access control, audit
+// integrity, or platform-level data. They are BLOCKED by default and only
+// allowed when the caller:
+//   1. Is a platform admin (has_role 'admin'), AND
+//   2. Explicitly sets `allow_sensitive: true` in the request body.
+// Owner-of-tenant alone is NOT enough.
+const SENSITIVE_TABLES = new Set<string>([
+  "custom_roles",
+  "role_section_permissions",
+  "role_limits",
+  "user_tenants",
+  "company_settings",
+  "approval_chains",
+  "fiscal_periods",
+  "chart_of_accounts",
+]);
+
+// Tables that are NEVER restorable through this endpoint, no matter who asks.
+// They are platform-level or tamper-evident logs.
+const FORBIDDEN_TABLES = new Set<string>([
+  "tenants",
+  "user_roles",
+  "platform_admins",
+  "audit_trail",
+  "activity_logs",
+  "restore_snapshots",
+  "domain_events",
+  "event_metrics",
 ]);
 
 type Mode = "append" | "upsert" | "replace";
