@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 import { supplierImportSchema } from "@/lib/validations";
 
 interface Props {
@@ -52,8 +52,9 @@ export default function SupplierImportDialog({ open, onOpenChange }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
+        const XLSX = await import('xlsx');
         const wb = XLSX.read(event.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);

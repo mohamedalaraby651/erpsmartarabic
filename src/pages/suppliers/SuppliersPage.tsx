@@ -26,7 +26,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { generatePDF } from "@/lib/pdfGenerator";
-import * as XLSX from "xlsx";
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -223,6 +223,7 @@ const SuppliersPage = () => {
         includeLogo: true,
       });
     } else {
+      const XLSX = await import('xlsx');
       const ws = XLSX.utils.json_to_sheet(data.map(row => {
         const labeled: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(row)) {

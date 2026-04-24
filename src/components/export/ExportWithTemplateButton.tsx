@@ -26,7 +26,7 @@ import { generatePDF } from '@/lib/pdfGenerator';
 import { Download, FileSpreadsheet, FileText, FileJson, Loader2, Save, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 
 interface ExportWithTemplateButtonProps {
   section: string;
@@ -161,7 +161,7 @@ export function ExportWithTemplateButton({
     }
   };
 
-  const exportToExcel = (data: any[], cols: Column[], filename: string) => {
+  const exportToExcel = async (data: any[], cols: Column[], filename: string) => {
     const exportData = data.map((row) => {
       const newRow: Record<string, any> = {};
       cols.forEach((col) => {
@@ -170,6 +170,7 @@ export function ExportWithTemplateButton({
       return newRow;
     });
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'البيانات');
@@ -182,7 +183,7 @@ export function ExportWithTemplateButton({
     XLSX.writeFile(workbook, `${filename}.xlsx`);
   };
 
-  const exportToCSV = (data: any[], cols: Column[], filename: string) => {
+  const exportToCSV = async (data: any[], cols: Column[], filename: string) => {
     const exportData = data.map((row) => {
       const newRow: Record<string, any> = {};
       cols.forEach((col) => {
@@ -191,6 +192,7 @@ export function ExportWithTemplateButton({
       return newRow;
     });
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const csv = XLSX.utils.sheet_to_csv(worksheet);
 

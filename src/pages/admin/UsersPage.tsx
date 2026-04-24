@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/table';
 import { Users, Loader2, Shield, Search, Download, UserCheck, UserX } from 'lucide-react';
 import { AdminPageSkeleton } from '@/components/shared/AdminPageSkeleton';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 
 const legacyRoleLabels: Record<string, string> = {
   admin: 'مدير النظام',
@@ -155,7 +155,7 @@ export default function UsersPage() {
     });
   }, [users, searchQuery, roleFilter]);
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!users) return;
     const data = users.map(user => {
       const profile = user.profiles as { full_name?: string; phone?: string } | null;
@@ -167,6 +167,7 @@ export default function UsersPage() {
         'الدور المخصص': customRole?.name || 'بدون',
       };
     });
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'المستخدمون');

@@ -9,7 +9,7 @@ import {
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { logErrorSafely } from '@/lib/errorHandler';
-import * as XLSX from 'xlsx';
+// xlsx is loaded dynamically inside handlers to keep it out of the main bundle
 
 interface ExportButtonProps {
   data: any[];
@@ -28,6 +28,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
 
     setIsExporting(true);
     try {
+      const XLSX = await import('xlsx');
       // Transform data with Arabic headers if provided
       const exportData = headers
         ? data.map((row) => {
@@ -67,6 +68,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
 
     setIsExporting(true);
     try {
+      const XLSX = await import('xlsx');
       const exportData = headers
         ? data.map((row) => {
             const newRow: Record<string, any> = {};

@@ -24,7 +24,7 @@ import {
   HardDrive
 } from 'lucide-react';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -158,7 +158,8 @@ const BackupPage = () => {
     }
   };
 
-  const exportToExcel = (data: Record<string, any[]>) => {
+  const exportToExcel = async (data: Record<string, any[]>) => {
+    const XLSX = await import('xlsx');
     const workbook = XLSX.utils.book_new();
     
     for (const [tableName, tableData] of Object.entries(data)) {
