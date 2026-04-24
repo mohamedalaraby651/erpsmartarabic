@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ColumnSelector, Column } from './ColumnSelector';
-import { generatePDF } from '@/lib/pdfGenerator';
+import { generatePDF } from '@/lib/pdfGeneratorLazy';
 import { Download, FileSpreadsheet, FileText, FileJson, Loader2, Save, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';

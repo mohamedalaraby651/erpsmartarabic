@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
-import { generatePDF } from "@/lib/pdfGenerator";
+import { generatePDF } from "@/lib/pdfGeneratorLazy";
 import { supabase } from "@/integrations/supabase/client";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";

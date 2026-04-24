@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as XLSX from 'xlsx';
+
 
 interface ProcessedFile {
   name: string;
@@ -20,10 +20,11 @@ export function useFileHandling() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const processExcelFile = useCallback(async (file: File): Promise<any[][]> => {
+  const processExcelFile = useCallback(async (file: File): Promise<unknown[][]> => {
+    const XLSX = await import('xlsx');
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
@@ -35,7 +36,7 @@ export function useFileHandling() {
           reject(err);
         }
       };
-      
+
       reader.onerror = reject;
       reader.readAsArrayBuffer(file);
     });

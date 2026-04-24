@@ -10,6 +10,7 @@ import MobileDrawer from './MobileDrawer';
 import { FABMenu } from '@/components/mobile/FABMenu';
 import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { PageLoadingState } from '@/components/shared/PageLoadingState';
+import { PageErrorBoundary } from '@/components/shared/PageErrorBoundary';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -89,11 +90,13 @@ export default function AppLayout() {
       <div className="min-h-screen bg-background pb-14">
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
-          <Suspense fallback={<PageSkeleton />}>
-            <PageTransition direction="fade" duration="fast">
-              <Outlet />
-            </PageTransition>
-          </Suspense>
+          <PageErrorBoundary>
+            <Suspense fallback={<PageSkeleton />}>
+              <PageTransition direction="fade" duration="fast">
+                <Outlet />
+              </PageTransition>
+            </Suspense>
+          </PageErrorBoundary>
         </main>
         <FABMenu pageContext={getPageContext()} />
         <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
@@ -126,11 +129,13 @@ export default function AppLayout() {
         >
           <AppHeader />
           <main className="p-6">
-          <Suspense fallback={<PageSkeleton />}>
-            <PageTransition direction="fade" duration="fast">
-              <Outlet />
-            </PageTransition>
-          </Suspense>
+          <PageErrorBoundary>
+            <Suspense fallback={<PageSkeleton />}>
+              <PageTransition direction="fade" duration="fast">
+                <Outlet />
+              </PageTransition>
+            </Suspense>
+          </PageErrorBoundary>
           </main>
         </div>
       </div>
