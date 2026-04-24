@@ -209,7 +209,7 @@ export function FileUpload({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [user, entityType, entityId, onUploadComplete, validateFile]);
+  }, [user, tenantId, entityType, entityId, onUploadComplete, validateFile]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
