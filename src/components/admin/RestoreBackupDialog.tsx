@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle, RotateCcw, History } from 'lucide-react';
+import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle, RotateCcw, History, ShieldAlert, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { parseBackupFile, type ParsedBackup } from '@/lib/services/backupRestoreParser';
@@ -21,6 +21,41 @@ import {
   summarize,
   type RestoreReportInput,
 } from '@/lib/services/backupRestoreReport';
+
+/**
+ * Tables that the backend treats as SENSITIVE — restoring them can affect
+ * access control, fiscal periods, accounting baselines, or company config.
+ * They appear in the dialog only when the user explicitly opts in, AND only
+ * platform admins can actually push them through.
+ *
+ * Keep in sync with `SENSITIVE_TABLES` in
+ * supabase/functions/restore-backup/index.ts
+ */
+const SENSITIVE_TABLE_NAMES = new Set<string>([
+  'custom_roles',
+  'role_section_permissions',
+  'role_limits',
+  'user_tenants',
+  'company_settings',
+  'approval_chains',
+  'fiscal_periods',
+  'chart_of_accounts',
+]);
+
+/**
+ * Tables the backend will NEVER restore. We don't even show them as options.
+ * Keep in sync with `FORBIDDEN_TABLES` server-side.
+ */
+const FORBIDDEN_TABLE_NAMES = new Set<string>([
+  'tenants',
+  'user_roles',
+  'platform_admins',
+  'audit_trail',
+  'activity_logs',
+  'restore_snapshots',
+  'domain_events',
+  'event_metrics',
+]);
 
 type RestoreMode = 'append' | 'upsert' | 'replace';
 type Step = 'configure' | 'review' | 'results';
