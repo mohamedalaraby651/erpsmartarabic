@@ -24,9 +24,14 @@ import {
   HardDrive
 } from 'lucide-react';
 import { toast } from 'sonner';
-// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import {
+  exportBackupToExcel,
+  exportBackupToJson,
+  exportBackupToCsv,
+  exportBackupToSql,
+} from '@/lib/services/backupExportService';
 
 interface TableInfo {
   name: string;
@@ -102,11 +107,6 @@ const BackupPage = () => {
     setSelectedTables([]);
   };
 
-  const generateFileName = (extension: string) => {
-    const date = format(new Date(), 'yyyy-MM-dd_HH-mm', { locale: ar });
-    return `نسخة_احتياطية_${date}.${extension}`;
-  };
-
   const handleExport = async () => {
     if (selectedTables.length === 0) {
       toast.error('يرجى اختيار جدول واحد على الأقل');
@@ -121,29 +121,29 @@ const BackupPage = () => {
         const { data, error } = await supabase
           .from(tableName as never)
           .select('*');
-        
+
         if (error) {
           if (import.meta.env.DEV) {
             console.error(`Error fetching ${tableName}:`, error);
           }
           continue;
         }
-        
+
         allData[tableName] = data || [];
       }
 
       switch (exportFormat) {
         case 'excel':
-          exportToExcel(allData);
+          await exportBackupToExcel(allData, tables);
           break;
         case 'json':
-          exportToJson(allData);
+          exportBackupToJson(allData);
           break;
         case 'csv':
-          exportToCsv(allData);
+          exportBackupToCsv(allData, tables);
           break;
         case 'sql':
-          exportToSql(allData);
+          exportBackupToSql(allData);
           break;
       }
 
@@ -156,92 +156,6 @@ const BackupPage = () => {
     } finally {
       setIsExporting(false);
     }
-  };
-
-  const exportToExcel = async (data: Record<string, any[]>) => {
-    const XLSX = await import('xlsx');
-    const workbook = XLSX.utils.book_new();
-    
-    for (const [tableName, tableData] of Object.entries(data)) {
-      if (tableData.length > 0) {
-        const tableInfo = tables.find((t) => t.name === tableName);
-        const worksheet = XLSX.utils.json_to_sheet(tableData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, tableInfo?.label || tableName);
-      }
-    }
-
-    XLSX.writeFile(workbook, generateFileName('xlsx'));
-  };
-
-  const exportToJson = (data: Record<string, any[]>) => {
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    downloadBlob(blob, generateFileName('json'));
-  };
-
-  const exportToCsv = (data: Record<string, any[]>) => {
-    // Create a zip-like structure with multiple CSV files in one
-    let csvContent = '';
-    
-    for (const [tableName, tableData] of Object.entries(data)) {
-      if (tableData.length > 0) {
-        const tableInfo = tables.find((t) => t.name === tableName);
-        csvContent += `\n### ${tableInfo?.label || tableName} ###\n`;
-        
-        const headers = Object.keys(tableData[0]).join(',');
-        csvContent += headers + '\n';
-        
-        for (const row of tableData) {
-          const values = Object.values(row).map(v => {
-            if (v === null) return '';
-            if (typeof v === 'string' && (v.includes(',') || v.includes('"') || v.includes('\n'))) {
-              return `"${v.replace(/"/g, '""')}"`;
-            }
-            return String(v);
-          }).join(',');
-          csvContent += values + '\n';
-        }
-      }
-    }
-
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, generateFileName('csv'));
-  };
-
-  const exportToSql = (data: Record<string, any[]>) => {
-    let sqlContent = '-- نسخة احتياطية\n';
-    sqlContent += `-- تاريخ التصدير: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}\n\n`;
-
-    for (const [tableName, tableData] of Object.entries(data)) {
-      if (tableData.length > 0) {
-        sqlContent += `-- جدول: ${tableName}\n`;
-        
-        for (const row of tableData) {
-          const columns = Object.keys(row).join(', ');
-          const values = Object.values(row).map(v => {
-            if (v === null) return 'NULL';
-            if (typeof v === 'string') return `'${v.replace(/'/g, "''")}'`;
-            if (typeof v === 'object') return `'${JSON.stringify(v).replace(/'/g, "''")}'`;
-            return String(v);
-          }).join(', ');
-          
-          sqlContent += `INSERT INTO ${tableName} (${columns}) VALUES (${values});\n`;
-        }
-        sqlContent += '\n';
-      }
-    }
-
-    const blob = new Blob([sqlContent], { type: 'text/sql' });
-    downloadBlob(blob, generateFileName('sql'));
-  };
-
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
   };
 
   const handleImportClick = () => {

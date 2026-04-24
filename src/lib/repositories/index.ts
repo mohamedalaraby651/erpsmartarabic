@@ -6,3 +6,7 @@ export type { DuplicateResult, DuplicateDetectionResult } from './customerSearch
 export { supplierRepository } from './supplierRepository';
 export type { SupplierFilters, SupplierSort, SupplierPagination } from './supplierRepository';
 export { supplierRelationsRepo } from './supplierRelationsRepo';
+export { invoiceRepository } from './invoiceRepository';
+export type { InvoiceFilters, InvoiceSort, InvoicePagination } from './invoiceRepository';
+export { productRepository } from './productRepository';
+export type { ProductFilters, ProductSort, ProductPagination } from './productRepository';
