@@ -48,8 +48,8 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('customers').select('*').eq('is_active', true).order('name');
-      if (error) throw error; return data as Customer[];
+      const { data, error } = await supabase.from('customers_safe').select('*').eq('is_active', true).order('name');
+      if (error) throw error; return data as unknown as Customer[];
     },
   });
 

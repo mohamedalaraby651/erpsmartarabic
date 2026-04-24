@@ -81,9 +81,9 @@ export default function SearchPage() {
 
       const searchResults: SearchResult[] = [];
 
-      // Search customers
+      // Search customers (PII-masked view)
       const { data: customers } = await supabase
-        .from('customers')
+        .from('customers_safe')
         .select('id, name, phone, email')
         .or(`name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
         .limit(10);

@@ -35,7 +35,7 @@ export default function MultiInvoiceSettlement({ open, onOpenChange, onSuccess, 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers-settlement'],
     queryFn: async () => {
-      const { data } = await supabase.from('customers').select('id, name').eq('is_active', true).order('name');
+      const { data } = await supabase.from('customers_safe').select('id, name').eq('is_active', true).order('name');
       return data || [];
     },
     enabled: open,
