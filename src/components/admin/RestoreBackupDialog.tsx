@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle, RotateCcw, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { parseBackupFile, type ParsedBackup } from '@/lib/services/backupRestoreParser';
