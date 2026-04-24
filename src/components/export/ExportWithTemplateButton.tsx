@@ -26,7 +26,7 @@ import { generatePDF } from '@/lib/pdfGenerator';
 import { Download, FileSpreadsheet, FileText, FileJson, Loader2, Save, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 
 interface ExportWithTemplateButtonProps {
   section: string;

@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 
 interface CustomerImportDialogProps {

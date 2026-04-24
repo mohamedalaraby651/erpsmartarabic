@@ -20,7 +20,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 import { format } from 'date-fns';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
 import { ImportOptionsDialog, type ImportMode } from './ImportOptionsDialog';

@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/table';
 import { Users, Loader2, Shield, Search, Download, UserCheck, UserX } from 'lucide-react';
 import { AdminPageSkeleton } from '@/components/shared/AdminPageSkeleton';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 
 const legacyRoleLabels: Record<string, string> = {
   admin: 'مدير النظام',
