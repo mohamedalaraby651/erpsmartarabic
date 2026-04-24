@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { RestoreBackupDialog } from '@/components/admin/RestoreBackupDialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -43,8 +44,7 @@ const BackupPage = () => {
   const [selectedTables, setSelectedTables] = useState<string[]>([]);
   const [exportFormat, setExportFormat] = useState<'excel' | 'json' | 'csv' | 'sql'>('excel');
   const [isExporting, setIsExporting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [restoreOpen, setRestoreOpen] = useState(false);
 
   const tables: { name: string; label: string }[] = [
     { name: 'customers', label: 'العملاء' },
@@ -158,41 +158,6 @@ const BackupPage = () => {
     }
   };
 
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsImporting(true);
-    try {
-      if (file.name.endsWith('.json')) {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        
-        toast.info('تم تحميل الملف. الاستيراد غير مفعل حالياً للحماية من فقدان البيانات.');
-        if (import.meta.env.DEV) {
-          console.log('Imported data structure:', Object.keys(data));
-        }
-      } else if (file.name.endsWith('.xlsx')) {
-        toast.info('استيراد ملفات Excel سيكون متاحاً قريباً');
-      } else {
-        toast.error('صيغة الملف غير مدعومة');
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Import error:', error);
-      }
-      toast.error('حدث خطأ أثناء قراءة الملف');
-    } finally {
-      setIsImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
 
   const totalRecords = Object.values(tableCounts).reduce((sum, count) => sum + count, 0);
   const selectedRecords = selectedTables.reduce(
@@ -219,16 +184,9 @@ const BackupPage = () => {
           <p className="text-muted-foreground">تصدير واستيراد بيانات النظام</p>
         </div>
         <div className="flex gap-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept=".json,.xlsx"
-            onChange={handleFileImport}
-          />
-          <Button variant="outline" onClick={handleImportClick} disabled={isImporting}>
+          <Button variant="outline" onClick={() => setRestoreOpen(true)}>
             <Upload className="h-4 w-4 ml-2" />
-            استيراد
+            استعادة من ملف
           </Button>
         </div>
       </div>
