@@ -243,31 +243,31 @@ serve(async (req) => {
 
         // Insert in chunks to avoid payload limits.
         const CHUNK = 500;
+        const errorSet = new Set<string>();
         for (let i = 0; i < sanitized.length; i += CHUNK) {
           const slice = sanitized.slice(i, i + CHUNK);
-          let q;
+          // We chain `.select('id')` to get back the rows actually written so
+          // we can distinguish inserted vs. skipped rows in append mode.
+          let resp;
           if (mode === "upsert") {
-            q = supabaseAdmin.from(table).upsert(slice, {
-              onConflict: "id",
-              ignoreDuplicates: false,
-            });
+            resp = await supabaseAdmin
+              .from(table)
+              .upsert(slice, { onConflict: "id", ignoreDuplicates: false })
+              .select("id");
           } else if (mode === "append") {
-            // ignoreDuplicates skips existing PKs silently.
-            q = supabaseAdmin.from(table).upsert(slice, {
-              onConflict: "id",
-              ignoreDuplicates: true,
-            });
+            resp = await supabaseAdmin
+              .from(table)
+              .upsert(slice, { onConflict: "id", ignoreDuplicates: true })
+              .select("id");
           } else {
-            // replace: rows are gone, plain insert.
-            q = supabaseAdmin.from(table).insert(slice);
+            resp = await supabaseAdmin.from(table).insert(slice).select("id");
           }
 
-          const { error, count } = await q.select("id", { count: "exact", head: false });
-          if (error) {
+          if (resp.error) {
             result.errors += slice.length;
-            if (!result.error_sample) result.error_sample = error.message;
+            errorSet.add(resp.error.message);
           } else {
-            const wrote = count ?? slice.length;
+            const wrote = resp.data?.length ?? slice.length;
             if (mode === "append") {
               result.inserted += wrote;
               result.skipped += slice.length - wrote;
@@ -276,10 +276,15 @@ serve(async (req) => {
             }
           }
         }
+        if (errorSet.size > 0) {
+          result.error_messages = Array.from(errorSet);
+          result.error_sample = result.error_messages[0];
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         result.errors += sanitized.length;
         result.error_sample = message;
+        result.error_messages = [message];
       }
 
       results.push(result);
