@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, Users, Settings, Lock } from 'lucide-react';
+import { Shield, Users, Settings, Lock, Activity } from 'lucide-react';
 
 export default function AdminMenu() {
   const navigate = useNavigate();
