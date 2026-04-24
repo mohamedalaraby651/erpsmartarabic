@@ -106,6 +106,17 @@ interface RestoreBody {
   tables: string[];
   mode: Mode;
   confirm_replace?: boolean;
+  /**
+   * Opt-in flag required to restore tables in SENSITIVE_TABLES.
+   * Even with this flag, the caller must be a platform admin.
+   */
+  allow_sensitive?: boolean;
+  /**
+   * Optional per-table row caps. Keys are table names, values are the
+   * maximum number of rows from `data[table]` to actually restore.
+   * Anything beyond the cap is left in the file and reported as `truncated`.
+   */
+  row_limits?: Record<string, number>;
 }
 
 interface TableResult {
