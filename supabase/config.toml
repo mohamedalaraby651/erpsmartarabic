@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.log-event]
 verify_jwt = false
+
+[functions.restore-backup]
+verify_jwt = false
