@@ -573,34 +573,172 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
             )}
 
             {/* ============ STEP 3: RESULTS ============ */}
-            {step === 'results' && results && (
-              <div className="space-y-2">
-                <Label>النتائج</Label>
-                <div className="border rounded-md divide-y text-sm">
-                  {results.map((r) => (
-                    <div key={r.table} className="px-3 py-2 flex items-center gap-2">
-                      <span className="flex-1">
-                        {knownTables.find((t) => t.name === r.table)?.label ?? r.table}
-                      </span>
-                      {r.inserted > 0 && (
-                        <Badge variant="default" className="text-xs">
-                          +{r.inserted}
-                        </Badge>
-                      )}
-                      {r.skipped > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          تم التجاهل: {r.skipped}
-                        </Badge>
-                      )}
-                      {r.errors > 0 && (
-                        <Badge variant="destructive" className="text-xs" title={r.error_sample}>
-                          أخطاء: {r.errors}
-                        </Badge>
-                      )}
+            {step === 'results' && results && reportSummary && reportInput && (
+              <>
+                {/* Top-level status banner */}
+                {reportSummary.totalErrors === 0 ? (
+                  <Alert className="border-success/40 bg-success/5">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <AlertTitle>اكتملت الاستعادة بنجاح</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      تمت معالجة {results.length} جدول دون أي أخطاء خلال{' '}
+                      {reportSummary.durationSeconds} ثانية.
+                    </AlertDescription>
+                  </Alert>
+                ) : reportSummary.totalInserted > 0 ? (
+                  <Alert className="border-warning/40 bg-warning/5">
+                    <AlertCircle className="h-4 w-4 text-warning" />
+                    <AlertTitle>اكتملت جزئياً مع أخطاء</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      تم إدراج {reportSummary.totalInserted} سجل، لكن{' '}
+                      {reportSummary.totalErrors} سجل فشل في{' '}
+                      {reportSummary.partialTables + reportSummary.failedTables} جدول.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert variant="destructive">
+                    <XCircle className="h-4 w-4" />
+                    <AlertTitle>فشلت الاستعادة</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      لم يتم إدراج أي سجل. راجع تفاصيل الأخطاء أدناه.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* KPI grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="rounded-md border p-3 bg-card">
+                    <div className="text-xs text-muted-foreground">سجلات ناجحة</div>
+                    <div className="text-lg font-semibold text-success">
+                      {reportSummary.totalInserted}
                     </div>
-                  ))}
+                  </div>
+                  <div className="rounded-md border p-3 bg-card">
+                    <div className="text-xs text-muted-foreground">سجلات متجاهلة</div>
+                    <div className="text-lg font-semibold text-muted-foreground">
+                      {reportSummary.totalSkipped}
+                    </div>
+                  </div>
+                  <div className="rounded-md border p-3 bg-card">
+                    <div className="text-xs text-muted-foreground">سجلات فاشلة</div>
+                    <div className="text-lg font-semibold text-destructive">
+                      {reportSummary.totalErrors}
+                    </div>
+                  </div>
+                  <div className="rounded-md border p-3 bg-card">
+                    <div className="text-xs text-muted-foreground">تعارضات مفاتيح</div>
+                    <div className="text-lg font-semibold text-warning">
+                      {reportSummary.conflictHits}
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                {/* Per-table breakdown */}
+                <div className="space-y-2">
+                  <Label>تفاصيل لكل جدول</Label>
+                  <div className="border rounded-md divide-y text-sm">
+                    {results.map((r) => {
+                      const label = knownTables.find((t) => t.name === r.table)?.label ?? r.table;
+                      const messages = r.error_messages?.length
+                        ? r.error_messages
+                        : r.error_sample
+                          ? [r.error_sample]
+                          : [];
+                      const status =
+                        r.errors === 0
+                          ? 'success'
+                          : r.inserted > 0
+                            ? 'partial'
+                            : 'failed';
+                      const StatusIcon =
+                        status === 'success'
+                          ? CheckCircle2
+                          : status === 'partial'
+                            ? AlertCircle
+                            : XCircle;
+                      const statusClass =
+                        status === 'success'
+                          ? 'text-success'
+                          : status === 'partial'
+                            ? 'text-warning'
+                            : 'text-destructive';
+                      return (
+                        <div key={r.table} className="px-3 py-2 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <StatusIcon className={`h-4 w-4 ${statusClass}`} />
+                            <span className="flex-1 font-medium">{label}</span>
+                            {r.inserted > 0 && (
+                              <Badge variant="default" className="text-xs">
+                                نجح: {r.inserted}
+                              </Badge>
+                            )}
+                            {r.skipped > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                تجاهل: {r.skipped}
+                              </Badge>
+                            )}
+                            {r.errors > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                فشل: {r.errors}
+                              </Badge>
+                            )}
+                          </div>
+                          {messages.length > 0 && (
+                            <div className="space-y-1 mr-6">
+                              {messages.map((msg, i) => {
+                                const kind = classifyError(msg);
+                                const tagText =
+                                  kind === 'conflict'
+                                    ? 'تعارض مفتاح'
+                                    : kind === 'fk'
+                                      ? 'علاقة مرجعية'
+                                      : kind === 'check'
+                                        ? 'قيد تحقق'
+                                        : 'خطأ';
+                                const tagVariant =
+                                  kind === 'conflict' || kind === 'fk' ? 'destructive' : 'outline';
+                                return (
+                                  <div
+                                    key={i}
+                                    className="text-xs flex items-start gap-2 rounded bg-muted/40 p-2"
+                                  >
+                                    <Badge variant={tagVariant} className="text-[10px] shrink-0">
+                                      {tagText}
+                                    </Badge>
+                                    <code className="text-xs break-all leading-relaxed">{msg}</code>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Download log */}
+                <div className="rounded-md border p-3 bg-muted/20 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <FileText className="h-4 w-4" />
+                    سجل الاستعادة (للأرشفة والمراجعة)
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    نزّل ملف log كامل يحتوي على وقت التنفيذ، الإعدادات، نتائج كل جدول،
+                    وكل رسائل الأخطاء — مفيد عند فتح تذكرة دعم أو للمراجعة الداخلية.
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant="outline" onClick={handleDownloadLog}>
+                      <Download className="h-3.5 w-3.5 ml-2" />
+                      تنزيل سجل نصي (.txt)
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleDownloadJson}>
+                      <Download className="h-3.5 w-3.5 ml-2" />
+                      تنزيل تقرير JSON
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </ScrollArea>
