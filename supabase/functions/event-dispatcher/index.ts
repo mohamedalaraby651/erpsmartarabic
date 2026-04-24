@@ -26,16 +26,11 @@ Deno.serve(async (req) => {
   );
 
   try {
-    // Claim up to 50 pending events
-    const { data: events, error: fetchErr } = await supabase
-      .from('domain_events')
-      .select('*')
-      .in('status', ['pending', 'failed'])
-      .lt('attempts', 5)
-      .order('created_at', { ascending: true })
-      .limit(50);
+    // Atomic claim with FOR UPDATE SKIP LOCKED + attempts increment
+    const { data: events, error: claimErr } = await supabase
+      .rpc('claim_pending_events', { _batch_size: 50 });
 
-    if (fetchErr) throw fetchErr;
+    if (claimErr) throw claimErr;
     if (!events || events.length === 0) {
       return new Response(
         JSON.stringify({ success: true, processed: 0 }),
@@ -46,27 +41,40 @@ Deno.serve(async (req) => {
     const results = { processed: 0, failed: 0 };
 
     for (const event of events as DomainEvent[]) {
-      // Mark processing
-      await supabase
-        .from('domain_events')
-        .update({ status: 'processing', attempts: event.attempts + 1 })
-        .eq('id', event.id);
+      const startedAt = Date.now();
+      let success = false;
 
       try {
         await handleEvent(supabase, event);
-        await supabase
-          .from('domain_events')
-          .update({ status: 'processed', processed_at: new Date().toISOString(), last_error: null })
-          .eq('id', event.id);
+        const { error: markErr } = await supabase.rpc('mark_event_processed', {
+          _event_id: event.id,
+          _new_status: 'processed',
+          _error: null,
+        });
+        if (markErr) throw markErr;
+        success = true;
         results.processed++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
         console.error(`[event-dispatcher] Failed event ${event.id}:`, msg);
-        await supabase
-          .from('domain_events')
-          .update({ status: 'failed', last_error: msg })
-          .eq('id', event.id);
+        await supabase.rpc('mark_event_processed', {
+          _event_id: event.id,
+          _new_status: 'failed',
+          _error: msg.slice(0, 500),
+        });
         results.failed++;
+      } finally {
+        // Observability: record metric (best-effort, never throw)
+        const latency = Date.now() - startedAt;
+        await supabase
+          .rpc('record_event_metric', {
+            _event_type: event.event_type,
+            _success: success,
+            _latency_ms: latency,
+          })
+          .then(({ error }) => {
+            if (error) console.warn('[metric] record fail:', error.message);
+          });
       }
     }
 
@@ -83,8 +91,9 @@ Deno.serve(async (req) => {
   }
 });
 
-async function handleEvent(supabase: ReturnType<typeof createClient>, event: DomainEvent) {
-  const { event_type, aggregate_id, payload, tenant_id, user_id } = event as DomainEvent & { user_id?: string };
+// deno-lint-ignore no-explicit-any
+async function handleEvent(supabase: any, event: DomainEvent) {
+  const { event_type, aggregate_id, payload, tenant_id } = event;
 
   switch (event_type) {
     case 'invoice.approved': {
@@ -95,7 +104,7 @@ async function handleEvent(supabase: ReturnType<typeof createClient>, event: Dom
         message: `الفاتورة ${payload.invoice_number} اعتُمدت بقيمة ${payload.total_amount}`,
         type: 'success',
         link: `/invoices/${aggregate_id}`,
-      }).then(({ error }) => { if (error) console.warn('[event] notification fail:', error.message); });
+      }).then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('[event] notification fail:', error.message); });
       break;
     }
     case 'payment.received': {
@@ -109,11 +118,10 @@ async function handleEvent(supabase: ReturnType<typeof createClient>, event: Dom
         title: 'مصروف معتمد',
         message: `المصروف ${payload.expense_number} اعتُمد بقيمة ${payload.amount}`,
         type: 'info',
-      }).then(({ error }) => { if (error) console.warn('[event] notification fail:', error.message); });
+      }).then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('[event] notification fail:', error.message); });
       break;
     }
     case 'customer.credit_exceeded': {
-      // Notify all admins
       const { data: admins } = await supabase
         .from('user_roles')
         .select('user_id')

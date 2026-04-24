@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.merge-customers]
 verify_jwt = false
+
+[functions.event-dispatcher]
+verify_jwt = false
+
+[functions.log-event]
+verify_jwt = false
