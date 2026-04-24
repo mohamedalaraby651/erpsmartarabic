@@ -267,6 +267,36 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     downloadJsonReport(`restore-report-${ts}.json`, reportInput);
   };
 
+  const handleRollback = async () => {
+    const snapshotId = reportMeta?.snapshotId;
+    if (!snapshotId) return;
+    const ok = window.confirm(
+      'سيتم حذف كل البيانات الحالية في الجداول المتأثرة واستعادة الحالة قبل الاستيراد. متأكد؟',
+    );
+    if (!ok) return;
+    setIsRollingBack(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rollback-restore', {
+        body: { snapshot_id: snapshotId },
+      });
+      if (error) {
+        toast.error(`فشل التراجع: ${error.message}`);
+        return;
+      }
+      if (!data?.success) {
+        toast.error(data?.error || 'فشل التراجع');
+        return;
+      }
+      setRollbackDone(true);
+      toast.success(`تم التراجع — استعادة ${data.total_restored ?? 0} سجل`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'خطأ غير متوقع';
+      toast.error(msg);
+    } finally {
+      setIsRollingBack(false);
+    }
+  };
+
   const modeMeta = MODE_LABELS[mode];
   const finalConfirmRequired = mode === 'replace';
   const finalConfirmValid = !finalConfirmRequired || finalConfirmText.trim() === 'استعادة';
