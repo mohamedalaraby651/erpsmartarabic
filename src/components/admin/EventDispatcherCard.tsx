@@ -94,17 +94,17 @@ export const EventDispatcherCard = () => {
         {/* Summary cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="rounded-lg border bg-card p-3 text-center">
-            <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-emerald-500" />
+            <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-success" />
             <p className="text-2xl font-bold">{overallSuccessRate}%</p>
             <p className="text-xs text-muted-foreground">معدل النجاح</p>
           </div>
           <div className="rounded-lg border bg-card p-3 text-center">
-            <Clock className="h-5 w-5 mx-auto mb-1 text-blue-500" />
+            <Clock className="h-5 w-5 mx-auto mb-1 text-info" />
             <p className="text-2xl font-bold">{overallAvgLatency}ms</p>
             <p className="text-xs text-muted-foreground">متوسط الاستجابة</p>
           </div>
           <div className="rounded-lg border bg-card p-3 text-center">
-            <Activity className="h-5 w-5 mx-auto mb-1 text-amber-500" />
+            <Activity className="h-5 w-5 mx-auto mb-1 text-warning" />
             <p className="text-2xl font-bold">{pendingCount}</p>
             <p className="text-xs text-muted-foreground">في الانتظار</p>
           </div>
