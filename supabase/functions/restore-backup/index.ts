@@ -364,13 +364,18 @@ serve(async (req) => {
     const results: TableResult[] = [];
 
     for (const table of tables) {
-      const rows = Array.isArray(data[table]) ? data[table] : [];
+      const allRows = Array.isArray(data[table]) ? data[table] : [];
+      const cap = body.row_limits?.[table];
+      const isCapped = typeof cap === "number" && cap >= 0 && cap < allRows.length;
+      const rows = isCapped ? allRows.slice(0, cap) : allRows;
       const result: TableResult = {
         table,
         inserted: 0,
         skipped: 0,
         errors: 0,
         rejected_foreign_tenant: 0,
+        truncated: isCapped ? allRows.length - rows.length : 0,
+        is_sensitive: SENSITIVE_TABLES.has(table),
       };
 
       // Tenant-scope enforcement (defense in depth):
