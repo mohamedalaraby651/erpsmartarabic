@@ -84,7 +84,10 @@ interface TableResult {
   inserted: number;
   skipped: number;
   errors: number;
+  /** First error message (back-compat). */
   error_sample?: string;
+  /** All distinct error messages collected during chunked inserts. */
+  error_messages?: string[];
 }
 
 function jsonResponse(body: unknown, status = 200): Response {
