@@ -133,7 +133,7 @@ serve(async (req) => {
     // Resolve current tenant for this user.
     const { data: tenantRow, error: tenantErr } = await supabaseAdmin
       .from("user_tenants")
-      .select("tenant_id, is_default, is_owner")
+      .select("tenant_id, is_default, role")
       .eq("user_id", userId)
       .eq("is_default", true)
       .maybeSingle();
@@ -151,7 +151,7 @@ serve(async (req) => {
       _role: "admin",
     });
     const isAdmin = isAdminData === true;
-    const isOwner = tenantRow.is_owner === true;
+    const isOwner = tenantRow.role === "owner";
     if (!isAdmin && !isOwner) {
       return jsonResponse(
         { success: false, error: "لا تملك صلاحية الاستعادة", code: "NO_PERMISSION" },
