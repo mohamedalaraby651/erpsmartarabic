@@ -37,6 +37,8 @@ interface RestoreResult {
   inserted: number;
   skipped: number;
   errors: number;
+  rejected_foreign_tenant?: number;
+  foreign_tenant_ids?: string[];
   error_sample?: string;
   error_messages?: string[];
 }
@@ -76,6 +78,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     tenantId?: string;
     snapshotId?: string;
     snapshotTotalRows?: number;
+    totalRejectedForeignTenant?: number;
   } | null>(null);
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [rollbackDone, setRollbackDone] = useState(false);
@@ -205,21 +208,45 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       const snapshotId = typeof data?.snapshot_id === 'string' ? data.snapshot_id : undefined;
       const snapshotTotalRows =
         typeof data?.snapshot_total_rows === 'number' ? data.snapshot_total_rows : undefined;
+      const totalRejectedForeignTenant =
+        typeof data?.total_rejected_foreign_tenant === 'number'
+          ? data.total_rejected_foreign_tenant
+          : undefined;
 
       if (!data?.success) {
         toast.error(data?.error || 'فشل الاستعادة');
         if (Array.isArray(data?.results)) {
           setResults(data.results as RestoreResult[]);
-          setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
+          setReportMeta({
+            startedAt,
+            finishedAt,
+            tenantId,
+            snapshotId,
+            snapshotTotalRows,
+            totalRejectedForeignTenant,
+          });
         }
         setStep('results');
         return;
       }
 
       setResults(data.results as RestoreResult[]);
-      setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
+      setReportMeta({
+        startedAt,
+        finishedAt,
+        tenantId,
+        snapshotId,
+        snapshotTotalRows,
+        totalRejectedForeignTenant,
+      });
       setStep('results');
-      toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
+      if (totalRejectedForeignTenant && totalRejectedForeignTenant > 0) {
+        toast.warning(
+          `تمت الاستعادة — ${data.total_inserted} سجل، ورُفض ${totalRejectedForeignTenant} صف ينتمي لمستأجر آخر`,
+        );
+      } else {
+        toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'خطأ غير متوقع';
       toast.error(msg);
@@ -243,6 +270,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       tenantId: reportMeta.tenantId,
       totalInserted,
       totalErrors,
+      totalRejectedForeignTenant: reportMeta.totalRejectedForeignTenant,
       results,
       startedAt: reportMeta.startedAt,
       finishedAt: reportMeta.finishedAt,
@@ -643,6 +671,25 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   </Alert>
                 )}
 
+                {/* Cross-tenant security alert (any rejected rows = potential injection attempt). */}
+                {reportSummary.totalRejectedForeignTenant > 0 && (
+                  <Alert variant="destructive">
+                    <ShieldCheck className="h-4 w-4" />
+                    <AlertTitle>تم رفض صفوف تخص مستأجراً آخر</AlertTitle>
+                    <AlertDescription className="text-xs space-y-1">
+                      <div>
+                        رُفض {reportSummary.totalRejectedForeignTenant} صف لأن قيمة tenant_id فيها
+                        لا تطابق المستأجر الحالي ({reportMeta?.tenantId?.slice(0, 8)}…). لم تُكتب
+                        أي بيانات لمستأجر آخر — هذه حماية تلقائية ضد الحقن.
+                      </div>
+                      <div className="text-muted-foreground">
+                        إذا كنت تتوقع استعادة بيانات من مستأجر مختلف، يجب القيام بذلك من حساب
+                        ينتمي لذلك المستأجر مباشرة.
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {/* KPI grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <div className="rounded-md border p-3 bg-card">
@@ -720,7 +767,18 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                                 فشل: {r.errors}
                               </Badge>
                             )}
+                            {(r.rejected_foreign_tenant ?? 0) > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                مرفوض (مستأجر آخر): {r.rejected_foreign_tenant}
+                              </Badge>
+                            )}
                           </div>
+                          {(r.rejected_foreign_tenant ?? 0) > 0 && r.foreign_tenant_ids?.length ? (
+                            <div className="text-[11px] text-muted-foreground mr-6">
+                              المعرّفات المرفوضة: {r.foreign_tenant_ids.slice(0, 3).join(', ')}
+                              {r.foreign_tenant_ids.length > 3 ? '…' : ''}
+                            </div>
+                          ) : null}
                           {messages.length > 0 && (
                             <div className="space-y-1 mr-6">
                               {messages.map((msg, i) => {

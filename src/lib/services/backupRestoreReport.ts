@@ -9,6 +9,12 @@ export interface RestoreResultRow {
   inserted: number;
   skipped: number;
   errors: number;
+  /**
+   * Rows refused before insert because they carried a tenant_id that did
+   * not match the caller's current tenant. Treated as a security event.
+   */
+  rejected_foreign_tenant?: number;
+  foreign_tenant_ids?: string[];
   error_sample?: string;
   error_messages?: string[];
 }
@@ -20,6 +26,8 @@ export interface RestoreReportInput {
   tenantId?: string;
   totalInserted: number;
   totalErrors: number;
+  /** Cross-tenant rows blocked across all tables. */
+  totalRejectedForeignTenant?: number;
   results: RestoreResultRow[];
   startedAt: Date;
   finishedAt: Date;
@@ -33,6 +41,7 @@ export interface RestoreReportSummary {
   totalInserted: number;
   totalSkipped: number;
   totalErrors: number;
+  totalRejectedForeignTenant: number;
   durationSeconds: number;
   conflictHits: number;
 }
@@ -64,9 +73,11 @@ export function summarize(input: RestoreReportInput): RestoreReportSummary {
   let failedTables = 0;
   let totalSkipped = 0;
   let conflictHits = 0;
+  let totalRejectedForeignTenant = 0;
 
   for (const r of input.results) {
     totalSkipped += r.skipped;
+    totalRejectedForeignTenant += r.rejected_foreign_tenant ?? 0;
     if (r.errors === 0 && (r.inserted > 0 || r.skipped > 0)) successTables++;
     else if (r.errors > 0 && r.inserted > 0) partialTables++;
     else if (r.errors > 0) failedTables++;
@@ -90,6 +101,8 @@ export function summarize(input: RestoreReportInput): RestoreReportSummary {
     totalInserted: input.totalInserted,
     totalSkipped,
     totalErrors: input.totalErrors,
+    totalRejectedForeignTenant:
+      input.totalRejectedForeignTenant ?? totalRejectedForeignTenant,
     durationSeconds,
     conflictHits,
   };
@@ -121,6 +134,7 @@ export function buildLogText(input: RestoreReportInput): string {
   lines.push(`إجمالي السجلات الناجحة : ${summary.totalInserted}`);
   lines.push(`إجمالي السجلات المتجاهلة: ${summary.totalSkipped}`);
   lines.push(`إجمالي الأخطاء         : ${summary.totalErrors}`);
+  lines.push(`صفوف مرفوضة (تخص مستأجراً آخر): ${summary.totalRejectedForeignTenant}`);
   lines.push(`تعارضات مفاتيح (PK/Unique): ${summary.conflictHits}`);
   lines.push('');
   lines.push('--- التفاصيل لكل جدول --------------------------------------');
@@ -132,6 +146,12 @@ export function buildLogText(input: RestoreReportInput): string {
     lines.push(`  ناجح   : ${r.inserted}`);
     lines.push(`  متجاهل : ${r.skipped}`);
     lines.push(`  أخطاء  : ${r.errors}`);
+    if ((r.rejected_foreign_tenant ?? 0) > 0) {
+      lines.push(`  مرفوض (مستأجر آخر): ${r.rejected_foreign_tenant}`);
+      if (r.foreign_tenant_ids?.length) {
+        lines.push(`    المعرّفات: ${r.foreign_tenant_ids.join(', ')}`);
+      }
+    }
 
     const messages = r.error_messages?.length ? r.error_messages : r.error_sample ? [r.error_sample] : [];
     if (messages.length > 0) {

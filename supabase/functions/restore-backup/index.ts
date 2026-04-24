@@ -84,6 +84,13 @@ interface TableResult {
   inserted: number;
   skipped: number;
   errors: number;
+  /**
+   * Rows rejected because their `tenant_id` belonged to another tenant
+   * (cross-tenant injection attempt). These rows are NEVER written.
+   */
+  rejected_foreign_tenant: number;
+  /** Distinct foreign tenant IDs found in this table (for the report). */
+  foreign_tenant_ids?: string[];
   /** First error message (back-compat). */
   error_sample?: string;
   /** All distinct error messages collected during chunked inserts. */
@@ -268,18 +275,62 @@ serve(async (req) => {
 
     for (const table of tables) {
       const rows = Array.isArray(data[table]) ? data[table] : [];
-      const result: TableResult = { table, inserted: 0, skipped: 0, errors: 0 };
+      const result: TableResult = {
+        table,
+        inserted: 0,
+        skipped: 0,
+        errors: 0,
+        rejected_foreign_tenant: 0,
+      };
 
-      // Force-rewrite tenant_id on every row (defense in depth).
-      const sanitized = rows.map((row) => {
-        const copy: Record<string, unknown> = { ...row };
+      // Tenant-scope enforcement (defense in depth):
+      //   - If a row has NO tenant_id, we accept it and stamp the caller's tenant.
+      //   - If a row has the SAME tenant_id, we accept it (re-stamp anyway).
+      //   - If a row has a DIFFERENT tenant_id, we REJECT it. Cross-tenant
+      //     payloads are treated as injection attempts.
+      const foreignTenantSet = new Set<string>();
+      const sanitized: Record<string, unknown>[] = [];
+      for (const row of rows) {
+        const incomingTenant =
+          row && typeof row === "object" && "tenant_id" in row
+            ? (row as Record<string, unknown>).tenant_id
+            : null;
+
+        if (
+          incomingTenant !== null &&
+          incomingTenant !== undefined &&
+          incomingTenant !== "" &&
+          incomingTenant !== tenantId
+        ) {
+          result.rejected_foreign_tenant += 1;
+          if (typeof incomingTenant === "string") {
+            foreignTenantSet.add(incomingTenant);
+          } else {
+            foreignTenantSet.add(String(incomingTenant));
+          }
+          continue;
+        }
+
+        const copy: Record<string, unknown> = { ...(row as Record<string, unknown>) };
         // Remove server-managed columns that shouldn't be carried over.
         delete copy.created_at;
         delete copy.updated_at;
-        // The KEY security guarantee:
+        // Stamp the caller's tenant — guarantees rows can only land in this tenant.
         copy.tenant_id = tenantId;
-        return copy;
-      });
+        sanitized.push(copy);
+      }
+
+      if (foreignTenantSet.size > 0) {
+        result.foreign_tenant_ids = Array.from(foreignTenantSet);
+        const sample = `تم رفض ${result.rejected_foreign_tenant} صف ينتمي لمستأجر آخر (${result.foreign_tenant_ids.slice(0, 3).join(", ")}${result.foreign_tenant_ids.length > 3 ? "…" : ""})`;
+        result.error_messages = [sample];
+        result.error_sample = sample;
+        console.warn(
+          `[restore-backup] cross-tenant rows rejected for ${table}:`,
+          result.rejected_foreign_tenant,
+          Array.from(foreignTenantSet),
+        );
+      }
 
       try {
         if (mode === "replace") {
@@ -363,15 +414,20 @@ serve(async (req) => {
 
     const totalInserted = results.reduce((s, r) => s + r.inserted, 0);
     const totalErrors = results.reduce((s, r) => s + r.errors, 0);
+    const totalRejectedForeignTenant = results.reduce(
+      (s, r) => s + (r.rejected_foreign_tenant ?? 0),
+      0,
+    );
 
     return jsonResponse({
-      success: totalErrors === 0,
+      success: totalErrors === 0 && totalRejectedForeignTenant === 0,
       mode,
       tenant_id: tenantId,
       snapshot_id: snapshotId,
       snapshot_total_rows: snapshotTotal,
       total_inserted: totalInserted,
       total_errors: totalErrors,
+      total_rejected_foreign_tenant: totalRejectedForeignTenant,
       results,
     });
   } catch (err) {
