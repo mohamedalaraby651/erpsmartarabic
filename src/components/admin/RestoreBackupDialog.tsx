@@ -78,6 +78,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     tenantId?: string;
     snapshotId?: string;
     snapshotTotalRows?: number;
+    totalRejectedForeignTenant?: number;
   } | null>(null);
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [rollbackDone, setRollbackDone] = useState(false);
