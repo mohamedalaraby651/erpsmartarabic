@@ -1349,6 +1349,7 @@ export type Database = {
       }
       expense_categories: {
         Row: {
+          account_id: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -1359,6 +1360,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          account_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -1369,6 +1371,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          account_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -1379,6 +1382,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "expense_categories_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "expense_categories_parent_id_fkey"
             columns: ["parent_id"]
@@ -4388,6 +4398,46 @@ export type Database = {
           },
         ]
       }
+      event_dispatcher_backlog: {
+        Row: {
+          event_count: number | null
+          event_type: string | null
+          max_attempts: number | null
+          oldest_event_at: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
+      event_dispatcher_metrics: {
+        Row: {
+          avg_latency_ms: number | null
+          event_type: string | null
+          failure_count: number | null
+          hour: string | null
+          success_count: number | null
+          success_rate_pct: number | null
+          total_count: number | null
+        }
+        Insert: {
+          avg_latency_ms?: never
+          event_type?: string | null
+          failure_count?: number | null
+          hour?: never
+          success_count?: number | null
+          success_rate_pct?: never
+          total_count?: never
+        }
+        Update: {
+          avg_latency_ms?: never
+          event_type?: string | null
+          failure_count?: number | null
+          hour?: never
+          success_count?: number | null
+          success_rate_pct?: never
+          total_count?: never
+        }
+        Relationships: []
+      }
       security_dashboard: {
         Row: {
           action: string | null
@@ -4578,6 +4628,10 @@ export type Database = {
         }
       }
       compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
+      create_journal_for_expense: {
+        Args: { _expense_id: string }
+        Returns: Json
+      }
       create_journal_for_invoice: {
         Args: { _invoice_id: string }
         Returns: Json
@@ -4773,6 +4827,10 @@ export type Database = {
       update_tenant_subscription: {
         Args: { _tenant_id: string; _tier: string }
         Returns: boolean
+      }
+      void_invoice: {
+        Args: { _invoice_id: string; _reason?: string }
+        Returns: Json
       }
     }
     Enums: {
