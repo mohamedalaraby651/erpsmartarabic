@@ -24,9 +24,14 @@ import {
   HardDrive
 } from 'lucide-react';
 import { toast } from 'sonner';
-// xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import {
+  exportBackupToExcel,
+  exportBackupToJson,
+  exportBackupToCsv,
+  exportBackupToSql,
+} from '@/lib/services/backupExportService';
 
 interface TableInfo {
   name: string;
