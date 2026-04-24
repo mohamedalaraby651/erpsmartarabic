@@ -393,6 +393,12 @@ const BackupPage = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      <RestoreBackupDialog
+        open={restoreOpen}
+        onOpenChange={setRestoreOpen}
+        knownTables={tables}
+      />
     </div>
   );
 };
