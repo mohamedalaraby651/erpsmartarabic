@@ -105,6 +105,7 @@ export function FileUpload({
   disabled = false,
 }: FileUploadProps) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
