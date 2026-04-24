@@ -727,11 +727,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   </>
                 )}
 
-                {parsed && availableTables.length === 0 && (
+                {parsed && fileBuckets.regular.length === 0 && fileBuckets.sensitive.length === 0 && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      لم يتم العثور على أي جدول معروف في الملف. تأكد من أن الملف صادر من هذا النظام.
+                      لم يتم العثور على أي جدول قابل للاستعادة في الملف. تأكد من أن الملف صادر من هذا النظام.
                     </AlertDescription>
                   </Alert>
                 )}
