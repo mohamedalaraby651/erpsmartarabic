@@ -73,9 +73,11 @@ export function summarize(input: RestoreReportInput): RestoreReportSummary {
   let failedTables = 0;
   let totalSkipped = 0;
   let conflictHits = 0;
+  let totalRejectedForeignTenant = 0;
 
   for (const r of input.results) {
     totalSkipped += r.skipped;
+    totalRejectedForeignTenant += r.rejected_foreign_tenant ?? 0;
     if (r.errors === 0 && (r.inserted > 0 || r.skipped > 0)) successTables++;
     else if (r.errors > 0 && r.inserted > 0) partialTables++;
     else if (r.errors > 0) failedTables++;
@@ -99,6 +101,8 @@ export function summarize(input: RestoreReportInput): RestoreReportSummary {
     totalInserted: input.totalInserted,
     totalSkipped,
     totalErrors: input.totalErrors,
+    totalRejectedForeignTenant:
+      input.totalRejectedForeignTenant ?? totalRejectedForeignTenant,
     durationSeconds,
     conflictHits,
   };
