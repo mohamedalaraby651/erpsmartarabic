@@ -52,7 +52,7 @@ export default function SupplierImportDialog({ open, onOpenChange }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const XLSX = await import('xlsx');
         const wb = XLSX.read(event.target?.result, { type: 'binary' });

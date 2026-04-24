@@ -161,7 +161,7 @@ export function ExportWithTemplateButton({
     }
   };
 
-  const exportToExcel = (data: any[], cols: Column[], filename: string) => {
+  const exportToExcel = async (data: any[], cols: Column[], filename: string) => {
     const exportData = data.map((row) => {
       const newRow: Record<string, any> = {};
       cols.forEach((col) => {
@@ -183,7 +183,7 @@ export function ExportWithTemplateButton({
     XLSX.writeFile(workbook, `${filename}.xlsx`);
   };
 
-  const exportToCSV = (data: any[], cols: Column[], filename: string) => {
+  const exportToCSV = async (data: any[], cols: Column[], filename: string) => {
     const exportData = data.map((row) => {
       const newRow: Record<string, any> = {};
       cols.forEach((col) => {

@@ -62,7 +62,7 @@ const CustomerImportDialog = ({ open, onOpenChange }: CustomerImportDialogProps)
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const XLSX = await import('xlsx');
         const wb = XLSX.read(event.target?.result, { type: 'binary' });
