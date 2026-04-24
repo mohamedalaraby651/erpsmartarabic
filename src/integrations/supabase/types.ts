@@ -1320,6 +1320,33 @@ export type Database = {
           },
         ]
       }
+      event_metrics: {
+        Row: {
+          event_type: string
+          failure_count: number
+          hour_bucket: string
+          id: string
+          success_count: number
+          total_latency_ms: number
+        }
+        Insert: {
+          event_type: string
+          failure_count?: number
+          hour_bucket: string
+          id?: string
+          success_count?: number
+          total_latency_ms?: number
+        }
+        Update: {
+          event_type?: string
+          failure_count?: number
+          hour_bucket?: string
+          id?: string
+          success_count?: number
+          total_latency_ms?: number
+        }
+        Relationships: []
+      }
       expense_categories: {
         Row: {
           created_at: string | null
@@ -4650,6 +4677,10 @@ export type Database = {
         Returns: boolean
       }
       purge_old_audit_records: { Args: never; Returns: undefined }
+      record_event_metric: {
+        Args: { _event_type: string; _latency_ms?: number; _success: boolean }
+        Returns: undefined
+      }
       refresh_customer_stats_mv: { Args: never; Returns: undefined }
       refresh_enterprise_mvs: { Args: never; Returns: undefined }
       switch_user_tenant: {
