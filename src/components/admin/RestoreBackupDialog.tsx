@@ -519,20 +519,45 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   )}
                 </div>
 
-                {parsed && availableTables.length > 0 && (
+                {parsed && (fileBuckets.regular.length > 0 || fileBuckets.sensitive.length > 0) && (
                   <>
                     <Separator />
+
+                    {/* Forbidden tables warning — strictly informational. */}
+                    {fileBuckets.forbidden.length > 0 && (
+                      <Alert variant="destructive">
+                        <Lock className="h-4 w-4" />
+                        <AlertTitle>جداول محظورة في الملف</AlertTitle>
+                        <AlertDescription className="text-xs space-y-1">
+                          <div>
+                            تم اكتشاف {fileBuckets.forbidden.length} جدول لا يمكن استعادته من هذه الواجهة
+                            مهما كانت صلاحياتك (حماية للنظام والتدقيق):
+                          </div>
+                          <code className="text-[11px] block bg-destructive/10 rounded p-2 break-all">
+                            {fileBuckets.forbidden.join(', ')}
+                          </code>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label>الجداول المتوفرة ({availableTables.length})</Label>
+                        <Label>
+                          الجداول العادية ({fileBuckets.regular.length})
+                        </Label>
                         <div className="flex gap-2">
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSelectedTables(availableTables.map((t) => t.name))}
+                            onClick={() =>
+                              setSelectedTables((prev) => {
+                                const keepSensitive = prev.filter((t) => SENSITIVE_TABLE_NAMES.has(t));
+                                return [...new Set([...keepSensitive, ...fileBuckets.regular.map((t) => t.name)])];
+                              })
+                            }
                           >
-                            تحديد الكل
+                            تحديد العادية
                           </Button>
                           <Button
                             type="button"
@@ -545,7 +570,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                         </div>
                       </div>
                       <div className="border rounded-md divide-y max-h-48 overflow-auto">
-                        {availableTables.map((t) => (
+                        {fileBuckets.regular.map((t) => (
                           <label
                             key={t.name}
                             className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/40"
@@ -560,6 +585,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                             </Badge>
                           </label>
                         ))}
+                        {fileBuckets.regular.length === 0 && (
+                          <div className="px-3 py-3 text-xs text-muted-foreground">
+                            لا توجد جداول عادية في هذا الملف.
+                          </div>
+                        )}
                       </div>
 
                       {ignoredKeys.length > 0 && (
@@ -568,6 +598,77 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                         </p>
                       )}
                     </div>
+
+                    {/* Sensitive tables tier — opt-in. */}
+                    {fileBuckets.sensitive.length > 0 && (
+                      <>
+                        <Separator />
+                        <div className="rounded-md border border-warning/40 bg-warning/5 p-3 space-y-3">
+                          <div className="flex items-start gap-2">
+                            <ShieldAlert className="h-4 w-4 text-warning mt-0.5" />
+                            <div className="flex-1 space-y-1">
+                              <div className="text-sm font-medium">
+                                جداول حساسة في الملف ({fileBuckets.sensitive.length})
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                هذه الجداول تتحكم في الصلاحيات، الإعدادات، أو الفترات المالية.
+                                استعادتها قد تؤثر على وصول المستخدمين أو دقة المحاسبة.
+                                مخفية افتراضياً — يجب تفعيل الخيار صراحة، وتتطلب صلاحية مدير منصة عند التنفيذ.
+                              </p>
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={allowSensitive}
+                              onCheckedChange={(v) => toggleAllowSensitive(v === true)}
+                            />
+                            <span className="text-sm font-medium">
+                              السماح بعرض واختيار الجداول الحساسة
+                            </span>
+                          </label>
+
+                          {allowSensitive && (
+                            <>
+                              <div className="border rounded-md divide-y max-h-40 overflow-auto bg-background">
+                                {fileBuckets.sensitive.map((t) => (
+                                  <label
+                                    key={t.name}
+                                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/40"
+                                  >
+                                    <Checkbox
+                                      checked={selectedTables.includes(t.name)}
+                                      onCheckedChange={() => toggleTable(t.name)}
+                                    />
+                                    <ShieldAlert className="h-3.5 w-3.5 text-warning" />
+                                    <span className="flex-1 text-sm">{t.label}</span>
+                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                      {t.name}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {t.count} سجل
+                                    </Badge>
+                                  </label>
+                                ))}
+                              </div>
+
+                              {hasSensitiveSelected && (
+                                <label className="flex items-start gap-2 cursor-pointer rounded bg-warning/10 p-2">
+                                  <Checkbox
+                                    checked={confirmSensitive}
+                                    onCheckedChange={(v) => setConfirmSensitive(v === true)}
+                                    className="mt-0.5"
+                                  />
+                                  <span className="text-xs">
+                                    أفهم أن استعادة هذه الجداول قد تغير صلاحيات المستخدمين أو
+                                    البيانات المرجعية، وقد تتطلب صلاحية مدير منصة على الخادم.
+                                  </span>
+                                </label>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </>
+                    )}
 
                     <Separator />
                     <div className="space-y-2">
