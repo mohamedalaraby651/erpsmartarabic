@@ -74,7 +74,7 @@ export type Database = {
           id: string
           is_active: boolean
           required_approvers: number
-          tenant_id: string | null
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -86,7 +86,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           required_approvers?: number
-          tenant_id?: string | null
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -98,7 +98,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           required_approvers?: number
-          tenant_id?: string | null
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
