@@ -1162,7 +1162,8 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   isParsing ||
                   !parsed ||
                   selectedTables.length === 0 ||
-                  (mode === 'replace' && !confirmReplace)
+                  (mode === 'replace' && !confirmReplace) ||
+                  (hasSensitiveSelected && !confirmSensitive)
                 }
               >
                 مراجعة قبل التنفيذ
