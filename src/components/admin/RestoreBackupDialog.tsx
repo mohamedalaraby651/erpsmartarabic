@@ -1023,9 +1023,15 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                             : 'text-destructive';
                       return (
                         <div key={r.table} className="px-3 py-2 space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <StatusIcon className={`h-4 w-4 ${statusClass}`} />
                             <span className="flex-1 font-medium">{label}</span>
+                            {r.is_sensitive && (
+                              <Badge variant="outline" className="text-[10px] border-warning text-warning">
+                                <ShieldAlert className="h-3 w-3 ml-1" />
+                                حساس
+                              </Badge>
+                            )}
                             {r.inserted > 0 && (
                               <Badge variant="default" className="text-xs">
                                 نجح: {r.inserted}
@@ -1034,6 +1040,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                             {r.skipped > 0 && (
                               <Badge variant="secondary" className="text-xs">
                                 تجاهل: {r.skipped}
+                              </Badge>
+                            )}
+                            {(r.truncated ?? 0) > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                مقتطع: {r.truncated}
                               </Badge>
                             )}
                             {r.errors > 0 && (
