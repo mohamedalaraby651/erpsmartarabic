@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import type { Database } from '@/integrations/supabase/types';
 
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -12,7 +11,8 @@ interface CustomerExportData {
   creditNotes: { credit_note_number: string; amount: number; status: string; created_at: string; reason: string | null }[];
 }
 
-export function exportCustomerToExcel({ customer, invoices, payments, creditNotes }: CustomerExportData) {
+export async function exportCustomerToExcel({ customer, invoices, payments, creditNotes }: CustomerExportData) {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
 
   // Sheet 1: Customer Info
