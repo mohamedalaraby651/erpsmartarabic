@@ -755,6 +755,43 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   </div>
                 </div>
 
+                {/* Auto-snapshot / Rollback */}
+                {reportMeta?.snapshotId && (
+                  <div className={`rounded-md border p-3 space-y-2 ${rollbackDone ? 'bg-success/5 border-success/40' : 'bg-warning/5 border-warning/40'}`}>
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <History className="h-4 w-4" />
+                      نسخة احتياطية تلقائية
+                      <Badge variant="outline" className="text-[10px] font-mono mr-auto">
+                        {reportMeta.snapshotId.slice(0, 8)}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      تم التقاط {reportMeta.snapshotTotalRows ?? 0} سجل من الجداول المتأثرة قبل بدء الاستعادة.
+                      يمكنك التراجع لاستعادة الحالة السابقة (تنتهي صلاحية النسخة بعد 7 أيام).
+                    </p>
+                    {rollbackDone ? (
+                      <div className="flex items-center gap-2 text-sm text-success">
+                        <CheckCircle2 className="h-4 w-4" />
+                        تم التراجع بنجاح إلى الحالة السابقة.
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleRollback}
+                        disabled={isRollingBack}
+                      >
+                        {isRollingBack ? (
+                          <Loader2 className="h-3.5 w-3.5 ml-2 animate-spin" />
+                        ) : (
+                          <RotateCcw className="h-3.5 w-3.5 ml-2" />
+                        )}
+                        تراجع واسترجاع الحالة السابقة
+                      </Button>
+                    )}
+                  </div>
+                )}
+
                 {/* Download log */}
                 <div className="rounded-md border p-3 bg-muted/20 space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
