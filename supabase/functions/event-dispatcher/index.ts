@@ -97,6 +97,21 @@ async function handleEvent(supabase: any, event: DomainEvent) {
 
   switch (event_type) {
     case 'invoice.approved': {
+      // 1) Create double-entry journal (idempotent)
+      const { data: journalRes, error: journalErr } = await supabase.rpc('create_journal_for_invoice', {
+        _invoice_id: aggregate_id,
+      });
+      if (journalErr) {
+        console.error('[event] create_journal_for_invoice RPC error:', journalErr.message);
+        throw new Error(`Journal posting failed: ${journalErr.message}`);
+      }
+      if (journalRes && journalRes.success === false) {
+        console.error('[event] create_journal_for_invoice failed:', journalRes);
+        throw new Error(`Journal posting failed: ${journalRes.error || 'unknown'}`);
+      }
+      console.log(`[event] invoice.approved journal:`, journalRes);
+
+      // 2) Notify creator (best-effort)
       await supabase.from('notifications').insert({
         tenant_id,
         user_id: (payload.created_by as string) || null,
@@ -108,7 +123,19 @@ async function handleEvent(supabase: any, event: DomainEvent) {
       break;
     }
     case 'payment.received': {
-      // Already handled by triggers — just log
+      // Create cash/AR journal (idempotent)
+      const { data: journalRes, error: journalErr } = await supabase.rpc('create_journal_for_payment', {
+        _payment_id: aggregate_id,
+      });
+      if (journalErr) {
+        console.error('[event] create_journal_for_payment RPC error:', journalErr.message);
+        throw new Error(`Journal posting failed: ${journalErr.message}`);
+      }
+      if (journalRes && journalRes.success === false) {
+        console.error('[event] create_journal_for_payment failed:', journalRes);
+        throw new Error(`Journal posting failed: ${journalRes.error || 'unknown'}`);
+      }
+      console.log(`[event] payment.received journal:`, journalRes);
       break;
     }
     case 'expense.approved': {

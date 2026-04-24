@@ -2162,6 +2162,51 @@ export type Database = {
         }
         Relationships: []
       }
+      posting_account_map: {
+        Row: {
+          account_id: string
+          created_at: string
+          description: string | null
+          id: string
+          posting_key: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          posting_key: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          posting_key?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posting_account_map_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posting_account_map_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_list_items: {
         Row: {
           created_at: string
@@ -4533,6 +4578,14 @@ export type Database = {
         }
       }
       compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
+      create_journal_for_invoice: {
+        Args: { _invoice_id: string }
+        Returns: Json
+      }
+      create_journal_for_payment: {
+        Args: { _payment_id: string }
+        Returns: Json
+      }
       emit_event: {
         Args: {
           _aggregate_id: string
@@ -4704,6 +4757,10 @@ export type Database = {
       }
       refresh_customer_stats_mv: { Args: never; Returns: undefined }
       refresh_enterprise_mvs: { Args: never; Returns: undefined }
+      resolve_posting_account: {
+        Args: { _posting_key: string; _tenant_id: string }
+        Returns: string
+      }
       storage_tenant_from_path: { Args: { _name: string }; Returns: string }
       switch_user_tenant: {
         Args: { _tenant_id: string; _user_id: string }
