@@ -139,9 +139,23 @@ async function handleEvent(supabase: any, event: DomainEvent) {
       break;
     }
     case 'expense.approved': {
+      // 1) Create expense journal (idempotent)
+      const { data: journalRes, error: journalErr } = await supabase.rpc('create_journal_for_expense', {
+        _expense_id: aggregate_id,
+      });
+      if (journalErr) {
+        console.error('[event] create_journal_for_expense RPC error:', journalErr.message);
+        throw new Error(`Journal posting failed: ${journalErr.message}`);
+      }
+      if (journalRes && journalRes.success === false) {
+        throw new Error(`Journal posting failed: ${journalRes.error || 'unknown'}`);
+      }
+      console.log(`[event] expense.approved journal:`, journalRes);
+
+      // 2) Notify (best-effort)
       await supabase.from('notifications').insert({
         tenant_id,
-        user_id: null,
+        user_id: (payload.created_by as string) || null,
         title: 'مصروف معتمد',
         message: `المصروف ${payload.expense_number} اعتُمد بقيمة ${payload.amount}`,
         type: 'info',
