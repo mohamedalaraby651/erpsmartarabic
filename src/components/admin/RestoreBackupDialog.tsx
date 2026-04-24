@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, AlertTriangle, ShieldCheck, FileText, ArrowRight, CheckCircle2, Info, Download, XCircle, AlertCircle, RotateCcw, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { parseBackupFile, type ParsedBackup } from '@/lib/services/backupRestoreParser';
@@ -74,7 +74,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     startedAt: Date;
     finishedAt: Date;
     tenantId?: string;
+    snapshotId?: string;
+    snapshotTotalRows?: number;
   } | null>(null);
+  const [isRollingBack, setIsRollingBack] = useState(false);
+  const [rollbackDone, setRollbackDone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const knownTableNames = useMemo(() => new Set(knownTables.map((t) => t.name)), [knownTables]);
@@ -120,6 +124,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     setFinalConfirmText('');
     setResults(null);
     setReportMeta(null);
+    setRollbackDone(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -197,19 +202,22 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       }
 
       const tenantId = typeof data?.tenant_id === 'string' ? data.tenant_id : undefined;
+      const snapshotId = typeof data?.snapshot_id === 'string' ? data.snapshot_id : undefined;
+      const snapshotTotalRows =
+        typeof data?.snapshot_total_rows === 'number' ? data.snapshot_total_rows : undefined;
 
       if (!data?.success) {
         toast.error(data?.error || 'فشل الاستعادة');
         if (Array.isArray(data?.results)) {
           setResults(data.results as RestoreResult[]);
-          setReportMeta({ startedAt, finishedAt, tenantId });
+          setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
         }
         setStep('results');
         return;
       }
 
       setResults(data.results as RestoreResult[]);
-      setReportMeta({ startedAt, finishedAt, tenantId });
+      setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
       setStep('results');
       toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
     } catch (err) {
@@ -257,6 +265,36 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     if (!reportInput) return;
     const ts = reportInput.finishedAt.toISOString().replace(/[:.]/g, '-');
     downloadJsonReport(`restore-report-${ts}.json`, reportInput);
+  };
+
+  const handleRollback = async () => {
+    const snapshotId = reportMeta?.snapshotId;
+    if (!snapshotId) return;
+    const ok = window.confirm(
+      'سيتم حذف كل البيانات الحالية في الجداول المتأثرة واستعادة الحالة قبل الاستيراد. متأكد؟',
+    );
+    if (!ok) return;
+    setIsRollingBack(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rollback-restore', {
+        body: { snapshot_id: snapshotId },
+      });
+      if (error) {
+        toast.error(`فشل التراجع: ${error.message}`);
+        return;
+      }
+      if (!data?.success) {
+        toast.error(data?.error || 'فشل التراجع');
+        return;
+      }
+      setRollbackDone(true);
+      toast.success(`تم التراجع — استعادة ${data.total_restored ?? 0} سجل`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'خطأ غير متوقع';
+      toast.error(msg);
+    } finally {
+      setIsRollingBack(false);
+    }
   };
 
   const modeMeta = MODE_LABELS[mode];
@@ -716,6 +754,43 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                     })}
                   </div>
                 </div>
+
+                {/* Auto-snapshot / Rollback */}
+                {reportMeta?.snapshotId && (
+                  <div className={`rounded-md border p-3 space-y-2 ${rollbackDone ? 'bg-success/5 border-success/40' : 'bg-warning/5 border-warning/40'}`}>
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <History className="h-4 w-4" />
+                      نسخة احتياطية تلقائية
+                      <Badge variant="outline" className="text-[10px] font-mono mr-auto">
+                        {reportMeta.snapshotId.slice(0, 8)}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      تم التقاط {reportMeta.snapshotTotalRows ?? 0} سجل من الجداول المتأثرة قبل بدء الاستعادة.
+                      يمكنك التراجع لاستعادة الحالة السابقة (تنتهي صلاحية النسخة بعد 7 أيام).
+                    </p>
+                    {rollbackDone ? (
+                      <div className="flex items-center gap-2 text-sm text-success">
+                        <CheckCircle2 className="h-4 w-4" />
+                        تم التراجع بنجاح إلى الحالة السابقة.
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleRollback}
+                        disabled={isRollingBack}
+                      >
+                        {isRollingBack ? (
+                          <Loader2 className="h-3.5 w-3.5 ml-2 animate-spin" />
+                        ) : (
+                          <RotateCcw className="h-3.5 w-3.5 ml-2" />
+                        )}
+                        تراجع واسترجاع الحالة السابقة
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 {/* Download log */}
                 <div className="rounded-md border p-3 bg-muted/20 space-y-2">

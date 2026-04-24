@@ -3075,6 +3075,62 @@ export type Database = {
           },
         ]
       }
+      restore_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          planned_mode: string
+          rolled_back_at: string | null
+          rolled_back_by: string | null
+          row_counts: Json
+          status: string
+          storage_path: string
+          tables: string[]
+          tenant_id: string
+          total_rows: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          planned_mode: string
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          row_counts?: Json
+          status?: string
+          storage_path: string
+          tables?: string[]
+          tenant_id: string
+          total_rows?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          planned_mode?: string
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          row_counts?: Json
+          status?: string
+          storage_path?: string
+          tables?: string[]
+          tenant_id?: string
+          total_rows?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restore_snapshots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_field_permissions: {
         Row: {
           can_edit: boolean | null

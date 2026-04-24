@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.restore-backup]
 verify_jwt = false
+
+[functions.rollback-restore]
+verify_jwt = false

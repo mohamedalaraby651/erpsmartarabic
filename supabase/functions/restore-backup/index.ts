@@ -204,6 +204,66 @@ serve(async (req) => {
       );
     }
 
+    // ────────────────────────────────────────────────────────────────
+    // SNAPSHOT (auto-backup) — capture current rows of every selected
+    // table BEFORE any write. Stored as one JSON blob in private bucket.
+    // If snapshot fails, we abort the restore: a restore without an
+    // undo path is too risky.
+    // ────────────────────────────────────────────────────────────────
+    const snapshotId = crypto.randomUUID();
+    const snapshotData: Record<string, unknown[]> = {};
+    const rowCounts: Record<string, number> = {};
+    let snapshotTotal = 0;
+    try {
+      for (const table of tables) {
+        const { data: existing, error: snapErr } = await supabaseAdmin
+          .from(table)
+          .select("*")
+          .eq("tenant_id", tenantId);
+        if (snapErr) throw new Error(`فشل التقاط ${table}: ${snapErr.message}`);
+        const arr = existing ?? [];
+        snapshotData[table] = arr;
+        rowCounts[table] = arr.length;
+        snapshotTotal += arr.length;
+      }
+
+      const storagePath = `${tenantId}/${snapshotId}.json`;
+      const blob = new Blob([JSON.stringify(snapshotData)], {
+        type: "application/json",
+      });
+      const { error: uploadErr } = await supabaseAdmin.storage
+        .from("restore-snapshots")
+        .upload(storagePath, blob, {
+          contentType: "application/json",
+          upsert: false,
+        });
+      if (uploadErr) throw new Error(`فشل رفع snapshot: ${uploadErr.message}`);
+
+      const { error: insErr } = await supabaseAdmin.from("restore_snapshots").insert({
+        id: snapshotId,
+        tenant_id: tenantId,
+        created_by: userId,
+        storage_path: storagePath,
+        tables,
+        row_counts: rowCounts,
+        total_rows: snapshotTotal,
+        planned_mode: mode,
+        status: "active",
+      });
+      if (insErr) throw new Error(`فشل تسجيل snapshot: ${insErr.message}`);
+    } catch (snapErr) {
+      const msg = snapErr instanceof Error ? snapErr.message : "snapshot failed";
+      console.error("[restore-backup] snapshot abort:", msg);
+      return jsonResponse(
+        {
+          success: false,
+          error: `تعذّر إنشاء نسخة احتياطية تلقائية قبل الاستعادة: ${msg}. تم إلغاء العملية لحماية بياناتك.`,
+          code: "SNAPSHOT_FAILED",
+        },
+        500,
+      );
+    }
+
     const results: TableResult[] = [];
 
     for (const table of tables) {
@@ -296,8 +356,9 @@ serve(async (req) => {
       tenant_id: tenantId,
       action: "restore_backup",
       entity_type: "system",
+      entity_id: snapshotId,
       entity_name: `restore (${mode})`,
-      new_values: { mode, tables, results },
+      new_values: { mode, tables, results, snapshot_id: snapshotId },
     });
 
     const totalInserted = results.reduce((s, r) => s + r.inserted, 0);
@@ -307,6 +368,8 @@ serve(async (req) => {
       success: totalErrors === 0,
       mode,
       tenant_id: tenantId,
+      snapshot_id: snapshotId,
+      snapshot_total_rows: snapshotTotal,
       total_inserted: totalInserted,
       total_errors: totalErrors,
       results,
