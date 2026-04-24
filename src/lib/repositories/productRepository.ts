@@ -40,7 +40,7 @@ function applyFilters<T extends { or: (...a: any[]) => any; eq: (...a: any[]) =>
   const { search, categoryId, status } = filters;
   if (search) {
     const s = sanitizeSearch(search);
-    q = q.or(`name.ilike.%${s}%,sku.ilike.%${s}%,barcode.ilike.%${s}%`) as typeof q;
+    q = q.or(`name.ilike.%${s}%,sku.ilike.%${s}%`) as typeof q;
   }
   if (categoryId && categoryId !== 'all') q = q.eq('category_id', categoryId) as typeof q;
   if (status && status !== 'all') q = q.eq('is_active', status === 'active') as typeof q;
