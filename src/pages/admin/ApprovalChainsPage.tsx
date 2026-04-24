@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenant } from '@/hooks/useTenant';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +68,7 @@ const initialForm = {
 
 const ApprovalChainsPage = () => {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -95,9 +97,10 @@ const ApprovalChainsPage = () => {
           .eq('id', editingId);
         if (error) throw error;
       } else {
+        if (!tenantId) throw new Error('لا يوجد مستأجر نشط');
         const { error } = await supabase
           .from('approval_chains')
-          .insert(values);
+          .insert({ ...values, tenant_id: tenantId });
         if (error) throw error;
       }
     },
