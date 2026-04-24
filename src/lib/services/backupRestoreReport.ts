@@ -9,6 +9,12 @@ export interface RestoreResultRow {
   inserted: number;
   skipped: number;
   errors: number;
+  /**
+   * Rows refused before insert because they carried a tenant_id that did
+   * not match the caller's current tenant. Treated as a security event.
+   */
+  rejected_foreign_tenant?: number;
+  foreign_tenant_ids?: string[];
   error_sample?: string;
   error_messages?: string[];
 }
@@ -20,6 +26,8 @@ export interface RestoreReportInput {
   tenantId?: string;
   totalInserted: number;
   totalErrors: number;
+  /** Cross-tenant rows blocked across all tables. */
+  totalRejectedForeignTenant?: number;
   results: RestoreResultRow[];
   startedAt: Date;
   finishedAt: Date;
@@ -33,6 +41,7 @@ export interface RestoreReportSummary {
   totalInserted: number;
   totalSkipped: number;
   totalErrors: number;
+  totalRejectedForeignTenant: number;
   durationSeconds: number;
   conflictHits: number;
 }
