@@ -270,6 +270,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       tenantId: reportMeta.tenantId,
       totalInserted,
       totalErrors,
+      totalRejectedForeignTenant: reportMeta.totalRejectedForeignTenant,
       results,
       startedAt: reportMeta.startedAt,
       finishedAt: reportMeta.finishedAt,
