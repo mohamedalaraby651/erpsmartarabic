@@ -136,7 +136,7 @@ export const EventDispatcherCard = () => {
                   <tr key={idx} className="border-t">
                     <td className="p-2 font-mono text-xs">{m.event_type}</td>
                     <td className="p-2">{m.total_count}</td>
-                    <td className="p-2 text-emerald-600">{m.success_count}</td>
+                    <td className="p-2 text-success">{m.success_count}</td>
                     <td className="p-2 text-destructive">{m.failure_count}</td>
                     <td className="p-2">
                       <Badge
