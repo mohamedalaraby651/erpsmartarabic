@@ -68,6 +68,7 @@ const initialForm = {
 
 const ApprovalChainsPage = () => {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -96,9 +97,10 @@ const ApprovalChainsPage = () => {
           .eq('id', editingId);
         if (error) throw error;
       } else {
+        if (!tenantId) throw new Error('لا يوجد مستأجر نشط');
         const { error } = await supabase
           .from('approval_chains')
-          .insert(values);
+          .insert({ ...values, tenant_id: tenantId });
         if (error) throw error;
       }
     },
