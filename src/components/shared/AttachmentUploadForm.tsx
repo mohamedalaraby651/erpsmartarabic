@@ -251,7 +251,7 @@ export function AttachmentUploadForm({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [user, entityType, entityId, onUploadComplete, validateFile, category, expiryDate, notes, defaultCategory]);
+  }, [user, tenantId, entityType, entityId, onUploadComplete, validateFile, category, expiryDate, notes, defaultCategory]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
