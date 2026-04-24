@@ -37,6 +37,8 @@ interface RestoreResult {
   inserted: number;
   skipped: number;
   errors: number;
+  rejected_foreign_tenant?: number;
+  foreign_tenant_ids?: string[];
   error_sample?: string;
   error_messages?: string[];
 }
