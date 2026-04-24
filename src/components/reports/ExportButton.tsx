@@ -9,7 +9,7 @@ import {
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { logErrorSafely } from '@/lib/errorHandler';
-import * as XLSX from 'xlsx';
+// xlsx is loaded dynamically inside handlers to keep it out of the main bundle
 
 interface ExportButtonProps {
   data: any[];
