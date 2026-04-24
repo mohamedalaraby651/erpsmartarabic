@@ -44,7 +44,7 @@ export function useDashboardData() {
       const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString();
 
       const [customersRes, productsRes, invoicesRes, quotationsRes, currentPeriodRes, previousPeriodRes] = await Promise.all([
-        supabase.from('customers').select('*', { count: 'exact', head: true }),
+        supabase.from('customers_safe').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('invoices').select('*', { count: 'exact', head: true }),
         supabase.from('quotations').select('*', { count: 'exact', head: true }),

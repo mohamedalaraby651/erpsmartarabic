@@ -40,7 +40,7 @@ const SalesOrderFormDialog = ({ open, onOpenChange, order }: SalesOrderFormDialo
   const isEditing = !!order;
   const [items, setItems] = useState<OrderItem[]>([]);
 
-  const { data: customers = [] } = useQuery({ queryKey: ['customers'], queryFn: async () => { const { data, error } = await supabase.from('customers').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as Customer[]; } });
+  const { data: customers = [] } = useQuery({ queryKey: ['customers'], queryFn: async () => { const { data, error } = await supabase.from('customers_safe').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as unknown as Customer[]; } });
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: async () => { const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as Product[]; } });
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({ defaultValues: { customer_id: '', delivery_date: '', delivery_address: '', notes: '', discount_amount: 0, tax_amount: 0 } });

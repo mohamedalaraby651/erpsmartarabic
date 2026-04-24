@@ -43,7 +43,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('customers').select('*').eq('is_active', true).order('name');
+      const { data, error } = await supabase.from('customers_safe').select('*').eq('is_active', true).order('name');
       if (error) throw error;
       return data as Customer[];
     },

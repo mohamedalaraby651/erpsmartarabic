@@ -63,7 +63,7 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const [customers, products, invoices, quotations] = await Promise.all([
-        supabase.from('customers').select('*', { count: 'exact', head: true }),
+        supabase.from('customers_safe').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('invoices').select('*', { count: 'exact', head: true }),
         supabase.from('quotations').select('*', { count: 'exact', head: true }),

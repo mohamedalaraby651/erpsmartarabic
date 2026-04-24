@@ -57,12 +57,12 @@ const PaymentFormDialog = ({ open, onOpenChange, prefillCustomerId, prefillInvoi
     queryKey: ['customers'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('customers')
+        .from('customers_safe')
         .select('*')
         .eq('is_active', true)
         .order('name');
       if (error) throw error;
-      return data as Customer[];
+      return data as unknown as Customer[];
     },
   });
 
