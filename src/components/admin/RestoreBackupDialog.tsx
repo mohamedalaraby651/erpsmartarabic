@@ -38,6 +38,7 @@ interface RestoreResult {
   skipped: number;
   errors: number;
   error_sample?: string;
+  error_messages?: string[];
 }
 
 const MODE_LABELS: Record<RestoreMode, { title: string; effect: string; tone: 'default' | 'warning' | 'destructive' }> = {
