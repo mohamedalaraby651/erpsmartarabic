@@ -238,14 +238,60 @@ serve(async (req) => {
       );
     }
 
-    // Validate table names against whitelist BEFORE any write.
-    const blocked = tables.filter((t) => !ALLOWED_TABLES.has(t));
+    // Validate table names BEFORE any write. Three tiers:
+    //   1. FORBIDDEN_TABLES → always rejected (system / audit / platform).
+    //   2. SENSITIVE_TABLES → require platform admin AND `allow_sensitive`.
+    //   3. ALLOWED_TABLES   → restorable for any authorized caller.
+    //   anything else       → unknown table, rejected.
+    const forbidden = tables.filter((t) => FORBIDDEN_TABLES.has(t));
+    if (forbidden.length > 0) {
+      return jsonResponse(
+        {
+          success: false,
+          error: `جداول محظورة لا يمكن استعادتها أبداً: ${forbidden.join(", ")}`,
+          code: "TABLE_FORBIDDEN",
+          forbidden_tables: forbidden,
+        },
+        400,
+      );
+    }
+
+    const sensitiveRequested = tables.filter((t) => SENSITIVE_TABLES.has(t));
+    if (sensitiveRequested.length > 0) {
+      if (!isAdmin) {
+        return jsonResponse(
+          {
+            success: false,
+            error: `استعادة جداول حساسة (${sensitiveRequested.join(", ")}) تتطلب صلاحية مدير منصة.`,
+            code: "SENSITIVE_REQUIRES_ADMIN",
+            sensitive_tables: sensitiveRequested,
+          },
+          403,
+        );
+      }
+      if (body.allow_sensitive !== true) {
+        return jsonResponse(
+          {
+            success: false,
+            error: `يجب تفعيل خيار "السماح بالجداول الحساسة" صراحة لاستعادة: ${sensitiveRequested.join(", ")}`,
+            code: "SENSITIVE_OPT_IN_REQUIRED",
+            sensitive_tables: sensitiveRequested,
+          },
+          400,
+        );
+      }
+    }
+
+    const blocked = tables.filter(
+      (t) => !ALLOWED_TABLES.has(t) && !SENSITIVE_TABLES.has(t),
+    );
     if (blocked.length > 0) {
       return jsonResponse(
         {
           success: false,
-          error: `جداول غير مسموح باستعادتها: ${blocked.join(", ")}`,
+          error: `جداول غير معروفة أو غير مسموح باستعادتها: ${blocked.join(", ")}`,
           code: "TABLE_BLOCKED",
+          blocked_tables: blocked,
         },
         400,
       );
