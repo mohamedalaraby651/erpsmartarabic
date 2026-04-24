@@ -28,6 +28,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
 
     setIsExporting(true);
     try {
+      const XLSX = await import('xlsx');
       // Transform data with Arabic headers if provided
       const exportData = headers
         ? data.map((row) => {
