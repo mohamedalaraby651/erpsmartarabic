@@ -74,7 +74,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     startedAt: Date;
     finishedAt: Date;
     tenantId?: string;
+    snapshotId?: string;
+    snapshotTotalRows?: number;
   } | null>(null);
+  const [isRollingBack, setIsRollingBack] = useState(false);
+  const [rollbackDone, setRollbackDone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const knownTableNames = useMemo(() => new Set(knownTables.map((t) => t.name)), [knownTables]);
