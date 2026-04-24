@@ -76,6 +76,8 @@ interface RestoreResult {
   foreign_tenant_ids?: string[];
   error_sample?: string;
   error_messages?: string[];
+  truncated?: number;
+  is_sensitive?: boolean;
 }
 
 const MODE_LABELS: Record<RestoreMode, { title: string; effect: string; tone: 'default' | 'warning' | 'destructive' }> = {
