@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
-import { generateDocumentPDF } from "@/lib/pdfGenerator";
+import { generateDocumentPDF } from "@/lib/pdfGeneratorLazy";
 import { toast } from "sonner";
 import {
   Dialog,
