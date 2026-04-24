@@ -734,6 +734,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "credit_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "credit_notes_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
@@ -836,6 +843,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "customer_addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "customer_addresses_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -922,6 +936,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "customer_communications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "customer_communications_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -964,6 +985,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1021,6 +1049,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_reminders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1757,6 +1792,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoices_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
@@ -2053,6 +2095,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -2899,6 +2948,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quotations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quotations_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -3301,6 +3357,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
             referencedColumns: ["id"]
           },
           {
@@ -4300,6 +4363,133 @@ export type Database = {
       }
     }
     Views: {
+      customers_safe: {
+        Row: {
+          category_id: string | null
+          city: string | null
+          contact_person: string | null
+          contact_person_role: string | null
+          created_at: string | null
+          credit_limit: number | null
+          current_balance: number | null
+          customer_type: Database["public"]["Enums"]["customer_type"] | null
+          discount_percentage: number | null
+          email: string | null
+          facebook_url: string | null
+          governorate: string | null
+          id: string | null
+          image_url: string | null
+          invoice_count_cached: number | null
+          is_active: boolean | null
+          last_activity_at: string | null
+          last_communication_at: string | null
+          last_transaction_date: string | null
+          name: string | null
+          notes: string | null
+          payment_terms_days: number | null
+          phone: string | null
+          phone2: string | null
+          preferred_payment_method: string | null
+          price_list_id: string | null
+          tax_number: string | null
+          tenant_id: string | null
+          total_purchases_cached: number | null
+          updated_at: string | null
+          vip_level: Database["public"]["Enums"]["vip_level"] | null
+          website_url: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          city?: string | null
+          contact_person?: string | null
+          contact_person_role?: string | null
+          created_at?: string | null
+          credit_limit?: never
+          current_balance?: never
+          customer_type?: Database["public"]["Enums"]["customer_type"] | null
+          discount_percentage?: number | null
+          email?: never
+          facebook_url?: string | null
+          governorate?: string | null
+          id?: string | null
+          image_url?: string | null
+          invoice_count_cached?: number | null
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          last_communication_at?: string | null
+          last_transaction_date?: string | null
+          name?: string | null
+          notes?: string | null
+          payment_terms_days?: number | null
+          phone?: never
+          phone2?: never
+          preferred_payment_method?: string | null
+          price_list_id?: string | null
+          tax_number?: never
+          tenant_id?: string | null
+          total_purchases_cached?: number | null
+          updated_at?: string | null
+          vip_level?: Database["public"]["Enums"]["vip_level"] | null
+          website_url?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          city?: string | null
+          contact_person?: string | null
+          contact_person_role?: string | null
+          created_at?: string | null
+          credit_limit?: never
+          current_balance?: never
+          customer_type?: Database["public"]["Enums"]["customer_type"] | null
+          discount_percentage?: number | null
+          email?: never
+          facebook_url?: string | null
+          governorate?: string | null
+          id?: string | null
+          image_url?: string | null
+          invoice_count_cached?: number | null
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          last_communication_at?: string | null
+          last_transaction_date?: string | null
+          name?: string | null
+          notes?: string | null
+          payment_terms_days?: number | null
+          phone?: never
+          phone2?: never
+          preferred_payment_method?: string | null
+          price_list_id?: string | null
+          tax_number?: never
+          tenant_id?: string | null
+          total_purchases_cached?: number | null
+          updated_at?: string | null
+          vip_level?: Database["public"]["Enums"]["vip_level"] | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "customer_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_price_list_id_fkey"
+            columns: ["price_list_id"]
+            isOneToOne: false
+            referencedRelation: "price_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees_safe: {
         Row: {
           address: string | null
