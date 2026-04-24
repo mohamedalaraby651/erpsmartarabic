@@ -2928,6 +2928,7 @@ export type Database = {
           is_default: boolean | null
           name: string
           template_data: Json
+          tenant_id: string | null
           type: string
           updated_at: string | null
         }
@@ -2938,6 +2939,7 @@ export type Database = {
           is_default?: boolean | null
           name: string
           template_data?: Json
+          tenant_id?: string | null
           type: string
           updated_at?: string | null
         }
@@ -2948,10 +2950,19 @@ export type Database = {
           is_default?: boolean | null
           name?: string
           template_data?: Json
+          tenant_id?: string | null
           type?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "report_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_field_permissions: {
         Row: {
@@ -2962,6 +2973,7 @@ export type Database = {
           id: string
           role_id: string
           section: string
+          tenant_id: string | null
         }
         Insert: {
           can_edit?: boolean | null
@@ -2971,6 +2983,7 @@ export type Database = {
           id?: string
           role_id: string
           section: string
+          tenant_id?: string | null
         }
         Update: {
           can_edit?: boolean | null
@@ -2980,6 +2993,7 @@ export type Database = {
           id?: string
           role_id?: string
           section?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -2987,6 +3001,13 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_field_permissions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
