@@ -4422,6 +4422,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_requeue_event: { Args: { _event_id: string }; Returns: undefined }
       atomic_customer_balance_update: {
         Args: { _amount: number; _customer_id: string }
         Returns: undefined
