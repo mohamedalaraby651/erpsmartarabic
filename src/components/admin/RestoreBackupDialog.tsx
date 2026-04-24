@@ -671,6 +671,25 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                   </Alert>
                 )}
 
+                {/* Cross-tenant security alert (any rejected rows = potential injection attempt). */}
+                {reportSummary.totalRejectedForeignTenant > 0 && (
+                  <Alert variant="destructive">
+                    <ShieldCheck className="h-4 w-4" />
+                    <AlertTitle>تم رفض صفوف تخص مستأجراً آخر</AlertTitle>
+                    <AlertDescription className="text-xs space-y-1">
+                      <div>
+                        رُفض {reportSummary.totalRejectedForeignTenant} صف لأن قيمة tenant_id فيها
+                        لا تطابق المستأجر الحالي ({reportMeta?.tenantId?.slice(0, 8)}…). لم تُكتب
+                        أي بيانات لمستأجر آخر — هذه حماية تلقائية ضد الحقن.
+                      </div>
+                      <div className="text-muted-foreground">
+                        إذا كنت تتوقع استعادة بيانات من مستأجر مختلف، يجب القيام بذلك من حساب
+                        ينتمي لذلك المستأجر مباشرة.
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {/* KPI grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <div className="rounded-md border p-3 bg-card">
