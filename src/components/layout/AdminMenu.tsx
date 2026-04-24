@@ -47,6 +47,10 @@ export default function AdminMenu() {
           <Users className="h-4 w-4" />
           إدارة المستخدمين
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/admin/domain-events')} className="gap-3 cursor-pointer">
+          <Activity className="h-4 w-4" />
+          أحداث النظام
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
