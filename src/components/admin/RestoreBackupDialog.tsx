@@ -208,21 +208,45 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       const snapshotId = typeof data?.snapshot_id === 'string' ? data.snapshot_id : undefined;
       const snapshotTotalRows =
         typeof data?.snapshot_total_rows === 'number' ? data.snapshot_total_rows : undefined;
+      const totalRejectedForeignTenant =
+        typeof data?.total_rejected_foreign_tenant === 'number'
+          ? data.total_rejected_foreign_tenant
+          : undefined;
 
       if (!data?.success) {
         toast.error(data?.error || 'فشل الاستعادة');
         if (Array.isArray(data?.results)) {
           setResults(data.results as RestoreResult[]);
-          setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
+          setReportMeta({
+            startedAt,
+            finishedAt,
+            tenantId,
+            snapshotId,
+            snapshotTotalRows,
+            totalRejectedForeignTenant,
+          });
         }
         setStep('results');
         return;
       }
 
       setResults(data.results as RestoreResult[]);
-      setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
+      setReportMeta({
+        startedAt,
+        finishedAt,
+        tenantId,
+        snapshotId,
+        snapshotTotalRows,
+        totalRejectedForeignTenant,
+      });
       setStep('results');
-      toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
+      if (totalRejectedForeignTenant && totalRejectedForeignTenant > 0) {
+        toast.warning(
+          `تمت الاستعادة — ${data.total_inserted} سجل، ورُفض ${totalRejectedForeignTenant} صف ينتمي لمستأجر آخر`,
+        );
+      } else {
+        toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'خطأ غير متوقع';
       toast.error(msg);
