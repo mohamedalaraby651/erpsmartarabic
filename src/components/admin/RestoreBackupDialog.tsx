@@ -767,7 +767,18 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
                                 فشل: {r.errors}
                               </Badge>
                             )}
+                            {(r.rejected_foreign_tenant ?? 0) > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                مرفوض (مستأجر آخر): {r.rejected_foreign_tenant}
+                              </Badge>
+                            )}
                           </div>
+                          {(r.rejected_foreign_tenant ?? 0) > 0 && r.foreign_tenant_ids?.length ? (
+                            <div className="text-[11px] text-muted-foreground mr-6">
+                              المعرّفات المرفوضة: {r.foreign_tenant_ids.slice(0, 3).join(', ')}
+                              {r.foreign_tenant_ids.length > 3 ? '…' : ''}
+                            </div>
+                          ) : null}
                           {messages.length > 0 && (
                             <div className="space-y-1 mr-6">
                               {messages.map((msg, i) => {
