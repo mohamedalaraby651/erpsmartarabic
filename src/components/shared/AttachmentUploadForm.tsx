@@ -134,6 +134,7 @@ export function AttachmentUploadForm({
   defaultCategory = 'other',
 }: AttachmentUploadFormProps) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
