@@ -68,6 +68,7 @@ export function ExportButton({ data, filename, headers }: ExportButtonProps) {
 
     setIsExporting(true);
     try {
+      const XLSX = await import('xlsx');
       const exportData = headers
         ? data.map((row) => {
             const newRow: Record<string, any> = {};
