@@ -124,6 +124,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     setFinalConfirmText('');
     setResults(null);
     setReportMeta(null);
+    setRollbackDone(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
