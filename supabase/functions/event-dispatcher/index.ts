@@ -104,7 +104,7 @@ async function handleEvent(supabase: any, event: DomainEvent) {
         message: `الفاتورة ${payload.invoice_number} اعتُمدت بقيمة ${payload.total_amount}`,
         type: 'success',
         link: `/invoices/${aggregate_id}`,
-      }).then(({ error }) => { if (error) console.warn('[event] notification fail:', error.message); });
+      }).then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('[event] notification fail:', error.message); });
       break;
     }
     case 'payment.received': {
