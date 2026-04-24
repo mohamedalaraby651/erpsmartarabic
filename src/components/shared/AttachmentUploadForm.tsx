@@ -164,6 +164,10 @@ export function AttachmentUploadForm({
 
   const uploadFile = useCallback(async (file: File) => {
     if (!user || !validateFile(file)) return;
+    if (!tenantId) {
+      toast.error('تعذّر تحديد الشركة الحالية');
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -171,7 +175,7 @@ export function AttachmentUploadForm({
     try {
       const fileType = getFileType(file);
       const fileExtension = file.name.split('.').pop();
-      const fileName = `${entityType}/${entityId}/${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
+      const fileName = `${tenantId}/${entityType}/${entityId}/${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
 
       // Simulate progress
       const progressInterval = setInterval(() => {
