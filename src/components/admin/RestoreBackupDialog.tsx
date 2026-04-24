@@ -70,6 +70,11 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
   const [isParsing, setIsParsing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [results, setResults] = useState<RestoreResult[] | null>(null);
+  const [reportMeta, setReportMeta] = useState<{
+    startedAt: Date;
+    finishedAt: Date;
+    tenantId?: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const knownTableNames = useMemo(() => new Set(knownTables.map((t) => t.name)), [knownTables]);
