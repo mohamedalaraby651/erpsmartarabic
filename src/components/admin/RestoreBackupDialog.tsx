@@ -117,38 +117,81 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
   } | null>(null);
   const [isRollingBack, setIsRollingBack] = useState(false);
   const [rollbackDone, setRollbackDone] = useState(false);
+  /** Opt-in: user wants to see + select sensitive tables. */
+  const [allowSensitive, setAllowSensitive] = useState(false);
+  /** Opt-in confirmation: user accepts the risk. */
+  const [confirmSensitive, setConfirmSensitive] = useState(false);
+  /** Per-table row caps. Undefined = no cap. 0 = none, N = first N. */
+  const [rowLimits, setRowLimits] = useState<Record<string, number | undefined>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const knownTableNames = useMemo(() => new Set(knownTables.map((t) => t.name)), [knownTables]);
 
-  // Only show parsed entries whose key is a known business table.
-  const availableTables = useMemo(() => {
-    if (!parsed) return [];
-    return Object.entries(parsed)
-      .filter(([k]) => knownTableNames.has(k))
-      .map(([k, rows]) => ({
-        name: k,
-        label: knownTables.find((t) => t.name === k)?.label ?? k,
-        count: rows.length,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'ar'));
-  }, [parsed, knownTableNames, knownTables]);
+  // Tables present in the file. Split into three buckets:
+  //   - regular   → safe business tables, shown by default
+  //   - sensitive → shown only when allowSensitive is on
+  //   - forbidden → never shown, just counted for the warning line
+  const fileBuckets = useMemo(() => {
+    if (!parsed) {
+      return { regular: [] as { name: string; label: string; count: number }[], sensitive: [] as { name: string; label: string; count: number }[], forbidden: [] as string[], unknown: [] as string[] };
+    }
+    const regular: { name: string; label: string; count: number }[] = [];
+    const sensitive: { name: string; label: string; count: number }[] = [];
+    const forbidden: string[] = [];
+    const unknown: string[] = [];
+    for (const [k, rows] of Object.entries(parsed)) {
+      const count = Array.isArray(rows) ? rows.length : 0;
+      if (FORBIDDEN_TABLE_NAMES.has(k)) {
+        forbidden.push(k);
+        continue;
+      }
+      if (SENSITIVE_TABLE_NAMES.has(k)) {
+        sensitive.push({ name: k, label: knownTables.find((t) => t.name === k)?.label ?? k, count });
+        continue;
+      }
+      if (knownTableNames.has(k)) {
+        regular.push({ name: k, label: knownTables.find((t) => t.name === k)?.label ?? k, count });
+        continue;
+      }
+      unknown.push(k);
+    }
+    regular.sort((a, b) => a.label.localeCompare(b.label, 'ar'));
+    sensitive.sort((a, b) => a.label.localeCompare(b.label, 'ar'));
+    return { regular, sensitive, forbidden, unknown };
+  }, [parsed, knownTables, knownTableNames]);
 
-  const ignoredKeys = useMemo(() => {
-    if (!parsed) return [];
-    return Object.keys(parsed).filter((k) => !knownTableNames.has(k));
-  }, [parsed, knownTableNames]);
+  // The list the user may actually pick from = regular + (sensitive if opted in).
+  const availableTables = useMemo(() => {
+    return allowSensitive
+      ? [...fileBuckets.regular, ...fileBuckets.sensitive]
+      : fileBuckets.regular;
+  }, [fileBuckets, allowSensitive]);
+
+  const ignoredKeys = useMemo(() => fileBuckets.unknown, [fileBuckets]);
+
+  const hasSensitiveSelected = useMemo(
+    () => selectedTables.some((t) => SENSITIVE_TABLE_NAMES.has(t)),
+    [selectedTables],
+  );
 
   const selectedSummary = useMemo(() => {
     if (!parsed) return [];
     return selectedTables
-      .map((name) => ({
-        name,
-        label: knownTables.find((t) => t.name === name)?.label ?? name,
-        count: parsed[name]?.length ?? 0,
-      }))
+      .map((name) => {
+        const totalInFile = parsed[name]?.length ?? 0;
+        const cap = rowLimits[name];
+        const effective = typeof cap === 'number' && cap >= 0 && cap < totalInFile ? cap : totalInFile;
+        return {
+          name,
+          label: knownTables.find((t) => t.name === name)?.label ?? name,
+          count: effective,
+          totalInFile,
+          truncated: totalInFile - effective,
+          isSensitive: SENSITIVE_TABLE_NAMES.has(name),
+        };
+      })
       .sort((a, b) => b.count - a.count);
-  }, [parsed, selectedTables, knownTables]);
+  }, [parsed, selectedTables, knownTables, rowLimits]);
 
   const totalSelectedRows = selectedSummary.reduce((s, r) => s + r.count, 0);
 
@@ -163,6 +206,9 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     setResults(null);
     setReportMeta(null);
     setRollbackDone(false);
+    setAllowSensitive(false);
+    setConfirmSensitive(false);
+    setRowLimits({});
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
