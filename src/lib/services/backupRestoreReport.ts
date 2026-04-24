@@ -134,6 +134,7 @@ export function buildLogText(input: RestoreReportInput): string {
   lines.push(`إجمالي السجلات الناجحة : ${summary.totalInserted}`);
   lines.push(`إجمالي السجلات المتجاهلة: ${summary.totalSkipped}`);
   lines.push(`إجمالي الأخطاء         : ${summary.totalErrors}`);
+  lines.push(`صفوف مرفوضة (تخص مستأجراً آخر): ${summary.totalRejectedForeignTenant}`);
   lines.push(`تعارضات مفاتيح (PK/Unique): ${summary.conflictHits}`);
   lines.push('');
   lines.push('--- التفاصيل لكل جدول --------------------------------------');
@@ -145,6 +146,12 @@ export function buildLogText(input: RestoreReportInput): string {
     lines.push(`  ناجح   : ${r.inserted}`);
     lines.push(`  متجاهل : ${r.skipped}`);
     lines.push(`  أخطاء  : ${r.errors}`);
+    if ((r.rejected_foreign_tenant ?? 0) > 0) {
+      lines.push(`  مرفوض (مستأجر آخر): ${r.rejected_foreign_tenant}`);
+      if (r.foreign_tenant_ids?.length) {
+        lines.push(`    المعرّفات: ${r.foreign_tenant_ids.join(', ')}`);
+      }
+    }
 
     const messages = r.error_messages?.length ? r.error_messages : r.error_sample ? [r.error_sample] : [];
     if (messages.length > 0) {
