@@ -414,15 +414,20 @@ serve(async (req) => {
 
     const totalInserted = results.reduce((s, r) => s + r.inserted, 0);
     const totalErrors = results.reduce((s, r) => s + r.errors, 0);
+    const totalRejectedForeignTenant = results.reduce(
+      (s, r) => s + (r.rejected_foreign_tenant ?? 0),
+      0,
+    );
 
     return jsonResponse({
-      success: totalErrors === 0,
+      success: totalErrors === 0 && totalRejectedForeignTenant === 0,
       mode,
       tenant_id: tenantId,
       snapshot_id: snapshotId,
       snapshot_total_rows: snapshotTotal,
       total_inserted: totalInserted,
       total_errors: totalErrors,
+      total_rejected_foreign_tenant: totalRejectedForeignTenant,
       results,
     });
   } catch (err) {
