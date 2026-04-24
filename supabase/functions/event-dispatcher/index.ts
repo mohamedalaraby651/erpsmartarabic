@@ -91,7 +91,8 @@ Deno.serve(async (req) => {
   }
 });
 
-async function handleEvent(supabase: ReturnType<typeof createClient>, event: DomainEvent) {
+// deno-lint-ignore no-explicit-any
+async function handleEvent(supabase: any, event: DomainEvent) {
   const { event_type, aggregate_id, payload, tenant_id } = event;
 
   switch (event_type) {
