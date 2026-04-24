@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Shield, Users, Settings, Lock } from 'lucide-react';
+import { Shield, Users, Settings, Lock, Activity } from 'lucide-react';
 
 export default function AdminMenu() {
   const navigate = useNavigate();
@@ -46,6 +46,10 @@ export default function AdminMenu() {
         <DropdownMenuItem onClick={() => navigate('/admin/users')} className="gap-3 cursor-pointer">
           <Users className="h-4 w-4" />
           إدارة المستخدمين
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/admin/domain-events')} className="gap-3 cursor-pointer">
+          <Activity className="h-4 w-4" />
+          أحداث النظام
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

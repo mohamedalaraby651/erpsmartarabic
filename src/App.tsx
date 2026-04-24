@@ -54,6 +54,7 @@ const ApprovalChainsPage = lazy(() => import("./pages/admin/ApprovalChainsPage")
 const MetricsPage = lazy(() => import("./pages/admin/MetricsPage"));
 const SodRulesPage = lazy(() => import("./pages/admin/SodRulesPage"));
 const TenantsPage = lazy(() => import("./pages/admin/TenantsPage"));
+const DomainEventsPage = lazy(() => import("./pages/admin/DomainEventsPage"));
 const ApprovalsPage = lazy(() => import("./pages/approvals/ApprovalsPage"));
 const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
 const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetailsPage"));
@@ -162,6 +163,7 @@ const App = () => (
                   <Route path="admin/metrics" element={<MetricsPage />} />
                   <Route path="admin/sod-rules" element={<SodRulesPage />} />
                   <Route path="admin/tenants" element={<TenantsPage />} />
+                  <Route path="admin/domain-events" element={<DomainEventsPage />} />
                   <Route path="approvals" element={<ApprovalsPage />} />
                   <Route path="employees" element={<EmployeesPage />} />
                   <Route path="employees/:id" element={<EmployeeDetailsPage />} />
