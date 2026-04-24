@@ -356,8 +356,9 @@ serve(async (req) => {
       tenant_id: tenantId,
       action: "restore_backup",
       entity_type: "system",
+      entity_id: snapshotId,
       entity_name: `restore (${mode})`,
-      new_values: { mode, tables, results },
+      new_values: { mode, tables, results, snapshot_id: snapshotId },
     });
 
     const totalInserted = results.reduce((s, r) => s + r.inserted, 0);
@@ -367,6 +368,8 @@ serve(async (req) => {
       success: totalErrors === 0,
       mode,
       tenant_id: tenantId,
+      snapshot_id: snapshotId,
+      snapshot_total_rows: snapshotTotal,
       total_inserted: totalInserted,
       total_errors: totalErrors,
       results,
