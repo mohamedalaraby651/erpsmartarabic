@@ -118,7 +118,7 @@ async function handleEvent(supabase: any, event: DomainEvent) {
         title: 'مصروف معتمد',
         message: `المصروف ${payload.expense_number} اعتُمد بقيمة ${payload.amount}`,
         type: 'info',
-      }).then(({ error }) => { if (error) console.warn('[event] notification fail:', error.message); });
+      }).then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('[event] notification fail:', error.message); });
       break;
     }
     case 'customer.credit_exceeded': {
