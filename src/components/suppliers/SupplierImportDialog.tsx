@@ -54,6 +54,7 @@ export default function SupplierImportDialog({ open, onOpenChange }: Props) {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
+        const XLSX = await import('xlsx');
         const wb = XLSX.read(event.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);

@@ -170,6 +170,7 @@ export function ExportWithTemplateButton({
       return newRow;
     });
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'البيانات');
@@ -191,6 +192,7 @@ export function ExportWithTemplateButton({
       return newRow;
     });
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const csv = XLSX.utils.sheet_to_csv(worksheet);
 

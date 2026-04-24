@@ -223,6 +223,7 @@ const SuppliersPage = () => {
         includeLogo: true,
       });
     } else {
+      const XLSX = await import('xlsx');
       const ws = XLSX.utils.json_to_sheet(data.map(row => {
         const labeled: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(row)) {

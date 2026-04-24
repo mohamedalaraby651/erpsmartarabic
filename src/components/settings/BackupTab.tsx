@@ -95,6 +95,7 @@ export function BackupTab() {
       const fileName = `backup_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
       
       if (exportFormat === 'excel') {
+        const XLSX = await import('xlsx');
         const workbook = XLSX.utils.book_new();
         for (const [name, data] of Object.entries(allData)) {
           if (data.length > 0) {
@@ -133,6 +134,7 @@ export function BackupTab() {
         setShowImportDialog(true);
       } else if (file.name.endsWith('.xlsx')) {
         const buffer = await file.arrayBuffer();
+        const XLSX = await import('xlsx');
         const workbook = XLSX.read(buffer, { type: 'array' });
         const data: Record<string, any[]> = {};
         

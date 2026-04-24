@@ -159,6 +159,7 @@ const BackupPage = () => {
   };
 
   const exportToExcel = (data: Record<string, any[]>) => {
+    const XLSX = await import('xlsx');
     const workbook = XLSX.utils.book_new();
     
     for (const [tableName, tableData] of Object.entries(data)) {
