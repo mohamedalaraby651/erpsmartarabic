@@ -174,6 +174,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     if (!parsed || selectedTables.length === 0) return;
 
     setIsRestoring(true);
+    const startedAt = new Date();
     try {
       const filteredData: ParsedBackup = {};
       for (const t of selectedTables) filteredData[t] = parsed[t] ?? [];
@@ -187,20 +188,28 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
         },
       });
 
+      const finishedAt = new Date();
+
       if (error) {
         toast.error(`فشل الاستعادة: ${error.message}`);
         setStep('configure');
         return;
       }
 
+      const tenantId = typeof data?.tenant_id === 'string' ? data.tenant_id : undefined;
+
       if (!data?.success) {
         toast.error(data?.error || 'فشل الاستعادة');
-        if (Array.isArray(data?.results)) setResults(data.results as RestoreResult[]);
+        if (Array.isArray(data?.results)) {
+          setResults(data.results as RestoreResult[]);
+          setReportMeta({ startedAt, finishedAt, tenantId });
+        }
         setStep('results');
         return;
       }
 
       setResults(data.results as RestoreResult[]);
+      setReportMeta({ startedAt, finishedAt, tenantId });
       setStep('results');
       toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
     } catch (err) {
@@ -210,6 +219,44 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     } finally {
       setIsRestoring(false);
     }
+  };
+
+  // ── Report data for the results step ──────────────────────────────────
+  const reportInput: RestoreReportInput | null = useMemo(() => {
+    if (!results || !reportMeta || !file) return null;
+    const tableLabels: Record<string, string> = {};
+    for (const t of knownTables) tableLabels[t.name] = t.label;
+    const totalInserted = results.reduce((s, r) => s + r.inserted, 0);
+    const totalErrors = results.reduce((s, r) => s + r.errors, 0);
+    return {
+      mode,
+      fileName: file.name,
+      fileSizeBytes: file.size,
+      tenantId: reportMeta.tenantId,
+      totalInserted,
+      totalErrors,
+      results,
+      startedAt: reportMeta.startedAt,
+      finishedAt: reportMeta.finishedAt,
+      tableLabels,
+    };
+  }, [results, reportMeta, file, mode, knownTables]);
+
+  const reportSummary = useMemo(
+    () => (reportInput ? summarize(reportInput) : null),
+    [reportInput],
+  );
+
+  const handleDownloadLog = () => {
+    if (!reportInput) return;
+    const ts = reportInput.finishedAt.toISOString().replace(/[:.]/g, '-');
+    downloadLog(`restore-log-${ts}.txt`, buildLogText(reportInput));
+  };
+
+  const handleDownloadJson = () => {
+    if (!reportInput) return;
+    const ts = reportInput.finishedAt.toISOString().replace(/[:.]/g, '-');
+    downloadJsonReport(`restore-report-${ts}.json`, reportInput);
   };
 
   const modeMeta = MODE_LABELS[mode];
