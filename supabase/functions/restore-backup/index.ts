@@ -135,6 +135,10 @@ interface TableResult {
   error_sample?: string;
   /** All distinct error messages collected during chunked inserts. */
   error_messages?: string[];
+  /** Rows skipped because the caller capped this table via row_limits. */
+  truncated?: number;
+  /** True when the table is in SENSITIVE_TABLES (surface in report). */
+  is_sensitive?: boolean;
 }
 
 function jsonResponse(body: unknown, status = 200): Response {
