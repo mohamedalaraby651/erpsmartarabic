@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenant } from '@/hooks/useTenant';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,6 +28,7 @@ const SupplierNotesTab = ({ supplierId }: SupplierNotesTabProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [newNote, setNewNote] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
@@ -46,11 +48,13 @@ const SupplierNotesTab = ({ supplierId }: SupplierNotesTabProps) => {
 
   const addMutation = useMutation({
     mutationFn: async (note: string) => {
+      if (!tenantId) throw new Error('No tenant');
       const { error } = await supabase.from('supplier_notes').insert({
         supplier_id: supplierId,
         note,
         user_id: user?.id,
         created_by: user?.id,
+        tenant_id: tenantId,
       });
       if (error) throw error;
     },
