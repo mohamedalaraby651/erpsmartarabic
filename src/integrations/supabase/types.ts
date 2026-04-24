@@ -3609,6 +3609,7 @@ export type Database = {
           is_pinned: boolean
           note: string
           supplier_id: string
+          tenant_id: string
           user_id: string | null
         }
         Insert: {
@@ -3618,6 +3619,7 @@ export type Database = {
           is_pinned?: boolean
           note: string
           supplier_id: string
+          tenant_id: string
           user_id?: string | null
         }
         Update: {
@@ -3627,6 +3629,7 @@ export type Database = {
           is_pinned?: boolean
           note?: string
           supplier_id?: string
+          tenant_id?: string
           user_id?: string | null
         }
         Relationships: [
@@ -3642,6 +3645,13 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_notes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
