@@ -202,19 +202,22 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       }
 
       const tenantId = typeof data?.tenant_id === 'string' ? data.tenant_id : undefined;
+      const snapshotId = typeof data?.snapshot_id === 'string' ? data.snapshot_id : undefined;
+      const snapshotTotalRows =
+        typeof data?.snapshot_total_rows === 'number' ? data.snapshot_total_rows : undefined;
 
       if (!data?.success) {
         toast.error(data?.error || 'فشل الاستعادة');
         if (Array.isArray(data?.results)) {
           setResults(data.results as RestoreResult[]);
-          setReportMeta({ startedAt, finishedAt, tenantId });
+          setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
         }
         setStep('results');
         return;
       }
 
       setResults(data.results as RestoreResult[]);
-      setReportMeta({ startedAt, finishedAt, tenantId });
+      setReportMeta({ startedAt, finishedAt, tenantId, snapshotId, snapshotTotalRows });
       setStep('results');
       toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
     } catch (err) {
