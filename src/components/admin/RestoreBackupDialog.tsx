@@ -263,8 +263,35 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       toast.error('يجب تأكيد الاستبدال الكامل أولاً');
       return;
     }
+    if (hasSensitiveSelected && !confirmSensitive) {
+      toast.error('يجب تأكيد استعادة الجداول الحساسة قبل المتابعة');
+      return;
+    }
     setFinalConfirmText('');
     setStep('review');
+  };
+
+  /** Toggle the sensitive opt-in. Turning it off also unselects sensitive tables. */
+  const toggleAllowSensitive = (next: boolean) => {
+    setAllowSensitive(next);
+    if (!next) {
+      setConfirmSensitive(false);
+      setSelectedTables((prev) => prev.filter((t) => !SENSITIVE_TABLE_NAMES.has(t)));
+    }
+  };
+
+  /** Set or clear a per-table row cap. Empty/0/NaN clears the cap. */
+  const setRowLimit = (table: string, value: string) => {
+    const n = Number.parseInt(value, 10);
+    setRowLimits((prev) => {
+      const next = { ...prev };
+      if (!Number.isFinite(n) || n <= 0) {
+        delete next[table];
+      } else {
+        next[table] = n;
+      }
+      return next;
+    });
   };
 
   const handleRestore = async () => {
@@ -276,11 +303,20 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       const filteredData: ParsedBackup = {};
       for (const t of selectedTables) filteredData[t] = parsed[t] ?? [];
 
+      // Only forward row_limits for tables actually selected.
+      const limitsToSend: Record<string, number> = {};
+      for (const t of selectedTables) {
+        const cap = rowLimits[t];
+        if (typeof cap === 'number' && cap > 0) limitsToSend[t] = cap;
+      }
+
       const { data, error } = await supabase.functions.invoke('restore-backup', {
         body: {
           data: filteredData,
           tables: selectedTables,
           mode,
+          allow_sensitive: hasSensitiveSelected ? true : undefined,
+          row_limits: Object.keys(limitsToSend).length > 0 ? limitsToSend : undefined,
           confirm_replace: mode === 'replace' ? confirmReplace : undefined,
         },
       });
