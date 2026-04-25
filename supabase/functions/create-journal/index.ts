@@ -232,12 +232,13 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
+    // Log full error server-side; never expose raw DB messages to clients.
     console.error('[create-journal] Error:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        code: 'INTERNAL_ERROR'
+      JSON.stringify({
+        success: false,
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
