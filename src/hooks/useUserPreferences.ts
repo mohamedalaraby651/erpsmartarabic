@@ -13,11 +13,15 @@ export interface UserPreferences {
   font_family: string;
   font_size: string;
   sidebar_compact: boolean;
-  sidebar_order: any[];
-  favorite_pages: any[];
-  collapsed_sections: any[];
+  sidebar_order: unknown[];
+  favorite_pages: unknown[];
+  collapsed_sections: unknown[];
+  // Stored as JSON in Supabase — kept loose to interop with the generated types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dashboard_widgets: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   table_settings: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   notification_settings: Record<string, any>;
 }
 
@@ -151,16 +155,18 @@ export function useUserPreferences() {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Cast to `never` because supabase generated types narrow JSON fields to a
+      // strict union which conflicts with our looser UserPreferences shape.
       if (existing) {
         const { error } = await supabase
           .from('user_preferences')
-          .update(updates)
+          .update(updates as never)
           .eq('user_id', user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('user_preferences')
-          .insert({ ...updates, user_id: user.id });
+          .insert({ ...updates, user_id: user.id } as never);
         if (error) throw error;
       }
 

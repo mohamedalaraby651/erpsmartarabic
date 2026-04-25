@@ -1,66 +1,75 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
+/**
+ * Generic shape for cached records — every entity stored offline is keyed by
+ * `id` at runtime. We use `unknown` instead of `any` so callers narrow the
+ * value at the call site instead of silently bypassing it.
+ */
+export type OfflineRecord = Record<string, unknown>;
+
+export interface SyncQueueItem {
+  id: string;
+  table: string;
+  operation: 'insert' | 'update' | 'delete';
+  data: OfflineRecord;
+  timestamp: number;
+  retryCount?: number;
+}
+
 interface OfflineDB extends DBSchema {
   customers: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-name': string };
   };
   products: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-name': string };
   };
   invoices: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-number': string };
   };
   quotations: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-number': string };
   };
   suppliers: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-name': string };
   };
   sales_orders: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-number': string };
   };
   purchase_orders: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-number': string };
   };
   payments: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-date': string };
   };
   expenses: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-date': string };
   };
   tasks: {
     key: string;
-    value: any;
+    value: OfflineRecord;
     indexes: { 'by-due_date': string };
   };
   sync_queue: {
     key: string;
-    value: {
-      id: string;
-      table: string;
-      operation: 'insert' | 'update' | 'delete';
-      data: any;
-      timestamp: number;
-      retryCount?: number;
-    };
+    value: SyncQueueItem;
     indexes: { 'by-timestamp': number };
   };
 }
@@ -104,31 +113,26 @@ export async function initOfflineDB() {
       
       // Version 2: Additional stores for expanded offline support
       if (oldVersion < 2) {
-        // Sales Orders store
         if (!database.objectStoreNames.contains('sales_orders')) {
           const salesOrdersStore = database.createObjectStore('sales_orders', { keyPath: 'id' });
           salesOrdersStore.createIndex('by-number', 'order_number');
         }
         
-        // Purchase Orders store
         if (!database.objectStoreNames.contains('purchase_orders')) {
           const purchaseOrdersStore = database.createObjectStore('purchase_orders', { keyPath: 'id' });
           purchaseOrdersStore.createIndex('by-number', 'order_number');
         }
         
-        // Payments store
         if (!database.objectStoreNames.contains('payments')) {
           const paymentsStore = database.createObjectStore('payments', { keyPath: 'id' });
           paymentsStore.createIndex('by-date', 'payment_date');
         }
         
-        // Expenses store
         if (!database.objectStoreNames.contains('expenses')) {
           const expensesStore = database.createObjectStore('expenses', { keyPath: 'id' });
           expensesStore.createIndex('by-date', 'expense_date');
         }
         
-        // Tasks store
         if (!database.objectStoreNames.contains('tasks')) {
           const tasksStore = database.createObjectStore('tasks', { keyPath: 'id' });
           tasksStore.createIndex('by-due_date', 'due_date');
@@ -147,24 +151,25 @@ export async function getOfflineDB() {
   return db!;
 }
 
-type StoreName = 
-  | 'customers' 
-  | 'products' 
-  | 'invoices' 
-  | 'quotations' 
-  | 'suppliers' 
+type EntityStore =
+  | 'customers'
+  | 'products'
+  | 'invoices'
+  | 'quotations'
+  | 'suppliers'
   | 'sales_orders'
   | 'purchase_orders'
   | 'payments'
   | 'expenses'
-  | 'tasks'
-  | 'sync_queue';
+  | 'tasks';
+
+type StoreName = EntityStore | 'sync_queue';
 
 // Cache data locally
-export async function cacheData(
-  store: StoreName,
-  data: any[]
-) {
+export async function cacheData<T extends OfflineRecord>(
+  store: EntityStore,
+  data: T[]
+): Promise<void> {
   const database = await getOfflineDB();
   const tx = database.transaction(store, 'readwrite');
   
@@ -180,25 +185,30 @@ export async function cacheData(
 }
 
 // Get cached data
-export async function getCachedData(store: StoreName): Promise<any[]> {
+export async function getCachedData<T extends OfflineRecord = OfflineRecord>(
+  store: EntityStore
+): Promise<T[]> {
   const database = await getOfflineDB();
-  return database.getAll(store);
+  return (await database.getAll(store)) as T[];
 }
 
 // Get single cached item
-export async function getCachedItem(store: StoreName, id: string): Promise<any | undefined> {
+export async function getCachedItem<T extends OfflineRecord = OfflineRecord>(
+  store: EntityStore,
+  id: string
+): Promise<T | undefined> {
   const database = await getOfflineDB();
-  return database.get(store, id);
+  return (await database.get(store, id)) as T | undefined;
 }
 
 // Add to sync queue
 export async function addToSyncQueue(
   table: string,
   operation: 'insert' | 'update' | 'delete',
-  data: any
-) {
+  data: OfflineRecord
+): Promise<string> {
   const database = await getOfflineDB();
-  const id = `${table}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const id = `${table}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   
   await database.put('sync_queue', {
     id,
@@ -212,19 +222,19 @@ export async function addToSyncQueue(
 }
 
 // Get pending sync items
-export async function getPendingSyncItems() {
+export async function getPendingSyncItems(): Promise<SyncQueueItem[]> {
   const database = await getOfflineDB();
   return database.getAllFromIndex('sync_queue', 'by-timestamp');
 }
 
 // Remove from sync queue
-export async function removeSyncItem(id: string) {
+export async function removeSyncItem(id: string): Promise<void> {
   const database = await getOfflineDB();
   await database.delete('sync_queue', id);
 }
 
 // Clear sync queue
-export async function clearSyncQueue() {
+export async function clearSyncQueue(): Promise<void> {
   const database = await getOfflineDB();
   await database.clear('sync_queue');
 }
@@ -234,3 +244,5 @@ export async function getSyncQueueCount(): Promise<number> {
   const database = await getOfflineDB();
   return database.count('sync_queue');
 }
+
+export type { StoreName };

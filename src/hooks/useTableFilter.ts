@@ -1,23 +1,36 @@
 import { useState, useMemo, useCallback } from 'react';
 
+export type FilterValue =
+  | string
+  | string[]
+  | { min?: unknown; max?: unknown }
+  | undefined;
+
 export interface FilterConfig {
-  [key: string]: string | string[] | { min?: any; max?: any } | undefined;
+  [key: string]: FilterValue;
 }
 
-export function useTableFilter<T extends Record<string, any>>(data: T[]) {
+export function useTableFilter<T extends Record<string, unknown>>(data: T[]) {
   const [filters, setFilters] = useState<FilterConfig>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFields, setSearchFields] = useState<string[]>([]);
 
-  const setFilter = useCallback((key: string, value: string | string[] | { min?: unknown; max?: unknown } | undefined | boolean) => {
-    setFilters((current) => {
-      if (value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-        const { [key]: _, ...rest } = current;
-        return rest;
-      }
-      return { ...current, [key]: value as FilterConfig[string] };
-    });
-  }, []);
+  const setFilter = useCallback(
+    (key: string, value: FilterValue | boolean) => {
+      setFilters((current) => {
+        if (
+          value === undefined ||
+          value === '' ||
+          (Array.isArray(value) && value.length === 0)
+        ) {
+          const { [key]: _omit, ...rest } = current;
+          return rest;
+        }
+        return { ...current, [key]: value as FilterValue };
+      });
+    },
+    [],
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({});
@@ -26,7 +39,7 @@ export function useTableFilter<T extends Record<string, any>>(data: T[]) {
 
   const clearFilter = useCallback((key: string) => {
     setFilters((current) => {
-      const { [key]: _, ...rest } = current;
+      const { [key]: _omit, ...rest } = current;
       return rest;
     });
   }, []);
@@ -54,21 +67,21 @@ export function useTableFilter<T extends Record<string, any>>(data: T[]) {
 
         // Array filter (multiple selection)
         if (Array.isArray(filterValue)) {
-          return filterValue.includes(itemValue);
+          return (filterValue as string[]).includes(itemValue as string);
         }
 
         // Range filter
         if (typeof filterValue === 'object' && filterValue !== null) {
-          const { min, max } = filterValue as { min?: any; max?: any };
-          if (min !== undefined && itemValue < min) return false;
-          if (max !== undefined && itemValue > max) return false;
+          const { min, max } = filterValue as { min?: unknown; max?: unknown };
+          if (min !== undefined && (itemValue as number) < (min as number)) return false;
+          if (max !== undefined && (itemValue as number) > (max as number)) return false;
           return true;
         }
 
-        // Exact match
+        // Exact / substring match
         if (typeof filterValue === 'string') {
           if (filterValue === '') return true;
-          return String(itemValue).toLowerCase().includes(filterValue.toLowerCase());
+          return String(itemValue ?? '').toLowerCase().includes(filterValue.toLowerCase());
         }
 
         return true;
