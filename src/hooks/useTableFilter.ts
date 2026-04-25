@@ -67,7 +67,7 @@ export function useTableFilter<T extends Record<string, unknown>>(data: T[]) {
 
         // Array filter (multiple selection)
         if (Array.isArray(filterValue)) {
-          return filterValue.includes(itemValue);
+          return (filterValue as string[]).includes(itemValue as string);
         }
 
         // Range filter
