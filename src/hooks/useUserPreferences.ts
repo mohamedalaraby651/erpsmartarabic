@@ -13,12 +13,12 @@ export interface UserPreferences {
   font_family: string;
   font_size: string;
   sidebar_compact: boolean;
-  sidebar_order: any[];
-  favorite_pages: any[];
-  collapsed_sections: any[];
-  dashboard_widgets: any;
-  table_settings: Record<string, any>;
-  notification_settings: Record<string, any>;
+  sidebar_order: unknown[];
+  favorite_pages: unknown[];
+  collapsed_sections: unknown[];
+  dashboard_widgets: Record<string, unknown> | null;
+  table_settings: Record<string, unknown>;
+  notification_settings: Record<string, unknown>;
 }
 
 const defaultPreferences: UserPreferences = {
