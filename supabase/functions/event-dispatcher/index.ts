@@ -20,6 +20,45 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ===== Authentication: shared secret OR authenticated user with platform/admin role =====
+  const expectedSecret = Deno.env.get('DISPATCHER_SECRET');
+  const providedSecret = req.headers.get('x-dispatcher-secret');
+  const authHeader = req.headers.get('authorization');
+
+  let isAuthorized = false;
+
+  // Path A: trusted cron / internal caller with shared secret
+  if (expectedSecret && providedSecret && providedSecret === expectedSecret) {
+    isAuthorized = true;
+  }
+
+  // Path B: authenticated platform admin (manual trigger from UI)
+  if (!isAuthorized && authHeader?.startsWith('Bearer ')) {
+    try {
+      const userClient = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: userData } = await userClient.auth.getUser();
+      if (userData?.user) {
+        const { data: roleData } = await userClient.rpc('get_platform_role', {
+          _user_id: userData.user.id,
+        });
+        if (roleData) isAuthorized = true;
+      }
+    } catch (_e) {
+      // fall through — isAuthorized stays false
+    }
+  }
+
+  if (!isAuthorized) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!

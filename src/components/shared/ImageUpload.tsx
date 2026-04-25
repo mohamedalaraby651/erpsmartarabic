@@ -114,11 +114,16 @@ export default function ImageUpload({
         .upload(filePath, blob, { upsert: true, contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
+      // All image buckets are private — return a signed URL for immediate use.
+      const { data: signed, error: signErr } = await supabase.storage
         .from(bucket)
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 60 * 60);
 
-      onImageUploaded(data.publicUrl);
+      if (signErr || !signed?.signedUrl) {
+        throw signErr ?? new Error('Failed to create signed URL');
+      }
+
+      onImageUploaded(signed.signedUrl);
       toast({ title: 'تم رفع الصورة', description: 'تم رفع الصورة بنجاح' });
       setCropDialogOpen(false);
       setImgSrc('');

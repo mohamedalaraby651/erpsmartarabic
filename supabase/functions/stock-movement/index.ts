@@ -283,9 +283,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[stock-movement] Unexpected error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[stock-movement] Unexpected error:', error);
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage, code: 'INTERNAL_ERROR' }),
+      JSON.stringify({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

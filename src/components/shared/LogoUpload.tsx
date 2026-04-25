@@ -69,12 +69,17 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
         throw uploadError;
       }
 
-      // Use public URL (bucket is now public - no expiry)
-      const { data: urlData } = supabase.storage
+      // Bucket is private — return a signed URL for immediate display.
+      // The stored path itself can be re-signed on demand later.
+      const { data: signed, error: signErr } = await supabase.storage
         .from('logos')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 60 * 60);
 
-      onUpload(urlData.publicUrl);
+      if (signErr || !signed?.signedUrl) {
+        throw signErr ?? new Error('Failed to create signed URL');
+      }
+
+      onUpload(signed.signedUrl);
       toast.success('تم رفع الشعار بنجاح');
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
