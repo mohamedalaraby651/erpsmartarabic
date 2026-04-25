@@ -25,12 +25,14 @@ export async function syncToServer(): Promise<SyncResult> {
   
   for (const item of pendingItems) {
     try {
+      const tableName = item.table as TableName;
+      const recordId = (item.data as { id?: string }).id;
       switch (item.operation) {
-        case 'insert':
+        case 'insert': {
           const { error: insertError } = await supabase
-            .from(item.table as TableName)
-            .insert(item.data);
-          
+            .from(tableName)
+            .insert(item.data as never);
+
           if (insertError) {
             // Check for conflict (duplicate key)
             if (insertError.code === '23505') {
@@ -45,13 +47,14 @@ export async function syncToServer(): Promise<SyncResult> {
             await removeSyncItem(item.id);
           }
           break;
-          
-        case 'update':
+        }
+
+        case 'update': {
           const { error: updateError } = await supabase
-            .from(item.table as TableName)
-            .update(item.data)
-            .eq('id', item.data.id);
-          
+            .from(tableName)
+            .update(item.data as never)
+            .eq('id', recordId ?? '');
+
           if (updateError) {
             failed++;
           } else {
@@ -59,13 +62,14 @@ export async function syncToServer(): Promise<SyncResult> {
             await removeSyncItem(item.id);
           }
           break;
-          
-        case 'delete':
+        }
+
+        case 'delete': {
           const { error: deleteError } = await supabase
-            .from(item.table as TableName)
+            .from(tableName)
             .delete()
-            .eq('id', item.data.id);
-          
+            .eq('id', recordId ?? '');
+
           if (deleteError) {
             failed++;
           } else {
@@ -73,6 +77,7 @@ export async function syncToServer(): Promise<SyncResult> {
             await removeSyncItem(item.id);
           }
           break;
+        }
       }
     } catch (error) {
       console.error('Sync error:', error);

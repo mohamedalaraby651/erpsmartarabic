@@ -155,16 +155,18 @@ export function useUserPreferences() {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Cast to `never` because supabase generated types narrow JSON fields to a
+      // strict union which conflicts with our looser UserPreferences shape.
       if (existing) {
         const { error } = await supabase
           .from('user_preferences')
-          .update(updates)
+          .update(updates as never)
           .eq('user_id', user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('user_preferences')
-          .insert({ ...updates, user_id: user.id });
+          .insert({ ...updates, user_id: user.id } as never);
         if (error) throw error;
       }
 
