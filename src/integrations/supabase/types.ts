@@ -4829,6 +4829,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa_status: {
+        Row: {
+          created_at: string | null
+          is_enabled: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          is_enabled?: never
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          is_enabled?: never
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _has_posted_journal: {
