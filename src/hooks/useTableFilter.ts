@@ -78,10 +78,10 @@ export function useTableFilter<T extends Record<string, unknown>>(data: T[]) {
           return true;
         }
 
-        // Exact match
+        // Exact / substring match
         if (typeof filterValue === 'string') {
           if (filterValue === '') return true;
-          return String(itemValue).toLowerCase().includes(filterValue.toLowerCase());
+          return String(itemValue ?? '').toLowerCase().includes(filterValue.toLowerCase());
         }
 
         return true;

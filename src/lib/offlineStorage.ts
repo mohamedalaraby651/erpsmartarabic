@@ -1,14 +1,11 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 /**
- * Generic shape for cached records — every entity stored offline keeps at least
- * an `id` plus arbitrary fields. We use `unknown` instead of `any` so callers
- * narrow the type at the call site instead of silently bypassing it.
+ * Generic shape for cached records — every entity stored offline is keyed by
+ * `id` at runtime. We use `unknown` instead of `any` so callers narrow the
+ * value at the call site instead of silently bypassing it.
  */
-export interface OfflineRecord {
-  id: string;
-  [key: string]: unknown;
-}
+export type OfflineRecord = Record<string, unknown>;
 
 export interface SyncQueueItem {
   id: string;

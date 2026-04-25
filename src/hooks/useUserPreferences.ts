@@ -16,9 +16,13 @@ export interface UserPreferences {
   sidebar_order: unknown[];
   favorite_pages: unknown[];
   collapsed_sections: unknown[];
-  dashboard_widgets: Record<string, unknown> | null;
-  table_settings: Record<string, unknown>;
-  notification_settings: Record<string, unknown>;
+  // Stored as JSON in Supabase — kept loose to interop with the generated types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dashboard_widgets: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  table_settings: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  notification_settings: Record<string, any>;
 }
 
 const defaultPreferences: UserPreferences = {
