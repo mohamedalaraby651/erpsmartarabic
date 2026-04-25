@@ -4870,6 +4870,7 @@ export type Database = {
           open_invoice_count: number
         }[]
       }
+      cancel_credit_note: { Args: { p_credit_note_id: string }; Returns: Json }
       check_financial_limit: {
         Args: { _limit_type: string; _user_id: string; _value: number }
         Returns: boolean
@@ -4916,6 +4917,7 @@ export type Database = {
         }
       }
       compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
+      confirm_credit_note: { Args: { p_credit_note_id: string }; Returns: Json }
       create_journal_for_expense: {
         Args: { _expense_id: string }
         Returns: Json
