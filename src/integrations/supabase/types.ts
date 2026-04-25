@@ -3189,7 +3189,7 @@ export type Database = {
           max_invoice_amount: number | null
           max_refund_amount: number | null
           role_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           created_at?: string | null
@@ -3200,7 +3200,7 @@ export type Database = {
           max_invoice_amount?: number | null
           max_refund_amount?: number | null
           role_id: string
-          tenant_id?: string | null
+          tenant_id: string
         }
         Update: {
           created_at?: string | null
@@ -3211,7 +3211,7 @@ export type Database = {
           max_invoice_amount?: number | null
           max_refund_amount?: number | null
           role_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -4870,10 +4870,21 @@ export type Database = {
           open_invoice_count: number
         }[]
       }
-      check_financial_limit: {
-        Args: { _limit_type: string; _user_id: string; _value: number }
-        Returns: boolean
-      }
+      cancel_credit_note: { Args: { p_credit_note_id: string }; Returns: Json }
+      check_financial_limit:
+        | {
+            Args: { _limit_type: string; _user_id: string; _value: number }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _amount: number
+              _limit_type: string
+              _tenant: string
+              _user_id: string
+            }
+            Returns: boolean
+          }
       check_rate_limit: {
         Args: { _endpoint: string; _user_id: string }
         Returns: boolean
@@ -4916,6 +4927,7 @@ export type Database = {
         }
       }
       compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
+      confirm_credit_note: { Args: { p_credit_note_id: string }; Returns: Json }
       create_journal_for_expense: {
         Args: { _expense_id: string }
         Returns: Json

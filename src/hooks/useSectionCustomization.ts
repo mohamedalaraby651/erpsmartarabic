@@ -10,7 +10,7 @@ export interface SectionCustomization {
   sort_order: number;
   is_custom_field: boolean;
   field_type: string;
-  field_options: any;
+  field_options: Record<string, unknown> | null;
 }
 
 export function useSectionCustomization(section: string) {

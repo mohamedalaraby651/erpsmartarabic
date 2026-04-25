@@ -119,9 +119,11 @@ const RoleLimitsPage = () => {
           .eq('role_id', selectedRoleId);
         if (error) throw error;
       } else {
+        const { data: tenantData } = await supabase.rpc('get_current_tenant');
+        if (!tenantData) throw new Error('Tenant not found');
         const { error } = await supabase
           .from('role_limits')
-          .insert({ role_id: selectedRoleId, ...limits });
+          .insert({ role_id: selectedRoleId, tenant_id: tenantData, ...limits });
         if (error) throw error;
       }
     },
