@@ -13,7 +13,7 @@ interface BeforeInstallPromptEvent extends Event {
 declare global {
   interface Window {
     launchQueue?: {
-      setConsumer: (callback: (params: any) => void) => void;
+      setConsumer: (callback: (params: { files: FileSystemFileHandle[] }) => void) => void;
     };
   }
 }

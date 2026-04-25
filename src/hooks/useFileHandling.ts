@@ -2,11 +2,13 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 
+type ProcessedRow = string[] | unknown[];
+
 interface ProcessedFile {
   name: string;
   type: string;
   size: number;
-  data: any;
+  data: ProcessedRow[] | string | null;
   preview?: string;
 }
 
@@ -42,7 +44,7 @@ export function useFileHandling() {
     });
   }, []);
 
-  const processCSVFile = useCallback(async (file: File): Promise<any[][]> => {
+  const processCSVFile = useCallback(async (file: File): Promise<string[][]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
