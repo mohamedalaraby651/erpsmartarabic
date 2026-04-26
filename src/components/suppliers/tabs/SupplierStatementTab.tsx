@@ -50,25 +50,22 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
   const handlePrint = async () => {
     setIsPrinting(true);
     try {
-      const formatted = entries.map(e => ({
-        date: new Date(e.entry_date).toLocaleDateString('ar-EG'),
-        type: e.entry_type,
-        reference: e.reference,
-        debit: e.debit > 0 ? Number(e.debit).toLocaleString() : '-',
-        credit: e.credit > 0 ? Number(e.credit).toLocaleString() : '-',
-        balance: Number(e.running_balance).toLocaleString(),
-        status: e.status,
-      }));
-      await generatePDF({
-        title: `كشف حساب المورد: ${supplierName}`,
-        data: formatted,
-        columns: [
-          { key: 'date', label: 'التاريخ' }, { key: 'type', label: 'النوع' },
-          { key: 'reference', label: 'المرجع' }, { key: 'debit', label: 'مدين' },
-          { key: 'credit', label: 'دائن' }, { key: 'balance', label: 'الرصيد' },
-          { key: 'status', label: 'الحالة' },
-        ],
-        includeCompanyInfo: true, includeLogo: true, orientation: 'landscape',
+      const { data: supplier } = await supabase
+        .from('suppliers')
+        .select('phone, tax_number, address')
+        .eq('id', supplierId)
+        .single();
+
+      await generateStatementPdf({
+        partyType: 'supplier',
+        partyName: supplierName,
+        partyPhone: supplier?.phone,
+        partyTaxNumber: supplier?.tax_number,
+        partyAddress: supplier?.address,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        openingBalance: 0,
+        entries,
       });
       toast({ title: 'تم تصدير كشف الحساب' });
     } catch {
