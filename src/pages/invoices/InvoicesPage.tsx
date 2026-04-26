@@ -38,6 +38,18 @@ const InvoicesPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const list = useInvoicesList();
+  const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+
+  // Invoices that match the current selection — used by the preview dialog.
+  const selectedInvoices = useMemo(
+    () => (list.sortedData as InvoiceWithCustomer[]).filter((i) => list.selectedIds.has(i.id)),
+    [list.sortedData, list.selectedIds]
+  );
+
+  const handleConfirmBulkPrint = useCallback(async () => {
+    await list.bulkPrint();
+    setBulkPreviewOpen(false);
+  }, [list]);
 
   const renderMobileInvoiceItem = useCallback((invoice: InvoiceWithCustomer) => {
     const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
