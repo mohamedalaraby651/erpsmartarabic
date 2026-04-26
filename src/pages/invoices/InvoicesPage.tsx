@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListStateRenderer } from "@/components/shared/ListStateRenderer";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList";
@@ -81,16 +82,19 @@ const InvoicesPage = () => {
   ], [list.invoiceStats]);
 
   const renderMobileView = () => {
-    if (list.isLoading) return <div className="space-y-4"><MobileStatSkeleton count={4} /><MobileListSkeleton count={5} variant="invoice" /></div>;
+    if (list.isLoading && list.sortedData.length === 0) {
+      return <div className="space-y-4"><MobileStatSkeleton count={4} /><MobileListSkeleton count={5} variant="invoice" /></div>;
+    }
+    const hasFilters = !!list.searchQuery;
     return (
       <PullToRefresh onRefresh={list.handleRefresh}>
         <div className="space-y-4">
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
             {statItems.map((stat, i) => (
-              <Card key={i} className="min-w-[140px] shrink-0"><CardContent className="p-3">
+              <Card key={i} className="min-w-[140px] shrink-0 shadow-xs"><CardContent className="p-3">
                 <div className="flex items-center gap-2">
                   <div className={`p-2 rounded-lg ${stat.bgColor}`}><stat.icon className={`h-4 w-4 ${stat.color}`} /></div>
-                  <div><p className="text-lg font-bold">{stat.value}</p><p className="text-xs text-muted-foreground">{stat.label}</p></div>
+                  <div><p className="text-lg font-bold tabular-nums">{stat.value}</p><p className="text-xs text-muted-foreground">{stat.label}</p></div>
                 </div>
               </CardContent></Card>
             ))}
@@ -99,14 +103,24 @@ const InvoicesPage = () => {
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
           </div>
-          {list.sortedData.length === 0 ? (
-            <EmptyState icon={Receipt} title="لا توجد فواتير" description="ابدأ بإضافة فاتورة جديدة" action={{ label: "فاتورة جديدة", onClick: list.handleAdd, icon: Plus }} />
-          ) : (
-            <>
-              <VirtualizedMobileList data={list.sortedData as InvoiceWithCustomer[]} renderItem={renderMobileInvoiceItem} getItemKey={(inv) => inv.id} itemHeight={160} />
-              <ServerPagination currentPage={list.pagination.currentPage} totalPages={list.pagination.totalPages} totalCount={list.totalCount} pageSize={list.PAGE_SIZE} onPageChange={list.pagination.goToPage} hasNextPage={list.pagination.hasNextPage} hasPrevPage={list.pagination.hasPrevPage} />
-            </>
-          )}
+          <ListStateRenderer
+            data={list.sortedData}
+            isLoading={false}
+            error={list.error}
+            hasFilters={hasFilters}
+            onRetry={() => list.refetch()}
+            onClearFilters={() => list.setSearchQuery('')}
+            empty={{
+              icon: Receipt,
+              title: 'لا توجد فواتير',
+              description: 'ابدأ بإصدار فاتورتك الأولى لمتابعة المبيعات والتحصيل.',
+              action: { label: 'فاتورة جديدة', onClick: list.handleAdd, icon: Plus },
+            }}
+            skeletonVariant="invoice"
+          >
+            <VirtualizedMobileList data={list.sortedData as InvoiceWithCustomer[]} renderItem={renderMobileInvoiceItem} getItemKey={(inv) => inv.id} itemHeight={160} />
+            <ServerPagination currentPage={list.pagination.currentPage} totalPages={list.pagination.totalPages} totalCount={list.totalCount} pageSize={list.PAGE_SIZE} onPageChange={list.pagination.goToPage} hasNextPage={list.pagination.hasNextPage} hasPrevPage={list.pagination.hasPrevPage} />
+          </ListStateRenderer>
         </div>
       </PullToRefresh>
     );

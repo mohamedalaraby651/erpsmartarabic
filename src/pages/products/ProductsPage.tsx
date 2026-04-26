@@ -18,6 +18,7 @@ import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListStateRenderer } from "@/components/shared/ListStateRenderer";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { ServerPagination } from "@/components/shared/ServerPagination";
@@ -53,18 +54,31 @@ const ProductsPage = () => {
   }, [navigate, list.canEdit, list.canDelete, list.handleEdit, list.handleDelete, list.getProductStock, list.getCategoryName]);
 
   const renderMobileView = () => {
-    if (list.isLoading) return <MobileListSkeleton count={5} />;
-    if (list.sortedData.length === 0) return <EmptyState icon={Package} title="لا توجد منتجات" description="ابدأ بإضافة منتجك الأول" action={list.canEdit ? { label: 'إضافة منتج', onClick: list.handleAdd, icon: Plus } : undefined} />;
-    if (list.sortedData.length > 50) {
-      return (
-        <PullToRefresh onRefresh={list.handleRefresh}>
-          <VirtualizedList data={list.sortedData} renderItem={renderProductCard} getItemKey={(p) => p.id} itemHeight={140} maxHeight={window.innerHeight - 280} gap={12} className="px-1" />
-        </PullToRefresh>
-      );
-    }
+    const hasFilters = !!list.searchQuery || list.categoryFilter !== 'all';
     return (
       <PullToRefresh onRefresh={list.handleRefresh}>
-        <div className="space-y-3">{list.sortedData.map(renderProductCard)}</div>
+        <ListStateRenderer
+          data={list.sortedData}
+          isLoading={list.isLoading}
+          error={list.error}
+          hasFilters={hasFilters}
+          onRetry={() => list.refetch()}
+          onClearFilters={() => { list.setSearchQuery(''); list.setCategoryFilter('all'); }}
+          empty={{
+            icon: Package,
+            title: 'لا توجد منتجات',
+            description: 'ابدأ بإضافة منتجك الأول لإدارة المخزون والمبيعات.',
+            action: list.canEdit ? { label: 'إضافة منتج', onClick: list.handleAdd, icon: Plus } : undefined,
+          }}
+          skeletonVariant="product"
+          skeletonCount={6}
+        >
+          {list.sortedData.length > 50 ? (
+            <VirtualizedList data={list.sortedData} renderItem={renderProductCard} getItemKey={(p) => p.id} itemHeight={140} maxHeight={window.innerHeight - 280} gap={12} className="px-1" />
+          ) : (
+            <div className="space-y-3">{list.sortedData.map(renderProductCard)}</div>
+          )}
+        </ListStateRenderer>
       </PullToRefresh>
     );
   };

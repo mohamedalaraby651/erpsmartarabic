@@ -130,7 +130,7 @@ export function useInvoicesList() {
 
   useEffect(() => { pagination.resetPage(); }, [debouncedSearch]);
 
-  const { data: invoices = [], isLoading, refetch } = useQuery({
+  const { data: invoices = [], isLoading, refetch, error } = useQuery({
     queryKey: ['invoices', debouncedSearch, pagination.currentPage],
     queryFn: async () => {
       let query = supabase.from('invoices').select('*, customers(name)')
@@ -202,7 +202,7 @@ export function useInvoicesList() {
     searchQuery, setSearchQuery, debouncedSearch,
     dialogOpen, setDialogOpen, selectedInvoice, prefillCustomerId, setPrefillCustomerId,
     printDialogOpen, setPrintDialogOpen, printInvoiceId, setPrintInvoiceId,
-    canEdit, canDelete, invoices, isLoading, sortedData, sortConfig, requestSort,
+    canEdit, canDelete, invoices, isLoading, error: error as Error | null, refetch, sortedData, sortConfig, requestSort,
     filters, setFilter, deleteMutation, handleEdit, handleAdd, handleRefresh,
     statItems, invoiceStats, pagination, totalCount, duplicate, isDuplicating,
     selectedIds, toggleSelect, clearSelection, bulkPrint, isBulkPrinting,

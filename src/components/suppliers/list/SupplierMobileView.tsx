@@ -1,9 +1,8 @@
 import { memo, useCallback } from "react";
 import { DataCard } from "@/components/mobile/DataCard";
 import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { ListStateRenderer } from "@/components/shared/ListStateRenderer";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
-import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { Building2, Phone, MapPin, Users, Plus } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -12,17 +11,22 @@ type Supplier = Database['public']['Tables']['suppliers']['Row'];
 interface SupplierMobileViewProps {
   suppliers: Supplier[];
   isLoading: boolean;
+  error?: Error | null;
   onRowClick: (supplier: Supplier) => void;
   onEdit?: (supplier: Supplier) => void;
   onDelete?: (id: string) => void;
   onAdd: () => void;
   onRefresh: () => Promise<void>;
+  onRetry?: () => void;
+  hasFilters?: boolean;
+  onClearFilters?: () => void;
   canEdit: boolean;
   canDelete: boolean;
 }
 
 export const SupplierMobileView = memo(function SupplierMobileView({
-  suppliers, isLoading, onRowClick, onEdit, onDelete, onAdd, onRefresh, canEdit, canDelete,
+  suppliers, isLoading, error, onRowClick, onEdit, onDelete, onAdd, onRefresh, onRetry,
+  hasFilters, onClearFilters, canEdit, canDelete,
 }: SupplierMobileViewProps) {
   const renderItem = useCallback((supplier: Supplier) => (
     <DataCard
@@ -42,17 +46,29 @@ export const SupplierMobileView = memo(function SupplierMobileView({
     />
   ), [onRowClick, canEdit, canDelete, onEdit, onDelete]);
 
-  if (isLoading) return <MobileListSkeleton count={5} />;
-
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {suppliers.length === 0 ? (
-        <EmptyState icon={Users} title="لا يوجد موردين" description="ابدأ بإضافة مورد جديد" action={{ label: "مورد جديد", onClick: onAdd, icon: Plus }} />
-      ) : suppliers.length > 50 ? (
-        <VirtualizedMobileList data={suppliers} renderItem={renderItem} getItemKey={(s: Supplier) => s.id} itemHeight={150} />
-      ) : (
-        <div className="space-y-3">{suppliers.map(s => <div key={s.id}>{renderItem(s)}</div>)}</div>
-      )}
+      <ListStateRenderer
+        data={suppliers}
+        isLoading={isLoading}
+        error={error}
+        hasFilters={hasFilters}
+        onRetry={onRetry}
+        onClearFilters={onClearFilters}
+        empty={{
+          icon: Users,
+          title: "لا يوجد موردين",
+          description: "ابدأ بإضافة مورد جديد لإدارة المشتريات والمدفوعات بسهولة.",
+          action: { label: "مورد جديد", onClick: onAdd, icon: Plus },
+        }}
+        skeletonCount={5}
+      >
+        {suppliers.length > 50 ? (
+          <VirtualizedMobileList data={suppliers} renderItem={renderItem} getItemKey={(s: Supplier) => s.id} itemHeight={150} />
+        ) : (
+          <div className="space-y-3">{suppliers.map(s => <div key={s.id}>{renderItem(s)}</div>)}</div>
+        )}
+      </ListStateRenderer>
     </PullToRefresh>
   );
 });

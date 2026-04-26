@@ -89,7 +89,7 @@ const SuppliersPage = () => {
     }
   }, [setStatusFilter, setCategoryFilter]);
 
-  const { suppliers, totalCount, isLoading, refetch, filterKey } = useSupplierList({
+  const { suppliers, totalCount, isLoading, error, refetch, filterKey } = useSupplierList({
     debouncedSearch,
     governorateFilter,
     categoryFilter,
@@ -281,11 +281,15 @@ const SuppliersPage = () => {
             <SupplierMobileView
               suppliers={suppliers}
               isLoading={isLoading}
+              error={error}
               onRowClick={handleRowClick}
               onEdit={canEdit ? handleEdit : undefined}
               onDelete={canDelete ? (id) => handleDelete(id) : undefined}
               onAdd={handleAdd}
               onRefresh={handleRefresh}
+              onRetry={() => refetch()}
+              hasFilters={activeFiltersCount > 0}
+              onClearFilters={handleClearAllFilters}
               canEdit={canEdit}
               canDelete={canDelete}
             />
