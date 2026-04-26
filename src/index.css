@@ -17,6 +17,7 @@
     --popover-foreground: 222 47% 11%;
     --primary: 217 91% 50%;
     --primary-foreground: 0 0% 100%;
+    --primary-soft: 217 91% 96%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
@@ -32,9 +33,29 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
     --border: 214 32% 91%;
+    --border-strong: 214 28% 84%;
     --input: 214 32% 91%;
     --ring: 217 91% 50%;
     --radius: 0.75rem;
+
+    /* Surface tones — subtle hierarchical layering */
+    --surface-1: 0 0% 100%;
+    --surface-2: 210 40% 98.5%;
+    --surface-3: 210 38% 96%;
+    --surface-sunken: 210 36% 94%;
+
+    /* Professional elevation system (layered shadows, neutral) */
+    --shadow-color: 220 40% 14%;
+    --shadow-xs: 0 1px 2px 0 hsl(var(--shadow-color) / 0.05);
+    --shadow-sm: 0 1px 2px 0 hsl(var(--shadow-color) / 0.04), 0 1px 3px 0 hsl(var(--shadow-color) / 0.06);
+    --shadow-md: 0 2px 4px -1px hsl(var(--shadow-color) / 0.06), 0 4px 8px -2px hsl(var(--shadow-color) / 0.08);
+    --shadow-lg: 0 4px 8px -2px hsl(var(--shadow-color) / 0.06), 0 12px 24px -4px hsl(var(--shadow-color) / 0.1);
+    --shadow-xl: 0 8px 16px -4px hsl(var(--shadow-color) / 0.08), 0 24px 48px -12px hsl(var(--shadow-color) / 0.18);
+    --shadow-focus: 0 0 0 3px hsl(var(--ring) / 0.18);
+
+    /* Easing & motion */
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 217 91% 50%;
