@@ -5,41 +5,71 @@ import { cn } from '@/lib/utils';
 interface MobileListSkeletonProps {
   count?: number;
   className?: string;
-  variant?: 'default' | 'invoice' | 'order' | 'employee';
+  variant?: 'default' | 'invoice' | 'order' | 'employee' | 'product';
 }
 
+/**
+ * Premium mobile list skeleton.
+ * Mirrors the actual DataCard layout (icon + title + status chip + meta fields)
+ * so the perceived loading transition feels instant and polished.
+ */
 export function MobileListSkeleton({ count = 5, className, variant = 'default' }: MobileListSkeletonProps) {
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn('space-y-3', className)} role="status" aria-label="جارٍ تحميل البيانات">
       {Array.from({ length: count }).map((_, i) => (
-        <Card key={i} className="overflow-hidden">
+        <Card key={i} className="overflow-hidden border-border/60 shadow-xs">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              {/* Avatar skeleton */}
-              <Skeleton className="h-12 w-12 rounded-full shrink-0" />
-              
-              {/* Content skeleton */}
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-2/3" />
-                  {variant === 'invoice' || variant === 'order' ? (
-                    <Skeleton className="h-5 w-16 rounded-full" />
+            <div className="flex items-start gap-3">
+              {/* Avatar / Icon */}
+              <Skeleton className="h-11 w-11 rounded-xl shrink-0" />
+
+              {/* Content */}
+              <div className="flex-1 min-w-0 space-y-2.5">
+                {/* Title row + status chip */}
+                <div className="flex items-center justify-between gap-2">
+                  <Skeleton className="h-4 w-2/3 rounded-md" />
+                  <Skeleton className="h-5 w-14 rounded-full shrink-0" />
+                </div>
+
+                {/* Subtitle */}
+                <Skeleton className="h-3 w-1/2 rounded-md" />
+
+                {/* Field rows — separated to mirror real DataCard */}
+                <div className="pt-2 space-y-2 border-t border-border/40">
+                  {(variant === 'invoice' || variant === 'order') ? (
+                    <>
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-3 w-16 rounded-sm" />
+                        <Skeleton className="h-3 w-20 rounded-sm" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-3 w-14 rounded-sm" />
+                        <Skeleton className="h-3 w-24 rounded-sm" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-3 w-12 rounded-sm" />
+                        <Skeleton className="h-4 w-20 rounded-sm" />
+                      </div>
+                    </>
                   ) : (
-                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <>
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-3 w-16 rounded-sm" />
+                        <Skeleton className="h-3 w-24 rounded-sm" />
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-3 w-20 rounded-sm" />
+                        <Skeleton className="h-3 w-16 rounded-sm" />
+                      </div>
+                    </>
                   )}
                 </div>
-                <Skeleton className="h-3 w-1/2" />
-                {(variant === 'invoice' || variant === 'order') && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                )}
               </div>
             </div>
           </CardContent>
         </Card>
       ))}
+      <span className="sr-only">جارٍ التحميل...</span>
     </div>
   );
 }
