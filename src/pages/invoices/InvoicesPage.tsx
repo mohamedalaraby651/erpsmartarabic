@@ -99,14 +99,30 @@ const InvoicesPage = () => {
   };
 
   const renderTableView = () => {
-    if (list.isLoading) return <TableSkeleton rows={5} columns={8} />;
+    if (list.isLoading) return <TableSkeleton rows={5} columns={9} />;
     if (list.sortedData.length === 0) return <EmptyState icon={Receipt} title="لا توجد فواتير" description="ابدأ بإضافة فاتورة جديدة" action={{ label: "فاتورة جديدة", onClick: list.handleAdd, icon: Plus }} />;
+
+    const allSelected = list.sortedData.length > 0 && list.sortedData.every((i) => list.selectedIds.has(i.id));
+    const someSelected = list.sortedData.some((i) => list.selectedIds.has(i.id));
+    const toggleAll = () => {
+      if (allSelected) list.clearSelection();
+      else list.sortedData.forEach((i) => { if (!list.selectedIds.has(i.id)) list.toggleSelect(i.id); });
+    };
+
     return (
       <>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableCell className="w-10">
+                  <Checkbox
+                    checked={allSelected}
+                    aria-label="تحديد الكل"
+                    onCheckedChange={toggleAll}
+                    {...(someSelected && !allSelected ? { 'data-state': 'indeterminate' as const } : {})}
+                  />
+                </TableCell>
                 <DataTableHeader label="رقم الفاتورة" sortKey="invoice_number" sortConfig={list.sortConfig} onSort={list.requestSort} />
                 <DataTableHeader label="العميل" />
                 <DataTableHeader label="التاريخ" sortKey="created_at" sortConfig={list.sortConfig} onSort={list.requestSort} />
@@ -121,8 +137,12 @@ const InvoicesPage = () => {
             <TableBody>
               {list.sortedData.map((invoice) => {
                 const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
+                const isSelected = list.selectedIds.has(invoice.id);
                 return (
-                  <TableRow key={invoice.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                  <TableRow key={invoice.id} data-state={isSelected ? 'selected' : undefined} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox checked={isSelected} onCheckedChange={() => list.toggleSelect(invoice.id)} aria-label={`تحديد فاتورة ${invoice.invoice_number}`} />
+                    </TableCell>
                     <TableCell><EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink></TableCell>
                     <TableCell>{invoice.customers?.name ? <EntityLink type="customer" id={invoice.customer_id}>{invoice.customers.name}</EntityLink> : '-'}</TableCell>
                     <TableCell>{new Date(invoice.created_at).toLocaleDateString('ar-EG')}</TableCell>
