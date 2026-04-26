@@ -29,6 +29,7 @@ import { SettingsExportImport } from '@/components/settings/SettingsExportImport
 import { OfflineSettings } from '@/components/settings/OfflineSettings';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import { TenantSettings } from '@/components/tenant/TenantSettings';
+import { AboutSystemCard } from '@/components/system/AboutSystemCard';
 
 // Section skeleton for loading states
 function SectionSkeleton() {
@@ -128,13 +129,16 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
     switch (activeTab) {
       case 'profile':
         return (
-          <PersonalInfoSection
-            userId={user?.id || ''}
-            profile={profile}
-            userEmail={user?.email || ''}
-            userRole={userRole}
-            onDataChange={() => setHasUnsavedChanges(true)}
-          />
+          <div className="space-y-6">
+            <PersonalInfoSection
+              userId={user?.id || ''}
+              profile={profile}
+              userEmail={user?.email || ''}
+              userRole={userRole}
+              onDataChange={() => setHasUnsavedChanges(true)}
+            />
+            <AboutSystemCard />
+          </div>
         );
       case 'security':
         return <SecuritySection userId={user?.id || ''} />;
