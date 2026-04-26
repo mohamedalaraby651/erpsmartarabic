@@ -261,9 +261,21 @@ const InvoicesPage = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button size="sm" variant="outline" onClick={toggleAllOnPage} disabled={pageData.length === 0}>
                       {allOnPageSelected ? 'إلغاء تحديد الصفحة' : 'تحديد الصفحة'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={list.selectAllFiltered}
+                      disabled={list.isSelectingAll || list.totalCount === 0}
+                      title={list.debouncedSearch ? 'تحديد كل الفواتير المطابقة للبحث' : 'تحديد كل الفواتير المعروضة'}
+                    >
+                      {list.isSelectingAll
+                        ? <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                        : null}
+                      تحديد كل المعروض ({list.totalCount})
                     </Button>
                     <Button
                       size="sm"
