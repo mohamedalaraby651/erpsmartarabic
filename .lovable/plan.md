@@ -1,105 +1,68 @@
-# خطة توحيد البيئات الثلاث
+# صفحة Dev/Debug للـ Prefetch والـ Chunk Performance
 
-## التشخيص النهائي
+## الهدف
+صفحة داخلية (`/dev/prefetch`) تكشف:
+1. **سجل حي**: كل route/group تم prefetch لها مع المصدر (hover / idle / boot / sidebar-open / mobile-drawer) والوقت والمدة.
+2. **مقارنة قبل/بعد التقسيم**: قياس فعلي لزمن تحميل سيناريوهات (sales-core، sales-ops، mobile drawer) مع وبدون prefetch مسبق.
+3. **حالة الـ chunks**: ما هو محمَّل في الذاكرة حالياً، وأي مجموعات مكتملة.
 
-الفروقات بين **التطوير** (المحرر) و**المعاينة** (`id-preview--*`) و**المنشور** (`erpsmartarabic.lovable.app`) لها 3 أسباب جذرية:
+## الملفات الجديدة
 
-1. **النشر متأخر**: المنشور = آخر مرة ضغطت فيها "Publish/Update". كل تعديل بعد ذلك يظهر في المعاينة فقط.
-2. **بيئتا Supabase منفصلتان**: المعاينة تستخدم *Cloud Dev*، المنشور يستخدم *Cloud Production* — بيانات/مستخدمون/إعدادات Auth مختلفة تماماً.
-3. **Service Worker / Cache قديم**: زوار سابقون قد يكون لديهم نسخة JS قديمة عالقة في المتصفح.
+### 1. `src/lib/prefetchTelemetry.ts` (جديد)
+سجل ذاكرة (in-memory) خفيف يلتقط أحداث prefetch:
+- `recordPrefetchEvent({ routeName, group, source, startedAt, durationMs, status, fromCache })`
+- `getPrefetchEvents()` / `clearEvents()` / `subscribe(callback)` لتحديث UI لحظياً
+- يحفظ آخر 200 حدث فقط (حلقة دائرية) لتجنب تسريب الذاكرة
+- يُفعَّل فقط عندما `import.meta.env.DEV` أو عندما يضع المستخدم `localStorage.setItem('debug:prefetch','1')`
 
-السبب رقم (1) هو الأكثر إرباكاً في حالتك — أنجزنا 6+ تحسينات في هذه الجلسة (تقسيم bundles, Auth retry, smart prefetch, RouteErrorPage…) لكنها **لم تُنشر بعد**.
+### 2. `src/lib/prefetch.ts` (تعديل)
+حقن نقاط القياس داخل `prefetchRoute` و`prefetchGroup`:
+- قبل `importFn()` → `performance.now()` كبداية
+- بعد resolve → حساب المدة وإرسالها لـ `recordPrefetchEvent`
+- إضافة وسم `fromCache: true` عندما يُرجع المسار مبكراً بسبب `prefetchedGroups.has(group)`
+- لا تأثير على المنطق الإنتاجي — مجرد Hook اختياري
 
----
+### 3. `src/pages/dev/PrefetchDebugPage.tsx` (جديد)
+صفحة بثلاثة أقسام:
 
-## الإجراءات المطلوبة منك (لا كود)
+**أ) جدول الأحداث الحي** (يتحدّث عبر `subscribe`)
+| الوقت | Route | Group | المصدر | المدة (ms) | من الـ Cache؟ |
 
-### إجراء فوري: انشر آخر التعديلات
-- اضغط زر **Publish** أعلى يمين المحرر (أو "..." ثم Publish على الموبايل)
-- اضغط **Update** لدفع آخر نسخة إلى `erpsmartarabic.lovable.app`
-- بدون هذه الخطوة، لن يرى مستخدموك أياً من تحسينات الأداء أو إصلاحات شاشة الخطأ
+**ب) مقاييس السيناريوهات** — أزرار تفاعلية:
+- **Cold Sales-Core**: مسح `prefetchedRoutes/Groups` ثم قياس `import('@/pages/invoices/InvoicesPage')` مباشرة
+- **Warm Sales-Core**: استدعاء `prefetchGroup('sales-core')` ثم قياس الاستيراد التالي (يجب أن يقترب من 0ms)
+- **Sales-Ops via Affinity**: قياس الفرق عند فتح sales-core (مع تفعيل affinity) ثم الانتقال لـ sales-ops
+- **Mobile Drawer Open**: محاكاة فتح القائمة الجانبية للموبايل ومراقبة ما يتم warm-up
 
-### قاعدة عامة للاختبار
-| ماذا تختبر؟ | استخدم أي رابط |
-|---|---|
-| كود/UI أثناء البناء | المحرر مباشرة |
-| سلوك الإنتاج الفعلي | **`erpsmartarabic.lovable.app` فقط** |
-| المشاركة مع المستخدمين | **`erpsmartarabic.lovable.app` فقط** |
-| ❌ **لا تشارك** | `id-preview--*.lovable.app` (يتطلب جلسة Lovable) |
+كل سيناريو يعرض:
+```
+قبل التقسيم: ~XXX ms   بعد التقسيم/Prefetch: ~Y ms   التحسن: NN%
+```
 
----
+**ج) حالة الـ Chunks الحالية**
+- قائمة `prefetchedGroups` و`prefetchedRoutes` كـ badges
+- زر "Reset" لمسح الحالة وإعادة الاختبار
+- شارة الإعدادات التكيفية الحالية (data-saver / balanced / performance) من `getAdaptiveFlags`
 
-## التحسينات البرمجية المقترحة
+### 4. `src/App.tsx` (تعديل)
+إضافة المسار داخل layout (محمي بالـ auth):
+```tsx
+const PrefetchDebugPage = lazy(() => import('./pages/dev/PrefetchDebugPage'));
+// ...
+<Route path="dev/prefetch" element={<PrefetchDebugPage />} />
+```
 
-### 1) شريط معلومات للبيئة (Environment Banner) — أولوية عالية
-- **ملف جديد**: `src/components/system/EnvironmentBadge.tsx`
-- **السلوك**:
-  - يكتشف الـ host تلقائياً
-  - يعرض شريط صغير أعلى الشاشة فقط في غير الإنتاج:
-    - 🟡 `معاينة (Preview) — البيانات تجريبية`
-    - 🔵 `وضع التطوير (Dev) — البيانات تجريبية`
-  - مخفي تماماً على `erpsmartarabic.lovable.app`
-- **الإدماج**: في `AppLayout.tsx` و `MobileHeader.tsx`
-- **الفائدة**: تعرف فوراً أي بيئة تستخدم وتفسّر اختلاف البيانات
+### 5. (اختياري) `src/components/layout/AppSidebar.tsx`
+لن أعدّله. الوصول للصفحة عبر URL مباشر `/dev/prefetch` (صفحة مطوّرين، لا داعي لإظهارها في القائمة).
 
-### 2) Build Stamp + شاشة "About" — أولوية متوسطة
-- **`vite.config.ts`**: حقن `__BUILD_TIME__` و `__BUILD_ID__` كـ `define`
-- **`src/lib/buildInfo.ts`**: تصدير قراءة آمنة لهذه الثوابت
-- **`UnifiedSettingsPage`**: قسم صغير "حول النظام" يعرض:
-  - رقم/توقيت البناء الحالي
-  - نوع البيئة (dev/preview/production)
-  - رابط "تحقق من وجود تحديث" يقارن مع `/version.json`
-- **الفائدة**: تتأكد فوراً ما إذا كان المستخدم يرى نسخة قديمة محشورة في الكاش
+## نقاط مهمة
+- **لا تأثير على الإنتاج**: التليمتري معطّل افتراضياً خارج DEV ما لم يُفعّله المستخدم بـ localStorage.
+- **القياس واقعي**: نستخدم `performance.now()` حول الـ dynamic import نفسه، وهو ما يعكس زمن الشبكة + parse + execute.
+- **آمن مع الـ cache**: المقاييس "Warm" تُظهر الـ HTTP cache + module cache بشكل صحيح؛ المقاييس "Cold" تُجبر إعادة الاستيراد عبر مسح الـ Sets الداخلية فقط (لا يمكن مسح module cache في المتصفح، لذا "Cold" هنا تعني "Cold للنظام الداخلي" — سأوضح ذلك في النص داخل الصفحة).
+- لقياس Cold حقيقي يحتاج المستخدم Hard Reload + DevTools "Disable cache"؛ سأذكر ذلك في الصفحة.
 
-### 3) تحديث Service Worker Cleanup — أولوية متوسطة
-- **`src/main.tsx`**: تحديث `FLAG = 'sw-cleanup:done:v1'` إلى `v2`
-- يضمن أن المستخدمين الذين شغّلوا التنظيف سابقاً يحصلون على جولة جديدة بعد آخر التحسينات
-- **بديل أقوى**: استبداله بفحص نسخة (إذا تغيّر `__BUILD_ID__` نفّذ التنظيف)
-
-### 4) كشف رابط المعاينة في `index.html` — أولوية منخفضة
-- إذا كان `host.includes('id-preview--')` ولم تُحمَّل React خلال 6s
-- يعرض رسالة عربية: *"هذا رابط معاينة محمي. للوصول استخدم: erpsmartarabic.lovable.app"*
-- مع زر يفتح الرابط الصحيح
-- **الفائدة**: يمنع شاشة بيضاء عند مشاركة رابط خاطئ بطريق الخطأ
-
-### 5) سكربت "preflight" قبل النشر — اختياري
-- **`scripts/preflight.mjs`**: يفحص قبل أي publish:
-  - وجود متغيرات بيئة Production
-  - تطابق إصدارات الحزم
-  - عدم وجود `console.error` صريحة في الكود
-- يُشغّل يدوياً فقط، لا يكسر البناء
-
----
-
-## الملفات المتأثرة
-
-**إنشاء جديد**:
-- `src/components/system/EnvironmentBadge.tsx`
-- `src/lib/buildInfo.ts`
-- `public/version.json` (يُولَّد من vite plugin)
-
-**تعديل**:
-- `vite.config.ts` (حقن build stamp)
-- `src/components/layout/AppLayout.tsx` (إدماج Banner)
-- `src/components/layout/MobileHeader.tsx` (إدماج Banner للموبايل)
-- `src/pages/settings/UnifiedSettingsPage.tsx` (قسم "حول النظام")
-- `src/main.tsx` (ترقية SW cleanup إلى v2)
-- `index.html` (كشف رابط المعاينة)
-
----
-
-## النتيجة المتوقعة
-
-- ستعرف **فوراً** أي بيئة تستخدم (Banner ملوّن)
-- ستعرف **فوراً** ما إذا كنت ترى نسخة قديمة (Build stamp)
-- المستخدمون الذين شاركتَ معهم رابط معاينة بالخطأ سيحصلون على رسالة واضحة
-- مشكلة "النشر يختلف عن الفعلي" تختفي بعد ضغطة Publish واحدة + التحديثات أعلاه
-
----
-
-## سؤال قبل البدء
-
-هل تريد:
-- **(أ)** تنفيذ كل التحسينات الخمسة؟
-- **(ب)** فقط الأهم: Banner + Build stamp + ترقية SW (1, 2, 3)؟
-- **(ج)** فقط (1) Banner — الحل الأخف وأسرع نتيجة؟
+## التحقق بعد التنفيذ
+1. الذهاب لـ `/dev/prefetch` بعد تسجيل الدخول
+2. تحريك المؤشر على عناصر الشريط الجانبي → يجب أن تظهر الأحداث في الجدول
+3. الضغط على "Warm Sales-Core" → الاستيراد التالي يقترب من 0ms
+4. التأكد من عدم ظهور أي تحذيرات في console
