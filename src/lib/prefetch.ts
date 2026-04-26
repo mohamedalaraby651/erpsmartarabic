@@ -102,11 +102,47 @@ const groupAffinity: Record<string, string[]> = {
 };
 
 /**
+ * Read adaptive performance settings (lazy import — non-blocking).
+ * Returns sensible defaults if module not loaded yet.
+ */
+function getAdaptiveFlags(): {
+  prefetchEnabled: boolean;
+  prefetchOnHover: boolean;
+  prefetchOnIdle: boolean;
+} {
+  try {
+    const raw = typeof localStorage !== 'undefined'
+      ? localStorage.getItem('adaptive-settings:v1')
+      : null;
+    if (!raw) return { prefetchEnabled: true, prefetchOnHover: true, prefetchOnIdle: true };
+    const s = JSON.parse(raw);
+    return {
+      prefetchEnabled: s.prefetchEnabled ?? true,
+      prefetchOnHover: s.prefetchOnHover ?? true,
+      prefetchOnIdle: s.prefetchOnIdle ?? true,
+    };
+  } catch {
+    return { prefetchEnabled: true, prefetchOnHover: true, prefetchOnIdle: true };
+  }
+}
+
+/**
  * Prefetch a single route. Safe to call repeatedly — caches per-route AND
  * per-group, so hovering 6 sales links only triggers ONE network fetch.
+ *
+ * Respects user's adaptive performance settings: if prefetch is disabled
+ * (e.g. data-saver mode), this becomes a no-op.
  */
-export function prefetchRoute(routeName: string): void {
+export function prefetchRoute(routeName: string, opts: { source?: 'hover' | 'idle' | 'boot' } = {}): void {
   if (prefetchedRoutes.has(routeName)) return;
+
+  // Honor user settings
+  const flags = getAdaptiveFlags();
+  if (!flags.prefetchEnabled) return;
+  if (opts.source === 'hover' && !flags.prefetchOnHover) return;
+  if (opts.source === 'idle' && !flags.prefetchOnIdle) return;
+  if (opts.source === 'boot' && !flags.prefetchOnIdle) return;
+
   const group = routeToGroup[routeName];
   if (group && prefetchedGroups.has(group)) {
     // Group chunk is already in cache — mark route as done and bail.
