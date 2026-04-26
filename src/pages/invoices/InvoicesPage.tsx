@@ -198,6 +198,25 @@ const InvoicesPage = () => {
               <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
             </div>
           </CardContent></Card>
+          {list.selectedIds.size > 0 && (
+            <Card className="border-primary/40 bg-primary/5">
+              <CardContent className="p-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <Badge variant="secondary" className="font-bold">{list.selectedIds.size}</Badge>
+                  <span className="text-muted-foreground">فاتورة محددة</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={list.bulkPrint} disabled={list.isBulkPrinting}>
+                    {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
+                    طباعة دفعية PDF
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={list.clearSelection}>
+                    <X className="h-4 w-4 ml-1" />إلغاء التحديد
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <Card><CardHeader><CardTitle>قائمة الفواتير</CardTitle></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
         </>
       )}
