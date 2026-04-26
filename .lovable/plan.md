@@ -1,97 +1,90 @@
-## 🔍 التشخيص
+# تقسيم حزمة pages-sales لتحسين أداء الموبايل
 
-بعد فحص شامل للمشروع، إليك ما اكتشفته:
+## الوضع الحالي
 
-| الفحص | النتيجة |
-|---|---|
-| `tsc --noEmit` | ✅ بدون أخطاء |
-| `dev-server.log` | ✅ Vite يعمل بنجاح (HTTP 200 على `/`, `/src/main.tsx`, `/src/App.tsx`, `bulkInvoicePdfGenerator.ts`) |
-| Console logs المتصفح | ⚠️ **فارغة تماماً** — التطبيق لا يصل لمرحلة التنفيذ في متصفح المستخدم |
-| Network logs المتصفح | ⚠️ **فارغة تماماً** |
-| Runtime errors | ✅ لا يوجد |
+حزمة `pages-sales` تحتوي على 8 صفحات بحجم **524KB** — وهي أكبر حزمة في النظام:
 
-### السبب الجذري المُحتمل (ثلاث مشاكل متراكبة):
+| المجموعة | الصفحات | الأسطر التقريبية |
+|---|---|---|
+| **العملاء + الفواتير + المدفوعات** | customers, invoices, payments, credit-notes | ~2,330 سطر |
+| **الوثائق التشغيلية** | quotations, sales-orders, collections, pricing | ~2,378 سطر |
 
-1. **Service Worker شبح (السبب الأكبر)**
-   - `main.tsx` يقول: *"vite-plugin-pwa handles service worker registration automatically"*
-   - **لكن في الحقيقة `vite.config.ts` لا يحتوي على `vite-plugin-pwa` إطلاقاً** ولا أي plugin PWA.
-   - النشرات السابقة (`erpsmartarabic.lovable.app`) من المرجح أنها كانت تسجّل service worker، وهذا الـ SW القديم لا يزال نشطاً في متصفح المستخدم ويخدم **نسخة كاش معطوبة** لا تعرف عن الملفات الجديدة (`bulkInvoicePdfGenerator.ts`, `BulkPrintConfirmDialog.tsx`).
-   - النتيجة: يتم تحميل HTML قديم يحاول استيراد ملفات JS غير موجودة → فشل صامت → شاشة بيضاء.
+المشكلة: المستخدم في أول زيارة لأي صفحة من هذه الـ 8 يحمّل 524KB دفعة واحدة، مما يبطئ Time-to-Interactive على شبكات 3G/4G.
 
-2. **`ReloadPrompt` فارغ**
-   - الملف `src/components/offline/ReloadPrompt.tsx` يعيد `null` فقط — لا يوجد منطق لاكتشاف SW جديد ولا زر "إعادة تحميل" للمستخدم.
+## الاستراتيجية المقترحة
 
-3. **80+ `lazy()` imports في `App.tsx`**
-   - شبكة ضعيفة + موبايل (المستخدم على 393×699) قد تؤدي لفشل صامت في تحميل أحد chunks. لا يوجد آلية fallback.
+### تقسيم إلى مجموعتين متوازنتين بناءً على نمط الاستخدام الحقيقي
 
----
+**1. `pages-sales-core` (~260KB متوقع)** — المسار اليومي الأكثر استخداماً
+- `customers/` — العملاء (الأكثر زيارة)
+- `invoices/` — الفواتير
+- `payments/` — المدفوعات
+- `credit-notes/` — إشعارات دائنة
 
-## 🛠️ خطة الإصلاح
+**لماذا معاً؟** هذه الصفحات تشترك في:
+- نفس مكونات العميل (`CustomerCombobox`, `CustomerSearchSelect`)
+- نفس منطق المدفوعات والأرصدة
+- المستخدم عادةً يفتح فاتورة → دفعة → عميل في نفس الجلسة
 
-### المهمة 1 — إنشاء "درع تحميل" يكشف الفشل ويتعافى منه (أولوية قصوى)
+**2. `pages-sales-ops` (~260KB متوقع)** — العمليات والتسعير
+- `quotations/` — عروض الأسعار
+- `sales-orders/` — أوامر البيع
+- `collections/` — لوحة التحصيل
+- `pricing/` — قوائم الأسعار
 
-**(أ) إلغاء تسجيل أي service worker شبح:**
-في `src/main.tsx` قبل `createRoot`، أضيف منطق ينظّف SW القديم لمرة واحدة:
-```ts
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((regs) => {
-    regs.forEach((reg) => reg.unregister());
-  });
-  // امسح أي كاش قديم أيضاً
-  if ('caches' in window) {
-    caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
-  }
+**لماذا معاً؟** 
+- Quotation → Sales Order → Invoice (تدفق متسلسل، لكن الـ Invoice في المجموعة الأخرى عبر prefetch)
+- Collections و Pricing عمليات إدارية أقل تكراراً
+
+## التغييرات المطلوبة
+
+### 1. `vite.config.ts`
+استبدال السطر الحالي:
+```typescript
+if (/\/pages\/(customers|invoices|payments|credit-notes|sales-orders|quotations|collections|pricing)\//.test(id)) {
+  return 'pages-sales';
 }
 ```
-**ملاحظة:** سيُعلَّم بـ TODO ليُحذف بعد ~أسبوعين عندما يكون كل المستخدمين قد فتحوا التطبيق مرة واحدة.
 
-**(ب) إصلاح التعليق المضلِّل في `main.tsx`:**
-حذف تعليق "vite-plugin-pwa handles service worker registration automatically" لأنه غير صحيح.
+بـ:
+```typescript
+// المسار اليومي: العملاء والفوترة والمدفوعات
+if (/\/pages\/(customers|invoices|payments|credit-notes)\//.test(id)) {
+  return 'pages-sales-core';
+}
+// العمليات: عروض، أوامر بيع، تحصيل، تسعير
+if (/\/pages\/(quotations|sales-orders|collections|pricing)\//.test(id)) {
+  return 'pages-sales-ops';
+}
+```
 
-**(ج) درع لاكتشاف فشل التحميل:**
-داخل `index.html` أضيف سكريبت inline يضع timeout 8 ثوانٍ بعد التحميل، فإذا بقي `#root` فارغاً يعرض رسالة عربية:
-> "تعذّر تحميل التطبيق — اضغط لإعادة المحاولة"
-مع زر يقوم بـ `location.reload(true)` ومسح localStorage القديم.
+### 2. `src/lib/prefetch.ts`
+تحديث خريطة المجموعات لتعكس التقسيم الجديد:
+- `prefetchGroup('sales-core')` يُحمّل المجموعة الأولى
+- `prefetchGroup('sales-ops')` يُحمّل الثانية
+- ربط prefetch ذكي: عند فتح Quotation/SO، نقوم بـ prefetch لـ `sales-core` (لأن المستخدم سيحوّل لفاتورة لاحقاً)
+- عند فتح Invoice، نقوم بـ prefetch لـ `sales-ops` فقط إذا كان المستخدم في قسم المبيعات
 
-### المهمة 2 — تفعيل `ReloadPrompt` بشكل حقيقي
+### 3. تحديث Sidebar Section Groups
+في `SidebarNavSections.tsx` و `MobileDrawer.tsx`:
+- قسم "المبيعات والعملاء" يستدعي `prefetchGroup('sales-core')` عند التوسيع
+- إضافة منطق ثانوي: بعد ~500ms من فتح Sidebar، prefetch لـ `sales-ops` بأولوية منخفضة عبر `requestIdleCallback`
 
-استبدل `ReloadPrompt` الفارغ بمكوّن يلتقط حدث `vite:beforeUpdate` (في dev) وعرض toast "نسخة جديدة متاحة" مع زر تحديث (في prod). هذا يحمي ضد المشكلة في المستقبل.
+## النتائج المتوقعة
 
-### المهمة 3 — حماية كل `lazy()` imports من فشل التحميل
+| المقياس | قبل | بعد |
+|---|---|---|
+| أكبر حزمة pages-* | 524KB | ~270KB (-48%) |
+| تحميل أولي (مستخدم يفتح Invoice) | 524KB | ~270KB |
+| تحميل ثانوي (لو زار quotation) | 0KB إضافي | +260KB (مع prefetch = شفاف) |
+| إجمالي الحزم في الموقع | 7 | 8 (+1 فقط) |
 
-أضيف helper `lazyWithRetry` في `src/lib/lazyWithRetry.ts`:
-- يحاول التحميل، وعند الفشل (مثلاً chunk قديم بعد deploy) ينتظر 500ms ويعيد المحاولة مرتين.
-- إذا فشل تماماً، يفرض reload صفحة كاملة (مع منع حلقة لا نهائية عبر sessionStorage flag).
+**المكسب الفعلي على 4G (1.5MB/s):**
+- توفير ~170ms في Time-to-Interactive للمستخدم الذي يفتح فقط الفواتير/العملاء
+- Smart prefetch يضمن أن التنقل بين Invoice ↔ Quotation يبقى فورياً (0ms) لأن chunk الثاني يكون محمّلاً مسبقاً عبر hover/expand
 
-ثم استبدل `lazy(() => import(...))` في `App.tsx` بـ `lazyWithRetry(() => import(...))`. هذه التقنية معيارية لتطبيقات React مع code-splitting.
+## ملاحظات
 
-### المهمة 4 — تحسينات تشخيصية
-
-- إضافة `console.log('[App] mounting')` في `main.tsx` و`console.log('[App] rendered')` في `App.tsx` (مع شرط `import.meta.env.DEV`) لمساعدتي على التشخيص في حال تكرار المشكلة.
-- إضافة `<noscript>` رسالة عربية واضحة في `index.html` لمن عطّل JS.
-
-### المهمة 5 — اختبار وتأكيد
-
-- بناء المشروع: `bunx vite build` للتأكد من سلامة الـ chunks.
-- فحص أن `bulkInvoicePdfGenerator` ضمن `vendor-pdf` chunk بشكل سليم.
-- فحص حجم الـ entry chunk الأولي.
-
----
-
-## 📦 الملفات التي ستتأثّر
-
-| الملف | التغيير |
-|---|---|
-| `index.html` | إضافة سكريبت timeout-shield + noscript عربي |
-| `src/main.tsx` | تنظيف SW شبح + console.log تشخيصي + حذف تعليق مضلِّل |
-| `src/components/offline/ReloadPrompt.tsx` | تفعيل حقيقي بدل `return null` |
-| `src/lib/lazyWithRetry.ts` | **جديد** — wrapper آمن لـ `lazy()` |
-| `src/App.tsx` | استبدال `lazy` بـ `lazyWithRetry` (تغيير سطر import واحد + استبدال نصي) |
-
-## ✅ النتيجة المتوقعة
-
-- المستخدم يُحدّث الصفحة → SW القديم يُلغى تلقائياً → التطبيق يعمل.
-- عند أي deploy مستقبلي، فشل تحميل chunk → reload تلقائي بدلاً من شاشة بيضاء.
-- إذا حدث تأخّر >8 ثوانٍ → رسالة عربية واضحة بدل شاشة بيضاء صامتة.
-
-هل توافق على البدء بالتنفيذ؟
+- لن نزيد عدد طلبات الشبكة الفعلية لأن `prefetchGroup` يستخدم `requestIdleCallback` ولا يتنافس مع المسار الحرج
+- التقسيم محافظ — لن نكسر منطق كود مشترك، فقط نعيد توزيع نقاط الدخول
+- لن نلمس eager imports (Auth/Layout/Dashboard) ولا الحزم الأخرى (inventory, finance, etc.)

@@ -45,9 +45,11 @@ import { prefetchGroup } from '@/lib/prefetch';
 
 // Sidebar section ids match the route-group keys defined in `prefetch.ts`,
 // so we can hand the section id straight to `prefetchGroup` when the user
-// opens it OR even hovers the section header.
+// opens it OR even hovers the section header. The 'sales' sidebar section
+// maps to the daily-path 'sales-core' chunk; the affinity rule in
+// prefetch.ts then quietly warms 'sales-ops' in a later idle slot.
 const SECTION_TO_GROUP: Record<string, string> = {
-  sales: 'sales',
+  sales: 'sales-core',
   inventory: 'inventory',
   finance: 'finance',
   // The 'system' section spans both workspace + settings chunks.

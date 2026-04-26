@@ -70,11 +70,13 @@ const prefetchedRoutes = new Set<string>();
 const prefetchedGroups = new Set<string>();
 
 const routeToGroup: Record<string, string> = {
-  // sales
-  customers: 'sales', 'customer-details': 'sales', invoices: 'sales',
-  'invoice-details': 'sales', quotations: 'sales', 'sales-orders': 'sales',
-  'credit-notes': 'sales', payments: 'sales', collections: 'sales',
-  'price-lists': 'sales',
+  // sales-core (customers + billing + payments — the daily path)
+  customers: 'sales-core', 'customer-details': 'sales-core',
+  invoices: 'sales-core', 'invoice-details': 'sales-core',
+  'credit-notes': 'sales-core', payments: 'sales-core',
+  // sales-ops (quotations, orders, collections, pricing — operational)
+  quotations: 'sales-ops', 'sales-orders': 'sales-ops',
+  collections: 'sales-ops', 'price-lists': 'sales-ops',
   // inventory
   products: 'inventory', 'product-details': 'inventory', categories: 'inventory',
   inventory: 'inventory', suppliers: 'inventory', 'purchase-orders': 'inventory',
@@ -85,6 +87,18 @@ const routeToGroup: Record<string, string> = {
   employees: 'workspace', attendance: 'workspace', sync: 'workspace',
   // settings
   settings: 'settings',
+};
+
+// Cross-group prefetch hints: when a user warms group X, what other group is
+// likely needed next? This stays cheap because each entry only triggers ONE
+// extra idle import. Examples of real flows:
+//   - On the sales-core path (invoices/customers), users frequently jump to
+//     quotations or sales-orders — warm sales-ops in the background.
+//   - Conversely, opening a quotation often leads to converting it into an
+//     invoice — so warm sales-core when the user is in sales-ops.
+const groupAffinity: Record<string, string[]> = {
+  'sales-core': ['sales-ops'],
+  'sales-ops': ['sales-core'],
 };
 
 /**
@@ -227,4 +241,17 @@ export function prefetchGroup(group: string): void {
   // them together), so we only need ONE import call per group.
   if (routes.length > 0) prefetchRoute(routes[0]);
   prefetchedGroups.add(group);
+
+  // Schedule affinity prefetch on a deeper idle window — these are "next
+  // likely" groups, not critical. Pushing them behind the primary group's
+  // network request avoids bandwidth contention on mobile.
+  const related = groupAffinity[group];
+  if (related && typeof window !== 'undefined') {
+    const warmRelated = () => related.forEach((g) => prefetchGroup(g));
+    if ('requestIdleCallback' in window) {
+      (window as Window & typeof globalThis).requestIdleCallback(warmRelated, { timeout: 4000 });
+    } else {
+      setTimeout(warmRelated, 1500);
+    }
+  }
 }
