@@ -130,7 +130,7 @@ export function useInvoicesList() {
 
   useEffect(() => { pagination.resetPage(); }, [debouncedSearch]);
 
-  const { data: invoices = [], isLoading, refetch } = useQuery({
+  const { data: invoices = [], isLoading, refetch, error } = useQuery({
     queryKey: ['invoices', debouncedSearch, pagination.currentPage],
     queryFn: async () => {
       let query = supabase.from('invoices').select('*, customers(name)')
