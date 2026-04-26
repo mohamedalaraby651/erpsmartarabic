@@ -241,7 +241,14 @@ function SidebarNavSections({
                 color={section.color}
                 bgColor={section.bgColor}
                 isOpen={isOpen}
-                onToggle={() => toggleSection(section.id)}
+                onToggle={() => {
+                  // Opening a section is a strong intent signal — warm the
+                  // whole route group in the background so the FIRST click
+                  // inside it is instant.
+                  const group = SECTION_TO_GROUP[section.id];
+                  if (group && !isOpen) prefetchGroup(group);
+                  toggleSection(section.id);
+                }}
                 hasActiveItem={hasActiveItem}
                 isDraggable={!isSearching}
               >
