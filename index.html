@@ -116,9 +116,70 @@
     <script>
       (function () {
         var SHIELD_MS = 10000;
+        var BOOT_KEY = 'lvbl:runtime-events:v1';
+        var MAX_BUF = 20;
+
+        // Tiny localStorage ring-buffer that mirrors runtimeTelemetry's format
+        // so the React layer can later drain & ship these events.
+        function bufferEvent(type, message, extra) {
+          try {
+            var raw = localStorage.getItem(BOOT_KEY);
+            var arr = raw ? JSON.parse(raw) : [];
+            arr.push({
+              type: type,
+              message: String(message || '').slice(0, 500),
+              timestamp: new Date().toISOString(),
+              url: window.location.pathname + window.location.search,
+              userAgent: navigator.userAgent,
+              metadata: extra || {}
+            });
+            if (arr.length > MAX_BUF) arr = arr.slice(-MAX_BUF);
+            localStorage.setItem(BOOT_KEY, JSON.stringify(arr));
+          } catch (e) { /* ignore */ }
+          // Also expose for drainBootstrapEvents() in case storage is blocked
+          try {
+            window.__LVBL_BOOT_EVENTS__ = window.__LVBL_BOOT_EVENTS__ || [];
+            window.__LVBL_BOOT_EVENTS__.push({
+              type: type, message: String(message || ''),
+              timestamp: new Date().toISOString(),
+              url: window.location.pathname,
+              userAgent: navigator.userAgent,
+              metadata: extra || {}
+            });
+          } catch (e) { /* ignore */ }
+        }
+
+        // Best-effort beacon while we still have a network — sendBeacon survives
+        // the user immediately closing the tab.
+        function shipBeacon(type, message) {
+          try {
+            var url = 'https://npwofemokwddtutugmas.supabase.co/functions/v1/log-event';
+            var apikey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wd29mZW1va3dkZHR1dHVnbWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1NjgyMTAsImV4cCI6MjA4MjE0NDIxMH0.dFuXXlbKjNUQ-phhFWxsbOtTIdIZROYN21SNlC_21UQ';
+            var payload = JSON.stringify({
+              level: 'error',
+              message: '[runtime] ' + type + ': ' + message,
+              endpoint: window.location.pathname,
+              metadata: { type: type, userAgent: navigator.userAgent, source: 'index.html-shield' }
+            });
+            var blob = new Blob([payload], { type: 'application/json' });
+            if ('sendBeacon' in navigator) {
+              navigator.sendBeacon(url + '?apikey=' + apikey, blob);
+            }
+          } catch (e) { /* ignore */ }
+        }
+
         setTimeout(function () {
           var root = document.getElementById('root');
           if (root && root.children.length === 0) {
+            // Persist + ship a diagnostic event so we can see WHY users hit
+            // a white screen (browser, network, route, etc.).
+            bufferEvent('white_screen', 'root empty after ' + SHIELD_MS + 'ms', {
+              shieldMs: SHIELD_MS,
+              referrer: document.referrer || null,
+              connection: (navigator.connection && navigator.connection.effectiveType) || null
+            });
+            shipBeacon('white_screen', 'root empty after ' + SHIELD_MS + 'ms');
+
             root.innerHTML =
               '<div dir="rtl" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Cairo,sans-serif;background:hsl(0 0% 100%)">' +
                 '<div style="max-width:420px;width:100%;text-align:center;border:1px solid #e5e7eb;border-radius:12px;padding:2rem;box-shadow:0 10px 25px rgba(0,0,0,0.06)">' +
@@ -128,10 +189,22 @@
                     'تأكد من اتصالك بالإنترنت ثم اضغط إعادة المحاولة. سيتم مسح الذاكرة المؤقتة تلقائياً.' +
                   '</p>' +
                   '<button id="lvbl-retry" style="background:#2563eb;color:#fff;border:0;border-radius:8px;padding:.6rem 1.25rem;font-size:.95rem;font-family:inherit;cursor:pointer;font-weight:600">إعادة المحاولة</button>' +
+                  '<p id="lvbl-diag" style="margin:1rem 0 0;font-size:.7rem;color:#9ca3af"></p>' +
                 '</div>' +
               '</div>';
+
+            // Show a tiny diagnostic line so support can see at a glance.
+            try {
+              var diag = document.getElementById('lvbl-diag');
+              if (diag) {
+                diag.textContent = 'رمز التشخيص: WS-' + Date.now().toString(36).toUpperCase();
+              }
+            } catch (e) { /* ignore */ }
+
             var btn = document.getElementById('lvbl-retry');
             if (btn) btn.onclick = function () {
+              bufferEvent('forced_reload', 'user clicked retry on white-screen shield', { source: 'index.html-shield' });
+              shipBeacon('forced_reload', 'user clicked retry on white-screen shield');
               try {
                 if ('serviceWorker' in navigator) {
                   navigator.serviceWorker.getRegistrations().then(function (rs) {
@@ -142,7 +215,7 @@
                   caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
                 }
               } catch (e) { /* ignore */ }
-              window.location.reload();
+              setTimeout(function () { window.location.reload(); }, 150);
             };
           }
         }, SHIELD_MS);

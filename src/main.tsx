@@ -4,6 +4,15 @@ import "./index.css";
 import { initializeTheme } from "./lib/themeManager";
 import { measureWebVitals, logBundleInfo } from "./lib/performanceMonitor";
 import { prefetchCommonRoutes } from "./lib/prefetch";
+import {
+  installGlobalErrorHandlers,
+  drainBootstrapEvents,
+  emitTelemetry,
+} from "./lib/runtimeTelemetry";
+
+// Install global error capture as early as possible — before React mounts —
+// so we catch errors thrown during initial module evaluation too.
+installGlobalErrorHandlers();
 
 // ---------------------------------------------------------------------------
 // Ghost Service Worker cleanup
@@ -34,6 +43,9 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
           // If we actually unregistered something, force one fresh load so
           // the user immediately gets the new bundle.
           if (Array.isArray(results) && results.some(Boolean)) {
+            emitTelemetry('sw_cleanup_reload', 'unregistered ghost service worker', {
+              metadata: { count: results.filter(Boolean).length },
+            });
             window.location.reload();
           }
         })
@@ -50,6 +62,9 @@ measureWebVitals();
 
 // Render the app
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Drain any events the index.html shield buffered before React loaded.
+drainBootstrapEvents();
 
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console

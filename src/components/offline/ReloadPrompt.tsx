@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { emitTelemetry } from '@/lib/runtimeTelemetry';
 
 /**
  * ReloadPrompt — listens for global chunk-load errors and prompts the user

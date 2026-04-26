@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { emitTelemetry } from '@/lib/runtimeTelemetry';
 
 interface Props {
   children: ReactNode;
@@ -35,18 +36,21 @@ export class AppErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({ errorInfo });
-    
+
     // Log error to console
     console.error('[AppErrorBoundary] Caught error:', error);
     console.error('[AppErrorBoundary] Component stack:', errorInfo.componentStack);
-    
+
+    // Ship a structured diagnostic event (buffered locally + best-effort to backend)
+    emitTelemetry('react_error_boundary', error.message || error.name || 'unknown', {
+      errorName: error.name,
+      errorStack: error.stack,
+      componentStack: errorInfo.componentStack ?? undefined,
+      metadata: { boundary: 'AppErrorBoundary' },
+    });
+
     // Call optional error handler
     this.props.onError?.(error, errorInfo);
-    
-    // In production, you might want to send this to an error tracking service
-    if (import.meta.env.PROD) {
-      // Example: sendToErrorTracking(error, errorInfo);
-    }
   }
 
   handleReload = (): void => {
