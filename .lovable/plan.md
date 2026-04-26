@@ -1,90 +1,105 @@
-# تقسيم حزمة pages-sales لتحسين أداء الموبايل
+# خطة توحيد البيئات الثلاث
 
-## الوضع الحالي
+## التشخيص النهائي
 
-حزمة `pages-sales` تحتوي على 8 صفحات بحجم **524KB** — وهي أكبر حزمة في النظام:
+الفروقات بين **التطوير** (المحرر) و**المعاينة** (`id-preview--*`) و**المنشور** (`erpsmartarabic.lovable.app`) لها 3 أسباب جذرية:
 
-| المجموعة | الصفحات | الأسطر التقريبية |
-|---|---|---|
-| **العملاء + الفواتير + المدفوعات** | customers, invoices, payments, credit-notes | ~2,330 سطر |
-| **الوثائق التشغيلية** | quotations, sales-orders, collections, pricing | ~2,378 سطر |
+1. **النشر متأخر**: المنشور = آخر مرة ضغطت فيها "Publish/Update". كل تعديل بعد ذلك يظهر في المعاينة فقط.
+2. **بيئتا Supabase منفصلتان**: المعاينة تستخدم *Cloud Dev*، المنشور يستخدم *Cloud Production* — بيانات/مستخدمون/إعدادات Auth مختلفة تماماً.
+3. **Service Worker / Cache قديم**: زوار سابقون قد يكون لديهم نسخة JS قديمة عالقة في المتصفح.
 
-المشكلة: المستخدم في أول زيارة لأي صفحة من هذه الـ 8 يحمّل 524KB دفعة واحدة، مما يبطئ Time-to-Interactive على شبكات 3G/4G.
+السبب رقم (1) هو الأكثر إرباكاً في حالتك — أنجزنا 6+ تحسينات في هذه الجلسة (تقسيم bundles, Auth retry, smart prefetch, RouteErrorPage…) لكنها **لم تُنشر بعد**.
 
-## الاستراتيجية المقترحة
+---
 
-### تقسيم إلى مجموعتين متوازنتين بناءً على نمط الاستخدام الحقيقي
+## الإجراءات المطلوبة منك (لا كود)
 
-**1. `pages-sales-core` (~260KB متوقع)** — المسار اليومي الأكثر استخداماً
-- `customers/` — العملاء (الأكثر زيارة)
-- `invoices/` — الفواتير
-- `payments/` — المدفوعات
-- `credit-notes/` — إشعارات دائنة
+### إجراء فوري: انشر آخر التعديلات
+- اضغط زر **Publish** أعلى يمين المحرر (أو "..." ثم Publish على الموبايل)
+- اضغط **Update** لدفع آخر نسخة إلى `erpsmartarabic.lovable.app`
+- بدون هذه الخطوة، لن يرى مستخدموك أياً من تحسينات الأداء أو إصلاحات شاشة الخطأ
 
-**لماذا معاً؟** هذه الصفحات تشترك في:
-- نفس مكونات العميل (`CustomerCombobox`, `CustomerSearchSelect`)
-- نفس منطق المدفوعات والأرصدة
-- المستخدم عادةً يفتح فاتورة → دفعة → عميل في نفس الجلسة
+### قاعدة عامة للاختبار
+| ماذا تختبر؟ | استخدم أي رابط |
+|---|---|
+| كود/UI أثناء البناء | المحرر مباشرة |
+| سلوك الإنتاج الفعلي | **`erpsmartarabic.lovable.app` فقط** |
+| المشاركة مع المستخدمين | **`erpsmartarabic.lovable.app` فقط** |
+| ❌ **لا تشارك** | `id-preview--*.lovable.app` (يتطلب جلسة Lovable) |
 
-**2. `pages-sales-ops` (~260KB متوقع)** — العمليات والتسعير
-- `quotations/` — عروض الأسعار
-- `sales-orders/` — أوامر البيع
-- `collections/` — لوحة التحصيل
-- `pricing/` — قوائم الأسعار
+---
 
-**لماذا معاً؟** 
-- Quotation → Sales Order → Invoice (تدفق متسلسل، لكن الـ Invoice في المجموعة الأخرى عبر prefetch)
-- Collections و Pricing عمليات إدارية أقل تكراراً
+## التحسينات البرمجية المقترحة
 
-## التغييرات المطلوبة
+### 1) شريط معلومات للبيئة (Environment Banner) — أولوية عالية
+- **ملف جديد**: `src/components/system/EnvironmentBadge.tsx`
+- **السلوك**:
+  - يكتشف الـ host تلقائياً
+  - يعرض شريط صغير أعلى الشاشة فقط في غير الإنتاج:
+    - 🟡 `معاينة (Preview) — البيانات تجريبية`
+    - 🔵 `وضع التطوير (Dev) — البيانات تجريبية`
+  - مخفي تماماً على `erpsmartarabic.lovable.app`
+- **الإدماج**: في `AppLayout.tsx` و `MobileHeader.tsx`
+- **الفائدة**: تعرف فوراً أي بيئة تستخدم وتفسّر اختلاف البيانات
 
-### 1. `vite.config.ts`
-استبدال السطر الحالي:
-```typescript
-if (/\/pages\/(customers|invoices|payments|credit-notes|sales-orders|quotations|collections|pricing)\//.test(id)) {
-  return 'pages-sales';
-}
-```
+### 2) Build Stamp + شاشة "About" — أولوية متوسطة
+- **`vite.config.ts`**: حقن `__BUILD_TIME__` و `__BUILD_ID__` كـ `define`
+- **`src/lib/buildInfo.ts`**: تصدير قراءة آمنة لهذه الثوابت
+- **`UnifiedSettingsPage`**: قسم صغير "حول النظام" يعرض:
+  - رقم/توقيت البناء الحالي
+  - نوع البيئة (dev/preview/production)
+  - رابط "تحقق من وجود تحديث" يقارن مع `/version.json`
+- **الفائدة**: تتأكد فوراً ما إذا كان المستخدم يرى نسخة قديمة محشورة في الكاش
 
-بـ:
-```typescript
-// المسار اليومي: العملاء والفوترة والمدفوعات
-if (/\/pages\/(customers|invoices|payments|credit-notes)\//.test(id)) {
-  return 'pages-sales-core';
-}
-// العمليات: عروض، أوامر بيع، تحصيل، تسعير
-if (/\/pages\/(quotations|sales-orders|collections|pricing)\//.test(id)) {
-  return 'pages-sales-ops';
-}
-```
+### 3) تحديث Service Worker Cleanup — أولوية متوسطة
+- **`src/main.tsx`**: تحديث `FLAG = 'sw-cleanup:done:v1'` إلى `v2`
+- يضمن أن المستخدمين الذين شغّلوا التنظيف سابقاً يحصلون على جولة جديدة بعد آخر التحسينات
+- **بديل أقوى**: استبداله بفحص نسخة (إذا تغيّر `__BUILD_ID__` نفّذ التنظيف)
 
-### 2. `src/lib/prefetch.ts`
-تحديث خريطة المجموعات لتعكس التقسيم الجديد:
-- `prefetchGroup('sales-core')` يُحمّل المجموعة الأولى
-- `prefetchGroup('sales-ops')` يُحمّل الثانية
-- ربط prefetch ذكي: عند فتح Quotation/SO، نقوم بـ prefetch لـ `sales-core` (لأن المستخدم سيحوّل لفاتورة لاحقاً)
-- عند فتح Invoice، نقوم بـ prefetch لـ `sales-ops` فقط إذا كان المستخدم في قسم المبيعات
+### 4) كشف رابط المعاينة في `index.html` — أولوية منخفضة
+- إذا كان `host.includes('id-preview--')` ولم تُحمَّل React خلال 6s
+- يعرض رسالة عربية: *"هذا رابط معاينة محمي. للوصول استخدم: erpsmartarabic.lovable.app"*
+- مع زر يفتح الرابط الصحيح
+- **الفائدة**: يمنع شاشة بيضاء عند مشاركة رابط خاطئ بطريق الخطأ
 
-### 3. تحديث Sidebar Section Groups
-في `SidebarNavSections.tsx` و `MobileDrawer.tsx`:
-- قسم "المبيعات والعملاء" يستدعي `prefetchGroup('sales-core')` عند التوسيع
-- إضافة منطق ثانوي: بعد ~500ms من فتح Sidebar، prefetch لـ `sales-ops` بأولوية منخفضة عبر `requestIdleCallback`
+### 5) سكربت "preflight" قبل النشر — اختياري
+- **`scripts/preflight.mjs`**: يفحص قبل أي publish:
+  - وجود متغيرات بيئة Production
+  - تطابق إصدارات الحزم
+  - عدم وجود `console.error` صريحة في الكود
+- يُشغّل يدوياً فقط، لا يكسر البناء
 
-## النتائج المتوقعة
+---
 
-| المقياس | قبل | بعد |
-|---|---|---|
-| أكبر حزمة pages-* | 524KB | ~270KB (-48%) |
-| تحميل أولي (مستخدم يفتح Invoice) | 524KB | ~270KB |
-| تحميل ثانوي (لو زار quotation) | 0KB إضافي | +260KB (مع prefetch = شفاف) |
-| إجمالي الحزم في الموقع | 7 | 8 (+1 فقط) |
+## الملفات المتأثرة
 
-**المكسب الفعلي على 4G (1.5MB/s):**
-- توفير ~170ms في Time-to-Interactive للمستخدم الذي يفتح فقط الفواتير/العملاء
-- Smart prefetch يضمن أن التنقل بين Invoice ↔ Quotation يبقى فورياً (0ms) لأن chunk الثاني يكون محمّلاً مسبقاً عبر hover/expand
+**إنشاء جديد**:
+- `src/components/system/EnvironmentBadge.tsx`
+- `src/lib/buildInfo.ts`
+- `public/version.json` (يُولَّد من vite plugin)
 
-## ملاحظات
+**تعديل**:
+- `vite.config.ts` (حقن build stamp)
+- `src/components/layout/AppLayout.tsx` (إدماج Banner)
+- `src/components/layout/MobileHeader.tsx` (إدماج Banner للموبايل)
+- `src/pages/settings/UnifiedSettingsPage.tsx` (قسم "حول النظام")
+- `src/main.tsx` (ترقية SW cleanup إلى v2)
+- `index.html` (كشف رابط المعاينة)
 
-- لن نزيد عدد طلبات الشبكة الفعلية لأن `prefetchGroup` يستخدم `requestIdleCallback` ولا يتنافس مع المسار الحرج
-- التقسيم محافظ — لن نكسر منطق كود مشترك، فقط نعيد توزيع نقاط الدخول
-- لن نلمس eager imports (Auth/Layout/Dashboard) ولا الحزم الأخرى (inventory, finance, etc.)
+---
+
+## النتيجة المتوقعة
+
+- ستعرف **فوراً** أي بيئة تستخدم (Banner ملوّن)
+- ستعرف **فوراً** ما إذا كنت ترى نسخة قديمة (Build stamp)
+- المستخدمون الذين شاركتَ معهم رابط معاينة بالخطأ سيحصلون على رسالة واضحة
+- مشكلة "النشر يختلف عن الفعلي" تختفي بعد ضغطة Publish واحدة + التحديثات أعلاه
+
+---
+
+## سؤال قبل البدء
+
+هل تريد:
+- **(أ)** تنفيذ كل التحسينات الخمسة؟
+- **(ب)** فقط الأهم: Banner + Build stamp + ترقية SW (1, 2, 3)؟
+- **(ج)** فقط (1) Banner — الحل الأخف وأسرع نتيجة؟
