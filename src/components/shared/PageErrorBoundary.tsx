@@ -2,6 +2,7 @@ import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { emitTelemetry } from '@/lib/runtimeTelemetry';
 
 interface Props {
   children: ReactNode;
@@ -29,6 +30,12 @@ export class PageErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[PageErrorBoundary]', error, info.componentStack);
+    emitTelemetry('react_error_boundary', error.message || error.name || 'unknown', {
+      errorName: error.name,
+      errorStack: error.stack,
+      componentStack: info.componentStack ?? undefined,
+      metadata: { boundary: 'PageErrorBoundary' },
+    });
   }
 
   handleRetry = () => {

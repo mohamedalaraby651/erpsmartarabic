@@ -13,6 +13,7 @@
  *     guarded by sessionStorage so we never enter an infinite reload loop.
  */
 import { lazy, type ComponentType } from 'react';
+import { emitTelemetry } from './runtimeTelemetry';
 
 const RETRIES = 2;
 const RETRY_DELAY_MS = 500;
