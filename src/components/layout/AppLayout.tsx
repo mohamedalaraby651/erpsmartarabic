@@ -127,6 +127,7 @@ export default function AppLayout() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-14">
+        <EnvironmentBadge />
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
           <PageErrorBoundary>
@@ -153,6 +154,7 @@ export default function AppLayout() {
   return (
     <>
       <div className="min-h-screen bg-background">
+        <EnvironmentBadge />
         <AppSidebar
           collapsed={sidebarCollapsed}
           onToggle={toggleSidebar}
