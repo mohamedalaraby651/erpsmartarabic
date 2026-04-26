@@ -54,6 +54,27 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
+        // ── Filename strategy (cache-busting via content hash) ───────────
+        // Every emitted JS chunk and static asset includes an 8-char content
+        // hash in its filename. The hash changes ONLY when the file's bytes
+        // change, so:
+        //   • Untouched chunks keep their URL across deploys → browser reuses
+        //     the cached copy with zero network round-trips.
+        //   • A change in (e.g.) `pages-sales-core` rotates only that chunk's
+        //     hash; `pages-finance`, vendor-react, etc. stay cached.
+        //
+        // Recommended HTTP headers from the static host (Lovable applies
+        // these automatically; documented here so future migrations preserve
+        // the contract):
+        //   /assets/*.[hash].js   →  Cache-Control: public, max-age=31536000, immutable
+        //   /assets/*.[hash].css  →  Cache-Control: public, max-age=31536000, immutable
+        //   /index.html           →  Cache-Control: no-cache  (must always re-validate
+        //                            so users pick up new chunk hashes)
+        //   /version.json         →  Cache-Control: no-cache  (used for update detection)
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
+
         // manualChunks as a function lets us group MANY page chunks into a few
         // logical bundles. The previous setup produced 80+ tiny chunks (one per
         // lazy() page), causing severe HTTP overhead on mobile networks.
