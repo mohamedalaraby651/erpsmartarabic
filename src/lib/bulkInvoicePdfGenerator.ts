@@ -183,7 +183,16 @@ function renderInvoice(
   );
 }
 
-export async function generateBulkInvoicesPDF(invoiceIds: string[]): Promise<void> {
+/**
+ * Build the bulk-invoices PDF document in memory.
+ * Returns the jsPDF instance + the page count + a sensible default file name.
+ * The caller decides whether to preview (`output('bloburl')`) or save.
+ */
+export async function buildBulkInvoicesPDF(invoiceIds: string[]): Promise<{
+  doc: jsPDF;
+  pageCount: number;
+  fileName: string;
+}> {
   if (!invoiceIds || invoiceIds.length === 0) {
     throw new Error('يجب تحديد فاتورة واحدة على الأقل');
   }
@@ -232,5 +241,13 @@ export async function generateBulkInvoicesPDF(invoiceIds: string[]): Promise<voi
   });
 
   const fileName = `فواتير_دفعية_${sorted.length}_${new Date().toISOString().split('T')[0]}.pdf`;
+  return { doc, pageCount: sorted.length, fileName };
+}
+
+/**
+ * Convenience wrapper preserving the original API: builds + saves immediately.
+ */
+export async function generateBulkInvoicesPDF(invoiceIds: string[]): Promise<void> {
+  const { doc, fileName } = await buildBulkInvoicesPDF(invoiceIds);
   doc.save(fileName);
 }
