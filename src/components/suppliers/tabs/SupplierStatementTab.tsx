@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Printer, Filter, Loader2, FileText } from 'lucide-react';
-import { generatePDF } from '@/lib/pdfGeneratorLazy';
+import { generateStatementPdf } from '@/lib/statementPdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 
 interface SupplierStatementTabProps {
