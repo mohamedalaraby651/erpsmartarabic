@@ -42,8 +42,17 @@ export default defineConfig(({ mode }) => ({
           // ── Application pages grouped by domain ────────────────────────
           // Each group ships as ONE chunk regardless of how many pages it has.
           if (id.includes('/src/pages/')) {
-            if (/\/pages\/(customers|invoices|payments|credit-notes|sales-orders|quotations|collections|pricing)\//.test(id)) {
-              return 'pages-sales';
+            // Daily core path: customers + billing + payments. The single
+            // most-used cluster — split out so first-time users on mobile
+            // download ~half of what the old `pages-sales` (524KB) shipped.
+            if (/\/pages\/(customers|invoices|payments|credit-notes)\//.test(id)) {
+              return 'pages-sales-core';
+            }
+            // Sales operations: quotations, orders, collections, pricing.
+            // Loaded on-demand and via smart prefetch when the user shows
+            // intent (sidebar expand / hover on related links).
+            if (/\/pages\/(quotations|sales-orders|collections|pricing)\//.test(id)) {
+              return 'pages-sales-ops';
             }
             if (/\/pages\/(suppliers|purchase-orders|products|categories|inventory|attachments)\//.test(id)) {
               return 'pages-inventory';
