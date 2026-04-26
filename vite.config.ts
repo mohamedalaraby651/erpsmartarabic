@@ -15,9 +15,9 @@ const BUILD_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(
  * to detect a newer deployment without parsing HTML.
  */
 function versionJsonPlugin() {
-  return {
+  const plugin: import('vite').Plugin = {
     name: 'lvbl-version-json',
-    apply: 'build' as const,
+    apply: 'build',
     generateBundle() {
       this.emitFile({
         type: 'asset',
@@ -25,8 +25,8 @@ function versionJsonPlugin() {
         source: JSON.stringify({ buildId: BUILD_ID, buildTime: BUILD_TIME }, null, 2),
       });
     },
-    // In dev, write it to disk so /version.json is served by Vite dev middleware
     configResolved() {
+      // Also write to /public so Vite's dev server serves it at /version.json
       try {
         const publicDir = path.resolve(__dirname, 'public');
         if (fs.existsSync(publicDir)) {
@@ -38,6 +38,7 @@ function versionJsonPlugin() {
       } catch { /* ignore — non-fatal */ }
     },
   };
+  return plugin;
 }
 
 // https://vitejs.dev/config/
