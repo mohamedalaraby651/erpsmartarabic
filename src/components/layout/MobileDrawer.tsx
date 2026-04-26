@@ -160,12 +160,13 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
   };
 
   // Opening the drawer is a strong signal the user is about to navigate
-  // somewhere. Pre-warm the most likely destinations (sales + inventory)
-  // while the open animation is still running — by the time they tap an
-  // item, the chunk is usually already in cache.
+  // somewhere. Pre-warm the most likely destinations (sales-core + inventory)
+  // while the open animation is still running. The sales-core → sales-ops
+  // affinity rule (see prefetch.ts) will quietly warm sales-ops afterwards
+  // on a deeper idle slot, so we don't double-pay bandwidth here.
   useEffect(() => {
     if (!open) return;
-    prefetchGroup('sales');
+    prefetchGroup('sales-core');
     prefetchGroup('inventory');
   }, [open]);
 
