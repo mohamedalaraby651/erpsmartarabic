@@ -35,6 +35,7 @@ export function useInvoicesList() {
   // Bulk-selection state for batch printing / actions
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkPrinting, setIsBulkPrinting] = useState(false);
+  const [isSelectingAll, setIsSelectingAll] = useState(false);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
