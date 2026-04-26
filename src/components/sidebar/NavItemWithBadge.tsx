@@ -1,10 +1,11 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { createPrefetchHandler, getRouteNameFromPath } from '@/lib/prefetch';
 
 interface NavItemWithBadgeProps {
   title: string;
@@ -42,6 +43,14 @@ function NavItemWithBadge({
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = location.pathname === href;
+
+  // Build a single hover-prefetch handler keyed to this href. `useMemo`
+  // ensures we don't churn a new closure (and a new "first hover") on
+  // every render — important since this list re-renders on route change.
+  const prefetchOnIntent = useMemo(() => {
+    const routeName = getRouteNameFromPath(href);
+    return routeName ? createPrefetchHandler(routeName) : undefined;
+  }, [href]);
 
   const handleClick = () => {
     navigate(href);
