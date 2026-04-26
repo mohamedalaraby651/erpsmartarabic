@@ -4,6 +4,7 @@ import { LayoutDashboard, Users, Package, Receipt, ShoppingCart, MoreHorizontal 
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { haptics } from '@/lib/haptics';
+import { prefetchByPath } from '@/lib/prefetch';
 
 interface NavItem {
   title: string;
@@ -148,6 +149,10 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
             <button
               key={item.href}
               onClick={(e) => handleNavClick(item, e)}
+              // Touch-start fires ~80-150ms before click on mobile, giving us
+              // a free head-start on the chunk fetch while the user's finger
+              // is still on the button.
+              onTouchStart={() => prefetchByPath(item.href)}
               className={cn(
                 'relative flex items-center justify-center gap-1 py-1.5 rounded-2xl transition-all duration-200 overflow-hidden touch-target',
                 isActive 

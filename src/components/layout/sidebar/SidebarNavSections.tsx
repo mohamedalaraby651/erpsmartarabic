@@ -41,6 +41,18 @@ import {
 } from 'lucide-react';
 import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
 import DraggableNavSection from '@/components/sidebar/DraggableNavSection';
+import { prefetchGroup } from '@/lib/prefetch';
+
+// Sidebar section ids match the route-group keys defined in `prefetch.ts`,
+// so we can hand the section id straight to `prefetchGroup` when the user
+// opens it OR even hovers the section header.
+const SECTION_TO_GROUP: Record<string, string> = {
+  sales: 'sales',
+  inventory: 'inventory',
+  finance: 'finance',
+  // The 'system' section spans both workspace + settings chunks.
+  system: 'workspace',
+};
 
 interface NavItem {
   title: string;
@@ -229,7 +241,14 @@ function SidebarNavSections({
                 color={section.color}
                 bgColor={section.bgColor}
                 isOpen={isOpen}
-                onToggle={() => toggleSection(section.id)}
+                onToggle={() => {
+                  // Opening a section is a strong intent signal — warm the
+                  // whole route group in the background so the FIRST click
+                  // inside it is instant.
+                  const group = SECTION_TO_GROUP[section.id];
+                  if (group && !isOpen) prefetchGroup(group);
+                  toggleSection(section.id);
+                }}
                 hasActiveItem={hasActiveItem}
                 isDraggable={!isSearching}
               >
