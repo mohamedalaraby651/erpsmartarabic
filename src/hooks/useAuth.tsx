@@ -31,6 +31,71 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  */
 const SESSION_INIT_TIMEOUT_MS = 8000;
 
+/**
+ * Categorize the bootstrap failure so we can surface a precise, actionable
+ * message instead of a generic "something failed". The taxonomy below maps
+ * to the realistic failure modes of `supabase.auth.getSession()`:
+ *
+ *   - offline    → no network at all (navigator.onLine === false or fetch threw)
+ *   - timeout    → request is taking longer than SESSION_INIT_TIMEOUT_MS
+ *   - permission → 401/403 / invalid JWT / refresh token revoked
+ *   - server     → 5xx from Supabase
+ *   - unknown    → catch-all so we never miss a category
+ */
+type AuthErrorKind = 'offline' | 'timeout' | 'permission' | 'server' | 'unknown';
+
+interface AuthErrorMeta {
+  kind: AuthErrorKind;
+  title: string;
+  description: string;
+}
+
+function classifyAuthError(err: Error): AuthErrorMeta {
+  const msg = (err.message || '').toLowerCase();
+  const status = (err as Error & { status?: number }).status;
+
+  // Offline takes priority — network state is the cheapest, most reliable signal.
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return {
+      kind: 'offline',
+      title: 'لا يوجد اتصال بالإنترنت',
+      description: 'تأكد من اتصالك بشبكة الإنترنت ثم اضغط "إعادة المحاولة".',
+    };
+  }
+  if (msg.includes('timed out') || msg.includes('timeout')) {
+    return {
+      kind: 'timeout',
+      title: 'انتهت مهلة الاتصال',
+      description: 'الخادم يستجيب ببطء. تحقق من جودة الشبكة وحاول مجدداً.',
+    };
+  }
+  if (
+    status === 401 || status === 403 ||
+    msg.includes('jwt') || msg.includes('refresh token') ||
+    msg.includes('not authorized') || msg.includes('invalid token')
+  ) {
+    return {
+      kind: 'permission',
+      title: 'انتهت صلاحية الجلسة',
+      description: 'يجب تسجيل الدخول من جديد للمتابعة.',
+    };
+  }
+  if ((status && status >= 500) || msg.includes('failed to fetch') || msg.includes('networkerror')) {
+    // `Failed to fetch` is what browsers throw when DNS/CORS/5xx makes the
+    // request unreachable while the user is technically "online".
+    return {
+      kind: 'server',
+      title: 'الخادم غير متاح حالياً',
+      description: 'حدث خلل مؤقت في الخادم. سنحاول استعادة الاتصال تلقائياً.',
+    };
+  }
+  return {
+    kind: 'unknown',
+    title: 'تعذّر التحقق من الجلسة',
+    description: 'حدث خطأ غير متوقع. حاول مجدداً أو سجّل الدخول من جديد.',
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -96,19 +161,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
 
       if (err) {
+        const meta = classifyAuthError(err);
         setInitError(err);
         emitTelemetry('unhandled_error', `auth_init: ${err.message}`, {
           errorName: err.name,
           errorStack: err.stack,
-          metadata: { source: 'AuthProvider.getSession' },
+          metadata: { source: 'AuthProvider.getSession', kind: meta.kind },
         });
         // Show the toast once per app load — repeated retries shouldn't spam.
         if (!errorToastShownRef.current) {
           errorToastShownRef.current = true;
+          // `permission` is the only category where the right next step is
+          // re-authentication rather than a retry — we keep `destructive`
+          // styling for hard failures and use `default` for transient ones
+          // (offline/timeout) to avoid alarming the user unnecessarily.
+          const isHard = meta.kind === 'permission' || meta.kind === 'unknown';
           toast({
-            variant: 'destructive',
-            title: 'تعذّر الاتصال بالخادم',
-            description: 'لم نتمكن من التحقق من حالة الجلسة. تأكد من الاتصال بالإنترنت ثم أعد المحاولة.',
+            variant: isHard ? 'destructive' : 'default',
+            title: meta.title,
+            description: meta.description,
           });
         }
       } else {
