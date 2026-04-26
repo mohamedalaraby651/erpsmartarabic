@@ -46,9 +46,10 @@ const InvoicesPage = () => {
     [list.sortedData, list.selectedIds]
   );
 
-  const handleConfirmBulkPrint = useCallback(async () => {
-    await list.bulkPrint();
-    setBulkPreviewOpen(false);
+  const selectedIdsArr = useMemo(() => Array.from(list.selectedIds), [list.selectedIds]);
+
+  const handleDownloaded = useCallback(() => {
+    list.clearSelection();
   }, [list]);
 
   const renderMobileInvoiceItem = useCallback((invoice: InvoiceWithCustomer) => {
