@@ -306,8 +306,8 @@ const InvoicesPage = () => {
         open={bulkPreviewOpen}
         onOpenChange={setBulkPreviewOpen}
         invoices={selectedInvoices}
-        onConfirm={handleConfirmBulkPrint}
-        isProcessing={list.isBulkPrinting}
+        selectedIds={selectedIdsArr}
+        onDownloaded={handleDownloaded}
       />
     </div>
   );
