@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, RefreshCw, Home, WifiOff, Bug, Copy, Check } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, RefreshCw, Home, WifiOff, Wifi, Bug, Copy, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { emitTelemetry, getBufferedEvents } from '@/lib/runtimeTelemetry';
@@ -44,6 +44,20 @@ export default function RouteErrorPage({
   const [copied, setCopied] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
+  // ── Network awareness ─────────────────────────────────────────────────────
+  // Track navigator.onLine so the Retry button can wait for connectivity
+  // instead of failing instantly when the user is offline.
+  const [isOnline, setIsOnline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  );
+  // Retry phases: idle → checking (probing the network) → success/failure.
+  const [retryPhase, setRetryPhase] = useState<'idle' | 'checking'>('idle');
+  // True once the user has clicked Retry and we're queued waiting for the
+  // browser's `online` event to fire — gives clear feedback they're not stuck.
+  const [waitingForNetwork, setWaitingForNetwork] = useState(false);
+  // Prevents stacking multiple in-flight probes if the user spam-clicks.
+  const probeAbortRef = useRef<AbortController | null>(null);
+
   // Generate a short diagnostic code the user can read out to support.
   // Stable for the lifetime of this mount so they see the same code on screen.
   const diagCode = useMemo(
@@ -84,16 +98,89 @@ export default function RouteErrorPage({
     }
   })();
 
-  const Icon = variant === 'offline' ? WifiOff : AlertTriangle;
+  const Icon = waitingForNetwork || variant === 'offline' ? WifiOff : AlertTriangle;
 
-  const handleRetry = () => {
+  /**
+   * Best-effort connectivity probe. We don't trust `navigator.onLine` alone
+   * (it lies on captive portals + some VPNs), so we make a tiny HEAD-ish
+   * request to a known-cheap, same-origin endpoint with a hard 4s timeout.
+   * Returns true if the server is reachable.
+   */
+  const probeNetwork = useCallback(async (): Promise<boolean> => {
+    try {
+      probeAbortRef.current?.abort();
+      const ctrl = new AbortController();
+      probeAbortRef.current = ctrl;
+      const timeout = setTimeout(() => ctrl.abort(), 4000);
+      // Cache-bust to avoid SW serving a stale 200.
+      const res = await fetch(`/favicon.ico?_probe=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: ctrl.signal,
+      });
+      clearTimeout(timeout);
+      return res.ok || res.status === 304;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  /**
+   * Smart retry: check connectivity first, then either delegate to the
+   * boundary's onRetry (in-place recovery, NO reload), or — only as a final
+   * resort — fall back to a hard reload to fetch fresh chunks.
+   */
+  const handleRetry = useCallback(async () => {
+    setRetryPhase('checking');
+    const reachable = await probeNetwork();
+
+    if (!reachable) {
+      // Still offline: queue an automatic retry the moment the browser fires
+      // the `online` event. The effect below handles the actual retry call.
+      setRetryPhase('idle');
+      setWaitingForNetwork(true);
+      emitTelemetry('forced_reload', 'retry deferred — offline', {
+        metadata: { source: 'RouteErrorPage', variant },
+      });
+      return;
+    }
+
+    setWaitingForNetwork(false);
+    setRetryPhase('idle');
+
+    // Prefer in-place recovery so we don't lose React state / scroll / forms.
     if (onRetry) {
       onRetry();
       return;
     }
-    // Hard reload — gets fresh HTML + clears any stuck chunk references
+    // Last resort for chunk failures with no boundary handler.
     window.location.reload();
-  };
+  }, [onRetry, probeNetwork, variant]);
+
+  /**
+   * Auto-retry pipeline: when the browser regains connectivity AND the user
+   * had previously asked to retry, fire the recovery automatically. Avoids
+   * the user staring at the error screen wondering when to click again.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (waitingForNetwork) {
+        // Tiny debounce so the network stack settles before we probe.
+        setTimeout(() => { void handleRetry(); }, 400);
+      }
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      probeAbortRef.current?.abort();
+    };
+  }, [waitingForNetwork, handleRetry]);
 
   const handleCopyDiag = async () => {
     try {
