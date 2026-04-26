@@ -222,10 +222,29 @@ export default function RouteErrorPage({
         </p>
 
         {/* Primary actions */}
-        <div className="flex flex-col sm:flex-row gap-2 justify-center mb-4">
-          <Button onClick={handleRetry} size="lg" className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            إعادة المحاولة
+        <div className="flex flex-col sm:flex-row gap-2 justify-center mb-3">
+          <Button
+            onClick={handleRetry}
+            size="lg"
+            className="gap-2"
+            disabled={retryPhase === 'checking' || waitingForNetwork}
+          >
+            {retryPhase === 'checking' ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                جارٍ الاتصال…
+              </>
+            ) : waitingForNetwork ? (
+              <>
+                <WifiOff className="h-4 w-4" />
+                في انتظار الإنترنت
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4" />
+                إعادة المحاولة
+              </>
+            )}
           </Button>
           <Button asChild variant="outline" size="lg" className="gap-2">
             <a href="/">
@@ -234,6 +253,22 @@ export default function RouteErrorPage({
             </a>
           </Button>
         </div>
+
+        {/* Network status hint — only shown while waiting or offline */}
+        {(waitingForNetwork || !isOnline) && (
+          <div
+            className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-full px-3 py-1.5 mb-3"
+            role="status"
+            aria-live="polite"
+          >
+            {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+            <span>
+              {isOnline
+                ? 'عاد الاتصال — جارٍ إعادة المحاولة تلقائياً…'
+                : 'لا يوجد اتصال بالإنترنت. سنحاول تلقائياً عند عودته.'}
+            </span>
+          </div>
+        )}
 
         {/* Diagnostic chip — readable by user, copyable for support */}
         <div className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-full px-3 py-1.5 mb-3">
