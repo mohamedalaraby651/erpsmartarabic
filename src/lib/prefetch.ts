@@ -176,8 +176,8 @@ export function prefetchRoute(routeName: string, opts: { source?: 'hover' | 'idl
 /**
  * Prefetch multiple routes
  */
-export function prefetchRoutes(routeNames: string[]): void {
-  routeNames.forEach(prefetchRoute);
+export function prefetchRoutes(routeNames: string[], opts?: { source?: 'hover' | 'idle' | 'boot' }): void {
+  routeNames.forEach((name) => prefetchRoute(name, opts));
 }
 
 /**
@@ -187,11 +187,11 @@ export function prefetchCommonRoutes(): void {
   if (typeof window === 'undefined') return;
   if ('requestIdleCallback' in window) {
     (window as Window & typeof globalThis).requestIdleCallback(
-      () => prefetchRoutes(['dashboard', 'customers']),
+      () => prefetchRoutes(['dashboard', 'customers'], { source: 'boot' }),
       { timeout: 5000 },
     );
   } else {
-    setTimeout(() => prefetchRoutes(['dashboard', 'customers']), 3000);
+    setTimeout(() => prefetchRoutes(['dashboard', 'customers'], { source: 'boot' }), 3000);
   }
 }
 
@@ -205,7 +205,7 @@ export function createPrefetchHandler(routeName: string): () => void {
   return () => {
     if (prefetched) return;
     prefetched = true;
-    prefetchRoute(routeName);
+    prefetchRoute(routeName, { source: 'hover' });
   };
 }
 
