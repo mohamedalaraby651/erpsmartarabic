@@ -211,25 +211,78 @@ const InvoicesPage = () => {
               <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
             </div>
           </CardContent></Card>
-          {list.selectedIds.size > 0 && (
-            <Card className="border-primary/40 bg-primary/5">
-              <CardContent className="p-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <Badge variant="secondary" className="font-bold">{list.selectedIds.size}</Badge>
-                  <span className="text-muted-foreground">فاتورة محددة</span>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => setBulkPreviewOpen(true)} disabled={list.isBulkPrinting}>
-                    {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
-                    معاينة وطباعة دفعية PDF
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={list.clearSelection}>
-                    <X className="h-4 w-4 ml-1" />إلغاء التحديد
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {(() => {
+            const pageData = list.sortedData as InvoiceWithCustomer[];
+            const allOnPageSelected = pageData.length > 0 && pageData.every((i) => list.selectedIds.has(i.id));
+            const someOnPageSelected = pageData.some((i) => list.selectedIds.has(i.id));
+            const selectedTotal = selectedInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0);
+            const selectionState: 'all' | 'partial' | 'none' = allOnPageSelected
+              ? 'all'
+              : someOnPageSelected || list.selectedIds.size > 0
+              ? 'partial'
+              : 'none';
+            const toggleAllOnPage = () => {
+              if (allOnPageSelected) list.clearSelection();
+              else pageData.forEach((i) => { if (!list.selectedIds.has(i.id)) list.toggleSelect(i.id); });
+            };
+            const stateLabel: Record<typeof selectionState, string> = {
+              all: 'تم تحديد كل فواتير الصفحة',
+              partial: 'تحديد جزئي',
+              none: 'لم يتم تحديد أي فاتورة',
+            };
+            const stateBadgeClass: Record<typeof selectionState, string> = {
+              all: 'bg-success/10 text-success border-success/30',
+              partial: 'bg-warning/10 text-warning border-warning/30',
+              none: 'bg-muted text-muted-foreground border-border',
+            };
+            return (
+              <Card className={list.selectedIds.size > 0 ? 'border-primary/40 bg-primary/5' : ''}>
+                <CardContent className="p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Checkbox
+                      checked={allOnPageSelected}
+                      aria-label={allOnPageSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                      onCheckedChange={toggleAllOnPage}
+                      {...(someOnPageSelected && !allOnPageSelected ? { 'data-state': 'indeterminate' as const } : {})}
+                    />
+                    <Badge variant="outline" className={`font-bold ${stateBadgeClass[selectionState]}`}>
+                      {stateLabel[selectionState]}
+                    </Badge>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">المحدد:</span>
+                      <span className="font-bold text-primary">{list.selectedIds.size}</span>
+                      <span className="text-muted-foreground">من</span>
+                      <span className="font-medium">{list.totalCount}</span>
+                    </div>
+                    {list.selectedIds.size > 0 && (
+                      <div className="flex items-center gap-2 text-sm border-r pr-3 mr-1">
+                        <span className="text-muted-foreground">إجمالي المحدد:</span>
+                        <span className="font-bold text-success">{selectedTotal.toLocaleString()} ج.م</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={toggleAllOnPage} disabled={pageData.length === 0}>
+                      {allOnPageSelected ? 'إلغاء تحديد الصفحة' : 'تحديد الصفحة'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => setBulkPreviewOpen(true)}
+                      disabled={list.isBulkPrinting || list.selectedIds.size === 0}
+                    >
+                      {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
+                      معاينة وطباعة دفعية PDF
+                    </Button>
+                    {list.selectedIds.size > 0 && (
+                      <Button size="sm" variant="ghost" onClick={list.clearSelection}>
+                        <X className="h-4 w-4 ml-1" />إلغاء التحديد
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
           <Card><CardHeader><CardTitle>قائمة الفواتير</CardTitle></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
         </>
       )}
