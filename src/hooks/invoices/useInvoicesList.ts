@@ -45,6 +45,7 @@ export function useInvoicesList() {
     });
   }, []);
 
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
   /**
    * Select every invoice that matches the current search term across ALL pages,
