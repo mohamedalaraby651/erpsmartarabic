@@ -9,38 +9,83 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReloadPrompt } from "@/components/offline/ReloadPrompt";
 import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
-const CustomerDetailsPage = lazy(() => import("./pages/customers/CustomerDetailsPage"));
 
-// Lazy load pages for better performance
+// ─────────────────────────────────────────────────────────────────────────────
+// EAGER imports — critical path. Shipped in the main entry chunk so the first
+// paint after auth never blocks on a network request. Mobile-first: every byte
+// here is one we don't have to fetch over a flaky 3G/4G connection.
+//   - Auth         : every unauthenticated user lands here
+//   - AppLayout    : the shell rendered for every authenticated route
+//   - Dashboard    : default landing for "/"
+//   - NotFound     : tiny + must render even if a chunk fetch fails
+// ─────────────────────────────────────────────────────────────────────────────
+import Auth from "./pages/Auth";
+import AppLayout from "./components/layout/AppLayout";
+import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LAZY imports — split into route-group chunks by `vite.config.ts > manualChunks`.
+// Each lazy() call still defines a route boundary for React Suspense, but Rollup
+// concatenates them into ~7 logical bundles (sales / inventory / finance /
+// workspace / admin / platform / settings) instead of 80+ tiny ones.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Public / landing
 const LandingPage = lazy(() => import("./pages/landing/LandingPage"));
-const Auth = lazy(() => import("./pages/Auth"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const AppLayout = lazy(() => import("./components/layout/AppLayout"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+
+// Sales & customers group
 const CustomersPage = lazy(() => import("./pages/customers/CustomersPage"));
-const ProductsPage = lazy(() => import("./pages/products/ProductsPage"));
-const ProductDetailsPage = lazy(() => import("./pages/products/ProductDetailsPage"));
-const CategoriesPage = lazy(() => import("./pages/categories/CategoriesPage"));
+const CustomerDetailsPage = lazy(() => import("./pages/customers/CustomerDetailsPage"));
 const QuotationsPage = lazy(() => import("./pages/quotations/QuotationsPage"));
 const QuotationDetailsPage = lazy(() => import("./pages/quotations/QuotationDetailsPage"));
 const SalesOrdersPage = lazy(() => import("./pages/sales-orders/SalesOrdersPage"));
 const SalesOrderDetailsPage = lazy(() => import("./pages/sales-orders/SalesOrderDetailsPage"));
-const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
 const InvoicesPage = lazy(() => import("./pages/invoices/InvoicesPage"));
 const InvoiceDetailsPage = lazy(() => import("./pages/invoices/InvoiceDetailsPage"));
 const PaymentsPage = lazy(() => import("./pages/payments/PaymentsPage"));
 const CreditNotesPage = lazy(() => import("./pages/credit-notes/CreditNotesPage"));
+const CollectionDashboard = lazy(() => import("./pages/collections/CollectionDashboard"));
+const PriceListsPage = lazy(() => import("./pages/pricing/PriceListsPage"));
+
+// Inventory & purchasing group
+const ProductsPage = lazy(() => import("./pages/products/ProductsPage"));
+const ProductDetailsPage = lazy(() => import("./pages/products/ProductDetailsPage"));
+const CategoriesPage = lazy(() => import("./pages/categories/CategoriesPage"));
 const InventoryPage = lazy(() => import("./pages/inventory/InventoryPage"));
 const SuppliersPage = lazy(() => import("./pages/suppliers/SuppliersPage"));
 const SupplierDetailsPage = lazy(() => import("./pages/suppliers/SupplierDetailsPage"));
 const SupplierPaymentsPage = lazy(() => import("./pages/suppliers/SupplierPaymentsPage"));
 const PurchaseOrdersPage = lazy(() => import("./pages/purchase-orders/PurchaseOrdersPage"));
 const PurchaseOrderDetailsPage = lazy(() => import("./pages/purchase-orders/PurchaseOrderDetailsPage"));
+const AttachmentsPage = lazy(() => import("./pages/attachments/AttachmentsPage"));
+
+// Finance & accounting group (heavy: pulls in jspdf, recharts via reports)
+const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
+const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
+const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
+const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
+const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
+const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
+const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
+const JournalEntriesPage = lazy(() => import("./pages/accounting/JournalEntriesPage"));
+
+// Workspace group (HR + day-to-day tooling)
+const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
+const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetailsPage"));
+const AttendancePage = lazy(() => import("./pages/attendance/AttendancePage"));
+const TasksPage = lazy(() => import("./pages/tasks/TasksPage"));
+const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
+const SearchPage = lazy(() => import("./pages/search/SearchPage"));
+const ApprovalsPage = lazy(() => import("./pages/approvals/ApprovalsPage"));
+const SyncStatusPage = lazy(() => import("./pages/sync/SyncStatusPage"));
+const InstallPage = lazy(() => import("./pages/install/InstallPage"));
+
+// Settings group (small, infrequent)
 const UnifiedSettingsPage = lazy(() => import("./pages/settings/UnifiedSettingsPage"));
 const CustomerAlertSettingsPage = lazy(() => import("./pages/settings/CustomerAlertSettings"));
-const SearchPage = lazy(() => import("./pages/search/SearchPage"));
-const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
-const TasksPage = lazy(() => import("./pages/tasks/TasksPage"));
+
+// Admin group (rarely visited by regular users — perfect for code-splitting)
 const RolesPage = lazy(() => import("./pages/admin/RolesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/PermissionsPage"));
 const CustomizationsPage = lazy(() => import("./pages/admin/CustomizationsPage"));
@@ -56,28 +101,13 @@ const MetricsPage = lazy(() => import("./pages/admin/MetricsPage"));
 const SodRulesPage = lazy(() => import("./pages/admin/SodRulesPage"));
 const TenantsPage = lazy(() => import("./pages/admin/TenantsPage"));
 const DomainEventsPage = lazy(() => import("./pages/admin/DomainEventsPage"));
-const ApprovalsPage = lazy(() => import("./pages/approvals/ApprovalsPage"));
-const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
-const EmployeeDetailsPage = lazy(() => import("./pages/employees/EmployeeDetailsPage"));
-const SyncStatusPage = lazy(() => import("./pages/sync/SyncStatusPage"));
-const AttachmentsPage = lazy(() => import("./pages/attachments/AttachmentsPage"));
-const InstallPage = lazy(() => import("./pages/install/InstallPage"));
-const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
-const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
-const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
-const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
-const AttendancePage = lazy(() => import("./pages/attendance/AttendancePage"));
-const CollectionDashboard = lazy(() => import("./pages/collections/CollectionDashboard"));
-const PriceListsPage = lazy(() => import("./pages/pricing/PriceListsPage"));
-const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
-// Accounting Pages
-const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
-const JournalEntriesPage = lazy(() => import("./pages/accounting/JournalEntriesPage"));
-// PWA 2025 Handler Pages
+
+// PWA 2025 handler routes (only triggered by OS share/file/protocol intents)
 const ShareTargetPage = lazy(() => import("./pages/share/ShareTargetPage"));
 const OpenFilePage = lazy(() => import("./pages/file/OpenFilePage"));
 const ProtocolHandlerPage = lazy(() => import("./pages/protocol/ProtocolHandlerPage"));
-// Platform Owner Pages
+
+// Platform Owner (super-admin) routes — only ever loaded by < 5 users globally
 const PlatformLayout = lazy(() => import("./components/platform/PlatformLayout"));
 const PlatformAuth = lazy(() => import("./pages/platform/PlatformAuth"));
 const PlatformDashboard = lazy(() => import("./pages/platform/PlatformDashboard"));
