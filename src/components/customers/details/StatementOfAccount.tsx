@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Printer, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { generatePDF } from "@/lib/pdfGeneratorLazy";
+import { generateStatementPdf } from "@/lib/statementPdfGenerator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
