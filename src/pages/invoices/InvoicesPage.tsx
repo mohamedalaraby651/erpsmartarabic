@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, Copy, FileText, X, Loader2 } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
+import { BulkPrintConfirmDialog } from "@/components/invoices/BulkPrintConfirmDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
@@ -37,6 +38,18 @@ const InvoicesPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const list = useInvoicesList();
+  const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+
+  // Invoices that match the current selection — used by the preview dialog.
+  const selectedInvoices = useMemo(
+    () => (list.sortedData as InvoiceWithCustomer[]).filter((i) => list.selectedIds.has(i.id)),
+    [list.sortedData, list.selectedIds]
+  );
+
+  const handleConfirmBulkPrint = useCallback(async () => {
+    await list.bulkPrint();
+    setBulkPreviewOpen(false);
+  }, [list]);
 
   const renderMobileInvoiceItem = useCallback((invoice: InvoiceWithCustomer) => {
     const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
@@ -206,9 +219,9 @@ const InvoicesPage = () => {
                   <span className="text-muted-foreground">فاتورة محددة</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={list.bulkPrint} disabled={list.isBulkPrinting}>
+                  <Button size="sm" onClick={() => setBulkPreviewOpen(true)} disabled={list.isBulkPrinting}>
                     {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
-                    طباعة دفعية PDF
+                    معاينة وطباعة دفعية PDF
                   </Button>
                   <Button size="sm" variant="ghost" onClick={list.clearSelection}>
                     <X className="h-4 w-4 ml-1" />إلغاء التحديد
@@ -223,6 +236,13 @@ const InvoicesPage = () => {
 
       <InvoiceFormDialog open={list.dialogOpen} onOpenChange={(open) => { list.setDialogOpen(open); if (!open) list.setPrefillCustomerId(undefined); }} invoice={list.selectedInvoice} prefillCustomerId={list.prefillCustomerId} />
       {list.printInvoiceId && <InvoicePrintView invoiceId={list.printInvoiceId} open={list.printDialogOpen} onOpenChange={list.setPrintDialogOpen} />}
+      <BulkPrintConfirmDialog
+        open={bulkPreviewOpen}
+        onOpenChange={setBulkPreviewOpen}
+        invoices={selectedInvoices}
+        onConfirm={handleConfirmBulkPrint}
+        isProcessing={list.isBulkPrinting}
+      />
     </div>
   );
 };
