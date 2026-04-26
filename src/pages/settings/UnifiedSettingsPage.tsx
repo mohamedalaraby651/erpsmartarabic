@@ -27,6 +27,7 @@ import { ReportTemplateEditor } from '@/components/reports/ReportTemplateEditor'
 import { BackupTab } from '@/components/settings/BackupTab';
 import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { OfflineSettings } from '@/components/settings/OfflineSettings';
+import { AdaptivePerformanceSettings } from '@/components/settings/AdaptivePerformanceSettings';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import { TenantSettings } from '@/components/tenant/TenantSettings';
 import { AboutSystemCard } from '@/components/system/AboutSystemCard';
@@ -150,6 +151,8 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         return <NotificationSettings />;
       case 'documents':
         return <DocumentsSection userId={user?.id || ''} />;
+      case 'performance':
+        return <AdaptivePerformanceSettings />;
       case 'company':
         return isAdmin ? <CompanyInfoSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
       case 'tenant':

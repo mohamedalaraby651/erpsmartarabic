@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Smartphone,
+  Gauge,
 } from 'lucide-react';
 
 export interface SettingsTab {
@@ -40,6 +41,7 @@ export const personalTabs: SettingsTab[] = [
   { id: 'appearance', label: 'المظهر', icon: Palette, adminOnly: false, description: 'الثيم والألوان والخطوط', color: 'bg-purple-500' },
   { id: 'notifications', label: 'الإشعارات', icon: Bell, adminOnly: false, description: 'إعدادات التنبيهات', color: 'bg-orange-500' },
   { id: 'documents', label: 'مستنداتي', icon: Paperclip, adminOnly: false, description: 'المرفقات الشخصية', color: 'bg-pink-500' },
+  { id: 'performance', label: 'الأداء والشبكة', icon: Gauge, adminOnly: false, description: 'تكييف timeout والمزامنة حسب سرعة الشبكة', color: 'bg-sky-500' },
 ];
 
 export const systemTabs: SettingsTab[] = [
