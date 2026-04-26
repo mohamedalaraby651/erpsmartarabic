@@ -107,6 +107,29 @@
       </div>
     </noscript>
     <div id="root"></div>
+
+    <!--
+      Preview-link banner: when the URL is `id-preview--*.lovable.app` the page
+      is gated behind Lovable's auth-bridge and may show a white screen for
+      anyone who isn't already logged into Lovable. Show a small banner BEFORE
+      React mounts so the user has a one-click escape to the production URL.
+    -->
+    <script>
+      (function () {
+        try {
+          var host = window.location.hostname;
+          if (host.indexOf('id-preview--') === -1) return;
+          var bar = document.createElement('div');
+          bar.setAttribute('dir', 'rtl');
+          bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#fef3c7;color:#92400e;border-bottom:1px solid #f59e0b;padding:6px 12px;font-family:Cairo,sans-serif;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+          bar.innerHTML =
+            '<span>⚠️ هذا رابط معاينة محمي. للوصول الفعلي للنظام:</span>' +
+            '<a href="https://erpsmartarabic.lovable.app" style="background:#f59e0b;color:#fff;text-decoration:none;border-radius:6px;padding:3px 10px;font-weight:600">افتح النسخة الرسمية</a>';
+          document.body.insertBefore(bar, document.body.firstChild);
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
     <!--
       Load-failure shield: if the React root is still empty after 10s,

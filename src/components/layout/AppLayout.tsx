@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { EnvironmentBadge } from '@/components/system/EnvironmentBadge';
 
 import PageTransition from '@/components/transitions/PageTransition';
 
@@ -126,6 +127,7 @@ export default function AppLayout() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-14">
+        <EnvironmentBadge />
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         <main className="p-3">
           <PageErrorBoundary>
@@ -152,6 +154,7 @@ export default function AppLayout() {
   return (
     <>
       <div className="min-h-screen bg-background">
+        <EnvironmentBadge />
         <AppSidebar
           collapsed={sidebarCollapsed}
           onToggle={toggleSidebar}
