@@ -100,7 +100,53 @@
 </head>
 
   <body>
+    <noscript>
+      <div style="padding:2rem;text-align:center;font-family:Cairo,sans-serif;direction:rtl">
+        <h1 style="color:#dc2626">هذا التطبيق يحتاج إلى تفعيل JavaScript</h1>
+        <p>يرجى تفعيل JavaScript في إعدادات المتصفح ثم إعادة تحميل الصفحة.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!--
+      Load-failure shield: if the React root is still empty after 10s,
+      something blocked the bundle (stale SW, network, broken chunk).
+      Show an Arabic recovery UI instead of leaving the user on a white screen.
+    -->
+    <script>
+      (function () {
+        var SHIELD_MS = 10000;
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && root.children.length === 0) {
+            root.innerHTML =
+              '<div dir="rtl" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Cairo,sans-serif;background:hsl(0 0% 100%)">' +
+                '<div style="max-width:420px;width:100%;text-align:center;border:1px solid #e5e7eb;border-radius:12px;padding:2rem;box-shadow:0 10px 25px rgba(0,0,0,0.06)">' +
+                  '<div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px">⚠️</div>' +
+                  '<h1 style="font-size:1.25rem;margin:0 0 .5rem;color:#111827">تعذّر تحميل التطبيق</h1>' +
+                  '<p style="color:#6b7280;font-size:.9rem;margin:0 0 1.25rem;line-height:1.6">' +
+                    'تأكد من اتصالك بالإنترنت ثم اضغط إعادة المحاولة. سيتم مسح الذاكرة المؤقتة تلقائياً.' +
+                  '</p>' +
+                  '<button id="lvbl-retry" style="background:#2563eb;color:#fff;border:0;border-radius:8px;padding:.6rem 1.25rem;font-size:.95rem;font-family:inherit;cursor:pointer;font-weight:600">إعادة المحاولة</button>' +
+                '</div>' +
+              '</div>';
+            var btn = document.getElementById('lvbl-retry');
+            if (btn) btn.onclick = function () {
+              try {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(function (rs) {
+                    rs.forEach(function (r) { r.unregister(); });
+                  });
+                }
+                if ('caches' in window) {
+                  caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
+                }
+              } catch (e) { /* ignore */ }
+              window.location.reload();
+            };
+          }
+        }, SHIELD_MS);
+      })();
+    </script>
   </body>
 </html>
