@@ -219,9 +219,9 @@ const InvoicesPage = () => {
                   <span className="text-muted-foreground">فاتورة محددة</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={list.bulkPrint} disabled={list.isBulkPrinting}>
+                  <Button size="sm" onClick={() => setBulkPreviewOpen(true)} disabled={list.isBulkPrinting}>
                     {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
-                    طباعة دفعية PDF
+                    معاينة وطباعة دفعية PDF
                   </Button>
                   <Button size="sm" variant="ghost" onClick={list.clearSelection}>
                     <X className="h-4 w-4 ml-1" />إلغاء التحديد
