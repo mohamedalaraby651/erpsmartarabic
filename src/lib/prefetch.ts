@@ -102,11 +102,47 @@ const groupAffinity: Record<string, string[]> = {
 };
 
 /**
+ * Read adaptive performance settings (lazy import — non-blocking).
+ * Returns sensible defaults if module not loaded yet.
+ */
+function getAdaptiveFlags(): {
+  prefetchEnabled: boolean;
+  prefetchOnHover: boolean;
+  prefetchOnIdle: boolean;
+} {
+  try {
+    const raw = typeof localStorage !== 'undefined'
+      ? localStorage.getItem('adaptive-settings:v1')
+      : null;
+    if (!raw) return { prefetchEnabled: true, prefetchOnHover: true, prefetchOnIdle: true };
+    const s = JSON.parse(raw);
+    return {
+      prefetchEnabled: s.prefetchEnabled ?? true,
+      prefetchOnHover: s.prefetchOnHover ?? true,
+      prefetchOnIdle: s.prefetchOnIdle ?? true,
+    };
+  } catch {
+    return { prefetchEnabled: true, prefetchOnHover: true, prefetchOnIdle: true };
+  }
+}
+
+/**
  * Prefetch a single route. Safe to call repeatedly — caches per-route AND
  * per-group, so hovering 6 sales links only triggers ONE network fetch.
+ *
+ * Respects user's adaptive performance settings: if prefetch is disabled
+ * (e.g. data-saver mode), this becomes a no-op.
  */
-export function prefetchRoute(routeName: string): void {
+export function prefetchRoute(routeName: string, opts: { source?: 'hover' | 'idle' | 'boot' } = {}): void {
   if (prefetchedRoutes.has(routeName)) return;
+
+  // Honor user settings
+  const flags = getAdaptiveFlags();
+  if (!flags.prefetchEnabled) return;
+  if (opts.source === 'hover' && !flags.prefetchOnHover) return;
+  if (opts.source === 'idle' && !flags.prefetchOnIdle) return;
+  if (opts.source === 'boot' && !flags.prefetchOnIdle) return;
+
   const group = routeToGroup[routeName];
   if (group && prefetchedGroups.has(group)) {
     // Group chunk is already in cache — mark route as done and bail.
@@ -140,8 +176,8 @@ export function prefetchRoute(routeName: string): void {
 /**
  * Prefetch multiple routes
  */
-export function prefetchRoutes(routeNames: string[]): void {
-  routeNames.forEach(prefetchRoute);
+export function prefetchRoutes(routeNames: string[], opts?: { source?: 'hover' | 'idle' | 'boot' }): void {
+  routeNames.forEach((name) => prefetchRoute(name, opts));
 }
 
 /**
@@ -151,11 +187,11 @@ export function prefetchCommonRoutes(): void {
   if (typeof window === 'undefined') return;
   if ('requestIdleCallback' in window) {
     (window as Window & typeof globalThis).requestIdleCallback(
-      () => prefetchRoutes(['dashboard', 'customers']),
+      () => prefetchRoutes(['dashboard', 'customers'], { source: 'boot' }),
       { timeout: 5000 },
     );
   } else {
-    setTimeout(() => prefetchRoutes(['dashboard', 'customers']), 3000);
+    setTimeout(() => prefetchRoutes(['dashboard', 'customers'], { source: 'boot' }), 3000);
   }
 }
 
@@ -169,7 +205,7 @@ export function createPrefetchHandler(routeName: string): () => void {
   return () => {
     if (prefetched) return;
     prefetched = true;
-    prefetchRoute(routeName);
+    prefetchRoute(routeName, { source: 'hover' });
   };
 }
 
