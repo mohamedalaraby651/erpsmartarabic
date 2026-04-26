@@ -53,7 +53,7 @@ export function useProductsList() {
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  const { data: products = [], isLoading, refetch } = useQuery({
+  const { data: products = [], isLoading, refetch, error } = useQuery({
     queryKey: ['products', debouncedSearch, categoryFilter, pagination.currentPage],
     queryFn: async () => {
       let query = supabase.from('products').select('*')
@@ -132,7 +132,7 @@ export function useProductsList() {
     searchQuery, setSearchQuery, categoryFilter, setCategoryFilter,
     dialogOpen, setDialogOpen, selectedProduct, deletingId,
     importDialogOpen, setImportDialogOpen,
-    canEdit, canDelete, products, isLoading, sortedData, sortConfig, requestSort,
+    canEdit, canDelete, products, isLoading, error: error as Error | null, refetch, sortedData, sortConfig, requestSort,
     filters, setFilter, deleteMutation, handleEdit, handleAdd, handleDelete, handleRefresh,
     stats, categories, getProductStock, getCategoryName,
     pagination, totalCount, PAGE_SIZE,
