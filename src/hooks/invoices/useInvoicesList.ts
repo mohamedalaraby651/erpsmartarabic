@@ -32,6 +32,38 @@ export function useInvoicesList() {
   const [prefillCustomerId, setPrefillCustomerId] = useState<string | undefined>(undefined);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printInvoiceId, setPrintInvoiceId] = useState<string | null>(null);
+  // Bulk-selection state for batch printing / actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkPrinting, setIsBulkPrinting] = useState(false);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const bulkPrint = useCallback(async () => {
+    if (selectedIds.size === 0) {
+      toast({ title: 'لم يتم تحديد فواتير', variant: 'destructive' });
+      return;
+    }
+    setIsBulkPrinting(true);
+    try {
+      const { generateBulkInvoicesPDF } = await import('@/lib/bulkInvoicePdfGenerator');
+      await generateBulkInvoicesPDF(Array.from(selectedIds));
+      toast({ title: `تم تجهيز ${selectedIds.size} فاتورة في PDF واحد` });
+      clearSelection();
+    } catch (e) {
+      logErrorSafely('InvoicesPage.bulkPrint', e);
+      toast({ title: 'فشل توليد ملف PDF', variant: 'destructive' });
+    } finally {
+      setIsBulkPrinting(false);
+    }
+  }, [selectedIds, toast, clearSelection]);
 
   const canEdit = userRole === 'admin' || userRole === 'sales' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
@@ -144,6 +176,7 @@ export function useInvoicesList() {
     canEdit, canDelete, invoices, isLoading, sortedData, sortConfig, requestSort,
     filters, setFilter, deleteMutation, handleEdit, handleAdd, handleRefresh,
     statItems, invoiceStats, pagination, totalCount, duplicate, isDuplicating,
+    selectedIds, toggleSelect, clearSelection, bulkPrint, isBulkPrinting,
     PAGE_SIZE,
   };
 }
