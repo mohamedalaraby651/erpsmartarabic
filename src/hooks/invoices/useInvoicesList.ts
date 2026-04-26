@@ -202,7 +202,7 @@ export function useInvoicesList() {
     searchQuery, setSearchQuery, debouncedSearch,
     dialogOpen, setDialogOpen, selectedInvoice, prefillCustomerId, setPrefillCustomerId,
     printDialogOpen, setPrintDialogOpen, printInvoiceId, setPrintInvoiceId,
-    canEdit, canDelete, invoices, isLoading, sortedData, sortConfig, requestSort,
+    canEdit, canDelete, invoices, isLoading, error: error as Error | null, refetch, sortedData, sortConfig, requestSort,
     filters, setFilter, deleteMutation, handleEdit, handleAdd, handleRefresh,
     statItems, invoiceStats, pagination, totalCount, duplicate, isDuplicating,
     selectedIds, toggleSelect, clearSelection, bulkPrint, isBulkPrinting,
