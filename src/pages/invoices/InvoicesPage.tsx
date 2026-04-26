@@ -236,6 +236,13 @@ const InvoicesPage = () => {
 
       <InvoiceFormDialog open={list.dialogOpen} onOpenChange={(open) => { list.setDialogOpen(open); if (!open) list.setPrefillCustomerId(undefined); }} invoice={list.selectedInvoice} prefillCustomerId={list.prefillCustomerId} />
       {list.printInvoiceId && <InvoicePrintView invoiceId={list.printInvoiceId} open={list.printDialogOpen} onOpenChange={list.setPrintDialogOpen} />}
+      <BulkPrintConfirmDialog
+        open={bulkPreviewOpen}
+        onOpenChange={setBulkPreviewOpen}
+        invoices={selectedInvoices}
+        onConfirm={handleConfirmBulkPrint}
+        isProcessing={list.isBulkPrinting}
+      />
     </div>
   );
 };
