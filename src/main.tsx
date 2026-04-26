@@ -26,7 +26,10 @@ installGlobalErrorHandlers();
 // the install base has rotated through at least one fresh load.
 // ---------------------------------------------------------------------------
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  const FLAG = 'sw-cleanup:done:v1';
+  // Bumped to v2 (2026-04-26): re-runs cleanup for users who already passed v1
+  // so they pick up the latest bundle-splitting + Auth retry fixes that were
+  // shipped after the original cleanup ran.
+  const FLAG = 'sw-cleanup:done:v2';
   try {
     if (localStorage.getItem(FLAG) !== '1') {
       navigator.serviceWorker

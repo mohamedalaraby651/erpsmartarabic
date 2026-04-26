@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { EnvironmentBadge } from '@/components/system/EnvironmentBadge';
 
 import PageTransition from '@/components/transitions/PageTransition';
 

@@ -1,13 +1,54 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
+
+// Build stamp computed once per build. Used by EnvironmentBadge / AboutSystemCard
+// so users (and support) can verify which version of the bundle is loaded.
+const BUILD_TIME = new Date().toISOString();
+const BUILD_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+/**
+ * Tiny inline plugin: emits `/version.json` containing the same buildId/buildTime
+ * that's inlined into the JS bundle. The frontend can fetch it with cache-bust
+ * to detect a newer deployment without parsing HTML.
+ */
+function versionJsonPlugin() {
+  return {
+    name: 'lvbl-version-json',
+    apply: 'build' as const,
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: JSON.stringify({ buildId: BUILD_ID, buildTime: BUILD_TIME }, null, 2),
+      });
+    },
+    // In dev, write it to disk so /version.json is served by Vite dev middleware
+    configResolved() {
+      try {
+        const publicDir = path.resolve(__dirname, 'public');
+        if (fs.existsSync(publicDir)) {
+          fs.writeFileSync(
+            path.join(publicDir, 'version.json'),
+            JSON.stringify({ buildId: BUILD_ID, buildTime: BUILD_TIME }, null, 2),
+          );
+        }
+      } catch { /* ignore — non-fatal */ }
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+  },
+  define: {
+    __BUILD_TIME__: JSON.stringify(BUILD_TIME),
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
   build: {
     rollupOptions: {
@@ -83,6 +124,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    versionJsonPlugin(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
