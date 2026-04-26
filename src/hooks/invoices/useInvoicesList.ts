@@ -176,6 +176,7 @@ export function useInvoicesList() {
     canEdit, canDelete, invoices, isLoading, sortedData, sortConfig, requestSort,
     filters, setFilter, deleteMutation, handleEdit, handleAdd, handleRefresh,
     statItems, invoiceStats, pagination, totalCount, duplicate, isDuplicating,
+    selectedIds, toggleSelect, clearSelection, bulkPrint, isBulkPrinting,
     PAGE_SIZE,
   };
 }
