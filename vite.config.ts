@@ -12,32 +12,60 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-ui-core': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-tooltip',
-          ],
-          'vendor-ui-extended': [
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-radio-group',
-            '@radix-ui/react-slider',
-            '@radix-ui/react-scroll-area',
-          ],
-          'vendor-charts': ['recharts'],
-          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
-          'vendor-excel': ['xlsx'],
-          'vendor-dates': ['date-fns'],
-          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-idb': ['idb'],
+        // manualChunks as a function lets us group MANY page chunks into a few
+        // logical bundles. The previous setup produced 80+ tiny chunks (one per
+        // lazy() page), causing severe HTTP overhead on mobile networks.
+        // Now we ship ~5 page-group chunks + dedicated vendor chunks.
+        manualChunks(id) {
+          // ── Vendors (shared libraries) ─────────────────────────────────
+          if (id.includes('node_modules')) {
+            if (/[\\/]react(?:-dom|-router-dom)?[\\/]/.test(id)) return 'vendor-react';
+            if (id.includes('@tanstack/react-query')) return 'vendor-query';
+            if (id.includes('@supabase/supabase-js')) return 'vendor-supabase';
+            if (id.includes('recharts')) return 'vendor-charts';
+            if (id.includes('jspdf')) return 'vendor-pdf';
+            if (id.includes('xlsx')) return 'vendor-excel';
+            if (id.includes('date-fns')) return 'vendor-dates';
+            if (id.includes('@dnd-kit')) return 'vendor-dnd';
+            if (id.includes('idb')) return 'vendor-idb';
+            if (id.includes('@radix-ui')) {
+              // Split radix into core (used everywhere) vs extended
+              if (/(dialog|dropdown-menu|select|popover|tooltip)/.test(id)) {
+                return 'vendor-ui-core';
+              }
+              return 'vendor-ui-extended';
+            }
+            // All other 3rd-party deps → single vendor bundle
+            return 'vendor-misc';
+          }
+
+          // ── Application pages grouped by domain ────────────────────────
+          // Each group ships as ONE chunk regardless of how many pages it has.
+          if (id.includes('/src/pages/')) {
+            if (/\/pages\/(customers|invoices|payments|credit-notes|sales-orders|quotations|collections|pricing)\//.test(id)) {
+              return 'pages-sales';
+            }
+            if (/\/pages\/(suppliers|purchase-orders|products|categories|inventory|attachments)\//.test(id)) {
+              return 'pages-inventory';
+            }
+            if (/\/pages\/(treasury|expenses|accounting|reports)\//.test(id)) {
+              return 'pages-finance';
+            }
+            if (/\/pages\/(employees|attendance|tasks|notifications|search|approvals|sync|install)\//.test(id)) {
+              return 'pages-workspace';
+            }
+            if (/\/pages\/admin\//.test(id)) {
+              return 'pages-admin';
+            }
+            if (/\/pages\/platform\//.test(id)) {
+              return 'pages-platform';
+            }
+            if (/\/pages\/settings\//.test(id)) {
+              return 'pages-settings';
+            }
+            // Misc handlers (share, file, protocol, landing, auth, dashboard)
+            // remain in main entry (small, used early).
+          }
         },
       },
     },
