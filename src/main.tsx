@@ -4,6 +4,15 @@ import "./index.css";
 import { initializeTheme } from "./lib/themeManager";
 import { measureWebVitals, logBundleInfo } from "./lib/performanceMonitor";
 import { prefetchCommonRoutes } from "./lib/prefetch";
+import {
+  installGlobalErrorHandlers,
+  drainBootstrapEvents,
+  emitTelemetry,
+} from "./lib/runtimeTelemetry";
+
+// Install global error capture as early as possible — before React mounts —
+// so we catch errors thrown during initial module evaluation too.
+installGlobalErrorHandlers();
 
 // ---------------------------------------------------------------------------
 // Ghost Service Worker cleanup
