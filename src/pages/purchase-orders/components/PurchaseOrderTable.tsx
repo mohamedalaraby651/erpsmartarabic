@@ -16,15 +16,16 @@ type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'] & {
 };
 
 type SortConfig = { key: string; direction: 'asc' | 'desc' } | null;
-type FilterValue = string | number | boolean | string[] | null;
+type AnyFilterValue = string | string[] | { min?: unknown; max?: unknown } | undefined;
 
 interface PurchaseOrderTableProps {
   orders: PurchaseOrder[];
   isLoading: boolean;
   sortConfig: SortConfig;
   requestSort: (key: string) => void;
-  filters: Record<string, FilterValue>;
-  setFilter: (key: string, value: FilterValue) => void;
+  filters: Record<string, AnyFilterValue>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setFilter: (key: string, value: any) => void;
   canEdit: boolean;
   canDelete: boolean;
   onEdit: (order: PurchaseOrder) => void;
