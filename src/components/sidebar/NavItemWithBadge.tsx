@@ -74,6 +74,9 @@ function NavItemWithBadge({
               'hover:scale-105'
             )}
             onClick={handleClick}
+            onMouseEnter={prefetchOnIntent}
+            onFocus={prefetchOnIntent}
+            onTouchStart={prefetchOnIntent}
           >
             <div className={cn(
               'p-1.5 rounded-md transition-colors',
