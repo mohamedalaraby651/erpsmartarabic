@@ -241,4 +241,17 @@ export function prefetchGroup(group: string): void {
   // them together), so we only need ONE import call per group.
   if (routes.length > 0) prefetchRoute(routes[0]);
   prefetchedGroups.add(group);
+
+  // Schedule affinity prefetch on a deeper idle window — these are "next
+  // likely" groups, not critical. Pushing them behind the primary group's
+  // network request avoids bandwidth contention on mobile.
+  const related = groupAffinity[group];
+  if (related && typeof window !== 'undefined') {
+    const warmRelated = () => related.forEach((g) => prefetchGroup(g));
+    if ('requestIdleCallback' in window) {
+      (window as Window & typeof globalThis).requestIdleCallback(warmRelated, { timeout: 4000 });
+    } else {
+      setTimeout(warmRelated, 1500);
+    }
+  }
 }
