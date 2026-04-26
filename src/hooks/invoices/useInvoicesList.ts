@@ -45,7 +45,34 @@ export function useInvoicesList() {
     });
   }, []);
 
-  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  /**
+   * Select every invoice that matches the current search term across ALL pages,
+   * not just the rows visible on the current page. Fetches IDs only (lightweight).
+   * Capped at 500 to avoid runaway PDF generation.
+   */
+  const selectAllFiltered = useCallback(async () => {
+    setIsSelectingAll(true);
+    try {
+      let query = supabase.from('invoices').select('id').limit(500);
+      if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      const { data, error } = await query;
+      if (error) throw error;
+      const ids = (data || []).map((r) => r.id);
+      setSelectedIds(new Set(ids));
+      if (ids.length === 500) {
+        toast({ title: 'تم تحديد أول 500 فاتورة فقط', description: 'استخدم البحث لتضييق النتائج', variant: 'default' });
+      } else {
+        toast({ title: `تم تحديد ${ids.length} فاتورة` });
+      }
+    } catch (e) {
+      logErrorSafely('InvoicesPage.selectAllFiltered', e);
+      toast({ title: 'فشل تحديد الفواتير', variant: 'destructive' });
+    } finally {
+      setIsSelectingAll(false);
+    }
+  }, [debouncedSearch, toast]);
+
 
   const bulkPrint = useCallback(async () => {
     if (selectedIds.size === 0) {
