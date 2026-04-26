@@ -153,47 +153,71 @@ const ProductsPage = () => {
       </div>
 
       {isMobile ? (
-        <ScrollArea className="w-full">
-          <div className="flex gap-3 pb-2">
+        <div className="space-y-5">
+          {/* 1. Search — primary, top of view */}
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="بحث بالاسم أو الكود..."
+              value={list.searchQuery}
+              onChange={(e) => list.setSearchQuery(e.target.value)}
+              className="pr-10 h-11"
+              inputMode="search"
+            />
+          </div>
+
+          {/* 2. Stats chips — secondary, compact */}
+          <ScrollArea className="w-full">
+            <div className="flex gap-2.5 pb-1">
+              {[
+                { icon: Package, value: list.stats.total, label: 'الإجمالي', color: 'text-primary', bgColor: 'bg-primary/10' },
+                { icon: Package, value: list.stats.active, label: 'نشط', color: 'text-success', bgColor: 'bg-success/10' },
+                { icon: AlertTriangle, value: list.stats.lowStock, label: 'مخزون منخفض', color: 'text-warning', bgColor: 'bg-warning/10' },
+                { icon: Layers, value: list.stats.categories, label: 'التصنيفات', color: 'text-info', bgColor: 'bg-info/10' },
+              ].map((stat, i) => (
+                <Card key={i} className="min-w-[130px] shrink-0 border-border/60 shadow-xs">
+                  <CardContent className="p-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded-md ${stat.bgColor}`}><stat.icon className={`h-3.5 w-3.5 ${stat.color}`} /></div>
+                      <div className="min-w-0">
+                        <p className="text-base font-bold tabular-nums leading-tight">{stat.value}</p>
+                        <p className="text-[11px] text-muted-foreground leading-tight truncate">{stat.label}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+
+          {/* 3. Results */}
+          <div className="pb-20">{renderMobileView()}</div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: Package, value: list.stats.total, label: 'الإجمالي', color: 'text-primary' },
-              { icon: Package, value: list.stats.active, label: 'نشط', color: 'text-success' },
-              { icon: AlertTriangle, value: list.stats.lowStock, label: 'مخزون منخفض', color: 'text-warning' },
-              { icon: Layers, value: list.stats.categories, label: 'التصنيفات', color: 'text-info' },
+              { icon: Package, value: list.stats.total, label: 'إجمالي المنتجات', bgColor: 'bg-primary/10', color: 'text-primary' },
+              { icon: Package, value: list.stats.active, label: 'منتجات نشطة', bgColor: 'bg-success/10', color: 'text-success' },
+              { icon: AlertTriangle, value: list.stats.lowStock, label: 'مخزون منخفض', bgColor: 'bg-warning/10', color: 'text-warning' },
+              { icon: Layers, value: list.stats.categories, label: 'التصنيفات', bgColor: 'bg-info/10', color: 'text-info' },
             ].map((stat, i) => (
-              <Card key={i} className="min-w-[110px] shrink-0"><CardContent className="p-3">
-                <div className="flex items-center gap-2"><stat.icon className={`h-4 w-4 ${stat.color}`} /><div><p className="text-lg font-bold">{stat.value}</p><p className="text-xs text-muted-foreground">{stat.label}</p></div></div>
+              <Card key={i}><CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${stat.bgColor}`}><stat.icon className={`h-5 w-5 ${stat.color}`} /></div>
+                  <div><p className="text-2xl font-bold">{stat.value}</p><p className="text-sm text-muted-foreground">{stat.label}</p></div>
+                </div>
               </CardContent></Card>
             ))}
           </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: Package, value: list.stats.total, label: 'إجمالي المنتجات', bgColor: 'bg-primary/10', color: 'text-primary' },
-            { icon: Package, value: list.stats.active, label: 'منتجات نشطة', bgColor: 'bg-success/10', color: 'text-success' },
-            { icon: AlertTriangle, value: list.stats.lowStock, label: 'مخزون منخفض', bgColor: 'bg-warning/10', color: 'text-warning' },
-            { icon: Layers, value: list.stats.categories, label: 'التصنيفات', bgColor: 'bg-info/10', color: 'text-info' },
-          ].map((stat, i) => (
-            <Card key={i}><CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}><stat.icon className={`h-5 w-5 ${stat.color}`} /></div>
-                <div><p className="text-2xl font-bold">{stat.value}</p><p className="text-sm text-muted-foreground">{stat.label}</p></div>
-              </div>
-            </CardContent></Card>
-          ))}
-        </div>
-      )}
 
-      <Card><CardContent className="p-3 md:p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="بحث بالاسم أو الكود..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
-          </div>
-          {!isMobile && (
-            <>
+          <Card><CardContent className="p-3 md:p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="بحث بالاسم أو الكود..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
+              </div>
               <Select value={list.categoryFilter} onValueChange={list.setCategoryFilter}>
                 <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="التصنيف" /></SelectTrigger>
                 <SelectContent>
@@ -205,14 +229,13 @@ const ProductsPage = () => {
                 <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="الحالة" /></SelectTrigger>
                 <SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="true">نشط</SelectItem><SelectItem value="false">غير نشط</SelectItem></SelectContent>
               </Select>
-            </>
-          )}
-        </div>
-      </CardContent></Card>
+            </div>
+          </CardContent></Card>
 
-      {isMobile ? <div className="pb-20">{renderMobileView()}</div> : (
-        <Card><CardHeader><CardTitle>قائمة المنتجات ({list.sortedData.length})</CardTitle></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
+          <Card><CardHeader><CardTitle>قائمة المنتجات ({list.sortedData.length})</CardTitle></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
+        </>
       )}
+
 
       <ServerPagination currentPage={list.pagination.currentPage} totalPages={list.pagination.totalPages} totalCount={list.totalCount} pageSize={list.PAGE_SIZE} onPageChange={list.pagination.goToPage} hasNextPage={list.pagination.hasNextPage} hasPrevPage={list.pagination.hasPrevPage} />
       <ProductFormDialog open={list.dialogOpen} onOpenChange={list.setDialogOpen} product={list.selectedProduct} />
