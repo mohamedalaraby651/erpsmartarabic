@@ -49,14 +49,24 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
           await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
           continue;
         }
+        // Telemetry: record the chunk failure before any forced reload so we
+        // know which module triggered it.
+        const errMsg = (err as Error)?.message || 'chunk load failed';
+        emitTelemetry('chunk_load_error', errMsg, {
+          errorName: (err as Error)?.name,
+          errorStack: (err as Error)?.stack,
+          metadata: { attempts: RETRIES + 1 },
+        });
         // Out of retries — try a single hard reload to get fresh HTML.
         try {
           const alreadyTried = sessionStorage.getItem(RELOAD_FLAG) === '1';
           if (!alreadyTried) {
             sessionStorage.setItem(RELOAD_FLAG, '1');
-            window.location.reload();
-            // Return a never-resolving promise so React doesn't render an error
-            // while the page is reloading.
+            emitTelemetry('forced_reload', `chunk reload: ${errMsg}`, {
+              metadata: { reason: 'chunk_load_error', source: 'lazyWithRetry' },
+            });
+            // Give sendBeacon a moment to flush before reload.
+            setTimeout(() => window.location.reload(), 100);
             return new Promise<{ default: T }>(() => { /* pending */ });
           }
         } catch { /* ignore storage errors */ }
