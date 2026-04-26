@@ -161,19 +161,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
 
       if (err) {
+        const meta = classifyAuthError(err);
         setInitError(err);
         emitTelemetry('unhandled_error', `auth_init: ${err.message}`, {
           errorName: err.name,
           errorStack: err.stack,
-          metadata: { source: 'AuthProvider.getSession' },
+          metadata: { source: 'AuthProvider.getSession', kind: meta.kind },
         });
         // Show the toast once per app load — repeated retries shouldn't spam.
         if (!errorToastShownRef.current) {
           errorToastShownRef.current = true;
+          // `permission` is the only category where the right next step is
+          // re-authentication rather than a retry — we keep `destructive`
+          // styling for hard failures and use `default` for transient ones
+          // (offline/timeout) to avoid alarming the user unnecessarily.
+          const isHard = meta.kind === 'permission' || meta.kind === 'unknown';
           toast({
-            variant: 'destructive',
-            title: 'تعذّر الاتصال بالخادم',
-            description: 'لم نتمكن من التحقق من حالة الجلسة. تأكد من الاتصال بالإنترنت ثم أعد المحاولة.',
+            variant: isHard ? 'destructive' : 'default',
+            title: meta.title,
+            description: meta.description,
           });
         }
       } else {
