@@ -32,7 +32,7 @@ const routeImports: Record<string, RouteImport> = {
   'sales-orders': () => import('@/pages/sales-orders/SalesOrdersPage'),
   'credit-notes': () => import('@/pages/credit-notes/CreditNotesPage'),
   payments: () => import('@/pages/payments/PaymentsPage'),
-  collections: () => import('@/pages/collections/CollectionsPage'),
+  collections: () => import('@/pages/collections/CollectionDashboard'),
   'price-lists': () => import('@/pages/pricing/PriceListsPage'),
 
   // Inventory group ──────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ const routeImports: Record<string, RouteImport> = {
   search: () => import('@/pages/search/SearchPage'),
   employees: () => import('@/pages/employees/EmployeesPage'),
   attendance: () => import('@/pages/attendance/AttendancePage'),
-  sync: () => import('@/pages/sync/SyncPage'),
+  sync: () => import('@/pages/sync/SyncStatusPage'),
 
   // Settings ─────────────────────────────────────────────────────────────────
   settings: () => import('@/pages/settings/UnifiedSettingsPage'),
