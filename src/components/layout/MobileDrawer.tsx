@@ -1,9 +1,10 @@
-import { memo, useMemo, useState, forwardRef } from 'react';
+import { memo, useMemo, useState, useEffect, forwardRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
 import { useSidebarCounts, type SidebarCounts } from '@/hooks/useSidebarCounts';
 import { cn } from '@/lib/utils';
+import { prefetchByPath, prefetchGroup } from '@/lib/prefetch';
 import {
   Sheet,
   SheetContent,
@@ -157,6 +158,16 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
     navigate(href);
     onOpenChange(false);
   };
+
+  // Opening the drawer is a strong signal the user is about to navigate
+  // somewhere. Pre-warm the most likely destinations (sales + inventory)
+  // while the open animation is still running — by the time they tap an
+  // item, the chunk is usually already in cache.
+  useEffect(() => {
+    if (!open) return;
+    prefetchGroup('sales');
+    prefetchGroup('inventory');
+  }, [open]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -371,6 +382,7 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
                               active && `${section.bgColor} ${section.color}`
                             )}
                             onClick={() => handleNavigation(item.href)}
+                            onTouchStart={() => prefetchByPath(item.href)}
                           >
                             <Icon className="h-4 w-4" />
                             <span className="flex-1 text-right">{item.title}</span>
