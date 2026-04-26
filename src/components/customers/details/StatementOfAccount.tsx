@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Printer, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { generatePDF } from "@/lib/pdfGeneratorLazy";
+import { generateStatementPdf } from "@/lib/statementPdfGenerator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -69,33 +69,28 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
   const handlePrint = async () => {
     setIsPrinting(true);
     try {
-      const formattedData = statementData.map(item => ({
-        date: new Date(item.entry_date).toLocaleDateString('ar-EG'),
-        type: item.entry_type,
-        reference: item.reference,
-        debit: item.debit > 0 ? item.debit.toLocaleString() : '-',
-        credit: item.credit > 0 ? item.credit.toLocaleString() : '-',
-        runningBalance: item.running_balance.toLocaleString(),
-        status: item.status,
-      }));
+      // Fetch customer details for the PDF header
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('phone, tax_number, governorate, city')
+        .eq('id', customerId)
+        .single();
 
-      await generatePDF({
-        title: `كشف حساب العميل: ${customerName}`,
-        data: formattedData,
-        columns: [
-          { key: 'date', label: 'التاريخ' },
-          { key: 'type', label: 'النوع' },
-          { key: 'reference', label: 'المرجع' },
-          { key: 'debit', label: 'مدين' },
-          { key: 'credit', label: 'دائن' },
-          { key: 'runningBalance', label: 'الرصيد' },
-          { key: 'status', label: 'الحالة' },
-        ],
-        includeCompanyInfo: true,
-        orientation: 'landscape',
+      const address = [customer?.governorate, customer?.city].filter(Boolean).join(' - ');
+
+      await generateStatementPdf({
+        partyType: 'customer',
+        partyName: customerName,
+        partyPhone: customer?.phone,
+        partyTaxNumber: customer?.tax_number,
+        partyAddress: address || null,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        openingBalance: 0,
+        entries: statementData,
       });
       toast.success('تم تصدير كشف الحساب بنجاح');
-    } catch {
+    } catch (e) {
       toast.error('حدث خطأ أثناء تصدير كشف الحساب');
     } finally {
       setIsPrinting(false);
