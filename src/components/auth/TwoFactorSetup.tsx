@@ -47,7 +47,7 @@ const TwoFactorSetup = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_2fa_settings")
-        .select("*")
+        .select("id, user_id, is_enabled, enabled_at, last_used_at, created_at")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
