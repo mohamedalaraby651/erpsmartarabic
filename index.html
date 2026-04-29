@@ -138,7 +138,11 @@
     -->
     <script>
       (function () {
-        var SHIELD_MS = 10000;
+        // Bumped from 10s → 25s. On mobile 3G/4G the initial bundle (vendor +
+        // route chunks) plus the 8s Supabase getSession() timeout can legitimately
+        // take 12-18s before React paints. Firing the shield at 10s was hiding
+        // the real (working) app behind a fake "تعذّر تحميل" screen.
+        var SHIELD_MS = 25000;
         var BOOT_KEY = 'lvbl:runtime-events:v1';
         var MAX_BUF = 20;
 
@@ -191,7 +195,24 @@
           } catch (e) { /* ignore */ }
         }
 
+        // Mark when React has mounted so the shield can stand down.
+        // We poll cheaply because there's no global mount event we can rely on
+        // before main.tsx has even parsed.
+        window.__LVBL_REACT_MOUNTED__ = false;
+        var mountObserver = setInterval(function () {
+          var r = document.getElementById('root');
+          if (r && r.children.length > 0) {
+            window.__LVBL_REACT_MOUNTED__ = true;
+            clearInterval(mountObserver);
+          }
+        }, 200);
+
         setTimeout(function () {
+          // If React already painted SOMETHING (loader, login, error UI), the
+          // shield must NOT replace it — that would be the actual bug the user
+          // reported (a working app being hidden behind a fake error screen).
+          if (window.__LVBL_REACT_MOUNTED__) return;
+          clearInterval(mountObserver);
           var root = document.getElementById('root');
           if (root && root.children.length === 0) {
             // Persist + ship a diagnostic event so we can see WHY users hit
