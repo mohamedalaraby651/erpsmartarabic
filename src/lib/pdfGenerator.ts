@@ -317,8 +317,17 @@ export async function generatePDF(options: ExportOptions): Promise<void> {
   doc.save(fileName);
 }
 
+export type DocumentPdfType =
+  | 'invoice'
+  | 'quotation'
+  | 'sales_order'
+  | 'purchase_order'
+  | 'payment_receipt'
+  | 'expense_receipt'
+  | 'credit_note';
+
 export async function generateDocumentPDF(
-  type: 'invoice' | 'quotation' | 'sales_order' | 'purchase_order',
+  type: DocumentPdfType,
   data: any
 ): Promise<void> {
   const company = await getCompanySettings();
@@ -337,11 +346,14 @@ export async function generateDocumentPDF(
   const pageWidth = doc.internal.pageSize.width;
   const margin = 15;
 
-  const titles: Record<string, string> = {
+  const titles: Record<DocumentPdfType, string> = {
     invoice: 'فاتورة مبيعات',
     quotation: 'عرض سعر',
     sales_order: 'أمر بيع',
     purchase_order: 'أمر شراء',
+    payment_receipt: 'إيصال دفع',
+    expense_receipt: 'إيصال مصروف',
+    credit_note: 'إشعار دائن',
   };
 
   const p = (text: string) => processText(text, hasArabicFont);
