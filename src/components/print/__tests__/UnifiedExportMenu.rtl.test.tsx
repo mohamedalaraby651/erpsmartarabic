@@ -10,12 +10,12 @@ import { UnifiedExportMenu } from '../UnifiedExportMenu';
 
 // ---- Mocks -----------------------------------------------------------------
 
-const generatePDF = vi.fn(async () => undefined);
-const generateDocumentPDF = vi.fn(async () => undefined);
+const generatePDF = vi.fn(async (..._args: any[]) => undefined);
+const generateDocumentPDF = vi.fn(async (..._args: any[]) => undefined);
 
 vi.mock('@/lib/pdfGeneratorLazy', () => ({
-  generatePDF: (...args: unknown[]) => generatePDF(...args),
-  generateDocumentPDF: (...args: unknown[]) => generateDocumentPDF(...args),
+  generatePDF: (...args: any[]) => generatePDF(...args),
+  generateDocumentPDF: (...args: any[]) => generateDocumentPDF(...args),
 }));
 
 vi.mock('sonner', () => ({
