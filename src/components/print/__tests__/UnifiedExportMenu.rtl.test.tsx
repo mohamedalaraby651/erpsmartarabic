@@ -33,12 +33,12 @@ const book_append_sheet = vi.fn((..._args: any[]) => undefined);
 
 vi.mock('xlsx', () => ({
   utils: {
-    json_to_sheet: (...a: any[]) => json_to_sheet(...a),
-    sheet_to_csv: (...a: any[]) => sheet_to_csv(...a),
-    book_new: (...a: any[]) => book_new(...a),
-    book_append_sheet: (...a: any[]) => book_append_sheet(...a),
+    json_to_sheet: (...a: any[]) => json_to_sheet(...(a as [any])),
+    sheet_to_csv: () => sheet_to_csv(),
+    book_new: () => book_new(),
+    book_append_sheet: (...a: any[]) => book_append_sheet(...(a as [any])),
   },
-  writeFile: (...a: any[]) => writeFileSpy(...a),
+  writeFile: (...a: any[]) => writeFileSpy(...(a as [any])),
 }));
 
 
