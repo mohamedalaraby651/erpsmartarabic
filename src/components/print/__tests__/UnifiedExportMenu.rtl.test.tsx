@@ -156,8 +156,12 @@ describe.each([
 
       await waitFor(() => expect(captured.blob).toBeDefined());
       expect(captured.blob!.type).toBe('text/csv;charset=utf-8');
-      const buf = await new Response(captured.blob!).arrayBuffer();
-      const text = new TextDecoder('utf-8').decode(buf);
+      const text: string = await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(String(fr.result));
+        fr.onerror = () => reject(fr.error);
+        fr.readAsText(captured.blob!, 'utf-8');
+      });
       expect(text.charCodeAt(0)).toBe(0xfeff); // BOM
       expect(ARABIC_RANGE.test(text)).toBe(true);
     } finally {
