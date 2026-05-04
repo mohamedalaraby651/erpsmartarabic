@@ -6,6 +6,28 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+// Some Radix/Floating-UI internals call `new ResizeObserver()` directly — ensure constructable
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(globalThis as any).ResizeObserver = ResizeObserverStub;
+class MutationObserverStub {
+  observe() {}
+  disconnect() {}
+  takeRecords() { return []; }
+}
+(globalThis as any).MutationObserver = MutationObserverStub;
+// hasPointerCapture is required by Radix in jsdom
+if (!(Element.prototype as any).hasPointerCapture) {
+  (Element.prototype as any).hasPointerCapture = () => false;
+  (Element.prototype as any).setPointerCapture = () => {};
+  (Element.prototype as any).releasePointerCapture = () => {};
+  (Element.prototype as any).scrollIntoView = () => {};
+}
+
 import { UnifiedExportMenu } from '../UnifiedExportMenu';
 
 // ---- Mocks -----------------------------------------------------------------
