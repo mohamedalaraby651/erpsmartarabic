@@ -156,13 +156,18 @@ describe.each([
 
       await waitFor(() => expect(captured.blob).toBeDefined());
       expect(captured.blob!.type).toBe('text/csv;charset=utf-8');
-      const text: string = await new Promise((resolve, reject) => {
+      const buf: ArrayBuffer = await new Promise((resolve, reject) => {
         const fr = new FileReader();
-        fr.onload = () => resolve(String(fr.result));
+        fr.onload = () => resolve(fr.result as ArrayBuffer);
         fr.onerror = () => reject(fr.error);
-        fr.readAsText(captured.blob!, 'utf-8');
+        fr.readAsArrayBuffer(captured.blob!);
       });
-      expect(text.charCodeAt(0)).toBe(0xfeff); // BOM
+      const bytes = new Uint8Array(buf);
+      // UTF-8 BOM: EF BB BF
+      expect(bytes[0]).toBe(0xef);
+      expect(bytes[1]).toBe(0xbb);
+      expect(bytes[2]).toBe(0xbf);
+      const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(buf);
       expect(ARABIC_RANGE.test(text)).toBe(true);
     } finally {
       URL.createObjectURL = origCreate;
