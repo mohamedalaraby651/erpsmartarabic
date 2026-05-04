@@ -41,15 +41,6 @@ vi.mock('xlsx', () => ({
   writeFile: (...a: any[]) => writeFileSpy(...a),
 }));
 
-vi.mock('xlsx', () => ({
-  utils: {
-    json_to_sheet: (...a: any[]) => json_to_sheet(...a),
-    sheet_to_csv: (...a: any[]) => sheet_to_csv(...a),
-    book_new: (...a: any[]) => book_new(...a),
-    book_append_sheet: (...a: any[]) => book_append_sheet(...a),
-  },
-  writeFile: (...a: any[]) => writeFileSpy(...a),
-}));
 
 // ---- Helpers ---------------------------------------------------------------
 
