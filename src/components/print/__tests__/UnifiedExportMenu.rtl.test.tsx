@@ -23,13 +23,23 @@ vi.mock('sonner', () => ({
 }));
 
 // xlsx mock — captures workbook + writeFile filename
-const writeFileSpy = vi.fn();
-const json_to_sheet = vi.fn((rows: unknown[]) => ({ __rows: rows } as any));
+const writeFileSpy = vi.fn((..._args: any[]) => undefined);
+const json_to_sheet = vi.fn((..._args: any[]) => ({ __rows: _args[0] } as any));
 const sheet_to_csv = vi.fn(
   () => 'الرقم,المنتج,الكمية\n1,قلم رصاص,2\n2,دفتر ملاحظات,5\n',
 );
 const book_new = vi.fn(() => ({} as any));
-const book_append_sheet = vi.fn();
+const book_append_sheet = vi.fn((..._args: any[]) => undefined);
+
+vi.mock('xlsx', () => ({
+  utils: {
+    json_to_sheet: (...a: any[]) => json_to_sheet(...a),
+    sheet_to_csv: (...a: any[]) => sheet_to_csv(...a),
+    book_new: (...a: any[]) => book_new(...a),
+    book_append_sheet: (...a: any[]) => book_append_sheet(...a),
+  },
+  writeFile: (...a: any[]) => writeFileSpy(...a),
+}));
 
 vi.mock('xlsx', () => ({
   utils: {
