@@ -1,68 +1,54 @@
-# صفحة Dev/Debug للـ Prefetch والـ Chunk Performance
-
 ## الهدف
-صفحة داخلية (`/dev/prefetch`) تكشف:
-1. **سجل حي**: كل route/group تم prefetch لها مع المصدر (hover / idle / boot / sidebar-open / mobile-drawer) والوقت والمدة.
-2. **مقارنة قبل/بعد التقسيم**: قياس فعلي لزمن تحميل سيناريوهات (sales-core، sales-ops، mobile drawer) مع وبدون prefetch مسبق.
-3. **حالة الـ chunks**: ما هو محمَّل في الذاكرة حالياً، وأي مجموعات مكتملة.
+ضمان تلقائي بأن كل تصدير (PDF / Excel / CSV) يحتوي على نص عربي صحيح وعلامات RTL، في كل من المتصفح (سطح المكتب) والموبايل.
 
 ## الملفات الجديدة
 
-### 1. `src/lib/prefetchTelemetry.ts` (جديد)
-سجل ذاكرة (in-memory) خفيف يلتقط أحداث prefetch:
-- `recordPrefetchEvent({ routeName, group, source, startedAt, durationMs, status, fromCache })`
-- `getPrefetchEvents()` / `clearEvents()` / `subscribe(callback)` لتحديث UI لحظياً
-- يحفظ آخر 200 حدث فقط (حلقة دائرية) لتجنب تسريب الذاكرة
-- يُفعَّل فقط عندما `import.meta.env.DEV` أو عندما يضع المستخدم `localStorage.setItem('debug:prefetch','1')`
+### 1) `src/components/print/__tests__/UnifiedExportMenu.rtl.test.tsx`
+اختبارات وحدة لمكوّن `UnifiedExportMenu` في وضعَي العرض (1280×720 و 390×844 عبر `matchMedia` وضبط `innerWidth`):
+- **Excel RTL**: محاكاة `xlsx` (`vi.mock('xlsx')`)، استدعاء "Excel" من القائمة، التحقق من:
+  - `wb.Workbook.Views[0].RTL === true`
+  - `ws['!views'][0].RTL === true`
+  - أسماء الأعمدة وقيم الخلايا تحوي نصاً عربياً (`/[\u0600-\u06FF]/`)
+  - اسم الملف ينتهي بـ `.xlsx`
+- **CSV BOM + Arabic**: التقاط `Blob` المُمرّر إلى `URL.createObjectURL` عبر spy، قراءته بـ `FileReader`/`blob.text()` والتحقق:
+  - يبدأ بـ `\uFEFF` (UTF-8 BOM لازم لإكسل العربي)
+  - يحتوي رؤوس الأعمدة العربية وعينة من القيم
+  - `type === 'text/csv;charset=utf-8'`
+- **PDF Arabic pipeline**: محاكاة `@/lib/pdfGeneratorLazy`؛ التحقق من استدعاء `generatePDF`/`generateDocumentPDF` بالعنوان والأعمدة العربية كما هي بدون تشويه (لا BiDi marks).
+- يُعاد تنفيذ نفس الاختبارات داخل `describe.each([['desktop', 1280], ['mobile', 390]])` لضمان التطابق على الموبايل.
 
-### 2. `src/lib/prefetch.ts` (تعديل)
-حقن نقاط القياس داخل `prefetchRoute` و`prefetchGroup`:
-- قبل `importFn()` → `performance.now()` كبداية
-- بعد resolve → حساب المدة وإرسالها لـ `recordPrefetchEvent`
-- إضافة وسم `fromCache: true` عندما يُرجع المسار مبكراً بسبب `prefetchedGroups.has(group)`
-- لا تأثير على المنطق الإنتاجي — مجرد Hook اختياري
+### 2) `src/lib/__tests__/exportRtl.test.ts`
+اختبارات منخفضة المستوى لخط أنابيب النص (تكميل `arabicFont.test.ts`):
+- `sanitizeBidiText` يُزيل `U+200E/200F/202A-202E/2066-2069` من رؤوس CSV/Excel.
+- مولّد PDF (`generatePDF`) عند تمرير عنوان عربي يستدعي `addFont('Amiri', ...)` ويرسم نصاً مُعالَجاً بـ `reshapeArabicText` ثم `toVisualOrder` (يُتحقّق منه عبر تجسس على `MockJsPDF.text`).
+- يُتحقَّق أن إعداد الاتجاه: `setR2L(true)` أو `internal.pageSize` مع `align: 'right'` مُمرّر إلى `autoTable`.
 
-### 3. `src/pages/dev/PrefetchDebugPage.tsx` (جديد)
-صفحة بثلاثة أقسام:
+### 3) `e2e/export-rtl.spec.ts` (Playwright)
+سيناريو E2E حقيقي لضمان السلوك في المتصفح والموبايل:
+- يعمل بمشروعَي viewport: `Desktop Chrome` (1280×720) و `Mobile (Pixel 5)` 393×851 — موجودان في `playwright.config.ts`.
+- يسجل دخول كمستخدم اختبار، ينتقل إلى `/invoices`، يفتح فاتورة، يضغط قائمة "تصدير وطباعة":
+  1. **CSV**: يلتقط التنزيل عبر `page.waitForEvent('download')`، يقرأ المحتوى ويتأكّد:
+     - يبدأ بـ `\uFEFF`
+     - يحوي رؤوساً عربية وأرقاماً
+  2. **XLSX**: يحفظ التنزيل، يفكّ ضغط `xl/workbook.xml` بأداة `unzipper` ويتحقّق من وجود `<workbookView rightToLeft="1"`.
+  3. **PDF**: يحفظ التنزيل، يستخدم `pdf-parse` لاستخراج النص ويتحقّق من ظهور حروف عربية بنطاق `\u0600-\u06FF` وأن الترتيب البصري سليم (لا أحرف Presentation-Form معكوسة بشكل خاطئ).
+- يُكرَّر الاختبار على عدة صفحات: Invoices, Quotations, SalesOrders, Reports.
+- بعد كل تصدير، التقاط `screenshot` للقائمة كدليل بصري (يُحفظ كـ artifact).
 
-**أ) جدول الأحداث الحي** (يتحدّث عبر `subscribe`)
-| الوقت | Route | Group | المصدر | المدة (ms) | من الـ Cache؟ |
+### 4) `e2e/helpers/exportAssertions.ts`
+دوال مساعدة قابلة لإعادة الاستخدام:
+- `assertCsvArabic(buffer)`
+- `assertXlsxRtl(buffer)`
+- `assertPdfArabic(buffer)`
 
-**ب) مقاييس السيناريوهات** — أزرار تفاعلية:
-- **Cold Sales-Core**: مسح `prefetchedRoutes/Groups` ثم قياس `import('@/pages/invoices/InvoicesPage')` مباشرة
-- **Warm Sales-Core**: استدعاء `prefetchGroup('sales-core')` ثم قياس الاستيراد التالي (يجب أن يقترب من 0ms)
-- **Sales-Ops via Affinity**: قياس الفرق عند فتح sales-core (مع تفعيل affinity) ثم الانتقال لـ sales-ops
-- **Mobile Drawer Open**: محاكاة فتح القائمة الجانبية للموبايل ومراقبة ما يتم warm-up
+## تعديلات بسيطة
+- `package.json` (devDependencies): إضافة `pdf-parse` و `unzipper` لاستخدامهما في E2E فقط.
+- `playwright.config.ts`: التأكد أن مشروع الموبايل مفعّل (إن لم يكن، إضافته).
 
-كل سيناريو يعرض:
-```
-قبل التقسيم: ~XXX ms   بعد التقسيم/Prefetch: ~Y ms   التحسن: NN%
-```
+## مخرجات تشغيل الاختبارات
+- وحدة: `bunx vitest run src/components/print src/lib/__tests__/exportRtl.test.ts`
+- E2E: `bunx playwright test e2e/export-rtl.spec.ts --project="Desktop Chrome" --project="Mobile Chrome"`
 
-**ج) حالة الـ Chunks الحالية**
-- قائمة `prefetchedGroups` و`prefetchedRoutes` كـ badges
-- زر "Reset" لمسح الحالة وإعادة الاختبار
-- شارة الإعدادات التكيفية الحالية (data-saver / balanced / performance) من `getAdaptiveFlags`
-
-### 4. `src/App.tsx` (تعديل)
-إضافة المسار داخل layout (محمي بالـ auth):
-```tsx
-const PrefetchDebugPage = lazy(() => import('./pages/dev/PrefetchDebugPage'));
-// ...
-<Route path="dev/prefetch" element={<PrefetchDebugPage />} />
-```
-
-### 5. (اختياري) `src/components/layout/AppSidebar.tsx`
-لن أعدّله. الوصول للصفحة عبر URL مباشر `/dev/prefetch` (صفحة مطوّرين، لا داعي لإظهارها في القائمة).
-
-## نقاط مهمة
-- **لا تأثير على الإنتاج**: التليمتري معطّل افتراضياً خارج DEV ما لم يُفعّله المستخدم بـ localStorage.
-- **القياس واقعي**: نستخدم `performance.now()` حول الـ dynamic import نفسه، وهو ما يعكس زمن الشبكة + parse + execute.
-- **آمن مع الـ cache**: المقاييس "Warm" تُظهر الـ HTTP cache + module cache بشكل صحيح؛ المقاييس "Cold" تُجبر إعادة الاستيراد عبر مسح الـ Sets الداخلية فقط (لا يمكن مسح module cache في المتصفح، لذا "Cold" هنا تعني "Cold للنظام الداخلي" — سأوضح ذلك في النص داخل الصفحة).
-- لقياس Cold حقيقي يحتاج المستخدم Hard Reload + DevTools "Disable cache"؛ سأذكر ذلك في الصفحة.
-
-## التحقق بعد التنفيذ
-1. الذهاب لـ `/dev/prefetch` بعد تسجيل الدخول
-2. تحريك المؤشر على عناصر الشريط الجانبي → يجب أن تظهر الأحداث في الجدول
-3. الضغط على "Warm Sales-Core" → الاستيراد التالي يقترب من 0ms
-4. التأكد من عدم ظهور أي تحذيرات في console
+## ملاحظات تقنية
+- لا حاجة لتعديل `UnifiedExportMenu` نفسه — السلوك الحالي صحيح؛ الاختبارات فقط تحرسه من الانحدار.
+- جميع الاختبارات لا تتصل بـ Supabase حقيقي (mocking) عدا E2E الذي يحتاج جلسة معاينة (سيتمّ تخطّيها برشاقة إذا لم تتوفّر بيئة `PREVIEW_URL` و `TEST_USER`).
