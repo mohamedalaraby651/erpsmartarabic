@@ -4061,6 +4061,7 @@ export type Database = {
           id: string
           is_enabled: boolean | null
           last_used_at: string | null
+          secret_encrypted: string | null
           secret_key: string | null
           user_id: string
         }
@@ -4071,6 +4072,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean | null
           last_used_at?: string | null
+          secret_encrypted?: string | null
           secret_key?: string | null
           user_id: string
         }
@@ -4081,6 +4083,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean | null
           last_used_at?: string | null
+          secret_encrypted?: string | null
           secret_key?: string | null
           user_id?: string
         }
@@ -4451,14 +4454,11 @@ export type Database = {
           customer_type: Database["public"]["Enums"]["customer_type"] | null
           discount_percentage: number | null
           email: string | null
-          facebook_url: string | null
           governorate: string | null
           id: string | null
           image_url: string | null
-          invoice_count_cached: number | null
           is_active: boolean | null
           last_activity_at: string | null
-          last_communication_at: string | null
           last_transaction_date: string | null
           name: string | null
           notes: string | null
@@ -4466,13 +4466,10 @@ export type Database = {
           phone: string | null
           phone2: string | null
           preferred_payment_method: string | null
-          price_list_id: string | null
           tax_number: string | null
           tenant_id: string | null
-          total_purchases_cached: number | null
           updated_at: string | null
           vip_level: Database["public"]["Enums"]["vip_level"] | null
-          website_url: string | null
         }
         Insert: {
           category_id?: string | null
@@ -4480,19 +4477,16 @@ export type Database = {
           contact_person?: string | null
           contact_person_role?: string | null
           created_at?: string | null
-          credit_limit?: never
-          current_balance?: never
+          credit_limit?: number | null
+          current_balance?: number | null
           customer_type?: Database["public"]["Enums"]["customer_type"] | null
           discount_percentage?: number | null
           email?: never
-          facebook_url?: string | null
           governorate?: string | null
           id?: string | null
           image_url?: string | null
-          invoice_count_cached?: number | null
           is_active?: boolean | null
           last_activity_at?: string | null
-          last_communication_at?: string | null
           last_transaction_date?: string | null
           name?: string | null
           notes?: string | null
@@ -4500,13 +4494,10 @@ export type Database = {
           phone?: never
           phone2?: never
           preferred_payment_method?: string | null
-          price_list_id?: string | null
-          tax_number?: never
+          tax_number?: string | null
           tenant_id?: string | null
-          total_purchases_cached?: number | null
           updated_at?: string | null
           vip_level?: Database["public"]["Enums"]["vip_level"] | null
-          website_url?: string | null
         }
         Update: {
           category_id?: string | null
@@ -4514,19 +4505,16 @@ export type Database = {
           contact_person?: string | null
           contact_person_role?: string | null
           created_at?: string | null
-          credit_limit?: never
-          current_balance?: never
+          credit_limit?: number | null
+          current_balance?: number | null
           customer_type?: Database["public"]["Enums"]["customer_type"] | null
           discount_percentage?: number | null
           email?: never
-          facebook_url?: string | null
           governorate?: string | null
           id?: string | null
           image_url?: string | null
-          invoice_count_cached?: number | null
           is_active?: boolean | null
           last_activity_at?: string | null
-          last_communication_at?: string | null
           last_transaction_date?: string | null
           name?: string | null
           notes?: string | null
@@ -4534,13 +4522,10 @@ export type Database = {
           phone?: never
           phone2?: never
           preferred_payment_method?: string | null
-          price_list_id?: string | null
-          tax_number?: never
+          tax_number?: string | null
           tenant_id?: string | null
-          total_purchases_cached?: number | null
           updated_at?: string | null
           vip_level?: Database["public"]["Enums"]["vip_level"] | null
-          website_url?: string | null
         }
         Relationships: [
           {
@@ -4548,13 +4533,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "customer_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customers_price_list_id_fkey"
-            columns: ["price_list_id"]
-            isOneToOne: false
-            referencedRelation: "price_lists"
             referencedColumns: ["id"]
           },
           {
@@ -4940,6 +4918,7 @@ export type Database = {
         Args: { _payment_id: string }
         Returns: Json
       }
+      decrypt_totp_secret: { Args: { _user_id: string }; Returns: string }
       emit_event: {
         Args: {
           _aggregate_id: string
@@ -5067,6 +5046,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_admin_equivalent_custom_role: {
+        Args: { _role_id: string; _tenant_id: string }
         Returns: boolean
       }
       is_platform_admin: { Args: { _user_id?: string }; Returns: boolean }
