@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { Phone, MapPin, DollarSign, Eye, FileText, CreditCard, ChevronDown, Crown, TrendingUp, Calendar } from 'lucide-react';
+import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
@@ -138,7 +138,7 @@ const CustomerListCardInner = ({
       </DropdownMenu>
 
       <div
-        className="p-4 cursor-pointer select-none"
+        className="p-3 cursor-pointer select-none"
         {...longPress}
       >
         {/* Header row: Avatar + Name + Balance */}
@@ -147,7 +147,7 @@ const CustomerListCardInner = ({
             name={customer.name}
             imageUrl={customer.image_url}
             customerType={customer.customer_type}
-            size="md"
+            size="sm"
             shape="rounded-square"
             vipBorder={customer.vip_level}
           />
@@ -156,12 +156,20 @@ const CustomerListCardInner = ({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-bold text-sm truncate">{customer.name}</h3>
-                  <span className={cn(
-                    'h-2 w-2 rounded-full shrink-0',
-                    isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
-                  )} />
+                  <span
+                    className={cn(
+                      'h-2 w-2 rounded-full shrink-0',
+                      isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+                    )}
+                    aria-label={isActive ? 'نشط' : 'غير نشط'}
+                  />
                   {alertCount && alertCount > 0 && (
-                    <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground shrink-0">
+                    <span
+                      className="inline-flex items-center gap-0.5 h-4 px-1.5 text-[10px] font-bold rounded-full bg-destructive/15 text-destructive shrink-0"
+                      title={`${alertCount} تنبيه نشط`}
+                      aria-label={`${alertCount} تنبيه نشط`}
+                    >
+                      <Bell className="h-2.5 w-2.5" />
                       {alertCount}
                     </span>
                   )}
@@ -181,12 +189,23 @@ const CustomerListCardInner = ({
                   )}
                 </div>
               </div>
-              {/* Balance on top right */}
+              {/* Balance with semantic label */}
               <div className="text-left shrink-0">
-                <p className={cn('font-bold text-sm tabular-nums', balanceColor)}>
-                  {balance.toLocaleString()}
+                <div className="flex items-center gap-1 justify-end">
+                  {balance > 0 ? (
+                    <ArrowUpCircle className="h-3 w-3 text-destructive" aria-hidden />
+                  ) : balance < 0 ? (
+                    <ArrowDownCircle className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                  ) : (
+                    <MinusCircle className="h-3 w-3 text-muted-foreground" aria-hidden />
+                  )}
+                  <p className={cn('font-bold text-sm tabular-nums', balanceColor)}>
+                    {Math.abs(balance).toLocaleString()}
+                  </p>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {balance > 0 ? 'مدين' : balance < 0 ? 'دائن' : 'مسوّى'} · ج.م
                 </p>
-                <p className="text-[10px] text-muted-foreground">ج.م</p>
               </div>
             </div>
             {/* Location & phone */}
@@ -209,16 +228,21 @@ const CustomerListCardInner = ({
           )} />
         </div>
 
-        {/* Credit bar */}
+        {/* Credit usage bar with explicit label */}
         {creditLimit > 0 && (
-          <div className="flex items-center gap-2 mt-3">
-            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+              <span>استخدام الائتمان</span>
+              <span className="tabular-nums">
+                {Math.round(creditUsage)}% من {creditLimit.toLocaleString()} ج.م
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
                 className={cn('h-full rounded-full transition-all duration-500', getCreditBarColor(creditUsage))}
                 style={{ width: `${creditUsage}%` }}
               />
             </div>
-            <span className="text-[10px] text-muted-foreground tabular-nums whitespace-nowrap">{Math.round(creditUsage)}%</span>
           </div>
         )}
 

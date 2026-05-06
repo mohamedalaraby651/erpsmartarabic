@@ -58,13 +58,22 @@ const vipBorderColors: Record<string, string> = {
   platinum: 'border-purple-500 dark:border-purple-400',
 };
 
+// Detect Arabic to avoid split-letter rendering ("فع" instead of "فا")
+const isArabic = (s: string) => /[\u0600-\u06FF]/.test(s);
+
 const CustomerAvatar = ({ name, imageUrl, customerType = 'individual', size = 'lg', shape = 'circle', vipBorder, className }: CustomerAvatarProps) => {
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const trimmedName = (name || '').trim();
+  // For Arabic names, take the first 1-2 letters of the first word as a connected glyph
+  // (Arabic letters change shape when isolated, so split first-letters look broken)
+  const initials = isArabic(trimmedName)
+    ? trimmedName.split(/\s+/)[0]?.slice(0, 2) || '؟'
+    : trimmedName
+        .split(/\s+/)
+        .map((n) => n[0])
+        .filter(Boolean)
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
 
   const config = typeConfig[customerType as keyof typeof typeConfig] || typeConfig.individual;
   const TypeIcon = config.icon;
