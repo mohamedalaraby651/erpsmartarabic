@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { CreditNoteWithRelations } from '../types';
 
 const statusLabels: Record<string, string> = {
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, pendingId }: Props) {
+  const navigate = useNavigate();
   return (
     <Card>
       <Table>
@@ -40,7 +42,7 @@ export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, p
             <TableHead className="text-right">السبب</TableHead>
             <TableHead className="text-right">الحالة</TableHead>
             <TableHead className="text-right">التاريخ</TableHead>
-            {canManage && <TableHead className="text-right">إجراءات</TableHead>}
+            <TableHead className="text-right">إجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -59,10 +61,13 @@ export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, p
                 </Badge>
               </TableCell>
               <TableCell>{new Date(cn.created_at).toLocaleDateString('ar-EG')}</TableCell>
-              {canManage && (
-                <TableCell>
-                  {cn.status === 'draft' && (
-                    <div className="flex gap-2">
+              <TableCell>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => navigate(`/credit-notes/${cn.id}`)}>
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                  {canManage && cn.status === 'draft' && (
+                    <>
                       <Button
                         size="sm"
                         variant="outline"
@@ -81,10 +86,10 @@ export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, p
                       >
                         <XCircle className="h-3 w-3 text-destructive" />
                       </Button>
-                    </div>
+                    </>
                   )}
-                </TableCell>
-              )}
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
