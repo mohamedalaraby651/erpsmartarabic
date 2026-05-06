@@ -5441,6 +5441,7 @@ export type Database = {
         }
         Returns: string
       }
+      ensure_logistics_posting_accounts: { Args: never; Returns: Json }
       find_duplicate_customers: {
         Args: { p_tenant_id?: string }
         Returns: {
