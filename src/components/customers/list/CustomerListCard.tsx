@@ -231,7 +231,7 @@ const CustomerListCardInner = ({
       </DropdownMenu>
 
       <div
-        className="p-3 cursor-pointer select-none"
+        className="p-3.5 cursor-pointer select-none"
         {...longPressHandlers}
       >
         {/* Header row: Avatar + Name + Balance */}
