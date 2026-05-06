@@ -41,6 +41,8 @@ interface ReturnLine {
   returnable: number;
   selected: boolean;
   return_qty: number;
+  requested_qty: number; // raw user input (may exceed returnable, used for error display)
+  error?: string;
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
