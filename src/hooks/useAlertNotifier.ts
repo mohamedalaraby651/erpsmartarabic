@@ -52,11 +52,15 @@ function playNotificationSound() {
  */
 export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
   const { settings } = useAlertSettings();
+  const { tenantId } = useTenant();
   const prevKeysRef = useRef<Set<string>>(getSeenKeys());
 
   // Stable reference for sound setting
   const soundEnabledRef = useRef(settings.soundEnabled);
   soundEnabledRef.current = settings.soundEnabled;
+
+  const tenantIdRef = useRef<string | undefined>(tenantId);
+  tenantIdRef.current = tenantId;
 
   const processAlerts = useCallback(async (newAlerts: CustomerAlert[], uid: string) => {
     // Play sound once
@@ -64,10 +68,14 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
       playNotificationSound();
     }
 
+    const tid = tenantIdRef.current;
+    if (!tid) return; // can't insert without tenant — RLS will block
+
     // Insert notifications with dedup (max 10 per batch)
     const today = new Date().toISOString().slice(0, 10);
     const toInsert = newAlerts.slice(0, 10).map(a => ({
       user_id: uid,
+      tenant_id: tid,
       title: getNotificationTitle(a.type),
       message: a.message,
       type: a.severity === 'error' ? 'alert' : a.severity === 'warning' ? 'warning' : 'info',
