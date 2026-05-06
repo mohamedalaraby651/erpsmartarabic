@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,8 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -21,15 +22,37 @@ interface Props {
   onSuccess: () => void;
 }
 
+interface InvoiceItemRow {
+  id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  products?: { name: string } | null;
+}
+
+interface ReturnLine {
+  invoice_item_id: string;
+  product_id: string;
+  product_name: string;
+  unit_price: number;
+  original_qty: number;
+  already_returned: number;
+  returnable: number;
+  selected: boolean;
+  return_qty: number;
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: Props) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [customerId, setCustomerId] = useState('');
   const [invoiceId, setInvoiceId] = useState('');
-  const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [lines, setLines] = useState<ReturnLine[]>([]);
 
-  // Fetch customers
   const { data: customers = [] } = useQuery({
     queryKey: ['customers-select'],
     queryFn: async () => {
@@ -39,7 +62,6 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     enabled: open,
   });
 
-  // Fetch invoices for selected customer
   const { data: invoices = [] } = useQuery({
     queryKey: ['invoices-for-credit', customerId],
     queryFn: async () => {
@@ -54,21 +76,110 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     enabled: !!customerId && open,
   });
 
+  // Load invoice items + already-returned quantities for this invoice
+  const { data: invoiceItems = [], isLoading: loadingItems } = useQuery({
+    queryKey: ['invoice-items-for-credit', invoiceId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoice_items')
+        .select('id, product_id, quantity, unit_price, total_price, products:product_id(name)')
+        .eq('invoice_id', invoiceId);
+      if (error) throw error;
+      return (data ?? []) as unknown as InvoiceItemRow[];
+    },
+    enabled: !!invoiceId && open,
+  });
+
+  const { data: returnedMap = {} } = useQuery({
+    queryKey: ['credit-note-returned-qty', invoiceId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('credit_note_items')
+        .select('invoice_item_id, quantity, credit_notes!inner(invoice_id, status)')
+        .eq('credit_notes.invoice_id', invoiceId)
+        .eq('credit_notes.status', 'confirmed');
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((r: any) => {
+        if (!r.invoice_item_id) return;
+        map[r.invoice_item_id] = (map[r.invoice_item_id] ?? 0) + Number(r.quantity || 0);
+      });
+      return map;
+    },
+    enabled: !!invoiceId && open,
+  });
+
+  // Build return-lines whenever invoice items / returned map change
+  useEffect(() => {
+    if (!invoiceItems.length) { setLines([]); return; }
+    setLines(invoiceItems.map((it) => {
+      const returned = returnedMap[it.id] ?? 0;
+      const returnable = Math.max(0, Number(it.quantity) - returned);
+      return {
+        invoice_item_id: it.id,
+        product_id: it.product_id,
+        product_name: it.products?.name ?? '—',
+        unit_price: Number(it.unit_price),
+        original_qty: Number(it.quantity),
+        already_returned: returned,
+        returnable,
+        selected: false,
+        return_qty: returnable, // default to max returnable
+      };
+    }));
+  }, [invoiceItems, returnedMap]);
+
+  const totalAmount = useMemo(
+    () => round2(lines.filter(l => l.selected).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
+    [lines],
+  );
+
+  const hasSelection = lines.some(l => l.selected && l.return_qty > 0);
+
+  const updateLine = (id: string, patch: Partial<ReturnLine>) =>
+    setLines(prev => prev.map(l => l.invoice_item_id === id ? { ...l, ...patch } : l));
+
   const createMutation = useMutation({
     mutationFn: async () => {
-      const { data: tenantData } = await supabase.rpc('get_current_tenant');
-      
-      const { error } = await supabase.from('credit_notes').insert({
-        invoice_id: invoiceId,
-        customer_id: customerId,
-        amount: parseFloat(amount),
-        reason: reason || null,
-        credit_note_number: '',
-        created_by: user?.id,
+      const selected = lines.filter(l => l.selected && l.return_qty > 0);
+      if (selected.length === 0) throw new Error('اختر بنداً واحداً على الأقل');
+
+      const { data: tenantData, error: tenantErr } = await supabase.rpc('get_current_tenant');
+      if (tenantErr) throw tenantErr;
+
+      const { data: cn, error: cnErr } = await supabase
+        .from('credit_notes')
+        .insert({
+          invoice_id: invoiceId,
+          customer_id: customerId,
+          amount: totalAmount,
+          reason: reason || null,
+          credit_note_number: '',
+          created_by: user?.id,
+          tenant_id: tenantData,
+          status: 'draft',
+        })
+        .select('id')
+        .single();
+      if (cnErr) throw cnErr;
+
+      const itemsPayload = selected.map(l => ({
+        credit_note_id: cn.id,
+        invoice_item_id: l.invoice_item_id,
+        product_id: l.product_id,
+        quantity: l.return_qty,
+        unit_price: l.unit_price,
+        unit_price_original: l.unit_price,
+        total_price: round2(l.unit_price * l.return_qty),
         tenant_id: tenantData,
-        status: 'draft',
-      });
-      if (error) throw error;
+      }));
+
+      const { error: itemsErr } = await supabase.from('credit_note_items').insert(itemsPayload);
+      if (itemsErr) {
+        // Rollback the header so we don't leave an orphan
+        await supabase.from('credit_notes').delete().eq('id', cn.id);
+        throw itemsErr;
+      }
     },
     onSuccess: () => {
       toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
@@ -76,78 +187,155 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
       onOpenChange(false);
       onSuccess();
     },
-    onError: () => {
-      toast({ title: 'خطأ في إنشاء إشعار الإرجاع', variant: 'destructive' });
+    onError: (err: any) => {
+      toast({
+        title: 'خطأ في إنشاء إشعار الإرجاع',
+        description: err?.message ?? 'حدث خطأ غير متوقع',
+        variant: 'destructive',
+      });
     },
   });
 
   const resetForm = () => {
     setCustomerId('');
     setInvoiceId('');
-    setAmount('');
     setReason('');
+    setLines([]);
   };
-
-  const selectedInvoice = invoices.find(i => i.id === invoiceId);
-  const maxAmount = selectedInvoice ? Number(selectedInvoice.total_amount) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>إشعار إرجاع جديد</DialogTitle>
         </DialogHeader>
+
         <div className="space-y-4">
-          <div>
-            <Label>العميل *</Label>
-            <Select value={customerId} onValueChange={(v) => { setCustomerId(v); setInvoiceId(''); setAmount(''); }}>
-              <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
-              <SelectContent>
-                {customers.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <Label>العميل *</Label>
+              <Select value={customerId} onValueChange={(v) => { setCustomerId(v); setInvoiceId(''); }}>
+                <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
+                <SelectContent>
+                  {customers.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>الفاتورة *</Label>
+              <Select value={invoiceId} onValueChange={setInvoiceId} disabled={!customerId}>
+                <SelectTrigger><SelectValue placeholder="اختر الفاتورة" /></SelectTrigger>
+                <SelectContent>
+                  {invoices.map((inv: any) => (
+                    <SelectItem key={inv.id} value={inv.id}>
+                      {inv.invoice_number} — {Number(inv.total_amount).toLocaleString()} ج.م
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <Label>الفاتورة *</Label>
-            <Select value={invoiceId} onValueChange={setInvoiceId} disabled={!customerId}>
-              <SelectTrigger><SelectValue placeholder="اختر الفاتورة" /></SelectTrigger>
-              <SelectContent>
-                {invoices.map(inv => (
-                  <SelectItem key={inv.id} value={inv.id}>
-                    {inv.invoice_number} — {Number(inv.total_amount).toLocaleString()} ج.م
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>المبلغ * {maxAmount > 0 && <span className="text-muted-foreground">(أقصى: {maxAmount.toLocaleString()})</span>}</Label>
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              max={maxAmount}
-              min={0}
-              placeholder="0"
-            />
-          </div>
+
+          {/* Items table */}
+          {invoiceId && (
+            <div className="border rounded-md">
+              <div className="px-3 py-2 border-b bg-muted/40 text-sm font-medium">
+                بنود الفاتورة ({lines.length})
+              </div>
+
+              {loadingItems ? (
+                <div className="p-6 text-center text-muted-foreground text-sm">
+                  <Loader2 className="h-5 w-5 animate-spin inline ml-2" />
+                  جارِ التحميل…
+                </div>
+              ) : lines.length === 0 ? (
+                <div className="p-6 text-center text-muted-foreground text-sm">لا توجد بنود</div>
+              ) : (
+                <div className="divide-y">
+                  {lines.map((l) => {
+                    const disabled = l.returnable <= 0;
+                    return (
+                      <div key={l.invoice_item_id} className="p-3 flex items-start gap-3">
+                        <Checkbox
+                          checked={l.selected}
+                          disabled={disabled}
+                          onCheckedChange={(v) => updateLine(l.invoice_item_id, { selected: !!v })}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{l.product_name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {Number(l.unit_price).toLocaleString()} × {l.original_qty}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            مُرتجع سابقاً: {l.already_returned} • متاح للإرجاع:{' '}
+                            <span className={l.returnable === 0 ? 'text-destructive' : 'text-success font-medium'}>
+                              {l.returnable}
+                            </span>
+                          </div>
+                          {l.selected && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <Label className="text-xs">كمية الإرجاع:</Label>
+                              <Input
+                                type="number"
+                                className="h-8 w-24"
+                                value={l.return_qty}
+                                min={0}
+                                max={l.returnable}
+                                step="0.01"
+                                onChange={(e) => {
+                                  const v = Math.min(l.returnable, Math.max(0, Number(e.target.value)));
+                                  updateLine(l.invoice_item_id, { return_qty: v });
+                                }}
+                              />
+                              <span className="text-xs text-muted-foreground">
+                                = {round2(l.unit_price * l.return_qty).toLocaleString()} ج.م
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {hasSelection && (
+                <div className="px-3 py-2 border-t bg-muted/40 flex items-center justify-between">
+                  <span className="text-sm font-medium">إجمالي المرتجع</span>
+                  <span className="text-base font-bold">{totalAmount.toLocaleString()} ج.م</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <Label>سبب الإرجاع</Label>
             <Textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="أدخل سبب الإرجاع..."
-              rows={3}
+              placeholder="أدخل سبب الإرجاع…"
+              rows={2}
             />
           </div>
+
+          {invoiceId && lines.every(l => l.returnable === 0) && lines.length > 0 && (
+            <div className="flex items-start gap-2 p-3 rounded-md bg-warning/10 text-warning text-sm">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>تم إرجاع جميع كميات هذه الفاتورة بالفعل.</span>
+            </div>
+          )}
         </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
           <Button
             onClick={() => createMutation.mutate()}
-            disabled={!customerId || !invoiceId || !amount || parseFloat(amount) <= 0 || createMutation.isPending}
+            disabled={!customerId || !invoiceId || !hasSelection || createMutation.isPending}
           >
             {createMutation.isPending && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
             إنشاء إشعار إرجاع
