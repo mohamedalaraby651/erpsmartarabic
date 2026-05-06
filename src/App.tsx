@@ -202,6 +202,7 @@ const App = () => (
                   <Route path="quotations" element={<QuotationsPage />} />
                   <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                   <Route path="reports" element={<ReportsPage />} />
+                  <Route path="reports/sales" element={<SalesReportsPage />} />
                   <Route path="settings" element={<UnifiedSettingsPage />} />
                   <Route path="settings/alerts" element={<CustomerAlertSettingsPage />} />
                   <Route path="search" element={<SearchPage />} />
