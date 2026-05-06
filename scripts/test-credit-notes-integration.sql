@@ -93,22 +93,24 @@ BEGIN
   RAISE NOTICE '✅ TEST 1: empty credit note correctly rejected (errors=%)', v_validation->'errors';
 
   -- ────────────────────────────────────────────────────────────────────────
-  -- TEST 2: Validation rejects item linked to a DIFFERENT invoice
+  -- TEST 2: Trigger blocks linking item to a DIFFERENT invoice
   -- ────────────────────────────────────────────────────────────────────────
   INSERT INTO public.credit_notes (credit_note_number, invoice_id, customer_id, amount, status, tenant_id, created_by)
     VALUES ('TEST-CN-WRONGINV', v_inv, v_cust, 100, 'draft', v_tenant, v_admin)
     RETURNING id INTO v_cn2;
 
-  -- Bypass the BEFORE INSERT trigger to seed bad data on purpose
-  ALTER TABLE public.credit_note_items DISABLE TRIGGER trg_validate_credit_note_item;
-  INSERT INTO public.credit_note_items (credit_note_id, invoice_item_id, product_id, quantity, unit_price, total_price, tenant_id)
-    VALUES (v_cn2, v_other_inv_item, v_prod, 1, 100, 100, v_tenant);
-  ALTER TABLE public.credit_note_items ENABLE TRIGGER trg_validate_credit_note_item;
-
-  v_validation := public.validate_credit_note_before_confirm(v_cn2);
-  ASSERT (v_validation->>'ok')::boolean = false,
-    'TEST 2 FAILED — wrong-invoice linkage should be rejected. Got: ' || v_validation::text;
-  RAISE NOTICE '✅ TEST 2: wrong-invoice linkage correctly rejected';
+  BEGIN
+    INSERT INTO public.credit_note_items (credit_note_id, invoice_item_id, product_id, quantity, unit_price, total_price, tenant_id)
+      VALUES (v_cn2, v_other_inv_item, v_prod, 1, 100, 100, v_tenant);
+    RAISE EXCEPTION 'TEST 2 FAILED — wrong-invoice link should be blocked by trigger';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_err = MESSAGE_TEXT;
+    IF v_err LIKE 'TEST 2 FAILED%' THEN RAISE; END IF;
+    IF v_err NOT ILIKE '%does not belong%' THEN
+      RAISE EXCEPTION 'TEST 2 FAILED — wrong error: %', v_err;
+    END IF;
+    RAISE NOTICE '✅ TEST 2: wrong-invoice link blocked by trigger (%)', v_err;
+  END;
 
   -- ────────────────────────────────────────────────────────────────────────
   -- TEST 3: Trigger blocks INSERT exceeding returnable quantity
