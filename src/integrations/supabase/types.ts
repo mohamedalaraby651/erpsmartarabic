@@ -672,6 +672,13 @@ export type Database = {
             foreignKeyName: "credit_note_items_invoice_item_id_fkey"
             columns: ["invoice_item_id"]
             isOneToOne: false
+            referencedRelation: "invoice_item_returns_summary"
+            referencedColumns: ["invoice_item_id"]
+          },
+          {
+            foreignKeyName: "credit_note_items_invoice_item_id_fkey"
+            columns: ["invoice_item_id"]
+            isOneToOne: false
             referencedRelation: "invoice_items"
             referencedColumns: ["id"]
           },
@@ -5320,6 +5327,36 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_item_returns_summary: {
+        Row: {
+          confirmed_credit_notes_count: number | null
+          confirmed_returned_qty: number | null
+          draft_credit_notes_count: number | null
+          draft_returned_qty: number | null
+          invoice_id: string | null
+          invoice_item_id: string | null
+          original_qty: number | null
+          product_id: string | null
+          remaining_qty: number | null
+          unit_price_current: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_dashboard: {
         Row: {
           action: string | null
@@ -5680,10 +5717,12 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      get_invoice_item_returnable: {
-        Args: { _invoice_item_id: string }
-        Returns: number
-      }
+      get_invoice_item_returnable:
+        | { Args: { _invoice_item_id: string }; Returns: number }
+        | {
+            Args: { _include_drafts?: boolean; _invoice_item_id: string }
+            Returns: number
+          }
       get_permission_matrix: { Args: { _user_id?: string }; Returns: Json }
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }

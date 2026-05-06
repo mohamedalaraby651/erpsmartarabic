@@ -38,10 +38,11 @@ interface ReturnLine {
   unit_price: number;
   original_qty: number;
   already_returned: number;
+  draft_reserved: number;
   returnable: number;
   selected: boolean;
   return_qty: number;
-  requested_qty: number; // raw user input (may exceed returnable, used for error display)
+  requested_qty: number;
   error?: string;
 }
 
@@ -92,38 +93,45 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     enabled: !!invoiceId && open,
   });
 
-  const { data: returnedMap = {} } = useQuery({
-    queryKey: ['credit-note-returned-qty', invoiceId],
+  // Use the aggregated view: confirmed + draft return progress per invoice item
+  const { data: returnsMap = {} } = useQuery({
+    queryKey: ['invoice-item-returns-summary', invoiceId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('credit_note_items')
-        .select('invoice_item_id, quantity, credit_notes!inner(invoice_id, status)')
-        .eq('credit_notes.invoice_id', invoiceId)
-        .eq('credit_notes.status', 'confirmed');
+        .from('invoice_item_returns_summary' as any)
+        .select('invoice_item_id, confirmed_returned_qty, draft_returned_qty, remaining_qty')
+        .eq('invoice_id', invoiceId);
       if (error) throw error;
-      const map: Record<string, number> = {};
+      const map: Record<string, { confirmed: number; draft: number; remaining: number }> = {};
       (data ?? []).forEach((r: any) => {
         if (!r.invoice_item_id) return;
-        map[r.invoice_item_id] = (map[r.invoice_item_id] ?? 0) + Number(r.quantity || 0);
+        map[r.invoice_item_id] = {
+          confirmed: Number(r.confirmed_returned_qty || 0),
+          draft: Number(r.draft_returned_qty || 0),
+          remaining: Number(r.remaining_qty || 0),
+        };
       });
       return map;
     },
     enabled: !!invoiceId && open,
   });
 
-  // Build return-lines whenever invoice items / returned map change
+  // Build return-lines whenever invoice items / returns summary change
   useEffect(() => {
     if (!invoiceItems.length) { setLines([]); return; }
     setLines(invoiceItems.map((it) => {
-      const returned = returnedMap[it.id] ?? 0;
-      const returnable = Math.max(0, Number(it.quantity) - returned);
+      const summary = returnsMap[it.id];
+      const confirmed = summary?.confirmed ?? 0;
+      const draftReserved = summary?.draft ?? 0;
+      const returnable = summary?.remaining ?? Math.max(0, Number(it.quantity) - confirmed);
       return {
         invoice_item_id: it.id,
         product_id: it.product_id,
         product_name: it.products?.name ?? '—',
         unit_price: Number(it.unit_price),
         original_qty: Number(it.quantity),
-        already_returned: returned,
+        already_returned: confirmed,
+        draft_reserved: draftReserved,
         returnable,
         selected: false,
         return_qty: returnable,
@@ -131,7 +139,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
         error: undefined,
       };
     }));
-  }, [invoiceItems, returnedMap]);
+  }, [invoiceItems, returnsMap]);
 
   const totalAmount = useMemo(
     () => round2(lines.filter(l => l.selected && !l.error).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
@@ -312,11 +320,17 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            مُرتجع سابقاً: {l.already_returned} • متاح للإرجاع:{' '}
+                            مُرتجع سابقاً (مؤكد): {l.already_returned} • متاح للإرجاع:{' '}
                             <span className={l.returnable === 0 ? 'text-destructive' : 'text-success font-medium'}>
                               {l.returnable}
                             </span>
                           </div>
+                          {l.draft_reserved > 0 && (
+                            <div className="text-xs text-warning mt-1 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              يوجد {l.draft_reserved} كمية محجوزة في مسودات إشعارات أخرى — قد تتعارض عند التأكيد.
+                            </div>
+                          )}
                           {l.selected && (
                             <div className="mt-2 space-y-1">
                               <div className="flex items-center gap-2 flex-wrap">
