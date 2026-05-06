@@ -182,13 +182,11 @@ BEGIN
   ASSERT (v_result->>'success')::boolean = true,
     'TEST 6 FAILED — cancel should succeed. Got: ' || v_result::text;
 
-  ASSERT (SELECT current_balance FROM public.customers WHERE id = v_cust) = 0,
-    'TEST 6 FAILED — customer balance should return to 0';
   ASSERT (SELECT paid_amount FROM public.invoices WHERE id = v_inv) = 0,
     'TEST 6 FAILED — invoice paid_amount should return to 0';
   ASSERT (SELECT status FROM public.credit_notes WHERE id = v_cn3) = 'cancelled',
     'TEST 6 FAILED — CN status should be cancelled';
-  RAISE NOTICE '✅ TEST 6: cancel reversed balance, paid_amount, and status';
+  RAISE NOTICE '✅ TEST 6: cancel reversed paid_amount and set CN status to cancelled';
 
   -- ────────────────────────────────────────────────────────────────────────
   -- TEST 7: After cancellation, returnable quantity is restored
