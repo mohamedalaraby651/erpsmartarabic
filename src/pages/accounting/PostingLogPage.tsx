@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, AlertCircle, CheckCircle2, MinusCircle } from "lucide-react";
+import { BookOpen, AlertCircle, CheckCircle2, MinusCircle, Wand2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface LogRow {
   id: string;
@@ -38,6 +40,7 @@ function StatusBadge({ s }: { s: LogRow["status"] }) {
 
 export default function PostingLogPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["document-posting-log"],
     queryFn: async () => {
@@ -51,20 +54,43 @@ export default function PostingLogPage() {
     },
   });
 
+  const ensureAccounts = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("ensure_logistics_posting_accounts" as any);
+      if (error) throw error;
+      const res = data as { success: boolean; created?: any[]; linked?: any[]; error?: string };
+      if (!res?.success) throw new Error(res?.error || "فشل");
+      return res;
+    },
+    onSuccess: (res) => {
+      const c = res.created?.length ?? 0;
+      const l = res.linked?.length ?? 0;
+      toast.success(`تم الإعداد — ${c} حساب جديد، ${l} ربط جديد`);
+      qc.invalidateQueries({ queryKey: ["document-posting-log"] });
+    },
+    onError: (e: any) => toast.error(e?.message || "فشل الإعداد"),
+  });
+
   const failed = rows.filter((r) => r.status === "failed").length;
   const success = rows.filter((r) => r.status === "success").length;
   const skipped = rows.filter((r) => r.status === "skipped").length;
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <BookOpen className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">سجل الترحيل المحاسبي</h1>
-          <p className="text-sm text-muted-foreground">
-            تتبّع تلقائي للقيود اليومية المتولّدة من إيصالات الاستلام، إذونات التسليم، وفواتير المشتريات.
-          </p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">سجل الترحيل المحاسبي</h1>
+            <p className="text-sm text-muted-foreground">
+              تتبّع تلقائي للقيود اليومية المتولّدة من إيصالات الاستلام، إذونات التسليم، وفواتير المشتريات.
+            </p>
+          </div>
         </div>
+        <Button variant="outline" onClick={() => ensureAccounts.mutate()} disabled={ensureAccounts.isPending}>
+          <Wand2 className="h-4 w-4 ml-1" />
+          {ensureAccounts.isPending ? "جارٍ الإعداد…" : "إعداد حسابات الترحيل"}
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
