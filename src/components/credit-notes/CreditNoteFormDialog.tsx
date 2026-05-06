@@ -115,19 +115,22 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     enabled: !!invoiceId && open,
   });
 
-  // Build return-lines whenever invoice items / returned map change
+  // Build return-lines whenever invoice items / returns summary change
   useEffect(() => {
     if (!invoiceItems.length) { setLines([]); return; }
     setLines(invoiceItems.map((it) => {
-      const returned = returnedMap[it.id] ?? 0;
-      const returnable = Math.max(0, Number(it.quantity) - returned);
+      const summary = returnsMap[it.id];
+      const confirmed = summary?.confirmed ?? 0;
+      const draftReserved = summary?.draft ?? 0;
+      const returnable = summary?.remaining ?? Math.max(0, Number(it.quantity) - confirmed);
       return {
         invoice_item_id: it.id,
         product_id: it.product_id,
         product_name: it.products?.name ?? '—',
         unit_price: Number(it.unit_price),
         original_qty: Number(it.quantity),
-        already_returned: returned,
+        already_returned: confirmed,
+        draft_reserved: draftReserved,
         returnable,
         selected: false,
         return_qty: returnable,
@@ -135,7 +138,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
         error: undefined,
       };
     }));
-  }, [invoiceItems, returnedMap]);
+  }, [invoiceItems, returnsMap]);
 
   const totalAmount = useMemo(
     () => round2(lines.filter(l => l.selected && !l.error).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
