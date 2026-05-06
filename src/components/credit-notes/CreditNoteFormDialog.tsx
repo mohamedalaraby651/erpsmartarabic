@@ -134,14 +134,39 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
   }, [invoiceItems, returnedMap]);
 
   const totalAmount = useMemo(
-    () => round2(lines.filter(l => l.selected).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
+    () => round2(lines.filter(l => l.selected && !l.error).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
     [lines],
   );
 
-  const hasSelection = lines.some(l => l.selected && l.return_qty > 0);
+  const selectedLines = useMemo(() => lines.filter(l => l.selected), [lines]);
+  const linesWithErrors = useMemo(() => selectedLines.filter(l => l.error), [selectedLines]);
+  const hasSelection = selectedLines.some(l => l.return_qty > 0);
+  const hasErrors = linesWithErrors.length > 0;
+
+  const validateQty = (returnable: number, requested: number): string | undefined => {
+    if (Number.isNaN(requested)) return 'قيمة غير صالحة — أدخل رقماً';
+    if (requested < 0) return 'الكمية لا يمكن أن تكون سالبة';
+    if (returnable === 0) return 'لا توجد كمية متاحة للإرجاع — تم إرجاع كل الكمية سابقاً';
+    if (requested === 0) return 'الكمية المطلوبة = 0 — أدخل قيمة أكبر من صفر';
+    if (requested > returnable) {
+      return `تجاوزت الكمية المتاحة — المطلوب: ${requested} ، المتاح: ${returnable} (الفرق: ${round2(requested - returnable)})`;
+    }
+    return undefined;
+  };
 
   const updateLine = (id: string, patch: Partial<ReturnLine>) =>
-    setLines(prev => prev.map(l => l.invoice_item_id === id ? { ...l, ...patch } : l));
+    setLines(prev => prev.map(l => {
+      if (l.invoice_item_id !== id) return l;
+      const merged = { ...l, ...patch };
+      // Re-validate whenever quantity-related fields change
+      if ('requested_qty' in patch || 'selected' in patch) {
+        const requested = Number(merged.requested_qty);
+        const err = merged.selected ? validateQty(merged.returnable, requested) : undefined;
+        merged.error = err;
+        merged.return_qty = err ? 0 : requested;
+      }
+      return merged;
+    }));
 
   const createMutation = useMutation({
     mutationFn: async () => {
