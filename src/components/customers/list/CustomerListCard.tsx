@@ -256,7 +256,7 @@ const CustomerListCardInner = ({
                     )}
                     aria-label={isActive ? 'نشط' : 'غير نشط'}
                   />
-                  {alertCount && alertCount > 0 && (
+                  {!hasErrorAlert && alertCount && alertCount > 0 && (
                     <span
                       className="inline-flex items-center gap-0.5 h-4 px-1.5 text-[10px] font-bold rounded-full bg-destructive/15 text-destructive shrink-0"
                       title={`${alertCount} تنبيه نشط`}
