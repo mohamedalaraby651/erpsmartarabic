@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { CreditNoteWithRelations } from '../types';
 
 const statusLabels: Record<string, string> = {
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, pendingId }: Props) {
+  const navigate = useNavigate();
   return (
     <Card>
       <Table>
@@ -61,28 +63,33 @@ export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, p
               <TableCell>{new Date(cn.created_at).toLocaleDateString('ar-EG')}</TableCell>
               {canManage && (
                 <TableCell>
-                  {cn.status === 'draft' && (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onConfirm(cn.id)}
-                        disabled={pendingId === cn.id}
-                      >
-                        {pendingId === cn.id
-                          ? <Loader2 className="h-3 w-3 animate-spin" />
-                          : <CheckCircle2 className="h-3 w-3 text-success" />}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onCancel(cn.id)}
-                        disabled={pendingId === cn.id}
-                      >
-                        <XCircle className="h-3 w-3 text-destructive" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => navigate(`/credit-notes/${cn.id}`)}>
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    {cn.status === 'draft' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onConfirm(cn.id)}
+                          disabled={pendingId === cn.id}
+                        >
+                          {pendingId === cn.id
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <CheckCircle2 className="h-3 w-3 text-success" />}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onCancel(cn.id)}
+                          disabled={pendingId === cn.id}
+                        >
+                          <XCircle className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               )}
             </TableRow>
