@@ -85,7 +85,7 @@ const CustomerListCardInner = ({
     setExpanded(prev => !prev);
   }, [selectionMode, onSelect, customer.id]);
 
-  const longPress = useLongPress({
+  const { isPressed: _isPressed, ...longPressHandlers } = useLongPress({
     onLongPress: () => {
       if (!selectionMode) {
         setMenuOpen(true);
@@ -222,7 +222,7 @@ const CustomerListCardInner = ({
 
       <div
         className="p-3 cursor-pointer select-none"
-        {...longPress}
+        {...longPressHandlers}
       >
         {/* Header row: Avatar + Name + Balance */}
         <div className="flex items-start gap-3">
