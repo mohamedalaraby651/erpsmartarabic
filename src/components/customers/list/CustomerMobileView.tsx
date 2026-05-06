@@ -5,6 +5,7 @@ import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
 import { CustomerListSkeleton } from "@/components/customers/list/CustomerListSkeleton";
+import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
