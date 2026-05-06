@@ -67,6 +67,11 @@ const PurchaseInvoicesPage = lazy(() => import("./pages/purchase-invoices/Purcha
 const PurchaseInvoiceApprovalsPage = lazy(() => import("./pages/purchase-invoices/PurchaseInvoiceApprovalsPage"));
 const LogisticsDocumentDetailsPage = lazy(() => import("./pages/logistics/LogisticsDocumentDetailsPage"));
 
+// Sales cycle (Quotes → Orders → Invoices → Deliveries)
+const QuotesPage = lazy(() => import("./pages/quotes/QuotesPage"));
+const QuoteNewPage = lazy(() => import("./pages/quotes/QuoteNewPage"));
+const SalesPipelinePage = lazy(() => import("./pages/quotes/SalesPipelinePage"));
+
 // Finance & accounting group (heavy: pulls in jspdf, recharts via reports)
 const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
 const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
@@ -188,6 +193,9 @@ const App = () => (
                   <Route path="purchase-invoices" element={<PurchaseInvoicesPage />} />
                   <Route path="purchase-invoices/approvals" element={<PurchaseInvoiceApprovalsPage />} />
                   <Route path="purchase-invoices/:id" element={<LogisticsDocumentDetailsPage />} />
+                  <Route path="quotes" element={<QuotesPage />} />
+                  <Route path="quotes/new" element={<QuoteNewPage />} />
+                  <Route path="sales-pipeline" element={<SalesPipelinePage />} />
                   <Route path="quotations" element={<QuotationsPage />} />
                   <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                   <Route path="reports" element={<ReportsPage />} />
