@@ -18,6 +18,8 @@ import {
 import {
   Users,
   Package,
+  PackageCheck,
+  PackageMinus,
   FileText,
   ShoppingCart,
   Warehouse,
@@ -112,6 +114,9 @@ export const defaultNavSections: NavSection[] = [
       { title: 'المخزون', icon: Warehouse, href: '/inventory', roles: ['admin', 'warehouse'], countKey: 'lowStockAlerts', countColor: 'warning' },
       { title: 'الموردين', icon: Truck, href: '/suppliers', roles: ['admin', 'warehouse'] },
       { title: 'أوامر الشراء', icon: ClipboardList, href: '/purchase-orders', roles: ['admin', 'warehouse'], countKey: 'pendingPurchaseOrders', countColor: 'info' },
+      { title: 'إيصالات استلام', icon: PackageCheck, href: '/goods-receipts', roles: ['admin', 'warehouse'] },
+      { title: 'إذونات تسليم', icon: PackageMinus, href: '/delivery-notes', roles: ['admin', 'warehouse', 'sales'] },
+      { title: 'فواتير المشتريات', icon: FileText, href: '/purchase-invoices', roles: ['admin', 'warehouse', 'accountant'] },
     ],
   },
   {
