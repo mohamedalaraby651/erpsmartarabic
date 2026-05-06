@@ -126,7 +126,9 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
         already_returned: returned,
         returnable,
         selected: false,
-        return_qty: returnable, // default to max returnable
+        return_qty: returnable,
+        requested_qty: returnable,
+        error: undefined,
       };
     }));
   }, [invoiceItems, returnedMap]);
