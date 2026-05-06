@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { PurchaseInvoiceStatusBadge, MatchingStatusBadge } from "@/components/lo
 import { PurchaseInvoiceDialog } from "@/components/logistics/LogisticsDialogs";
 
 export default function PurchaseInvoicesPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const { data: rows = [], isLoading } = usePurchaseInvoicesList(search);
@@ -66,7 +68,7 @@ export default function PurchaseInvoicesPage() {
               </thead>
               <tbody>
                 {rows.map(r => (
-                  <tr key={r.id} className="border-b hover:bg-muted/30">
+                  <tr key={r.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/purchase-invoices/${r.id}`)}>
                     <td className="p-2 font-mono">{r.invoice_number}</td>
                     <td className="p-2">{r.suppliers?.name ?? "—"}</td>
                     <td className="p-2 text-xs text-muted-foreground">{r.purchase_orders?.order_number ?? "—"}</td>
@@ -79,7 +81,7 @@ export default function PurchaseInvoicesPage() {
                         {r.approval_required && <span className="text-xs text-destructive">⚠</span>}
                       </div>
                     </td>
-                    <td className="p-2">
+                    <td className="p-2" onClick={(e) => e.stopPropagation()}>
                       {r.status === "draft" && (
                         <Button size="sm" variant="ghost" className="text-success h-8 px-2"
                           onClick={() => post.mutate(r.id)} disabled={post.isPending}>
