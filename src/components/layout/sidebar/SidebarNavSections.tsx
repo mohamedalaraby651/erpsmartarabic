@@ -95,7 +95,7 @@ export const defaultNavSections: NavSection[] = [
     bgColor: sectionIconColors.sales.bg,
     items: [
       { title: 'العملاء', icon: Users, href: '/customers', roles: ['admin', 'sales'] },
-      { title: 'عروض الأسعار', icon: FileText, href: '/quotations', roles: ['admin', 'sales'], countKey: 'pendingQuotations', countColor: 'info' },
+      { title: 'عروض الأسعار', icon: FileText, href: '/quotes', roles: ['admin', 'sales'], countKey: 'pendingQuotations', countColor: 'info' },
       { title: 'أوامر البيع', icon: ShoppingCart, href: '/sales-orders', roles: ['admin', 'sales'], countKey: 'pendingSalesOrders', countColor: 'warning' },
       { title: 'الفواتير', icon: Receipt, href: '/invoices', roles: ['admin', 'sales', 'accountant'], countKey: 'pendingInvoices', countColor: 'destructive' },
       { title: 'المرتجعات', icon: RotateCcw, href: '/credit-notes', roles: ['admin', 'sales', 'accountant'] },
