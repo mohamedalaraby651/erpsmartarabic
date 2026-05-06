@@ -42,34 +42,17 @@ export const CustomerSummaryBar = memo(function CustomerSummaryBar({
   if (hidden || customers.length === 0) return null;
   if (summary.debtorCount === 0 && summary.nearLimitCount === 0) return null;
 
+  // Show only the most actionable card to reduce duplication with StatsBar chips.
+  // Debtors card is primary; near-limit appears as a small inline note.
   const cards = [
     {
       id: 'debtors',
       label: 'إجمالي المستحق',
       value: `${summary.totalDebt.toLocaleString()} ج.م`,
-      sub: `${summary.debtorCount} عميل`,
+      sub: `${summary.debtorCount} عميل · اضغط للتصفية`,
       icon: Wallet,
       tone: 'destructive' as const,
       show: summary.debtorCount > 0,
-    },
-    {
-      id: 'near-limit',
-      label: 'قرب حد الائتمان',
-      value: `${summary.nearLimitCount}`,
-      sub: 'تجاوز 80% من الحد',
-      icon: AlertTriangle,
-      tone: 'warning' as const,
-      show: summary.nearLimitCount > 0,
-      disabled: true, // فلتر مشتق غير موجود — للعرض فقط حالياً
-    },
-    {
-      id: 'overdue',
-      label: 'متأخر السداد',
-      value: '—',
-      sub: 'يحتاج متابعة',
-      icon: TrendingDown,
-      tone: 'amber' as const,
-      show: false, // يحتاج بيانات invoice overdue (مستقبلي)
     },
   ].filter(c => c.show);
 
