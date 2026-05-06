@@ -1,104 +1,80 @@
-# خطة تطوير صفحة العملاء (Mobile)
 
-استكشفت البنية الحالية: `CustomersPage.tsx`, `CustomerListCard.tsx`, `CustomerStatsBar.tsx`, `CustomerMobileView.tsx`, و `CustomerPageHeader.tsx`. أدناه ملاحظات الواجهة الحالية ثم خطة التحسين.
+# خطة إكمال تطوير صفحة العملاء (المرحلة 2)
 
-## الملاحظات على الصورة الحالية
+تم في المرحلة السابقة: تنظيف الهيدر، إعادة تصميم البطاقة، تحسين الفلاتر، تحسين الأفاتار. هذه الخطة تكمل النقاط المتبقية مع المراجعة والاختبار.
 
-1. **تكرار زر الإشعارات**: جرس في الهيدر العلوي + جرس عائم بعدّاد (35) — ازدواج بصري ووظيفي.
-2. **رقم 3 أحمر بجوار اسم العميل** غير واضح المعنى (تنبيهات؟ فواتير متأخرة؟) — يحتاج tooltip أو لون دلالي.
-3. **الأفاتار الكبير (فع/شا)** يأخذ مساحة كبيرة دون قيمة — الأحرف العربية المقطوعة غير جذابة.
-4. **زر الفلتر العائم** منفصل عن شريط التصنيفات أعلاه — تكرار وتشتيت.
-5. **شريط الفلاتر الأفقي** (الكل/نشط/VIP/مدين) جيد لكن لا يظهر أي فلتر مفعّل بصرياً عند العودة للصفحة.
-6. **شريط الترتيب "تاريخ الإضافة"** في موضع غريب يميناً تحت الإشعارات.
-7. **الرصيد 6,740 ج.م** بلون أصفر بدون سياق — دائن/مدين/حد ائتمان؟
-8. **شريط التقدم 45%** بدون label — المستخدم لا يعرف أنه نسبة استخدام الائتمان.
-9. **Floating Action Button (+)** يظهر مع وجود زر "إضافة" بالأعلى — تكرار.
-10. **مساحات فارغة كبيرة** بين البطاقات وبين شريط الفلاتر والقائمة.
+## ما سيتم تنفيذه
 
-## التحسينات المقترحة
+### 1. شريط ملخص ذكي قابل للضغط (أولوية عالية)
+إضافة شريط `CustomerSummaryBar` فوق القائمة يعرض:
+- إجمالي الديون المستحقة (مجموع الأرصدة المدينة)
+- عدد العملاء المتأخرين (لديهم فواتير overdue)
+- عدد العملاء قرب حد الائتمان (>80%)
+- كل بطاقة قابلة للضغط → تفعّل الفلتر المقابل تلقائياً
+- يطابق نمط `kpi-value` و `card-premium` من design system
+- مخفي عند تفعيل بحث/فلتر (تجنب التشويش)
 
-### 1. تنظيف الهيدر وإزالة التكرار
+### 2. Swipe Actions على البطاقة (أولوية عالية)
+إنشاء hook `useCustomerSwipeActions`:
+- Swipe يسار → كشف زرين: "فاتورة جديدة" + "دفعة" (ألوان primary/success)
+- Swipe يمين → "اتصال" + "WhatsApp" (إذا توفر phone)
+- threshold = 80px، spring back عند الإفلات
+- Haptic feedback عبر `lib/haptics.ts`
+- Long-press يبقى يفتح القائمة الكاملة (لا تعارض)
+- معطّل تلقائياً على الديسكتوب
+- متوافق مع memory `mobile-native-interaction-standards` (44px، tap-only)
 
-- دمج جرس الإشعارات العائم مع جرس الهيدر (إبقاء واحد فقط مع badge للعدد).
-- نقل زر الفلتر بجوار شريط البحث كأيقونة مدمجة بدل floating.
-- إزالة FAB (+) عند وجود زر "إضافة" مرئي بالأعلى — أو العكس.
+### 3. Virtualization للقائمة (أولوية متوسطة)
+- استخدام `useVirtualList` الموجود (تحقق من الاستخدام الحالي أولاً)
+- تفعيل فقط عند `data.length > 50`
+- ارتفاع بطاقة ثابت ≈ 120px (mobile) / 90px (desktop)
+- الحفاظ على `IntersectionObserver` للـ infinite scroll
+- `useDeferredValue` على نتائج البحث لتقليل re-renders
 
-### 2. شريط فلاتر أذكى
+### 4. تحسين الفرز والترتيب
+- إضافة خيارات: "الأكثر تأخراً"، "الأعلى رصيداً مدين"، "VIP أولاً"، "آخر نشاط"
+- حفظ آخر sortKey في `useNavigationState` (sessionStorage per-route)
+- نقل dropdown الفرز بجوار chip الفلاتر بدل تعليقه منفصلاً
 
-- إظهار chip "مسح الفلاتر ✕" عند تفعيل أي فلتر.
-- إضافة badge صغير على زر الفلتر المتقدم عند وجود فلاتر نشطة.
-- حفظ آخر فلتر مستخدم في sessionStorage (متوافق مع memory `navigation-state-persistence-pattern`).
+### 5. تحسينات a11y وأداء
+- مراجعة جميع الأيقونات-أزرار وإضافة `aria-label` عربي صحيح
+- التحقق من 44px touch targets على كل العناصر التفاعلية في البطاقة
+- زيادة contrast على `text-muted-foreground` الفاتح في الأرصدة
+- `loading="lazy"` على صور الأفاتار + `decoding="async"`
+- مراجعة `React.memo` على `CustomerListCard` مع `areEqual` dقيق
 
-### 3. بطاقة عميل أكثر كثافة معلوماتية
-
-- **الرصيد**: إضافة label صريح (مدين/دائن) + سهم اتجاه + لون دلالي (HSL tokens: `destructive` / `success` / `warning`).
-- **شريط الائتمان**: إضافة نص "استخدام الائتمان: 45% من X ج.م" بدل النسبة المعلّقة.
-- **Badge الـ 3**: تحويله لأيقونة جرس صغيرة + tooltip "3 تنبيهات نشطة" + ربط بالـ alert drawer.
-- **VIP/Type chip**: دمج "فرد + فضي" في سطر واحد مدمج لتوفير مساحة.
-- تقليل padding الداخلي من `p-4` إلى `p-3` على الموبايل.
-
-### 4. أفاتار أفضل
-
-- استبدال الأحرف العربية المقطوعة (فع/شا) بـ:
-  - أيقونة User/Building حسب النوع + خلفية ملونة hash-based من اسم العميل.
-  - أو أول حرفين كاملين (فا/شر) بحجم أصغر.
-
-### 5. ترتيب وفرز محسّن
-
-- نقل dropdown "تاريخ الإضافة" بجوار شريط الفلاتر بدل تعليقه يميناً.
-- إضافة خيارات فرز: الأحدث نشاطاً، الأعلى رصيداً، الأكثر تأخراً، VIP أولاً.
-
-### 6. إجراءات سريعة (Swipe Actions)
-
-- إضافة swipe يسار على البطاقة → يكشف زرين: "فاتورة جديدة" و "دفعة".
-- swipe يمين → "اتصال" و "WhatsApp" (عند توفر رقم).
-- مع الإبقاء على long-press للقائمة الكاملة.
-
-### 7. حالة فارغة وإسكلتون أذكى
-
-- التمييز بين "لا يوجد عملاء" و "لا توجد نتائج للفلتر الحالي" (متوافق مع memory `empty-state-logic`).
-- skeleton يطابق شكل البطاقة الفعلي (avatar + سطرين + شريط).
-
-### 8. ملخص الحالة في الأعلى
-
-- إضافة شريط مدمج فوق القائمة يعرض: "إجمالي الديون: X ج.م • متأخر: Y" قابل للضغط للفلترة المباشرة.
-
-### 9. أداء
-
-- تفعيل `react-window` أو virtualization للقائمة عند تجاوز 50 عميل.
-- lazy-load صور الأفاتار مع IntersectionObserver.
-- استخدام `useDeferredValue` لنتائج البحث.
-
-### 10. إمكانية الوصول (a11y)
-
-- إضافة `aria-label` لكل أيقونة-زر.
-- ضمان لمس 44px لكل عناصر التفاعل (متوافق مع memory `mobile-native-interaction-standards`).
-- زيادة contrast ratio للنصوص الرمادية الفاتحة.
+### 6. مراجعة واختبار
+- قراءة `CustomersPage.tsx`, `CustomerListCard.tsx` بعد التعديلات للتحقق من عدم وجود تعارضات
+- اختبار TypeScript build (تلقائي عبر harness)
+- اختبار سريع للـ console errors عبر `read_console_logs`
+- مراجعة أن RTL يعمل بشكل صحيح للـ swipe (الاتجاه ينعكس)
+- التأكد من توافق التغييرات مع memories: `rtl-standard`, `mobile-native-interaction-standards`, `semantic-color-tokens`
 
 ## الملفات المتأثرة
 
 ```
-src/pages/customers/CustomersPage.tsx          (تنظيم header + floating elements)
-src/components/customers/list/
-  ├─ CustomerListCard.tsx                      (إعادة تصميم البطاقة + swipe)
-  ├─ CustomerStatsBar.tsx                      (chip مسح الفلاتر + sticky)
-  ├─ CustomerPageHeader.tsx                    (دمج زر الفلتر مع البحث)
-  └─ CustomerEmptyState.tsx                    (تمييز no-data vs no-results)
-src/components/customers/shared/CustomerAvatar.tsx  (تحسين الأفاتار)
-src/components/customers/alerts/CustomerAlertsMobileTrigger.tsx  (إزالة التكرار)
-src/hooks/customers/useCustomerSwipeActions.ts (جديد — swipe gestures)
+جديد:
+  src/hooks/customers/useCustomerSwipeActions.ts
+  src/components/customers/list/CustomerSummaryBar.tsx
+
+تعديل:
+  src/components/customers/list/CustomerListCard.tsx       (دمج swipe + a11y)
+  src/components/customers/list/CustomerMobileView.tsx     (إضافة summary bar + virtualization + sort options)
+  src/pages/customers/CustomersPage.tsx                    (تمرير handlers + sort state persistence)
+  src/hooks/customers/useCustomerFilters.ts                (إضافة فلاتر مشتقة: overdue, near-credit-limit) — إن لزم
 ```
 
-## ترتيب التنفيذ المقترح
+## ترتيب التنفيذ
 
-1. تنظيف التكرار (الجرس + FAB) — تأثير بصري فوري.
-2. إعادة تصميم بطاقة العميل (labels واضحة + ألوان دلالية).
-3. تحسين شريط الفلاتر (badge + مسح).
-4. إضافة swipe actions.
-5. تحسينات الأداء والـ a11y.
+1. شريط الملخص (تأثير بصري مباشر)
+2. Swipe actions (تجربة موبايل أساسية)
+3. Virtualization + sort persistence
+4. مراجعة a11y/performance
+5. اختبار نهائي + قراءة console logs
 
-## أسئلة قبل البدء
+## نقاط تقنية
 
-- هل تريد أن أنفذ كل التحسينات دفعة واحدة، أم نبدأ بأهم 3-4 تحسينات؟
-- هل swipe actions أولوية أم نؤجلها لمرحلة لاحقة؟
-- نمط الأفاتار المفضّل: أيقونة + خلفية ملوّنة، 
+- **Swipe في RTL**: المسافات السالبة/الموجبة تنعكس — استخدام `dir`-aware logic أو CSS logical properties (`inline-start/end`)
+- **Summary bar tokens**: استخدام `bg-destructive/10`, `bg-warning/10`, `bg-success/10` للحفاظ على نظام الألوان
+- **Virtualization مع animations**: تعطيل `animate-fade-in` عند تفعيل virtualization (يسبب flicker مع reposition)
+- **useDeferredValue**: تطبيقه على query string فقط، ليس على filter object كامل

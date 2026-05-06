@@ -6,6 +6,7 @@ import { ArrowUpDown, Loader2, Trash2, Crown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
+import { useNavigationState } from "@/hooks/useNavigationState";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useInfiniteCustomers } from "@/hooks/customers/useInfiniteCustomers";
@@ -64,18 +65,19 @@ const CustomersPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
 
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
+  const [sortConfig, setSortConfig] = useNavigationState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
   const requestSort = useCallback((key: string) => {
-    setSortConfig(current => {
+    setSortConfig((() => {
+      const current = sortConfig;
       if (current.key === key) {
-        if (current.direction === 'asc') return { key, direction: 'desc' };
+        if (current.direction === 'asc') return { key, direction: 'desc' as const };
         if (current.direction === 'desc') return { key: '', direction: null };
       }
-      return { key, direction: 'asc' };
-    });
-  }, []);
+      return { key, direction: 'asc' as const };
+    })());
+  }, [sortConfig, setSortConfig]);
 
-  const [quickFilter, setQuickFilter] = useState<string | null>(null);
+  const [quickFilter, setQuickFilter] = useNavigationState<string | null>('customers_quick_filter', null);
 
   const resetAllQuickFilters = useCallback(() => {
     filters.setStatusFilter('all');
@@ -241,6 +243,9 @@ const CustomersPage = () => {
             onSortChange={requestSort}
             alertCountByCustomer={alertCountByCustomer}
             errorCustomerIds={errorCustomerIds}
+            hasActiveSearch={!!filters.debouncedSearch}
+            activeQuickFilter={quickFilter}
+            onQuickFilter={handleQuickFilter}
           />
         </div>
       ) : (

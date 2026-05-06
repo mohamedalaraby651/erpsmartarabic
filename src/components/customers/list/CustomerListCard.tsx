@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle } from 'lucide-react';
+import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle, MessageSquare } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { vipColors, vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';
 import { useLongPress } from '@/hooks/useLongPress';
+import { useCustomerSwipeActions } from '@/hooks/customers/useCustomerSwipeActions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,16 +97,97 @@ const CustomerListCardInner = ({
     delay: 500,
   });
 
+  const isMobile = useIsMobile();
+  const swipeEnabled = isMobile && !selectionMode && !expanded;
+  const hasContact = !!customer.phone;
+
+  const triggerNewInvoice = useCallback(() => onNewInvoice?.(customer.id), [onNewInvoice, customer.id]);
+  const triggerNewPayment = useCallback(() => onNewPayment?.(customer.id), [onNewPayment, customer.id]);
+  const triggerCall = useCallback(() => {
+    if (customer.phone) window.location.href = `tel:${customer.phone}`;
+  }, [customer.phone]);
+  const triggerWhatsApp = useCallback(() => {
+    if (customer.phone) {
+      const num = customer.phone.replace(/\D/g, '');
+      window.open(`https://wa.me/${num}`, '_blank');
+    }
+  }, [customer.phone]);
+
+  const swipe = useCustomerSwipeActions({
+    enabled: swipeEnabled,
+    onSwipeLeftRevealed: () => {
+      if (onNewInvoice) triggerNewInvoice();
+      else if (onNewPayment) triggerNewPayment();
+    },
+    onSwipeRightRevealed: () => {
+      if (hasContact) triggerCall();
+    },
+  });
+
   return (
+    <div className="relative overflow-hidden rounded-lg" {...swipe.handlers}>
+      {/* Action layer — primary (revealed on swipe toward inline-end visually) */}
+      {swipeEnabled && (onNewInvoice || onNewPayment) && (
+        <div
+          className="absolute inset-y-0 end-0 flex items-center gap-1 pe-2 ps-3 pointer-events-none"
+          aria-hidden
+        >
+          {onNewInvoice && (
+            <div className={cn(
+              'flex flex-col items-center justify-center rounded-lg bg-primary text-primary-foreground h-12 w-14 transition-opacity',
+              swipe.direction === 'primary' ? 'opacity-100' : 'opacity-60',
+            )}>
+              <FileText className="h-4 w-4" />
+              <span className="text-[10px] mt-0.5">فاتورة</span>
+            </div>
+          )}
+          {onNewPayment && (
+            <div className={cn(
+              'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-14 transition-opacity',
+              swipe.direction === 'primary' ? 'opacity-100' : 'opacity-60',
+            )}>
+              <CreditCard className="h-4 w-4" />
+              <span className="text-[10px] mt-0.5">دفعة</span>
+            </div>
+          )}
+        </div>
+      )}
+      {/* Action layer — contact (revealed on swipe toward inline-start visually) */}
+      {swipeEnabled && hasContact && (
+        <div
+          className="absolute inset-y-0 start-0 flex items-center gap-1 ps-2 pe-3 pointer-events-none"
+          aria-hidden
+        >
+          <div className={cn(
+            'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-14 transition-opacity',
+            swipe.direction === 'contact' ? 'opacity-100' : 'opacity-60',
+          )}>
+            <Phone className="h-4 w-4" />
+            <span className="text-[10px] mt-0.5">اتصال</span>
+          </div>
+          <div className={cn(
+            'flex flex-col items-center justify-center rounded-lg bg-emerald-700 text-white h-12 w-14 transition-opacity',
+            swipe.direction === 'contact' ? 'opacity-100' : 'opacity-60',
+          )}>
+            <MessageSquare className="h-4 w-4" />
+            <span className="text-[10px] mt-0.5">واتساب</span>
+          </div>
+        </div>
+      )}
+
     <Card
       className={cn(
-        'overflow-hidden border-s-[3px] transition-all duration-200 active:scale-[0.98] shadow-sm',
+        'relative overflow-hidden border-s-[3px] transition-transform duration-200 active:scale-[0.98] shadow-sm',
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
         isSelected && 'ring-2 ring-primary bg-primary/5',
         hasErrorAlert && 'bg-destructive/5',
       )}
-      style={{ animationDelay: `${animationDelay}ms` }}
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        transform: swipe.offset !== 0 ? `translateX(${swipe.visualTranslateX}px)` : undefined,
+        transition: swipe.offset === 0 ? 'transform 200ms ease-out' : 'none',
+      }}
     >
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
@@ -319,6 +402,7 @@ const CustomerListCardInner = ({
         </div>
       </div>
     </Card>
+    </div>
   );
 };
 
