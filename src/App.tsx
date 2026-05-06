@@ -77,6 +77,7 @@ const SalesPipelinePage = lazy(() => import("./pages/quotes/SalesPipelinePage"))
 const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
 const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
 const SalesReportsPage = lazy(() => import("./pages/reports/SalesReportsPage"));
+const ReturnsReportPage = lazy(() => import("./pages/reports/ReturnsReportPage"));
 const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
 const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
 const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
