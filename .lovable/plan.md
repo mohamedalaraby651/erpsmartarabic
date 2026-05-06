@@ -1,222 +1,183 @@
-# الخطة الشاملة: المحاور الثلاثة لإكمال ERP
+# المحور 2 — الطبقة الأولى: قاعدة بيانات اللوجستيات والمطابقة
 
-> **الحالة الراهنة:** فحص أمني تلقائي كشف **166 ثغرة فعلية** (أكثر من 13 الموثقة في التقارير السابقة). 3 ثغرات منطقية حرجة في RLS تم تأكيدها. الجداول التالية **غير موجودة فعلياً**: `goods_receipts`, `delivery_notes`, `currencies`, `exchange_rates`, `tax_rates`. لا يوجد عمود `currency` أو `exchange_rate` في الفواتير.
-
----
-
-## 🔴 المحور الأول: الأمان الشامل (P0 — أسبوع واحد)
-
-### 1.1 ثغرات منطقية حرجة مؤكدة من الفحص
-
-| # | الثغرة | الوصف الفني | الحل |
-|---|--------|------------|------|
-| 1 | **PRIVILEGE_ESCALATION_RISK** | `user_roles_insert_admin_tenant` يمنع تعيين `role='admin'` لكنه **لا يقيّد `custom_role_id`** — أي tenant admin يستطيع إنشاء custom role بصلاحيات admin كاملة وتعيينه | إضافة CHECK يرفض custom_role_id الذي يحتوي على صلاحيات admin-equivalent |
-| 2 | **MISSING_TENANT_ISOLATION** | سياسة إنشاء notifications لا تتحقق من `tenant_id = get_current_tenant()` — يمكن إرسال إشعارات لمستخدمين في tenants أخرى | إضافة `WITH CHECK (tenant_id = get_current_tenant() AND user_id IN (SELECT id FROM profiles WHERE tenant_id = get_current_tenant()))` |
-| 3 | **سياسات UPDATE معطلة فعلياً** | `customers_update_policy`, `quotations_update_policy`, `employees_update_policy`, `sales_orders_update_policy`, `suppliers_update_policy` تستدعي `check_section_permission(..., 'update')` لكن الدالة تتعامل مع `'edit'` فقط — السياسات الفرعية تفشل دائماً، والوصول يمر عبر السياسات الأخرى مما **يتجاوز فحص section permissions كلياً للتحديثات** | تصحيح string من `'update'` إلى `'edit'` في كل السياسات الخمس |
-
-### 1.2 ثغرات SECURITY DEFINER (163 finding)
-
-عشرات دوال `SECURITY DEFINER` قابلة للاستدعاء من `anon` و `authenticated` بدون تقييد. القائمة تشمل: `get_current_tenant`, `get_supplier_health_score`, `auto_assign_default_tenant`, وغيرها.
-
-**الإجراء:**
-- مراجعة كل دالة وتحديد: هل تحتاج فعلاً استدعاء من العميل؟
-- للدوال الداخلية (triggers, helpers): `REVOKE EXECUTE ON FUNCTION ... FROM PUBLIC, anon, authenticated`
-- للدوال العامة المطلوبة (مثل `has_role`, `get_current_tenant`): إبقاؤها لكن مع التأكد من `STABLE` و `search_path = public`
-
-### 1.3 حماية البيانات الحساسة (Field-Level)
-
-| الجدول | الأعمدة الحساسة | الحل |
-|--------|-----------------|------|
-| `employees` | `national_id`, `bank_account`, `birth_date` | استخدام view `employees_safe` (موجود بالفعل) في كل الواجهات + إنشاء سياسة منفصلة تسمح بالحقول الكاملة لـ HR + الموظف نفسه فقط |
-| `suppliers` | `iban`, `bank_account` | نفس النمط مع `suppliers_safe` (موجود) — تقييد للدور `accountant` فقط |
-| `customers` | `phone`, `email` | إنشاء `customers_safe` view مع masking للأرقام (آخر 4 خانات) للأدوار الأقل |
-| `bank_accounts` | كامل الجدول | تقييد على الدور `accountant` + `admin` فقط، إضافة 2FA challenge قبل العرض |
-| `user_2fa_settings` | `secret` (TOTP) | تشفير at-rest باستخدام `pgcrypto` + `pgp_sym_encrypt` بمفتاح من Vault |
-
-### 1.4 تشفير TOTP secrets
-
-```text
-ALTER TABLE user_2fa_settings ADD COLUMN secret_encrypted bytea;
--- migration: encrypt existing → drop plaintext column
--- Edge function verify-totp يفك التشفير وقت التحقق فقط
-```
-
-### 1.5 إخفاء error.message (10 ملفات)
-
-استبدال مباشر في الملفات: `TwoFactorSetup.tsx`, `JournalFormDialog.tsx`, `JournalDetailDialog.tsx`, `AccountFormDialog.tsx`, `InvoiceApprovalDialog.tsx`, `ExpensesPage.tsx`, `Auth.tsx`, `secureOperations.ts` — استخدام `getSafeErrorMessage()` الموجود في `errorHandler.ts`.
-
-### 1.6 تفعيل Leaked Password Protection
-استخدام `configure_auth` لتفعيل `password_hibp_enabled: true`.
-
-**نتيجة المحور الأول:** نظام يجتاز فحص Lovable Security Scanner بـ 0 ERROR و < 10 WARN.
+بناء **DB Layer فقط** (بدون UI). يلتزم بالقرارات المتفق عليها:
+- إنشاء `purchase_invoices` ضمن نفس الـ Migration (Three-Way Matching كامل).
+- ترحيل عبر **RPC + Trigger** (RPC يغيّر الحالة، Trigger يولّد الحركة).
+- نقص المخزون في DN: **سماح بسالب + تحذير في `sync_logs`**.
 
 ---
 
-## 🟠 المحور الثاني: إكمال الدورة المستندية (P0 — 3 أسابيع)
+## 1) الجداول الجديدة (6 جداول)
 
-### 2.1 جداول جديدة كاملة
-
+### أ) إيصالات الاستلام
 ```text
-goods_receipts (إيصالات استلام البضاعة)
-├── id, receipt_number, tenant_id
-├── purchase_order_id (FK → purchase_orders)
-├── supplier_id, warehouse_id
-├── received_date, received_by
-├── status: draft|posted|cancelled
-├── notes, attachments
-└── created_at, updated_at
+goods_receipts(
+  id, tenant_id, receipt_number UNIQUE per tenant,
+  purchase_order_id FK→purchase_orders, supplier_id FK→suppliers,
+  warehouse_id FK→warehouses, received_date DATE,
+  status ENUM('draft','posted','cancelled') DEFAULT 'draft',
+  posted_at, posted_by, notes, created_by, created_at, updated_at
+)
 
-goods_receipt_items
-├── id, receipt_id (FK → goods_receipts CASCADE)
-├── purchase_order_item_id (FK)
-├── product_id, ordered_qty, received_qty
-├── unit_cost, total_cost
-└── quality_status: accepted|rejected|partial
-
-delivery_notes (إذونات تسليم)
-├── id, delivery_number, tenant_id
-├── sales_order_id (FK → sales_orders)
-├── invoice_id (nullable — قد تُسلَّم قبل الفوترة)
-├── customer_id, warehouse_id
-├── delivery_date, delivered_by, received_by_name
-├── status: draft|in_transit|delivered|returned
-└── signature_url (PNG توقيع رقمي)
-
-delivery_note_items
-├── id, delivery_id, sales_order_item_id
-├── product_id, ordered_qty, delivered_qty
-└── condition: good|damaged
+goods_receipt_items(
+  id, tenant_id, receipt_id FK CASCADE,
+  product_id, variant_id NULL,
+  ordered_qty NUMERIC, received_qty NUMERIC CHECK >= 0,
+  unit_cost NUMERIC, notes
+)
 ```
 
-### 2.2 Three-Way Matching (Trigger DB)
-
+### ب) إذونات التسليم
 ```text
-عند posting الفاتورة الواردة (Purchase Invoice):
-  IF supplier_id موجود في purchase_orders:
-    تحقق: invoice_qty ≤ goods_receipt_qty
-    تحقق: invoice_unit_price ≈ po_unit_price (±5% tolerance)
-    إذا فشل → رفع approval_required = true
+delivery_notes(
+  id, tenant_id, delivery_number UNIQUE per tenant,
+  sales_order_id FK→sales_orders NULL,
+  invoice_id FK→invoices NULL,         -- نسمح بربط بفاتورة مباشرة
+  customer_id, warehouse_id, delivery_date,
+  status ENUM('draft','in_transit','delivered','cancelled'),
+  posted_at, posted_by, ...
+)
+
+delivery_note_items(
+  id, tenant_id, delivery_id FK CASCADE,
+  product_id, variant_id NULL,
+  ordered_qty, delivered_qty CHECK >= 0, notes
+)
 ```
 
-### 2.3 Auto Journal Entries
+### ج) فواتير المشتريات (جديد بالكامل)
+```text
+purchase_invoices(
+  id, tenant_id, invoice_number UNIQUE per tenant,
+  supplier_id, purchase_order_id FK NULL,
+  invoice_date DATE, due_date DATE,
+  subtotal, tax_amount, discount_amount, total_amount,
+  paid_amount DEFAULT 0,
+  status ENUM('draft','posted','paid','cancelled'),
+  payment_status ENUM('pending','partial','paid'),
+  matching_status ENUM('matched','over_received','under_received','no_receipt'),
+  approval_required BOOLEAN DEFAULT false,
+  posted_at, posted_by, notes, created_by/at, updated_at
+)
 
-ربط trigger على `payments`, `expenses`, `goods_receipts` ينشئ تلقائياً:
-- Payment → Dr Cash / Cr Receivable (أو AP)
-- Expense → Dr Expense Account / Cr Cash (أو AP)
-- Goods Receipt → Dr Inventory / Cr GR/IR Clearing
-- Purchase Invoice → Dr GR/IR Clearing / Cr AP
+purchase_invoice_items(
+  id, tenant_id, invoice_id FK CASCADE,
+  product_id, variant_id NULL,
+  quantity NUMERIC, unit_price, total_price, notes
+)
+```
 
-استخدام `posting.rules.ts` الموجود + توسيعه.
-
-### 2.4 إكمال Credit Notes
-
-ربط `credit_notes` بـ `invoice_items` عبر جدول وسيط `credit_note_items` يشير إلى `invoice_item_id` المرجعي + كمية الإرجاع.
-
-### 2.5 تقارير محاسبية أساسية
-
-- **Trial Balance** (ميزان المراجعة): تجميع من `journal_entries` لفترة محددة
-- **P&L** (قائمة الدخل): تجميع حسابات الإيرادات والمصروفات
-- **Balance Sheet** (الميزانية): الأصول/الخصوم/حقوق الملكية في تاريخ معين
-
-كلها صفحات React تستخدم RPCs محسّنة مع indexes على `journal_entries(tenant_id, period, account_id)`.
-
-### 2.6 صفحات وواجهات
-
-| الصفحة | الملف |
-|--------|------|
-| قائمة إيصالات الاستلام | `src/pages/goods-receipts/GoodsReceiptsPage.tsx` |
-| تفاصيل/إنشاء استلام | `src/pages/goods-receipts/GoodsReceiptFormDialog.tsx` |
-| قائمة إذونات التسليم | `src/pages/delivery-notes/DeliveryNotesPage.tsx` |
-| تفاصيل/إنشاء تسليم + توقيع | `src/pages/delivery-notes/DeliveryNoteFormDialog.tsx` |
-| ميزان المراجعة | `src/pages/accounting/TrialBalancePage.tsx` |
-| قائمة الدخل | `src/pages/accounting/ProfitLossPage.tsx` |
-| الميزانية العمومية | `src/pages/accounting/BalanceSheetPage.tsx` |
-
-**نتيجة المحور الثاني:** نظام يدعم دورة Purchase Order → GR → Invoice → Payment الكاملة + Sales Order → Delivery Note → Invoice → Payment + 3 تقارير محاسبية معيارية.
+كل الجداول: `tenant_id NOT NULL`، فهارس على `(tenant_id, status)` و FKs.
 
 ---
 
-## 🟢 المحور الثالث: Multi-Currency (P1 — أسبوعان)
-
-### 3.1 جداول جديدة
-
-```text
-currencies
-├── code (PK, char(3)): 'EGP', 'SAR', 'USD', 'EUR', 'AED', 'KWD', 'QAR'
-├── name_ar, name_en, symbol
-├── decimal_places (2 افتراضي، 3 لـ KWD/BHD)
-├── is_active boolean
-└── seeded افتراضياً بـ 15 عملة
-
-exchange_rates
-├── id, tenant_id, from_currency, to_currency
-├── rate numeric(18,8)
-├── valid_from date, valid_to date (nullable)
-├── source: manual|api|bank
-└── UNIQUE(tenant_id, from_currency, to_currency, valid_from)
-
-tenant_settings.base_currency (إضافة عمود)
-├── default 'EGP'
-└── العملة الأساسية للحسابات
-```
-
-### 3.2 تعديل الجداول المالية
-
-إضافة الأعمدة التالية على: `invoices`, `quotations`, `sales_orders`, `purchase_orders`, `payments`, `expenses`, `credit_notes`:
-
-```text
-+ currency_code char(3) DEFAULT (SELECT base_currency FROM tenant_settings)
-+ exchange_rate numeric(18,8) DEFAULT 1.0
-+ base_amount numeric(18,2) GENERATED ALWAYS AS (total * exchange_rate) STORED
-```
-
-كل التقارير المالية تستخدم `base_amount` للتجميع (لتفادي خلط العملات).
-
-### 3.3 RPC: `get_exchange_rate(from, to, date)`
-
-ترجع السعر الساري في تاريخ معين. تُستخدم تلقائياً عند إنشاء أي مستند مالي بعملة غير الأساسية.
-
-### 3.4 واجهات
-
-- **CurrencySelector component** في كل forms المالية
-- **ExchangeRatesPage** لإدارة الأسعار يدوياً
-- **(اختياري لاحقاً)** Edge Function لجلب الأسعار من API مجاني (exchangerate.host) يومياً عبر pg_cron
-
-### 3.5 Tax Rates (مع Multi-Currency لأنها مرتبطة)
-
-```text
-tax_rates
-├── id, tenant_id, name_ar, name_en
-├── rate numeric(5,2) — مثلاً 14.00 للضريبة المصرية
-├── type: vat|withholding|stamp
-├── is_default boolean
-└── account_id (FK → chart_of_accounts للقيود التلقائية)
-```
-
-ربط `invoice_items.tax_rate_id` بدلاً من `tax_amount` المحسوب يدوياً.
-
-**نتيجة المحور الثالث:** النظام يدعم 15 عملة + ضرائب متعددة + حساب تلقائي بالعملة الأساسية للتقارير. يفتح السوق الخليجي بأكمله.
+## 2) الترقيم التلقائي
+ثلاث Sequences جديدة + ثلاث Triggers `BEFORE INSERT`:
+- `GR-YYYYMMDD-NNNN` — `goods_receipts`
+- `DN-YYYYMMDD-NNNN` — `delivery_notes`
+- `PINV-YYYYMMDD-NNNN` — `purchase_invoices`
 
 ---
 
-## 📅 الجدول الزمني المقترح
-
-```text
-الأسبوع 1     │ المحور 1: الأمان (كل البنود 1.1 → 1.6)
-الأسبوع 2-3   │ المحور 2 جزء أ: GR + DN + Three-Way Match + UI
-الأسبوع 4     │ المحور 2 جزء ب: Auto Journal + Credit Notes + 3 تقارير
-الأسبوع 5-6   │ المحور 3: Multi-Currency + Tax Rates + Exchange Rates
-```
-
-**إجمالي:** 6 أسابيع لتحويل النظام من "ERP بنسبة 80%" إلى "ERP enterprise قابل للبيع إقليمياً بثقة كاملة".
+## 3) RLS (إجباري لكل الجداول)
+نفس النمط المعتمد:
+- **SELECT**: `tenant_id = get_current_tenant()`
+- **INSERT**: `tenant_id = get_current_tenant() AND check_section_permission(uid,'inventory'|'purchases','create')`
+- **UPDATE**: `+ check_section_permission(...,'edit')` ومنع تعديل سطور مرحّلة (`status='posted'`)
+- **DELETE**: مرفوض إذا `status='posted'` (Trigger BEFORE DELETE)
 
 ---
 
-## 🎯 طريقة التنفيذ المقترحة
+## 4) Triggers المنطقية
 
-أقترح **التنفيذ التتابعي** لا التوازي، بهذا الترتيب الإلزامي:
-1. **الأمان أولاً** — لأن أي ميزة تُبنى فوق RLS مكسور تضاعف المخاطر.
-2. **ثم الدورة المستندية** — لأن Multi-Currency يعدّل نفس الجداول التي ستضاف بها أعمدة GR/DN.
-3. **ثم Multi-Currency** — كطبقة أخيرة فوق نظام مكتمل.
+### T1 — `trg_stock_movement_on_gr_post`
+على `goods_receipts AFTER UPDATE OF status WHEN OLD.status='draft' AND NEW.status='posted'`:
+- لكل سطر: `INSERT INTO stock_movements (movement_type='in', to_warehouse_id, quantity, reference_type='goods_receipt', reference_id=NEW.id)`
+- `UPSERT product_stock SET quantity = quantity + received_qty`
+- يحدّث `products.cost_price` بمتوسط مرجّح اختياري (Phase 2 — نتركه الآن).
 
-عند الموافقة على هذه الخطة، سأبدأ فوراً بـ **المحور الأول (الأمان)** كأول منفذ تنفيذي، ثم نراجع معاً قبل الانتقال للمحور الثاني.
+### T2 — `trg_stock_movement_on_dn_post`
+على `delivery_notes` بنفس النمط لكن `movement_type='out'`، `from_warehouse_id`، خصم من `product_stock`.
+- إذا `current_qty - delivered_qty < 0`:  
+  `INSERT INTO sync_logs (level='warning', endpoint='delivery_note_post', metadata={product_id, requested, available, deficit})` — **بدون رفض**.
+
+### T3 — `trg_three_way_matching` على `purchase_invoices`
+عند `BEFORE UPDATE OF status WHEN NEW.status='posted'`:
+- يحسب لكل منتج في الفاتورة: `SUM(received_qty)` من جميع `goods_receipt_items` المرتبطة بنفس `purchase_order_id`.
+- يقارن بـ `quantity` في `purchase_invoice_items`:
+  - مساوية → `matching_status='matched'`
+  - أقل → `matching_status='under_received'` (سماح)
+  - أكبر → `matching_status='over_received'` + `approval_required=true` + رفع `WARNING` في `sync_logs`
+- إذا لا يوجد أي GR → `matching_status='no_receipt'` + `approval_required=true`
+
+### T4 — حماية الترحيل
+- `BEFORE UPDATE`: إذا `OLD.status='posted'` لا يُسمح بتعديل أي حقل مالي/كمي.
+- `BEFORE DELETE`: يُرفض إذا `status='posted'`.
+
+### T5 — `log_activity` على الجداول الستة (الموجود مسبقًا).
+
+---
+
+## 5) RPCs (4 دوال SECURITY DEFINER)
+
+### `post_goods_receipt(p_id uuid) → jsonb`
+- يتحقق من `tenant_id` و الصلاحية (`inventory.edit`).
+- يقفل الصف `FOR UPDATE`.
+- يرفض إذا الحالة ليست `draft`.
+- يحدّث `status='posted', posted_at=now(), posted_by=auth.uid()`.
+- يعتمد على T1 لإنشاء الحركة.
+- يُرجع `{success, receipt_id, movements_created}`.
+
+### `post_delivery_note(p_id uuid) → jsonb`
+- نفس النمط، يعتمد على T2.
+- يُرجع تحذيرات نقص المخزون في الـ payload.
+
+### `post_purchase_invoice(p_id uuid) → jsonb`
+- يعتمد على T3 لاحتساب المطابقة.
+- إذا `approval_required=true` ولم يكن المستخدم admin → يرجع `{success:false, requires_approval:true}` بدون ترحيل.
+
+### `cancel_goods_receipt(p_id uuid, _reason text) → jsonb`
+- لـ GR مرحّل: ينشئ حركة عكسية `out` ويصفّر المخزون (مثل `void_invoice`). نفس النمط لـ DN.
+
+كل RPC: `REVOKE EXECUTE FROM anon, public; GRANT EXECUTE TO authenticated`.
+
+---
+
+## 6) الفهارس
+```sql
+goods_receipts(tenant_id, status), (purchase_order_id), (supplier_id, received_date DESC)
+goods_receipt_items(receipt_id), (product_id)
+delivery_notes(tenant_id, status), (sales_order_id), (customer_id, delivery_date DESC)
+delivery_note_items(delivery_id), (product_id)
+purchase_invoices(tenant_id, status), (supplier_id, invoice_date DESC), (matching_status)
+purchase_invoice_items(invoice_id), (product_id)
+```
+
+---
+
+## 7) ما لن يتم في هذه الطبقة
+- ❌ أي UI / صفحات / Hooks (الطبقة 2).
+- ❌ القيود المحاسبية التلقائية للـ GR (الطبقة 3).
+- ❌ تحديث `cost_price` بمتوسط مرجّح (يُؤجَّل).
+- ❌ Edge Functions.
+
+---
+
+## 8) خطوات التنفيذ
+1. Migration واحد شامل: ENUMs → Tables → Sequences → Indexes → RLS → Triggers → RPCs → Grants.
+2. تحقق ما بعد التنفيذ بـ `supabase--read_query`:
+   - وجود الجداول الـ 6 + الـ ENUMs.
+   - عدد policies = 24 (4 لكل جدول).
+   - الـ 5 triggers مفعّلة.
+   - الـ 4 RPCs محصورة على `authenticated`.
+3. اختبار سريع: إدراج GR تجريبي، ترحيله، التحقق من ظهور صف في `stock_movements` وزيادة `product_stock`.
+4. تحديث memory: إنشاء `mem://features/document-cycle/logistics-layer` يوثّق الـ Triggers والـ RPCs.
+
+---
+
+## ملاحظة فنية (للمراجعة)
+- لم نُنشئ `purchase_payments` هنا (موجود `supplier_payments` بالفعل، سنربطه بـ `purchase_invoices` في الطبقة 3 المحاسبية).
+- `matching_status='over_received'` لا يرفض الترحيل (مرونة) لكن يرفع flag للموافقة الإدارية لاحقًا.
+- نقص المخزون في DN يُسمح به (سياستك) مع تحذير دائم في `sync_logs` — قابل للمراجعة عبر تقرير لاحق.
+
+**الخطة جاهزة للتنفيذ بمجرد الموافقة.**
