@@ -1,80 +1,90 @@
 
-# خطة إكمال تطوير صفحة العملاء (المرحلة 2)
+# إصلاح مشاكل صفحة العملاء — التصميم والإجراءات
 
-تم في المرحلة السابقة: تنظيف الهيدر، إعادة تصميم البطاقة، تحسين الفلاتر، تحسين الأفاتار. هذه الخطة تكمل النقاط المتبقية مع المراجعة والاختبار.
+بعد فحص الصفحة على viewport الموبايل (390x844) ومراجعة المكونات، تم رصد المشاكل التالية مع خطة الحل لكل منها.
 
-## ما سيتم تنفيذه
+## المشاكل المرصودة
 
-### 1. شريط ملخص ذكي قابل للضغط (أولوية عالية)
-إضافة شريط `CustomerSummaryBar` فوق القائمة يعرض:
-- إجمالي الديون المستحقة (مجموع الأرصدة المدينة)
-- عدد العملاء المتأخرين (لديهم فواتير overdue)
-- عدد العملاء قرب حد الائتمان (>80%)
-- كل بطاقة قابلة للضغط → تفعّل الفلتر المقابل تلقائياً
-- يطابق نمط `kpi-value` و `card-premium` من design system
-- مخفي عند تفعيل بحث/فلتر (تجنب التشويش)
+### A. مشاكل حرجة (تأثير وظيفي مباشر)
 
-### 2. Swipe Actions على البطاقة (أولوية عالية)
-إنشاء hook `useCustomerSwipeActions`:
-- Swipe يسار → كشف زرين: "فاتورة جديدة" + "دفعة" (ألوان primary/success)
-- Swipe يمين → "اتصال" + "WhatsApp" (إذا توفر phone)
-- threshold = 80px، spring back عند الإفلات
-- Haptic feedback عبر `lib/haptics.ts`
-- Long-press يبقى يفتح القائمة الكاملة (لا تعارض)
-- معطّل تلقائياً على الديسكتوب
-- متوافق مع memory `mobile-native-interaction-standards` (44px، tap-only)
+1. **طبقات إجراءات السحب (Swipe layers) مكشوفة دائماً فوق الكارت** — أزرار "فاتورة / دفعة / اتصال / واتساب" تظهر بشكل دائم بـ `opacity-60` وتغطي اسم العميل والشعار في أول كل كارت بدلاً من أن تكون مخفية تماماً وتظهر فقط أثناء السحب الفعلي. هذا أكبر مشكلة بصرية في الصفحة.
+2. **الكارت لا يحجب الطبقات الخلفية** — `<Card>` لا يفرض خلفية معتمة (`bg-card`) ولا z-index، فالطبقات تتسرّب بصرياً حتى لو أصلحنا الـ opacity.
+3. **`onSortChange` يستدعي `requestSort`** بدلاً من setter بسيط، فيقلب اتجاه الترتيب asc/desc/null عند كل اختيار من Select الموبايل، والنتيجة سلوك مرتبك للقائمة المنسدلة.
 
-### 3. Virtualization للقائمة (أولوية متوسطة)
-- استخدام `useVirtualList` الموجود (تحقق من الاستخدام الحالي أولاً)
-- تفعيل فقط عند `data.length > 50`
-- ارتفاع بطاقة ثابت ≈ 120px (mobile) / 90px (desktop)
-- الحفاظ على `IntersectionObserver` للـ infinite scroll
-- `useDeferredValue` على نتائج البحث لتقليل re-renders
+### B. مشاكل تخطيط ومسافات
 
-### 4. تحسين الفرز والترتيب
-- إضافة خيارات: "الأكثر تأخراً"، "الأعلى رصيداً مدين"، "VIP أولاً"، "آخر نشاط"
-- حفظ آخر sortKey في `useNavigationState` (sessionStorage per-route)
-- نقل dropdown الفرز بجوار chip الفلاتر بدل تعليقه منفصلاً
+4. **زر الفلتر المتقدم (SlidersHorizontal) معلق وحده** على اليسار في الموبايل بدون عناصر مجاورة، يبدو يتيماً.
+5. **شريط الإحصاءات (chips) ملاصق لشريط الهيدر** — مسافة `space-y-3` غير كافية بصرياً مع كثافة العناصر.
+6. **مسافات بين الكروت متفاوتة** — `space-y-2` مع كروت ذات شارات عريضة يبدو ضيقاً.
+7. **زر FAB (+) العائم يغطي آخر كارت** ولا يحترم مساحة شريط التنقل السفلي.
+8. **عناصر الترتيب وعدّاد العملاء** فوق القائمة في صف منفصل بحيث يضيف ارتفاعاً غير مبرر.
 
-### 5. تحسينات a11y وأداء
-- مراجعة جميع الأيقونات-أزرار وإضافة `aria-label` عربي صحيح
-- التحقق من 44px touch targets على كل العناصر التفاعلية في البطاقة
-- زيادة contrast على `text-muted-foreground` الفاتح في الأرصدة
-- `loading="lazy"` على صور الأفاتار + `decoding="async"`
-- مراجعة `React.memo` على `CustomerListCard` مع `areEqual` dقيق
+### C. مشاكل تكرار وتشتيت
 
-### 6. مراجعة واختبار
-- قراءة `CustomersPage.tsx`, `CustomerListCard.tsx` بعد التعديلات للتحقق من عدم وجود تعارضات
-- اختبار TypeScript build (تلقائي عبر harness)
-- اختبار سريع للـ console errors عبر `read_console_logs`
-- مراجعة أن RTL يعمل بشكل صحيح للـ swipe (الاتجاه ينعكس)
-- التأكد من توافق التغييرات مع memories: `rtl-standard`, `mobile-native-interaction-standards`, `semantic-color-tokens`
+9. **أيقونة جرس مكررة** — جرس عام في الهيدر العلوي + جرس مخصص للتنبيهات داخل هيدر الصفحة، كلاهما بنفس الشكل.
+10. **Summary cards (إجمالي المستحق / قرب حد الائتمان)** مكررة منطقياً مع الـ chips (مدين / VIP) — نفس الفئات مرتين.
+11. **داخل الكارت**: شارات النوع (فرد/شركة) + شارة VIP (ذهبي) + شارة التنبيهات + النقطة الخضراء — كثافة عالية تنافس الاسم.
+
+### D. مشاكل صياغة وتفاعل
+
+12. **`opacity-60` للأيقونات الافتراضية** يوحي بأنها متاحة دائماً للنقر، بينما هي pointer-events-none فعلياً — فجوة بين السلوك والمظهر.
+13. **عند `expanded === true`** تبقى Action layers ظاهرة لكن `swipeEnabled` يصبح false — لا يضر، لكن المؤشر البصري متناقض.
+
+## خطة الإصلاح
+
+### 1) إصلاح طبقات السحب (الأهم)
+
+في `CustomerListCard.tsx`:
+- تغيير الحالة الافتراضية للطبقات من `opacity-60` إلى `opacity-0` مع `pointer-events-none`، وعرضها فقط عند `Math.abs(swipe.offset) > 8` أو حسب الاتجاه.
+- إضافة `bg-card` صريح إلى `<Card>` + `relative z-10` لضمان حجب الطبقات الخلفية.
+- إضافة `aria-hidden` ديناميكي (true عند الإخفاء).
+- تقليل عرض الأزرار من `w-14` إلى `w-12` لتقليل التداخل.
+
+### 2) إصلاح Select الترتيب في الموبايل
+
+في `CustomersPage.tsx`:
+- تمرير `setter` يستدعي `setSortConfig({ key, direction: 'asc' })` مباشرة لـ `CustomerMobileView`، لا `requestSort` (الذي مخصّص لرؤوس الجدول في الديسكتوب).
+
+### 3) تنسيق الفلاتر والمسافات في الموبايل
+
+- في `CustomerFiltersBar` (موبايل): دمج زر "متقدم" مع زر "ترتيب" في صف واحد بـ `justify-between`، أو تحريكه بجانب الـ chips.
+- زيادة `space-y-4` بين الهيدر و StatsBar وSummaryBar في `CustomersPage`.
+- إضافة `pb-24` بدل `pb-20` للحاوي العلوي حتى لا يغطي FAB آخر كارت، أو إخفاء FAB عند الموبايل لوجود زر "إضافة" واضح في الهيدر.
+
+### 4) تقليل التكرار
+
+- إخفاء جرس الهيدر العام على صفحة العملاء عند وجود `CustomerAlertsMobileTrigger` (أو العكس) — اختيار واحد فقط.
+- إخفاء بطاقة "قرب حد الائتمان" من `CustomerSummaryBar` لأن الـ chip "مدين" يغني عنها بصرياً، أو تحويلها إلى chip صغير ضمن StatsBar.
+- داخل الكارت: إخفاء شارة التنبيهات الصغيرة طالما شارة `hasErrorAlert` تطبق خلفية حمراء على الكارت (تجنب الإشارة المضاعفة).
+
+### 5) تقليل كثافة الكارت
+
+- تكبير ارتفاع الكارت قليلاً بـ `p-3.5` بدل `p-3`.
+- زيادة `space-y-2` بين الكروت إلى `space-y-2.5` للتنفس.
+- تحويل شارة النوع (فرد/شركة) من نص عادي إلى أيقونة صغيرة بجوار الاسم بدلاً من سطر منفصل.
+
+### 6) تحسينات a11y وتجاوبية
+
+- إضافة `aria-label` لزر السحب يوضح أنه يحتاج لمسة طويلة على الموبايل.
+- ضمان `min-h-11` (44px) لجميع أزرار الإجراءات داخل الـ expanded state (موجود لكن نضمن باقي الأزرار).
 
 ## الملفات المتأثرة
 
 ```
-جديد:
-  src/hooks/customers/useCustomerSwipeActions.ts
-  src/components/customers/list/CustomerSummaryBar.tsx
-
-تعديل:
-  src/components/customers/list/CustomerListCard.tsx       (دمج swipe + a11y)
-  src/components/customers/list/CustomerMobileView.tsx     (إضافة summary bar + virtualization + sort options)
-  src/pages/customers/CustomersPage.tsx                    (تمرير handlers + sort state persistence)
-  src/hooks/customers/useCustomerFilters.ts                (إضافة فلاتر مشتقة: overdue, near-credit-limit) — إن لزم
+src/components/customers/list/CustomerListCard.tsx       (الإصلاح الأكبر — طبقات السحب + bg-card)
+src/components/customers/list/CustomerMobileView.tsx     (تمرير setter صحيح للترتيب + spacing)
+src/pages/customers/CustomersPage.tsx                    (setter مباشر للترتيب + إخفاء FAB موبايل)
+src/components/customers/list/CustomerSummaryBar.tsx     (إخفاء بطاقة قرب الحد أو تصغيرها)
+src/components/customers/list/CustomerPageHeader.tsx     (لا تكرار للجرس)
+src/components/customers/filters/CustomerFiltersBar.tsx  (دمج زر الفلتر مع شريط أدوات)
 ```
 
-## ترتيب التنفيذ
+## التحقق بعد التنفيذ
 
-1. شريط الملخص (تأثير بصري مباشر)
-2. Swipe actions (تجربة موبايل أساسية)
-3. Virtualization + sort persistence
-4. مراجعة a11y/performance
-5. اختبار نهائي + قراءة console logs
-
-## نقاط تقنية
-
-- **Swipe في RTL**: المسافات السالبة/الموجبة تنعكس — استخدام `dir`-aware logic أو CSS logical properties (`inline-start/end`)
-- **Summary bar tokens**: استخدام `bg-destructive/10`, `bg-warning/10`, `bg-success/10` للحفاظ على نظام الألوان
-- **Virtualization مع animations**: تعطيل `animate-fade-in` عند تفعيل virtualization (يسبب flicker مع reposition)
-- **useDeferredValue**: تطبيقه على query string فقط، ليس على filter object كامل
+1. التقاط لقطة شاشة جديدة على iPhone 12 (390×844) للتأكد من:
+   - عدم ظهور أزرار السحب في الحالة الافتراضية.
+   - وضوح اسم العميل والرصيد دون تداخل.
+   - تباعد مريح بين الأقسام.
+2. تجربة السحب الفعلي للتأكد من ظهور الإجراءات أثناء الحركة.
+3. تجربة Select الترتيب للتأكد من تغيير الترتيب فوراً بدون تقلب.
+4. مراجعة console للتأكد من عدم ظهور أخطاء جديدة.

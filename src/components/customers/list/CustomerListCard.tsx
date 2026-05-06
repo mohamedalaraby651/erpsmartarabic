@@ -124,18 +124,25 @@ const CustomerListCardInner = ({
     },
   });
 
+  const isSwiping = Math.abs(swipe.offset) > 6;
+  const showPrimary = isSwiping && swipe.offset < 0;
+  const showContact = isSwiping && swipe.offset > 0;
+
   return (
     <div className="relative overflow-hidden rounded-lg" {...swipe.handlers}>
       {/* Action layer — primary (revealed on swipe toward inline-end visually) */}
       {swipeEnabled && (onNewInvoice || onNewPayment) && (
         <div
-          className="absolute inset-y-0 end-0 flex items-center gap-1 pe-2 ps-3 pointer-events-none"
-          aria-hidden
+          className={cn(
+            'absolute inset-y-0 end-0 flex items-center gap-1 pe-2 ps-3 pointer-events-none transition-opacity duration-150',
+            showPrimary ? 'opacity-100' : 'opacity-0',
+          )}
+          aria-hidden={!showPrimary}
         >
           {onNewInvoice && (
             <div className={cn(
-              'flex flex-col items-center justify-center rounded-lg bg-primary text-primary-foreground h-12 w-14 transition-opacity',
-              swipe.direction === 'primary' ? 'opacity-100' : 'opacity-60',
+              'flex flex-col items-center justify-center rounded-lg bg-primary text-primary-foreground h-12 w-12 transition-transform',
+              swipe.direction === 'primary' ? 'scale-105' : 'scale-100',
             )}>
               <FileText className="h-4 w-4" />
               <span className="text-[10px] mt-0.5">فاتورة</span>
@@ -143,8 +150,8 @@ const CustomerListCardInner = ({
           )}
           {onNewPayment && (
             <div className={cn(
-              'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-14 transition-opacity',
-              swipe.direction === 'primary' ? 'opacity-100' : 'opacity-60',
+              'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-12 transition-transform',
+              swipe.direction === 'primary' ? 'scale-105' : 'scale-100',
             )}>
               <CreditCard className="h-4 w-4" />
               <span className="text-[10px] mt-0.5">دفعة</span>
@@ -155,19 +162,22 @@ const CustomerListCardInner = ({
       {/* Action layer — contact (revealed on swipe toward inline-start visually) */}
       {swipeEnabled && hasContact && (
         <div
-          className="absolute inset-y-0 start-0 flex items-center gap-1 ps-2 pe-3 pointer-events-none"
-          aria-hidden
+          className={cn(
+            'absolute inset-y-0 start-0 flex items-center gap-1 ps-2 pe-3 pointer-events-none transition-opacity duration-150',
+            showContact ? 'opacity-100' : 'opacity-0',
+          )}
+          aria-hidden={!showContact}
         >
           <div className={cn(
-            'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-14 transition-opacity',
-            swipe.direction === 'contact' ? 'opacity-100' : 'opacity-60',
+            'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-12 transition-transform',
+            swipe.direction === 'contact' ? 'scale-105' : 'scale-100',
           )}>
             <Phone className="h-4 w-4" />
             <span className="text-[10px] mt-0.5">اتصال</span>
           </div>
           <div className={cn(
-            'flex flex-col items-center justify-center rounded-lg bg-emerald-700 text-white h-12 w-14 transition-opacity',
-            swipe.direction === 'contact' ? 'opacity-100' : 'opacity-60',
+            'flex flex-col items-center justify-center rounded-lg bg-emerald-700 text-white h-12 w-12 transition-transform',
+            swipe.direction === 'contact' ? 'scale-105' : 'scale-100',
           )}>
             <MessageSquare className="h-4 w-4" />
             <span className="text-[10px] mt-0.5">واتساب</span>
@@ -177,7 +187,7 @@ const CustomerListCardInner = ({
 
     <Card
       className={cn(
-        'relative overflow-hidden border-s-[3px] transition-transform duration-200 active:scale-[0.98] shadow-sm',
+        'relative z-10 bg-card overflow-hidden border-s-[3px] transition-transform duration-200 active:scale-[0.98] shadow-sm',
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
         isSelected && 'ring-2 ring-primary bg-primary/5',
