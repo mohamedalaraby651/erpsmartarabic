@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { AlertTriangle, TrendingDown, Wallet } from 'lucide-react';
+import { AlertTriangle, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Customer } from '@/lib/customerConstants';
 
