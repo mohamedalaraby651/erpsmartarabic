@@ -125,15 +125,69 @@ const CustomerListCardInner = ({
   });
 
   return (
+    <div className="relative overflow-hidden rounded-lg" {...swipe.handlers}>
+      {/* Action layer — primary (revealed on swipe toward inline-end visually) */}
+      {swipeEnabled && (onNewInvoice || onNewPayment) && (
+        <div
+          className="absolute inset-y-0 end-0 flex items-center gap-1 pe-2 ps-3 pointer-events-none"
+          aria-hidden
+        >
+          {onNewInvoice && (
+            <div className={cn(
+              'flex flex-col items-center justify-center rounded-lg bg-primary text-primary-foreground h-12 w-14 transition-opacity',
+              swipe.direction === 'primary' ? 'opacity-100' : 'opacity-60',
+            )}>
+              <FileText className="h-4 w-4" />
+              <span className="text-[10px] mt-0.5">فاتورة</span>
+            </div>
+          )}
+          {onNewPayment && (
+            <div className={cn(
+              'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-14 transition-opacity',
+              swipe.direction === 'primary' ? 'opacity-100' : 'opacity-60',
+            )}>
+              <CreditCard className="h-4 w-4" />
+              <span className="text-[10px] mt-0.5">دفعة</span>
+            </div>
+          )}
+        </div>
+      )}
+      {/* Action layer — contact (revealed on swipe toward inline-start visually) */}
+      {swipeEnabled && hasContact && (
+        <div
+          className="absolute inset-y-0 start-0 flex items-center gap-1 ps-2 pe-3 pointer-events-none"
+          aria-hidden
+        >
+          <div className={cn(
+            'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-14 transition-opacity',
+            swipe.direction === 'contact' ? 'opacity-100' : 'opacity-60',
+          )}>
+            <Phone className="h-4 w-4" />
+            <span className="text-[10px] mt-0.5">اتصال</span>
+          </div>
+          <div className={cn(
+            'flex flex-col items-center justify-center rounded-lg bg-emerald-700 text-white h-12 w-14 transition-opacity',
+            swipe.direction === 'contact' ? 'opacity-100' : 'opacity-60',
+          )}>
+            <MessageSquare className="h-4 w-4" />
+            <span className="text-[10px] mt-0.5">واتساب</span>
+          </div>
+        </div>
+      )}
+
     <Card
       className={cn(
-        'overflow-hidden border-s-[3px] transition-all duration-200 active:scale-[0.98] shadow-sm',
+        'relative overflow-hidden border-s-[3px] transition-transform duration-200 active:scale-[0.98] shadow-sm',
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
         isSelected && 'ring-2 ring-primary bg-primary/5',
         hasErrorAlert && 'bg-destructive/5',
       )}
-      style={{ animationDelay: `${animationDelay}ms` }}
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        transform: swipe.offset !== 0 ? `translateX(${swipe.visualTranslateX}px)` : undefined,
+        transition: swipe.offset === 0 ? 'transform 200ms ease-out' : 'none',
+      }}
     >
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
