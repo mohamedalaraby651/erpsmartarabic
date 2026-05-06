@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { Phone, MapPin, DollarSign, Eye, FileText, CreditCard, ChevronDown, Crown, TrendingUp, Calendar } from 'lucide-react';
+import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
