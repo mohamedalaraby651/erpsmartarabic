@@ -92,19 +92,23 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     enabled: !!invoiceId && open,
   });
 
-  const { data: returnedMap = {} } = useQuery({
-    queryKey: ['credit-note-returned-qty', invoiceId],
+  // Use the aggregated view: confirmed + draft return progress per invoice item
+  const { data: returnsMap = {} } = useQuery({
+    queryKey: ['invoice-item-returns-summary', invoiceId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('credit_note_items')
-        .select('invoice_item_id, quantity, credit_notes!inner(invoice_id, status)')
-        .eq('credit_notes.invoice_id', invoiceId)
-        .eq('credit_notes.status', 'confirmed');
+        .from('invoice_item_returns_summary' as any)
+        .select('invoice_item_id, confirmed_returned_qty, draft_returned_qty, remaining_qty')
+        .eq('invoice_id', invoiceId);
       if (error) throw error;
-      const map: Record<string, number> = {};
+      const map: Record<string, { confirmed: number; draft: number; remaining: number }> = {};
       (data ?? []).forEach((r: any) => {
         if (!r.invoice_item_id) return;
-        map[r.invoice_item_id] = (map[r.invoice_item_id] ?? 0) + Number(r.quantity || 0);
+        map[r.invoice_item_id] = {
+          confirmed: Number(r.confirmed_returned_qty || 0),
+          draft: Number(r.draft_returned_qty || 0),
+          remaining: Number(r.remaining_qty || 0),
+        };
       });
       return map;
     },
