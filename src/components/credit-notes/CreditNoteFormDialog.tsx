@@ -348,8 +348,16 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                                   min={0}
                                   step="0.01"
                                   aria-invalid={!!l.error}
+                                  aria-describedby={l.error ? `qty-error-${l.invoice_item_id}` : undefined}
                                   onChange={(e) => {
-                                    const v = Number(e.target.value);
+                                    const raw = e.target.value;
+                                    const v = raw === '' ? NaN : Number(raw);
+                                    updateLine(l.invoice_item_id, { requested_qty: v });
+                                  }}
+                                  onBlur={(e) => {
+                                    // Normalize on blur: empty → 0, then re-run validation with the same inline message
+                                    const raw = e.target.value.trim();
+                                    const v = raw === '' || Number.isNaN(Number(raw)) ? 0 : Number(raw);
                                     updateLine(l.invoice_item_id, { requested_qty: v });
                                   }}
                                 />
