@@ -38,7 +38,7 @@ export default function CreditNoteDetailsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('credit_note_items')
-        .select('*, products(name, sku)')
+        .select('*, products(name, sku), invoice_items:invoice_item_id(id, quantity, unit_price)')
         .eq('credit_note_id', id!);
       if (error) throw error;
       return data;
