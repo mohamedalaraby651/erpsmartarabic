@@ -85,7 +85,7 @@ const CustomerListCardInner = ({
     setExpanded(prev => !prev);
   }, [selectionMode, onSelect, customer.id]);
 
-  const longPress = useLongPress({
+  const { isPressed: _isPressed, ...longPressHandlers } = useLongPress({
     onLongPress: () => {
       if (!selectionMode) {
         setMenuOpen(true);
