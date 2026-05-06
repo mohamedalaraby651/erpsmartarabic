@@ -371,7 +371,11 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                                 )}
                               </div>
                               {l.error && (
-                                <div className="flex items-start gap-1.5 text-xs text-destructive">
+                                <div
+                                  id={`qty-error-${l.invoice_item_id}`}
+                                  role="alert"
+                                  className="flex items-start gap-1.5 text-xs text-destructive"
+                                >
                                   <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                                   <span>{l.error}</span>
                                 </div>
