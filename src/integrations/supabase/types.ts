@@ -5552,6 +5552,10 @@ export type Database = {
         Returns: string
       }
       convert_quote_to_order: { Args: { p_quote_id: string }; Returns: string }
+      create_journal_for_credit_note: {
+        Args: { _credit_note_id: string }
+        Returns: Json
+      }
       create_journal_for_delivery_note: {
         Args: { _delivery_id: string }
         Returns: Json
@@ -5586,6 +5590,7 @@ export type Database = {
         }
         Returns: string
       }
+      ensure_credit_note_posting_accounts: { Args: never; Returns: Json }
       ensure_logistics_posting_accounts: { Args: never; Returns: Json }
       find_duplicate_customers: {
         Args: { p_tenant_id?: string }
@@ -5763,6 +5768,14 @@ export type Database = {
       resolve_posting_account: {
         Args: { _posting_key: string; _tenant_id: string }
         Returns: string
+      }
+      reverse_journal_for_credit_note: {
+        Args: { _credit_note_id: string }
+        Returns: Json
+      }
+      reverse_stock_for_credit_note: {
+        Args: { _credit_note_id: string }
+        Returns: Json
       }
       storage_tenant_from_path: { Args: { _name: string }; Returns: string }
       switch_user_tenant: {
