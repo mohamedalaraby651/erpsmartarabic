@@ -117,9 +117,9 @@ SECTION "7. Financial accounting balance / توازن القيود"
 # ────────────────────────────────────────────────────────────────────────────
 check_count_zero "Journals balanced (DR=CR)" \
   "SELECT count(*) FROM (
-     SELECT journal_id, sum(debit)-sum(credit) AS diff
+     SELECT journal_id, sum(debit_amount)-sum(credit_amount) AS diff
      FROM journal_entries GROUP BY journal_id
-     HAVING abs(sum(debit)-sum(credit)) > 0.01
+     HAVING abs(sum(debit_amount)-sum(credit_amount)) > 0.01
    ) x"
 
 # ────────────────────────────────────────────────────────────────────────────
