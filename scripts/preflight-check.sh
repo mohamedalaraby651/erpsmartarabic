@@ -7,15 +7,52 @@
 # ============================================================================
 
 set -u
-RED=$(printf '\033[31m'); GREEN=$(printf '\033[32m'); YEL=$(printf '\033[33m'); NC=$(printf '\033[0m'); BLD=$(printf '\033[1m')
+RED=$(printf '\033[31m'); GREEN=$(printf '\033[32m'); YEL=$(printf '\033[33m'); BLU=$(printf '\033[34m'); NC=$(printf '\033[0m'); BLD=$(printf '\033[1m')
 
-PASS=0; FAIL=0; WARN=0
+# ── Modes ────────────────────────────────────────────────────────────────────
+FIX_MODE=0
+DRY_RUN=0
+for arg in "$@"; do
+  case "$arg" in
+    --fix)     FIX_MODE=1 ;;
+    --dry-run) FIX_MODE=1; DRY_RUN=1 ;;
+    --help|-h)
+      cat <<EOF
+Usage: $0 [--fix] [--dry-run]
+  --fix      Auto-repair issues that have a known safe fix
+             (missing indexes, missing enum values, account map seeds)
+  --dry-run  Print the SQL that --fix would execute, but do NOT run it
+EOF
+      exit 0 ;;
+  esac
+done
+
+PASS=0; FAIL=0; WARN=0; FIXED=0
+FIX_SQL_LOG=()
+
 SECTION() { echo; echo "${BLD}━━━ $1 ━━━${NC}"; }
 ok()   { echo "  ${GREEN}✓${NC} $1"; PASS=$((PASS+1)); }
 bad()  { echo "  ${RED}✗${NC} $1"; FAIL=$((FAIL+1)); }
 warn() { echo "  ${YEL}⚠${NC} $1"; WARN=$((WARN+1)); }
+fix()  { echo "  ${BLU}🔧${NC} $1"; FIXED=$((FIXED+1)); }
 
 run_sql() { psql -tAX -c "$1" 2>/dev/null; }
+
+# Apply a corrective SQL statement (or just log it in --dry-run).
+# Usage: apply_fix "human label" "SQL ..."
+apply_fix() {
+  local label="$1" sql="$2"
+  FIX_SQL_LOG+=("-- $label"$'\n'"$sql;")
+  if [ "$DRY_RUN" -eq 1 ]; then
+    fix "[dry-run] $label"
+    return 0
+  fi
+  if psql -v ON_ERROR_STOP=1 -c "$sql" >/dev/null 2>&1; then
+    fix "$label"
+  else
+    bad "fix failed: $label"
+  fi
+}
 
 check_count_zero() {
   local label="$1" sql="$2"
