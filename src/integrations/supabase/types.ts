@@ -3452,6 +3452,142 @@ export type Database = {
           },
         ]
       }
+      quote_items: {
+        Row: {
+          created_at: string
+          discount_percentage: number
+          id: string
+          notes: string | null
+          product_id: string | null
+          quantity: number
+          quote_id: string
+          tenant_id: string
+          total_price: number
+          unit_price: number
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity: number
+          quote_id: string
+          tenant_id?: string
+          total_price?: number
+          unit_price: number
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number
+          quote_id?: string
+          tenant_id?: string
+          total_price?: number
+          unit_price?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          converted_order_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          discount_amount: number
+          id: string
+          notes: string | null
+          quote_date: string
+          quote_number: string
+          status: Database["public"]["Enums"]["quote_status"]
+          subtotal: number
+          tax_amount: number
+          tenant_id: string
+          total_amount: number
+          updated_at: string
+          valid_until: string
+        }
+        Insert: {
+          converted_order_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          quote_date?: string
+          quote_number: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          tax_amount?: number
+          tenant_id?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string
+        }
+        Update: {
+          converted_order_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          quote_date?: string
+          quote_number?: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          tax_amount?: number
+          tenant_id?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limit_config: {
         Row: {
           created_at: string
@@ -5407,6 +5543,15 @@ export type Database = {
       }
       compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
       confirm_credit_note: { Args: { p_credit_note_id: string }; Returns: Json }
+      convert_invoice_to_delivery: {
+        Args: { p_invoice_id: string; p_warehouse_id?: string }
+        Returns: string
+      }
+      convert_order_to_invoice: {
+        Args: { p_order_id: string }
+        Returns: string
+      }
+      convert_quote_to_order: { Args: { p_quote_id: string }; Returns: string }
       create_journal_for_delivery_note: {
         Args: { _delivery_id: string }
         Returns: Json
@@ -5665,6 +5810,13 @@ export type Database = {
       payment_status: "pending" | "partial" | "paid" | "overdue"
       purchase_invoice_payment_status: "pending" | "partial" | "paid"
       purchase_invoice_status: "draft" | "posted" | "paid" | "cancelled"
+      quote_status:
+        | "draft"
+        | "sent"
+        | "accepted"
+        | "rejected"
+        | "expired"
+        | "converted"
       stock_movement_type: "in" | "out" | "transfer" | "adjustment"
       vip_level: "regular" | "silver" | "gold" | "platinum"
     }
@@ -5824,6 +5976,14 @@ export const Constants = {
       payment_status: ["pending", "partial", "paid", "overdue"],
       purchase_invoice_payment_status: ["pending", "partial", "paid"],
       purchase_invoice_status: ["draft", "posted", "paid", "cancelled"],
+      quote_status: [
+        "draft",
+        "sent",
+        "accepted",
+        "rejected",
+        "expired",
+        "converted",
+      ],
       stock_movement_type: ["in", "out", "transfer", "adjustment"],
       vip_level: ["regular", "silver", "gold", "platinum"],
     },
