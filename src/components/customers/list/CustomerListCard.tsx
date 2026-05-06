@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle } from 'lucide-react';
+import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle, MessageSquare } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { vipColors, vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';
 import { useLongPress } from '@/hooks/useLongPress';
+import { useCustomerSwipeActions } from '@/hooks/customers/useCustomerSwipeActions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
