@@ -15,6 +15,12 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertCircle } from 'lucide-react';
+import {
+  formatReturnOverdraw,
+  formatInvalidQty,
+  parseDbOverdraw,
+  round2 as round2Shared,
+} from '@/lib/credit-notes/overdrawMessages';
 
 interface Props {
   open: boolean;
