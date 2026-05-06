@@ -219,14 +219,6 @@ const CustomersPage = () => {
 
       {isMobile ? (
         <div className="pb-20">
-          {/* Mobile alert trigger */}
-          <div className="flex items-center justify-between mb-3">
-            <CustomerAlertsMobileTrigger
-              alertsByType={alertsByType}
-              totalAlerts={totalAlerts}
-              onFilterByType={setAlertFilterType}
-            />
-          </div>
           <CustomerMobileView
             data={allCustomers}
             isLoading={list.isLoading}
