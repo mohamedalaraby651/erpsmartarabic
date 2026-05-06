@@ -73,14 +73,14 @@ export default function GoodsReceiptsPage() {
               </thead>
               <tbody>
                 {rows.map(r => (
-                  <tr key={r.id} className="border-b hover:bg-muted/30">
+                  <tr key={r.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/goods-receipts/${r.id}`)}>
                     <td className="p-2 font-mono">{r.receipt_number}</td>
                     <td className="p-2">{r.suppliers?.name ?? "—"}</td>
                     <td className="p-2">{r.warehouses?.name ?? "—"}</td>
                     <td className="p-2 text-xs text-muted-foreground">{r.purchase_orders?.order_number ?? "—"}</td>
                     <td className="p-2 text-xs">{r.received_date}</td>
                     <td className="p-2"><GoodsReceiptStatusBadge status={r.status} /></td>
-                    <td className="p-2">
+                    <td className="p-2" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         {r.status === "draft" && (
                           <Button size="sm" variant="ghost" className="text-success h-8 px-2"
