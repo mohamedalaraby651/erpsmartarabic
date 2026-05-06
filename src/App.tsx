@@ -76,6 +76,7 @@ const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
 const ExpenseCategoriesPage = lazy(() => import("./pages/expenses/ExpenseCategoriesPage"));
 const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
 const JournalEntriesPage = lazy(() => import("./pages/accounting/JournalEntriesPage"));
+const PostingLogPage = lazy(() => import("./pages/accounting/PostingLogPage"));
 
 // Workspace group (HR + day-to-day tooling)
 const EmployeesPage = lazy(() => import("./pages/employees/EmployeesPage"));
@@ -228,6 +229,7 @@ const App = () => (
                   {/* Accounting Routes */}
                   <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
                   <Route path="accounting/journals" element={<JournalEntriesPage />} />
+                  <Route path="accounting/posting-log" element={<PostingLogPage />} />
                   {/* PWA 2025 Handler Routes */}
                   <Route path="share-target" element={<ShareTargetPage />} />
                   <Route path="open-file" element={<OpenFilePage />} />

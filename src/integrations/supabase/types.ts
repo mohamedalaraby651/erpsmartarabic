@@ -1349,6 +1349,48 @@ export type Database = {
           },
         ]
       }
+      document_posting_log: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_id: string
+          document_number: string | null
+          document_type: string
+          id: string
+          journal_id: string | null
+          reason: string | null
+          status: string
+          tenant_id: string
+          total_amount: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          document_number?: string | null
+          document_type: string
+          id?: string
+          journal_id?: string | null
+          reason?: string | null
+          status?: string
+          tenant_id: string
+          total_amount?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          document_number?: string | null
+          document_type?: string
+          id?: string
+          journal_id?: string | null
+          reason?: string | null
+          status?: string
+          tenant_id?: string
+          total_amount?: number | null
+        }
+        Relationships: []
+      }
       domain_events: {
         Row: {
           aggregate_id: string | null
@@ -5278,6 +5320,10 @@ export type Database = {
         Args: { _source_id: string; _source_type: string }
         Returns: boolean
       }
+      _resolve_open_period: {
+        Args: { _date: string; _tenant_id: string }
+        Returns: string
+      }
       admin_requeue_event: { Args: { _event_id: string }; Returns: undefined }
       atomic_customer_balance_update: {
         Args: { _amount: number; _customer_id: string }
@@ -5361,8 +5407,16 @@ export type Database = {
       }
       compute_permission_matrix: { Args: { _user_id: string }; Returns: Json }
       confirm_credit_note: { Args: { p_credit_note_id: string }; Returns: Json }
+      create_journal_for_delivery_note: {
+        Args: { _delivery_id: string }
+        Returns: Json
+      }
       create_journal_for_expense: {
         Args: { _expense_id: string }
+        Returns: Json
+      }
+      create_journal_for_goods_receipt: {
+        Args: { _receipt_id: string }
         Returns: Json
       }
       create_journal_for_invoice: {
@@ -5371,6 +5425,10 @@ export type Database = {
       }
       create_journal_for_payment: {
         Args: { _payment_id: string }
+        Returns: Json
+      }
+      create_journal_for_purchase_invoice: {
+        Args: { _invoice_id: string }
         Returns: Json
       }
       decrypt_totp_secret: { Args: { _user_id: string }; Returns: string }
@@ -5383,6 +5441,7 @@ export type Database = {
         }
         Returns: string
       }
+      ensure_logistics_posting_accounts: { Args: never; Returns: Json }
       find_duplicate_customers: {
         Args: { p_tenant_id?: string }
         Returns: {
@@ -5505,6 +5564,10 @@ export type Database = {
       }
       is_admin_equivalent_custom_role: {
         Args: { _role_id: string; _tenant_id: string }
+        Returns: boolean
+      }
+      is_period_closed: {
+        Args: { _date: string; _tenant_id: string }
         Returns: boolean
       }
       is_platform_admin: { Args: { _user_id?: string }; Returns: boolean }
