@@ -197,18 +197,36 @@ export default function CreditNoteDetailsPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {items.map((it: any) => (
-                <div key={it.id} className="py-3 flex items-center justify-between text-sm">
-                  <div className="flex-1">
-                    <p className="font-medium">{it.products?.name || '—'}</p>
-                    {it.products?.sku && <p className="text-xs text-muted-foreground">SKU: {it.products.sku}</p>}
+              {items.map((it: any) => {
+                const origQty = it.invoice_items?.quantity;
+                const linked  = !!it.invoice_item_id;
+                return (
+                  <div key={it.id} className="py-3 flex items-center justify-between text-sm gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{it.products?.name || '—'}</p>
+                      <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                        {it.products?.sku && (
+                          <span className="text-xs text-muted-foreground">SKU: {it.products.sku}</span>
+                        )}
+                        {linked && origQty != null && (
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-success/10 text-success">
+                            مرتبط ببند فاتورة • أصل: {origQty}
+                          </span>
+                        )}
+                        {!linked && (
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-warning/10 text-warning">
+                            غير مرتبط
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-left shrink-0">
+                      <p>{it.quantity} × {Number(it.unit_price).toLocaleString()}</p>
+                      <p className="font-bold">{Number(it.total_price).toLocaleString()} ج.م</p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <p>{it.quantity} × {Number(it.unit_price).toLocaleString()}</p>
-                    <p className="font-bold">{Number(it.total_price).toLocaleString()} ج.م</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
