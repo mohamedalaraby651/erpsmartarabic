@@ -59,7 +59,7 @@ BEGIN
     invoice_number, customer_id, total_amount, paid_amount,
     status, payment_status, tenant_id, created_by
   )
-  VALUES ('TEST-INV-CN-001', v_cust, 1000, 0, 'confirmed', 'pending', v_tenant, v_admin)
+  VALUES ('TEST-INV-CN-001', v_cust, 1000, 0, 'approved', 'pending', v_tenant, v_admin)
   RETURNING id INTO v_inv;
 
   INSERT INTO public.invoice_items (invoice_id, product_id, quantity, unit_price, total_price, tenant_id)
@@ -71,7 +71,7 @@ BEGIN
     invoice_number, customer_id, total_amount, paid_amount,
     status, payment_status, tenant_id, created_by
   )
-  VALUES ('TEST-INV-CN-OTHER', v_cust, 500, 0, 'confirmed', 'pending', v_tenant, v_admin)
+  VALUES ('TEST-INV-CN-OTHER', v_cust, 500, 0, 'approved', 'pending', v_tenant, v_admin)
   RETURNING id INTO v_other_inv;
 
   INSERT INTO public.invoice_items (invoice_id, product_id, quantity, unit_price, total_price, tenant_id)
