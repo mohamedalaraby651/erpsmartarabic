@@ -20,13 +20,15 @@ interface CustomerPageHeaderProps {
   // Mobile search-first
   searchQuery?: string;
   onSearchChange?: (v: string) => void;
+  // Optional slot rendered next to the title (mobile) — e.g. alerts bell
+  mobileTitleSlot?: ReactNode;
 }
 
 export const CustomerPageHeader = memo(function CustomerPageHeader({
   isMobile, canEdit, exportAllLoading,
   onAdd, onDuplicates, onMerge, onImport, onExportAll,
   totalCount = 0, filteredCount,
-  searchQuery, onSearchChange,
+  searchQuery, onSearchChange, mobileTitleSlot,
 }: CustomerPageHeaderProps) {
   const countLabel = filteredCount != null && filteredCount !== totalCount
     ? `${filteredCount} من ${totalCount}`
@@ -52,9 +54,13 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {mobileTitleSlot}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors">
+                <button
+                  className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
+                  aria-label="المزيد من الأدوات"
+                >
                   <MoreVertical className="h-4.5 w-4.5" />
                 </button>
               </DropdownMenuTrigger>
@@ -74,7 +80,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
               </DropdownMenuContent>
             </DropdownMenu>
             {canEdit && (
-              <Button onClick={onAdd} size="sm" className="h-10 px-4 rounded-xl shadow-sm shadow-primary/20">
+              <Button onClick={onAdd} size="sm" className="h-10 px-4 rounded-xl shadow-sm shadow-primary/20" aria-label="إضافة عميل">
                 <Plus className="h-4 w-4 ml-1.5" />إضافة
               </Button>
             )}
