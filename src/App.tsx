@@ -70,6 +70,7 @@ const LogisticsDocumentDetailsPage = lazy(() => import("./pages/logistics/Logist
 // Sales cycle (Quotes → Orders → Invoices → Deliveries)
 const QuotesPage = lazy(() => import("./pages/quotes/QuotesPage"));
 const QuoteNewPage = lazy(() => import("./pages/quotes/QuoteNewPage"));
+const SalesPipelinePage = lazy(() => import("./pages/quotes/SalesPipelinePage"));
 
 // Finance & accounting group (heavy: pulls in jspdf, recharts via reports)
 const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
