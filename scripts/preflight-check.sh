@@ -34,7 +34,7 @@ else bad "Cannot connect — aborting"; exit 1; fi
 SECTION "2. Enum integrity / سلامة الـ Enums"
 # ────────────────────────────────────────────────────────────────────────────
 check_count_zero "invoices.status uses valid enum" \
-  "SELECT count(*) FROM invoices WHERE status::text NOT IN ('draft','pending','confirmed','cancelled','paid','partial')"
+  "SELECT count(*) FROM invoices WHERE status::text NOT IN ('draft','pending','confirmed','cancelled','paid','partial','approved','completed','rejected')"
 
 check_count_zero "invoices.payment_status uses valid enum" \
   "SELECT count(*) FROM invoices WHERE payment_status::text NOT IN ('pending','partial','paid')"
