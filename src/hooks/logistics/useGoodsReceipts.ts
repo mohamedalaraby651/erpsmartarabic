@@ -105,7 +105,7 @@ export function useCreateGoodsReceipt() {
           purchase_order_id: draft.purchase_order_id ?? null,
           received_date: draft.received_date,
           notes: draft.notes ?? null,
-        })
+        } as any)
         .select("id, receipt_number")
         .single();
       if (hErr) throw hErr;
