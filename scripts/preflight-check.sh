@@ -268,11 +268,23 @@ SECTION "Summary / الملخص النهائي"
 echo "  ${GREEN}Passed:${NC}  $PASS"
 echo "  ${YEL}Warned:${NC}  $WARN"
 echo "  ${RED}Failed:${NC}  $FAIL"
+if [ "$FIX_MODE" -eq 1 ]; then
+  echo "  ${BLU}Fixed: ${NC}  $FIXED"
+fi
 echo
+
+if [ "$DRY_RUN" -eq 1 ] && [ "${#FIX_SQL_LOG[@]}" -gt 0 ]; then
+  LOG_FILE="/tmp/preflight-fixes.sql"
+  printf "%s\n\n" "${FIX_SQL_LOG[@]}" > "$LOG_FILE"
+  echo "${BLU}📝 dry-run SQL written to $LOG_FILE${NC}"
+  echo
+fi
+
 if [ "$FAIL" -eq 0 ]; then
   echo "${GREEN}${BLD}✅ READY TO SHIP — جاهز للإطلاق${NC}"
   exit 0
 else
   echo "${RED}${BLD}⛔ BLOCKED — يجب إصلاح الأخطاء قبل الإطلاق${NC}"
+  [ "$FIX_MODE" -eq 0 ] && echo "${YEL}💡 Tip: rerun with --fix to auto-repair safe issues${NC}"
   exit 1
 fi
