@@ -42,7 +42,7 @@ export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, p
             <TableHead className="text-right">السبب</TableHead>
             <TableHead className="text-right">الحالة</TableHead>
             <TableHead className="text-right">التاريخ</TableHead>
-            {canManage && <TableHead className="text-right">إجراءات</TableHead>}
+            <TableHead className="text-right">إجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -61,7 +61,7 @@ export function CreditNoteTable({ creditNotes, canManage, onConfirm, onCancel, p
                 </Badge>
               </TableCell>
               <TableCell>{new Date(cn.created_at).toLocaleDateString('ar-EG')}</TableCell>
-              {canManage && (
+              {(
                 <TableCell>
                   <div className="flex gap-2">
                     <Button size="sm" variant="ghost" onClick={() => navigate(`/credit-notes/${cn.id}`)}>
