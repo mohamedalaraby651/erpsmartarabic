@@ -41,6 +41,8 @@ interface ReturnLine {
   returnable: number;
   selected: boolean;
   return_qty: number;
+  requested_qty: number; // raw user input (may exceed returnable, used for error display)
+  error?: string;
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -124,25 +126,56 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
         already_returned: returned,
         returnable,
         selected: false,
-        return_qty: returnable, // default to max returnable
+        return_qty: returnable,
+        requested_qty: returnable,
+        error: undefined,
       };
     }));
   }, [invoiceItems, returnedMap]);
 
   const totalAmount = useMemo(
-    () => round2(lines.filter(l => l.selected).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
+    () => round2(lines.filter(l => l.selected && !l.error).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
     [lines],
   );
 
-  const hasSelection = lines.some(l => l.selected && l.return_qty > 0);
+  const selectedLines = useMemo(() => lines.filter(l => l.selected), [lines]);
+  const linesWithErrors = useMemo(() => selectedLines.filter(l => l.error), [selectedLines]);
+  const hasSelection = selectedLines.some(l => l.return_qty > 0);
+  const hasErrors = linesWithErrors.length > 0;
+
+  const validateQty = (returnable: number, requested: number): string | undefined => {
+    if (Number.isNaN(requested)) return 'قيمة غير صالحة — أدخل رقماً';
+    if (requested < 0) return 'الكمية لا يمكن أن تكون سالبة';
+    if (returnable === 0) return 'لا توجد كمية متاحة للإرجاع — تم إرجاع كل الكمية سابقاً';
+    if (requested === 0) return 'الكمية المطلوبة = 0 — أدخل قيمة أكبر من صفر';
+    if (requested > returnable) {
+      return `تجاوزت الكمية المتاحة — المطلوب: ${requested} ، المتاح: ${returnable} (الفرق: ${round2(requested - returnable)})`;
+    }
+    return undefined;
+  };
 
   const updateLine = (id: string, patch: Partial<ReturnLine>) =>
-    setLines(prev => prev.map(l => l.invoice_item_id === id ? { ...l, ...patch } : l));
+    setLines(prev => prev.map(l => {
+      if (l.invoice_item_id !== id) return l;
+      const merged = { ...l, ...patch };
+      // Re-validate whenever quantity-related fields change
+      if ('requested_qty' in patch || 'selected' in patch) {
+        const requested = Number(merged.requested_qty);
+        const err = merged.selected ? validateQty(merged.returnable, requested) : undefined;
+        merged.error = err;
+        merged.return_qty = err ? 0 : requested;
+      }
+      return merged;
+    }));
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const selected = lines.filter(l => l.selected && l.return_qty > 0);
-      if (selected.length === 0) throw new Error('اختر بنداً واحداً على الأقل');
+      const selected = lines.filter(l => l.selected && l.return_qty > 0 && !l.error);
+      if (linesWithErrors.length > 0) {
+        const first = linesWithErrors[0];
+        throw new Error(`${first.product_name}: ${first.error}`);
+      }
+      if (selected.length === 0) throw new Error('اختر بنداً واحداً على الأقل بكمية صالحة');
 
       const { data: tenantData, error: tenantErr } = await supabase.rpc('get_current_tenant');
       if (tenantErr) throw tenantErr;
@@ -188,9 +221,16 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
       onSuccess();
     },
     onError: (err: any) => {
+      const raw: string = err?.message ?? 'حدث خطأ غير متوقع';
+      // Try to translate the DB trigger message into Arabic with values
+      // Trigger raises: "Quantity X exceeds returnable amount Y"
+      const m = raw.match(/Quantity\s+([\d.]+)\s+exceeds returnable amount\s+([\d.]+)/i);
+      const description = m
+        ? `تم رفض الترحيل من قاعدة البيانات: المطلوب ${m[1]} يتجاوز المتاح ${m[2]} (الفرق: ${round2(Number(m[1]) - Number(m[2]))})`
+        : raw;
       toast({
         title: 'خطأ في إنشاء إشعار الإرجاع',
-        description: err?.message ?? 'حدث خطأ غير متوقع',
+        description,
         variant: 'destructive',
       });
     },
@@ -278,23 +318,36 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                             </span>
                           </div>
                           {l.selected && (
-                            <div className="mt-2 flex items-center gap-2">
-                              <Label className="text-xs">كمية الإرجاع:</Label>
-                              <Input
-                                type="number"
-                                className="h-8 w-24"
-                                value={l.return_qty}
-                                min={0}
-                                max={l.returnable}
-                                step="0.01"
-                                onChange={(e) => {
-                                  const v = Math.min(l.returnable, Math.max(0, Number(e.target.value)));
-                                  updateLine(l.invoice_item_id, { return_qty: v });
-                                }}
-                              />
-                              <span className="text-xs text-muted-foreground">
-                                = {round2(l.unit_price * l.return_qty).toLocaleString()} ج.م
-                              </span>
+                            <div className="mt-2 space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Label className="text-xs">كمية الإرجاع:</Label>
+                                <Input
+                                  type="number"
+                                  className={`h-8 w-24 ${l.error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                                  value={l.requested_qty}
+                                  min={0}
+                                  step="0.01"
+                                  aria-invalid={!!l.error}
+                                  onChange={(e) => {
+                                    const v = Number(e.target.value);
+                                    updateLine(l.invoice_item_id, { requested_qty: v });
+                                  }}
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  من أصل {l.returnable} متاح
+                                </span>
+                                {!l.error && (
+                                  <span className="text-xs text-muted-foreground">
+                                    = {round2(l.unit_price * l.return_qty).toLocaleString()} ج.م
+                                  </span>
+                                )}
+                              </div>
+                              {l.error && (
+                                <div className="flex items-start gap-1.5 text-xs text-destructive">
+                                  <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                                  <span>{l.error}</span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -329,13 +382,31 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
               <span>تم إرجاع جميع كميات هذه الفاتورة بالفعل.</span>
             </div>
           )}
+
+          {hasErrors && (
+            <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <div className="font-medium">
+                  لا يمكن الحفظ — يوجد {linesWithErrors.length} بند(بنود) بكمية غير صالحة:
+                </div>
+                <ul className="list-disc pr-4 space-y-0.5">
+                  {linesWithErrors.map(l => (
+                    <li key={l.invoice_item_id} className="text-xs">
+                      <span className="font-medium">{l.product_name}</span>: {l.error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
           <Button
             onClick={() => createMutation.mutate()}
-            disabled={!customerId || !invoiceId || !hasSelection || createMutation.isPending}
+            disabled={!customerId || !invoiceId || !hasSelection || hasErrors || createMutation.isPending}
           >
             {createMutation.isPending && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
             إنشاء إشعار إرجاع
