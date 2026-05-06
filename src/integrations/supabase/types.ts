@@ -625,33 +625,39 @@ export type Database = {
           created_at: string
           credit_note_id: string
           id: string
+          invoice_item_id: string | null
           product_id: string
           quantity: number
           tenant_id: string
           total_price: number
           unit_price: number
+          unit_price_original: number | null
           variant_id: string | null
         }
         Insert: {
           created_at?: string
           credit_note_id: string
           id?: string
+          invoice_item_id?: string | null
           product_id: string
           quantity?: number
           tenant_id?: string
           total_price?: number
           unit_price?: number
+          unit_price_original?: number | null
           variant_id?: string | null
         }
         Update: {
           created_at?: string
           credit_note_id?: string
           id?: string
+          invoice_item_id?: string | null
           product_id?: string
           quantity?: number
           tenant_id?: string
           total_price?: number
           unit_price?: number
+          unit_price_original?: number | null
           variant_id?: string | null
         }
         Relationships: [
@@ -660,6 +666,13 @@ export type Database = {
             columns: ["credit_note_id"]
             isOneToOne: false
             referencedRelation: "credit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_note_items_invoice_item_id_fkey"
+            columns: ["invoice_item_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
             referencedColumns: ["id"]
           },
           {
@@ -5666,6 +5679,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      get_invoice_item_returnable: {
+        Args: { _invoice_item_id: string }
+        Returns: number
       }
       get_permission_matrix: { Args: { _user_id?: string }; Returns: Json }
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
