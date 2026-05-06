@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { AlertTriangle, TrendingDown, Wallet } from 'lucide-react';
+import { AlertTriangle, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Customer } from '@/lib/customerConstants';
 
@@ -42,74 +42,57 @@ export const CustomerSummaryBar = memo(function CustomerSummaryBar({
   if (hidden || customers.length === 0) return null;
   if (summary.debtorCount === 0 && summary.nearLimitCount === 0) return null;
 
+  // Show only the most actionable card to reduce duplication with StatsBar chips.
+  // Debtors card is primary; near-limit appears as a small inline note.
   const cards = [
     {
       id: 'debtors',
       label: 'إجمالي المستحق',
       value: `${summary.totalDebt.toLocaleString()} ج.م`,
-      sub: `${summary.debtorCount} عميل`,
+      sub: `${summary.debtorCount} عميل · اضغط للتصفية`,
       icon: Wallet,
       tone: 'destructive' as const,
       show: summary.debtorCount > 0,
     },
-    {
-      id: 'near-limit',
-      label: 'قرب حد الائتمان',
-      value: `${summary.nearLimitCount}`,
-      sub: 'تجاوز 80% من الحد',
-      icon: AlertTriangle,
-      tone: 'warning' as const,
-      show: summary.nearLimitCount > 0,
-      disabled: true, // فلتر مشتق غير موجود — للعرض فقط حالياً
-    },
-    {
-      id: 'overdue',
-      label: 'متأخر السداد',
-      value: '—',
-      sub: 'يحتاج متابعة',
-      icon: TrendingDown,
-      tone: 'amber' as const,
-      show: false, // يحتاج بيانات invoice overdue (مستقبلي)
-    },
   ].filter(c => c.show);
 
-  return (
-    <div className="grid grid-cols-2 gap-2 mb-3" role="region" aria-label="ملخص الحالة المالية">
-      {cards.map(card => {
-        const Icon = card.icon;
-        const isActive = activeQuickFilter === card.id;
-        const isClickable = !card.disabled && !!onQuickFilter && card.id === 'debtors';
-        const toneClass =
-          card.tone === 'destructive'
-            ? 'from-destructive/10 to-destructive/5 border-destructive/20 text-destructive'
-            : card.tone === 'warning'
-              ? 'from-amber-500/10 to-amber-500/5 border-amber-500/20 text-amber-700 dark:text-amber-400'
-              : 'from-muted to-muted/50 border-border text-foreground';
+  const debtCard = cards[0];
+  if (!debtCard) return null;
+  const Icon = debtCard.icon;
+  const isActive = activeQuickFilter === debtCard.id;
+  const isClickable = !!onQuickFilter;
 
-        const Wrapper: 'button' | 'div' = isClickable ? 'button' : 'div';
-        return (
-          <Wrapper
-            key={card.id}
-            type={isClickable ? 'button' : undefined}
-            onClick={isClickable ? () => onQuickFilter?.(isActive ? null : card.id) : undefined}
-            aria-pressed={isClickable ? isActive : undefined}
-            aria-label={`${card.label}: ${card.value}`}
-            className={cn(
-              'rounded-xl border bg-gradient-to-br p-3 text-right transition-all',
-              toneClass,
-              isClickable && 'cursor-pointer active:scale-[0.97] hover:shadow-md min-h-[64px]',
-              isActive && 'ring-2 ring-current shadow-sm',
-            )}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <Icon className="h-4 w-4 opacity-80" aria-hidden />
-              <span className="text-[10px] font-medium opacity-80">{card.label}</span>
+  return (
+    <div className="mb-3 space-y-1.5" role="region" aria-label="ملخص الحالة المالية">
+      <button
+        type="button"
+        onClick={isClickable ? () => onQuickFilter?.(isActive ? null : debtCard.id) : undefined}
+        aria-pressed={isActive}
+        aria-label={`${debtCard.label}: ${debtCard.value}`}
+        className={cn(
+          'w-full rounded-xl border bg-gradient-to-br p-3.5 text-right transition-all',
+          'from-destructive/10 to-destructive/5 border-destructive/20 text-destructive',
+          isClickable && 'cursor-pointer active:scale-[0.99] hover:shadow-md min-h-[64px]',
+          isActive && 'ring-2 ring-current shadow-sm',
+        )}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Icon className="h-5 w-5 opacity-90" aria-hidden />
+            <div>
+              <div className="text-[11px] font-medium opacity-80">{debtCard.label}</div>
+              <div className="text-[10px] opacity-70 mt-0.5">{debtCard.sub}</div>
             </div>
-            <div className="text-base font-bold tabular-nums leading-tight">{card.value}</div>
-            <div className="text-[10px] opacity-70 mt-0.5">{card.sub}</div>
-          </Wrapper>
-        );
-      })}
+          </div>
+          <div className="text-lg font-bold tabular-nums leading-tight">{debtCard.value}</div>
+        </div>
+      </button>
+      {summary.nearLimitCount > 0 && (
+        <div className="flex items-center gap-1.5 px-1 text-[11px] text-amber-700 dark:text-amber-400">
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+          <span>{summary.nearLimitCount} عميل تجاوز 80% من حد الائتمان</span>
+        </div>
+      )}
     </div>
   );
 });

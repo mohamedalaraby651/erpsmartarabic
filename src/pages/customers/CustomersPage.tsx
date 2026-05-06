@@ -220,7 +220,7 @@ const CustomersPage = () => {
       />
 
       {isMobile ? (
-        <div className="pb-20">
+        <div className="pb-28">
           <CustomerMobileView
             data={allCustomers}
             isLoading={list.isLoading}
@@ -240,7 +240,7 @@ const CustomersPage = () => {
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
             sortKey={sortConfig.key || 'created_at'}
-            onSortChange={requestSort}
+            onSortChange={(key) => setSortConfig({ key, direction: 'asc' })}
             alertCountByCustomer={alertCountByCustomer}
             errorCustomerIds={errorCustomerIds}
             hasActiveSearch={!!filters.debouncedSearch}
