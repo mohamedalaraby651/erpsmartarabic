@@ -222,7 +222,7 @@ const CustomerListCardInner = ({
 
       <div
         className="p-3 cursor-pointer select-none"
-        {...longPress}
+        {...longPressHandlers}
       >
         {/* Header row: Avatar + Name + Balance */}
         <div className="flex items-start gap-3">
