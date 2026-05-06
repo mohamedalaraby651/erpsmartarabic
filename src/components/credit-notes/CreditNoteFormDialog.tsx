@@ -318,23 +318,36 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                             </span>
                           </div>
                           {l.selected && (
-                            <div className="mt-2 flex items-center gap-2">
-                              <Label className="text-xs">كمية الإرجاع:</Label>
-                              <Input
-                                type="number"
-                                className="h-8 w-24"
-                                value={l.return_qty}
-                                min={0}
-                                max={l.returnable}
-                                step="0.01"
-                                onChange={(e) => {
-                                  const v = Math.min(l.returnable, Math.max(0, Number(e.target.value)));
-                                  updateLine(l.invoice_item_id, { return_qty: v });
-                                }}
-                              />
-                              <span className="text-xs text-muted-foreground">
-                                = {round2(l.unit_price * l.return_qty).toLocaleString()} ج.م
-                              </span>
+                            <div className="mt-2 space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Label className="text-xs">كمية الإرجاع:</Label>
+                                <Input
+                                  type="number"
+                                  className={`h-8 w-24 ${l.error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                                  value={l.requested_qty}
+                                  min={0}
+                                  step="0.01"
+                                  aria-invalid={!!l.error}
+                                  onChange={(e) => {
+                                    const v = Number(e.target.value);
+                                    updateLine(l.invoice_item_id, { requested_qty: v });
+                                  }}
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  من أصل {l.returnable} متاح
+                                </span>
+                                {!l.error && (
+                                  <span className="text-xs text-muted-foreground">
+                                    = {round2(l.unit_price * l.return_qty).toLocaleString()} ج.م
+                                  </span>
+                                )}
+                              </div>
+                              {l.error && (
+                                <div className="flex items-start gap-1.5 text-xs text-destructive">
+                                  <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                                  <span>{l.error}</span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
