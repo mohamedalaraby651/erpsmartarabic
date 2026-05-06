@@ -41,6 +41,7 @@ import {
   ArrowLeftRight,
   CalendarCheck,
   Landmark,
+  TrendingUp,
 } from 'lucide-react';
 import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
 import DraggableNavSection from '@/components/sidebar/DraggableNavSection';
