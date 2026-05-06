@@ -320,11 +320,17 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            مُرتجع سابقاً: {l.already_returned} • متاح للإرجاع:{' '}
+                            مُرتجع سابقاً (مؤكد): {l.already_returned} • متاح للإرجاع:{' '}
                             <span className={l.returnable === 0 ? 'text-destructive' : 'text-success font-medium'}>
                               {l.returnable}
                             </span>
                           </div>
+                          {l.draft_reserved > 0 && (
+                            <div className="text-xs text-warning mt-1 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              يوجد {l.draft_reserved} كمية محجوزة في مسودات إشعارات أخرى — قد تتعارض عند التأكيد.
+                            </div>
+                          )}
                           {l.selected && (
                             <div className="mt-2 space-y-1">
                               <div className="flex items-center gap-2 flex-wrap">
