@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "preflight": "bash scripts/preflight-check.sh"
+    "preflight": "bash scripts/preflight-check.sh",
+    "preflight:fix": "bash scripts/preflight-check.sh --fix",
+    "preflight:dry-run": "bash scripts/preflight-check.sh --dry-run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -7,15 +7,52 @@
 # ============================================================================
 
 set -u
-RED=$(printf '\033[31m'); GREEN=$(printf '\033[32m'); YEL=$(printf '\033[33m'); NC=$(printf '\033[0m'); BLD=$(printf '\033[1m')
+RED=$(printf '\033[31m'); GREEN=$(printf '\033[32m'); YEL=$(printf '\033[33m'); BLU=$(printf '\033[34m'); NC=$(printf '\033[0m'); BLD=$(printf '\033[1m')
 
-PASS=0; FAIL=0; WARN=0
+# ── Modes ────────────────────────────────────────────────────────────────────
+FIX_MODE=0
+DRY_RUN=0
+for arg in "$@"; do
+  case "$arg" in
+    --fix)     FIX_MODE=1 ;;
+    --dry-run) FIX_MODE=1; DRY_RUN=1 ;;
+    --help|-h)
+      cat <<EOF
+Usage: $0 [--fix] [--dry-run]
+  --fix      Auto-repair issues that have a known safe fix
+             (missing indexes, missing enum values, account map seeds)
+  --dry-run  Print the SQL that --fix would execute, but do NOT run it
+EOF
+      exit 0 ;;
+  esac
+done
+
+PASS=0; FAIL=0; WARN=0; FIXED=0
+FIX_SQL_LOG=()
+
 SECTION() { echo; echo "${BLD}━━━ $1 ━━━${NC}"; }
 ok()   { echo "  ${GREEN}✓${NC} $1"; PASS=$((PASS+1)); }
 bad()  { echo "  ${RED}✗${NC} $1"; FAIL=$((FAIL+1)); }
 warn() { echo "  ${YEL}⚠${NC} $1"; WARN=$((WARN+1)); }
+fix()  { echo "  ${BLU}🔧${NC} $1"; FIXED=$((FIXED+1)); }
 
 run_sql() { psql -tAX -c "$1" 2>/dev/null; }
+
+# Apply a corrective SQL statement (or just log it in --dry-run).
+# Usage: apply_fix "human label" "SQL ..."
+apply_fix() {
+  local label="$1" sql="$2"
+  FIX_SQL_LOG+=("-- $label"$'\n'"$sql;")
+  if [ "$DRY_RUN" -eq 1 ]; then
+    fix "[dry-run] $label"
+    return 0
+  fi
+  if psql -v ON_ERROR_STOP=1 -c "$sql" >/dev/null 2>&1; then
+    fix "$label"
+  else
+    bad "fix failed: $label"
+  fi
+}
 
 check_count_zero() {
   local label="$1" sql="$2"
@@ -148,8 +185,57 @@ for idx_check in \
     WHERE schemaname='public' AND tablename='$tbl'
       AND (indexdef ~ ('\\(' || '$col' || '[,) ]') OR indexdef ILIKE '%($col)%')
   ")
-  if [ "$has" != "0" ]; then ok "index on $tbl($col)"; else warn "missing index $tbl($col)"; fi
+  if [ "$has" != "0" ]; then
+    ok "index on $tbl($col)"
+  else
+    warn "missing index $tbl($col)"
+    if [ "$FIX_MODE" -eq 1 ]; then
+      apply_fix "create index idx_${tbl}_${col}" \
+        "CREATE INDEX IF NOT EXISTS idx_${tbl}_${col} ON public.${tbl}(${col})"
+    fi
+  fi
 done
+
+# ────────────────────────────────────────────────────────────────────────────
+SECTION "9b. Enum completeness / اكتمال الـ Enums"
+# ────────────────────────────────────────────────────────────────────────────
+check_enum_values() {
+  local type_name="$1"; shift
+  local required=("$@")
+  local existing
+  existing=$(run_sql "SELECT string_agg(enumlabel, ',') FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE t.typname='$type_name'")
+  if [ -z "$existing" ]; then warn "enum $type_name not found — skip"; return; fi
+  for v in "${required[@]}"; do
+    if echo ",$existing," | grep -q ",$v,"; then
+      ok "enum $type_name has '$v'"
+    else
+      warn "enum $type_name missing '$v'"
+      if [ "$FIX_MODE" -eq 1 ]; then
+        apply_fix "ALTER TYPE $type_name ADD VALUE '$v'" \
+          "ALTER TYPE public.${type_name} ADD VALUE IF NOT EXISTS '$v'"
+      fi
+    fi
+  done
+}
+
+check_enum_values "movement_type"  in out transfer adjustment return_in return_out
+check_enum_values "payment_status" pending partial paid
+check_enum_values "app_role"       admin sales accountant warehouse hr
+
+# ────────────────────────────────────────────────────────────────────────────
+SECTION "9c. Seed posting accounts / ضبط حسابات الترحيل"
+# ────────────────────────────────────────────────────────────────────────────
+if [ "$FIX_MODE" -eq 1 ]; then
+  has_fn=$(run_sql "SELECT count(*) FROM pg_proc WHERE proname='ensure_credit_note_posting_accounts'")
+  if [ "$has_fn" != "0" ]; then
+    apply_fix "seed credit-note posting accounts" \
+      "SELECT public.ensure_credit_note_posting_accounts()"
+  else
+    warn "ensure_credit_note_posting_accounts() not found — skipping seed"
+  fi
+else
+  warn "seed skipped (use --fix to apply)"
+fi
 
 # ────────────────────────────────────────────────────────────────────────────
 SECTION "10. TypeScript typecheck / فحص الأنواع"
@@ -182,11 +268,23 @@ SECTION "Summary / الملخص النهائي"
 echo "  ${GREEN}Passed:${NC}  $PASS"
 echo "  ${YEL}Warned:${NC}  $WARN"
 echo "  ${RED}Failed:${NC}  $FAIL"
+if [ "$FIX_MODE" -eq 1 ]; then
+  echo "  ${BLU}Fixed: ${NC}  $FIXED"
+fi
 echo
+
+if [ "$DRY_RUN" -eq 1 ] && [ "${#FIX_SQL_LOG[@]}" -gt 0 ]; then
+  LOG_FILE="/tmp/preflight-fixes.sql"
+  printf "%s\n\n" "${FIX_SQL_LOG[@]}" > "$LOG_FILE"
+  echo "${BLU}📝 dry-run SQL written to $LOG_FILE${NC}"
+  echo
+fi
+
 if [ "$FAIL" -eq 0 ]; then
   echo "${GREEN}${BLD}✅ READY TO SHIP — جاهز للإطلاق${NC}"
   exit 0
 else
   echo "${RED}${BLD}⛔ BLOCKED — يجب إصلاح الأخطاء قبل الإطلاق${NC}"
+  [ "$FIX_MODE" -eq 0 ] && echo "${YEL}💡 Tip: rerun with --fix to auto-repair safe issues${NC}"
   exit 1
 fi
