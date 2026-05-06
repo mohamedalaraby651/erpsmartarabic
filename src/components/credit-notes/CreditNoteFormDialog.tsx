@@ -242,12 +242,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     },
     onError: (err: any) => {
       const raw: string = err?.message ?? 'حدث خطأ غير متوقع';
-      // Try to translate the DB trigger message into Arabic with values
-      // Trigger raises: "Quantity X exceeds returnable amount Y"
-      const m = raw.match(/Quantity\s+([\d.]+)\s+exceeds returnable amount\s+([\d.]+)/i);
-      const description = m
-        ? `تم رفض الترحيل من قاعدة البيانات: المطلوب ${m[1]} يتجاوز المتاح ${m[2]} (الفرق: ${round2(Number(m[1]) - Number(m[2]))})`
-        : raw;
+      const description = parseDbOverdraw(raw) ?? raw;
       toast({
         title: 'خطأ في إنشاء إشعار الإرجاع',
         description,
