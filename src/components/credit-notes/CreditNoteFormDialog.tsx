@@ -170,8 +170,12 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const selected = lines.filter(l => l.selected && l.return_qty > 0);
-      if (selected.length === 0) throw new Error('اختر بنداً واحداً على الأقل');
+      const selected = lines.filter(l => l.selected && l.return_qty > 0 && !l.error);
+      if (linesWithErrors.length > 0) {
+        const first = linesWithErrors[0];
+        throw new Error(`${first.product_name}: ${first.error}`);
+      }
+      if (selected.length === 0) throw new Error('اختر بنداً واحداً على الأقل بكمية صالحة');
 
       const { data: tenantData, error: tenantErr } = await supabase.rpc('get_current_tenant');
       if (tenantErr) throw tenantErr;
