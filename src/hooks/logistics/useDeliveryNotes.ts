@@ -125,7 +125,7 @@ export function useCreateDeliveryNote() {
             ordered_qty: Math.round((it.ordered_qty ?? 0) * 100) / 100,
             delivered_qty: Math.round(it.delivered_qty * 100) / 100,
             notes: it.notes ?? null,
-          }))
+          })) as any
         );
         if (iErr) throw iErr;
       }
