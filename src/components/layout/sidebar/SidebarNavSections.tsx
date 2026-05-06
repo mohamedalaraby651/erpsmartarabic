@@ -100,6 +100,7 @@ export const defaultNavSections: NavSection[] = [
       { title: 'الفواتير', icon: Receipt, href: '/invoices', roles: ['admin', 'sales', 'accountant'], countKey: 'pendingInvoices', countColor: 'destructive' },
       { title: 'المرتجعات', icon: RotateCcw, href: '/credit-notes', roles: ['admin', 'sales', 'accountant'] },
       { title: 'التحصيل', icon: CreditCard, href: '/payments', roles: ['admin', 'accountant'] },
+      { title: 'مسار الدورة', icon: Truck, href: '/sales-pipeline', roles: ['admin', 'sales'] },
     ],
   },
   {
