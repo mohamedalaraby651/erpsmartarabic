@@ -157,13 +157,20 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
   const hasSelection = selectedLines.some(l => l.return_qty > 0);
   const hasErrors = linesWithErrors.length > 0;
 
-  const validateQty = (returnable: number, requested: number): string | undefined => {
-    if (Number.isNaN(requested)) return 'قيمة غير صالحة — أدخل رقماً';
-    if (requested < 0) return 'الكمية لا يمكن أن تكون سالبة';
-    if (returnable === 0) return 'لا توجد كمية متاحة للإرجاع — تم إرجاع كل الكمية سابقاً';
-    if (requested === 0) return 'الكمية المطلوبة = 0 — أدخل قيمة أكبر من صفر';
-    if (requested > returnable) {
-      return `تجاوزت الكمية المتاحة — المطلوب: ${requested} ، المتاح: ${returnable} (الفرق: ${round2(requested - returnable)})`;
+  const validateQty = (line: ReturnLine, requested: number): string | undefined => {
+    if (Number.isNaN(requested)) return formatInvalidQty('nan');
+    if (requested < 0) return formatInvalidQty('negative');
+    if (line.returnable === 0) return formatInvalidQty('none-available');
+    if (requested === 0) return formatInvalidQty('zero');
+    if (requested > line.returnable) {
+      return formatReturnOverdraw({
+        productName: line.product_name,
+        requested,
+        available: line.returnable,
+        originalQty: line.original_qty,
+        alreadyReturned: line.already_returned,
+        source: 'client',
+      });
     }
     return undefined;
   };
@@ -172,10 +179,9 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     setLines(prev => prev.map(l => {
       if (l.invoice_item_id !== id) return l;
       const merged = { ...l, ...patch };
-      // Re-validate whenever quantity-related fields change
       if ('requested_qty' in patch || 'selected' in patch) {
         const requested = Number(merged.requested_qty);
-        const err = merged.selected ? validateQty(merged.returnable, requested) : undefined;
+        const err = merged.selected ? validateQty(merged, requested) : undefined;
         merged.error = err;
         merged.return_qty = err ? 0 : requested;
       }
