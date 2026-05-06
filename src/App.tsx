@@ -76,6 +76,7 @@ const SalesPipelinePage = lazy(() => import("./pages/quotes/SalesPipelinePage"))
 // Finance & accounting group (heavy: pulls in jspdf, recharts via reports)
 const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
 const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
+const SalesReportsPage = lazy(() => import("./pages/reports/SalesReportsPage"));
 const TreasuryPage = lazy(() => import("./pages/treasury/TreasuryPage"));
 const CashRegisterDetailsPage = lazy(() => import("./pages/treasury/CashRegisterDetailsPage"));
 const ExpensesPage = lazy(() => import("./pages/expenses/ExpensesPage"));
@@ -201,6 +202,7 @@ const App = () => (
                   <Route path="quotations" element={<QuotationsPage />} />
                   <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                   <Route path="reports" element={<ReportsPage />} />
+                  <Route path="reports/sales" element={<SalesReportsPage />} />
                   <Route path="settings" element={<UnifiedSettingsPage />} />
                   <Route path="settings/alerts" element={<CustomerAlertSettingsPage />} />
                   <Route path="search" element={<SearchPage />} />

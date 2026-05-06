@@ -41,6 +41,7 @@ import {
   ArrowLeftRight,
   CalendarCheck,
   Landmark,
+  TrendingUp,
 } from 'lucide-react';
 import NavItemWithBadge from '@/components/sidebar/NavItemWithBadge';
 import DraggableNavSection from '@/components/sidebar/DraggableNavSection';
@@ -136,6 +137,7 @@ export const defaultNavSections: NavSection[] = [
       { title: 'القيود اليومية', icon: FileText, href: '/accounting/journals', roles: ['admin', 'accountant'] },
       { title: 'سجل الترحيل المحاسبي', icon: BookOpen, href: '/accounting/posting-log', roles: ['admin', 'accountant'] },
       { title: 'التقارير', icon: BarChart3, href: '/reports', roles: ['admin', 'accountant'] },
+      { title: 'تقارير المبيعات', icon: TrendingUp, href: '/reports/sales', roles: ['admin', 'accountant', 'sales'] },
       { title: 'مؤشرات الأداء', icon: ArrowLeftRight, href: '/kpis', roles: ['admin', 'accountant'] },
     ],
   },
