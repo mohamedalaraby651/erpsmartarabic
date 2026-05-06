@@ -19,7 +19,6 @@ import {
   formatReturnOverdraw,
   formatInvalidQty,
   parseDbOverdraw,
-  round2 as round2Shared,
 } from '@/lib/credit-notes/overdrawMessages';
 
 interface Props {
