@@ -402,6 +402,7 @@ const CustomerListCardInner = ({
         </div>
       </div>
     </Card>
+    </div>
   );
 };
 
