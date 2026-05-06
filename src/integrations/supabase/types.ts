@@ -5807,6 +5807,10 @@ export type Database = {
         Args: { _tenant_id: string; _tier: string }
         Returns: boolean
       }
+      validate_credit_note_before_confirm: {
+        Args: { p_credit_note_id: string }
+        Returns: Json
+      }
       void_invoice: {
         Args: { _invoice_id: string; _reason?: string }
         Returns: Json
