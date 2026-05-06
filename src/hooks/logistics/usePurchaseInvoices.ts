@@ -130,7 +130,7 @@ export function useCreatePurchaseInvoice() {
           discount_amount: discount,
           total_amount: total,
           notes: draft.notes ?? null,
-        })
+        } as any)
         .select("id, invoice_number")
         .single();
       if (hErr) throw hErr;

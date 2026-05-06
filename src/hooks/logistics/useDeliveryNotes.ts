@@ -110,7 +110,7 @@ export function useCreateDeliveryNote() {
           invoice_id: draft.invoice_id ?? null,
           delivery_date: draft.delivery_date,
           notes: draft.notes ?? null,
-        })
+        } as any)
         .select("id, delivery_number")
         .single();
       if (hErr) throw hErr;
