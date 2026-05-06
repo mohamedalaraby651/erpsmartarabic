@@ -220,7 +220,7 @@ const CustomersPage = () => {
       />
 
       {isMobile ? (
-        <div className="pb-20">
+        <div className="pb-28">
           <CustomerMobileView
             data={allCustomers}
             isLoading={list.isLoading}
