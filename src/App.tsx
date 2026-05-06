@@ -192,6 +192,8 @@ const App = () => (
                   <Route path="purchase-invoices" element={<PurchaseInvoicesPage />} />
                   <Route path="purchase-invoices/approvals" element={<PurchaseInvoiceApprovalsPage />} />
                   <Route path="purchase-invoices/:id" element={<LogisticsDocumentDetailsPage />} />
+                  <Route path="quotes" element={<QuotesPage />} />
+                  <Route path="quotes/new" element={<QuoteNewPage />} />
                   <Route path="quotations" element={<QuotationsPage />} />
                   <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                   <Route path="reports" element={<ReportsPage />} />
