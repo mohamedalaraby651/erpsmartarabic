@@ -408,14 +408,6 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
             onClick={() => createMutation.mutate()}
             disabled={!customerId || !invoiceId || !hasSelection || hasErrors || createMutation.isPending}
           >
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
-          <Button
-            onClick={() => createMutation.mutate()}
-            disabled={!customerId || !invoiceId || !hasSelection || createMutation.isPending}
-          >
             {createMutation.isPending && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
             إنشاء إشعار إرجاع
           </Button>
