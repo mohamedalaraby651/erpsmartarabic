@@ -183,6 +183,13 @@ const CustomersPage = () => {
         filteredCount={filteredCount !== totalStatsCount ? filteredCount : undefined}
         searchQuery={isMobile ? filters.searchQuery : undefined}
         onSearchChange={isMobile ? filters.setSearchQuery : undefined}
+        mobileTitleSlot={isMobile && totalAlerts > 0 ? (
+          <CustomerAlertsMobileTrigger
+            alertsByType={alertsByType}
+            totalAlerts={totalAlerts}
+            onFilterByType={setAlertFilterType}
+          />
+        ) : undefined}
       />
 
       <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
