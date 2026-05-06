@@ -145,7 +145,8 @@ for idx_check in \
   tbl="${idx_check%%:*}"; col="${idx_check##*:}"
   has=$(run_sql "
     SELECT count(*) FROM pg_indexes
-    WHERE schemaname='public' AND tablename='$tbl' AND indexdef ILIKE '%($col%'
+    WHERE schemaname='public' AND tablename='$tbl'
+      AND (indexdef ~ ('\\(' || '$col' || '[,) ]') OR indexdef ILIKE '%($col)%')
   ")
   if [ "$has" != "0" ]; then ok "index on $tbl($col)"; else warn "missing index $tbl($col)"; fi
 done
