@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { DeliveryNoteStatusBadge } from "@/components/logistics/StatusBadges";
 import { DeliveryNoteDialog } from "@/components/logistics/LogisticsDialogs";
 
 export default function DeliveryNotesPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const { data: rows = [], isLoading } = useDeliveryNotesList(search);
@@ -63,13 +65,13 @@ export default function DeliveryNotesPage() {
               </thead>
               <tbody>
                 {rows.map(r => (
-                  <tr key={r.id} className="border-b hover:bg-muted/30">
+                  <tr key={r.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/delivery-notes/${r.id}`)}>
                     <td className="p-2 font-mono">{r.delivery_number}</td>
                     <td className="p-2">{r.customers?.name ?? "—"}</td>
                     <td className="p-2">{r.warehouses?.name ?? "—"}</td>
                     <td className="p-2 text-xs">{r.delivery_date}</td>
                     <td className="p-2"><DeliveryNoteStatusBadge status={r.status} /></td>
-                    <td className="p-2">
+                    <td className="p-2" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         {(r.status === "draft" || r.status === "in_transit") && (
                           <Button size="sm" variant="ghost" className="text-success h-8 px-2"

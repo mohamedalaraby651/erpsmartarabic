@@ -60,6 +60,13 @@ const PurchaseOrdersPage = lazy(() => import("./pages/purchase-orders/PurchaseOr
 const PurchaseOrderDetailsPage = lazy(() => import("./pages/purchase-orders/PurchaseOrderDetailsPage"));
 const AttachmentsPage = lazy(() => import("./pages/attachments/AttachmentsPage"));
 
+// Logistics group (Goods Receipts, Delivery Notes, Purchase Invoices)
+const GoodsReceiptsPage = lazy(() => import("./pages/goods-receipts/GoodsReceiptsPage"));
+const DeliveryNotesPage = lazy(() => import("./pages/delivery-notes/DeliveryNotesPage"));
+const PurchaseInvoicesPage = lazy(() => import("./pages/purchase-invoices/PurchaseInvoicesPage"));
+const PurchaseInvoiceApprovalsPage = lazy(() => import("./pages/purchase-invoices/PurchaseInvoiceApprovalsPage"));
+const LogisticsDocumentDetailsPage = lazy(() => import("./pages/logistics/LogisticsDocumentDetailsPage"));
+
 // Finance & accounting group (heavy: pulls in jspdf, recharts via reports)
 const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
 const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
@@ -172,6 +179,14 @@ const App = () => (
                   <Route path="supplier-payments" element={<SupplierPaymentsPage />} />
                   <Route path="purchase-orders" element={<PurchaseOrdersPage />} />
                   <Route path="purchase-orders/:id" element={<PurchaseOrderDetailsPage />} />
+                  {/* Logistics: Goods Receipts, Delivery Notes, Purchase Invoices */}
+                  <Route path="goods-receipts" element={<GoodsReceiptsPage />} />
+                  <Route path="goods-receipts/:id" element={<LogisticsDocumentDetailsPage />} />
+                  <Route path="delivery-notes" element={<DeliveryNotesPage />} />
+                  <Route path="delivery-notes/:id" element={<LogisticsDocumentDetailsPage />} />
+                  <Route path="purchase-invoices" element={<PurchaseInvoicesPage />} />
+                  <Route path="purchase-invoices/approvals" element={<PurchaseInvoiceApprovalsPage />} />
+                  <Route path="purchase-invoices/:id" element={<LogisticsDocumentDetailsPage />} />
                   <Route path="quotations" element={<QuotationsPage />} />
                   <Route path="quotations/:id" element={<QuotationDetailsPage />} />
                   <Route path="reports" element={<ReportsPage />} />
