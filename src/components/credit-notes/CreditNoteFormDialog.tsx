@@ -38,10 +38,11 @@ interface ReturnLine {
   unit_price: number;
   original_qty: number;
   already_returned: number;
+  draft_reserved: number;
   returnable: number;
   selected: boolean;
   return_qty: number;
-  requested_qty: number; // raw user input (may exceed returnable, used for error display)
+  requested_qty: number;
   error?: string;
 }
 
