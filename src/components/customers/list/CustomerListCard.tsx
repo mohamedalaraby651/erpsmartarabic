@@ -97,6 +97,33 @@ const CustomerListCardInner = ({
     delay: 500,
   });
 
+  const isMobile = useIsMobile();
+  const swipeEnabled = isMobile && !selectionMode && !expanded;
+  const hasContact = !!customer.phone;
+
+  const triggerNewInvoice = useCallback(() => onNewInvoice?.(customer.id), [onNewInvoice, customer.id]);
+  const triggerNewPayment = useCallback(() => onNewPayment?.(customer.id), [onNewPayment, customer.id]);
+  const triggerCall = useCallback(() => {
+    if (customer.phone) window.location.href = `tel:${customer.phone}`;
+  }, [customer.phone]);
+  const triggerWhatsApp = useCallback(() => {
+    if (customer.phone) {
+      const num = customer.phone.replace(/\D/g, '');
+      window.open(`https://wa.me/${num}`, '_blank');
+    }
+  }, [customer.phone]);
+
+  const swipe = useCustomerSwipeActions({
+    enabled: swipeEnabled,
+    onSwipeLeftRevealed: () => {
+      if (onNewInvoice) triggerNewInvoice();
+      else if (onNewPayment) triggerNewPayment();
+    },
+    onSwipeRightRevealed: () => {
+      if (hasContact) triggerCall();
+    },
+  });
+
   return (
     <Card
       className={cn(
