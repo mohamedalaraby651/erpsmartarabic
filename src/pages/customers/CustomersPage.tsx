@@ -243,6 +243,9 @@ const CustomersPage = () => {
             onSortChange={requestSort}
             alertCountByCustomer={alertCountByCustomer}
             errorCustomerIds={errorCustomerIds}
+            hasActiveSearch={!!filters.debouncedSearch}
+            activeQuickFilter={quickFilter}
+            onQuickFilter={handleQuickFilter}
           />
         </div>
       ) : (
