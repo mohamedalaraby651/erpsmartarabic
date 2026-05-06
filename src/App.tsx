@@ -67,6 +67,10 @@ const PurchaseInvoicesPage = lazy(() => import("./pages/purchase-invoices/Purcha
 const PurchaseInvoiceApprovalsPage = lazy(() => import("./pages/purchase-invoices/PurchaseInvoiceApprovalsPage"));
 const LogisticsDocumentDetailsPage = lazy(() => import("./pages/logistics/LogisticsDocumentDetailsPage"));
 
+// Sales cycle (Quotes → Orders → Invoices → Deliveries)
+const QuotesPage = lazy(() => import("./pages/quotes/QuotesPage"));
+const QuoteNewPage = lazy(() => import("./pages/quotes/QuoteNewPage"));
+
 // Finance & accounting group (heavy: pulls in jspdf, recharts via reports)
 const ReportsPage = lazy(() => import("./pages/reports/ReportsPage"));
 const KPIDashboard = lazy(() => import("./pages/reports/KPIDashboard"));
