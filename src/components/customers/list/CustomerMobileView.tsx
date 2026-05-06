@@ -30,6 +30,9 @@ interface CustomerMobileViewProps {
   onSortChange?: (key: string) => void;
   alertCountByCustomer?: Map<string, number>;
   errorCustomerIds?: Set<string>;
+  hasActiveSearch?: boolean;
+  activeQuickFilter?: string | null;
+  onQuickFilter?: (id: string | null) => void;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
