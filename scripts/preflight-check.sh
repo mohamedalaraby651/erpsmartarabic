@@ -185,8 +185,57 @@ for idx_check in \
     WHERE schemaname='public' AND tablename='$tbl'
       AND (indexdef ~ ('\\(' || '$col' || '[,) ]') OR indexdef ILIKE '%($col)%')
   ")
-  if [ "$has" != "0" ]; then ok "index on $tbl($col)"; else warn "missing index $tbl($col)"; fi
+  if [ "$has" != "0" ]; then
+    ok "index on $tbl($col)"
+  else
+    warn "missing index $tbl($col)"
+    if [ "$FIX_MODE" -eq 1 ]; then
+      apply_fix "create index idx_${tbl}_${col}" \
+        "CREATE INDEX IF NOT EXISTS idx_${tbl}_${col} ON public.${tbl}(${col})"
+    fi
+  fi
 done
+
+# ────────────────────────────────────────────────────────────────────────────
+SECTION "9b. Enum completeness / اكتمال الـ Enums"
+# ────────────────────────────────────────────────────────────────────────────
+check_enum_values() {
+  local type_name="$1"; shift
+  local required=("$@")
+  local existing
+  existing=$(run_sql "SELECT string_agg(enumlabel, ',') FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE t.typname='$type_name'")
+  if [ -z "$existing" ]; then warn "enum $type_name not found — skip"; return; fi
+  for v in "${required[@]}"; do
+    if echo ",$existing," | grep -q ",$v,"; then
+      ok "enum $type_name has '$v'"
+    else
+      warn "enum $type_name missing '$v'"
+      if [ "$FIX_MODE" -eq 1 ]; then
+        apply_fix "ALTER TYPE $type_name ADD VALUE '$v'" \
+          "ALTER TYPE public.${type_name} ADD VALUE IF NOT EXISTS '$v'"
+      fi
+    fi
+  done
+}
+
+check_enum_values "movement_type"  in out transfer adjustment return_in return_out
+check_enum_values "payment_status" pending partial paid
+check_enum_values "app_role"       admin sales accountant warehouse hr
+
+# ────────────────────────────────────────────────────────────────────────────
+SECTION "9c. Seed posting accounts / ضبط حسابات الترحيل"
+# ────────────────────────────────────────────────────────────────────────────
+if [ "$FIX_MODE" -eq 1 ]; then
+  has_fn=$(run_sql "SELECT count(*) FROM pg_proc WHERE proname='ensure_credit_note_posting_accounts'")
+  if [ "$has_fn" != "0" ]; then
+    apply_fix "seed credit-note posting accounts" \
+      "SELECT public.ensure_credit_note_posting_accounts()"
+  else
+    warn "ensure_credit_note_posting_accounts() not found — skipping seed"
+  fi
+else
+  warn "seed skipped (use --fix to apply)"
+fi
 
 # ────────────────────────────────────────────────────────────────────────────
 SECTION "10. TypeScript typecheck / فحص الأنواع"
