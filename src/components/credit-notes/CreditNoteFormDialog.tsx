@@ -382,6 +382,32 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
               <span>تم إرجاع جميع كميات هذه الفاتورة بالفعل.</span>
             </div>
           )}
+
+          {hasErrors && (
+            <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <div className="font-medium">
+                  لا يمكن الحفظ — يوجد {linesWithErrors.length} بند(بنود) بكمية غير صالحة:
+                </div>
+                <ul className="list-disc pr-4 space-y-0.5">
+                  {linesWithErrors.map(l => (
+                    <li key={l.invoice_item_id} className="text-xs">
+                      <span className="font-medium">{l.product_name}</span>: {l.error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button
+            onClick={() => createMutation.mutate()}
+            disabled={!customerId || !invoiceId || !hasSelection || hasErrors || createMutation.isPending}
+          >
         </div>
 
         <DialogFooter>
