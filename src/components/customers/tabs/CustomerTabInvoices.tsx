@@ -27,6 +27,10 @@ interface CustomerTabInvoicesProps {
   customerId: string;
   totalPaymentsFromLedger?: number;
   onQuickPay?: (invoiceId: string) => void;
+  // Linked returns + balance for unified summary
+  creditNotes?: CreditNote[];
+  currentBalance?: number;
+  onViewAllReturns?: () => void;
   // Server pagination props (optional — uses client pagination as fallback)
   paginatedData?: { data: Invoice[]; count: number };
   currentPage?: number;
