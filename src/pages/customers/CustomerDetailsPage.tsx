@@ -184,7 +184,12 @@ function MobileCustomerView({
       </div>
 
       <div ref={sectionRef}>
-        {mobileSection !== 'none' && (
+        {mobileSection === 'none' ? (
+          <CustomerQuickSuggestions
+            overdueCount={sectionBadges.invoices ?? 0}
+            onPick={(id) => selectSection(id)}
+          />
+        ) : (
           <Suspense fallback={<TabSkeleton />}>
             {mobileSection === 'invoices' && (
               <div className="space-y-4">
