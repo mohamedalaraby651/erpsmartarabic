@@ -74,15 +74,25 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             <p className="text-sm text-muted-foreground">
               {customer.customer_type === 'company' ? 'شركة' : customer.customer_type === 'farm' ? 'مزرعة' : 'فرد'}
             </p>
-            <div className="flex items-center justify-center gap-2 mt-1">
+            <div className="flex items-center justify-center gap-2 mt-1.5">
               {onToggleActive ? (
-                <button onClick={onToggleActive} aria-label={customer.is_active ? "تعطيل العميل" : "تفعيل العميل"} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium cursor-pointer", customer.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
-                  {customer.is_active ? <UserCheck className="h-2.5 w-2.5" /> : <UserX className="h-2.5 w-2.5" />}
+                <button
+                  onClick={onToggleActive}
+                  aria-label={customer.is_active ? "تعطيل العميل" : "تفعيل العميل"}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium cursor-pointer min-h-7",
+                    "transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    customer.is_active
+                      ? "bg-success/10 text-success hover:bg-success/15"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {customer.is_active ? <UserCheck className="h-3 w-3" /> : <UserX className="h-3 w-3" />}
                   {customer.is_active ? "نشط" : "غير نشط"}
                   <span className="sr-only">{customer.is_active ? "العميل نشط حالياً — اضغط للتعطيل" : "العميل غير نشط — اضغط للتفعيل"}</span>
                 </button>
               ) : (
-                <Badge variant={customer.is_active ? "default" : "secondary"} className="text-[10px]">
+                <Badge variant={customer.is_active ? "default" : "secondary"} className="text-xs px-3 py-1">
                   {customer.is_active ? "نشط" : "غير نشط"}
                   <span className="sr-only">{customer.is_active ? "حالة العميل: نشط" : "حالة العميل: غير نشط"}</span>
                 </Badge>
