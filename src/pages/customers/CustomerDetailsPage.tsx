@@ -529,6 +529,17 @@ const CustomerDetailsPage = () => {
 
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
+      <CreditNoteFormDialog
+        open={creditNoteDialogOpen}
+        onOpenChange={setCreditNoteDialogOpen}
+        prefillCustomerId={id}
+        onSuccess={() => {
+          setCreditNoteDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['customer-credit-notes', id] });
+          queryClient.invalidateQueries({ queryKey: ['customer-financial-summary', id] });
+          toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
+        }}
+      />
     </div>
     </PageWrapper>
   );
