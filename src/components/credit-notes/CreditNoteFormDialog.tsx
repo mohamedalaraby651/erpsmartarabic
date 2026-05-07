@@ -25,6 +25,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  /** Prefill the customer when opening the dialog (e.g. from a customer profile) */
+  prefillCustomerId?: string;
 }
 
 interface InvoiceItemRow {
@@ -54,7 +56,7 @@ interface ReturnLine {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: Props) {
+export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, prefillCustomerId }: Props) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [customerId, setCustomerId] = useState('');
