@@ -178,7 +178,7 @@ function MobileCustomerView({
             onMoreActions={onEdit}
           />
         </div>
-        <CustomerIconStrip activeSection={mobileSection} onSectionChange={selectSection} />
+        <CustomerIconStrip activeSection={mobileSection} onSectionChange={selectSection} badges={sectionBadges} />
       </div>
 
       <div ref={sectionRef}>
