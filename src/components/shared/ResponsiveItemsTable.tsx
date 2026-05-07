@@ -187,12 +187,28 @@ const DesktopItemRow = memo(function DesktopItemRow({
         </Select>
       </TableCell>
       <TableCell className="w-24">
-        <Input
-          type="number"
-          min="1"
-          value={item.quantity}
-          onChange={(e) => onUpdateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-        />
+        {(() => {
+          const qtyInvalid = !Number.isFinite(item.quantity) || item.quantity < 1;
+          const qtyErrorId = `desktop-item-qty-error-${index}`;
+          return (
+            <div className="space-y-1">
+              <Input
+                type="number"
+                min="1"
+                value={item.quantity}
+                aria-invalid={qtyInvalid}
+                aria-describedby={qtyInvalid ? qtyErrorId : undefined}
+                className={qtyInvalid ? 'border-destructive focus-visible:ring-destructive' : ''}
+                onChange={(e) => onUpdateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+              />
+              {qtyInvalid && (
+                <p id={qtyErrorId} role="alert" className="text-[10px] text-destructive">
+                  الكمية يجب أن تكون 1 أو أكثر
+                </p>
+              )}
+            </div>
+          );
+        })()}
       </TableCell>
       <TableCell className="w-32">
         <Input
