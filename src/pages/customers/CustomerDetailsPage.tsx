@@ -188,10 +188,10 @@ function MobileCustomerView({
             {mobileSection === 'analytics' && (
               <div className="space-y-4">
                 <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoiceCount} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
-                <AgingDonutChart customerId={customerId} />
-                <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
-                <TopProductsChart topProducts={detail.chartData?.top_products} />
+                <LazyOnVisible minHeight={280}><CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
+                <LazyOnVisible minHeight={300}><AgingDonutChart customerId={customerId} /></LazyOnVisible>
+                <LazyOnVisible minHeight={280}><CashFlowLineChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
+                <LazyOnVisible minHeight={280}><TopProductsChart topProducts={detail.chartData?.top_products} /></LazyOnVisible>
               </div>
             )}
             {mobileSection === 'sales' && (
