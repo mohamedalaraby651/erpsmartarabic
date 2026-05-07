@@ -236,6 +236,46 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 hasPrevPage={activePage > 1}
               />
             )}
+
+            {/* Linked returns (credit notes) — quick access */}
+            {recentReturns.length > 0 && (
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                    <Undo2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    المرتجعات المرتبطة
+                    <span className="text-xs text-muted-foreground font-normal">({creditNotes.length})</span>
+                  </h4>
+                  {onViewAllReturns && creditNotes.length > recentReturns.length && (
+                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={onViewAllReturns}>
+                      عرض الكل
+                      <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  {recentReturns.map((cn) => (
+                    <button
+                      key={cn.id}
+                      type="button"
+                      onClick={() => navigate(`/credit-notes/${cn.id}`)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-lg border hover:bg-muted/50 transition-colors text-right"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{cn.credit_note_number}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(cn.created_at).toLocaleDateString('ar-EG')}
+                          {cn.reason ? ` • ${cn.reason}` : ''}
+                        </p>
+                      </div>
+                      <span className="text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums shrink-0">
+                        −{Number(cn.amount).toLocaleString()} ج.م
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </CardContent>
