@@ -32,9 +32,9 @@ export const CustomerSalesPipeline = memo(function CustomerSalesPipeline({
         count: openQuotes.length,
         total: quotations.length,
         amount: openQuotes.reduce((s, q) => s + Number(q.total_amount || 0), 0),
-        color: 'text-blue-600 dark:text-blue-400',
-        bg: 'bg-blue-500/10',
-        borderColor: 'border-blue-500/30',
+        color: 'text-primary',
+        bg: 'bg-primary/10',
+        borderColor: 'border-primary/30',
       },
       {
         key: 'orders',
@@ -43,9 +43,9 @@ export const CustomerSalesPipeline = memo(function CustomerSalesPipeline({
         count: activeOrders.length,
         total: salesOrders.length,
         amount: activeOrders.reduce((s, o) => s + Number(o.total_amount || 0), 0),
-        color: 'text-amber-600 dark:text-amber-400',
-        bg: 'bg-amber-500/10',
-        borderColor: 'border-amber-500/30',
+        color: 'text-warning',
+        bg: 'bg-warning/10',
+        borderColor: 'border-warning/30',
       },
       {
         key: 'invoices',
@@ -54,9 +54,9 @@ export const CustomerSalesPipeline = memo(function CustomerSalesPipeline({
         count: pendingInvoices.length,
         total: invoices.length,
         amount: pendingInvoices.reduce((s, i) => s + Number(i.total_amount || 0) - Number(i.paid_amount || 0), 0),
-        color: 'text-emerald-600 dark:text-emerald-400',
-        bg: 'bg-emerald-500/10',
-        borderColor: 'border-emerald-500/30',
+        color: 'text-success',
+        bg: 'bg-success/10',
+        borderColor: 'border-success/30',
       },
     ];
   }, [quotations, salesOrders, invoices]);

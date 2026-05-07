@@ -104,7 +104,7 @@ export const ActivityDiffViewer = memo(function ActivityDiffViewer({
             )}
             <span className={cn(
               "truncate max-w-[160px]",
-              isCreate ? "text-emerald-600 dark:text-emerald-400" : "text-emerald-600 dark:text-emerald-400"
+              "text-success"
             )}>
               {!isCreate && '← '}{newVal}
             </span>
