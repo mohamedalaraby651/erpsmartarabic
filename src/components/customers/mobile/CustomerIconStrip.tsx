@@ -32,7 +32,7 @@ const stripIcons = [
 ] as const;
 
 export const CustomerIconStrip = memo(function CustomerIconStrip({
-  activeSection, onSectionChange,
+  activeSection, onSectionChange, badges,
 }: CustomerIconStripProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
