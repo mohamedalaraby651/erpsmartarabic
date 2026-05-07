@@ -125,9 +125,16 @@ export const CustomerMobileView = memo(function CustomerMobileView({
         ))}
       </div>
 
-      {/* Infinite scroll sentinel */}
-      <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
-        {isFetchingNextPage && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+      {/* Infinite scroll sentinel — skeleton أثناء جلب المزيد */}
+      <div ref={observerRef} className="mt-3" aria-hidden={!isFetchingNextPage}>
+        {isFetchingNextPage ? (
+          <div className="space-y-2.5" role="status" aria-live="polite" aria-label="جارٍ تحميل المزيد">
+            <span className="sr-only">جارٍ تحميل المزيد من العملاء…</span>
+            <CustomerMobileSkeleton count={2} showSummary={false} showSortBar={false} />
+          </div>
+        ) : (
+          <div className="h-6" />
+        )}
       </div>
 
       {!hasNextPage && data.length > 0 && (
