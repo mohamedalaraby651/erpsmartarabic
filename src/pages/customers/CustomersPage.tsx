@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useInfiniteCustomers } from "@/hooks/customers/useInfiniteCustomers";
@@ -65,7 +66,7 @@ const CustomersPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
 
-  const [sortConfig, setSortConfig] = useNavigationState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
+  const [sortConfig, setSortConfig] = usePersistentState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
   const requestSort = useCallback((key: string) => {
     setSortConfig((() => {
       const current = sortConfig;
@@ -77,7 +78,7 @@ const CustomersPage = () => {
     })());
   }, [sortConfig, setSortConfig]);
 
-  const [quickFilter, setQuickFilter] = useNavigationState<string | null>('customers_quick_filter', null);
+  const [quickFilter, setQuickFilter] = usePersistentState<string | null>('customers_quick_filter', null);
 
   const resetAllQuickFilters = useCallback(() => {
     filters.setStatusFilter('all');

@@ -1,19 +1,48 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 
+const STORAGE_KEY = "lov_customers_filters_v1";
+
+interface PersistedFilters {
+  q?: string;
+  type?: string;
+  vip?: string;
+  gov?: string;
+  status?: string;
+  cat?: string;
+  noComm?: string;
+  inactive?: string;
+}
+
+function loadPersisted(): PersistedFilters {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as PersistedFilters) : {};
+  } catch { return {}; }
+}
+
+function savePersisted(data: PersistedFilters) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch { /* quota */ }
+}
+
 export function useCustomerFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  // Initialize from URL params
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
-  const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || "all");
-  const [vipFilter, setVipFilter] = useState(searchParams.get('vip') || "all");
-  const [governorateFilter, setGovernorateFilter] = useState(searchParams.get('gov') || "all");
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || "all");
-  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('cat') || "all");
-  const [noCommDays, setNoCommDays] = useState(searchParams.get('noComm') || "");
-  const [inactiveDays, setInactiveDays] = useState(searchParams.get('inactive') || "");
+
+  // Hydration: URL takes priority (for deep links/sharing); fall back to localStorage.
+  const persistedRef = useRef<PersistedFilters>(loadPersisted());
+  const initial = persistedRef.current;
+  const urlHas = (k: string) => searchParams.has(k);
+
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || initial.q || "");
+  const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || initial.type || "all");
+  const [vipFilter, setVipFilter] = useState(searchParams.get('vip') || initial.vip || "all");
+  const [governorateFilter, setGovernorateFilter] = useState(searchParams.get('gov') || initial.gov || "all");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || initial.status || "all");
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('cat') || initial.cat || "all");
+  const [noCommDays, setNoCommDays] = useState(searchParams.get('noComm') || initial.noComm || "");
+  const [inactiveDays, setInactiveDays] = useState(searchParams.get('inactive') || initial.inactive || "");
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   // Temporary filter state for mobile drawer
@@ -26,6 +55,41 @@ export function useCustomerFilters() {
   const [tempInactiveDays, setTempInactiveDays] = useState("");
 
   const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // On first mount, if URL is empty but we restored from localStorage, push values back to URL
+  // so reload/back keeps a consistent address bar.
+  useEffect(() => {
+    const hasAnyUrl = ['q','type','vip','gov','status','cat','noComm','inactive'].some(urlHas);
+    if (!hasAnyUrl) {
+      const params: Record<string, string> = {};
+      if (searchQuery) params.q = searchQuery;
+      if (typeFilter !== 'all') params.type = typeFilter;
+      if (vipFilter !== 'all') params.vip = vipFilter;
+      if (governorateFilter !== 'all') params.gov = governorateFilter;
+      if (statusFilter !== 'all') params.status = statusFilter;
+      if (categoryFilter !== 'all') params.cat = categoryFilter;
+      if (noCommDays) params.noComm = noCommDays;
+      if (inactiveDays) params.inactive = inactiveDays;
+      if (Object.keys(params).length > 0) {
+        setSearchParams(params, { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist every change to localStorage
+  useEffect(() => {
+    savePersisted({
+      q: searchQuery || undefined,
+      type: typeFilter !== 'all' ? typeFilter : undefined,
+      vip: vipFilter !== 'all' ? vipFilter : undefined,
+      gov: governorateFilter !== 'all' ? governorateFilter : undefined,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      cat: categoryFilter !== 'all' ? categoryFilter : undefined,
+      noComm: noCommDays || undefined,
+      inactive: inactiveDays || undefined,
+    });
+  }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays]);
 
   // Sync filters to URL
   const syncToUrl = useCallback((overrides: Record<string, string> = {}) => {
@@ -74,6 +138,7 @@ export function useCustomerFilters() {
     setNoCommDays('');
     setInactiveDays('');
     setSearchParams({}, { replace: true });
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
   }, [setSearchParams]);
 
   const openDrawerWithCurrentValues = useCallback(() => {
