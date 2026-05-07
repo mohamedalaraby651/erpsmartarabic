@@ -24,11 +24,22 @@ export const fmtQty = (n: number): string => {
 
 export interface OverdrawContext {
   productName?: string;
+  productSku?: string;
   requested: number;
   available: number;
   originalQty?: number;
   alreadyReturned?: number;
   source?: 'client' | 'trigger' | 'precheck';
+}
+
+/** Build the canonical product label: «Name (SKU)» / «Name» / «(SKU)» */
+function buildProductLabel(name?: string, sku?: string): string | null {
+  const n = (name ?? '').trim();
+  const s = (sku ?? '').trim();
+  if (n && s) return `«${n} (${s})»`;
+  if (n) return `«${n}»`;
+  if (s) return `«${s}»`;
+  return null;
 }
 
 /**
@@ -41,8 +52,9 @@ export function formatReturnOverdraw(ctx: OverdrawContext): string {
   const available = round2(ctx.available);
   const diff = round2(Math.max(0, requested - available));
 
-  const head = ctx.productName
-    ? `«${ctx.productName}»: تجاوزت الكمية المتاحة للإرجاع`
+  const label = buildProductLabel(ctx.productName, ctx.productSku);
+  const head = label
+    ? `${label}: تجاوزت الكمية المتاحة للإرجاع`
     : 'تجاوزت الكمية المتاحة للإرجاع';
 
   const main = `المطلوب ${fmtQty(requested)} • المتاح ${fmtQty(available)} • الفرق ${fmtQty(diff)}`;
