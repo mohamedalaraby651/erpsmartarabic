@@ -33,14 +33,22 @@ interface CustomerSmartAlertsProps {
   onSendReminder: () => void;
   onNewInvoice: () => void;
   onContact: () => void;
+  /** Stable key (e.g. customer id) to persist expanded/dismissed state across reloads */
+  persistKey?: string;
 }
 
 export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
   currentBalance, creditLimit, invoices, lastPurchaseDate, lastCommunicationAt,
-  onEditCreditLimit, onSendReminder, onNewInvoice, onContact,
+  onEditCreditLimit, onSendReminder, onNewInvoice, onContact, persistKey,
 }: CustomerSmartAlertsProps) {
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState(false);
+  const scope = persistKey ?? 'global';
+  const [dismissedArr, setDismissedArr] = usePersistentState<string[]>(
+    `smart_alerts_dismissed_${scope}`, [],
+  );
+  const [expanded, setExpanded] = usePersistentState<boolean>(
+    `smart_alerts_expanded_${scope}`, false,
+  );
+  const dismissed = useMemo(() => new Set(dismissedArr), [dismissedArr]);
 
   const alerts = useMemo<AlertItem[]>(() => {
     const list: AlertItem[] = [];
