@@ -414,34 +414,105 @@ const CustomerListCardInner = ({
               </div>
             )}
 
-            {/* Quick actions */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="default"
-                className="flex-1 min-h-11 text-xs font-medium shadow-sm"
-                onClick={(e) => { e.stopPropagation(); onNavigate(customer.id); }}
-              >
-                <Eye className="h-4 w-4 ml-1.5" /> عرض التفاصيل
-              </Button>
-              {onNewInvoice && (
-                <Button
-                  variant="outline"
-                  className="flex-1 min-h-11 text-xs font-medium"
-                  onClick={(e) => { e.stopPropagation(); onNewInvoice(customer.id); }}
-                >
-                  <FileText className="h-4 w-4 ml-1.5" /> فاتورة
-                </Button>
-              )}
-              {onNewPayment && (
-                <Button
-                  variant="outline"
-                  className="flex-1 min-h-11 text-xs font-medium"
-                  onClick={(e) => { e.stopPropagation(); onNewPayment(customer.id); }}
-                >
-                  <CreditCard className="h-4 w-4 ml-1.5" /> دفعة
-                </Button>
-              )}
-            </div>
+            {/* Quick actions — proper menu semantics */}
+            <QuickActionsMenu
+              customerId={customer.id}
+              expanded={expanded}
+              onNavigate={onNavigate}
+              onNewInvoice={onNewInvoice}
+              onNewPayment={onNewPayment}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+    </div>
+  );
+};
+
+interface QuickActionsMenuProps {
+  customerId: string;
+  expanded: boolean;
+  onNavigate: (id: string) => void;
+  onNewInvoice?: (id: string) => void;
+  onNewPayment?: (id: string) => void;
+}
+
+function QuickActionsMenu({ customerId, expanded, onNavigate, onNewInvoice, onNewPayment }: QuickActionsMenuProps) {
+  const items = React.useMemo(() => {
+    const list: Array<{ id: string; label: string; icon: React.ElementType; variant: 'default' | 'outline'; onSelect: () => void }> = [
+      { id: 'view', label: 'عرض التفاصيل', icon: Eye, variant: 'default', onSelect: () => onNavigate(customerId) },
+    ];
+    if (onNewInvoice) list.push({ id: 'invoice', label: 'فاتورة', icon: FileText, variant: 'outline', onSelect: () => onNewInvoice(customerId) });
+    if (onNewPayment) list.push({ id: 'payment', label: 'دفعة', icon: CreditCard, variant: 'outline', onSelect: () => onNewPayment(customerId) });
+    return list;
+  }, [customerId, onNavigate, onNewInvoice, onNewPayment]);
+
+  const menuId = React.useId();
+  const itemId = (id: string) => `${menuId}-${id}`;
+  const [activeIdx, setActiveIdx] = React.useState(0);
+  const itemRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
+
+  // Reset active item when collapsed/expanded or items change
+  React.useEffect(() => { setActiveIdx(0); }, [expanded, items.length]);
+
+  const focusItem = useCallback((idx: number) => {
+    const clamped = (idx + items.length) % items.length;
+    setActiveIdx(clamped);
+    itemRefs.current[clamped]?.focus();
+  }, [items.length]);
+
+  const handleKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const isRTL = document.documentElement.dir === 'rtl';
+    const next = isRTL ? 'ArrowLeft' : 'ArrowRight';
+    const prev = isRTL ? 'ArrowRight' : 'ArrowLeft';
+    if (e.key === next) { e.preventDefault(); focusItem(activeIdx + 1); }
+    else if (e.key === prev) { e.preventDefault(); focusItem(activeIdx - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); focusItem(0); }
+    else if (e.key === 'End') { e.preventDefault(); focusItem(items.length - 1); }
+    else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      items[activeIdx]?.onSelect();
+    }
+  };
+
+  return (
+    <div
+      role="menu"
+      aria-orientation="horizontal"
+      aria-label="إجراءات سريعة للعميل"
+      aria-activedescendant={items[activeIdx] ? itemId(items[activeIdx].id) : undefined}
+      tabIndex={-1}
+      onKeyDown={handleKey}
+      className="flex items-center gap-2 focus-visible:outline-none"
+    >
+      {items.map((it, idx) => {
+        const Icon = it.icon;
+        const active = idx === activeIdx;
+        return (
+          <Button
+            key={it.id}
+            id={itemId(it.id)}
+            ref={(el) => { itemRefs.current[idx] = el; }}
+            role="menuitem"
+            tabIndex={active ? 0 : -1}
+            data-active={active || undefined}
+            variant={it.variant}
+            className={cn(
+              'flex-1 min-h-11 text-xs font-medium',
+              it.variant === 'default' && 'shadow-sm',
+              active && 'ring-2 ring-ring ring-offset-1',
+            )}
+            onFocus={() => setActiveIdx(idx)}
+            onClick={(e) => { e.stopPropagation(); it.onSelect(); }}
+          >
+            <Icon className="h-4 w-4 ml-1.5" /> {it.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
           </div>
         </div>
       </div>
