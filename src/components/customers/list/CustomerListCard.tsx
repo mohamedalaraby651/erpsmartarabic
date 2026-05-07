@@ -513,13 +513,6 @@ function QuickActionsMenu({ customerId, expanded, onNavigate, onNewInvoice, onNe
     </div>
   );
 }
-          </div>
-        </div>
-      </div>
-    </Card>
-    </div>
-  );
-};
 
 const CustomerListCard = memo(CustomerListCardInner);
 export default CustomerListCard;
