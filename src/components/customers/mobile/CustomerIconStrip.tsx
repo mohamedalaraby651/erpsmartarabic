@@ -13,6 +13,8 @@ export type MobileSectionId =
 interface CustomerIconStripProps {
   activeSection: MobileSectionId;
   onSectionChange: (section: MobileSectionId) => void;
+  /** Optional badge counts per section (e.g. overdue invoices, upcoming reminders) */
+  badges?: Partial<Record<MobileSectionId, number>>;
 }
 
 const stripIcons = [
