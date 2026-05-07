@@ -91,7 +91,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoice_items')
-        .select('id, product_id, quantity, unit_price, total_price, products:product_id(name)')
+        .select('id, product_id, quantity, unit_price, total_price, products:product_id(name, sku)')
         .eq('invoice_id', invoiceId);
       if (error) throw error;
       return (data ?? []) as unknown as InvoiceItemRow[];
