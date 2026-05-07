@@ -458,17 +458,17 @@ const CustomerDetailsPage = () => {
               <ChartErrorBoundary title="المشتريات والمدفوعات">
                 <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
               </ChartErrorBoundary>
-              <LazyOnVisible minHeight={300}>
+              <LazyOnVisible minHeight={300} placeholder={<ChartSkeleton variant="donut" height={260} />}>
                 <ChartErrorBoundary title="أعمار الديون">
                   <AgingDonutChart customerId={id!} />
                 </ChartErrorBoundary>
               </LazyOnVisible>
-              <LazyOnVisible minHeight={300}>
+              <LazyOnVisible minHeight={300} placeholder={<ChartSkeleton variant="line" height={260} />}>
                 <ChartErrorBoundary title="التدفق المالي">
                   <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
                 </ChartErrorBoundary>
               </LazyOnVisible>
-              <LazyOnVisible minHeight={300}>
+              <LazyOnVisible minHeight={300} placeholder={<ChartSkeleton variant="bars" height={260} />}>
                 <ChartErrorBoundary title="المنتجات">
                   <TopProductsChart topProducts={detail.chartData?.top_products} />
                 </ChartErrorBoundary>
