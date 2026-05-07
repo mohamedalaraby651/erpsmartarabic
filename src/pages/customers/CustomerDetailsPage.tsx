@@ -110,7 +110,7 @@ function MobileCustomerView({
   const sectionRef = useRef<HTMLDivElement>(null);
   const [showCompressed, setShowCompressed] = useState(false);
 
-  // Section badges (overdue invoices, unread reminders, etc.)
+  // Section badges (overdue invoices, upcoming reminders)
   const sectionBadges = useMemo(() => {
     const now = Date.now();
     const overdueInvoices = detail.invoices.filter(inv => {
@@ -120,8 +120,9 @@ function MobileCustomerView({
     }).length;
     return {
       invoices: overdueInvoices,
+      reminders: upcomingReminders,
     } as Partial<Record<MobileSectionId, number>>;
-  }, [detail.invoices]);
+  }, [detail.invoices, upcomingReminders]);
 
   useEffect(() => {
     const el = heroRef.current;
