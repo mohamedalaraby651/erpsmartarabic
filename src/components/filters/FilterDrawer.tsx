@@ -1,10 +1,11 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,9 +34,36 @@ export function FilterDrawer({
   activeFiltersCount = 0,
   className,
 }: FilterDrawerProps) {
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      previouslyFocusedRef.current = (document.activeElement as HTMLElement) ?? null;
+    }
+  }, [open]);
+
+  const restoreFocus = () => {
+    const el = previouslyFocusedRef.current;
+    if (el && typeof el.focus === 'function' && document.contains(el)) {
+      // Defer to ensure DOM is settled after close animation
+      requestAnimationFrame(() => el.focus());
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className={cn('w-80 flex flex-col p-0', className)}>
+      <SheetContent
+        side="left"
+        className={cn('w-80 flex flex-col p-0', className)}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          onOpenChange(false);
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          restoreFocus();
+        }}
+      >
         <SheetHeader className="px-4 py-4 border-b">
           <div className="flex items-center justify-between">
             <SheetTitle>{title}</SheetTitle>
@@ -45,6 +73,9 @@ export function FilterDrawer({
               </span>
             )}
           </div>
+          <SheetDescription className="sr-only">
+            استخدم Tab للتنقل بين الحقول، Escape للإغلاق، Enter للتطبيق.
+          </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="flex-1">
