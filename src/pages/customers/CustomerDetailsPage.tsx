@@ -384,6 +384,7 @@ const CustomerDetailsPage = () => {
           onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
           onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
           onContact={handleWhatsApp}
+          persistKey={id}
         />
         <CustomerHealthBadge customerId={id!} />
       </div>
