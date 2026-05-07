@@ -277,6 +277,7 @@ const CustomerListCardInner = ({
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
+        aria-controls={expandedPanelId}
         aria-haspopup="menu"
         aria-label={`${customer.name} — اضغط للتوسيع. أسهم اليمين/اليسار للإجراءات السريعة. Shift+F10 للقائمة.`}
         onKeyDown={handleKeyDown}
