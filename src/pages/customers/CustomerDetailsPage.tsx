@@ -426,7 +426,26 @@ const CustomerDetailsPage = () => {
           </Suspense>
         </Tabs>
       )}
-
+            <TabsContent value="analytics" className="mt-6 space-y-4">
+              <ChartErrorBoundary title="المشتريات والمدفوعات">
+                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
+              </ChartErrorBoundary>
+              <LazyOnVisible minHeight={300}>
+                <ChartErrorBoundary title="أعمار الديون">
+                  <AgingDonutChart customerId={id!} />
+                </ChartErrorBoundary>
+              </LazyOnVisible>
+              <LazyOnVisible minHeight={300}>
+                <ChartErrorBoundary title="التدفق المالي">
+                  <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
+                </ChartErrorBoundary>
+              </LazyOnVisible>
+              <LazyOnVisible minHeight={300}>
+                <ChartErrorBoundary title="المنتجات">
+                  <TopProductsChart topProducts={detail.chartData?.top_products} />
+                </ChartErrorBoundary>
+              </LazyOnVisible>
+            </TabsContent>
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
     </div>
