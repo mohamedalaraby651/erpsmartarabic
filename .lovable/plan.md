@@ -1,115 +1,57 @@
-# تحسين صفحة تفاصيل العميل (Mobile + Desktop)
+# ربط الفواتير والمرتجعات داخل صفحة العميل
 
-## المشاكل المكتشفة
+## الهدف
+عرض سجل الفواتير والمرتجعات (إشعارات دائنة) مرتبطين مباشرة في صفحة العميل، مع ملخص أرصدة موحّد يربط: الإجمالي ↔ المدفوع ↔ المرتجعات ↔ الصافي المستحق ↔ الرصيد الحالي.
 
-### A. تكرار وتشتيت بصري
-1. **بطاقتا "إجمالي المستحق" و"الرصيد الحالي" تعرضان نفس القيمة (6,740)** في الموبايل — بدون رصيد دائن أو خصومات تكون متطابقتين دائماً. تكرار يستهلك مساحة عمودية ثمينة.
-2. **شريط Smart Alerts + Health Badge فوق البطاقات** يقدّم نفس المعلومة (نشاط/مخاطر) المعروضة في الـ KPI Cards وأسفلها، فيتضاعف العرض.
-3. **اسم العميل يظهر 4 مرات** على الموبايل: بريد التطبيق، MobileDetailHeader، CompressedHeader، Hero. عند Scroll يصبح 3 معاً.
+## ما سيتم بناؤه
 
-### B. هرمية بصرية مكسورة
-4. **Avatar ضخم جداً (≈ 200px)** يأخذ ثلث الشاشة قبل أي معلومة قابلة للتنفيذ.
-5. **الإجراءات الأساسية (فاتورة/دفعة) أسفل الإجراءات الثانوية (واتساب/اتصال)** — العكس هو الصحيح.
-6. **زر "..." بدون تسمية واضحة** — يخالف معيار 44px touch target ولا يوضّح ما بداخله.
+### 1. مكوّن جديد: `InvoicesReturnsSummary`
+ملف: `src/components/customers/details/InvoicesReturnsSummary.tsx`
 
-### C. التنقل والـ Tabs
-7. **شريط الأيقونات السفلي يحوي 9 أقسام بدون مجموعات** — يجب التمرير الأفقي بدون تلميح بصري.
-8. **لا يوجد Badge على الأقسام التي تحوي عناصر نشطة** (فواتير غير مدفوعة، تذكيرات قادمة، تنبيهات حرجة).
-9. **`activeTab` لا يُحفظ في URL على الموبايل** (يحفظ فقط في desktop) → الرجوع من تفاصيل فاتورة يعيدنا للقسم الافتراضي.
-10. **`useEffect` للـ tab sync ينقص `detail.setActiveTab` في deps** → تحذير ESLint محتمل وعدم استقرار.
+شريط ملخص متجاوب (4 بطاقات gradient على شبكة 2×2 موبايل / 4 أعمدة ديسكتوب):
 
-### D. أداء
-11. **كل المخططات (Aging/CashFlow/TopProducts) في تبويب التحليلات تُحمَّل دفعة واحدة** بدون انتظار ظهور التبويب.
-12. **`AgingDonutChart` و `CustomerAgingReport` يستخدمان نفس البيانات** لكن يُستدعى الاستعلام مرتين في تبويبين منفصلين.
-13. **`CustomerSmartAlerts` يحسب التنبيهات في كل render** بدون memoization واضح.
+| البطاقة | المصدر | الملاحظات |
+|---|---|---|
+| إجمالي الفواتير | `Σ invoices.total_amount` | عدد الفواتير |
+| المدفوع | `Σ invoices.paid_amount` | نسبة السداد |
+| المرتجعات | `Σ credit_notes.amount` (status ≠ cancelled) | عدد + نسبة من الإجمالي |
+| الصافي المستحق | إجمالي − مدفوع − مرتجعات | يقارن بـ `current_balance` |
 
-### E. إمكانية الوصول (A11y)
-14. **زر "..." بدون `aria-label`**.
-15. **Icon Strip بدون `role="tablist"`** ولا keyboard navigation بين الأقسام.
-16. **شارة الحالة (نشط/غير نشط) لون فقط** بدون نص بديل لقرّاء الشاشة.
+- استخدام التوكنز الدلالية (`primary/emerald/amber/destructive`) فقط — بدون ألوان مباشرة.
+- شريط تنبيه أصفر إذا اختلف الصافي عن `current_balance` بأكثر من 0.5 ج.م (للإشارة إلى الحاجة لإعادة احتساب الرصيد).
+- جميع الحسابات بـ `Math.round(v*100)/100` (معيار الدقة المالية).
+- `role="region"` + `aria-label` للقارئات الشاشية.
 
-### F. تجربة العميل (UX)
-17. **لا يوجد زر "نسخ رقم الهاتف"** مع أن الرقم معروض.
-18. **لا يوجد إجراء "تذكير سريع" من أعلى الصفحة** — يتطلب 3 نقرات للوصول.
-19. **عند تجاوز حد الائتمان**، البار يصل 100% بدون لون تحذير تدريجي قبل ذلك.
-20. **حقول مفقودة بصرياً**: تاريخ الميلاد، فئة العميل، نوع البزنس — مدفونة في "بيانات أساسية" بدون اختصار في الهيدر.
+### 2. دمج الملخص في تبويب الفواتير (ديسكتوب)
+ملف: `src/components/customers/tabs/CustomerTabInvoices.tsx`
 
----
+- استقبال props جديدة: `creditNotes` و`currentBalance`.
+- استبدال شريط الملخص الحالي (داخل `CardContent`) بمكوّن `InvoicesReturnsSummary`.
+- إضافة قسم «المرتجعات المرتبطة» أسفل قائمة الفواتير، يعرض آخر 3 إشعارات دائنة مع رابط «عرض الكل» يفتح تبويب credit-notes.
 
-## التحسينات المقترحة
+### 3. دمج الملخص في عرض الموبايل
+ملف: `src/pages/customers/CustomerDetailsPage.tsx` (داخل `MobileCustomerView`)
 
-### 1) Header موبايل مضغوط ومحدّث
-- تقليص Avatar من ≈200px إلى **96px** مع KPI inline بجانبه (ميزان أفقي بدل عمودي).
-- دمج بطاقتي "المستحق" و"الرصيد" في **بطاقة واحدة** تعرض الدائن/المدين بأيقونة سهم.
-- نقل الإجراءات الأساسية (فاتورة/دفعة) **أعلى** الثانوية، مع عرض صف واحد بـ 3 أزرار رئيسية + قائمة "المزيد" (`Sheet`) للأزرار الثانوية مع `aria-label`.
+- تمرير `currentBalance` إلى `CustomerTabInvoices`.
+- عرض `InvoicesReturnsSummary` فوق `CustomerTabInvoices` و`CustomerTabCreditNotes` مرة واحدة عند اختيار قسم `invoices`.
 
-### 2) Icon Strip محسّن
-- تجميع الأقسام في **3 مجموعات بصرية** بفواصل خفيفة: مالي (فواتير/مدفوعات/كشف/أعمار) — مبيعات (عروض/أوامر/تحليلات) — معلومات (بيانات/ملاحظات/مرفقات/تذكرات/تواصل).
-- إضافة **Badge عددية** على كل قسم (عدد التنبيهات، الفواتير المتأخرة، التذكيرات القادمة).
-- `role="tablist"` + `aria-selected` + دعم Arrow keys.
-- Sticky مع shadow عند الـ scroll (موجود جزئياً، يحتاج ضبط).
+### 4. تمرير البيانات من الصفحة
+ملف: `src/pages/customers/CustomerDetailsPage.tsx`
 
-### 3) حفظ القسم النشط في الـ URL على الموبايل
-- استخدام `?section=invoices` بنفس آلية desktop tabs.
-- `usePersistentState` (متاح من المهمة السابقة) كـ fallback.
+في كل من النداءات الديسكتوب والموبايل لـ `CustomerTabInvoices`، تمرير:
+```
+creditNotes={detail.creditNotes}
+currentBalance={detail.currentBalance}
+```
+(البيانات متوفرة بالفعل في `useCustomerDetail` — لا حاجة لاستعلام جديد).
 
-### 4) Smart Alerts مدمج ومضغوط
-- دمج `CustomerSmartAlerts` و `CustomerHealthBadge` في شريط واحد قابل للطي افتراضياً (فقط أعلى تنبيه يظهر، الباقي في "X+").
-- `useMemo` للـ alerts.
+## التفاصيل التقنية
+- لا توجد تغييرات في قاعدة البيانات أو RLS — الاستعلامات قائمة (`useCustomerDetail` يجلب `invoices` و`creditNotes` فعلياً).
+- لا تغييرات على edge functions.
+- يحترم RTL: استخدام `gap` و`grid` بدون `left/right` صريحة.
+- يحترم mobile-first: 44px touch targets محفوظة في الأزرار الموجودة.
 
-### 5) أداء المخططات
-- استخدام `IntersectionObserver` لتأجيل تحميل كل chart حتى يقترب من الـ viewport.
-- مشاركة استعلام Aging بين `AgingDonutChart` و `CustomerAgingReport` عبر نفس `queryKey`.
-
-### 6) تحسينات تفاعلية صغيرة
-- زر **نسخ الهاتف** بجوار الرقم.
-- **تذكير سريع** بزر مباشر في Header (بجوار واتساب).
-- **بار ائتمان متدرّج**: أخضر < 60%، أصفر 60-85%، أحمر > 85% (semantic tokens موجودة).
-- **Long-press على KPI Card** يفتح كشف الحساب مفلتراً على نفس الفترة.
-
-### 7) إمكانية الوصول
-- `aria-label` لزر "..." → "خيارات إضافية".
-- نص بديل لشارة الحالة (`<span class="sr-only">`).
-- `role="tablist"` + keyboard nav للـ Icon Strip.
-- تباين WCAG AA على نص "ممتاز (100/100)".
-
-### 8) إصلاح bugs صغيرة
-- إضافة `detail.setActiveTab` و `setSearchParams` لـ deps في `useEffect` الخاص بـ urlTab.
-- `mobileSection` يجب أن يستعيد آخر قسم من URL عند تحميل الصفحة.
-- إزالة استعلام Aging المكرر.
-
----
-
-## نطاق التنفيذ المقترح (موزّع على 3 مراحل)
-
-**المرحلة 1 — أساسية (سريعة، تأثير عالي):**
-- دمج بطاقات KPI المكررة
-- ترتيب الإجراءات الأساسية أولاً
-- حفظ `mobileSection` في URL + استعادته
-- إصلاح deps في useEffect
-- aria-label للأزرار غير الموسومة
-
-**المرحلة 2 — هرمية وأداء:**
-- تصغير Avatar الموبايل + بناء Header مضغوط جديد
-- Lazy-load المخططات بـ IntersectionObserver
-- Memo لـ CustomerSmartAlerts
-- توحيد استعلام Aging
-
-**المرحلة 3 — تنقل متقدم:**
-- Icon Strip بمجموعات + Badges + tablist a11y
-- شريط تنبيهات قابل للطي
-- نسخ الهاتف + تذكير سريع + long-press على KPI
-- بار ائتمان متدرج
-
-## ملفات ستُعدَّل
-
-- `src/pages/customers/CustomerDetailsPage.tsx`
-- `src/components/customers/mobile/CustomerMobileProfile.tsx`
-- `src/components/customers/mobile/CustomerCompressedHeader.tsx`
-- `src/components/customers/mobile/CustomerIconStrip.tsx`
-- `src/components/customers/details/CustomerSmartAlerts.tsx`
-- `src/components/customers/details/CustomerKPICards.tsx`
-- `src/components/customers/charts/AgingDonutChart.tsx`
-- `src/components/customers/details/CustomerAgingReport.tsx`
-
-أخبرني بأي **مرحلة** أبدأ (أو الكل دفعة واحدة)، وهل تفضّل أي تحسين معين قبل غيره؟
+## الملفات المتأثرة
+- إضافة: `src/components/customers/details/InvoicesReturnsSummary.tsx`
+- تعديل: `src/components/customers/tabs/CustomerTabInvoices.tsx` (props + استخدام الملخص + قسم مرتجعات مختصر)
+- تعديل: `src/pages/customers/CustomerDetailsPage.tsx` (تمرير props جديدة في موضعين: ديسكتوب + موبايل)
