@@ -143,7 +143,7 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
               {alert.action}
             </Button>
             <button
-              onClick={() => setDismissed(prev => new Set(prev).add(alert.id))}
+              onClick={() => setDismissedArr(prev => prev.includes(alert.id) ? prev : [...prev, alert.id])}
               className="shrink-0 p-0.5 rounded hover:bg-background/50"
               aria-label="إخفاء التنبيه"
             >
