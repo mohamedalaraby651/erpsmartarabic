@@ -164,7 +164,7 @@ function MobileCustomerView({
           onNewPayment={onNewPayment}
           onNewQuotation={onNewQuotation}
           onNewOrder={onNewOrder}
-          onNewCreditNote={() => selectSection('invoices')}
+          onNewCreditNote={onNewCreditNote}
           onToggleActive={onToggleActive}
         />
       </div>
