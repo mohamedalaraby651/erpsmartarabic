@@ -86,34 +86,47 @@ export function formatInvalidQty(reason: 'nan' | 'negative' | 'zero' | 'none-ava
  *   "Quantity X exceeds returnable amount Y for invoice item Z (original: O, already returned: A)"
  *   "Item X: returning R + already-returned A exceeds sold S"
  */
-export function parseDbOverdraw(raw: string): string | null {
-  // Trigger format (with extra context)
+export interface DbOverdrawResolver {
+  /** Resolve a product label (name + sku) for an invoice item id, when known */
+  resolveProduct?: (invoiceItemId: string) => { name?: string; sku?: string } | undefined;
+}
+
+export function parseDbOverdraw(raw: string, resolver?: DbOverdrawResolver): string | null {
+  // Trigger format (with extra context). Capture the invoice item id to resolve the product.
   const m1 = raw.match(
-    /Quantity\s+([\d.]+)\s+exceeds returnable amount\s+([\d.]+)[^()]*(?:\(original:\s*([\d.]+),\s*already returned:\s*([\d.]+)\))?/i,
+    /Quantity\s+([\d.]+)\s+exceeds returnable amount\s+([\d.]+)\s+for invoice item\s+(\S+?)(?=\s|$|\()(?:[^()]*\(original:\s*([\d.]+),\s*already returned:\s*([\d.]+)\))?/i,
   );
   if (m1) {
+    const itemId = m1[3]?.replace(/[.,;:]+$/, '');
+    const product = itemId ? resolver?.resolveProduct?.(itemId) : undefined;
     return formatReturnOverdraw({
       requested: Number(m1[1]),
       available: Number(m1[2]),
-      originalQty: m1[3] ? Number(m1[3]) : undefined,
-      alreadyReturned: m1[4] ? Number(m1[4]) : undefined,
+      originalQty: m1[4] ? Number(m1[4]) : undefined,
+      alreadyReturned: m1[5] ? Number(m1[5]) : undefined,
+      productName: product?.name,
+      productSku: product?.sku,
       source: 'trigger',
     });
   }
 
   // Pre-confirm RPC format
   const m2 = raw.match(
-    /Item\s+\S+:\s+returning\s+([\d.]+)\s+\+\s+already-returned\s+([\d.]+)\s+exceeds sold\s+([\d.]+)/i,
+    /Item\s+(\S+):\s+returning\s+([\d.]+)\s+\+\s+already-returned\s+([\d.]+)\s+exceeds sold\s+([\d.]+)/i,
   );
   if (m2) {
-    const requested = Number(m2[1]);
-    const already = Number(m2[2]);
-    const sold = Number(m2[3]);
+    const itemId = m2[1]?.replace(/[.,;:]+$/, '');
+    const product = itemId ? resolver?.resolveProduct?.(itemId) : undefined;
+    const requested = Number(m2[2]);
+    const already = Number(m2[3]);
+    const sold = Number(m2[4]);
     return formatReturnOverdraw({
       requested,
       available: Math.max(0, sold - already),
       originalQty: sold,
       alreadyReturned: already,
+      productName: product?.name,
+      productSku: product?.sku,
       source: 'precheck',
     });
   }
