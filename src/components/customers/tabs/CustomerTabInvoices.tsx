@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Wallet, AlertCircle, Search, CreditCard } from "lucide-react";
+import { FileText, Plus, Search, CreditCard, Undo2, ArrowLeft } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { ServerPagination } from "@/components/shared/ServerPagination";
+import { InvoicesReturnsSummary } from "@/components/customers/details/InvoicesReturnsSummary";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
+type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   paid: { label: 'مدفوع', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' },
@@ -25,6 +27,10 @@ interface CustomerTabInvoicesProps {
   customerId: string;
   totalPaymentsFromLedger?: number;
   onQuickPay?: (invoiceId: string) => void;
+  // Linked returns + balance for unified summary
+  creditNotes?: CreditNote[];
+  currentBalance?: number;
+  onViewAllReturns?: () => void;
   // Server pagination props (optional — uses client pagination as fallback)
   paginatedData?: { data: Invoice[]; count: number };
   currentPage?: number;
@@ -37,6 +43,9 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   customerId,
   totalPaymentsFromLedger,
   onQuickPay,
+  creditNotes = [],
+  currentBalance = 0,
+  onViewAllReturns,
   paginatedData,
   currentPage = 1,
   pageSize = 20,
@@ -79,12 +88,16 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
 
   React.useEffect(() => { setClientPage(1); }, [statusFilter, searchQuery]);
 
-  const summary = useMemo(() => {
-    const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
+  const unlinkedPayments = useMemo(() => {
+    if (totalPaymentsFromLedger == null) return 0;
     const totalPaid = invoices.reduce((s, i) => s + Number(i.paid_amount || 0), 0);
-    const unlinkedPayments = totalPaymentsFromLedger != null ? Math.round((totalPaymentsFromLedger - totalPaid) * 100) / 100 : 0;
-    return { totalInvoiced, totalPaid, outstanding: totalInvoiced - totalPaid, unlinkedPayments };
+    return Math.round((totalPaymentsFromLedger - totalPaid) * 100) / 100;
   }, [invoices, totalPaymentsFromLedger]);
+
+  const recentReturns = useMemo(
+    () => creditNotes.filter((c) => c.status !== 'cancelled').slice(0, 3),
+    [creditNotes],
+  );
 
   return (
     <Card>
@@ -109,28 +122,17 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
           </div>
         ) : (
           <>
-            {/* Summary Bar */}
-            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-4 p-3 mb-4 rounded-lg bg-muted/50 border text-sm">
-              <div className="flex items-center gap-1.5">
-                <Wallet className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">الإجمالي:</span>
-                <span className="font-bold">{summary.totalInvoiced.toLocaleString()} ج.م</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">المدفوع:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{summary.totalPaid.toLocaleString()} ج.م</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <AlertCircle className="h-4 w-4 text-destructive" />
-                <span className="text-muted-foreground">المتبقي:</span>
-                <span className="font-bold text-destructive">{summary.outstanding.toLocaleString()} ج.م</span>
-              </div>
-              {summary.unlinkedPayments > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  <span className="text-xs text-amber-600 dark:text-amber-400">
-                    {summary.unlinkedPayments.toLocaleString()} ج.م غير مرتبطة
-                  </span>
+            {/* Unified summary: invoices ↔ returns ↔ balance */}
+            <div className="mb-4 space-y-2">
+              <InvoicesReturnsSummary
+                invoices={invoices}
+                creditNotes={creditNotes}
+                currentBalance={currentBalance}
+              />
+              {unlinkedPayments > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 px-1">
+                  <span className="font-medium">{unlinkedPayments.toLocaleString()} ج.م</span>
+                  <span className="text-muted-foreground">دفعات غير مرتبطة بفواتير</span>
                 </div>
               )}
             </div>
@@ -233,6 +235,46 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 hasNextPage={activePage < totalPages}
                 hasPrevPage={activePage > 1}
               />
+            )}
+
+            {/* Linked returns (credit notes) — quick access */}
+            {recentReturns.length > 0 && (
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                    <Undo2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    المرتجعات المرتبطة
+                    <span className="text-xs text-muted-foreground font-normal">({creditNotes.length})</span>
+                  </h4>
+                  {onViewAllReturns && creditNotes.length > recentReturns.length && (
+                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={onViewAllReturns}>
+                      عرض الكل
+                      <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  {recentReturns.map((cn) => (
+                    <button
+                      key={cn.id}
+                      type="button"
+                      onClick={() => navigate(`/credit-notes/${cn.id}`)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-lg border hover:bg-muted/50 transition-colors text-right"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{cn.credit_note_number}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(cn.created_at).toLocaleDateString('ar-EG')}
+                          {cn.reason ? ` • ${cn.reason}` : ''}
+                        </p>
+                      </div>
+                      <span className="text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums shrink-0">
+                        −{Number(cn.amount).toLocaleString()} ج.م
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </>
         )}
