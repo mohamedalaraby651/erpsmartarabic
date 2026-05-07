@@ -166,6 +166,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     if (requested > line.returnable) {
       return formatReturnOverdraw({
         productName: line.product_name,
+        productSku: line.product_sku,
         requested,
         available: line.returnable,
         originalQty: line.original_qty,
