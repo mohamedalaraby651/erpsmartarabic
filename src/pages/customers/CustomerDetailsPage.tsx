@@ -13,7 +13,8 @@ import {
 import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
-import { useCustomerDetail, useCustomerNavigation } from "@/hooks/customers";
+import { useCustomerDetail, useCustomerNavigation, useUpcomingReminders } from "@/hooks/customers";
+import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
 import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
 import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
 import { CustomerPinnedNote } from "@/components/customers/details/CustomerPinnedNote";
