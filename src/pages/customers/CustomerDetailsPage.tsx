@@ -23,6 +23,7 @@ import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMob
 import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStrip";
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
+import { CustomerQuickSuggestions } from "@/components/customers/mobile/CustomerQuickSuggestions";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
@@ -167,7 +168,7 @@ function MobileCustomerView({
       <div className="sticky top-0 z-30 -mx-3 px-3 bg-background pb-1 space-y-1.5">
         <div className={cn(
           "transition-all duration-200 overflow-hidden",
-          showCompressed ? "max-h-40 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+          showCompressed ? "max-h-20 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
         )}>
           <CustomerCompressedHeader
             customer={customer}
@@ -183,7 +184,12 @@ function MobileCustomerView({
       </div>
 
       <div ref={sectionRef}>
-        {mobileSection !== 'none' && (
+        {mobileSection === 'none' ? (
+          <CustomerQuickSuggestions
+            overdueCount={sectionBadges.invoices ?? 0}
+            onPick={(id) => selectSection(id)}
+          />
+        ) : (
           <Suspense fallback={<TabSkeleton />}>
             {mobileSection === 'invoices' && (
               <div className="space-y-4">

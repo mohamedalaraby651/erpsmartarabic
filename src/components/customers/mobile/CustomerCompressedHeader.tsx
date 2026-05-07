@@ -20,45 +20,32 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
   onNewInvoice, onNewPayment, onCall, onMoreActions,
 }: CustomerCompressedHeaderProps) {
   return (
-    <div className="bg-card border rounded-xl shadow-sm p-3 space-y-2">
-      {/* Row 1: Avatar + Name + Balance */}
-      <div className="flex items-center gap-3">
-        <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="sm" />
-        <div className="flex-1 min-w-0">
-          <h2 className="text-sm font-bold truncate">{customer.name}</h2>
-          <p className="text-xs text-muted-foreground">
-            {customer.customer_type === 'company' ? 'شركة' : customer.customer_type === 'farm' ? 'مزرعة' : 'فرد'}
-          </p>
-        </div>
-        <div className="text-left shrink-0">
-          <p className="text-[10px] text-muted-foreground">الرصيد</p>
-          <p className={cn("text-sm font-bold tabular-nums", balanceIsDebit ? "text-destructive" : "text-emerald-600 dark:text-emerald-400")}>
-            {currentBalance.toLocaleString()} <span className="text-[10px]">ج.م</span>
-          </p>
-        </div>
+    <div className="bg-card/85 backdrop-blur-md border rounded-xl shadow-sm p-2 flex items-center gap-2">
+      <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="sm" />
+      <div className="flex-1 min-w-0">
+        <h2 className="text-sm font-bold truncate leading-tight">{customer.name}</h2>
+        <p className={cn("text-[11px] font-semibold tabular-nums leading-tight", balanceIsDebit ? "text-destructive" : "text-success")}>
+          {currentBalance.toLocaleString()} <span className="text-[9px] text-muted-foreground font-normal">ج.م</span>
+        </p>
       </div>
-
-      {/* Row 2: Quick action buttons */}
-      <div className="flex items-center gap-1.5">
-        <Button size="sm" className="flex-1 min-h-9 text-xs" onClick={onNewInvoice}>
-          <FileText className="h-3.5 w-3.5 ml-1" />فاتورة
+      <Button size="icon" className="h-9 w-9 shrink-0" onClick={onNewInvoice} aria-label="فاتورة جديدة">
+        <FileText className="h-4 w-4" />
+      </Button>
+      {onNewPayment && (
+        <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onNewPayment} aria-label="دفعة جديدة">
+          <CreditCard className="h-4 w-4" />
         </Button>
-        {onNewPayment && (
-          <Button size="sm" variant="outline" className="flex-1 min-h-9 text-xs" onClick={onNewPayment}>
-            <CreditCard className="h-3.5 w-3.5 ml-1" />دفعة
-          </Button>
-        )}
-        {onCall && customer.phone && (
-          <Button size="icon" variant="outline" className="min-h-9 min-w-9 shrink-0" asChild>
-            <a href={`tel:${customer.phone}`}>
-              <Phone className="h-3.5 w-3.5" />
-            </a>
-          </Button>
-        )}
-        <Button size="icon" variant="outline" className="min-h-9 min-w-9 shrink-0" onClick={onMoreActions}>
-          <MoreHorizontal className="h-3.5 w-3.5" />
+      )}
+      {onCall && customer.phone && (
+        <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" asChild aria-label={`اتصال بـ ${customer.phone}`}>
+          <a href={`tel:${customer.phone}`}>
+            <Phone className="h-4 w-4" />
+          </a>
         </Button>
-      </div>
+      )}
+      <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onMoreActions} aria-label="إجراءات أخرى">
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
     </div>
   );
 });

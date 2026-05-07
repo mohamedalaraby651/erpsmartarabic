@@ -74,15 +74,25 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             <p className="text-sm text-muted-foreground">
               {customer.customer_type === 'company' ? 'شركة' : customer.customer_type === 'farm' ? 'مزرعة' : 'فرد'}
             </p>
-            <div className="flex items-center justify-center gap-2 mt-1">
+            <div className="flex items-center justify-center gap-2 mt-1.5">
               {onToggleActive ? (
-                <button onClick={onToggleActive} aria-label={customer.is_active ? "تعطيل العميل" : "تفعيل العميل"} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium cursor-pointer", customer.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
-                  {customer.is_active ? <UserCheck className="h-2.5 w-2.5" /> : <UserX className="h-2.5 w-2.5" />}
+                <button
+                  onClick={onToggleActive}
+                  aria-label={customer.is_active ? "تعطيل العميل" : "تفعيل العميل"}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium cursor-pointer min-h-7",
+                    "transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    customer.is_active
+                      ? "bg-success/10 text-success hover:bg-success/15"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {customer.is_active ? <UserCheck className="h-3 w-3" /> : <UserX className="h-3 w-3" />}
                   {customer.is_active ? "نشط" : "غير نشط"}
                   <span className="sr-only">{customer.is_active ? "العميل نشط حالياً — اضغط للتعطيل" : "العميل غير نشط — اضغط للتفعيل"}</span>
                 </button>
               ) : (
-                <Badge variant={customer.is_active ? "default" : "secondary"} className="text-[10px]">
+                <Badge variant={customer.is_active ? "default" : "secondary"} className="text-xs px-3 py-1">
                   {customer.is_active ? "نشط" : "غير نشط"}
                   <span className="sr-only">{customer.is_active ? "حالة العميل: نشط" : "حالة العميل: غير نشط"}</span>
                 </Badge>
@@ -109,31 +119,40 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             payments={payments}
             compact
           />
-          {/* Credit usage indicator */}
-          {creditLimit != null && creditLimit > 0 && creditUsagePercent != null && (
-            <div className="mt-2 p-2 rounded-lg bg-muted/50 border text-xs" role="meter" aria-valuenow={creditUsagePercent} aria-valuemin={0} aria-valuemax={100} aria-label={`استخدام حد الائتمان ${creditUsagePercent.toFixed(0)}%`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Target className="h-3 w-3" />
-                  حد الائتمان: {creditLimit.toLocaleString()} ج.م
-                </span>
-                <span className={cn("font-bold", creditUsagePercent > 90 ? "text-destructive" : creditUsagePercent > 70 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
-                  {creditUsagePercent.toFixed(0)}%
-                </span>
+          {/* Credit usage indicator — only when there's an actual credit limit */}
+          {creditLimit != null && creditLimit > 0 && creditUsagePercent != null && (() => {
+            const available = Math.round((creditLimit - currentBalance) * 100) / 100;
+            const tone = creditUsagePercent > 90
+              ? { text: 'text-destructive', bar: 'bg-destructive' }
+              : creditUsagePercent > 70
+                ? { text: 'text-warning', bar: 'bg-warning' }
+                : { text: 'text-success', bar: 'bg-success' };
+            return (
+              <div className="mt-2 p-2.5 rounded-lg bg-muted/50 border text-xs" role="meter" aria-valuenow={creditUsagePercent} aria-valuemin={0} aria-valuemax={100} aria-label={`استخدام حد الائتمان ${creditUsagePercent.toFixed(0)}%`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Target className="h-3 w-3" />
+                    حد الائتمان: {creditLimit.toLocaleString()} ج.م
+                  </span>
+                  <span className={cn("font-bold tabular-nums", tone.text)}>
+                    {creditUsagePercent.toFixed(0)}%
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full transition-all", tone.bar)}
+                    style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                  <span className="text-muted-foreground">المتاح للسحب</span>
+                  <span className={cn("font-semibold tabular-nums", available > 0 ? 'text-success' : 'text-destructive')}>
+                    {available.toLocaleString()} ج.م
+                  </span>
+                </div>
               </div>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full transition-all",
-                    creditUsagePercent > 90 ? "bg-destructive"
-                    : creditUsagePercent > 70 ? "bg-amber-500"
-                    : creditUsagePercent > 50 ? "bg-yellow-500"
-                    : "bg-emerald-500"
-                  )}
-                  style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
-                />
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Primary actions FIRST */}
@@ -157,11 +176,11 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             <>
               <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" asChild aria-label={`اتصال بـ ${customer.phone}`}>
                 <a href={`tel:${customer.phone}`}>
-                  <Phone className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />اتصال
+                  <Phone className="h-3.5 w-3.5 ml-1 text-success" />اتصال
                 </a>
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp} aria-label="فتح محادثة واتساب">
-                <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-success/30" onClick={onWhatsApp} aria-label="فتح محادثة واتساب">
+                <MessageSquare className="h-3.5 w-3.5 ml-1 text-success" />واتساب
               </Button>
               <Button
                 variant="outline"
@@ -176,7 +195,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                   } catch { /* clipboard unavailable */ }
                 }}
               >
-                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
               </Button>
             </>
           ) : (
