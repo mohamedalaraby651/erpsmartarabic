@@ -102,9 +102,9 @@ interface MobileCustomerViewProps {
 
 function MobileCustomerView({
   customer, customerId, detail, mobileSection, setMobileSection,
-  onEdit, onNewInvoice, onNewPayment, onNewQuotation, onNewOrder,
+  onEdit, onNewInvoice, onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote,
   onWhatsApp, onImageUpdate, onToggleActive, onQuickPay,
-  setSelectedAddress, setAddressDialogOpen,
+  setSelectedAddress, setAddressDialogOpen, upcomingReminders,
 }: MobileCustomerViewProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
