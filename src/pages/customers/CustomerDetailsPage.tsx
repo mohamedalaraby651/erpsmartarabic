@@ -233,7 +233,8 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  const [mobileSection, setMobileSection] = useState<MobileSectionId>('none');
+  const initialSection = (searchParams.get('section') as MobileSectionId | null) || 'none';
+  const [mobileSection, setMobileSectionState] = useState<MobileSectionId>(initialSection);
 
   const detail = useCustomerDetail(id);
   const { prevId, nextId, goNext, goPrev } = useCustomerNavigation(id);
@@ -244,12 +245,22 @@ const CustomerDetailsPage = () => {
     if (urlTab && !isMobile) {
       detail.setActiveTab(urlTab);
     }
-  }, [urlTab, isMobile]);
+  }, [urlTab, isMobile, detail]);
 
   const handleTabChange = (tab: string) => {
     detail.setActiveTab(tab);
     setSearchParams({ tab }, { replace: true });
   };
+
+  // Persist mobile section in URL so back-navigation restores it
+  const setMobileSection = (s: MobileSectionId) => {
+    setMobileSectionState(s);
+    const next = new URLSearchParams(searchParams);
+    if (s === 'none') next.delete('section');
+    else next.set('section', s);
+    setSearchParams(next, { replace: true });
+  };
+
 
   const updateFieldMutation = useMutation({
     mutationFn: async (updates: Record<string, unknown>) => {
