@@ -12,6 +12,7 @@ import { InvoicesReturnsSummary } from "@/components/customers/details/InvoicesR
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
+type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   paid: { label: 'مدفوع', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' },
