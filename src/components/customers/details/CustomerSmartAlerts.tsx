@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, AlertTriangle, Clock, UserX, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,97 +40,100 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
 }: CustomerSmartAlertsProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
-  const alerts: AlertItem[] = [];
+  const alerts = useMemo<AlertItem[]>(() => {
+    const list: AlertItem[] = [];
+    const now = Date.now();
 
-  // Credit limit exceeded
-  if (creditLimit > 0 && currentBalance >= creditLimit) {
-    alerts.push({
-      id: 'credit-exceeded',
-      icon: AlertTriangle,
-      message: `تجاوز حد الائتمان — الرصيد ${currentBalance.toLocaleString()} من أصل ${creditLimit.toLocaleString()} ج.م`,
-      action: 'تعديل الحد',
-      variant: 'destructive',
-      onAction: onEditCreditLimit,
-    });
-  }
-
-  // Overdue invoices (60+ days)
-  const now = Date.now();
-  const overdueCount = invoices.filter(inv => {
-    if (inv.payment_status === 'paid') return false;
-    const due = inv.due_date ? new Date(inv.due_date).getTime() : new Date(inv.created_at).getTime();
-    return (now - due) > 60 * 24 * 60 * 60 * 1000;
-  }).length;
-
-  if (overdueCount > 0) {
-    alerts.push({
-      id: 'overdue',
-      icon: Clock,
-      message: `${overdueCount} فاتورة متأخرة أكثر من 60 يوم`,
-      action: 'إرسال تذكير',
-      variant: 'warning',
-      onAction: onSendReminder,
-    });
-  }
-
-  // Inactive customer (30+ days no activity)
-  const lastActivity = lastPurchaseDate || lastCommunicationAt;
-  if (lastActivity && invoices.length > 0) {
-    const daysSince = Math.floor((now - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24));
-    if (daysSince > 30) {
-      alerts.push({
-        id: 'inactive',
-        icon: UserX,
-        message: `عميل خامل منذ ${daysSince} يوم — آخر نشاط ${new Date(lastActivity).toLocaleDateString('ar-EG')}`,
-        action: 'تواصل',
-        variant: 'info',
-        onAction: onContact,
+    if (creditLimit > 0 && currentBalance >= creditLimit) {
+      list.push({
+        id: 'credit-exceeded',
+        icon: AlertTriangle,
+        message: `تجاوز حد الائتمان — الرصيد ${currentBalance.toLocaleString()} من أصل ${creditLimit.toLocaleString()} ج.م`,
+        action: 'تعديل الحد',
+        variant: 'destructive',
+        onAction: onEditCreditLimit,
       });
     }
-  }
 
-  // New customer with no invoices
-  if (invoices.length === 0) {
-    alerts.push({
-      id: 'new-customer',
-      icon: Sparkles,
-      message: 'عميل جديد — لم يتم إنشاء أي فاتورة بعد',
-      action: 'إنشاء فاتورة',
-      variant: 'success',
-      onAction: onNewInvoice,
-    });
-  }
+    const overdueCount = invoices.filter(inv => {
+      if (inv.payment_status === 'paid') return false;
+      const due = inv.due_date ? new Date(inv.due_date).getTime() : new Date(inv.created_at).getTime();
+      return (now - due) > 60 * 24 * 60 * 60 * 1000;
+    }).length;
+
+    if (overdueCount > 0) {
+      list.push({
+        id: 'overdue',
+        icon: Clock,
+        message: `${overdueCount} فاتورة متأخرة أكثر من 60 يوم`,
+        action: 'إرسال تذكير',
+        variant: 'warning',
+        onAction: onSendReminder,
+      });
+    }
+
+    const lastActivity = lastPurchaseDate || lastCommunicationAt;
+    if (lastActivity && invoices.length > 0) {
+      const daysSince = Math.floor((now - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSince > 30) {
+        list.push({
+          id: 'inactive',
+          icon: UserX,
+          message: `عميل خامل منذ ${daysSince} يوم — آخر نشاط ${new Date(lastActivity).toLocaleDateString('ar-EG')}`,
+          action: 'تواصل',
+          variant: 'info',
+          onAction: onContact,
+        });
+      }
+    }
+
+    if (invoices.length === 0) {
+      list.push({
+        id: 'new-customer',
+        icon: Sparkles,
+        message: 'عميل جديد — لم يتم إنشاء أي فاتورة بعد',
+        action: 'إنشاء فاتورة',
+        variant: 'success',
+        onAction: onNewInvoice,
+      });
+    }
+
+    return list;
+  }, [currentBalance, creditLimit, invoices, lastPurchaseDate, lastCommunicationAt, onEditCreditLimit, onSendReminder, onContact, onNewInvoice]);
 
   const visibleAlerts = alerts.filter(a => !dismissed.has(a.id));
   if (visibleAlerts.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="region" aria-label="تنبيهات العميل" aria-live="polite">
       {visibleAlerts.map(alert => {
         const Icon = alert.icon;
         return (
           <div
             key={alert.id}
+            role="alert"
             className={cn(
               "flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm",
               variantStyles[alert.variant]
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="flex-1 min-w-0 truncate">{alert.message}</span>
             <Button
               variant="ghost"
               size="sm"
               className="h-7 text-xs shrink-0 hover:bg-background/50"
               onClick={alert.onAction}
+              aria-label={`${alert.action} — ${alert.message}`}
             >
               {alert.action}
             </Button>
             <button
               onClick={() => setDismissed(prev => new Set(prev).add(alert.id))}
               className="shrink-0 p-0.5 rounded hover:bg-background/50"
+              aria-label="إخفاء التنبيه"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
         );

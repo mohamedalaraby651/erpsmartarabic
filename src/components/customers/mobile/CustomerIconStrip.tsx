@@ -32,20 +32,35 @@ const stripIcons = [
 export const CustomerIconStrip = memo(function CustomerIconStrip({
   activeSection, onSectionChange,
 }: CustomerIconStripProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    // RTL: ArrowRight = previous, ArrowLeft = next
+    const dir = e.key === 'ArrowLeft' ? 1 : -1;
+    const nextIndex = (index + dir + stripIcons.length) % stripIcons.length;
+    const buttons = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    buttons?.[nextIndex]?.focus();
+  };
+
   return (
     <div className="bg-card border rounded-xl shadow-sm py-2">
       <ScrollArea className="w-full">
-        <div className="flex items-center gap-1 px-2">
-          {stripIcons.map((item) => {
+        <div className="flex items-center gap-1 px-2" role="tablist" aria-label="أقسام ملف العميل">
+          {stripIcons.map((item, index) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
 
             return (
               <button
                 key={item.id}
+                role="tab"
+                aria-selected={isActive}
+                aria-label={item.label}
+                tabIndex={isActive ? 0 : -1}
+                onKeyDown={(e) => handleKeyDown(e, index)}
                 onClick={() => onSectionChange(activeSection === item.id ? 'none' : item.id)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 min-w-[52px] shrink-0 transition-all",
+                  "flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 min-w-[52px] min-h-11 shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   isActive && item.bg,
                 )}
               >

@@ -26,10 +26,13 @@ export const CustomerKPICards = memo(function CustomerKPICards({
 }: CustomerKPICardsProps) {
   const [drawerFilter, setDrawerFilter] = useState<KPIFilter | null>(null);
 
-  const cards: { key: KPIFilter; label: string; value: string; icon: React.ElementType; colorClass: string; bgClass: string; trend?: 'up' | 'down' }[] = [
+  // Hide "outstanding" card when it duplicates the current balance to avoid visual redundancy
+  const balanceAndOutstandingMatch = Math.round(currentBalance) === Math.round(totalOutstanding) && totalOutstanding > 0;
+
+  const allCards: { key: KPIFilter; label: string; value: string; icon: React.ElementType; colorClass: string; bgClass: string; trend?: 'up' | 'down' }[] = [
     {
       key: 'balance',
-      label: 'الرصيد الحالي',
+      label: balanceAndOutstandingMatch ? 'الرصيد / المستحق' : 'الرصيد الحالي',
       value: currentBalance.toLocaleString(),
       icon: CreditCard,
       colorClass: balanceIsDebit ? 'text-destructive' : 'text-emerald-700 dark:text-emerald-400',
@@ -54,9 +57,16 @@ export const CustomerKPICards = memo(function CustomerKPICards({
     },
   ];
 
+  const cards = balanceAndOutstandingMatch ? allCards.filter(c => c.key !== 'outstanding') : allCards;
+
   return (
     <>
-      <div className={cn("grid gap-3", compact ? "grid-cols-3" : "grid-cols-1 md:grid-cols-3")}>
+      <div className={cn(
+        "grid gap-3",
+        compact
+          ? (cards.length === 2 ? "grid-cols-2" : "grid-cols-3")
+          : (cards.length === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-3")
+      )}>
         {cards.map((card) => {
           const Icon = card.icon;
           const TrendIcon = card.trend === 'up' ? ArrowUpRight : ArrowDownRight;
