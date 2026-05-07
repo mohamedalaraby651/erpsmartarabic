@@ -80,13 +80,13 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
       {/* Sort */}
       {onSortChange && (
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3" role="toolbar" aria-label="ترتيب وإحصاء القائمة">
           <Select value={sortKey || 'created_at'} onValueChange={onSortChange}>
             <SelectTrigger
-              className="w-auto h-9 text-xs gap-1.5 px-3 rounded-xl border-border bg-card shadow-sm min-h-11"
-              aria-label="ترتيب القائمة"
+              className="w-auto h-9 text-xs gap-1.5 px-3 rounded-xl border-border bg-card shadow-sm min-h-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+              aria-label="ترتيب القائمة حسب"
             >
-              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -98,11 +98,17 @@ export const CustomerMobileView = memo(function CustomerMobileView({
               <SelectItem value="total_purchases_cached">الأكثر شراءً</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-xs text-muted-foreground tabular-nums">{data.length} عميل</span>
+          <span
+            className="text-xs text-muted-foreground tabular-nums"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {data.length} عميل
+          </span>
         </div>
       )}
 
-      <div className="space-y-2.5">
+      <div className="space-y-2.5" role="list" aria-label="قائمة العملاء">
         {data.map((customer, i) => (
           <div key={customer.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
             <CustomerListCard
