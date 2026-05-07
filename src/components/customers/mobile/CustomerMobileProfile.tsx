@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Crown, FileText, Printer, Phone, MessageSquare, MapPin,
-  Target, MoreHorizontal,
+  Target, MoreHorizontal, Copy, Check,
   Edit, Wallet, Globe, ShoppingCart, Receipt, UserCheck, UserX,
 } from "lucide-react";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
