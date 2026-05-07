@@ -33,13 +33,14 @@ interface InvoiceItemRow {
   quantity: number;
   unit_price: number;
   total_price: number;
-  products?: { name: string } | null;
+  products?: { name: string; sku?: string | null } | null;
 }
 
 interface ReturnLine {
   invoice_item_id: string;
   product_id: string;
   product_name: string;
+  product_sku?: string;
   unit_price: number;
   original_qty: number;
   already_returned: number;
@@ -90,7 +91,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoice_items')
-        .select('id, product_id, quantity, unit_price, total_price, products:product_id(name)')
+        .select('id, product_id, quantity, unit_price, total_price, products:product_id(name, sku)')
         .eq('invoice_id', invoiceId);
       if (error) throw error;
       return (data ?? []) as unknown as InvoiceItemRow[];
@@ -133,6 +134,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
         invoice_item_id: it.id,
         product_id: it.product_id,
         product_name: it.products?.name ?? '—',
+        product_sku: it.products?.sku ?? undefined,
         unit_price: Number(it.unit_price),
         original_qty: Number(it.quantity),
         already_returned: confirmed,
@@ -164,6 +166,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     if (requested > line.returnable) {
       return formatReturnOverdraw({
         productName: line.product_name,
+        productSku: line.product_sku,
         requested,
         available: line.returnable,
         originalQty: line.original_qty,
@@ -241,7 +244,12 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     },
     onError: (err: any) => {
       const raw: string = err?.message ?? 'حدث خطأ غير متوقع';
-      const description = parseDbOverdraw(raw) ?? raw;
+      const description = parseDbOverdraw(raw, {
+        resolveProduct: (itemId) => {
+          const l = lines.find(x => x.invoice_item_id === itemId);
+          return l ? { name: l.product_name, sku: l.product_sku } : undefined;
+        },
+      }) ?? raw;
       toast({
         title: 'خطأ في إنشاء إشعار الإرجاع',
         description,
@@ -320,7 +328,12 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <span className="font-medium text-sm">{l.product_name}</span>
+                            <span className="font-medium text-sm">
+                              {l.product_name}
+                              {l.product_sku && (
+                                <span className="text-xs text-muted-foreground font-normal mr-1">({l.product_sku})</span>
+                              )}
+                            </span>
                             <span className="text-xs text-muted-foreground">
                               {Number(l.unit_price).toLocaleString()} × {l.original_qty}
                             </span>
