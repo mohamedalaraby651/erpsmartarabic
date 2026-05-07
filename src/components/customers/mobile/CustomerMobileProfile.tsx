@@ -176,11 +176,11 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             <>
               <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" asChild aria-label={`اتصال بـ ${customer.phone}`}>
                 <a href={`tel:${customer.phone}`}>
-                  <Phone className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />اتصال
+                  <Phone className="h-3.5 w-3.5 ml-1 text-success" />اتصال
                 </a>
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp} aria-label="فتح محادثة واتساب">
-                <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-success/30" onClick={onWhatsApp} aria-label="فتح محادثة واتساب">
+                <MessageSquare className="h-3.5 w-3.5 ml-1 text-success" />واتساب
               </Button>
               <Button
                 variant="outline"
@@ -195,7 +195,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                   } catch { /* clipboard unavailable */ }
                 }}
               >
-                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
               </Button>
             </>
           ) : (
