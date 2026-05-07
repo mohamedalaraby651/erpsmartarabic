@@ -37,6 +37,7 @@ import { CustomerExportDialog } from "@/components/customers/dialogs/CustomerExp
 import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedViews";
 import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/list/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
+import { LiveRegion } from "@/components/shared/LiveRegion";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
@@ -172,9 +173,32 @@ const CustomersPage = () => {
   const filteredCount = list.totalCount;
   const totalStatsCount = list.stats.total;
 
+  // Announce sort + filter changes for screen readers
+  const sortLabelMap: Record<string, string> = {
+    created_at: 'تاريخ الإنشاء',
+    name: 'الاسم',
+    current_balance: 'الرصيد',
+    last_activity_at: 'آخر نشاط',
+  };
+  const liveMessage = useMemo(() => {
+    if (list.isLoading) return '';
+    const parts: string[] = [];
+    const sortLabel = sortLabelMap[sortConfig.key] || sortLabelMap.created_at;
+    const dirLabel = sortConfig.direction === 'desc' ? 'تنازلي' : 'تصاعدي';
+    parts.push(`تم ترتيب القائمة حسب ${sortLabel} ${dirLabel}.`);
+    if (filters.activeFiltersCount > 0 || filters.debouncedSearch) {
+      parts.push(`تم تطبيق ${filters.activeFiltersCount} فلتر، النتائج: ${filteredCount} عميل.`);
+    } else {
+      parts.push(`عرض ${filteredCount} عميل.`);
+    }
+    return parts.join(' ');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortConfig.key, sortConfig.direction, filters.activeFiltersCount, filters.debouncedSearch, filteredCount, list.isLoading]);
+
   return (
     <PageWrapper title="العملاء">
     <div className="space-y-4 md:space-y-5">
+      <LiveRegion message={liveMessage} />
       <CustomerPageHeader
         isMobile={isMobile} canEdit={canEdit}
         exportAllLoading={false} onAdd={handleAdd}
