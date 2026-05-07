@@ -1,5 +1,5 @@
 import React, { memo, useRef, useEffect } from "react";
-import { Loader2, ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
