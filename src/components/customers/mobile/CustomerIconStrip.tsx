@@ -49,29 +49,28 @@ const toneClass: Record<Tone, { fg: string; bg: string }> = {
 export const CustomerIconStrip = memo(function CustomerIconStrip({
   activeSection, onSectionChange, badges,
 }: CustomerIconStripProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
 
   const updateEdges = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    // RTL: scrollLeft is negative or reversed depending on browser
-    const left = Math.abs(el.scrollLeft);
+    const viewport = wrapperRef.current?.querySelector<HTMLDivElement>('[data-radix-scroll-area-viewport]');
+    if (!viewport) return;
+    const max = viewport.scrollWidth - viewport.clientWidth;
+    const left = Math.abs(viewport.scrollLeft);
     setEdges({
-      start: left < max - 4,   // can scroll towards start (visually right in RTL)
-      end: left > 4,           // can scroll towards end (visually left in RTL)
+      start: left < max - 4,
+      end: left > 4,
     });
   }, []);
 
   useEffect(() => {
     updateEdges();
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', updateEdges, { passive: true });
+    const viewport = wrapperRef.current?.querySelector<HTMLDivElement>('[data-radix-scroll-area-viewport]');
+    if (!viewport) return;
+    viewport.addEventListener('scroll', updateEdges, { passive: true });
     window.addEventListener('resize', updateEdges);
     return () => {
-      el.removeEventListener('scroll', updateEdges);
+      viewport.removeEventListener('scroll', updateEdges);
       window.removeEventListener('resize', updateEdges);
     };
   }, [updateEdges]);
