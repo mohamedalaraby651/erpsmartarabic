@@ -67,6 +67,9 @@ const CustomerListCardInner = ({
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const reactId = React.useId();
+  const expandedPanelId = `customer-card-${reactId}-panel`;
+  const menuContentId = `customer-card-${reactId}-menu`;
 
   const balance = Number(customer.current_balance || 0);
   const creditLimit = Number(customer.credit_limit || 0);
