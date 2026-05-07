@@ -16,10 +16,10 @@ interface CustomerMobileStatCardProps {
 
 const colorMap = {
   emerald: {
-    border: 'border-s-emerald-500',
-    iconBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
-    iconText: 'text-emerald-600 dark:text-emerald-400',
-    valueText: 'text-emerald-600 dark:text-emerald-400',
+    border: 'border-s-success',
+    iconBg: 'bg-success/10',
+    iconText: 'text-success',
+    valueText: 'text-success',
   },
   destructive: {
     border: 'border-s-destructive',
@@ -34,16 +34,16 @@ const colorMap = {
     valueText: 'text-primary',
   },
   warning: {
-    border: 'border-s-amber-500',
-    iconBg: 'bg-amber-500/10 dark:bg-amber-500/20',
-    iconText: 'text-amber-600 dark:text-amber-400',
-    valueText: 'text-amber-600 dark:text-amber-400',
+    border: 'border-s-warning',
+    iconBg: 'bg-warning/10',
+    iconText: 'text-warning',
+    valueText: 'text-warning',
   },
   info: {
-    border: 'border-s-blue-500',
-    iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
-    iconText: 'text-blue-600 dark:text-blue-400',
-    valueText: 'text-blue-600 dark:text-blue-400',
+    border: 'border-s-primary',
+    iconBg: 'bg-primary/10',
+    iconText: 'text-primary',
+    valueText: 'text-primary',
   },
   muted: {
     border: 'border-s-muted-foreground/30',

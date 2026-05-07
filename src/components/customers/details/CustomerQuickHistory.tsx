@@ -30,8 +30,8 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  paid: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  partial: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  paid: 'bg-success/10 text-success',
+  partial: 'bg-warning/10 text-warning',
   pending: 'bg-muted text-muted-foreground',
   overdue: 'bg-destructive/10 text-destructive',
 };
@@ -56,8 +56,8 @@ const CustomerQuickHistory = ({ invoices, payments }: CustomerQuickHistoryProps)
         </div>
       ))}
       {lastPayment && (
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/5 border border-emerald-500/20">
-          <CreditCard className="h-3 w-3 text-emerald-600" />
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-success/5 border border-success/20">
+          <CreditCard className="h-3 w-3 text-success" />
           <span className="text-muted-foreground">آخر دفعة:</span>
           <span className="font-medium">{Number(lastPayment.amount).toLocaleString()} ج.م</span>
           <span className="text-muted-foreground">
