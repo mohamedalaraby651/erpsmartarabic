@@ -66,16 +66,23 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenDrawer}
+            type="button"
+            aria-label={activeFiltersCount > 0 ? `الفلاتر المتقدمة (${activeFiltersCount} نشط)` : 'فتح الفلاتر المتقدمة'}
+            aria-haspopup="dialog"
+            aria-expanded={false}
             className={cn(
-              'relative flex items-center justify-center h-11 w-11 rounded-xl border transition-all duration-200 shrink-0',
+              'relative flex items-center justify-center h-11 w-11 rounded-xl border transition-all duration-200 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
               activeFiltersCount > 0
                 ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
                 : 'bg-card text-muted-foreground border-border hover:bg-accent',
             )}
           >
-            <SlidersHorizontal className="h-4.5 w-4.5" />
+            <SlidersHorizontal className="h-4.5 w-4.5" aria-hidden="true" />
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
+              <span
+                className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center shadow-sm"
+                aria-hidden="true"
+              >
                 {activeFiltersCount}
               </span>
             )}
