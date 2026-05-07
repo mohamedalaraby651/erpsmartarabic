@@ -242,37 +242,69 @@ const CustomerDetailsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const isMobile = useIsMobile();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
-  const initialSection = (searchParams.get('section') as MobileSectionId | null) || 'none';
+
+  // ── Cross-device URL ↔ tab/section mapping ───────────────────────────
+  // Single source of truth: `tab` (desktop value). `section` mirrors it for mobile.
+  const tabToSection = (tab: string): MobileSectionId => {
+    const map: Record<string, MobileSectionId> = {
+      'basic-info': 'info', notes: 'notes', attachments: 'attachments',
+      reminders: 'reminders', invoices: 'invoices', 'credit-notes': 'invoices',
+      quotations: 'sales', orders: 'sales', payments: 'payments',
+      financial: 'analytics', statement: 'statement', aging: 'aging',
+      analytics: 'analytics', communications: 'communications', activity: 'none',
+    };
+    return map[tab] ?? 'none';
+  };
+  const sectionToTab = (s: MobileSectionId): string | null => {
+    const map: Partial<Record<MobileSectionId, string>> = {
+      info: 'basic-info', notes: 'notes', attachments: 'attachments',
+      reminders: 'reminders', invoices: 'invoices', payments: 'payments',
+      sales: 'orders', analytics: 'analytics', statement: 'statement',
+      aging: 'aging', communications: 'communications',
+    };
+    return map[s] ?? null;
+  };
+
+  const urlTab = searchParams.get('tab');
+  const urlSection = searchParams.get('section') as MobileSectionId | null;
+  const initialSection: MobileSectionId =
+    urlSection || (urlTab ? tabToSection(urlTab) : 'none');
   const [mobileSection, setMobileSectionState] = useState<MobileSectionId>(initialSection);
 
   const detail = useCustomerDetail(id);
   const { prevId, nextId, goNext, goPrev } = useCustomerNavigation(id);
 
-  // === URL sync for active tab (desktop) ===
-  const urlTab = searchParams.get('tab');
+  // Sync URL tab → desktop active tab
   useEffect(() => {
-    if (urlTab && !isMobile) {
-      detail.setActiveTab(urlTab);
-    }
+    if (urlTab && !isMobile) detail.setActiveTab(urlTab);
   }, [urlTab, isMobile, detail]);
+
+  // Sync URL section → mobile section (back/forward navigation)
+  useEffect(() => {
+    if (urlSection && urlSection !== mobileSection) setMobileSectionState(urlSection);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSection]);
+
+  const writeParams = (tab: string | null, section: MobileSectionId | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (tab) next.set('tab', tab); else next.delete('tab');
+    if (section && section !== 'none') next.set('section', section); else next.delete('section');
+    setSearchParams(next, { replace: true });
+  };
 
   const handleTabChange = (tab: string) => {
     detail.setActiveTab(tab);
-    setSearchParams({ tab }, { replace: true });
+    writeParams(tab, tabToSection(tab));
   };
 
-  // Persist mobile section in URL so back-navigation restores it
   const setMobileSection = (s: MobileSectionId) => {
     setMobileSectionState(s);
-    const next = new URLSearchParams(searchParams);
-    if (s === 'none') next.delete('section');
-    else next.set('section', s);
-    setSearchParams(next, { replace: true });
+    writeParams(sectionToTab(s), s);
   };
 
 
