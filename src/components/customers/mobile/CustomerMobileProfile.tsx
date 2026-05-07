@@ -58,7 +58,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
         {/* Avatar + VIP centered */}
         <div className="flex flex-col items-center text-center gap-3 mb-4">
           <div className="relative">
-            <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="xl" />
+            <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="lg" />
             <div className="absolute -bottom-1 -left-1">
               <ImageUpload currentImageUrl={customer.image_url} onImageUploaded={(url) => onImageUpdate(url)} onImageRemoved={() => onImageUpdate(null)} bucket="customer-images" folder={customerId} showAvatar={false} />
             </div>
