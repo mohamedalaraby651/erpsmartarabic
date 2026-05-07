@@ -39,6 +39,7 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
   onEditCreditLimit, onSendReminder, onNewInvoice, onContact,
 }: CustomerSmartAlertsProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState(false);
 
   const alerts = useMemo<AlertItem[]>(() => {
     const list: AlertItem[] = [];
