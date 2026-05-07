@@ -424,7 +424,15 @@ const CustomerDetailsPage = () => {
               <LazyOnVisible minHeight={300}>
                 <ChartErrorBoundary title="المنتجات">
                   <TopProductsChart topProducts={detail.chartData?.top_products} />
-                </ChartError
+                </ChartErrorBoundary>
+              </LazyOnVisible>
+            </TabsContent>
+            <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
+            <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>
+          </Suspense>
+        </Tabs>
+      )}
+
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
     </div>
