@@ -194,10 +194,13 @@ function MobileCustomerView({
         {mobileSection === 'none' ? (
           <CustomerQuickSuggestions
             overdueCount={sectionBadges.invoices ?? 0}
+            upcomingReminders={upcomingReminders}
             onPick={(id) => selectSection(id)}
           />
         ) : (
-          <Suspense fallback={<TabSkeleton />}>
+          <>
+            <SectionHeader sectionId={mobileSection} onBack={() => selectSection('none')} />
+            <Suspense fallback={<TabSkeleton />}>
             {mobileSection === 'invoices' && (
               <div className="space-y-4">
                 <CustomerTabInvoices invoices={detail.invoices} customerId={customerId} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={onQuickPay} creditNotes={detail.creditNotes} currentBalance={detail.currentBalance} paginatedData={detail.paginatedInvoices} currentPage={detail.invoicePage} pageSize={detail.invoicePageSize} onPageChange={detail.goToInvoicePage} />
