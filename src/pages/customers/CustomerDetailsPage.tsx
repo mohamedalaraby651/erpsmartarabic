@@ -27,6 +27,7 @@ import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
 import { LazyOnVisible } from "@/components/shared/LazyOnVisible";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
