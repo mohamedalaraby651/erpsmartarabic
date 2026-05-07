@@ -244,7 +244,12 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
     },
     onError: (err: any) => {
       const raw: string = err?.message ?? 'حدث خطأ غير متوقع';
-      const description = parseDbOverdraw(raw) ?? raw;
+      const description = parseDbOverdraw(raw, {
+        resolveProduct: (itemId) => {
+          const l = lines.find(x => x.invoice_item_id === itemId);
+          return l ? { name: l.product_name, sku: l.product_sku } : undefined;
+        },
+      }) ?? raw;
       toast({
         title: 'خطأ في إنشاء إشعار الإرجاع',
         description,
