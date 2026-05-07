@@ -1,10 +1,10 @@
 import React, { memo, useRef, useEffect } from "react";
-import { Loader2, ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
-import { CustomerListSkeleton } from "@/components/customers/list/CustomerListSkeleton";
+import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
 import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
 import type { Customer } from "@/lib/customerConstants";
 
@@ -55,7 +55,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
     return () => observer.disconnect();
   }, [hasNextPage, onLoadMore, isFetchingNextPage, data.length]);
 
-  if (isLoading && data.length === 0) return <CustomerListSkeleton count={6} />;
+  if (isLoading && data.length === 0) return <CustomerMobileSkeleton count={6} />;
 
   if (data.length === 0) {
     return (
@@ -125,9 +125,16 @@ export const CustomerMobileView = memo(function CustomerMobileView({
         ))}
       </div>
 
-      {/* Infinite scroll sentinel */}
-      <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
-        {isFetchingNextPage && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+      {/* Infinite scroll sentinel — skeleton أثناء جلب المزيد */}
+      <div ref={observerRef} className="mt-3" aria-hidden={!isFetchingNextPage}>
+        {isFetchingNextPage ? (
+          <div className="space-y-2.5" role="status" aria-live="polite" aria-label="جارٍ تحميل المزيد">
+            <span className="sr-only">جارٍ تحميل المزيد من العملاء…</span>
+            <CustomerMobileSkeleton count={2} showSummary={false} showSortBar={false} />
+          </div>
+        ) : (
+          <div className="h-6" />
+        )}
       </div>
 
       {!hasNextPage && data.length > 0 && (
