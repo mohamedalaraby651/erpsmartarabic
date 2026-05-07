@@ -1,57 +1,77 @@
-# ربط الفواتير والمرتجعات داخل صفحة العميل
 
-## الهدف
-عرض سجل الفواتير والمرتجعات (إشعارات دائنة) مرتبطين مباشرة في صفحة العميل، مع ملخص أرصدة موحّد يربط: الإجمالي ↔ المدفوع ↔ المرتجعات ↔ الصافي المستحق ↔ الرصيد الحالي.
+# تحسينات صفحة العميل (موبايل) — اقتراحات وإصلاحات
 
-## ما سيتم بناؤه
+من فحص الصورة والكود (`CustomerMobileProfile`, `CustomerIconStrip`, `CustomerDetailsPage`)، رصدت عدة مشاكل وفرص تحسين. أدناه مقترح متماسك بدون كسر للواجهة الحالية.
 
-### 1. مكوّن جديد: `InvoicesReturnsSummary`
-ملف: `src/components/customers/details/InvoicesReturnsSummary.tsx`
+## مشاكل رصدتها
 
-شريط ملخص متجاوب (4 بطاقات gradient على شبكة 2×2 موبايل / 4 أعمدة ديسكتوب):
+1. **فراغ ضخم تحت الـ IconStrip** عند `mobileSection === 'none'`: الشاشة شبه فارغة بعد KPI، يضيع موضع المستخدم.
+2. **بطاقة "الرصيد/المستحق"** بلون أحمر دائمًا حتى لو الرصيد صفر/دائن — مضلل بصريًا.
+3. **شريط الأيقونات (11 أيقونة)** يُجبر على التمرير الأفقي بدون إشارة لذلك (لا سهم/ظل) — كثير من المستخدمين لا يكتشفون باقي الأقسام.
+4. **شارة "ممتاز 100/100"** فوق رأس البطاقة منفصلة بصريًا عن الـ Hero — تبدو طافية وغير مرتبطة.
+5. **زر "تواصل ×"** الأخضر العلوي (Smart Alerts/last activity chip) مكرر مع زر الاتصال بالأسفل.
+6. **استخدام ألوان tailwind مباشرة** (`text-blue-600`, `bg-emerald-100`...) في `CustomerIconStrip` و`CustomerMobileProfile` بدلاً من tokens دلالية — يخالف Core memory.
+7. **لا يوجد Empty State** بديل عند `'none'` يقترح أكثر القسم استخدامًا (فواتير/كشف/تذكيرات).
+8. **زر "إشعار دائن"** في sheet الإجراءات يفتح قسم الفواتير فقط — إجراء مضلل (لا ينشئ إشعار فعليًا).
+9. **حد الائتمان** يُعرض كـ progress bar بدون قيمة الرصيد المتبقي (المتاح للسحب) — معلومة مفقودة مهمة.
+10. **عدم تمييز overdue invoices** في ملخص KPI الموبايل (الشارة موجودة على أيقونة "فواتير" فقط).
+11. **CustomerCompressedHeader** يظهر بكامل ارتفاعه (max-h-40) فيغطي محتوى عند التمرير على الموبايل.
+12. **زر «نشط/غير نشط»** صغير جدًا (h ≈ 18px) أقل من 44px — مخالف لمعيار اللمس.
 
-| البطاقة | المصدر | الملاحظات |
-|---|---|---|
-| إجمالي الفواتير | `Σ invoices.total_amount` | عدد الفواتير |
-| المدفوع | `Σ invoices.paid_amount` | نسبة السداد |
-| المرتجعات | `Σ credit_notes.amount` (status ≠ cancelled) | عدد + نسبة من الإجمالي |
-| الصافي المستحق | إجمالي − مدفوع − مرتجعات | يقارن بـ `current_balance` |
+## الخطة
 
-- استخدام التوكنز الدلالية (`primary/emerald/amber/destructive`) فقط — بدون ألوان مباشرة.
-- شريط تنبيه أصفر إذا اختلف الصافي عن `current_balance` بأكثر من 0.5 ج.م (للإشارة إلى الحاجة لإعادة احتساب الرصيد).
-- جميع الحسابات بـ `Math.round(v*100)/100` (معيار الدقة المالية).
-- `role="region"` + `aria-label` للقارئات الشاشية.
+### 1) إصلاح بصري سريع (بدون breaking)
+- استبدال الألوان المباشرة بـ semantic tokens (`primary`, `success`, `warning`, `destructive`, `muted`) في `CustomerIconStrip` + KPI Cards.
+- توحيد بطاقة الرصيد: لون `success` لو دائن/صفر، `warning` لو 0–60% من حد الائتمان، `destructive` فقط لو تجاوز.
+- تكبير زر "نشط/غير نشط" إلى `min-h-[28px]` ووضعه ضمن صف flex ملموس، أو نقله بجانب الشارة الذهبية (Crown).
+- إضافة ظل تدرجي يسار/يمين على `ScrollArea` الـ IconStrip ليُوحي بإمكانية السحب الأفقي.
 
-### 2. دمج الملخص في تبويب الفواتير (ديسكتوب)
-ملف: `src/components/customers/tabs/CustomerTabInvoices.tsx`
+### 2) Empty State ذكي عند `'none'`
+بدل الفراغ، عرض بطاقة "اقتراحات سريعة" تحوي 3 أزرار كبيرة:
+- "آخر 3 فواتير" (يفتح قسم invoices)
+- "كشف الحساب" (يفتح statement)
+- "تذكيرات قادمة" (يفتح reminders) — مع badge عدد التذكيرات اليوم/الأسبوع.
+هذا يقلّل عدد النقرات للوصول لأكثر الإجراءات تكرارًا.
 
-- استقبال props جديدة: `creditNotes` و`currentBalance`.
-- استبدال شريط الملخص الحالي (داخل `CardContent`) بمكوّن `InvoicesReturnsSummary`.
-- إضافة قسم «المرتجعات المرتبطة» أسفل قائمة الفواتير، يعرض آخر 3 إشعارات دائنة مع رابط «عرض الكل» يفتح تبويب credit-notes.
+### 3) معلومات حد الائتمان
+- إضافة سطر تحت progress bar: «المتاح للسحب: X ج.م» (creditLimit − currentBalance، مع `Math.round(v*100)/100`).
+- إخفاء البطاقة كاملة لو `creditLimit === 0` (بدلًا من إظهار 0%).
 
-### 3. دمج الملخص في عرض الموبايل
-ملف: `src/pages/customers/CustomerDetailsPage.tsx` (داخل `MobileCustomerView`)
+### 4) شارات Overdue ضمن KPI
+- داخل `CustomerKPICards` (الموبايل compact): لو `overdueCount > 0` نضيف badge صغير `+N متأخرة` أعلى رقم "المستحق" بلون `destructive`.
+- يستخدم نفس الحساب الموجود حاليًا في `sectionBadges`.
 
-- تمرير `currentBalance` إلى `CustomerTabInvoices`.
-- عرض `InvoicesReturnsSummary` فوق `CustomerTabInvoices` و`CustomerTabCreditNotes` مرة واحدة عند اختيار قسم `invoices`.
+### 5) إصلاح زر "إشعار دائن"
+- تغيير `onNewCreditNote` ليفتح فعليًا dialog `CreditNoteFormDialog` مع `prefillCustomerId` (نمط مماثل لـ `onNewPayment` → `/payments`).
+- بديلًا أبسط: تمرير `() => navigate('/credit-notes', { state: { prefillCustomerId } })`.
 
-### 4. تمرير البيانات من الصفحة
-ملف: `src/pages/customers/CustomerDetailsPage.tsx`
+### 6) تنظيف الـ Hero
+- دمج شارة "ممتاز 100/100" مع صف الحالة (نشط) في صف واحد متناسق.
+- إزالة chip "تواصل ×" المكرر، أو تحويله لـ Toast/Toggle داخل Smart Alerts فقط.
 
-في كل من النداءات الديسكتوب والموبايل لـ `CustomerTabInvoices`، تمرير:
+### 7) IconStrip
+- تحويل التنقل إلى `aria-orientation="horizontal"` وإضافة Home/End keys.
+- إعادة ترتيب الأقسام حسب التكرار: `invoices, payments, statement, reminders, sales, analytics, aging, communications, notes, info, attachments`.
+- زر "المزيد" في النهاية يعرض الأقل استخدامًا في popover (لتقليل الصف لـ 6 أيقونات افتراضًا).
+
+### 8) Compressed Header
+- خفض `max-h-40` إلى `max-h-16` وإظهار اسم العميل + رصيد + زرّي إجراء فقط (Phone, Invoice).
+- استخدام `backdrop-blur` + شفافية بدل الخلفية الصلبة.
+
+## ملفات ستُعدَّل
+
+```text
+src/components/customers/mobile/CustomerIconStrip.tsx     (semantic tokens, scroll hints, More popover)
+src/components/customers/mobile/CustomerMobileProfile.tsx (status chip, credit usage line, hero merge)
+src/components/customers/mobile/CustomerCompressedHeader.tsx (شريط مضغوط حقيقي)
+src/components/customers/details/CustomerKPICards.tsx     (overdue badge في compact)
+src/pages/customers/CustomerDetailsPage.tsx               (empty state ذكي + onNewCreditNote حقيقي + إعادة ترتيب)
 ```
-creditNotes={detail.creditNotes}
-currentBalance={detail.currentBalance}
-```
-(البيانات متوفرة بالفعل في `useCustomerDetail` — لا حاجة لاستعلام جديد).
 
-## التفاصيل التقنية
-- لا توجد تغييرات في قاعدة البيانات أو RLS — الاستعلامات قائمة (`useCustomerDetail` يجلب `invoices` و`creditNotes` فعلياً).
-- لا تغييرات على edge functions.
-- يحترم RTL: استخدام `gap` و`grid` بدون `left/right` صريحة.
-- يحترم mobile-first: 44px touch targets محفوظة في الأزرار الموجودة.
+## نقاط للنقاش (اختياري)
 
-## الملفات المتأثرة
-- إضافة: `src/components/customers/details/InvoicesReturnsSummary.tsx`
-- تعديل: `src/components/customers/tabs/CustomerTabInvoices.tsx` (props + استخدام الملخص + قسم مرتجعات مختصر)
-- تعديل: `src/pages/customers/CustomerDetailsPage.tsx` (تمرير props جديدة في موضعين: ديسكتوب + موبايل)
+- هل تريدني أبدأ بكل التحسينات معًا، أم على دفعات (1+2+3 أولًا، ثم الباقي)؟
+- زر "إشعار دائن": نفتح dialog أم ننتقل لصفحة `/credit-notes`؟
+- تقليل أيقونات الـ Strip لـ 6 + "المزيد"، أم نُبقي الـ 11 ونُحسّن مؤشر التمرير فقط؟
+
+عند موافقتك أبدأ التنفيذ خطوة خطوة مع QA بصري لكل تغيير.
