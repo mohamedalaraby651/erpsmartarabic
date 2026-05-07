@@ -416,7 +416,7 @@ const CustomerDetailsPage = () => {
           onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
-          onNewCreditNote={() => handleTabChange('credit-notes')}
+          onNewCreditNote={() => setCreditNoteDialogOpen(true)}
           onToggleActive={handleToggleActive} onChangeVip={handleChangeVip}
         />
       </div>
