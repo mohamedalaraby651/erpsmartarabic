@@ -246,7 +246,8 @@ function MobileCustomerView({
             {mobileSection === 'attachments' && (
               <CustomerTabAttachments customerId={customerId} />
             )}
-          </Suspense>
+            </Suspense>
+          </>
         )}
       </div>
     </div>
