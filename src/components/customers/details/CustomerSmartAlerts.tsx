@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, AlertTriangle, Clock, UserX, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
