@@ -259,8 +259,14 @@ const CustomerListCardInner = ({
       </DropdownMenu>
 
       <div
-        className="p-3.5 cursor-pointer select-none"
+        className="p-3.5 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
         {...longPressHandlers}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-haspopup="menu"
+        aria-label={`${customer.name} — اضغط للتوسيع. أسهم اليمين/اليسار للإجراءات السريعة. Shift+F10 للقائمة.`}
+        onKeyDown={handleKeyDown}
       >
         {/* Header row: Avatar + Name + Balance */}
         <div className="flex items-start gap-3">
