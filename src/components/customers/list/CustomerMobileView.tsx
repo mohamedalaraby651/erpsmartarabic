@@ -55,7 +55,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
     return () => observer.disconnect();
   }, [hasNextPage, onLoadMore, isFetchingNextPage, data.length]);
 
-  if (isLoading && data.length === 0) return <CustomerListSkeleton count={6} />;
+  if (isLoading && data.length === 0) return <CustomerMobileSkeleton count={6} />;
 
   if (data.length === 0) {
     return (
