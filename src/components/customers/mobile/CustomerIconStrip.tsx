@@ -75,6 +75,16 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
     };
   }, [updateEdges]);
 
+  // Scroll the active button into view when section changes externally
+  useEffect(() => {
+    const viewport = wrapperRef.current?.querySelector<HTMLDivElement>('[data-radix-scroll-area-viewport]');
+    if (!viewport) return;
+    const active = viewport.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]');
+    if (active) {
+      active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [activeSection]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     const last = stripIcons.length - 1;
     let nextIndex: number | null = null;

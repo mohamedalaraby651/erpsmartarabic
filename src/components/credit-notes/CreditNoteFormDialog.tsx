@@ -25,6 +25,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  /** Prefill the customer when opening the dialog (e.g. from a customer profile) */
+  prefillCustomerId?: string;
 }
 
 interface InvoiceItemRow {
@@ -54,13 +56,21 @@ interface ReturnLine {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: Props) {
+export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, prefillCustomerId }: Props) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [customerId, setCustomerId] = useState('');
   const [invoiceId, setInvoiceId] = useState('');
   const [reason, setReason] = useState('');
   const [lines, setLines] = useState<ReturnLine[]>([]);
+
+  // Apply prefill on open
+  useEffect(() => {
+    if (open && prefillCustomerId) {
+      setCustomerId(prefillCustomerId);
+      setInvoiceId('');
+    }
+  }, [open, prefillCustomerId]);
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers-select'],

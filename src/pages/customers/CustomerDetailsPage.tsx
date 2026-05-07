@@ -13,7 +13,8 @@ import {
 import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
-import { useCustomerDetail, useCustomerNavigation } from "@/hooks/customers";
+import { useCustomerDetail, useCustomerNavigation, useUpcomingReminders } from "@/hooks/customers";
+import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
 import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
 import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
 import { CustomerPinnedNote } from "@/components/customers/details/CustomerPinnedNote";
@@ -77,6 +78,32 @@ const TabSkeleton = () => (
   </div>
 );
 
+/* ─── Section labels for mobile ─── */
+const sectionLabels: Record<string, string> = {
+  invoices: 'الفواتير', payments: 'المدفوعات', info: 'البيانات الأساسية',
+  notes: 'الملاحظات', analytics: 'التحليلات والمؤشرات', sales: 'العروض والأوامر',
+  statement: 'كشف الحساب', aging: 'أعمار الديون', reminders: 'التذكيرات',
+  communications: 'سجل التواصل', attachments: 'المرفقات',
+};
+
+function SectionHeader({ sectionId, onBack }: { sectionId: MobileSectionId; onBack: () => void }) {
+  const label = sectionLabels[sectionId];
+  if (!label) return null;
+  return (
+    <div className="flex items-center justify-between mb-2 px-1">
+      <h3 className="text-sm font-bold text-foreground">{label}</h3>
+      <button
+        type="button"
+        onClick={onBack}
+        className="text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1.5 py-0.5"
+        aria-label="العودة للنظرة العامة"
+      >
+        ← العودة للملخص
+      </button>
+    </div>
+  );
+}
+
 /* ─── Mobile Customer View with scroll-based sticky header ─── */
 interface MobileCustomerViewProps {
   customer: Customer;
@@ -89,25 +116,27 @@ interface MobileCustomerViewProps {
   onNewPayment: () => void;
   onNewQuotation: () => void;
   onNewOrder: () => void;
+  onNewCreditNote: () => void;
   onWhatsApp: () => void;
   onImageUpdate: (url: string | null) => void;
   onToggleActive: () => void;
   onQuickPay: (invoiceId: string) => void;
   setSelectedAddress: (a: CustomerAddress | null) => void;
   setAddressDialogOpen: (v: boolean) => void;
+  upcomingReminders: number;
 }
 
 function MobileCustomerView({
   customer, customerId, detail, mobileSection, setMobileSection,
-  onEdit, onNewInvoice, onNewPayment, onNewQuotation, onNewOrder,
+  onEdit, onNewInvoice, onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote,
   onWhatsApp, onImageUpdate, onToggleActive, onQuickPay,
-  setSelectedAddress, setAddressDialogOpen,
+  setSelectedAddress, setAddressDialogOpen, upcomingReminders,
 }: MobileCustomerViewProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const [showCompressed, setShowCompressed] = useState(false);
 
-  // Section badges (overdue invoices, unread reminders, etc.)
+  // Section badges (overdue invoices, upcoming reminders)
   const sectionBadges = useMemo(() => {
     const now = Date.now();
     const overdueInvoices = detail.invoices.filter(inv => {
@@ -117,8 +146,9 @@ function MobileCustomerView({
     }).length;
     return {
       invoices: overdueInvoices,
+      reminders: upcomingReminders,
     } as Partial<Record<MobileSectionId, number>>;
-  }, [detail.invoices]);
+  }, [detail.invoices, upcomingReminders]);
 
   useEffect(() => {
     const el = heroRef.current;
@@ -160,7 +190,7 @@ function MobileCustomerView({
           onNewPayment={onNewPayment}
           onNewQuotation={onNewQuotation}
           onNewOrder={onNewOrder}
-          onNewCreditNote={() => selectSection('invoices')}
+          onNewCreditNote={onNewCreditNote}
           onToggleActive={onToggleActive}
         />
       </div>
@@ -190,10 +220,13 @@ function MobileCustomerView({
         {mobileSection === 'none' ? (
           <CustomerQuickSuggestions
             overdueCount={sectionBadges.invoices ?? 0}
+            upcomingReminders={upcomingReminders}
             onPick={(id) => selectSection(id)}
           />
         ) : (
-          <Suspense fallback={<TabSkeleton />}>
+          <>
+            <SectionHeader sectionId={mobileSection} onBack={() => selectSection('none')} />
+            <Suspense fallback={<TabSkeleton />}>
             {mobileSection === 'invoices' && (
               <div className="space-y-4">
                 <CustomerTabInvoices invoices={detail.invoices} customerId={customerId} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={onQuickPay} creditNotes={detail.creditNotes} currentBalance={detail.currentBalance} paginatedData={detail.paginatedInvoices} currentPage={detail.invoicePage} pageSize={detail.invoicePageSize} onPageChange={detail.goToInvoicePage} />
@@ -239,7 +272,8 @@ function MobileCustomerView({
             {mobileSection === 'attachments' && (
               <CustomerTabAttachments customerId={customerId} />
             )}
-          </Suspense>
+            </Suspense>
+          </>
         )}
       </div>
     </div>
@@ -257,6 +291,8 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
+  const [creditNoteDialogOpen, setCreditNoteDialogOpen] = useState(false);
+  const { data: upcomingReminders = 0 } = useUpcomingReminders(id);
 
   // ── Cross-device URL ↔ tab/section mapping ───────────────────────────
   // Single source of truth: `tab` (desktop value). `section` mirrors it for mobile.
@@ -380,7 +416,7 @@ const CustomerDetailsPage = () => {
           onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
-          onNewCreditNote={() => handleTabChange('credit-notes')}
+          onNewCreditNote={() => setCreditNoteDialogOpen(true)}
           onToggleActive={handleToggleActive} onChangeVip={handleChangeVip}
         />
       </div>
@@ -413,6 +449,8 @@ const CustomerDetailsPage = () => {
           onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
+          onNewCreditNote={() => setCreditNoteDialogOpen(true)}
+          upcomingReminders={upcomingReminders}
           onWhatsApp={handleWhatsApp}
           onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
           onToggleActive={handleToggleActive}
@@ -491,6 +529,17 @@ const CustomerDetailsPage = () => {
 
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
+      <CreditNoteFormDialog
+        open={creditNoteDialogOpen}
+        onOpenChange={setCreditNoteDialogOpen}
+        prefillCustomerId={id}
+        onSuccess={() => {
+          setCreditNoteDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['customer-credit-notes', id] });
+          queryClient.invalidateQueries({ queryKey: ['customer-financial-summary', id] });
+          toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
+        }}
+      />
     </div>
     </PageWrapper>
   );
