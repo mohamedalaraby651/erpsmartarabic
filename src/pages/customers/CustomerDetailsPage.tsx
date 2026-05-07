@@ -78,6 +78,32 @@ const TabSkeleton = () => (
   </div>
 );
 
+/* ─── Section labels for mobile ─── */
+const sectionLabels: Record<string, string> = {
+  invoices: 'الفواتير', payments: 'المدفوعات', info: 'البيانات الأساسية',
+  notes: 'الملاحظات', analytics: 'التحليلات والمؤشرات', sales: 'العروض والأوامر',
+  statement: 'كشف الحساب', aging: 'أعمار الديون', reminders: 'التذكيرات',
+  communications: 'سجل التواصل', attachments: 'المرفقات',
+};
+
+function SectionHeader({ sectionId, onBack }: { sectionId: MobileSectionId; onBack: () => void }) {
+  const label = sectionLabels[sectionId];
+  if (!label) return null;
+  return (
+    <div className="flex items-center justify-between mb-2 px-1">
+      <h3 className="text-sm font-bold text-foreground">{label}</h3>
+      <button
+        type="button"
+        onClick={onBack}
+        className="text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1.5 py-0.5"
+        aria-label="العودة للنظرة العامة"
+      >
+        ← العودة للملخص
+      </button>
+    </div>
+  );
+}
+
 /* ─── Mobile Customer View with scroll-based sticky header ─── */
 interface MobileCustomerViewProps {
   customer: Customer;
