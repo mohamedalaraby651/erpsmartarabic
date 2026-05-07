@@ -48,15 +48,15 @@ const CustomerFinancialSummary = ({
       icon: TrendingDown,
       label: 'إجمالي المدفوعات',
       value: `${totalPayments.toLocaleString()} ج.م`,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-500/10',
+      color: 'text-success',
+      bgColor: 'bg-success/10',
     },
     {
       icon: Wallet,
       label: 'المستحق',
       value: `${(totalOutstanding ?? (totalPurchases - totalPayments)).toLocaleString()} ج.م`,
-      color: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'text-destructive' : 'text-emerald-600',
-      bgColor: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10',
+      color: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'text-destructive' : 'text-success',
+      bgColor: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'bg-destructive/10' : 'bg-success/10',
     },
     {
       icon: CreditCard,
@@ -69,8 +69,8 @@ const CustomerFinancialSummary = ({
       icon: Percent,
       label: 'نسبة الخصم المخصصة',
       value: `${discountPercentage}%`,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-500/10',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
     },
     {
       icon: Clock,
@@ -83,15 +83,15 @@ const CustomerFinancialSummary = ({
       icon: Timer,
       label: 'متوسط أيام السداد (DSO)',
       value: `${dso} يوم`,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-500/10',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
     }] : []),
     ...(clv !== undefined ? [{
       icon: Star,
       label: 'قيمة العميل (CLV)',
       value: `${clv.toLocaleString()} ج.م`,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-500/10',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
     }] : []),
   ];
 
@@ -135,7 +135,7 @@ const CustomerFinancialSummary = ({
               </div>
               <Progress
                 value={Math.min(creditUsage, 100)}
-                className={`h-2 ${creditUsage > 80 ? '[&>div]:bg-destructive' : creditUsage > 50 ? '[&>div]:bg-amber-500' : ''}`}
+                className={`h-2 ${creditUsage > 80 ? '[&>div]:bg-destructive' : creditUsage > 50 ? '[&>div]:bg-warning' : ''}`}
               />
             </div>
           )}

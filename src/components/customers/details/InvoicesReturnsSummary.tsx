@@ -57,9 +57,9 @@ export const InvoicesReturnsSummary = memo(function InvoicesReturnsSummary({
       sub: stats.totalInvoiced > 0
         ? `${Math.round((stats.totalPaid / stats.totalInvoiced) * 100)}% من الإجمالي`
         : '—',
-      tone: 'text-emerald-600 dark:text-emerald-400',
-      bg: 'from-emerald-500/5 to-emerald-500/10',
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      tone: 'text-success',
+      bg: 'from-success/5 to-success/10',
+      iconColor: 'text-success',
     },
     {
       key: 'returns',
@@ -67,9 +67,9 @@ export const InvoicesReturnsSummary = memo(function InvoicesReturnsSummary({
       label: 'المرتجعات',
       value: stats.totalReturns,
       sub: stats.returnsCount > 0 ? `${stats.returnsCount} إشعار · ${stats.returnsRatio}%` : 'لا توجد',
-      tone: 'text-amber-600 dark:text-amber-400',
-      bg: 'from-amber-500/5 to-amber-500/10',
-      iconColor: 'text-amber-600 dark:text-amber-400',
+      tone: 'text-warning',
+      bg: 'from-warning/5 to-warning/10',
+      iconColor: 'text-warning',
     },
     {
       key: 'net',
@@ -77,9 +77,9 @@ export const InvoicesReturnsSummary = memo(function InvoicesReturnsSummary({
       label: 'الصافي المستحق',
       value: stats.outstanding,
       sub: balanceMatches ? 'مطابق للرصيد' : `الرصيد المحفوظ: ${currentBalance.toLocaleString()}`,
-      tone: stats.outstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400',
-      bg: stats.outstanding > 0 ? 'from-destructive/5 to-destructive/10' : 'from-emerald-500/5 to-emerald-500/10',
-      iconColor: stats.outstanding > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400',
+      tone: stats.outstanding > 0 ? 'text-destructive' : 'text-success',
+      bg: stats.outstanding > 0 ? 'from-destructive/5 to-destructive/10' : 'from-success/5 to-success/10',
+      iconColor: stats.outstanding > 0 ? 'text-destructive' : 'text-success',
     },
   ] as const;
 
@@ -107,7 +107,7 @@ export const InvoicesReturnsSummary = memo(function InvoicesReturnsSummary({
         })}
       </div>
       {!balanceMatches && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] border-t border-amber-500/20">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-warning/10 text-warning text-[11px] border-t border-warning/20">
           <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
           <span>
             فرق بين الصافي المحسوب ({stats.outstanding.toLocaleString()}) والرصيد المحفوظ
