@@ -37,6 +37,7 @@ import { CustomerExportDialog } from "@/components/customers/dialogs/CustomerExp
 import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedViews";
 import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/list/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
+import { LiveRegion } from "@/components/shared/LiveRegion";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
