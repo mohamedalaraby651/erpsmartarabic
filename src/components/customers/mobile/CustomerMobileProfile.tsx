@@ -162,6 +162,21 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp} aria-label="فتح محادثة واتساب">
                 <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
               </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="min-h-11 min-w-11 shrink-0"
+                aria-label="نسخ رقم الهاتف"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(customer.phone!);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  } catch { /* clipboard unavailable */ }
+                }}
+              >
+                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+              </Button>
             </>
           ) : (
             <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" onClick={onEdit} aria-label="إضافة رقم هاتف">
