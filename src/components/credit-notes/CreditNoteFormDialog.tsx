@@ -134,6 +134,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
         invoice_item_id: it.id,
         product_id: it.product_id,
         product_name: it.products?.name ?? '—',
+        product_sku: it.products?.sku ?? undefined,
         unit_price: Number(it.unit_price),
         original_qty: Number(it.quantity),
         already_returned: confirmed,
