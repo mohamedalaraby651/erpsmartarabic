@@ -33,13 +33,14 @@ interface InvoiceItemRow {
   quantity: number;
   unit_price: number;
   total_price: number;
-  products?: { name: string } | null;
+  products?: { name: string; sku?: string | null } | null;
 }
 
 interface ReturnLine {
   invoice_item_id: string;
   product_id: string;
   product_name: string;
+  product_sku?: string;
   unit_price: number;
   original_qty: number;
   already_returned: number;
