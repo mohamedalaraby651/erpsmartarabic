@@ -29,7 +29,6 @@ interface CustomerMobileProfileProps {
   onStatement: () => void;
   onWhatsApp: () => void;
   onImageUpdate: (url: string | null) => void;
-  // Embedded stats
   currentBalance?: number;
   balanceIsDebit?: boolean;
   creditLimit?: number;
@@ -39,7 +38,6 @@ interface CustomerMobileProfileProps {
   totalPurchases?: number;
   invoices?: Invoice[];
   payments?: Payment[];
-  // Quick actions
   onNewPayment?: () => void;
   onNewQuotation?: () => void;
   onNewOrder?: () => void;
@@ -77,13 +75,15 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             </p>
             <div className="flex items-center justify-center gap-2 mt-1">
               {onToggleActive ? (
-                <button onClick={onToggleActive} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium cursor-pointer", customer.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                <button onClick={onToggleActive} aria-label={customer.is_active ? "تعطيل العميل" : "تفعيل العميل"} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium cursor-pointer", customer.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
                   {customer.is_active ? <UserCheck className="h-2.5 w-2.5" /> : <UserX className="h-2.5 w-2.5" />}
                   {customer.is_active ? "نشط" : "غير نشط"}
+                  <span className="sr-only">{customer.is_active ? "العميل نشط حالياً — اضغط للتعطيل" : "العميل غير نشط — اضغط للتفعيل"}</span>
                 </button>
               ) : (
                 <Badge variant={customer.is_active ? "default" : "secondary"} className="text-[10px]">
                   {customer.is_active ? "نشط" : "غير نشط"}
+                  <span className="sr-only">{customer.is_active ? "حالة العميل: نشط" : "حالة العميل: غير نشط"}</span>
                 </Badge>
               )}
             </div>
@@ -110,7 +110,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           />
           {/* Credit usage indicator */}
           {creditLimit != null && creditLimit > 0 && creditUsagePercent != null && (
-            <div className="mt-2 p-2 rounded-lg bg-muted/50 border text-xs">
+            <div className="mt-2 p-2 rounded-lg bg-muted/50 border text-xs" role="meter" aria-valuenow={creditUsagePercent} aria-valuemin={0} aria-valuemax={100} aria-label={`استخدام حد الائتمان ${creditUsagePercent.toFixed(0)}%`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-muted-foreground flex items-center gap-1">
                   <Target className="h-3 w-3" />
@@ -122,7 +122,12 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
-                  className={cn("h-full rounded-full transition-all", creditUsagePercent > 90 ? "bg-destructive" : creditUsagePercent > 70 ? "bg-amber-500" : "bg-emerald-500")}
+                  className={cn("h-full rounded-full transition-all",
+                    creditUsagePercent > 90 ? "bg-destructive"
+                    : creditUsagePercent > 70 ? "bg-amber-500"
+                    : creditUsagePercent > 50 ? "bg-yellow-500"
+                    : "bg-emerald-500"
+                  )}
                   style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
                 />
               </div>
@@ -130,37 +135,42 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           )}
         </div>
 
-        {/* Quick contact buttons */}
-        <div className="flex gap-2 mb-4">
+        {/* Primary actions FIRST */}
+        <div className="flex gap-2 mb-2">
+          <Button size="sm" className="flex-1 min-h-11" onClick={onNewInvoice} aria-label="إنشاء فاتورة جديدة">
+            <FileText className="h-4 w-4 ml-1.5" />فاتورة جديدة
+          </Button>
+          {onNewPayment && (
+            <Button size="sm" variant="secondary" className="flex-1 min-h-11" onClick={onNewPayment} aria-label="تسجيل دفعة جديدة">
+              <Wallet className="h-4 w-4 ml-1.5" />دفعة
+            </Button>
+          )}
+          <Button variant="outline" size="sm" className="flex-1 min-h-11" onClick={onStatement} aria-label="عرض كشف الحساب">
+            <Printer className="h-4 w-4 ml-1.5" />كشف
+          </Button>
+        </div>
+
+        {/* Secondary: contact + more */}
+        <div className="flex gap-2">
           {customer.phone ? (
             <>
-              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" asChild>
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" asChild aria-label={`اتصال بـ ${customer.phone}`}>
                 <a href={`tel:${customer.phone}`}>
                   <Phone className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />اتصال
                 </a>
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp}>
+              <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp} aria-label="فتح محادثة واتساب">
                 <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
               </Button>
             </>
           ) : (
-            <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" onClick={onEdit}>
+            <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs" onClick={onEdit} aria-label="إضافة رقم هاتف">
               <Phone className="h-3.5 w-3.5 ml-1 text-muted-foreground" />إضافة رقم هاتف
             </Button>
           )}
-        </div>
-
-        {/* Action buttons: primary + "more" sheet */}
-        <div className="flex gap-2">
-          <Button size="sm" className="flex-1 min-h-11" onClick={onNewInvoice}>
-            <FileText className="h-4 w-4 ml-1.5" />فاتورة جديدة
-          </Button>
-          <Button variant="outline" size="sm" className="flex-1 min-h-11" onClick={onStatement}>
-            <Printer className="h-4 w-4 ml-1.5" />كشف حساب
-          </Button>
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="min-h-11 min-w-11 shrink-0">
+              <Button variant="outline" size="icon" className="min-h-11 min-w-11 shrink-0" aria-label="خيارات إضافية">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </SheetTrigger>
@@ -170,7 +180,6 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               </SheetHeader>
               <div className="grid grid-cols-2 gap-3 mt-4 pb-4">
                 <SheetAction icon={Edit} label="تعديل البيانات" onClick={() => { setSheetOpen(false); onEdit(); }} />
-                {onNewPayment && <SheetAction icon={Wallet} label="تسجيل دفعة" onClick={() => { setSheetOpen(false); onNewPayment(); }} />}
                 {onNewQuotation && <SheetAction icon={Globe} label="عرض سعر" onClick={() => { setSheetOpen(false); onNewQuotation(); }} />}
                 {onNewOrder && <SheetAction icon={ShoppingCart} label="أمر بيع" onClick={() => { setSheetOpen(false); onNewOrder(); }} />}
                 {onNewCreditNote && <SheetAction icon={Receipt} label="إشعار دائن" onClick={() => { setSheetOpen(false); onNewCreditNote(); }} />}
@@ -186,7 +195,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
 
 function SheetAction({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
   return (
-    <Button variant="outline" className="h-14 flex-col gap-1" onClick={onClick}>
+    <Button variant="outline" className="h-14 flex-col gap-1" onClick={onClick} aria-label={label}>
       <Icon className="h-5 w-5" />
       <span className="text-xs">{label}</span>
     </Button>
