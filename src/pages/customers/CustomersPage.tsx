@@ -78,7 +78,7 @@ const CustomersPage = () => {
     })());
   }, [sortConfig, setSortConfig]);
 
-  const [quickFilter, setQuickFilter] = useNavigationState<string | null>('customers_quick_filter', null);
+  const [quickFilter, setQuickFilter] = usePersistentState<string | null>('customers_quick_filter', null);
 
   const resetAllQuickFilters = useCallback(() => {
     filters.setStatusFilter('all');
