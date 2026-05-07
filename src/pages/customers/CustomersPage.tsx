@@ -66,7 +66,7 @@ const CustomersPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'sales';
   const canDelete = userRole === 'admin';
 
-  const [sortConfig, setSortConfig] = useNavigationState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
+  const [sortConfig, setSortConfig] = usePersistentState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
   const requestSort = useCallback((key: string) => {
     setSortConfig((() => {
       const current = sortConfig;
