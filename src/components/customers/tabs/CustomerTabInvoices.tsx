@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Wallet, AlertCircle, Search, CreditCard } from "lucide-react";
+import { FileText, Plus, Search, CreditCard, Undo2, ArrowLeft } from "lucide-react";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { ServerPagination } from "@/components/shared/ServerPagination";
+import { InvoicesReturnsSummary } from "@/components/customers/details/InvoicesReturnsSummary";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
