@@ -119,31 +119,40 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             payments={payments}
             compact
           />
-          {/* Credit usage indicator */}
-          {creditLimit != null && creditLimit > 0 && creditUsagePercent != null && (
-            <div className="mt-2 p-2 rounded-lg bg-muted/50 border text-xs" role="meter" aria-valuenow={creditUsagePercent} aria-valuemin={0} aria-valuemax={100} aria-label={`استخدام حد الائتمان ${creditUsagePercent.toFixed(0)}%`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Target className="h-3 w-3" />
-                  حد الائتمان: {creditLimit.toLocaleString()} ج.م
-                </span>
-                <span className={cn("font-bold", creditUsagePercent > 90 ? "text-destructive" : creditUsagePercent > 70 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
-                  {creditUsagePercent.toFixed(0)}%
-                </span>
+          {/* Credit usage indicator — only when there's an actual credit limit */}
+          {creditLimit != null && creditLimit > 0 && creditUsagePercent != null && (() => {
+            const available = Math.round((creditLimit - currentBalance) * 100) / 100;
+            const tone = creditUsagePercent > 90
+              ? { text: 'text-destructive', bar: 'bg-destructive' }
+              : creditUsagePercent > 70
+                ? { text: 'text-warning', bar: 'bg-warning' }
+                : { text: 'text-success', bar: 'bg-success' };
+            return (
+              <div className="mt-2 p-2.5 rounded-lg bg-muted/50 border text-xs" role="meter" aria-valuenow={creditUsagePercent} aria-valuemin={0} aria-valuemax={100} aria-label={`استخدام حد الائتمان ${creditUsagePercent.toFixed(0)}%`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Target className="h-3 w-3" />
+                    حد الائتمان: {creditLimit.toLocaleString()} ج.م
+                  </span>
+                  <span className={cn("font-bold tabular-nums", tone.text)}>
+                    {creditUsagePercent.toFixed(0)}%
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full transition-all", tone.bar)}
+                    style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                  <span className="text-muted-foreground">المتاح للسحب</span>
+                  <span className={cn("font-semibold tabular-nums", available > 0 ? 'text-success' : 'text-destructive')}>
+                    {available.toLocaleString()} ج.م
+                  </span>
+                </div>
               </div>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full transition-all",
-                    creditUsagePercent > 90 ? "bg-destructive"
-                    : creditUsagePercent > 70 ? "bg-amber-500"
-                    : creditUsagePercent > 50 ? "bg-yellow-500"
-                    : "bg-emerald-500"
-                  )}
-                  style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
-                />
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Primary actions FIRST */}
