@@ -18,9 +18,9 @@ interface AlertItem {
 
 const variantStyles = {
   destructive: 'bg-destructive/10 border-destructive/30 text-destructive',
-  warning: 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400',
-  info: 'bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400',
-  success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400',
+  warning: 'bg-warning/10 border-warning/30 text-warning',
+  info: 'bg-primary/10 border-primary/30 text-primary',
+  success: 'bg-success/10 border-success/30 text-success',
 };
 
 interface CustomerSmartAlertsProps {

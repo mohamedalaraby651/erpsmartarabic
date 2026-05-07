@@ -36,19 +36,19 @@ export default function CustomerAgingReport({ customerId }: CustomerAgingReportP
       label: 'جاري', range: '0-30 يوم',
       amount: Number(agingData?.bucket_0_30?.amount || 0),
       count: Number(agingData?.bucket_0_30?.count || 0),
-      color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-500',
+      color: 'text-success', bgColor: 'bg-success',
     },
     {
       label: 'متأخر', range: '31-60 يوم',
       amount: Number(agingData?.bucket_31_60?.amount || 0),
       count: Number(agingData?.bucket_31_60?.count || 0),
-      color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-500',
+      color: 'text-warning', bgColor: 'bg-warning',
     },
     {
       label: 'متأخر جداً', range: '61-90 يوم',
       amount: Number(agingData?.bucket_61_90?.amount || 0),
       count: Number(agingData?.bucket_61_90?.count || 0),
-      color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-500',
+      color: 'text-warning', bgColor: 'bg-warning/80',
     },
     {
       label: 'خطر', range: '90+ يوم',

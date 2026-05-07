@@ -39,13 +39,13 @@ export const CustomerPinnedNote = memo(function CustomerPinnedNote({
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
+      <Card className="border-warning/30 bg-warning/5">
         <CardContent className="p-3">
           <CollapsibleTrigger asChild>
             <button className="flex items-center justify-between w-full text-right">
               <div className="flex items-center gap-2">
-                <Pin className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 rotate-45" />
-                <span className="text-xs font-medium text-amber-700 dark:text-amber-400">ملاحظة مثبتة</span>
+                <Pin className="h-3.5 w-3.5 text-warning rotate-45" />
+                <span className="text-xs font-medium text-warning">ملاحظة مثبتة</span>
               </div>
               {open ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
             </button>
@@ -56,7 +56,7 @@ export const CustomerPinnedNote = memo(function CustomerPinnedNote({
               <span className="text-[10px] text-muted-foreground">
                 {new Date(pinnedNote.created_at).toLocaleDateString('ar-EG')}
               </span>
-              <Button variant="link" size="sm" className="h-auto p-0 text-xs text-amber-700 dark:text-amber-400" onClick={onViewAllNotes}>
+              <Button variant="link" size="sm" className="h-auto p-0 text-xs text-warning" onClick={onViewAllNotes}>
                 عرض الكل
               </Button>
             </div>

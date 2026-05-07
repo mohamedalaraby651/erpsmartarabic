@@ -21,7 +21,7 @@ const typeConfig = {
   call: { label: 'مكالمة', icon: Phone, color: 'bg-info/10 text-info border-info/30' },
   visit: { label: 'زيارة', icon: MapPin, color: 'bg-warning/10 text-warning border-warning/30' },
   email: { label: 'بريد', icon: Mail, color: 'bg-primary/10 text-primary border-primary/30' },
-  whatsapp: { label: 'واتساب', icon: MessagesSquare, color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' },
+  whatsapp: { label: 'واتساب', icon: MessagesSquare, color: 'bg-success/10 text-success border-success/30' },
   other: { label: 'أخرى', icon: MessageSquare, color: 'bg-muted text-muted-foreground border-muted' },
 };
 

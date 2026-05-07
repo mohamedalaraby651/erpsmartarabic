@@ -122,13 +122,13 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
             <p className="text-sm text-muted-foreground">إجمالي مدين</p>
             <p className="text-lg font-bold text-destructive">{totalDebit.toLocaleString()} ج.م</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-emerald-500/10">
+          <div className="text-center p-3 rounded-lg bg-success/10">
             <p className="text-sm text-muted-foreground">إجمالي دائن</p>
-            <p className="text-lg font-bold text-emerald-600">{totalCredit.toLocaleString()} ج.م</p>
+            <p className="text-lg font-bold text-success">{totalCredit.toLocaleString()} ج.م</p>
           </div>
-          <div className={`text-center p-3 rounded-lg ${finalBalance > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10'}`}>
+          <div className={`text-center p-3 rounded-lg ${finalBalance > 0 ? 'bg-destructive/10' : 'bg-success/10'}`}>
             <p className="text-sm text-muted-foreground">الرصيد النهائي</p>
-            <p className={`text-lg font-bold ${finalBalance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>{finalBalance.toLocaleString()} ج.م</p>
+            <p className={`text-lg font-bold ${finalBalance > 0 ? 'text-destructive' : 'text-success'}`}>{finalBalance.toLocaleString()} ج.م</p>
           </div>
         </div>
 
@@ -179,10 +179,10 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
                       <TableCell className={entry.debit > 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}>
                         {entry.debit > 0 ? entry.debit.toLocaleString() : '-'}
                       </TableCell>
-                      <TableCell className={entry.credit > 0 ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}>
+                      <TableCell className={entry.credit > 0 ? 'text-success font-medium' : 'text-muted-foreground'}>
                         {entry.credit > 0 ? entry.credit.toLocaleString() : '-'}
                       </TableCell>
-                      <TableCell className={`font-bold ${entry.running_balance > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                      <TableCell className={`font-bold ${entry.running_balance > 0 ? 'text-destructive' : 'text-success'}`}>
                         {entry.running_balance.toLocaleString()}
                       </TableCell>
                       <TableCell>
