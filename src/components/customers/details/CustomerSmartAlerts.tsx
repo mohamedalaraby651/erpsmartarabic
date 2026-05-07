@@ -105,32 +105,35 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
   if (visibleAlerts.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="region" aria-label="تنبيهات العميل" aria-live="polite">
       {visibleAlerts.map(alert => {
         const Icon = alert.icon;
         return (
           <div
             key={alert.id}
+            role="alert"
             className={cn(
               "flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm",
               variantStyles[alert.variant]
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="flex-1 min-w-0 truncate">{alert.message}</span>
             <Button
               variant="ghost"
               size="sm"
               className="h-7 text-xs shrink-0 hover:bg-background/50"
               onClick={alert.onAction}
+              aria-label={`${alert.action} — ${alert.message}`}
             >
               {alert.action}
             </Button>
             <button
               onClick={() => setDismissed(prev => new Set(prev).add(alert.id))}
               className="shrink-0 p-0.5 rounded hover:bg-background/50"
+              aria-label="إخفاء التنبيه"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
         );
