@@ -51,13 +51,14 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
           {stripIcons.map((item, index) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
+            const badge = badges?.[item.id] ?? 0;
 
             return (
               <button
                 key={item.id}
                 role="tab"
                 aria-selected={isActive}
-                aria-label={item.label}
+                aria-label={badge > 0 ? `${item.label} (${badge})` : item.label}
                 tabIndex={isActive ? 0 : -1}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 onClick={() => onSectionChange(activeSection === item.id ? 'none' : item.id)}
@@ -67,10 +68,15 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
                 )}
               >
                 <div className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-lg transition-all",
+                  "relative flex items-center justify-center w-8 h-8 rounded-lg transition-all",
                   isActive ? item.bg : "bg-transparent",
                 )}>
                   <Icon className={cn("h-4.5 w-4.5", isActive ? item.color : "text-muted-foreground")} />
+                  {badge > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none shadow">
+                      {badge > 99 ? '99+' : badge}
+                    </span>
+                  )}
                 </div>
                 <span className={cn(
                   "text-[10px] font-medium leading-none whitespace-nowrap",
