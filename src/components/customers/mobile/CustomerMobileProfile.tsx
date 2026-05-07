@@ -51,6 +51,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
 }: CustomerMobileProfileProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   return (
     <Card className="border-0 shadow-lg bg-gradient-to-b from-primary/5 via-background to-background overflow-hidden">
