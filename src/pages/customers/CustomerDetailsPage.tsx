@@ -449,6 +449,8 @@ const CustomerDetailsPage = () => {
           onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
           onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
           onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
+          onNewCreditNote={() => setCreditNoteDialogOpen(true)}
+          upcomingReminders={upcomingReminders}
           onWhatsApp={handleWhatsApp}
           onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
           onToggleActive={handleToggleActive}
