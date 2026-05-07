@@ -128,8 +128,36 @@ const CustomerListCardInner = ({
   const showPrimary = isSwiping && swipe.offset < 0;
   const showContact = isSwiping && swipe.offset > 0;
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleToggle();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      // Keyboard equivalents of swipe gestures (RTL-aware)
+      const isRTL = document.documentElement.dir === 'rtl';
+      const wantsPrimary = isRTL ? e.key === 'ArrowRight' : e.key === 'ArrowLeft';
+      if (wantsPrimary) {
+        if (onNewInvoice) { e.preventDefault(); triggerNewInvoice(); }
+        else if (onNewPayment) { e.preventDefault(); triggerNewPayment(); }
+      } else if (hasContact) {
+        e.preventDefault();
+        triggerCall();
+      }
+    } else if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+      e.preventDefault();
+      setMenuOpen(true);
+    }
+  }, [handleToggle, onNewInvoice, onNewPayment, triggerNewInvoice, triggerNewPayment, hasContact, triggerCall]);
+
+  const ariaLabel = `${customer.name}، ${typeLabels[customer.customer_type] || ''}${customer.vip_level !== 'regular' ? '، ' + (vipLabels[customer.vip_level] || '') : ''}، الرصيد ${Math.abs(balance).toLocaleString()} جنيه ${balance > 0 ? 'مدين' : balance < 0 ? 'دائن' : 'مسوّى'}${alertCount && alertCount > 0 ? `، ${alertCount} تنبيه` : ''}`;
+
   return (
-    <div className="relative overflow-hidden rounded-lg" {...swipe.handlers}>
+    <div
+      className="relative overflow-hidden rounded-lg"
+      {...swipe.handlers}
+      role="article"
+      aria-label={ariaLabel}
+    >
       {/* Action layer — primary (revealed on swipe toward inline-end visually) */}
       {swipeEnabled && (onNewInvoice || onNewPayment) && (
         <div
@@ -231,8 +259,14 @@ const CustomerListCardInner = ({
       </DropdownMenu>
 
       <div
-        className="p-3.5 cursor-pointer select-none"
+        className="p-3.5 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
         {...longPressHandlers}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-haspopup="menu"
+        aria-label={`${customer.name} — اضغط للتوسيع. أسهم اليمين/اليسار للإجراءات السريعة. Shift+F10 للقائمة.`}
+        onKeyDown={handleKeyDown}
       >
         {/* Header row: Avatar + Name + Balance */}
         <div className="flex items-start gap-3">
