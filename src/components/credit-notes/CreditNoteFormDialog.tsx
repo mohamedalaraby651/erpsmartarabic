@@ -328,7 +328,12 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess }: 
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <span className="font-medium text-sm">{l.product_name}</span>
+                            <span className="font-medium text-sm">
+                              {l.product_name}
+                              {l.product_sku && (
+                                <span className="text-xs text-muted-foreground font-normal mr-1">({l.product_sku})</span>
+                              )}
+                            </span>
                             <span className="text-xs text-muted-foreground">
                               {Number(l.unit_price).toLocaleString()} × {l.original_qty}
                             </span>
