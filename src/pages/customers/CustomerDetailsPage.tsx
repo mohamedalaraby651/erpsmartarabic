@@ -411,25 +411,6 @@ const CustomerDetailsPage = () => {
               <ChartErrorBoundary title="المشتريات والمدفوعات">
                 <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
               </ChartErrorBoundary>
-              <ChartErrorBoundary title="أعمار الديون">
-                <AgingDonutChart customerId={id!} />
-              </ChartErrorBoundary>
-              <ChartErrorBoundary title="التدفق المالي">
-                <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
-              </ChartErrorBoundary>
-              <ChartErrorBoundary title="المنتجات">
-                <TopProductsChart topProducts={detail.chartData?.top_products} />
-              </ChartErrorBoundary>
-            </TabsContent>
-            <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
-            <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>
-          </Suspense>
-        </Tabs>
-      )}
-            <TabsContent value="analytics" className="mt-6 space-y-4">
-              <ChartErrorBoundary title="المشتريات والمدفوعات">
-                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
-              </ChartErrorBoundary>
               <LazyOnVisible minHeight={300}>
                 <ChartErrorBoundary title="أعمار الديون">
                   <AgingDonutChart customerId={id!} />
@@ -443,9 +424,7 @@ const CustomerDetailsPage = () => {
               <LazyOnVisible minHeight={300}>
                 <ChartErrorBoundary title="المنتجات">
                   <TopProductsChart topProducts={detail.chartData?.top_products} />
-                </ChartErrorBoundary>
-              </LazyOnVisible>
-            </TabsContent>
+                </ChartError
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
     </div>
