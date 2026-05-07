@@ -232,9 +232,19 @@ const CustomerListCardInner = ({
     >
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <button ref={menuTriggerRef} className="sr-only" tabIndex={-1}>menu</button>
+          <button
+            ref={menuTriggerRef}
+            id={`${menuContentId}-trigger`}
+            aria-controls={menuOpen ? menuContentId : undefined}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="sr-only"
+            tabIndex={-1}
+          >
+            menu
+          </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-[180px]">
+        <DropdownMenuContent id={menuContentId} align="start" className="min-w-[180px]">
           <DropdownMenuItem onClick={() => onNavigate(customer.id)}>
             <Eye className="h-4 w-4 ml-2" /> عرض التفاصيل
           </DropdownMenuItem>
