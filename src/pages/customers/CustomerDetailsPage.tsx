@@ -203,10 +203,10 @@ function MobileCustomerView({
             {mobileSection === 'analytics' && (
               <div className="space-y-4">
                 <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoiceCount} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-                <LazyOnVisible minHeight={280}><CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
-                <LazyOnVisible minHeight={300}><AgingDonutChart customerId={customerId} /></LazyOnVisible>
-                <LazyOnVisible minHeight={280}><CashFlowLineChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
-                <LazyOnVisible minHeight={280}><TopProductsChart topProducts={detail.chartData?.top_products} /></LazyOnVisible>
+                <LazyOnVisible minHeight={280} placeholder={<ChartSkeleton variant="bars" height={240} />}><CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
+                <LazyOnVisible minHeight={300} placeholder={<ChartSkeleton variant="donut" height={260} />}><AgingDonutChart customerId={customerId} /></LazyOnVisible>
+                <LazyOnVisible minHeight={280} placeholder={<ChartSkeleton variant="line" height={240} />}><CashFlowLineChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
+                <LazyOnVisible minHeight={280} placeholder={<ChartSkeleton variant="bars" height={240} />}><TopProductsChart topProducts={detail.chartData?.top_products} /></LazyOnVisible>
               </div>
             )}
             {mobileSection === 'sales' && (
