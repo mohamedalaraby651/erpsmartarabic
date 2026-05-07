@@ -90,12 +90,14 @@ interface MobileCustomerViewProps {
   onNewPayment: () => void;
   onNewQuotation: () => void;
   onNewOrder: () => void;
+  onNewCreditNote: () => void;
   onWhatsApp: () => void;
   onImageUpdate: (url: string | null) => void;
   onToggleActive: () => void;
   onQuickPay: (invoiceId: string) => void;
   setSelectedAddress: (a: CustomerAddress | null) => void;
   setAddressDialogOpen: (v: boolean) => void;
+  upcomingReminders: number;
 }
 
 function MobileCustomerView({
