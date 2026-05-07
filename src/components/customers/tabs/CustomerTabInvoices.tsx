@@ -88,12 +88,16 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
 
   React.useEffect(() => { setClientPage(1); }, [statusFilter, searchQuery]);
 
-  const summary = useMemo(() => {
-    const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total_amount), 0);
+  const unlinkedPayments = useMemo(() => {
+    if (totalPaymentsFromLedger == null) return 0;
     const totalPaid = invoices.reduce((s, i) => s + Number(i.paid_amount || 0), 0);
-    const unlinkedPayments = totalPaymentsFromLedger != null ? Math.round((totalPaymentsFromLedger - totalPaid) * 100) / 100 : 0;
-    return { totalInvoiced, totalPaid, outstanding: totalInvoiced - totalPaid, unlinkedPayments };
+    return Math.round((totalPaymentsFromLedger - totalPaid) * 100) / 100;
   }, [invoices, totalPaymentsFromLedger]);
+
+  const recentReturns = useMemo(
+    () => creditNotes.filter((c) => c.status !== 'cancelled').slice(0, 3),
+    [creditNotes],
+  );
 
   return (
     <Card>
