@@ -258,6 +258,8 @@ const CustomerDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
+  const [creditNoteDialogOpen, setCreditNoteDialogOpen] = useState(false);
+  const { data: upcomingReminders = 0 } = useUpcomingReminders(id);
 
   // ── Cross-device URL ↔ tab/section mapping ───────────────────────────
   // Single source of truth: `tab` (desktop value). `section` mirrors it for mobile.
