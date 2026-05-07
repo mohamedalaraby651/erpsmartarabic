@@ -67,6 +67,9 @@ const CustomerListCardInner = ({
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const reactId = React.useId();
+  const expandedPanelId = `customer-card-${reactId}-panel`;
+  const menuContentId = `customer-card-${reactId}-menu`;
 
   const balance = Number(customer.current_balance || 0);
   const creditLimit = Number(customer.credit_limit || 0);
@@ -229,9 +232,19 @@ const CustomerListCardInner = ({
     >
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <button ref={menuTriggerRef} className="sr-only" tabIndex={-1}>menu</button>
+          <button
+            ref={menuTriggerRef}
+            id={`${menuContentId}-trigger`}
+            aria-controls={menuOpen ? menuContentId : undefined}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="sr-only"
+            tabIndex={-1}
+          >
+            menu
+          </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-[180px]">
+        <DropdownMenuContent id={menuContentId} align="start" className="min-w-[180px]">
           <DropdownMenuItem onClick={() => onNavigate(customer.id)}>
             <Eye className="h-4 w-4 ml-2" /> عرض التفاصيل
           </DropdownMenuItem>
@@ -264,6 +277,7 @@ const CustomerListCardInner = ({
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
+        aria-controls={expandedPanelId}
         aria-haspopup="menu"
         aria-label={`${customer.name} — اضغط للتوسيع. أسهم اليمين/اليسار للإجراءات السريعة. Shift+F10 للقائمة.`}
         onKeyDown={handleKeyDown}
@@ -374,10 +388,16 @@ const CustomerListCardInner = ({
         )}
 
         {/* Expanded content */}
-        <div className={cn(
-          'overflow-hidden transition-all duration-300 ease-in-out',
-          expanded ? 'max-h-[350px] opacity-100 mt-3' : 'max-h-0 opacity-0',
-        )}>
+        <div
+          id={expandedPanelId}
+          role="region"
+          aria-label={`تفاصيل ${customer.name}`}
+          aria-hidden={!expanded}
+          className={cn(
+            'overflow-hidden transition-all duration-300 ease-in-out',
+            expanded ? 'max-h-[350px] opacity-100 mt-3' : 'max-h-0 opacity-0',
+          )}
+        >
           <div className="border-t border-border/40 pt-3 animate-fade-in space-y-3">
             {/* KPIs */}
             <div className="grid grid-cols-3 gap-2">
