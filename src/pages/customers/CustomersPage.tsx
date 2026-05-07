@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
 import { useNavigationState } from "@/hooks/useNavigationState";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
 import { useInfiniteCustomers } from "@/hooks/customers/useInfiniteCustomers";
