@@ -165,7 +165,10 @@ function MobileCustomerView({
         />
       </div>
 
-      <div className="sticky top-0 z-30 -mx-3 px-3 bg-background pb-1 space-y-1.5">
+      <div className={cn(
+        "sticky top-0 z-30 -mx-3 px-3 bg-background/80 backdrop-blur-sm pb-1 space-y-1.5 transition-shadow",
+        showCompressed && "shadow-[0_1px_0_0_hsl(var(--border))]",
+      )}>
         <div className={cn(
           "transition-all duration-200 overflow-hidden",
           showCompressed ? "max-h-20 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
