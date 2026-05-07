@@ -220,7 +220,7 @@ const CustomersPage = () => {
       />
 
       {isMobile ? (
-        <div className="pb-28">
+        <div className="pb-fab-safe">
           <CustomerMobileView
             data={allCustomers}
             isLoading={list.isLoading}
