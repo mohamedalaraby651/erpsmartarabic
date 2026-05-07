@@ -388,10 +388,16 @@ const CustomerListCardInner = ({
         )}
 
         {/* Expanded content */}
-        <div className={cn(
-          'overflow-hidden transition-all duration-300 ease-in-out',
-          expanded ? 'max-h-[350px] opacity-100 mt-3' : 'max-h-0 opacity-0',
-        )}>
+        <div
+          id={expandedPanelId}
+          role="region"
+          aria-label={`تفاصيل ${customer.name}`}
+          aria-hidden={!expanded}
+          className={cn(
+            'overflow-hidden transition-all duration-300 ease-in-out',
+            expanded ? 'max-h-[350px] opacity-100 mt-3' : 'max-h-0 opacity-0',
+          )}
+        >
           <div className="border-t border-border/40 pt-3 animate-fade-in space-y-3">
             {/* KPIs */}
             <div className="grid grid-cols-3 gap-2">
