@@ -61,7 +61,12 @@ export const CustomerKPICards = memo(function CustomerKPICards({
 
   return (
     <>
-      <div className={cn("grid gap-3", compact ? "grid-cols-3" : "grid-cols-1 md:grid-cols-3")}>
+      <div className={cn(
+        "grid gap-3",
+        compact
+          ? (cards.length === 2 ? "grid-cols-2" : "grid-cols-3")
+          : (cards.length === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-3")
+      )}>
         {cards.map((card) => {
           const Icon = card.icon;
           const TrendIcon = card.trend === 'up' ? ArrowUpRight : ArrowDownRight;
