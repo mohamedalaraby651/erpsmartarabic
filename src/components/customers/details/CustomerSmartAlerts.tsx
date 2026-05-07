@@ -1,7 +1,8 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { X, AlertTriangle, Clock, UserX, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -32,14 +33,22 @@ interface CustomerSmartAlertsProps {
   onSendReminder: () => void;
   onNewInvoice: () => void;
   onContact: () => void;
+  /** Stable key (e.g. customer id) to persist expanded/dismissed state across reloads */
+  persistKey?: string;
 }
 
 export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
   currentBalance, creditLimit, invoices, lastPurchaseDate, lastCommunicationAt,
-  onEditCreditLimit, onSendReminder, onNewInvoice, onContact,
+  onEditCreditLimit, onSendReminder, onNewInvoice, onContact, persistKey,
 }: CustomerSmartAlertsProps) {
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState(false);
+  const scope = persistKey ?? 'global';
+  const [dismissedArr, setDismissedArr] = usePersistentState<string[]>(
+    `smart_alerts_dismissed_${scope}`, [],
+  );
+  const [expanded, setExpanded] = usePersistentState<boolean>(
+    `smart_alerts_expanded_${scope}`, false,
+  );
+  const dismissed = useMemo(() => new Set(dismissedArr), [dismissedArr]);
 
   const alerts = useMemo<AlertItem[]>(() => {
     const list: AlertItem[] = [];
@@ -134,7 +143,7 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
               {alert.action}
             </Button>
             <button
-              onClick={() => setDismissed(prev => new Set(prev).add(alert.id))}
+              onClick={() => setDismissedArr(prev => prev.includes(alert.id) ? prev : [...prev, alert.id])}
               className="shrink-0 p-0.5 rounded hover:bg-background/50"
               aria-label="إخفاء التنبيه"
             >
