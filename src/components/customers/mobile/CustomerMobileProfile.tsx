@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Crown, FileText, Printer, Phone, MessageSquare, MapPin,
-  Target, MoreHorizontal,
+  Target, MoreHorizontal, Copy, Check,
   Edit, Wallet, Globe, ShoppingCart, Receipt, UserCheck, UserX,
 } from "lucide-react";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
@@ -51,6 +51,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
 }: CustomerMobileProfileProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   return (
     <Card className="border-0 shadow-lg bg-gradient-to-b from-primary/5 via-background to-background overflow-hidden">
@@ -58,7 +59,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
         {/* Avatar + VIP centered */}
         <div className="flex flex-col items-center text-center gap-3 mb-4">
           <div className="relative">
-            <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="xl" />
+            <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="lg" />
             <div className="absolute -bottom-1 -left-1">
               <ImageUpload currentImageUrl={customer.image_url} onImageUploaded={(url) => onImageUpdate(url)} onImageRemoved={() => onImageUpdate(null)} bucket="customer-images" folder={customerId} showAvatar={false} />
             </div>
@@ -161,6 +162,21 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               </Button>
               <Button variant="outline" size="sm" className="flex-1 min-h-11 text-xs border-emerald-200 dark:border-emerald-800" onClick={onWhatsApp} aria-label="فتح محادثة واتساب">
                 <MessageSquare className="h-3.5 w-3.5 ml-1 text-emerald-600 dark:text-emerald-400" />واتساب
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="min-h-11 min-w-11 shrink-0"
+                aria-label="نسخ رقم الهاتف"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(customer.phone!);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  } catch { /* clipboard unavailable */ }
+                }}
+              >
+                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
               </Button>
             </>
           ) : (

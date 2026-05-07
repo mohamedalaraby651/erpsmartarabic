@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -26,6 +26,7 @@ import { CustomerCompressedHeader } from "@/components/customers/mobile/Customer
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
+import { LazyOnVisible } from "@/components/shared/LazyOnVisible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -104,6 +105,19 @@ function MobileCustomerView({
   const sectionRef = useRef<HTMLDivElement>(null);
   const [showCompressed, setShowCompressed] = useState(false);
 
+  // Section badges (overdue invoices, unread reminders, etc.)
+  const sectionBadges = useMemo(() => {
+    const now = Date.now();
+    const overdueInvoices = detail.invoices.filter(inv => {
+      if (inv.payment_status === 'paid') return false;
+      const due = inv.due_date ? new Date(inv.due_date).getTime() : new Date(inv.created_at).getTime();
+      return due < now;
+    }).length;
+    return {
+      invoices: overdueInvoices,
+    } as Partial<Record<MobileSectionId, number>>;
+  }, [detail.invoices]);
+
   useEffect(() => {
     const el = heroRef.current;
     if (!el) return;
@@ -164,7 +178,7 @@ function MobileCustomerView({
             onMoreActions={onEdit}
           />
         </div>
-        <CustomerIconStrip activeSection={mobileSection} onSectionChange={selectSection} />
+        <CustomerIconStrip activeSection={mobileSection} onSectionChange={selectSection} badges={sectionBadges} />
       </div>
 
       <div ref={sectionRef}>
@@ -188,10 +202,10 @@ function MobileCustomerView({
             {mobileSection === 'analytics' && (
               <div className="space-y-4">
                 <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoiceCount} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
-                <AgingDonutChart customerId={customerId} />
-                <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
-                <TopProductsChart topProducts={detail.chartData?.top_products} />
+                <LazyOnVisible minHeight={280}><CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
+                <LazyOnVisible minHeight={300}><AgingDonutChart customerId={customerId} /></LazyOnVisible>
+                <LazyOnVisible minHeight={280}><CashFlowLineChart monthlyData={detail.chartData?.monthly_data} /></LazyOnVisible>
+                <LazyOnVisible minHeight={280}><TopProductsChart topProducts={detail.chartData?.top_products} /></LazyOnVisible>
               </div>
             )}
             {mobileSection === 'sales' && (
@@ -410,15 +424,21 @@ const CustomerDetailsPage = () => {
               <ChartErrorBoundary title="المشتريات والمدفوعات">
                 <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
               </ChartErrorBoundary>
-              <ChartErrorBoundary title="أعمار الديون">
-                <AgingDonutChart customerId={id!} />
-              </ChartErrorBoundary>
-              <ChartErrorBoundary title="التدفق المالي">
-                <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
-              </ChartErrorBoundary>
-              <ChartErrorBoundary title="المنتجات">
-                <TopProductsChart topProducts={detail.chartData?.top_products} />
-              </ChartErrorBoundary>
+              <LazyOnVisible minHeight={300}>
+                <ChartErrorBoundary title="أعمار الديون">
+                  <AgingDonutChart customerId={id!} />
+                </ChartErrorBoundary>
+              </LazyOnVisible>
+              <LazyOnVisible minHeight={300}>
+                <ChartErrorBoundary title="التدفق المالي">
+                  <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
+                </ChartErrorBoundary>
+              </LazyOnVisible>
+              <LazyOnVisible minHeight={300}>
+                <ChartErrorBoundary title="المنتجات">
+                  <TopProductsChart topProducts={detail.chartData?.top_products} />
+                </ChartErrorBoundary>
+              </LazyOnVisible>
             </TabsContent>
             <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
             <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>

@@ -17,7 +17,7 @@ interface AgingDonutChartProps {
 
 export function AgingDonutChart({ customerId }: AgingDonutChartProps) {
   const { data: agingData } = useQuery({
-    queryKey: ['customer-aging-chart', customerId],
+    queryKey: ['customer-aging', customerId],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_customer_aging', { _customer_id: customerId });
       if (error) throw error;
