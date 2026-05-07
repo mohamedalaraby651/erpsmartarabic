@@ -104,9 +104,13 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
   const visibleAlerts = alerts.filter(a => !dismissed.has(a.id));
   if (visibleAlerts.length === 0) return null;
 
+  // Show first alert always; collapse the rest behind a toggle when 2+
+  const shown = expanded ? visibleAlerts : visibleAlerts.slice(0, 1);
+  const hiddenCount = visibleAlerts.length - shown.length;
+
   return (
-    <div className="space-y-2" role="region" aria-label="تنبيهات العميل" aria-live="polite">
-      {visibleAlerts.map(alert => {
+    <div className="space-y-2 w-full" role="region" aria-label="تنبيهات العميل" aria-live="polite">
+      {shown.map(alert => {
         const Icon = alert.icon;
         return (
           <div
@@ -138,6 +142,24 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
           </div>
         );
       })}
+      {visibleAlerts.length > 1 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          aria-expanded={expanded}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 px-2 py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {expanded ? (
+            <>
+              <ChevronUp className="h-3 w-3" /> طيّ التنبيهات
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-3 w-3" /> عرض {hiddenCount} تنبيه إضافي
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 });
