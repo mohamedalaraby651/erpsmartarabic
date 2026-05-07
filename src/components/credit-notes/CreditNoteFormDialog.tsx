@@ -64,6 +64,14 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
   const [reason, setReason] = useState('');
   const [lines, setLines] = useState<ReturnLine[]>([]);
 
+  // Apply prefill on open
+  useEffect(() => {
+    if (open && prefillCustomerId) {
+      setCustomerId(prefillCustomerId);
+      setInvoiceId('');
+    }
+  }, [open, prefillCustomerId]);
+
   const { data: customers = [] } = useQuery({
     queryKey: ['customers-select'],
     queryFn: async () => {
