@@ -198,6 +198,7 @@ const CustomersPage = () => {
   return (
     <PageWrapper title="العملاء">
     <div className="space-y-4 md:space-y-5">
+      <LiveRegion message={liveMessage} />
       <CustomerPageHeader
         isMobile={isMobile} canEdit={canEdit}
         exportAllLoading={false} onAdd={handleAdd}
