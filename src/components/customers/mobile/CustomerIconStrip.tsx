@@ -96,7 +96,7 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
   };
 
   return (
-    <div className="relative bg-card border rounded-xl shadow-sm py-2">
+    <div ref={wrapperRef} className="relative bg-card border rounded-xl shadow-sm py-2">
       {/* Edge fade hints for horizontal scroll */}
       <div
         aria-hidden
@@ -115,7 +115,7 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
         )}
       />
 
-      <ScrollArea className="w-full" ref={scrollRef as React.RefObject<HTMLDivElement>}>
+      <ScrollArea className="w-full">
         <div
           className="flex items-center gap-1 px-2"
           role="tablist"
