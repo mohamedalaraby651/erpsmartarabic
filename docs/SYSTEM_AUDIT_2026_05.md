@@ -122,3 +122,44 @@ return <div ref={bindRef}>{...}</div>;
 ---
 
 **نهاية التقرير**
+
+---
+
+## ملحق — جلسة 8 مايو 2026 (المساء): تصحيح المفاهيم الأمنية وتعزيزات إضافية
+
+### تصحيح مفاهيم خاطئة شائعة
+
+| الادعاء | الحقيقة |
+|---------|---------|
+| "كشف `SUPABASE_ANON_KEY` في `index.html` تسرّب أمني" | ❌ خطأ. هذا مفتاح **publishable** بالتصميم — يُفترض وجوده في الواجهة. الحماية الفعلية عبر **RLS policies** (مُفعَّلة على كل الجداول مع عزل `tenant_id`). إخفاؤه لا يضيف أماناً ويكسر التطبيق. |
+| "Project ID و Edge Function URL أسرار" | ❌ خطأ. عناوين عامة كأي URL على الإنترنت. |
+| "58 تحذير Linter متبقية = ثغرات" | ❌ false positives — دوال SECURITY DEFINER داخلية مطلوبة للعمليات الذرية (تحديث الأرصدة، triggers). تم تقييد `EXECUTE` لها بشكل صحيح. |
+
+### إصلاحات هذه الجلسة
+
+1. **معالجة الأخطاء الموحّدة**: استبدال `e?.message` المباشر بـ `getSafeErrorMessage(e)` في 13 موضعاً عبر:
+   - `src/hooks/logistics/useGoodsReceipts.ts`
+   - `src/hooks/logistics/usePurchaseInvoices.ts`
+   - `src/hooks/logistics/useDeliveryNotes.ts`
+   - `src/hooks/sales-cycle/useQuotes.ts`
+
+2. **حماية الـ logging في الإنتاج**: لفّ كل `console.log` بـ `import.meta.env.DEV &&` في:
+   - `src/lib/performanceMonitor.ts`
+   - `src/lib/syncManager.ts`
+   - `src/hooks/useAppBadge.ts`
+   - `src/lib/arabicFont.ts`
+
+3. **Sync Manager — حارس offline**: `syncToServer()` تعود مبكراً عند `!navigator.onLine` لمنع تراكم طلبات فاشلة في طابور المزامنة.
+
+4. **Content Security Policy (CSP)**: أُضيف `<meta http-equiv="Content-Security-Policy">` في `index.html` يقيّد:
+   - `connect-src` على `*.supabase.co` + Google Fonts فقط.
+   - `frame-ancestors 'none'` (منع clickjacking).
+   - `base-uri 'self'` و `form-action 'self'`.
+   - مع السماح بـ `'unsafe-inline'` للـ scripts/styles المطلوبة من Vite/Tailwind.
+
+### ما أُجِّل لجلسة لاحقة (مع التبرير)
+
+- **`tsconfig.app.json` strict mode**: تفعيل `noImplicitAny` يولّد 29 خطأ (معظمها في ملفات الاختبار). يحتاج جلسة مخصصة لإصلاحها قبل التفعيل.
+- **إزالة `(supabase as any)` من useQuotes**: types موجودة في `types.ts`، لكن الإزالة قد تسبب type errors متتالية في الـ callers. يحتاج refactor تدريجي.
+- **تقسيم ملفات > 500 سطر** (RestoreBackupDialog 1213 سطر، ReportTemplateEditor 736 سطر): يحتاج جلسة مخصصة.
+- **تغيير `package.json` name**: قد يكسر سكريبتات Lovable الداخلية — متروك.

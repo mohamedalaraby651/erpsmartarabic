@@ -9,17 +9,17 @@ export function useAppBadge() {
 
   const setBadge = useCallback(async (count: number) => {
     if (!isSupported) {
-      console.log('[App Badge] Not supported in this browser');
+      import.meta.env.DEV && console.log('[App Badge] Not supported in this browser');
       return false;
     }
 
     try {
       if (count > 0) {
         await (navigator as unknown as { setAppBadge: (count: number) => Promise<void> }).setAppBadge(count);
-        console.log(`[App Badge] Set to ${count}`);
+        import.meta.env.DEV && console.log(`[App Badge] Set to ${count}`);
       } else {
         await (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge();
-        console.log('[App Badge] Cleared');
+        import.meta.env.DEV && console.log('[App Badge] Cleared');
       }
       return true;
     } catch (error) {
@@ -33,7 +33,7 @@ export function useAppBadge() {
 
     try {
       await (navigator as unknown as { clearAppBadge: () => Promise<void> }).clearAppBadge();
-      console.log('[App Badge] Cleared');
+      import.meta.env.DEV && console.log('[App Badge] Cleared');
       return true;
     } catch (error) {
       console.error('[App Badge] Error clearing:', error);

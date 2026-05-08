@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSafeErrorMessage } from "@/lib/errorHandler";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -131,7 +132,7 @@ export function useCreateGoodsReceipt() {
       toast.success(`تم إنشاء إيصال الاستلام ${h.receipt_number}`);
       qc.invalidateQueries({ queryKey: ["goods-receipts"] });
     },
-    onError: (e: any) => toast.error(e?.message || "تعذّر إنشاء الإيصال"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "تعذّر إنشاء الإيصال"),
   });
 }
 
@@ -150,7 +151,7 @@ export function usePostGoodsReceipt() {
       qc.invalidateQueries({ queryKey: ["goods-receipts"] });
       qc.invalidateQueries({ queryKey: ["goods-receipt"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل الترحيل"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل الترحيل"),
   });
 }
 
@@ -172,6 +173,6 @@ export function useCancelGoodsReceipt() {
       qc.invalidateQueries({ queryKey: ["goods-receipts"] });
       qc.invalidateQueries({ queryKey: ["goods-receipt"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل الإلغاء"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل الإلغاء"),
   });
 }

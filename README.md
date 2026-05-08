@@ -1,73 +1,61 @@
-# Welcome to your Lovable project
+# نظرة (Nazra) — نظام إدارة الأعمال الذكي
 
-## Project info
+نظام ERP عربي متكامل لإدارة العملاء والمبيعات والمخزون والمحاسبة، مع دعم العمل بدون إنترنت وتعدد الشركات (Multi-tenant).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## المنصة
 
-## How can I edit this code?
+- **الواجهة**: React 18 + Vite 5 + TypeScript + Tailwind CSS + shadcn-ui
+- **الباك إند**: Lovable Cloud (PostgreSQL + Auth + Edge Functions + Storage)
+- **PWA**: يعمل بدون إنترنت مع مزامنة تلقائية عند عودة الاتصال
+- **اللغة**: عربية (RTL) كاملة + خط Cairo
 
-There are several ways of editing your application.
+## بنية المشروع
 
-**Use Lovable**
+```
+src/
+├── components/      # مكونات الواجهة المعاد استخدامها
+├── pages/           # صفحات النظام (مرتبطة بالـ routes)
+├── hooks/           # React hooks مخصصة
+├── lib/             # خدمات، utilities، مولدات PDF/Excel
+├── integrations/    # عميل Supabase (مولَّد تلقائياً)
+└── __tests__/       # اختبارات وحدات + تكامل + أمان
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+supabase/
+├── functions/       # Edge Functions (Deno)
+└── migrations/      # ترحيلات قاعدة البيانات
 
-Changes made via Lovable will be committed automatically to this repo.
+docs/                # توثيق فني وتقارير المراجعة
+e2e/                 # اختبارات Playwright شاملة
+```
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## التشغيل المحلي
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+ثم افتح `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## التحرير
 
-**Use GitHub Codespaces**
+- **Lovable**: عبر [محرر المشروع](https://lovable.dev) — التغييرات تُرفع تلقائياً.
+- **محلياً**: استنسخ المستودع، عدّل، ثم ادفع.
+- **GitHub Codespaces**: اضغط Code → Codespaces → New codespace.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## النشر
 
-## What technologies are used for this project?
+عبر Lovable: Share → Publish. لربط دومين مخصص: Project → Settings → Domains.
 
-This project is built with:
+## التوثيق الفني
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `docs/SYSTEM_AUDIT_2026_05.md` — أحدث مراجعة أمنية وأدائية.
+- `docs/DATABASE_SCHEMA.md` — مخطط قاعدة البيانات.
+- `docs/API_DOCUMENTATION.md` — مرجع Edge Functions.
+- `docs/DEPLOYMENT_GUIDE.md` — دليل النشر للإنتاج.
 
-## How can I deploy this project?
+## الأمان
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- جميع الجداول محمية بـ Row Level Security (RLS) مع عزل `tenant_id`.
+- العمليات الحساسة (المدفوعات، الترحيل المحاسبي) تمر عبر Edge Functions أو RPCs ذرية.
+- مفتاح `VITE_SUPABASE_PUBLISHABLE_KEY` في الواجهة هو **publishable** بالتصميم — الحماية تأتي من RLS وليس من إخفاء المفتاح.

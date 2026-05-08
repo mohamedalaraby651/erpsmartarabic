@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSafeErrorMessage } from "@/lib/errorHandler";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -144,7 +145,7 @@ export function useCreateQuote() {
       toast.success(`تم إنشاء عرض السعر ${h.quote_number}`);
       qc.invalidateQueries({ queryKey: ["quotes"] });
     },
-    onError: (e: any) => toast.error(e?.message || "تعذّر إنشاء عرض السعر"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "تعذّر إنشاء عرض السعر"),
   });
 }
 
@@ -163,7 +164,7 @@ export function useUpdateQuoteStatus() {
       qc.invalidateQueries({ queryKey: ["quotes"] });
       qc.invalidateQueries({ queryKey: ["quote"] });
     },
-    onError: (e: any) => toast.error(e?.message || "تعذّر التحديث"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "تعذّر التحديث"),
   });
 }
 
@@ -182,7 +183,7 @@ export function useConvertQuoteToOrder() {
       qc.invalidateQueries({ queryKey: ["quotes"] });
       qc.invalidateQueries({ queryKey: ["sales-orders"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل التحويل"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل التحويل"),
   });
 }
 
@@ -201,7 +202,7 @@ export function useConvertOrderToInvoice() {
       qc.invalidateQueries({ queryKey: ["sales-orders"] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل إنشاء الفاتورة"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل إنشاء الفاتورة"),
   });
 }
 
@@ -227,6 +228,6 @@ export function useConvertInvoiceToDelivery() {
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["delivery-notes"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل إنشاء إذن التسليم"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل إنشاء إذن التسليم"),
   });
 }

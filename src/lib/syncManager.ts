@@ -17,6 +17,11 @@ type TableName = 'customers' | 'products' | 'invoices' | 'quotations' | 'supplie
 
 // Sync pending changes to server
 export async function syncToServer(): Promise<SyncResult> {
+  // Guard: skip entirely when offline to avoid piling up failed attempts
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return { success: false, synced: 0, failed: 0, conflicts: 0 };
+  }
+
   const pendingItems = await getPendingSyncItems();
   
   let synced = 0;
@@ -143,7 +148,7 @@ export async function refreshCache(): Promise<void> {
       await cacheData('suppliers', suppliers);
     }
     
-    console.log('Cache refreshed successfully');
+    import.meta.env.DEV && console.log('Cache refreshed successfully');
   } catch (error) {
     console.error('Failed to refresh cache:', error);
   }
