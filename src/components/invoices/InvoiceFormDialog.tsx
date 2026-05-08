@@ -47,21 +47,13 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const [isValidating, setIsValidating] = useState(false);
 
   const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('customers_safe').select('*').eq('is_active', true).order('name');
-      if (error) throw error;
-      return data as Customer[];
-    },
+    queryKey: queryKeys.customers.list({ active: true, safe: true }),
+    queryFn: () => customerRepository.findActiveSafe(),
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ['products'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name');
-      if (error) throw error;
-      return data as Product[];
-    },
+    queryKey: queryKeys.products.list({ active: true }),
+    queryFn: () => productRepository.findActive(),
   });
 
   const { items, subtotal, addItem, updateItem, removeItem, loadItems, resetItems } = useInvoiceItems(products);
