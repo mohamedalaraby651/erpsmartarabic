@@ -137,9 +137,25 @@ const PlatformSettingsPage = lazy(() => import("./pages/platform/PlatformSetting
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (previously cacheTime)
+      // Default = `standard` preset from src/lib/queryConfig.ts.
+      // Hooks needing different freshness should pass an override
+      // (e.g. queryPresets.realtime for notifications).
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
+      retry: (failureCount, error: unknown) => {
+        // Don't retry permission/auth errors — they won't succeed.
+        const code = (error as { code?: string; status?: number })?.code;
+        const status = (error as { status?: number })?.status;
+        if (code === '42501' || code === 'PGRST301' || status === 401 || status === 403) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
+    },
+    mutations: {
+      retry: false,
     },
   },
 });
