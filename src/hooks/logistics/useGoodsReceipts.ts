@@ -106,7 +106,7 @@ export function useCreateGoodsReceipt() {
           purchase_order_id: draft.purchase_order_id ?? null,
           received_date: draft.received_date,
           notes: draft.notes ?? null,
-        } as any)
+        })
         .select("id, receipt_number")
         .single();
       if (hErr) throw hErr;
@@ -122,7 +122,7 @@ export function useCreateGoodsReceipt() {
             received_qty: Math.round(it.received_qty * 100) / 100,
             unit_cost: Math.round(it.unit_cost * 100) / 100,
             notes: it.notes ?? null,
-          })) as any
+          }))
         );
         if (iErr) throw iErr;
       }

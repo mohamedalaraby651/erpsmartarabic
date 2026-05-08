@@ -131,7 +131,7 @@ export function useCreatePurchaseInvoice() {
           discount_amount: discount,
           total_amount: total,
           notes: draft.notes ?? null,
-        } as any)
+        })
         .select("id, invoice_number")
         .single();
       if (hErr) throw hErr;
@@ -147,7 +147,7 @@ export function useCreatePurchaseInvoice() {
             unit_price: round2(it.unit_price),
             total_price: round2(it.quantity * it.unit_price),
             notes: it.notes ?? null,
-          })) as any
+          }))
         );
         if (iErr) throw iErr;
       }
