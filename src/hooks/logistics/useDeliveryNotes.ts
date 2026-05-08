@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSafeErrorMessage } from "@/lib/errorHandler";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -135,7 +136,7 @@ export function useCreateDeliveryNote() {
       toast.success(`تم إنشاء إذن التسليم ${h.delivery_number}`);
       qc.invalidateQueries({ queryKey: ["delivery-notes"] });
     },
-    onError: (e: any) => toast.error(e?.message || "تعذّر إنشاء إذن التسليم"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "تعذّر إنشاء إذن التسليم"),
   });
 }
 
@@ -165,7 +166,7 @@ export function usePostDeliveryNote() {
       qc.invalidateQueries({ queryKey: ["delivery-notes"] });
       qc.invalidateQueries({ queryKey: ["delivery-note"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل الترحيل"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل الترحيل"),
   });
 }
 
@@ -187,6 +188,6 @@ export function useCancelDeliveryNote() {
       qc.invalidateQueries({ queryKey: ["delivery-notes"] });
       qc.invalidateQueries({ queryKey: ["delivery-note"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل الإلغاء"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل الإلغاء"),
   });
 }

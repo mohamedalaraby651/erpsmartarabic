@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSafeErrorMessage } from "@/lib/errorHandler";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -156,7 +157,7 @@ export function useCreatePurchaseInvoice() {
       toast.success(`تم إنشاء فاتورة المشتريات ${h.invoice_number}`);
       qc.invalidateQueries({ queryKey: ["purchase-invoices"] });
     },
-    onError: (e: any) => toast.error(e?.message || "تعذّر إنشاء الفاتورة"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "تعذّر إنشاء الفاتورة"),
   });
 }
 
@@ -192,6 +193,6 @@ export function usePostPurchaseInvoice() {
       qc.invalidateQueries({ queryKey: ["purchase-invoices"] });
       qc.invalidateQueries({ queryKey: ["purchase-invoice"] });
     },
-    onError: (e: any) => toast.error(e?.message || "فشل الترحيل"),
+    onError: (e: any) => toast.error(getSafeErrorMessage(e) || "فشل الترحيل"),
   });
 }
