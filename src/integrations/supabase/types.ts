@@ -2223,6 +2223,51 @@ export type Database = {
           },
         ]
       }
+      journal_reversals: {
+        Row: {
+          created_at: string
+          id: string
+          original_journal_id: string
+          reason: string
+          reversal_journal_id: string
+          reversed_by: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          original_journal_id: string
+          reason: string
+          reversal_journal_id: string
+          reversed_by?: string | null
+          tenant_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          original_journal_id?: string
+          reason?: string
+          reversal_journal_id?: string
+          reversed_by?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_reversals_original_journal_id_fkey"
+            columns: ["original_journal_id"]
+            isOneToOne: true
+            referencedRelation: "journals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_reversals_reversal_journal_id_fkey"
+            columns: ["reversal_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journals: {
         Row: {
           created_at: string | null
@@ -2234,6 +2279,8 @@ export type Database = {
           journal_date: string
           journal_number: string
           posted_at: string | null
+          reversed_by_journal_id: string | null
+          reverses_journal_id: string | null
           source_id: string | null
           source_type: string | null
           tenant_id: string
@@ -2250,6 +2297,8 @@ export type Database = {
           journal_date: string
           journal_number: string
           posted_at?: string | null
+          reversed_by_journal_id?: string | null
+          reverses_journal_id?: string | null
           source_id?: string | null
           source_type?: string | null
           tenant_id?: string
@@ -2266,6 +2315,8 @@ export type Database = {
           journal_date?: string
           journal_number?: string
           posted_at?: string | null
+          reversed_by_journal_id?: string | null
+          reverses_journal_id?: string | null
           source_id?: string | null
           source_type?: string | null
           tenant_id?: string
@@ -2278,6 +2329,20 @@ export type Database = {
             columns: ["fiscal_period_id"]
             isOneToOne: false
             referencedRelation: "fiscal_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journals_reversed_by_journal_id_fkey"
+            columns: ["reversed_by_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journals_reverses_journal_id_fkey"
+            columns: ["reverses_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journals"
             referencedColumns: ["id"]
           },
           {
@@ -5630,6 +5695,14 @@ export type Database = {
         Args: { _invoice_id: string }
         Returns: Json
       }
+      create_journal_reversal: {
+        Args: {
+          _original_journal_id: string
+          _reason: string
+          _reversal_date?: string
+        }
+        Returns: string
+      }
       decrypt_totp_secret: { Args: { _user_id: string }; Returns: string }
       emit_event: {
         Args: {
@@ -5849,6 +5922,15 @@ export type Database = {
       validate_credit_note_before_confirm: {
         Args: { p_credit_note_id: string }
         Returns: Json
+      }
+      validate_ledger_integrity: {
+        Args: { _tenant_id?: string }
+        Returns: {
+          check_name: string
+          details: Json
+          failing_count: number
+          status: string
+        }[]
       }
       void_invoice: {
         Args: { _invoice_id: string; _reason?: string }
