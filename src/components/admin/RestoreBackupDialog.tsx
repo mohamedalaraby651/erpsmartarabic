@@ -243,7 +243,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
         .map(([k]) => k);
       setSelectedTables(auto);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'فشل قراءة الملف';
+      const msg = getSafeErrorMessage(err) || 'فشل قراءة الملف';
       toast.error(msg);
       reset();
     } finally {
@@ -376,7 +376,8 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
         toast.success(`تمت الاستعادة بنجاح — ${data.total_inserted} سجل`);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'خطأ غير متوقع';
+      const msg = getSafeErrorMessage(err) || 'خطأ غير متوقع';
+      console.error('[RestoreBackup] restore error:', err);
       toast.error(msg);
       setStep('configure');
     } finally {
@@ -446,7 +447,8 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       setRollbackDone(true);
       toast.success(`تم التراجع — استعادة ${data.total_restored ?? 0} سجل`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'خطأ غير متوقع';
+      const msg = getSafeErrorMessage(err) || 'خطأ غير متوقع';
+      console.error('[RestoreBackup] rollback error:', err);
       toast.error(msg);
     } finally {
       setIsRollingBack(false);
