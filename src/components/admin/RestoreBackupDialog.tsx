@@ -30,6 +30,7 @@ import {
   type RestoreStep as Step,
   type RestoreResult,
 } from './restoreBackup.constants';
+import { RestoreBackupResultsView } from './RestoreBackupResultsView';
 
 interface Props {
   open: boolean;
