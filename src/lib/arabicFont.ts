@@ -80,7 +80,7 @@ export async function loadArabicFont(fontKey: PdfFontKey = 'amiri'): Promise<str
   
   for (const url of config.urls) {
     try {
-      console.log(`[Font] Trying to load "${config.name}" from: ${url}`);
+      import.meta.env.DEV && console.log(`[Font] Trying to load "${config.name}" from: ${url}`);
       const response = await fetch(url);
       if (!response.ok) {
         console.warn(`[Font] HTTP ${response.status} for: ${url}`);
@@ -115,7 +115,7 @@ export async function loadArabicFont(fontKey: PdfFontKey = 'amiri'): Promise<str
       }
       const base64 = btoa(binary);
       
-      console.log(`[Font] ✅ "${config.name}" loaded successfully (${Math.round(arrayBuffer.byteLength / 1024)}KB)`);
+      import.meta.env.DEV && console.log(`[Font] ✅ "${config.name}" loaded successfully (${Math.round(arrayBuffer.byteLength / 1024)}KB)`);
       ARABIC_FONT_NAME = config.name;
       return base64;
     } catch (error) {

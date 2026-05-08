@@ -57,7 +57,7 @@ function reportMetric(name: string, value: number) {
   // Log to console in development
   if (import.meta.env.DEV) {
     const emoji = rating === 'good' ? '✅' : rating === 'needs-improvement' ? '⚠️' : '❌';
-    console.log(`[Performance] ${emoji} ${name.toUpperCase()}: ${value.toFixed(2)}ms (${rating})`);
+    import.meta.env.DEV && console.log(`[Performance] ${emoji} ${name.toUpperCase()}: ${value.toFixed(2)}ms (${rating})`);
   }
 }
 
@@ -214,7 +214,7 @@ function measureTTI() {
         const tti = navigationEntry.domInteractive;
         metricsStore.tti = tti;
         if (import.meta.env.DEV) {
-          console.log(`[Performance] ℹ️ TTI (estimated): ${tti.toFixed(2)}ms`);
+          import.meta.env.DEV && console.log(`[Performance] ℹ️ TTI (estimated): ${tti.toFixed(2)}ms`);
         }
       }
     }, 0);
@@ -287,9 +287,9 @@ export function logBundleInfo(): void {
     const totalJsSize = jsResources.reduce((sum, r) => sum + (r.transferSize || 0), 0);
     const totalCssSize = cssResources.reduce((sum, r) => sum + (r.transferSize || 0), 0);
     
-    console.log('[Performance] 📦 Bundle Analysis:');
-    console.log(`  JS: ${(totalJsSize / 1024).toFixed(2)} KB (${jsResources.length} files)`);
-    console.log(`  CSS: ${(totalCssSize / 1024).toFixed(2)} KB (${cssResources.length} files)`);
-    console.log(`  Total: ${((totalJsSize + totalCssSize) / 1024).toFixed(2)} KB`);
+    import.meta.env.DEV && console.log('[Performance] 📦 Bundle Analysis:');
+    import.meta.env.DEV && console.log(`  JS: ${(totalJsSize / 1024).toFixed(2)} KB (${jsResources.length} files)`);
+    import.meta.env.DEV && console.log(`  CSS: ${(totalCssSize / 1024).toFixed(2)} KB (${cssResources.length} files)`);
+    import.meta.env.DEV && console.log(`  Total: ${((totalJsSize + totalCssSize) / 1024).toFixed(2)} KB`);
   }
 }

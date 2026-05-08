@@ -143,7 +143,7 @@ export async function refreshCache(): Promise<void> {
       await cacheData('suppliers', suppliers);
     }
     
-    console.log('Cache refreshed successfully');
+    import.meta.env.DEV && console.log('Cache refreshed successfully');
   } catch (error) {
     console.error('Failed to refresh cache:', error);
   }
