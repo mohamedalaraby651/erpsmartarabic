@@ -5,9 +5,45 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
+import { invoiceRepository } from "@/lib/repositories/invoiceRepository";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
+type InvoiceInsert = Database['public']['Tables']['invoices']['Insert'];
+type InvoiceItemInsert = Database['public']['Tables']['invoice_items']['Insert'];
+
+// ============================================
+// Save (atomic-ish: header + items)
+// ============================================
+
+export interface SaveInvoiceInput {
+  id?: string; // undefined = create
+  header: InvoiceInsert;
+  items: Omit<InvoiceItemInsert, 'invoice_id'>[];
+}
+
+/**
+ * Persists an invoice header + items.
+ * For edits, replaces all items (legacy behavior preserved).
+ * Note: not transactional client-side. The DB triggers reverse stats on delete,
+ * and Phase 4 will move this to an RPC for true atomicity.
+ */
+export async function saveInvoiceWithItems(input: SaveInvoiceInput): Promise<string> {
+  let invoiceId: string;
+  if (input.id) {
+    await invoiceRepository.update(input.id, input.header);
+    await invoiceRepository.deleteItemsByInvoice(input.id);
+    invoiceId = input.id;
+  } else {
+    const created = await invoiceRepository.create(input.header);
+    invoiceId = created.id;
+  }
+  await invoiceRepository.bulkInsertItems(
+    input.items.map((it) => ({ ...it, invoice_id: invoiceId }))
+  );
+  return invoiceId;
+}
+
 
 // ============================================
 // Permission Checks
