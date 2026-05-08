@@ -151,7 +151,16 @@ export const customerRelationsRepo = {
     if (error) throw error;
   },
 
-  async updateReminder(id: string, payload: { is_completed: boolean; updated_at: string }): Promise<void> {
+  async updateReminder(
+    id: string,
+    payload: Partial<{
+      is_completed: boolean;
+      reminder_date: string;
+      note: string;
+      recurrence: string | null;
+      linked_invoice_id: string | null;
+    }> & { updated_at: string }
+  ): Promise<void> {
     const { error } = await supabase
       .from('customer_reminders')
       .update(payload)
