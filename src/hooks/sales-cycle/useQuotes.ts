@@ -116,13 +116,13 @@ export function useCreateQuote() {
           notes: draft.notes ?? null,
           subtotal,
           total_amount: subtotal,
-        })
+        } as any)
         .select("id, quote_number")
         .single();
       if (hErr) throw hErr;
 
       if (draft.items.length > 0) {
-        const { error: iErr } = await supabase.from("quote_items").insert(
+        const { error: iErr } = await (supabase as any).from("quote_items").insert(
           draft.items.map((it) => ({
             tenant_id,
             quote_id: header.id,
