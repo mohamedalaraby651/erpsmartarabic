@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Bell, Plus, Clock, Check, FileText, ArrowLeft, AlarmClock, CalendarClock } from "lucide-react";
+import { Bell, Plus, Clock, Check, FileText, ArrowLeft, AlarmClock, CalendarClock, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
 import SharedEmptyState from "@/components/shared/SharedEmptyState";
@@ -27,6 +27,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
   const navigate = useNavigate();
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [reminderDate, setReminderDate] = useState('');
   const [reminderNote, setReminderNote] = useState('');
   const [recurrence, setRecurrence] = useState<string>('none');
@@ -37,6 +38,18 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
     queryFn: () => customerRelationsRepo.findReminders(customerId),
     staleTime: 30000,
   });
+
+  const resetForm = () => {
+    setEditingId(null);
+    setReminderDate('');
+    setReminderNote('');
+    setRecurrence('none');
+    setLinkedInvoiceId('');
+  };
+
+  useEffect(() => {
+    if (!dialogOpen) resetForm();
+  }, [dialogOpen]);
 
   const addMutation = useMutation({
     mutationFn: () => customerRelationsRepo.createReminder({
@@ -52,12 +65,24 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       queryClient.invalidateQueries({ queryKey: ['customer-upcoming-reminders', customerId] });
       toast.success('تم إضافة التذكير');
       setDialogOpen(false);
-      setReminderDate('');
-      setReminderNote('');
-      setRecurrence('none');
-      setLinkedInvoiceId('');
     },
     onError: () => toast.error('فشل إضافة التذكير'),
+  });
+
+  const editMutation = useMutation({
+    mutationFn: () => customerRelationsRepo.updateReminder(editingId!, {
+      reminder_date: reminderDate,
+      note: reminderNote.trim(),
+      recurrence: recurrence !== 'none' ? recurrence : null,
+      updated_at: new Date().toISOString(),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-reminders', customerId] });
+      queryClient.invalidateQueries({ queryKey: ['customer-upcoming-reminders', customerId] });
+      toast.success('تم تحديث التذكير');
+      setDialogOpen(false);
+    },
+    onError: () => toast.error('فشل تحديث التذكير'),
   });
 
   const toggleMutation = useMutation({
@@ -68,6 +93,16 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       queryClient.invalidateQueries({ queryKey: ['customer-upcoming-reminders', customerId] });
     },
   });
+
+  const openEdit = (r: typeof reminders[number]) => {
+    setEditingId(r.id);
+    // reminder_date is a timestamp; use first 10 chars for date input
+    setReminderDate((r.reminder_date || '').slice(0, 10));
+    setReminderNote(r.note || '');
+    setRecurrence(r.recurrence || 'none');
+    setLinkedInvoiceId(r.linked_invoice_id || '');
+    setDialogOpen(true);
+  };
 
   const { overdue, today, upcoming, completed } = useMemo(() => {
     const now = new Date();
@@ -84,7 +119,6 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       else if (d < endOfToday) today.push(r);
       else upcoming.push(r);
     }
-    // sort: overdue oldest-first (most overdue), today/upcoming nearest-first
     overdue.sort((a, b) => +new Date(a.reminder_date) - +new Date(b.reminder_date));
     today.sort((a, b) => +new Date(a.reminder_date) - +new Date(b.reminder_date));
     upcoming.sort((a, b) => +new Date(a.reminder_date) - +new Date(b.reminder_date));
@@ -129,7 +163,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center flex-wrap gap-2 mt-2">
             {r.linked_invoice_id ? (
               <Button
                 size="sm"
@@ -154,11 +188,24 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                 تمت المتابعة
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs gap-1"
+              onClick={() => openEdit(r)}
+              aria-label="تعديل التذكير"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              تعديل
+            </Button>
           </div>
         </div>
       </div>
     );
   };
+
+  const isEditing = editingId !== null;
+  const submitMutation = isEditing ? editMutation : addMutation;
 
   return (
     <Card>
@@ -167,7 +214,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
           <Bell className="h-5 w-5" />
           التذكيرات ({pendingCount})
         </CardTitle>
-        <Button size="sm" onClick={() => setDialogOpen(true)} className="min-h-9">
+        <Button size="sm" onClick={() => { resetForm(); setDialogOpen(true); }} className="min-h-9">
           <Plus className="h-4 w-4 ml-2" />
           تذكير جديد
         </Button>
@@ -180,7 +227,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
             description="أضف تذكيراً للاتصال أو متابعة فاتورة أو مهمة قادمة لهذا العميل."
             action={{
               label: 'إنشاء أول تذكير',
-              onClick: () => setDialogOpen(true),
+              onClick: () => { resetForm(); setDialogOpen(true); },
               icon: <Plus className="h-4 w-4" />,
             }}
             className="py-10"
@@ -192,7 +239,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
             description="لا توجد تذكيرات معلقة حالياً. أحسنت!"
             action={{
               label: 'إضافة تذكير جديد',
-              onClick: () => setDialogOpen(true),
+              onClick: () => { resetForm(); setDialogOpen(true); },
               icon: <Plus className="h-4 w-4" />,
             }}
             className="py-10"
@@ -260,7 +307,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>إضافة تذكير جديد</DialogTitle>
+            <DialogTitle>{isEditing ? 'تعديل التذكير' : 'إضافة تذكير جديد'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -283,8 +330,11 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>إلغاء</Button>
-            <Button onClick={() => addMutation.mutate()} disabled={!reminderDate || !reminderNote.trim() || addMutation.isPending}>
-              {addMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+            <Button
+              onClick={() => submitMutation.mutate()}
+              disabled={!reminderDate || !reminderNote.trim() || submitMutation.isPending}
+            >
+              {submitMutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'حفظ'}
             </Button>
           </DialogFooter>
         </DialogContent>
