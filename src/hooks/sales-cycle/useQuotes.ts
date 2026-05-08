@@ -45,7 +45,7 @@ export function useQuotesList(search = "") {
   return useQuery({
     queryKey: ["quotes", search],
     queryFn: async () => {
-      let q = (supabase as any)
+      let q = supabase
         .from("quotes")
         .select("*, customers(id,name)")
         .order("created_at", { ascending: false })
@@ -63,7 +63,7 @@ export function useQuoteDetails(id: string | undefined) {
     queryKey: ["quote", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("quotes")
         .select("*, customers(id,name)")
         .eq("id", id!)
@@ -77,7 +77,7 @@ export function useQuoteDetails(id: string | undefined) {
     queryKey: ["quote-items", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("quote_items")
         .select("*, products(id,name,sku)")
         .eq("quote_id", id!);
@@ -106,7 +106,7 @@ export function useCreateQuote() {
         )
       );
 
-      const { data: header, error: hErr } = await (supabase as any)
+      const { data: header, error: hErr } = await supabase
         .from("quotes")
         .insert({
           tenant_id,
@@ -116,7 +116,7 @@ export function useCreateQuote() {
           notes: draft.notes ?? null,
           subtotal,
           total_amount: subtotal,
-        })
+        } as any)
         .select("id, quote_number")
         .single();
       if (hErr) throw hErr;
@@ -153,7 +153,7 @@ export function useUpdateQuoteStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: QuoteStatus }) => {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("quotes")
         .update({ status })
         .eq("id", id);
