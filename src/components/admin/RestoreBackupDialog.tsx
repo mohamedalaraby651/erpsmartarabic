@@ -326,7 +326,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
       const finishedAt = new Date();
 
       if (error) {
-        toast.error(`فشل الاستعادة: ${error.message}`);
+        toast.error(`فشل الاستعادة: ${getSafeErrorMessage(error)}`);
         setStep('configure');
         return;
       }
@@ -435,7 +435,7 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
         body: { snapshot_id: snapshotId },
       });
       if (error) {
-        toast.error(`فشل التراجع: ${error.message}`);
+        toast.error(`فشل التراجع: ${getSafeErrorMessage(error)}`);
         return;
       }
       if (!data?.success) {
