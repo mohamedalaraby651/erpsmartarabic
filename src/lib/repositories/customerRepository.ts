@@ -101,6 +101,17 @@ export const customerRepository = {
   // Core CRUD
   // ============================================
 
+  /** Active customers via PII-masked safe view, used by selectors. */
+  async findActiveSafe(): Promise<Customer[]> {
+    const { data, error } = await supabase
+      .from('customers_safe')
+      .select('*')
+      .eq('is_active', true)
+      .order('name');
+    if (error) throw error;
+    return (data || []) as Customer[];
+  },
+
   async findAll(
     filters: CustomerFilters,
     sort: CustomerSort,

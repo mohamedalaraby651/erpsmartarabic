@@ -2462,6 +2462,39 @@ export type Database = {
           },
         ]
       }
+      operation_idempotency: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          idempotency_key: string
+          operation: string
+          response_hash: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idempotency_key: string
+          operation: string
+          response_hash?: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idempotency_key?: string
+          operation?: string
+          response_hash?: string | null
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -5887,6 +5920,7 @@ export type Database = {
       post_delivery_note: { Args: { p_id: string }; Returns: Json }
       post_goods_receipt: { Args: { p_id: string }; Returns: Json }
       post_purchase_invoice: { Args: { p_id: string }; Returns: Json }
+      prune_expired_idempotency: { Args: never; Returns: number }
       purge_old_audit_records: { Args: never; Returns: undefined }
       record_event_metric: {
         Args: { _event_type: string; _latency_ms?: number; _success: boolean }

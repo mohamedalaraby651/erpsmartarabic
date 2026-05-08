@@ -134,3 +134,11 @@ src/
 
 ## ما أحتاج تأكيده قبل البدء
 - هل أبدأ فورًا من **Batch A للمرحلة 2** (إكمال تقسيم ملفات admin الكبيرة) بالتوازي مع كتابة مستند التدقيق المرحلة 1، أم تفضّل أن أُنجز التدقيق الكامل أولًا وأعرضه للموافقة قبل أي تعديل كود؟
+
+
+## 2026-05-08 — Hardening progress (continuation)
+- ✅ `operation_idempotency` table + RLS + `prune_expired_idempotency()` deployed.
+- ✅ Repository extensions: `customerRepository.findActiveSafe()`, `productRepository.findActive()`, `invoiceRepository.bulkInsertItems()` / `deleteItemsByInvoice()`.
+- ✅ New service: `invoiceService.saveInvoiceWithItems()` — sole entry for create/update from UI.
+- ✅ Refactored `InvoiceFormDialog` to remove all direct `supabase.from(...)` calls, now uses repos + service + `queryKeys.invoices.all`.
+- Next: edge-function hardening (`x-correlation-id` + idempotency check in `process-payment` / `create-journal`), then continue Batch C migration of remaining direct supabase calls in pages.

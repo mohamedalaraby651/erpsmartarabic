@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   ResponsiveDialog as Dialog,
   ResponsiveDialogContent as DialogContent,
@@ -14,6 +13,10 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/lib/validations";
 import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
+import { saveInvoiceWithItems } from "@/lib/services/invoiceService";
+import { customerRepository } from "@/lib/repositories/customerRepository";
+import { productRepository } from "@/lib/repositories/productRepository";
+import { queryKeys } from "@/lib/queryKeys";
 import { useInvoiceItems } from "./useInvoiceItems";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import InvoiceFormHeader from "./InvoiceFormHeader";
@@ -44,21 +47,13 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const [isValidating, setIsValidating] = useState(false);
 
   const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('customers_safe').select('*').eq('is_active', true).order('name');
-      if (error) throw error;
-      return data as Customer[];
-    },
+    queryKey: queryKeys.customers.list({ active: true, safe: true }),
+    queryFn: () => customerRepository.findActiveSafe(),
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ['products'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name');
-      if (error) throw error;
-      return data as Product[];
-    },
+    queryKey: queryKeys.products.list({ active: true }),
+    queryFn: () => productRepository.findActive(),
   });
 
   const { items, subtotal, addItem, updateItem, removeItem, loadItems, resetItems } = useInvoiceItems(products);
@@ -138,7 +133,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
         } finally { setIsValidating(false); }
       }
 
-      const invoiceData = {
+      const headerData = {
         customer_id: data.customer_id, invoice_number: invoice?.invoice_number || generateInvoiceNumber(),
         payment_method: data.payment_method, due_date: data.due_date || null,
         notes: data.notes?.trim() || null, subtotal, discount_amount: discountAmount,
@@ -146,27 +141,19 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
         payment_status: 'pending' as const, created_by: user?.id || null,
       };
 
-      let invoiceId: string;
-      if (isEditing) {
-        const { error } = await supabase.from('invoices').update(invoiceData).eq('id', invoice.id);
-        if (error) throw error;
-        invoiceId = invoice.id;
-        await supabase.from('invoice_items').delete().eq('invoice_id', invoice.id);
-      } else {
-        const { data: newInvoice, error } = await supabase.from('invoices').insert(invoiceData).select().single();
-        if (error) throw error;
-        invoiceId = newInvoice.id;
-      }
-
-      const itemsData = items.map(item => ({
-        invoice_id: invoiceId, product_id: item.product_id, quantity: item.quantity,
+      const itemsPayload = items.map(item => ({
+        product_id: item.product_id, quantity: item.quantity,
         unit_price: item.unit_price, discount_percentage: item.discount_percentage, total_price: item.total_price,
       }));
-      const { error: itemsError } = await supabase.from('invoice_items').insert(itemsData);
-      if (itemsError) throw itemsError;
+
+      await saveInvoiceWithItems({
+        id: isEditing ? invoice!.id : undefined,
+        header: headerData,
+        items: itemsPayload,
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
       clearDraft();
       toast({ title: isEditing ? "تم تحديث الفاتورة بنجاح" : "تم إنشاء الفاتورة بنجاح", description: "تم التحقق من الصلاحيات والحدود المالية" });
       onOpenChange(false);
