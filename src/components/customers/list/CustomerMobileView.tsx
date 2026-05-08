@@ -1,11 +1,11 @@
 import React, { memo, useRef, useEffect } from "react";
-import { ArrowUpDown } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, Wallet, Activity, Star } from "lucide-react";
 import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
 import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
 import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
+import { cn } from "@/lib/utils";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
@@ -78,31 +78,39 @@ export const CustomerMobileView = memo(function CustomerMobileView({
         onQuickFilter={onQuickFilter}
       />
 
-      {/* Sort */}
+      {/* Quick sort chips — single tap */}
       {onSortChange && (
-        <div className="flex items-center justify-between mb-3" role="toolbar" aria-label="ترتيب وإحصاء القائمة">
-          <Select value={sortKey || 'created_at'} onValueChange={onSortChange}>
-            <SelectTrigger
-              className="w-auto h-9 text-xs gap-1.5 px-3 rounded-xl border-border bg-card shadow-sm min-h-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
-              aria-label="ترتيب القائمة حسب"
-            >
-              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="created_at">تاريخ الإضافة</SelectItem>
-              <SelectItem value="name">الاسم (أ-ي)</SelectItem>
-              <SelectItem value="current_balance">الأعلى رصيداً</SelectItem>
-              <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
-              <SelectItem value="vip_level">VIP أولاً</SelectItem>
-              <SelectItem value="total_purchases_cached">الأكثر شراءً</SelectItem>
-            </SelectContent>
-          </Select>
-          <span
-            className="text-xs text-muted-foreground tabular-nums"
-            aria-live="polite"
-            aria-atomic="true"
-          >
+        <div
+          className="flex items-center gap-1.5 mb-3 overflow-x-auto -mx-1 px-1 pb-1 scrollbar-hide"
+          role="toolbar"
+          aria-label="ترتيب سريع"
+        >
+          {[
+            { key: 'created_at', label: 'الأحدث', Icon: Clock },
+            { key: 'last_activity_at', label: 'آخر نشاط', Icon: Activity },
+            { key: 'current_balance', label: 'الأعلى مديونية', Icon: Wallet },
+            { key: 'vip_level', label: 'VIP', Icon: Star },
+          ].map(({ key, label, Icon }) => {
+            const active = (sortKey || 'created_at') === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onSortChange(key)}
+                aria-pressed={active}
+                className={cn(
+                  'shrink-0 inline-flex items-center gap-1.5 h-9 min-h-9 px-3 rounded-full text-xs font-medium border transition-all',
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'bg-card text-muted-foreground border-border active:scale-95',
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            );
+          })}
+          <span className="ms-auto text-[11px] text-muted-foreground tabular-nums shrink-0 self-center pe-1" aria-live="polite">
             {data.length} عميل
           </span>
         </div>

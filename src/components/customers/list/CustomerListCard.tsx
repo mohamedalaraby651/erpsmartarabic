@@ -33,20 +33,20 @@ interface CustomerListCardProps {
 
 const vipBorderAccent: Record<string, string> = {
   regular: 'border-s-border',
-  silver: 'border-s-zinc-400 dark:border-s-zinc-500',
-  gold: 'border-s-amber-500 dark:border-s-amber-400',
-  platinum: 'border-s-purple-500 dark:border-s-purple-400',
+  silver: 'border-s-muted-foreground/40',
+  gold: 'border-s-warning',
+  platinum: 'border-s-primary',
 };
 
 const vipPillStyle: Record<string, string> = {
-  silver: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  gold: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
-  platinum: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+  silver: 'bg-muted text-muted-foreground',
+  gold: 'bg-warning/15 text-warning',
+  platinum: 'bg-primary/15 text-primary',
 };
 
 function getCreditBarColor(usage: number): string {
-  if (usage < 50) return 'bg-emerald-500';
-  if (usage < 80) return 'bg-amber-500';
+  if (usage < 50) return 'bg-success';
+  if (usage < 80) return 'bg-warning';
   return 'bg-destructive';
 }
 
@@ -181,7 +181,7 @@ const CustomerListCardInner = ({
           )}
           {onNewPayment && (
             <div className={cn(
-              'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-12 transition-transform',
+              'flex flex-col items-center justify-center rounded-lg bg-success text-success-foreground h-12 w-12 transition-transform',
               swipe.direction === 'primary' ? 'scale-105' : 'scale-100',
             )}>
               <CreditCard className="h-4 w-4" />
@@ -200,14 +200,14 @@ const CustomerListCardInner = ({
           aria-hidden={!showContact}
         >
           <div className={cn(
-            'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-12 transition-transform',
+            'flex flex-col items-center justify-center rounded-lg bg-success text-success-foreground h-12 w-12 transition-transform',
             swipe.direction === 'contact' ? 'scale-105' : 'scale-100',
           )}>
             <Phone className="h-4 w-4" />
             <span className="text-[10px] mt-0.5">اتصال</span>
           </div>
           <div className={cn(
-            'flex flex-col items-center justify-center rounded-lg bg-emerald-700 text-white h-12 w-12 transition-transform',
+            'flex flex-col items-center justify-center rounded-lg bg-success/90 text-success-foreground h-12 w-12 transition-transform',
             swipe.direction === 'contact' ? 'scale-105' : 'scale-100',
           )}>
             <MessageSquare className="h-4 w-4" />
@@ -300,7 +300,7 @@ const CustomerListCardInner = ({
                   <span
                     className={cn(
                       'h-2 w-2 rounded-full shrink-0',
-                      isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+                      isActive ? 'bg-success' : 'bg-muted-foreground/40',
                     )}
                     aria-label={isActive ? 'نشط' : 'غير نشط'}
                   />
@@ -336,7 +336,7 @@ const CustomerListCardInner = ({
                   {balance > 0 ? (
                     <ArrowUpCircle className="h-3 w-3 text-destructive" aria-hidden />
                   ) : balance < 0 ? (
-                    <ArrowDownCircle className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                    <ArrowDownCircle className="h-3 w-3 text-success" aria-hidden />
                   ) : (
                     <MinusCircle className="h-3 w-3 text-muted-foreground" aria-hidden />
                   )}
@@ -409,10 +409,10 @@ const CustomerListCardInner = ({
                 <p className="text-base font-bold tabular-nums">{totalPurchases.toLocaleString()}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">مشتريات</p>
               </div>
-              <div className="rounded-xl bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 dark:from-emerald-500/10 dark:to-emerald-500/20 p-3 text-center">
+              <div className="rounded-xl bg-gradient-to-br from-success/5 to-success/10 p-3 text-center">
                 <p className={cn(
                   'text-base font-bold tabular-nums',
-                  paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'
+                  paymentRatio >= 80 ? 'text-success' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'
                 )}>
                   {paymentRatio}%
                 </p>
