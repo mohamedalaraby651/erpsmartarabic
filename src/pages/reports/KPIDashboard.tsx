@@ -323,7 +323,7 @@ const KPIDashboard = () => {
                 <tr key={ri} className="border-b last:border-0 hover:bg-muted/50">
                   <td className="py-2 px-3 font-medium">{row.label}</td>
                   {monthlyData.map((m, ci) => (
-                    <td key={ci} className="text-center py-2 px-3">{row.format((m as Record<string, number>)[row.key])}</td>
+                    <td key={ci} className="text-center py-2 px-3">{row.format((m as unknown as Record<string, number>)[row.key])}</td>
                   ))}
                 </tr>
               ))}
