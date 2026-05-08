@@ -134,6 +134,17 @@ export const invoiceRepository = {
     if (error) throw error;
   },
 
+  async bulkInsertItems(items: InvoiceItemInsert[]): Promise<void> {
+    if (items.length === 0) return;
+    const { error } = await supabase.from('invoice_items').insert(items);
+    if (error) throw error;
+  },
+
+  async deleteItemsByInvoice(invoiceId: string): Promise<void> {
+    const { error } = await supabase.from('invoice_items').delete().eq('invoice_id', invoiceId);
+    if (error) throw error;
+  },
+
   async deleteItem(itemId: string): Promise<void> {
     const { error } = await supabase.from('invoice_items').delete().eq('id', itemId);
     if (error) throw error;
