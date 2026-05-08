@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,11 +67,11 @@ export function SupplierQuickAddDialog({ open, onOpenChange, onOpenAdvanced }: S
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>إضافة مورد سريع</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>إضافة مورد سريع</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="quick-supplier-name">اسم المورد *</Label>
@@ -118,7 +118,7 @@ export function SupplierQuickAddDialog({ open, onOpenChange, onOpenAdvanced }: S
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
+          <ResponsiveDialogFooter className="flex-col sm:flex-row gap-2">
             {onOpenAdvanced && (
               <Button
                 type="button"
@@ -137,9 +137,9 @@ export function SupplierQuickAddDialog({ open, onOpenChange, onOpenAdvanced }: S
                 إضافة
               </Button>
             </div>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

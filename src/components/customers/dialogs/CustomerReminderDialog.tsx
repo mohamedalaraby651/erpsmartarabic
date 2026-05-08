@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Plus, Clock, Check, FileText, ArrowLeft, AlarmClock, CalendarClock, Pencil } from "lucide-react";
@@ -304,11 +304,11 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
         )}
       </CardContent>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{isEditing ? 'تعديل التذكير' : 'إضافة تذكير جديد'}</DialogTitle>
-          </DialogHeader>
+      <ResponsiveDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>{isEditing ? 'تعديل التذكير' : 'إضافة تذكير جديد'}</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">تاريخ التذكير</label>
@@ -328,7 +328,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
               </select>
             </div>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>إلغاء</Button>
             <Button
               onClick={() => submitMutation.mutate()}
@@ -336,9 +336,9 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
             >
               {submitMutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'حفظ'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </Card>
   );
 }

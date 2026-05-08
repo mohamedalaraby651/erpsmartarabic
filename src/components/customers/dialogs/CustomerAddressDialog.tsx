@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,11 +81,11 @@ const CustomerAddressDialog = ({ open, onOpenChange, customerId, address }: Cust
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'تعديل العنوان' : 'إضافة عنوان جديد'}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-w-lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{isEditing ? 'تعديل العنوان' : 'إضافة عنوان جديد'}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
           <div>
             <Label htmlFor="label">تسمية العنوان *</Label>
@@ -122,8 +122,8 @@ const CustomerAddressDialog = ({ open, onOpenChange, customerId, address }: Cust
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
 
