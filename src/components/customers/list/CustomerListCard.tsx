@@ -409,10 +409,10 @@ const CustomerListCardInner = ({
                 <p className="text-base font-bold tabular-nums">{totalPurchases.toLocaleString()}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">مشتريات</p>
               </div>
-              <div className="rounded-xl bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 dark:from-emerald-500/10 dark:to-emerald-500/20 p-3 text-center">
+              <div className="rounded-xl bg-gradient-to-br from-success/5 to-success/10 p-3 text-center">
                 <p className={cn(
                   'text-base font-bold tabular-nums',
-                  paymentRatio >= 80 ? 'text-emerald-600 dark:text-emerald-400' : paymentRatio >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'
+                  paymentRatio >= 80 ? 'text-success' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'
                 )}>
                   {paymentRatio}%
                 </p>
