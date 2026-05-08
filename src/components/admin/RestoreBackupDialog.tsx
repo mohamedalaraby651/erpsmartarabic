@@ -31,6 +31,7 @@ import {
   type RestoreResult,
 } from './restoreBackup.constants';
 import { RestoreBackupResultsView } from './RestoreBackupResultsView';
+import { RestoreBackupReviewView } from './RestoreBackupReviewView';
 
 interface Props {
   open: boolean;
