@@ -10,15 +10,25 @@ import { cn } from "@/lib/utils";
  */
 interface ListErrorStateProps {
   message?: string;
+  error?: unknown;
   onRetry?: () => void;
   className?: string;
 }
 
 export function ListErrorState({
-  message = "تعذّر تحميل البيانات. يرجى المحاولة مرة أخرى.",
+  message,
+  error,
   onRetry,
   className,
 }: ListErrorStateProps) {
+  // Lazy import to avoid circular deps; safely format any error shape.
+  const safeMessage = React.useMemo(() => {
+    if (message) return message;
+    if (!error) return "تعذّر تحميل البيانات. يرجى المحاولة مرة أخرى.";
+    if (error instanceof Error) return error.message || "تعذّر تحميل البيانات.";
+    if (typeof error === "string") return error;
+    return "تعذّر تحميل البيانات. يرجى المحاولة مرة أخرى.";
+  }, [message, error]);
   return (
     <div
       className={cn(
@@ -28,7 +38,7 @@ export function ListErrorState({
       role="alert"
     >
       <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden />
-      <p className="max-w-md text-sm text-destructive">{message}</p>
+      <p className="max-w-md text-sm text-destructive">{safeMessage}</p>
       {onRetry && (
         <Button
           variant="outline"
