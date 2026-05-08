@@ -1,124 +1,115 @@
-# خطة الإصلاح الآمنة — بدون كسر للمشروع
+# خطة إنتاجية متكاملة على 5 مراحل (آمنة، تدريجية، قابلة للاختبار)
 
-## ⚠️ تصحيحات مهمة قبل البدء
-
-التحليل المُقدَّم يحتوي على **تشخيصات غير دقيقة** يجب توضيحها لتجنّب "إصلاحات" تكسر المشروع:
-
-| الادعاء | الواقع |
-|---------|--------|
-| `SUPABASE_ANON_KEY` في `index.html` تسرّب أمني | ❌ خطأ — هذا مفتاح **publishable** بالتصميم. كل تطبيق Supabase يضعه في الواجهة. الحماية عبر **RLS** (مُفعَّلة). |
-| `Project ID` و رابط Edge Function أسرار | ❌ خطأ — عناوين عامة كأي URL. |
-| تفعيل `strict: true` فوراً | ⚠️ سيُولِّد آلاف الأخطاء ويُعطّل البناء — نهج تدريجي مطلوب. |
-| إزالة كل `as any` | ⚠️ بعضها ضروري لأن جداول جديدة (quotes, purchase_invoices) قد تسبق تحديث `types.ts`. |
-| إعادة تسمية package | ⚠️ قد تكسر سكريبتات داخلية في Lovable — متروك. |
-
-سنُنفّذ فقط ما له **أثر حقيقي إيجابي** بدون مخاطرة.
+## نظرة عامة على الحالة الراهنة
+- تم سابقاً: تحويل 7 dialogs صغيرة إلى `ResponsiveDialog`، تفعيل `noImplicitAny`، إضافة CSP، حماية console.log في الإنتاج، توحيد `getSafeErrorMessage` في hooks اللوجستيات/المبيعات.
+- المتبقي الفعلي: 4 dialogs كبيرة + RestoreBackupDialog، 12 موضع `as any` في hooks، 3 مواضع `err.message` في RestoreBackupDialog، 16 صفحة قائمة بدون pull-to-refresh.
 
 ---
 
-## المرحلة 1 — إصلاحات آمنة عالية الأثر
+## المرحلة 1 — توحيد Dialogs الكبيرة إلى ResponsiveDialog
 
-### 1.1 توحيد معالجة الأخطاء (منع تسرّب رسائل DB للمستخدم)
-استبدال `e?.message` المباشر بـ `getSafeErrorMessage(e)` في:
-- `src/hooks/logistics/useGoodsReceipts.ts`
-- `src/hooks/logistics/usePurchaseInvoices.ts`
-- `src/hooks/logistics/useDeliveryNotes.ts`
-- `src/hooks/sales-cycle/useQuotes.ts`
+**الملفات المستهدفة (5):**
+- `src/components/invoices/InvoiceFormDialog.tsx`
+- `src/components/quotations/QuotationFormDialog.tsx`
+- `src/components/quotes/*FormDialog.tsx` (إن وُجد)
+- `src/components/credit-notes/CreditNoteFormDialog.tsx`
+- `src/components/customers/dialogs/CustomerReminderDialog.tsx` (تأكيد)
 
-**الأمان**: تغيير سطحي على `onError` فقط — لا يمسّ المنطق.
+**الإجراء لكل ملف:**
+1. استبدال imports من `@/components/ui/dialog` بـ `@/components/ui/responsive-dialog`.
+2. إعادة تسمية: `Dialog` → `ResponsiveDialog`، `DialogContent` → `ResponsiveDialogContent`، إلخ.
+3. التأكد من أن أزرار "حفظ / إصدار / إرسال" في `Footer` تظهر sticky بأسفل الـ Drawer على الموبايل.
+4. **ترك** `InvoiceApprovalDialog` و `BulkPrintConfirmDialog` و `DuplicateDetectionDialog` كـ Dialogs عادية (صغيرة، لا تحتاج Drawer).
 
-### 1.2 حماية `console.log` في الإنتاج
-لفّ `console.log` (وليس `console.error`) بـ `if (import.meta.env.DEV)` في:
-- `src/lib/performanceMonitor.ts`
-- `src/hooks/useAppBadge.ts`
-- `src/lib/arabicFont.ts`
-
-**الإبقاء على `console.error`** لأنها مفيدة لـ telemetry و Sentry-like flows.
-
-**الأمان**: لا يُغيّر سلوك تشغيلي — فقط يُسكت اللوغ في الإنتاج.
-
-### 1.3 فحص الاتصال قبل المزامنة
-في `src/lib/syncManager.ts` → `syncToServer()`: إضافة early return عند `!navigator.onLine` مع رسالة واضحة في النتيجة.
-
-**الأمان**: يمنع طلبات فاشلة فقط — لا يحذف بيانات.
+**اختبار:**
+- فتح كل نموذج على viewport 390px والتحقق من ظهوره كـ Drawer من الأسفل.
+- التحقق من ظهوره كـ Dialog مركزي على viewport 1280px.
+- تجربة دورة كاملة: إنشاء فاتورة، إنشاء عرض سعر، إنشاء credit note.
 
 ---
 
-## المرحلة 2 — تشديد TypeScript تدريجي (آمن)
+## المرحلة 2 — توحيد رسائل الخطأ الآمنة
 
-### 2.1 الخطوة الأولى فقط: `noImplicitAny`
-- تفعيل `noImplicitAny: true` في `tsconfig.app.json` (وليس `tsconfig.json` الجذر).
-- إصلاح الأخطاء الناتجة بإضافة types صريحة (لن تكون كثيرة لأن معظم الكود مُنوَّع بالفعل).
-- **عدم تفعيل** `strictNullChecks` أو `strict` في هذه الجلسة — يحتاج جلسة منفصلة مخصصة.
+**RestoreBackupDialog (3 مواضع):**
+- استبدال `err instanceof Error ? err.message : 'fallback'` بـ `getSafeErrorMessage(err) || 'fallback'` في الأسطر 246, 379, 449.
+- إبقاء `console.error` للتشخيص الداخلي.
 
-**الأمان**: لو ظهرت أخطاء بناء كثيرة، نتراجع فوراً ونؤجّل لجلسة لاحقة.
+**فحص شامل:**
+- مسح `rg "\.message" src/hooks src/components` للعثور على أي تسريب آخر.
+- استبدال أي `e.message` يُعرض في `toast.error()` بـ `getSafeErrorMessage(e)`.
 
-### 2.2 إزالة `as any` فقط حيث types موجودة
-- فحص `src/integrations/supabase/types.ts` للتأكد من وجود types لجداول `quotes`, `purchase_invoices`, `goods_receipts`.
-- **إن وُجدت**: استبدال `as any` بـ types مستوردة من `Database['public']['Tables']`.
-- **إن لم تُوجد**: ترك `as any` مع تعليق `// TODO: types pending` بدلاً من كسر الكود.
-
----
-
-## المرحلة 3 — تحسينات أمان حقيقية
-
-### 3.1 إضافة Content Security Policy (CSP) — اختبار حذِر
-- إضافة `<meta http-equiv="Content-Security-Policy">` في `index.html` يسمح بـ:
-  - `script-src 'self' 'unsafe-inline'` (مطلوب لـ Vite/React inline scripts).
-  - `connect-src 'self' https://*.supabase.co https://fonts.googleapis.com`.
-  - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`.
-  - `font-src 'self' https://fonts.gstatic.com data:`.
-  - `img-src 'self' data: blob: https:`.
-  - `frame-ancestors 'none'`.
-- **اختبار** في المعاينة بعد الإضافة للتحقق من عدم كسر تحميل الخطوط/Supabase.
-- في حال ظهور أي مورد محظور: تخفيف السياسة بدلاً من حذفها.
-
-### 3.2 تشغيل Security Scanner و DB Linter
-- تشغيل `security--run_security_scan` و `supabase--linter`.
-- معالجة findings الجديدة الحقيقية فقط (تجاهل false positives الـ 58 المعروفة).
+**اختبار:**
+- محاكاة خطأ DB (مثل insert duplicate) والتأكد أن الرسالة عربية مفهومة وليست SQL خام.
 
 ---
 
-## المرحلة 4 — توثيق وتنظيف
+## المرحلة 3 — تنظيف TypeScript تدريجي
 
-### 4.1 تحديث `README.md`
-- استبدال placeholder بمعلومات حقيقية: اسم نظام نظرة، التشغيل المحلي، بنية المجلدات، روابط التوثيق.
+**استخراج Models موحدة:**
+- إنشاء `src/types/entities.ts` مع `export type Customer = Database['public']['Tables']['customers']['Row']` لكل من: Customer, Supplier, Invoice, Quote, GoodsReceipt, PurchaseInvoice, DeliveryNote, Reminder.
 
-### 4.2 تحديث `docs/SYSTEM_AUDIT_2026_05.md`
-- إضافة قسم "تصحيح المفاهيم الأمنية" يوضّح:
-  - لماذا `anon key` ليس سرّاً.
-  - كيف تحمي RLS البيانات.
-  - شرح الـ 58 تحذير المتبقية كـ false positives.
-  - استراتيجية CSP الجديدة.
+**إزالة `(supabase as any)` (12 موضعاً):**
+- تنفيذ هذا فقط بعد التحقق من أن types الجداول موجودة في `types.ts` (تم التحقق سابقاً من وجود quotes/quote_items/purchase_invoices/goods_receipts/delivery_notes).
+- في كل hook: إزالة `(supabase as any)` واستبدالها بـ `supabase` مباشرة، مع cast الـ payload فقط عند الحاجة.
+- ملفات: `useQuotes.ts`, `usePurchaseInvoices.ts`, `useGoodsReceipts.ts`, `useDeliveryNotes.ts`.
 
----
+**`noImplicitAny`:** مفعّل بالفعل وbuild نظيف. **`strictNullChecks` يبقى معطّلاً** — لكن سنضيف فحوص null دفاعية في 3-5 أماكن حساسة (تحويلات مالية، بيانات user).
 
-## ما لن يُنفَّذ (مع التبرير)
-
-| الطلب | السبب |
-|------|-------|
-| إخفاء `anon key` من `index.html` | مفتاح publishable بالتصميم — حذفه يكسر التطبيق |
-| `strict: true` كاملاً | يُعطّل البناء — يحتاج جلسة مخصصة |
-| إزالة كل `console.error` | مفيدة للتشخيص في الإنتاج |
-| تغيير `package.json` name | قد يكسر سكريبتات Lovable الداخلية |
-| تقسيم الملفات الكبيرة (>500 سطر) | تم تأجيله سابقاً — يحتاج جلسة منفصلة |
-| تعطيل `allowJs` | قد يكسر استيرادات موجودة |
+**اختبار:** `bunx tsc --noEmit` يجب أن يبقى نظيفاً.
 
 ---
 
-## آلية التراجع (Rollback Safety)
+## المرحلة 4 — مراجعة CSP والتوثيق الأمني
 
-- كل مرحلة مستقلة — لو فشلت مرحلة 2.1 (TypeScript) نتراجع عنها فقط.
-- بعد كل مرحلة: التحقق من نجاح البناء قبل الانتقال للتالية.
-- لو أي تغيير CSP كسر مورداً: التراجع الفوري وتخفيف السياسة.
+**CSP موجود.** المطلوب:
+- اختبار الموقع على المعاينة وتجميع أي console errors تتعلق بـ CSP violations.
+- ضبط السياسة بناءً على ما يظهر فعلاً (إضافة domains مفقودة، أو إزالة سماحات زائدة).
+- اعتبار حذف `'unsafe-eval'` لو لم يكسر شيئاً.
+
+**توثيق:**
+- التحقق من أن `docs/SYSTEM_AUDIT_2026_05.md` يحتوي على القسم الخاص بـ:
+  - لماذا anon key ليس تسريباً.
+  - شرح RLS كخط الدفاع الفعلي.
+  - الـ 58 false positives الموثّقة.
+- (تم سابقاً — فقط مراجعة وتأكيد).
+
+---
+
+## المرحلة 5 — صقل تجربة الموبايل
+
+**Pull-to-refresh:**
+- معظم الصفحات تستخدم بالفعل مكون `PullToRefresh` الموجود. الجديد `usePullToRefresh` hook متوفر للاستخدام في بقية الصفحات.
+- تركيب `usePullToRefresh` في الصفحات التي لا تملك أي pull-to-refresh: `TasksPage`, `NotificationsPage`, `ExpensesPage` (تحقق ميداني أولاً).
+
+**توحيد حالات UI:**
+- التأكد من وجود مكونات موحدة: `EmptyState`, `LoadingSkeleton`, `ErrorState`.
+- إنشاء/استخدام `<ListErrorState message={getSafeErrorMessage(error)} onRetry={refetch} />` كنمط موحد.
+
+**RTL وتنسيق العملة:**
+- مسح سريع لاستخدام `toLocaleString('ar-EG')` للأرقام و `Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' })` للعملة.
+- لا تغيير في حسابات — فقط في طبقة العرض.
+
+---
+
+## قواعد التنفيذ الصارمة
+
+| القاعدة | السلوك |
+|---------|---------|
+| منطق تجاري | لا يُمسّ مطلقاً — فقط طبقة العرض ومعالجة الأخطاء. |
+| الملفات الكبيرة | لا تقسيم في هذه الجلسة — يحتاج جلسة مخصصة منفصلة. |
+| بعد كل مرحلة | `bunx tsc --noEmit` + فحص runtime errors + console logs. |
+| التراجع | كل مرحلة مستقلة — لو فشلت 3 نتراجع عنها فقط. |
 
 ## معايير النجاح
-- ✅ البناء يمر بدون أخطاء.
-- ✅ المعاينة تعمل (auth, dashboard, customers).
-- ✅ لا تسرّب رسائل خام للمستخدم.
-- ✅ CSP فعّال دون كسر موارد.
-- ✅ توثيق محدَّث ودقيق.
+- ✅ كل النماذج الكبيرة تعمل كـ Drawer على الموبايل و Dialog على الديسكتوب.
+- ✅ 0 رسائل خطأ خام للمستخدم النهائي.
+- ✅ 0 `(supabase as any)` في hooks اللوجستيات/المبيعات.
+- ✅ ملف `src/types/entities.ts` موحَّد للكيانات الأساسية.
+- ✅ TypeScript build نظيف.
+- ✅ CSP فعّال بدون كسر موارد.
+- ✅ pull-to-refresh متوفر في الصفحات الرئيسية.
 
 ## الملفات المتأثرة (تقدير)
-- **تعديل آمن**: `tsconfig.app.json`, `index.html`, `README.md`, `src/lib/syncManager.ts`, `src/lib/performanceMonitor.ts`, `src/hooks/useAppBadge.ts`, `src/lib/arabicFont.ts`, `src/hooks/logistics/*.ts`, `src/hooks/sales-cycle/useQuotes.ts`, `docs/SYSTEM_AUDIT_2026_05.md`
-- **بدون مساس**: `.env`, `src/integrations/supabase/client.ts`, `src/integrations/supabase/types.ts`, `package.json`
+- **جديد**: `src/types/entities.ts`
+- **تعديل**: 5 dialogs كبيرة، RestoreBackupDialog، 4 hooks (logistics/sales-cycle)، 2-3 صفحات قوائم، docs/SYSTEM_AUDIT_2026_05.md
+- **بدون مساس**: `.env`, `client.ts`, `types.ts`, ملفات منطق الحسابات المالية.
