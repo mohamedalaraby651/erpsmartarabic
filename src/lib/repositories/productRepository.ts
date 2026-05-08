@@ -48,6 +48,16 @@ function applyFilters<T extends { or: (...a: any[]) => any; eq: (...a: any[]) =>
 }
 
 export const productRepository = {
+  async findActive(): Promise<Product[]> {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .order('name');
+    if (error) throw error;
+    return (data || []) as Product[];
+  },
+
   async findAll(
     filters: ProductFilters,
     sort: ProductSort,
