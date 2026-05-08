@@ -29,8 +29,6 @@ export function RestoreBackupDialog({ open, onOpenChange, knownTables }: Props) 
     }
   };
 
-  // Reference MODE_LABELS to preserve existing import semantics (used by review view via mode prop).
-  void MODE_LABELS;
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
