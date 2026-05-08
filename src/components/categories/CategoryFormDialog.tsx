@@ -4,11 +4,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -124,11 +124,11 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'تعديل التصنيف' : 'إضافة تصنيف جديد'}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-w-lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{isEditing ? 'تعديل التصنيف' : 'إضافة تصنيف جديد'}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Name */}
@@ -197,8 +197,8 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
 
