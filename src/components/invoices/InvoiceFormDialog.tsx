@@ -133,7 +133,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
         } finally { setIsValidating(false); }
       }
 
-      const invoiceData = {
+      const headerData = {
         customer_id: data.customer_id, invoice_number: invoice?.invoice_number || generateInvoiceNumber(),
         payment_method: data.payment_method, due_date: data.due_date || null,
         notes: data.notes?.trim() || null, subtotal, discount_amount: discountAmount,
@@ -141,24 +141,16 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
         payment_status: 'pending' as const, created_by: user?.id || null,
       };
 
-      let invoiceId: string;
-      if (isEditing) {
-        const { error } = await supabase.from('invoices').update(invoiceData).eq('id', invoice.id);
-        if (error) throw error;
-        invoiceId = invoice.id;
-        await supabase.from('invoice_items').delete().eq('invoice_id', invoice.id);
-      } else {
-        const { data: newInvoice, error } = await supabase.from('invoices').insert(invoiceData).select().single();
-        if (error) throw error;
-        invoiceId = newInvoice.id;
-      }
-
-      const itemsData = items.map(item => ({
-        invoice_id: invoiceId, product_id: item.product_id, quantity: item.quantity,
+      const itemsPayload = items.map(item => ({
+        product_id: item.product_id, quantity: item.quantity,
         unit_price: item.unit_price, discount_percentage: item.discount_percentage, total_price: item.total_price,
       }));
-      const { error: itemsError } = await supabase.from('invoice_items').insert(itemsData);
-      if (itemsError) throw itemsError;
+
+      await saveInvoiceWithItems({
+        id: isEditing ? invoice!.id : undefined,
+        header: headerData,
+        items: itemsPayload,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
