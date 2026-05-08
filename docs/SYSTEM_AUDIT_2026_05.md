@@ -163,3 +163,21 @@ return <div ref={bindRef}>{...}</div>;
 - **إزالة `(supabase as any)` من useQuotes**: types موجودة في `types.ts`، لكن الإزالة قد تسبب type errors متتالية في الـ callers. يحتاج refactor تدريجي.
 - **تقسيم ملفات > 500 سطر** (RestoreBackupDialog 1213 سطر، ReportTemplateEditor 736 سطر): يحتاج جلسة مخصصة.
 - **تغيير `package.json` name**: قد يكسر سكريبتات Lovable الداخلية — متروك.
+
+### تحديث (نفس الجلسة): تفعيل `noImplicitAny` بنجاح
+
+تم تنفيذ المرحلة المؤجلة:
+- استبعاد ملفات الاختبارات من `tsconfig.app.json` (لها config منفصل في vitest).
+- إصلاح 4 أخطاء في كود الإنتاج:
+  - `CreditNoteFormDialog.tsx`: تحديد type لـ `error: undefined as string | undefined`.
+  - `ChartOfAccountsPage.tsx`: إضافة return type `JSX.Element` لـ `renderAccountRow`.
+  - `CustomersPage.tsx`: إضافة `as null` للـ direction.
+  - `KPIDashboard.tsx`: cast عبر `unknown` للحقول المختلطة.
+- **`bunx tsc --noEmit` يمر بدون أخطاء.**
+- 0 استخدامات `any` ضمنية في كود الإنتاج بعد الآن.
+
+### حالة الفحوصات
+- ✅ TypeScript build: نظيف (0 errors).
+- ✅ Supabase Linter: 58 تحذير، **كلها false positives موثّقة** (دوال SECURITY DEFINER داخلية محمية بـ REVOKE/GRANT صحيح).
+- ✅ Runtime errors: 0.
+- ✅ Console logs in production: محمية بـ `import.meta.env.DEV`.
