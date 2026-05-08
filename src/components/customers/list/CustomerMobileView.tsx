@@ -1,11 +1,12 @@
 import React, { memo, useRef, useEffect } from "react";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Clock, Wallet, Activity, Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
 import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
 import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
+import { cn } from "@/lib/utils";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
