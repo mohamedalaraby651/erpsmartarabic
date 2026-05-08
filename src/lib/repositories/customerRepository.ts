@@ -112,6 +112,7 @@ export const customerRepository = {
     return (data || []) as Customer[];
   },
 
+  async findAll(
     filters: CustomerFilters,
     sort: CustomerSort,
     pagination: CustomerPagination
