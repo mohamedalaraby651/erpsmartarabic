@@ -99,7 +99,7 @@ const CustomersPage = () => {
     else if (filterId === 'farms') filters.setTypeFilter('farm');
   }, [filters, resetAllQuickFilters]);
 
-  const pageSize = 20;
+  const pageSize = isMobile ? 12 : 20;
 
   const {
     currentPage, allData: allCustomersRaw, hasNextPage, isFetchingNextPage,
