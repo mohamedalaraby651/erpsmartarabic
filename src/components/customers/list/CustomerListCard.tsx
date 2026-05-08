@@ -181,7 +181,7 @@ const CustomerListCardInner = ({
           )}
           {onNewPayment && (
             <div className={cn(
-              'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-12 transition-transform',
+              'flex flex-col items-center justify-center rounded-lg bg-success text-success-foreground h-12 w-12 transition-transform',
               swipe.direction === 'primary' ? 'scale-105' : 'scale-100',
             )}>
               <CreditCard className="h-4 w-4" />
@@ -200,14 +200,14 @@ const CustomerListCardInner = ({
           aria-hidden={!showContact}
         >
           <div className={cn(
-            'flex flex-col items-center justify-center rounded-lg bg-emerald-600 text-white h-12 w-12 transition-transform',
+            'flex flex-col items-center justify-center rounded-lg bg-success text-success-foreground h-12 w-12 transition-transform',
             swipe.direction === 'contact' ? 'scale-105' : 'scale-100',
           )}>
             <Phone className="h-4 w-4" />
             <span className="text-[10px] mt-0.5">اتصال</span>
           </div>
           <div className={cn(
-            'flex flex-col items-center justify-center rounded-lg bg-emerald-700 text-white h-12 w-12 transition-transform',
+            'flex flex-col items-center justify-center rounded-lg bg-success/90 text-success-foreground h-12 w-12 transition-transform',
             swipe.direction === 'contact' ? 'scale-105' : 'scale-100',
           )}>
             <MessageSquare className="h-4 w-4" />
@@ -300,7 +300,7 @@ const CustomerListCardInner = ({
                   <span
                     className={cn(
                       'h-2 w-2 rounded-full shrink-0',
-                      isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+                      isActive ? 'bg-success' : 'bg-muted-foreground/40',
                     )}
                     aria-label={isActive ? 'نشط' : 'غير نشط'}
                   />
@@ -336,7 +336,7 @@ const CustomerListCardInner = ({
                   {balance > 0 ? (
                     <ArrowUpCircle className="h-3 w-3 text-destructive" aria-hidden />
                   ) : balance < 0 ? (
-                    <ArrowDownCircle className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                    <ArrowDownCircle className="h-3 w-3 text-success" aria-hidden />
                   ) : (
                     <MinusCircle className="h-3 w-3 text-muted-foreground" aria-hidden />
                   )}

@@ -36,8 +36,8 @@ export function CustomerEmptyState({ hasActiveFilters, onClearFilters, onAdd, on
         <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center animate-[pulse_3s_ease-in-out_infinite]">
           <Users className="h-10 w-10 text-primary" />
         </div>
-        <div className="absolute -top-2 -right-2 h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center animate-[bounce_2s_ease-in-out_infinite]">
-          <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+        <div className="absolute -top-2 -right-2 h-8 w-8 rounded-lg bg-warning/15 flex items-center justify-center animate-[bounce_2s_ease-in-out_infinite]">
+          <TrendingUp className="h-4 w-4 text-warning" />
         </div>
       </div>
 
