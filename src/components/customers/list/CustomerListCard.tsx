@@ -33,20 +33,20 @@ interface CustomerListCardProps {
 
 const vipBorderAccent: Record<string, string> = {
   regular: 'border-s-border',
-  silver: 'border-s-zinc-400 dark:border-s-zinc-500',
-  gold: 'border-s-amber-500 dark:border-s-amber-400',
-  platinum: 'border-s-purple-500 dark:border-s-purple-400',
+  silver: 'border-s-muted-foreground/40',
+  gold: 'border-s-warning',
+  platinum: 'border-s-primary',
 };
 
 const vipPillStyle: Record<string, string> = {
-  silver: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  gold: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
-  platinum: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+  silver: 'bg-muted text-muted-foreground',
+  gold: 'bg-warning/15 text-warning',
+  platinum: 'bg-primary/15 text-primary',
 };
 
 function getCreditBarColor(usage: number): string {
-  if (usage < 50) return 'bg-emerald-500';
-  if (usage < 80) return 'bg-amber-500';
+  if (usage < 50) return 'bg-success';
+  if (usage < 80) return 'bg-warning';
   return 'bg-destructive';
 }
 
