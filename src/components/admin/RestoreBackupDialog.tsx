@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Upload, ArrowRight } from 'lucide-react';
-import { MODE_LABELS } from './restoreBackup.constants';
 import { RestoreBackupResultsView } from './RestoreBackupResultsView';
 import { RestoreBackupReviewView } from './RestoreBackupReviewView';
 import { RestoreBackupConfigureView } from './RestoreBackupConfigureView';
