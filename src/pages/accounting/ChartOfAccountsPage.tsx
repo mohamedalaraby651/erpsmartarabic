@@ -150,7 +150,7 @@ const ChartOfAccountsPage = () => {
     expenses: accounts.filter((a) => a.account_type === "expense").length,
   };
 
-  const renderAccountRow = (account: Account, level: number = 0) => {
+  const renderAccountRow = (account: Account, level: number = 0): JSX.Element => {
     const children = getChildren(account.id);
     const hasChildren = children.length > 0;
     const isExpanded = expandedAccounts.has(account.id);

@@ -73,7 +73,7 @@ const CustomersPage = () => {
       const current = sortConfig;
       if (current.key === key) {
         if (current.direction === 'asc') return { key, direction: 'desc' as const };
-        if (current.direction === 'desc') return { key: '', direction: null };
+        if (current.direction === 'desc') return { key: '', direction: null as null };
       }
       return { key, direction: 'asc' as const };
     })());
