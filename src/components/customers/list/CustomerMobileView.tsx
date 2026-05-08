@@ -1,6 +1,5 @@
 import React, { memo, useRef, useEffect } from "react";
-import { ArrowUpDown, Clock, Wallet, Activity, Star } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, Wallet, Activity, Star } from "lucide-react";
 import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
