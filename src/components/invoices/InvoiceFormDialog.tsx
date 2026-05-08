@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   ResponsiveDialog as Dialog,
   ResponsiveDialogContent as DialogContent,
@@ -14,6 +13,10 @@ import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/lib/validations";
 import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
+import { saveInvoiceWithItems } from "@/lib/services/invoiceService";
+import { customerRepository } from "@/lib/repositories/customerRepository";
+import { productRepository } from "@/lib/repositories/productRepository";
+import { queryKeys } from "@/lib/queryKeys";
 import { useInvoiceItems } from "./useInvoiceItems";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import InvoiceFormHeader from "./InvoiceFormHeader";
