@@ -46,7 +46,7 @@ serve(async (req) => {
       console.error('[process-payment] Missing environment variables');
       return new Response(
         JSON.stringify({ success: false, error: 'Server configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: respHeaders }
       );
     }
 
@@ -55,7 +55,7 @@ serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -70,7 +70,7 @@ serve(async (req) => {
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid token', code: 'INVALID_TOKEN' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -90,7 +90,7 @@ serve(async (req) => {
       console.log('[process-payment] Rate limit exceeded for user:', userId);
       return new Response(
         JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 429, headers: respHeaders }
       );
     }
 
@@ -100,7 +100,7 @@ serve(async (req) => {
     if (!paymentData) {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing payment_data', code: 'MISSING_DATA' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -115,7 +115,7 @@ serve(async (req) => {
     if (!hasPermission) {
       return new Response(
         JSON.stringify({ success: false, error: 'Permission denied', code: 'NO_PERMISSION' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: respHeaders }
       );
     }
 
@@ -130,7 +130,7 @@ serve(async (req) => {
     if (customerError || !customer) {
       return new Response(
         JSON.stringify({ success: false, error: 'Customer not found', code: 'CUSTOMER_NOT_FOUND' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -147,7 +147,7 @@ serve(async (req) => {
       if (invoiceError || !invoiceData) {
         return new Response(
           JSON.stringify({ success: false, error: 'Invoice not found', code: 'INVOICE_NOT_FOUND' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: respHeaders }
         );
       }
 
@@ -168,7 +168,7 @@ serve(async (req) => {
               requested: paymentData.amount
             }
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: respHeaders }
         );
       }
     }
@@ -195,7 +195,7 @@ serve(async (req) => {
       console.error('[process-payment] Error creating payment:', paymentError);
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to create payment', code: 'CREATE_FAILED' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: respHeaders }
       );
     }
 
@@ -254,7 +254,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: respHeaders }
     );
 
   } catch (error) {
@@ -262,7 +262,7 @@ serve(async (req) => {
     console.error('[process-payment] Unexpected error:', error);
     return new Response(
       JSON.stringify({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: respHeaders }
     );
   }
 });
