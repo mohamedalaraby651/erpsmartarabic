@@ -79,10 +79,14 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            {/* "إضافة" button removed on mobile — global FAB (AppLayout) handles it. Advanced add stays in dropdown menu. */}
             {canEdit && (
-              <Button onClick={onAdd} size="sm" className="h-10 px-4 rounded-xl shadow-sm shadow-primary/20" aria-label="إضافة عميل">
-                <Plus className="h-4 w-4 ml-1.5" />إضافة
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="sr-only" aria-hidden="true" tabIndex={-1} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent />
+              </DropdownMenu>
             )}
           </div>
         </div>
