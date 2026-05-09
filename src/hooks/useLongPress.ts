@@ -79,7 +79,19 @@ export function useLongPress({
   );
 
   const cancel = useCallback(
-    (_e: React.TouchEvent | React.MouseEvent) => {
+    (e: React.TouchEvent | React.MouseEvent) => {
+      // Mark touchend timestamp so we can reject the synthetic mousedown/mouseup
+      // events the browser will fire shortly after.
+      const isTouchEvent = 'changedTouches' in e || 'touches' in e;
+      if (isTouchEvent) {
+        lastTouchEndAtRef.current = Date.now();
+      } else {
+        // If a synthetic mouse event slipped through, ignore it.
+        if (Date.now() - lastTouchEndAtRef.current < SYNTHETIC_MOUSE_WINDOW_MS) {
+          return;
+        }
+      }
+
       if (longPressTriggeredRef.current) {
         // Long press already fired, don't trigger onPress
         clearTimer();
