@@ -24,13 +24,15 @@ interface CustomerPageHeaderProps {
   onSearchChange?: (v: string) => void;
   // Optional slot rendered next to the title (mobile) — e.g. alerts bell
   mobileTitleSlot?: ReactNode;
+  /** Optional "تخصيص العرض" entry rendered as a menu item (rendered as ReactNode). */
+  layoutCustomizerSlot?: ReactNode;
 }
 
 export const CustomerPageHeader = memo(function CustomerPageHeader({
   isMobile, canEdit, exportAllLoading,
   onAdd, onDuplicates, onMerge, onImport, onExportAll,
   totalCount = 0, filteredCount,
-  searchQuery, onSearchChange, mobileTitleSlot,
+  searchQuery, onSearchChange, mobileTitleSlot, layoutCustomizerSlot,
 }: CustomerPageHeaderProps) {
   const countLabel = filteredCount != null && filteredCount !== totalCount
     ? `${filteredCount} من ${totalCount}`
