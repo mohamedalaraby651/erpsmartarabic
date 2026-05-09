@@ -1,8 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkIdempotency, getCorrelationId, getIdempotencyKey } from '../_shared/idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, idempotency-key, x-correlation-id',
+  'Access-Control-Expose-Headers': 'x-correlation-id',
 };
 
 interface ApproveInvoiceRequest {
@@ -23,7 +25,7 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -46,7 +48,7 @@ Deno.serve(async (req) => {
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid token', code: 'INVALID_TOKEN' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -63,7 +65,7 @@ Deno.serve(async (req) => {
       console.log('[approve-invoice] Rate limit exceeded for user:', userId);
       return new Response(
         JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 429, headers: respHeaders }
       );
     }
 
@@ -76,7 +78,7 @@ Deno.serve(async (req) => {
     if (!invoice_id || !action) {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required fields', code: 'MISSING_DATA' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -84,7 +86,7 @@ Deno.serve(async (req) => {
     if (!['approve', 'reject', 'submit'].includes(action)) {
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid action', code: 'INVALID_ACTION' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -92,7 +94,7 @@ Deno.serve(async (req) => {
     if (action === 'reject' && !rejection_reason) {
       return new Response(
         JSON.stringify({ success: false, error: 'يجب إدخال سبب الرفض', code: 'MISSING_REASON' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -107,7 +109,7 @@ Deno.serve(async (req) => {
       console.error('[approve-invoice] Invoice not found:', invoiceError);
       return new Response(
         JSON.stringify({ success: false, error: 'الفاتورة غير موجودة', code: 'INVOICE_NOT_FOUND' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: respHeaders }
       );
     }
 
@@ -125,7 +127,7 @@ Deno.serve(async (req) => {
         if (!isAdmin) {
           return new Response(
             JSON.stringify({ success: false, error: 'ليس لديك صلاحية لتقديم الفاتورة للموافقة', code: 'NO_PERMISSION' }),
-            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 403, headers: respHeaders }
           );
         }
       }
@@ -134,7 +136,7 @@ Deno.serve(async (req) => {
       if (invoice.approval_status !== 'draft') {
         return new Response(
           JSON.stringify({ success: false, error: 'يمكن تقديم المسودات فقط للموافقة', code: 'INVALID_STATUS' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: respHeaders }
         );
       }
 
@@ -160,7 +162,7 @@ Deno.serve(async (req) => {
           message: 'تم تقديم الفاتورة للموافقة',
           new_status: 'pending'
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: respHeaders }
       );
     }
 
@@ -171,7 +173,7 @@ Deno.serve(async (req) => {
     if (!isAdmin && !isAccountant) {
       return new Response(
         JSON.stringify({ success: false, error: 'ليس لديك صلاحية للموافقة على الفواتير', code: 'NO_PERMISSION' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: respHeaders }
       );
     }
 
@@ -179,7 +181,7 @@ Deno.serve(async (req) => {
     if (invoice.created_by === userId && action === 'approve') {
       return new Response(
         JSON.stringify({ success: false, error: 'لا يمكنك الموافقة على فاتورتك الخاصة', code: 'SELF_APPROVAL' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: respHeaders }
       );
     }
 
@@ -187,7 +189,7 @@ Deno.serve(async (req) => {
     if (invoice.approval_status !== 'pending') {
       return new Response(
         JSON.stringify({ success: false, error: 'يمكن الموافقة/الرفض على الفواتير المعلقة فقط', code: 'INVALID_STATUS' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -310,7 +312,7 @@ Deno.serve(async (req) => {
           message: 'تم اعتماد الفاتورة بنجاح',
           new_status: 'approved'
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: respHeaders }
       );
     }
 
@@ -339,13 +341,13 @@ Deno.serve(async (req) => {
           message: 'تم رفض الفاتورة',
           new_status: 'rejected'
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: respHeaders }
       );
     }
 
     return new Response(
       JSON.stringify({ success: false, error: 'Invalid action', code: 'INVALID_ACTION' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 400, headers: respHeaders }
     );
 
   } catch (error) {
@@ -356,7 +358,7 @@ Deno.serve(async (req) => {
         error: error instanceof Error ? error.message : 'Internal server error',
         code: 'INTERNAL_ERROR'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: respHeaders }
     );
   }
 });
