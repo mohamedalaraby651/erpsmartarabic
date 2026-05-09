@@ -320,6 +320,8 @@ const CustomersPage = () => {
             onQuickFilter={handleQuickFilter}
             selectedIds={bulk.selectedIds}
             onToggleSelect={bulk.toggleSelect}
+            showSummary={layout.isMobileVisible('summary')}
+            showSort={layout.isMobileVisible('sort')}
           />
           {/* FAB removed — global FABMenu (AppLayout) handles "عميل جديد" via pageContext='customers' */}
         </div>
