@@ -214,7 +214,22 @@ serve(async (req) => {
       );
     }
 
-    // Parse and validate body.
+    // Idempotency guard — restore is destructive; protect against retries
+    const correlationId = getCorrelationId(req);
+    const idemKey = getIdempotencyKey(req);
+    if (idemKey) {
+      const guard = await checkIdempotency(supabaseAdmin, {
+        tenantId, userId, operation: 'restore-backup', key: idemKey,
+      });
+      if (guard.duplicate) {
+        console.log(`[restore-backup] [${correlationId}] Idempotent replay rejected`);
+        return jsonResponse(
+          { success: false, error: 'Duplicate restore request', code: 'IDEMPOTENT_REPLAY' },
+          409,
+        );
+      }
+    }
+
     let body: RestoreBody;
     try {
       body = await req.json();
