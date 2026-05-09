@@ -1,6 +1,6 @@
 import { memo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical, ChevronLeft, Eye } from "lucide-react";
+import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical, ChevronLeft } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
