@@ -95,6 +95,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            {layoutCustomizerSlot}
             {/* "إضافة" button removed on mobile — global FAB (AppLayout) handles new-customer entry. */}
           </div>
         </div>
