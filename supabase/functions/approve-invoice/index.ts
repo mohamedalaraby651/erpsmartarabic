@@ -117,6 +117,31 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Idempotency guard — prevent double approval/submit on retry
+    if (idempotencyKey) {
+      const { data: tenantRow } = await supabaseAdmin
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+      const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
+      if (tenantId) {
+        const guard = await checkIdempotency(supabaseAdmin, {
+          tenantId,
+          userId,
+          operation: `approve-invoice:${action}`,
+          key: idempotencyKey,
+        });
+        if (guard.duplicate) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
+            { status: 409, headers: respHeaders }
+          );
+        }
+      }
+    }
+
     // Check permissions based on action
     if (action === 'submit') {
       // Anyone with edit permission can submit for approval
