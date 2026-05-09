@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { productRepository } from "@/lib/repositories/productRepository";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,17 +45,8 @@ export default function LogisticsItemsTable({ value, onChange, columns, newRow }
   }, [rows]);
 
   const { data: products = [] } = useQuery({
-    queryKey: ["logistics-products-light"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, sku, cost_price, selling_price")
-        .eq("is_active", true)
-        .order("name")
-        .limit(500);
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryKey: [...queryKeys.products.lists(), 'light'] as const,
+    queryFn: () => productRepository.findActiveLight(500),
   });
 
   const addRow = () => {

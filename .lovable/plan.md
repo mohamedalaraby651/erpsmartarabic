@@ -142,3 +142,12 @@ src/
 - ✅ New service: `invoiceService.saveInvoiceWithItems()` — sole entry for create/update from UI.
 - ✅ Refactored `InvoiceFormDialog` to remove all direct `supabase.from(...)` calls, now uses repos + service + `queryKeys.invoices.all`.
 - Next: edge-function hardening (`x-correlation-id` + idempotency check in `process-payment` / `create-journal`), then continue Batch C migration of remaining direct supabase calls in pages.
+
+## 2026-05-09 — Edge-function idempotency rollout complete
+- ✅ Shared helpers: `supabase/functions/_shared/idempotency.ts` (`checkIdempotency`, `getIdempotencyKey`, `getCorrelationId`).
+- ✅ Client helper: `src/lib/requestHeaders.ts` (`newIdempotencyKey`, `buildRequestHeaders`).
+- ✅ Idempotency + `x-correlation-id` applied to: `process-payment`, `approve-invoice`, `create-journal`, `restore-backup`, `stock-movement`, `approve-expense`. All deployed.
+- ✅ `journal.service.saveAndPostJournal` uses **stable** key `${source_type}:${source_id}:${event}` to make double-post from triggers a no-op.
+- ✅ `LogisticsItemsTable` migrated off direct `supabase.from('products')` → `productRepository.findActiveLight()` + `queryKeys.products`.
+- ✅ Repositories extended: `productRepository.findActiveLight(limit)`.
+- Next (Batch C continuation): sweep remaining `supabase.from(...)` callsites in `src/components/**` and `src/pages/**` (audit count: 133 → target 0). Prioritize: invoice/quotation/sales-order detail pages, customer/supplier list cards.

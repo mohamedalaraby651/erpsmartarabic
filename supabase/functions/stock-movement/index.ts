@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkIdempotency, getIdempotencyKey, getCorrelationId } from "../_shared/idempotency.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key, x-correlation-id, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 type MovementType = 'in' | 'out' | 'transfer' | 'adjustment';
@@ -147,7 +148,30 @@ serve(async (req) => {
       );
     }
 
-    // 2. Validate product exists
+    // Idempotency guard (prevents duplicate stock movement on retry)
+    const idemKey = getIdempotencyKey(req);
+    const correlationId = getCorrelationId(req);
+    if (idemKey) {
+      const { data: tenantRow } = await supabaseAdmin
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      const tenantId = tenantRow?.tenant_id;
+      if (tenantId) {
+        const guard = await checkIdempotency(supabaseAdmin, {
+          tenantId, userId, operation: 'stock-movement', key: idemKey,
+        });
+        if (guard.duplicate) {
+          console.log(`[stock-movement] [${correlationId}] Idempotent replay rejected`);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Duplicate request', code: 'IDEMPOTENT_REPLAY' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
     console.log('[stock-movement] Validating product...');
     const { data: product, error: productError } = await supabaseAdmin
       .from('products')
