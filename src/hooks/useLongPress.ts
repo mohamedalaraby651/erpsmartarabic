@@ -21,6 +21,10 @@ export function useLongPress({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const longPressTriggeredRef = useRef(false);
+  // Track last touch end timestamp to suppress synthetic mouse events
+  // that browsers fire ~300ms after touchend on touch devices.
+  const lastTouchEndAtRef = useRef<number>(0);
+  const SYNTHETIC_MOUSE_WINDOW_MS = 600;
 
   const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
