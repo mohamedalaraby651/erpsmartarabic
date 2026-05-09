@@ -271,6 +271,8 @@ const CustomersPage = () => {
             hasActiveSearch={!!filters.debouncedSearch}
             activeQuickFilter={quickFilter}
             onQuickFilter={handleQuickFilter}
+            selectedIds={bulk.selectedIds}
+            onToggleSelect={bulk.toggleSelect}
           />
           {/* FAB removed — global FABMenu (AppLayout) handles "عميل جديد" via pageContext='customers' */}
         </div>
@@ -370,17 +372,22 @@ const CustomersPage = () => {
         </div>
       )}
 
-      {/* Floating Bulk Action Bar */}
+      {/* Floating Bulk Action Bar — raised above mobile FAB */}
       {bulk.hasSelection && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background border border-border shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4">
-          <span className="text-sm font-medium">{bulk.selectedIds.size} عميل محدد</span>
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-50 bg-background border border-border shadow-lg rounded-xl px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)' }}
+          role="toolbar"
+          aria-label="إجراءات على العملاء المحددين"
+        >
+          <span className="text-sm font-medium tabular-nums">{bulk.selectedIds.size} محدد</span>
           <Button size="sm" variant="destructive" onClick={() => dialogRef.current?.openBulkDelete()}>
             <Trash2 className="h-3.5 w-3.5 ml-1" /> حذف
           </Button>
           <Button size="sm" variant="outline" onClick={() => dialogRef.current?.openBulkVip()}>
             <Crown className="h-3.5 w-3.5 ml-1" /> VIP
           </Button>
-          <Button size="sm" variant="ghost" onClick={bulk.clearSelection}>
+          <Button size="sm" variant="ghost" onClick={bulk.clearSelection} aria-label="إلغاء التحديد">
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
