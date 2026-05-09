@@ -35,6 +35,10 @@ interface CustomerMobileViewProps {
   onQuickFilter?: (id: string | null) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string, checked: boolean) => void;
+  /** عرض شريط الملخص الذكي. الافتراضي true. */
+  showSummary?: boolean;
+  /** عرض شريط الترتيب السريع. الافتراضي true. */
+  showSort?: boolean;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
@@ -43,6 +47,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
   alertCountByCustomer, errorCustomerIds, hasActiveSearch, activeQuickFilter, onQuickFilter,
   selectedIds, onToggleSelect,
+  showSummary = true, showSort = true,
 }: CustomerMobileViewProps) {
   const observerRef = useRef<HTMLDivElement>(null);
   const selectionMode = !!(selectedIds && selectedIds.size > 0);
@@ -74,16 +79,18 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {/* شريط الملخص الذكي — مخفي عند البحث/الفلترة */}
-      <CustomerSummaryBar
-        customers={data}
-        hidden={hasActiveSearch || hasActiveFilters}
-        activeQuickFilter={activeQuickFilter}
-        onQuickFilter={onQuickFilter}
-      />
+      {/* شريط الملخص الذكي — مخفي عند البحث/الفلترة أو عند تعطيله من تخصيص العرض */}
+      {showSummary && (
+        <CustomerSummaryBar
+          customers={data}
+          hidden={hasActiveSearch || hasActiveFilters}
+          activeQuickFilter={activeQuickFilter}
+          onQuickFilter={onQuickFilter}
+        />
+      )}
 
       {/* Quick sort chips — single tap */}
-      {onSortChange && (
+      {showSort && onSortChange && (
         <div
           className="flex items-center gap-1.5 mb-3 overflow-x-auto -mx-1 px-1 pb-1 scrollbar-hide"
           role="toolbar"

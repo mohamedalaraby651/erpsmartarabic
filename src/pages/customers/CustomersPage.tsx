@@ -38,6 +38,9 @@ import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedVie
 import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/list/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import { LiveRegion } from "@/components/shared/LiveRegion";
+import { useCustomerLayoutPrefs } from "@/hooks/customers/useCustomerLayoutPrefs";
+import { CustomerLayoutCustomizer } from "@/components/customers/list/CustomerLayoutCustomizer";
+import { CollapsedSummaryBar } from "@/components/customers/list/CollapsedSummaryBar";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
@@ -55,6 +58,9 @@ const CustomersPage = () => {
 
   // Column visibility
   const { visibleColumns, setVisibleColumns } = useVisibleColumns();
+
+  // Layout preferences (show/hide sections above the list — persisted per device)
+  const layout = useCustomerLayoutPrefs();
 
   useEffect(() => {
     const action = filters.searchParams.get('action');
@@ -217,12 +223,52 @@ const CustomersPage = () => {
             onFilterByType={setAlertFilterType}
           />
         ) : undefined}
+        layoutCustomizerSlot={
+          <CustomerLayoutCustomizer
+            layout={layout}
+            isMobile={isMobile}
+            trigger={
+              isMobile ? (
+                <button
+                  type="button"
+                  className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
+                  aria-label="تخصيص العرض"
+                  title="تخصيص ما يظهر فوق القائمة"
+                >
+                  {layout.prefs.compact ? <span className="text-[10px] font-bold">عرض</span> : <span className="text-[10px] font-bold">طي</span>}
+                </button>
+              ) : (
+                <Button variant="outline" size="sm" aria-label="تخصيص العرض" title="تخصيص ما يظهر فوق القائمة">
+                  {layout.prefs.compact ? "إظهار الأدوات" : "تخصيص العرض"}
+                </Button>
+              )
+            }
+          />
+        }
       />
 
-      <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
+      {/* Compact mode: thin summary bar that lets the user re-open everything */}
+      {layout.prefs.compact && (
+        <CollapsedSummaryBar
+          filteredCount={filteredCount}
+          totalCount={totalStatsCount}
+          hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch}
+          sortLabel={({
+            created_at: 'الأحدث',
+            last_activity_at: 'آخر نشاط',
+            current_balance: 'الأعلى مديونية',
+            vip_level: 'VIP',
+          } as Record<string, string>)[sortConfig.key || 'created_at']}
+          onExpand={() => layout.setCompact(false)}
+        />
+      )}
+
+      {(isMobile ? layout.isMobileVisible('stats') : layout.isDesktopVisible('stats')) && (
+        <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
+      )}
 
       {/* Alert Banner - Desktop */}
-      {!isMobile && (
+      {!isMobile && layout.isDesktopVisible('alerts') && (
         <CustomerAlertsBanner
           alertsByType={alertsByType}
           totalAlerts={totalAlerts}
@@ -231,19 +277,20 @@ const CustomersPage = () => {
         />
       )}
 
-      <CustomerFiltersBar
-        searchQuery={filters.searchQuery} onSearchChange={filters.setSearchQuery}
-        typeFilter={filters.typeFilter} onTypeChange={(v) => { filters.setTypeFilter(v); setQuickFilter(null); }}
-        vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
-        governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
-        statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
-        categoryFilter={filters.categoryFilter} onCategoryChange={(v) => { filters.setCategoryFilter(v); setQuickFilter(null); }}
-        governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
-        isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
-        onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
-        noCommDays={filters.noCommDays} inactiveDays={filters.inactiveDays}
-      />
-
+      {(isMobile ? layout.isMobileVisible('filters') : layout.isDesktopVisible('filters')) && (
+        <CustomerFiltersBar
+          searchQuery={filters.searchQuery} onSearchChange={filters.setSearchQuery}
+          typeFilter={filters.typeFilter} onTypeChange={(v) => { filters.setTypeFilter(v); setQuickFilter(null); }}
+          vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
+          governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
+          statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
+          categoryFilter={filters.categoryFilter} onCategoryChange={(v) => { filters.setCategoryFilter(v); setQuickFilter(null); }}
+          governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
+          isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
+          onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
+          noCommDays={filters.noCommDays} inactiveDays={filters.inactiveDays}
+        />
+      )}
       {isMobile ? (
         <div className="pb-fab-safe">
           <CustomerMobileView
@@ -273,6 +320,8 @@ const CustomersPage = () => {
             onQuickFilter={handleQuickFilter}
             selectedIds={bulk.selectedIds}
             onToggleSelect={bulk.toggleSelect}
+            showSummary={layout.isMobileVisible('summary')}
+            showSort={layout.isMobileVisible('sort')}
           />
           {/* FAB removed — global FABMenu (AppLayout) handles "عميل جديد" via pageContext='customers' */}
         </div>

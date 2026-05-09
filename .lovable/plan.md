@@ -1,148 +1,106 @@
-## التشخيص — مشاكل واجهة قائمة العملاء (موبايل)
+# خطة: إخفاء/إظهار كل ما فوق بطاقات العملاء مع حفظ الحالة
 
-### مشاكل سلوكية حرجة (Bugs)
+## الهدف
 
-**B1. الكارد ينفتح ثم يُغلق فورًا عند الضغط على اسم العميل**
-- السبب الجذري: `useLongPress` يستدعي `onPress` في كلا الحدثين `onTouchEnd` و `onMouseUp`. على Android Chrome تُولَّد أحداث ماوس صناعية (~300ms بعد touchend) → `setExpanded(prev => !prev)` يعمل مرتين فينفتح ثم يغلق.
-- المظهر: السهم يدور، المحتوى يبدأ بالظهور ثم يختفي بعد ~300ms.
+السماح للمستخدم بإخفاء أو إظهار كل قسم من الأقسام التي تعلو قائمة بطاقات العملاء بشكل مستقل، مع حفظ التفضيل لكل مستخدم وكل جهاز (موبايل/ديسكتوب) واستعادته تلقائيًا عند العودة للصفحة.
 
-**B2. زرّان عائمان "+" متطابقان في أسفل الصفحة**
-- المصدر: `CustomersPage.tsx` يضيف FAB خاص (سطر 280) **و** `AppLayout.tsx` يحقن `<FABMenu pageContext>` عمومًا. النتيجة زرّان أزرقان متطابقان في الموبايل.
-- التأثير: ارتباك المستخدم + كارثة ذاكرة بصرية + يحجبان آخر صف من القائمة.
+## الأقسام المستهدفة (فوق البطاقات)
 
-**B3. Long-press يفتح قائمة منبثقة (DropdownMenu) بدل تفعيل وضع التحديد**
-- التوقع المعتاد عربيًا/iOS: long-press = تحديد متعدد (selection mode). الكود الحالي يفتح menu صغيرة من 5 عناصر تكرّر إجراءات الـ FAB والـ swipe.
 
-### مشاكل تخطيط/UX (Layout)
+| #   | القسم                                        | المكوّن                   | يظهر في          |
+| --- | -------------------------------------------- | ------------------------- | ---------------- |
+| 1   | شريط البحث + رأس "العملاء (15)" + زر الأدوات | `CustomerPageHeader`      | موبايل + ديسكتوب |
+| 2   | شريط الإحصائيات السريعة (KPIs)               | `CustomerStatsBar`        | الاثنان          |
+| 3   | بانر التنبيهات                               | `CustomerAlertsBanner`    | ديسكتوب فقط      |
+| 4   | شريط الفلاتر (chips/segmented)               | `CustomerFiltersBar`      | الاثنان          |
+| 5   | شريط الملخص الذكي (إجمالي مستحق… )           | `CustomerSummaryBar`      | موبايل           |
+| 6   | شريط الترتيب السريع (الأحدث/VIP…)            | داخل `CustomerMobileView` | موبايل           |
 
-**L1. ازدحام شريط العنوان (top app bar)**
-- 5 أيقونات (P / Layers / Bell-34 / Search / Grid) في عرض 393px + سطر تحته فيه 3 أزرار (إضافة كبير + Kebab + Bell-34 ثاني). **زر الإشعارات مكرر مرتين.**
 
-**L2. زر "إضافة" داخل الصفحة + FAB + FABMenu = ثلاثة طرق لنفس الإجراء**
-- ينبغي توحيدها: FAB واحد فقط على الموبايل، وإزالة زر "إضافة" من رأس الصفحة (يُنقل إلى قائمة الكيباب).
+> شريط البحث نفسه (داخل الهيدر) يبقى دائمًا ظاهرًا حتى لو طُويت بقية عناصر الهيدر، لأنه أداة استخدام يومية.
 
-**L3. شريط البحث بدون إطار وبدون sticky**
-- يطفو بين شريطي الأكشنز ولا يبقى مرئيًا أثناء التمرير → فقدان السياق.
+## تجربة المستخدم
 
-**L4. أيقونة المرشّحات (filter sliders) تطفو وحدها في فراغ كبير**
-- وضعها الحالي وسط الشاشة بمفردها يهدر مساحة عمودية ~70px. يجب دمجها في شريط الفلاتر/الترتيب.
+### نقطة التحكم الموحّدة: زر "تخصيص العرض"
 
-**L5. صفّ pills الفلتر (الكل/نشط/VIP/مدين) وصفّ pills الترتيب (الأحدث/آخر نشاط/…) متطابقان بصريًا**
-- يصعب على المستخدم التمييز بين "الفلترة" و"الترتيب". يحتاجان hierarchy مختلف (مثلاً: الفلتر segmented filled، الترتيب outline + Icon فقط).
+- يُضاف زر صغير (أيقونة `LayoutPanelTop` أو `EyeOff`) داخل قائمة "الأدوات" (Kebab) الموجودة بالفعل في `CustomerPageHeader`، لتجنّب أيقونات إضافية في الأعلى.
+- النقر عليه يفتح `Popover` (ديسكتوب) أو `Sheet` (موبايل) عنوانه «تخصيص ما يظهر فوق القائمة» يحوي:
+  - مفاتيح Switch لكل قسم: الإحصائيات، التنبيهات (ديسكتوب)، الفلاتر، الملخص الذكي (موبايل)، الترتيب السريع (موبايل).
+  - زر «تركيز كامل» = يُخفي كل شيء ما عدا البحث (للقراءة بأقصى مساحة).
+  - زر «إعادة الافتراضي» = يُعيد الكل لظاهر.
 
-### مشاكل بصرية/Design System
+### اختصار سريع — زر «طيّ/توسيع» عائم
 
-**V1. كارد "إجمالي المستحق" بكامله أحمر destructive**
-- KPI محايد لكن اللون الأحمر الكثيف يوحي بخطأ. القاعدة: destructive للأخطاء فقط. يجب: كارد محايد (surface-1) + رقم بلون warning + أيقونة ملوّنة.
+- زر صغير شفاف (chevron up/down) يظهر أعلى قائمة البطاقات مباشرةً.
+- نقرة واحدة = يطوي/يوسّع كل الأقسام الخمسة دفعة واحدة، ويتذكّر آخر مجموعة كانت ظاهرة.
+- في وضع الطيّ يظهر شريط رفيع (32px) يعرض: «مفلتر • 23 من 156 • الأحدث» قابل للنقر لإعادة الفتح.
 
-**V2. حدّ VIP الجانبي (3px) يكاد يكون غير مرئي في الوضع الداكن**
-- استخدام `border-s-warning` على خلفية كارد داكنة يضيع. الحل: شريط vertical accent بعرض 4px + glow خفيف، أو chip VIP أوضح.
+### حركة (Animation)
 
-**V3. شارة "نشط" (نقطة 2px بجوار الاسم) غير قابلة للاكتشاف**
-- يجب استخدام نقطة ملوّنة أكبر مع label عند الـ inactive فقط، أو dot + ring.
+- استخدام `framer-motion` AnimatePresence مع `height: auto ↔ 0` و opacity لـ 200ms لتجنب القفز.
 
-**V4. شريط ائتمان 69% لونه أصفر — جيد، لكن النسبة (69%) ولوحة "25,000" صغيرة جدًا (10px)**
-- يحتاج tabular-nums + font-size 11px للأرقام المالية الحرجة.
+## التخزين والمزامنة
 
-**V5. لا توجد فواصل واضحة بين: header / search / summary / filters / sort / list**
-- النتيجة: "جدار" متجانس يتعب العين على شاشة طويلة.
+### المفتاح والشكل
 
-### مشاكل وصول/Accessibility
+```ts
+// localStorage key
+'customers:layout-prefs:v1'
 
-**A1. `min-height` لبعض الـ chips = 36px** — أقل من معيار 44px للمس.
-**A2. focus rings مفقودة على الـ summary card الكبيرة** (تستخدم button بدون focus-visible صريح).
-**A3. swipe gestures بدون keyboard fallback مرئي** — موجود في الكود لكن غير مُعلَن للمستخدم.
-
----
-
-## خطة العلاج (4 دفعات قابلة للقياس)
-
-### دفعة 1 — إصلاح الـ Bugs السلوكية (Critical, ~30 دقيقة)
-
-1. **`src/hooks/useLongPress.ts`**: منع double-fire من أحداث الماوس الصناعية بعد touch:
-   - إضافة `lastTouchEndAtRef` + تجاهل `onMouseDown/Up` لمدة 500ms بعد آخر `touchend`.
-   - بديل أنظف: استخدام Pointer Events (`onPointerDown/Up/Move`) بدل المزج، أو استدعاء `e.preventDefault()` على touchend عندما يكون target hard tap.
-
-2. **إزالة الـ FAB المحلي من `CustomersPage.tsx`** (سطر 275–284):
-   - الاحتفاظ بـ `FABMenu` العام فقط، وضمان أن `pageContext='customers'` يحقن إجراء "عميل جديد" + "فاتورة جديدة" + "دفعة" + "استيراد".
-   - تعديل `FABMenu` لو لم تكن إجراءات العملاء موجودة.
-
-3. **تحويل long-press إلى selection mode**:
-   - `useLongPress.onLongPress` ينادي `onSelect(customer.id)` ويمرّر إشارة لـ `CustomersPage` لفتح وضع التحديد المتعدد.
-   - DropdownMenu (Kebab) يبقى متاحًا عبر زر صغير في الزاوية لمن يريده.
-
-### دفعة 2 — تنظيف الـ Header وشريط الأدوات (~45 دقيقة)
-
-4. **`CustomerPageHeader.tsx`**: 
-   - إزالة زر "إضافة" الكبير (أصبح في FAB).
-   - إزالة الـ Bell المكرر (يبقى الذي في app header العام فقط).
-   - تجميع: عنوان "العملاء (15)" + Kebab واحد يحوي [استيراد، تصدير، إعدادات الأعمدة، الحفظ كعرض].
-
-5. **شريط بحث sticky موحّد**:
-   - وضع SearchInput + زر فلاتر (sliders icon) في صف واحد sticky `top-14` مع backdrop blur.
-   - حذف أيقونة الفلاتر المنفصلة الطافية في المنتصف.
-
-6. **تمييز شريط الفلتر عن شريط الترتيب**:
-   - الفلتر: segmented control filled (الكل / نشط / VIP / مدين) — يبقى pills.
-   - الترتيب: شريط أصغر outline + icon فقط مع label تحت الأيقونة عند active، أو menu زر "ترتيب: الأحدث ▾" بدلاً من 4 pills.
-
-### دفعة 3 — تحسينات بصرية للكارد والملخص (~45 دقيقة)
-
-7. **`CustomerSummaryBar.tsx`**:
-   - تغيير tone من `destructive` إلى surface محايد (`bg-card border-border`) مع: أيقونة ملوّنة destructive، رقم بلون destructive، خلفية محايدة.
-   - زيادة الـ padding وتباين الفئات.
-
-8. **`CustomerListCard.tsx`**:
-   - VIP accent: استخدام شريط vertical 4px مع لون مشبع + احتمال إضافة gradient خفيف للخلفية فقط لـ platinum/gold.
-   - Active dot: نقلها لتكون فوق الـ avatar (دائرة 10px مع ring-2 من لون الكارد) بدل بجانب الاسم.
-   - الأرقام المالية: تكبير الـ balance إلى text-base وإضافة `font-mono` خفيف، تكبير نسبة الائتمان إلى 11px.
-   - تحسين contrast الـ chevron (50% → 70%).
-
-9. **فواصل بصرية**:
-   - إضافة `divide-y divide-border/30` على القسم الكامل، أو `space-y-3` مع خلفية مختلفة لكل segment (header sticky / filters sticky / list scroll).
-
-### دفعة 4 — Accessibility & Polish (~20 دقيقة)
-
-10. كل chips → `min-h-11` (44px).
-11. focus-visible rings على summary card و chips الفلتر.
-12. إضافة tooltip "اسحب لليمين للاتصال، لليسار لإصدار فاتورة" يظهر مرة عند أول زيارة (localStorage flag).
-13. haptic feedback خفيف عند toggle (`navigator.vibrate(10)` خلف feature detect).
-
----
-
-## الملفات المتأثرة
-
-```text
-src/hooks/useLongPress.ts                              [bug fix]
-src/pages/customers/CustomersPage.tsx                  [حذف FAB، توحيد الإجراءات]
-src/components/customers/list/CustomerListCard.tsx     [بصري + accessibility]
-src/components/customers/list/CustomerPageHeader.tsx   [تنظيف header]
-src/components/customers/list/CustomerSummaryBar.tsx   [تخفيف tone]
-src/components/customers/list/CustomerMobileView.tsx   [دمج البحث + sticky toolbar]
-src/components/mobile/FABMenu.tsx                      [ضمان إجراءات pageContext='customers']
+// الشكل
+{
+  mobile:  { stats: true, filters: true, summary: true, sort: true },
+  desktop: { stats: true, alerts: true, filters: true },
+  compact: false,                   // وضع التركيز الكامل
+  updatedAt: '2026-05-09T07:40:50Z'
+}
 ```
 
-## معايير القبول
+### المنطق
 
-- ✅ الضغط على اسم العميل يفتح/يغلق الكارد بنقرة واحدة (لا double-fire).
-- ✅ FAB واحد فقط مرئي في الموبايل، مع قائمة سياقية لإجراءات العملاء.
-- ✅ زر "إشعارات" يظهر مرة واحدة في الـ header.
-- ✅ أيقونة الفلتر مدمجة مع شريط البحث (sticky).
-- ✅ كارد "إجمالي المستحق" لا يظهر باللون الأحمر الكامل.
-- ✅ كل أزرار اللمس ≥ 44px.
-- ✅ long-press يفتح selection mode (متعدد) بدل قائمة منبثقة.
+- يُقرأ مرة واحدة عند mount عبر hook `useCustomerLayoutPrefs()` يعيد `(prefs, setSection, toggleCompact, reset)`.
+- كل تغيير يحفظ فورًا في localStorage (debounce 150ms).
+- `compact = true` يتجاوز التفضيلات الجزئية ويُخفي الكل (مع ذاكرة سابقة لاسترجاعها عند الخروج).
+- مستقبلاً (خارج هذه الخطة) يمكن مزامنته مع `user_preferences` في القاعدة بنفس المفتاح إن طُلب.
 
-## ما يبقى كما هو
+## التغييرات التقنية
 
-- منطق البيانات (repositories, queryKeys) — تم العمل عليه سابقًا، لن نلمسه.
-- نمط swipe-to-action للاتصال/الفاتورة — يعمل جيدًا ويبقى.
-- بنية CustomerListCard العامة — تعديلات بصرية فقط، لا إعادة كتابة.
-- ألوان semantic tokens (HSL) — استخدام نفس النظام، فقط نُعيد توزيع الـ tones.
+### ملفات جديدة
 
-## أسئلة للتأكيد قبل التنفيذ
+- `src/hooks/customers/useCustomerLayoutPrefs.ts` — قراءة/كتابة التفضيلات + reducer + قيم افتراضية.
+- `src/components/customers/list/CustomerLayoutCustomizer.tsx` — Popover/Sheet مع المفاتيح.
+- `src/components/customers/list/CollapsedSummaryBar.tsx` — الشريط الرفيع (32px) عند الطيّ الكامل.
 
-1. **Selection mode بعد long-press**: هل تريد أن يدخل long-press في وضع تحديد متعدد (مثل WhatsApp/Gmail) ويختفي القائمة المنبثقة الحالية؟ أم تفضّل الإبقاء على القائمة كما هي وحلّ مشكلة الـ double-fire فقط؟
+### ملفات معدَّلة
 
-2. **زر "إضافة" الكبير في الـ header**: هل أحذفه نهائيًا (الإضافة عبر FAB فقط)، أم أحوّله إلى زر نصي صغير "+ جديد"؟
+- `src/pages/customers/CustomersPage.tsx`
+  - استخدام `useCustomerLayoutPrefs`.
+  - تغليف كل قسم بـ `prefs.stats && (...)` …إلخ.
+  - تمرير `prefs` و`setSection` إلى `CustomerPageHeader` لإظهار قائمة التخصيص.
+  - عرض زر طيّ/توسيع عائم + `CollapsedSummaryBar` عند `compact=true`.
+- `src/components/customers/list/CustomerPageHeader.tsx`
+  - إضافة عنصر `DropdownMenuItem` جديد «تخصيص العرض» يفتح `CustomerLayoutCustomizer`.
+- `src/components/customers/list/CustomerMobileView.tsx`
+  - استقبال props اختيارية `showSummary` و`showSort` بدل الإظهار غير المشروط.
 
-إن لم يكن هناك تفضيل، سأطبّق التوصية الافتراضية (Selection mode + حذف زر الإضافة من الـ header).
+### معايير القبول
+
+- ✅ تخصيص ظهور كل قسم مستقلًا، مع حفظ فوري.
+- ✅ زرّ طيّ موحّد + شريط رفيع عند الطيّ يعرض الفلتر/العدد/الترتيب الحالي.
+- ✅ التفضيل ينفصل بين موبايل وديسكتوب.
+- ✅ animation سلسة بدون قفز عند التبديل.
+- ✅ يصل المستخدم إلى زرّ التحكّم بسهولة دون إضافة أيقونات جديدة في الـ header.
+- ✅ shortcut لوحة المفاتيح (ديسكتوب): `Shift + H` لطيّ/توسيع.
+
+## نطاق محدود
+
+- لن نلمس منطق البيانات (repositories, queryKeys).
+- لن نغيّر تصميم البطاقة نفسها.
+- المزامنة مع قاعدة البيانات تُترك لخطوة لاحقة لو طُلبت.
+
+## سؤال للتأكيد قبل التنفيذ
+
+قبل البدء، أحتاج تأكيد نقطة واحدة:
+
+- هل تريد **تحكّم لكل قسم على حدة** (Switches داخل popover) **** 
+- **الحفاظ على حالة الاخفاء حتي يتم إجراء اظهار من قبل المستخدم** 

@@ -24,13 +24,15 @@ interface CustomerPageHeaderProps {
   onSearchChange?: (v: string) => void;
   // Optional slot rendered next to the title (mobile) — e.g. alerts bell
   mobileTitleSlot?: ReactNode;
+  /** Optional "تخصيص العرض" entry rendered as a menu item (rendered as ReactNode). */
+  layoutCustomizerSlot?: ReactNode;
 }
 
 export const CustomerPageHeader = memo(function CustomerPageHeader({
   isMobile, canEdit, exportAllLoading,
   onAdd, onDuplicates, onMerge, onImport, onExportAll,
   totalCount = 0, filteredCount,
-  searchQuery, onSearchChange, mobileTitleSlot,
+  searchQuery, onSearchChange, mobileTitleSlot, layoutCustomizerSlot,
 }: CustomerPageHeaderProps) {
   const countLabel = filteredCount != null && filteredCount !== totalCount
     ? `${filteredCount} من ${totalCount}`
@@ -93,6 +95,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            {layoutCustomizerSlot}
             {/* "إضافة" button removed on mobile — global FAB (AppLayout) handles new-customer entry. */}
           </div>
         </div>
@@ -147,6 +150,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        {layoutCustomizerSlot}
         {canEdit && (
           <TapTooltip content="إضافة سريعة لعميل جديد" side="bottom" autoCloseMs={1500}>
             <Button onClick={onAdd} className="flex-1 sm:flex-none">
