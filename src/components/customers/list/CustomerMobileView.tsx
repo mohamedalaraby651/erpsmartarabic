@@ -33,6 +33,8 @@ interface CustomerMobileViewProps {
   hasActiveSearch?: boolean;
   activeQuickFilter?: string | null;
   onQuickFilter?: (id: string | null) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string, checked: boolean) => void;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
@@ -40,8 +42,10 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
   alertCountByCustomer, errorCustomerIds, hasActiveSearch, activeQuickFilter, onQuickFilter,
+  selectedIds, onToggleSelect,
 }: CustomerMobileViewProps) {
   const observerRef = useRef<HTMLDivElement>(null);
+  const selectionMode = !!(selectedIds && selectedIds.size > 0);
 
   useEffect(() => {
     if (!hasNextPage || !onLoadMore || isFetchingNextPage) return;
@@ -128,6 +132,9 @@ export const CustomerMobileView = memo(function CustomerMobileView({
               onNewPayment={onNewPayment}
               alertCount={alertCountByCustomer?.get(customer.id)}
               hasErrorAlert={errorCustomerIds?.has(customer.id)}
+              selectionMode={selectionMode}
+              isSelected={selectedIds?.has(customer.id)}
+              onSelect={onToggleSelect ? (id) => onToggleSelect(id, !selectedIds?.has(id)) : undefined}
             />
           </div>
         ))}
