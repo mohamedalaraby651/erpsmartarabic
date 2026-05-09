@@ -58,6 +58,25 @@ export const productRepository = {
     return (data || []) as Product[];
   },
 
+  /**
+   * Lightweight projection for selectors (id/name/sku/cost/price).
+   * Used by line-item pickers to avoid loading full product rows.
+   */
+  async findActiveLight(limit = 500): Promise<
+    Array<Pick<Product, 'id' | 'name' | 'sku' | 'cost_price' | 'selling_price'>>
+  > {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, sku, cost_price, selling_price')
+      .eq('is_active', true)
+      .order('name')
+      .limit(limit);
+    if (error) throw error;
+    return (data || []) as Array<
+      Pick<Product, 'id' | 'name' | 'sku' | 'cost_price' | 'selling_price'>
+    >;
+  },
+
   async findAll(
     filters: ProductFilters,
     sort: ProductSort,
