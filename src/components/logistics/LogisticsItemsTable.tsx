@@ -45,17 +45,8 @@ export default function LogisticsItemsTable({ value, onChange, columns, newRow }
   }, [rows]);
 
   const { data: products = [] } = useQuery({
-    queryKey: ["logistics-products-light"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, sku, cost_price, selling_price")
-        .eq("is_active", true)
-        .order("name")
-        .limit(500);
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryKey: [...queryKeys.products.lists(), 'light'] as const,
+    queryFn: () => productRepository.findActiveLight(500),
   });
 
   const addRow = () => {
