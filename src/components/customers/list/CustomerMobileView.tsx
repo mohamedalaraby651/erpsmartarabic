@@ -79,16 +79,18 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {/* شريط الملخص الذكي — مخفي عند البحث/الفلترة */}
-      <CustomerSummaryBar
-        customers={data}
-        hidden={hasActiveSearch || hasActiveFilters}
-        activeQuickFilter={activeQuickFilter}
-        onQuickFilter={onQuickFilter}
-      />
+      {/* شريط الملخص الذكي — مخفي عند البحث/الفلترة أو عند تعطيله من تخصيص العرض */}
+      {showSummary && (
+        <CustomerSummaryBar
+          customers={data}
+          hidden={hasActiveSearch || hasActiveFilters}
+          activeQuickFilter={activeQuickFilter}
+          onQuickFilter={onQuickFilter}
+        />
+      )}
 
       {/* Quick sort chips — single tap */}
-      {onSortChange && (
+      {showSort && onSortChange && (
         <div
           className="flex items-center gap-1.5 mb-3 overflow-x-auto -mx-1 px-1 pb-1 scrollbar-hide"
           role="toolbar"
