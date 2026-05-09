@@ -9,6 +9,7 @@ import type { Customer } from '@/lib/customerConstants';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useCustomerSwipeActions } from '@/hooks/customers/useCustomerSwipeActions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { haptics } from '@/lib/haptics';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,10 +91,13 @@ const CustomerListCardInner = ({
 
   const { isPressed: _isPressed, ...longPressHandlers } = useLongPress({
     onLongPress: () => {
-      if (!selectionMode) {
-        setMenuOpen(true);
+      // Long press always toggles selection (enters selection mode if onSelect provided),
+      // otherwise falls back to opening the contextual menu.
+      if (onSelect) {
+        haptics.medium();
+        onSelect(customer.id);
       } else {
-        onSelect?.(customer.id);
+        setMenuOpen(true);
       }
     },
     onPress: handleToggle,
