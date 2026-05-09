@@ -38,6 +38,9 @@ import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedVie
 import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/list/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import { LiveRegion } from "@/components/shared/LiveRegion";
+import { useCustomerLayoutPrefs } from "@/hooks/customers/useCustomerLayoutPrefs";
+import { CustomerLayoutCustomizer } from "@/components/customers/list/CustomerLayoutCustomizer";
+import { CollapsedSummaryBar } from "@/components/customers/list/CollapsedSummaryBar";
 
 const CustomersPage = () => {
   const navigate = useNavigate();
