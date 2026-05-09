@@ -70,23 +70,28 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
                 </TooltipTrigger>
                 <TooltipContent side="bottom">المزيد من الأدوات (إضافة، استيراد، تصدير، دمج)</TooltipContent>
               </Tooltip>
-              <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuContent align="end" className="w-64">
                 {canEdit && (
-                  <DropdownMenuItem onClick={onAdd}>
-                    <Plus className="h-4 w-4 ml-2" />إضافة عميل
+                  <DropdownMenuItem onClick={onAdd} className="flex-col items-start gap-0.5 py-2">
+                    <span className="flex items-center font-medium"><Plus className="h-4 w-4 ml-2" />إضافة عميل</span>
+                    <span className="text-[11px] text-muted-foreground pr-6">إضافة سريعة لعميل جديد</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={onImport}>
-                  <Upload className="h-4 w-4 ml-2" />استيراد
+                <DropdownMenuItem onClick={onImport} className="flex-col items-start gap-0.5 py-2">
+                  <span className="flex items-center font-medium"><Upload className="h-4 w-4 ml-2" />استيراد</span>
+                  <span className="text-[11px] text-muted-foreground pr-6">رفع ملف Excel أو CSV لعملاء متعددين</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading}>
-                  <Download className="h-4 w-4 ml-2" />تصدير
+                <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading} className="flex-col items-start gap-0.5 py-2">
+                  <span className="flex items-center font-medium"><Download className="h-4 w-4 ml-2" />تصدير</span>
+                  <span className="text-[11px] text-muted-foreground pr-6">تنزيل قائمة العملاء كملف Excel</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onDuplicates}>
-                  <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين
+                <DropdownMenuItem onClick={onDuplicates} className="flex-col items-start gap-0.5 py-2">
+                  <span className="flex items-center font-medium"><ScanSearch className="h-4 w-4 ml-2" />كشف المكررين</span>
+                  <span className="text-[11px] text-muted-foreground pr-6">البحث عن بيانات مكررة بين العملاء</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onMerge}>
-                  <Merge className="h-4 w-4 ml-2" />دمج
+                <DropdownMenuItem onClick={onMerge} className="flex-col items-start gap-0.5 py-2">
+                  <span className="flex items-center font-medium"><Merge className="h-4 w-4 ml-2" />دمج</span>
+                  <span className="text-[11px] text-muted-foreground pr-6">دمج عميلين في سجل واحد</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
