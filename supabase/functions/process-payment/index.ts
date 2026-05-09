@@ -32,7 +32,10 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  console.log('[process-payment] Request received');
+  const correlationId = getCorrelationId(req);
+  const idempotencyKey = getIdempotencyKey(req);
+  const respHeaders = { ...corsHeaders, 'Content-Type': 'application/json', 'x-correlation-id': correlationId };
+  console.log('[process-payment] Request received', { correlationId, idempotencyKey });
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
