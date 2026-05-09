@@ -272,16 +272,7 @@ const CustomersPage = () => {
             activeQuickFilter={quickFilter}
             onQuickFilter={handleQuickFilter}
           />
-          {canEdit && (
-            <button
-              type="button"
-              onClick={handleAdd}
-              aria-label="إضافة عميل جديد"
-              className="fixed bottom-20 start-4 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <Plus className="h-6 w-6" />
-            </button>
-          )}
+          {/* FAB removed — global FABMenu (AppLayout) handles "عميل جديد" via pageContext='customers' */}
         </div>
       ) : (
         <div>
