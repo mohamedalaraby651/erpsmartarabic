@@ -64,7 +64,12 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
                   <MoreVertical className="h-4.5 w-4.5" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-52">
+                {canEdit && (
+                  <DropdownMenuItem onClick={onAdd}>
+                    <Plus className="h-4 w-4 ml-2" />إضافة عميل
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={onImport}>
                   <Upload className="h-4 w-4 ml-2" />استيراد
                 </DropdownMenuItem>
@@ -79,11 +84,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {canEdit && (
-              <Button onClick={onAdd} size="sm" className="h-10 px-4 rounded-xl shadow-sm shadow-primary/20" aria-label="إضافة عميل">
-                <Plus className="h-4 w-4 ml-1.5" />إضافة
-              </Button>
-            )}
+            {/* "إضافة" button removed on mobile — global FAB (AppLayout) handles new-customer entry. */}
           </div>
         </div>
       </div>

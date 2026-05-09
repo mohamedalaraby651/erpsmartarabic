@@ -21,6 +21,10 @@ export function useLongPress({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const longPressTriggeredRef = useRef(false);
+  // Track last touch end timestamp to suppress synthetic mouse events
+  // that browsers fire ~300ms after touchend on touch devices.
+  const lastTouchEndAtRef = useRef<number>(0);
+  const SYNTHETIC_MOUSE_WINDOW_MS = 600;
 
   const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
@@ -31,6 +35,13 @@ export function useLongPress({
 
   const start = useCallback(
     (e: React.TouchEvent | React.MouseEvent) => {
+      // Suppress synthetic mouse events fired by the browser after a touch.
+      if (!('touches' in e)) {
+        if (Date.now() - lastTouchEndAtRef.current < SYNTHETIC_MOUSE_WINDOW_MS) {
+          return;
+        }
+      }
+
       // Don't preventDefault — allow native scroll
       longPressTriggeredRef.current = false;
 
@@ -68,7 +79,19 @@ export function useLongPress({
   );
 
   const cancel = useCallback(
-    (_e: React.TouchEvent | React.MouseEvent) => {
+    (e: React.TouchEvent | React.MouseEvent) => {
+      // Mark touchend timestamp so we can reject the synthetic mousedown/mouseup
+      // events the browser will fire shortly after.
+      const isTouchEvent = 'changedTouches' in e || 'touches' in e;
+      if (isTouchEvent) {
+        lastTouchEndAtRef.current = Date.now();
+      } else {
+        // If a synthetic mouse event slipped through, ignore it.
+        if (Date.now() - lastTouchEndAtRef.current < SYNTHETIC_MOUSE_WINDOW_MS) {
+          return;
+        }
+      }
+
       if (longPressTriggeredRef.current) {
         // Long press already fired, don't trigger onPress
         clearTimer();
