@@ -19,6 +19,10 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const correlationId = getCorrelationId(req);
+  const idempotencyKey = getIdempotencyKey(req);
+  const respHeaders = { ...corsHeaders, 'Content-Type': 'application/json', 'x-correlation-id': correlationId };
+
   try {
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
