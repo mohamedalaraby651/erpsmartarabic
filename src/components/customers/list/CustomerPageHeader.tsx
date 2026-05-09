@@ -4,6 +4,7 @@ import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical, Chevr
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CustomerSearchPreview } from "@/components/customers/filters/CustomerSearchPreview";
 
 interface CustomerPageHeaderProps {
@@ -56,14 +57,19 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
           <div className="flex items-center gap-2">
             {mobileTitleSlot}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
-                  aria-label="المزيد من الأدوات"
-                >
-                  <MoreVertical className="h-4.5 w-4.5" />
-                </button>
-              </DropdownMenuTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
+                      aria-label="المزيد من الأدوات"
+                    >
+                      <MoreVertical className="h-4.5 w-4.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">المزيد من الأدوات (إضافة، استيراد، تصدير، دمج)</TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align="end" className="w-52">
                 {canEdit && (
                   <DropdownMenuItem onClick={onAdd}>
