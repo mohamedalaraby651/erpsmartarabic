@@ -58,19 +58,16 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
           <div className="flex items-center gap-2">
             {mobileTitleSlot}
             <DropdownMenu>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
-                      aria-label="المزيد من الأدوات"
-                    >
-                      <MoreVertical className="h-4.5 w-4.5" />
-                    </button>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">المزيد من الأدوات (إضافة، استيراد، تصدير، دمج)</TooltipContent>
-              </Tooltip>
+              <TapTooltip content="المزيد من الأدوات (إضافة، استيراد، تصدير، دمج)" side="bottom" autoCloseMs={1600}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
+                    aria-label="المزيد من الأدوات"
+                  >
+                    <MoreVertical className="h-4.5 w-4.5" />
+                  </button>
+                </DropdownMenuTrigger>
+              </TapTooltip>
               <DropdownMenuContent align="end" className="w-64">
                 {canEdit && (
                   <DropdownMenuItem onClick={onAdd} className="flex-col items-start gap-0.5 py-2">
