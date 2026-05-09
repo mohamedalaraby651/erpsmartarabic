@@ -108,11 +108,18 @@ export async function validateInvoice(
  * Handles: permission check, invoice validation, balance updates
  */
 export async function processPayment(
-  paymentData: PaymentData
+  paymentData: PaymentData,
+  options: { idempotencyKey?: string; correlationId?: string } = {},
 ): Promise<OperationResult<{ payment_id: string }>> {
   try {
+    const { buildRequestHeaders, newIdempotencyKey } = await import('@/lib/requestHeaders');
+    const headers = buildRequestHeaders({
+      idempotencyKey: options.idempotencyKey || newIdempotencyKey(),
+      correlationId: options.correlationId,
+    });
     const { data, error } = await supabase.functions.invoke('process-payment', {
-      body: { payment_data: paymentData }
+      body: { payment_data: paymentData },
+      headers,
     });
 
     if (error) {
