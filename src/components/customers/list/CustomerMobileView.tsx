@@ -35,6 +35,10 @@ interface CustomerMobileViewProps {
   onQuickFilter?: (id: string | null) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string, checked: boolean) => void;
+  /** عرض شريط الملخص الذكي. الافتراضي true. */
+  showSummary?: boolean;
+  /** عرض شريط الترتيب السريع. الافتراضي true. */
+  showSort?: boolean;
 }
 
 export const CustomerMobileView = memo(function CustomerMobileView({
