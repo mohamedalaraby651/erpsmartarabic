@@ -121,8 +121,13 @@ serve(async (req) => {
 
     // 1.5 Idempotency guard — prevent duplicate payment posting on retry/replay
     if (idempotencyKey) {
-      const { data: tenantIdData } = await supabaseAdmin.rpc('get_user_tenant_id', { _user_id: userId });
-      const tenantId = tenantIdData as string | null;
+      const { data: tenantRow } = await supabaseAdmin
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+      const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
       if (tenantId) {
         const guard = await checkIdempotency(supabaseAdmin, {
           tenantId,
