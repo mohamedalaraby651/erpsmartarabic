@@ -210,8 +210,50 @@ describe('useLongPress', () => {
 
       expect(result.current.isPressed).toBe(false);
       expect(onLongPress).not.toHaveBeenCalled();
+  });
+
+  describe('Synthetic Mouse Event Suppression / منع الأحداث المركبة', () => {
+    it('should ignore synthetic mousedown fired right after touchend', () => {
+      const onLongPress = vi.fn();
+      const onPress = vi.fn();
+
+      const { result } = renderHook(() =>
+        useLongPress({ onLongPress, onPress, delay: 500 })
+      );
+
+      // Touch start then release (short tap → onPress fires once)
+      act(() => {
+        result.current.onTouchStart({
+          preventDefault: vi.fn(),
+          target: document.createElement('div'),
+          touches: [{ clientX: 0, clientY: 0 }],
+        } as any);
+      });
+      act(() => {
+        vi.advanceTimersByTime(100);
+        result.current.onTouchEnd({
+          changedTouches: [{ clientX: 0, clientY: 0 }],
+        } as any);
+      });
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+
+      // Browser fires synthetic mousedown/mouseup right after — must be ignored
+      act(() => {
+        result.current.onMouseDown({
+          preventDefault: vi.fn(),
+          target: document.createElement('div'),
+          clientX: 0,
+          clientY: 0,
+        } as any);
+        result.current.onMouseUp({} as any);
+      });
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+      expect(onLongPress).not.toHaveBeenCalled();
     });
   });
+});
 
   describe('Delay Configuration / تكوين التأخير', () => {
     it('should use default delay of 500ms', () => {
