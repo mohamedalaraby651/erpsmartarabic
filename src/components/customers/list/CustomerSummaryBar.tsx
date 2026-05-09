@@ -70,25 +70,30 @@ export const CustomerSummaryBar = memo(function CustomerSummaryBar({
         aria-pressed={isActive}
         aria-label={`${debtCard.label}: ${debtCard.value}`}
         className={cn(
-          'w-full rounded-xl border bg-gradient-to-br p-3.5 text-right transition-all',
-          'from-destructive/10 to-destructive/5 border-destructive/20 text-destructive',
-          isClickable && 'cursor-pointer active:scale-[0.99] hover:shadow-md min-h-[64px]',
-          isActive && 'ring-2 ring-current shadow-sm',
+          'w-full rounded-xl border bg-card border-border p-3.5 text-right transition-all',
+          'shadow-sm hover:shadow-md',
+          isClickable && 'cursor-pointer active:scale-[0.99] min-h-11',
+          isActive && 'ring-2 ring-destructive/50 border-destructive/40',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
         )}
       >
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Icon className="h-5 w-5 opacity-90" aria-hidden />
-            <div>
-              <div className="text-[11px] font-medium opacity-80">{debtCard.label}</div>
-              <div className="text-[10px] opacity-70 mt-0.5">{debtCard.sub}</div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-destructive/10 text-destructive shrink-0">
+              <Icon className="h-5 w-5" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-medium text-foreground">{debtCard.label}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">{debtCard.sub}</div>
             </div>
           </div>
-          <div className="text-lg font-bold tabular-nums leading-tight">{debtCard.value}</div>
+          <div className="text-lg font-bold tabular-nums leading-tight text-destructive shrink-0">
+            {debtCard.value}
+          </div>
         </div>
       </button>
       {summary.nearLimitCount > 0 && (
-        <div className="flex items-center gap-1.5 px-1 text-[11px] text-amber-700 dark:text-amber-400">
+        <div className="flex items-center gap-1.5 px-1 text-[11px] text-warning">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
           <span>{summary.nearLimitCount} عميل تجاوز 80% من حد الائتمان</span>
         </div>
