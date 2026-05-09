@@ -118,6 +118,32 @@ serve(async (req) => {
       );
     }
 
+    // Idempotency guard
+    const idemKey = getIdempotencyKey(req);
+    const correlationId = getCorrelationId(req);
+    if (idemKey) {
+      const { data: tenantRow } = await supabaseAdmin
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      const tenantId = tenantRow?.tenant_id;
+      if (tenantId) {
+        const guard = await checkIdempotency(supabaseAdmin, {
+          tenantId, userId,
+          operation: `approve-expense:${approvalData.action}`,
+          key: idemKey,
+        });
+        if (guard.duplicate) {
+          console.log(`[approve-expense] [${correlationId}] Idempotent replay rejected`);
+          return new Response(
+            JSON.stringify({ success: false, error: 'Duplicate request', code: 'IDEMPOTENT_REPLAY' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
     // 2. Get expense details
     console.log('[approve-expense] Fetching expense...');
     const { data: expense, error: expenseError } = await supabaseAdmin
