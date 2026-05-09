@@ -35,6 +35,13 @@ export function useLongPress({
 
   const start = useCallback(
     (e: React.TouchEvent | React.MouseEvent) => {
+      // Suppress synthetic mouse events fired by the browser after a touch.
+      if (!('touches' in e)) {
+        if (Date.now() - lastTouchEndAtRef.current < SYNTHETIC_MOUSE_WINDOW_MS) {
+          return;
+        }
+      }
+
       // Don't preventDefault — allow native scroll
       longPressTriggeredRef.current = false;
 
