@@ -82,6 +82,31 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Idempotency guard — prevent duplicate journal posting on retry
+    if (idempotencyKey) {
+      const { data: tenantRow } = await supabaseAdmin
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+      const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
+      if (tenantId) {
+        const guard = await checkIdempotency(supabaseAdmin, {
+          tenantId,
+          userId,
+          operation: 'create-journal',
+          key: idempotencyKey,
+        });
+        if (guard.duplicate) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
+            { status: 409, headers: respHeaders }
+          );
+        }
+      }
+    }
+
     // Check permission - only admin or accountant
     const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'admin' });
     const { data: isAccountant } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'accountant' });
