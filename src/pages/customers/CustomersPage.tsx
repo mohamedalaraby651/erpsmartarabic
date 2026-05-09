@@ -59,6 +59,9 @@ const CustomersPage = () => {
   // Column visibility
   const { visibleColumns, setVisibleColumns } = useVisibleColumns();
 
+  // Layout preferences (show/hide sections above the list — persisted per device)
+  const layout = useCustomerLayoutPrefs();
+
   useEffect(() => {
     const action = filters.searchParams.get('action');
     if (action === 'new' || action === 'create') {
