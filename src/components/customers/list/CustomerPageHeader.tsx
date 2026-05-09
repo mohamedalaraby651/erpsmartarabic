@@ -153,7 +153,6 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
               <Plus className="h-4 w-4 ml-2" />إضافة عميل
             </Button>
           </TapTooltip>
-          </Tooltip>
         )}
       </div>
     </div>
