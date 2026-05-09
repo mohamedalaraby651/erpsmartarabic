@@ -1,9 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkIdempotency, getCorrelationId, getIdempotencyKey } from "../_shared/idempotency.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, idempotency-key, x-correlation-id',
+  'Access-Control-Expose-Headers': 'x-correlation-id',
 };
 
 interface PaymentData {
@@ -30,7 +32,10 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  console.log('[process-payment] Request received');
+  const correlationId = getCorrelationId(req);
+  const idempotencyKey = getIdempotencyKey(req);
+  const respHeaders = { ...corsHeaders, 'Content-Type': 'application/json', 'x-correlation-id': correlationId };
+  console.log('[process-payment] Request received', { correlationId, idempotencyKey });
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -41,7 +46,7 @@ serve(async (req) => {
       console.error('[process-payment] Missing environment variables');
       return new Response(
         JSON.stringify({ success: false, error: 'Server configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: respHeaders }
       );
     }
 
@@ -50,7 +55,7 @@ serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -65,7 +70,7 @@ serve(async (req) => {
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid token', code: 'INVALID_TOKEN' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -85,7 +90,7 @@ serve(async (req) => {
       console.log('[process-payment] Rate limit exceeded for user:', userId);
       return new Response(
         JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 429, headers: respHeaders }
       );
     }
 
@@ -95,7 +100,7 @@ serve(async (req) => {
     if (!paymentData) {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing payment_data', code: 'MISSING_DATA' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -110,8 +115,34 @@ serve(async (req) => {
     if (!hasPermission) {
       return new Response(
         JSON.stringify({ success: false, error: 'Permission denied', code: 'NO_PERMISSION' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: respHeaders }
       );
+    }
+
+    // 1.5 Idempotency guard — prevent duplicate payment posting on retry/replay
+    if (idempotencyKey) {
+      const { data: tenantRow } = await supabaseAdmin
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+      const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
+      if (tenantId) {
+        const guard = await checkIdempotency(supabaseAdmin, {
+          tenantId,
+          userId,
+          operation: 'process-payment',
+          key: idempotencyKey,
+        });
+        if (guard.duplicate) {
+          console.log('[process-payment] Replay detected, rejecting', { correlationId, idempotencyKey });
+          return new Response(
+            JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
+            { status: 409, headers: respHeaders }
+          );
+        }
+      }
     }
 
     // 2. Validate customer exists
@@ -125,7 +156,7 @@ serve(async (req) => {
     if (customerError || !customer) {
       return new Response(
         JSON.stringify({ success: false, error: 'Customer not found', code: 'CUSTOMER_NOT_FOUND' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -142,7 +173,7 @@ serve(async (req) => {
       if (invoiceError || !invoiceData) {
         return new Response(
           JSON.stringify({ success: false, error: 'Invoice not found', code: 'INVOICE_NOT_FOUND' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: respHeaders }
         );
       }
 
@@ -163,7 +194,7 @@ serve(async (req) => {
               requested: paymentData.amount
             }
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: respHeaders }
         );
       }
     }
@@ -190,7 +221,7 @@ serve(async (req) => {
       console.error('[process-payment] Error creating payment:', paymentError);
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to create payment', code: 'CREATE_FAILED' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: respHeaders }
       );
     }
 
@@ -249,7 +280,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: respHeaders }
     );
 
   } catch (error) {
@@ -257,7 +288,7 @@ serve(async (req) => {
     console.error('[process-payment] Unexpected error:', error);
     return new Response(
       JSON.stringify({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: respHeaders }
     );
   }
 });
