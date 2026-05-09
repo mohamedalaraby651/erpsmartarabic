@@ -120,31 +120,47 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <MoreVertical className="h-4 w-4 ml-2" />أدوات
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading}>
-              {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
-              تصدير متقدم
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MoreVertical className="h-4 w-4 ml-2" />أدوات
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">استيراد، تصدير، كشف مكررين، ودمج</TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading} className="flex-col items-start gap-0.5 py-2">
+              <span className="flex items-center font-medium">
+                {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
+                تصدير متقدم
+              </span>
+              <span className="text-[11px] text-muted-foreground pr-6">تخصيص الأعمدة والفلاتر قبل التصدير</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onImport}>
-              <Upload className="h-4 w-4 ml-2" />استيراد
+            <DropdownMenuItem onClick={onImport} className="flex-col items-start gap-0.5 py-2">
+              <span className="flex items-center font-medium"><Upload className="h-4 w-4 ml-2" />استيراد</span>
+              <span className="text-[11px] text-muted-foreground pr-6">رفع ملف Excel أو CSV لعملاء متعددين</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDuplicates}>
-              <ScanSearch className="h-4 w-4 ml-2" />كشف المكررين
+            <DropdownMenuItem onClick={onDuplicates} className="flex-col items-start gap-0.5 py-2">
+              <span className="flex items-center font-medium"><ScanSearch className="h-4 w-4 ml-2" />كشف المكررين</span>
+              <span className="text-[11px] text-muted-foreground pr-6">البحث عن سجلات متشابهة بين العملاء</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onMerge}>
-              <Merge className="h-4 w-4 ml-2" />دمج
+            <DropdownMenuItem onClick={onMerge} className="flex-col items-start gap-0.5 py-2">
+              <span className="flex items-center font-medium"><Merge className="h-4 w-4 ml-2" />دمج</span>
+              <span className="text-[11px] text-muted-foreground pr-6">دمج عميلين في سجل واحد مع نقل البيانات</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         {canEdit && (
-          <Button onClick={onAdd} className="flex-1 sm:flex-none">
-            <Plus className="h-4 w-4 ml-2" />إضافة عميل
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={onAdd} className="flex-1 sm:flex-none">
+                <Plus className="h-4 w-4 ml-2" />إضافة عميل
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">إضافة سريعة لعميل جديد</TooltipContent>
+          </Tooltip>
         )}
       </div>
     </div>
