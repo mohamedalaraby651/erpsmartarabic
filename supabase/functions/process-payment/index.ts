@@ -119,6 +119,27 @@ serve(async (req) => {
       );
     }
 
+    // 1.5 Idempotency guard — prevent duplicate payment posting on retry/replay
+    if (idempotencyKey) {
+      const { data: tenantIdData } = await supabaseAdmin.rpc('get_user_tenant_id', { _user_id: userId });
+      const tenantId = tenantIdData as string | null;
+      if (tenantId) {
+        const guard = await checkIdempotency(supabaseAdmin, {
+          tenantId,
+          userId,
+          operation: 'process-payment',
+          key: idempotencyKey,
+        });
+        if (guard.duplicate) {
+          console.log('[process-payment] Replay detected, rejecting', { correlationId, idempotencyKey });
+          return new Response(
+            JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
+            { status: 409, headers: respHeaders }
+          );
+        }
+      }
+    }
+
     // 2. Validate customer exists
     console.log('[process-payment] Validating customer...');
     const { data: customer, error: customerError } = await supabaseAdmin
