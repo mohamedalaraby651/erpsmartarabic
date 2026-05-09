@@ -47,6 +47,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
   alertCountByCustomer, errorCustomerIds, hasActiveSearch, activeQuickFilter, onQuickFilter,
   selectedIds, onToggleSelect,
+  showSummary = true, showSort = true,
 }: CustomerMobileViewProps) {
   const observerRef = useRef<HTMLDivElement>(null);
   const selectionMode = !!(selectedIds && selectedIds.size > 0);
