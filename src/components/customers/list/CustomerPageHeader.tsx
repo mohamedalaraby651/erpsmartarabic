@@ -118,16 +118,13 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
         <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MoreVertical className="h-4 w-4 ml-2" />أدوات
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">استيراد، تصدير، كشف مكررين، ودمج</TooltipContent>
-          </Tooltip>
+          <TapTooltip content="استيراد، تصدير، كشف مكررين، ودمج" side="bottom" autoCloseMs={1600}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4 ml-2" />أدوات
+              </Button>
+            </DropdownMenuTrigger>
+          </TapTooltip>
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading} className="flex-col items-start gap-0.5 py-2">
               <span className="flex items-center font-medium">
@@ -151,13 +148,11 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
           </DropdownMenuContent>
         </DropdownMenu>
         {canEdit && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={onAdd} className="flex-1 sm:flex-none">
-                <Plus className="h-4 w-4 ml-2" />إضافة عميل
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">إضافة سريعة لعميل جديد</TooltipContent>
+          <TapTooltip content="إضافة سريعة لعميل جديد" side="bottom" autoCloseMs={1500}>
+            <Button onClick={onAdd} className="flex-1 sm:flex-none">
+              <Plus className="h-4 w-4 ml-2" />إضافة عميل
+            </Button>
+          </TapTooltip>
           </Tooltip>
         )}
       </div>
