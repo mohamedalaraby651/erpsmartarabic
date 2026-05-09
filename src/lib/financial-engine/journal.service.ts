@@ -50,6 +50,9 @@ export async function createJournalFromEvent(params: CreateJournalParams): Promi
       return { success: false, error: `Missing accounts: ${missing.join(', ')}` };
     }
 
+    const { buildRequestHeaders, newIdempotencyKey } = await import('@/lib/requestHeaders');
+    // Stable idempotency key derived from source doc to deduplicate auto-postings
+    const stableKey = `${source_type}:${source_id}:${event}`;
     const { data, error } = await supabase.functions.invoke('create-journal', {
       body: {
         fiscal_period_id,
@@ -64,6 +67,7 @@ export async function createJournalFromEvent(params: CreateJournalParams): Promi
           memo: l.memo,
         })),
       },
+      headers: buildRequestHeaders({ idempotencyKey: stableKey || newIdempotencyKey() }),
     });
 
     if (error) {

@@ -61,12 +61,14 @@ const InvoiceApprovalDialog = ({
       action: "submit" | "approve" | "reject";
       reason?: string;
     }) => {
+      const { buildRequestHeaders, newIdempotencyKey } = await import("@/lib/requestHeaders");
       const { data, error } = await supabase.functions.invoke("approve-invoice", {
         body: {
           invoice_id: invoice?.id,
           action,
           rejection_reason: reason,
         },
+        headers: buildRequestHeaders({ idempotencyKey: newIdempotencyKey() }),
       });
 
       if (error) throw error;

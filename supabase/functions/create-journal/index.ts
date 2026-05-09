@@ -1,8 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkIdempotency, getCorrelationId, getIdempotencyKey } from '../_shared/idempotency.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, idempotency-key, x-correlation-id',
+  'Access-Control-Expose-Headers': 'x-correlation-id',
 };
 
 interface JournalEntry {
@@ -26,13 +28,17 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const correlationId = getCorrelationId(req);
+  const idempotencyKey = getIdempotencyKey(req);
+  const respHeaders = { ...corsHeaders, 'Content-Type': 'application/json', 'x-correlation-id': correlationId };
+
   try {
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -55,7 +61,7 @@ Deno.serve(async (req) => {
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid token', code: 'INVALID_TOKEN' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: respHeaders }
       );
     }
 
@@ -72,8 +78,33 @@ Deno.serve(async (req) => {
       console.log('[create-journal] Rate limit exceeded for user:', userId);
       return new Response(
         JSON.stringify({ success: false, error: 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً', code: 'RATE_LIMITED' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 429, headers: respHeaders }
       );
+    }
+
+    // Idempotency guard — prevent duplicate journal posting on retry
+    if (idempotencyKey) {
+      const { data: tenantRow } = await supabaseAdmin
+        .from('user_tenants')
+        .select('tenant_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+      const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
+      if (tenantId) {
+        const guard = await checkIdempotency(supabaseAdmin, {
+          tenantId,
+          userId,
+          operation: 'create-journal',
+          key: idempotencyKey,
+        });
+        if (guard.duplicate) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
+            { status: 409, headers: respHeaders }
+          );
+        }
+      }
     }
 
     // Check permission - only admin or accountant
@@ -83,7 +114,7 @@ Deno.serve(async (req) => {
     if (!isAdmin && !isAccountant) {
       return new Response(
         JSON.stringify({ success: false, error: 'ليس لديك صلاحية لإنشاء قيود محاسبية', code: 'NO_PERMISSION' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 403, headers: respHeaders }
       );
     }
 
@@ -101,7 +132,7 @@ Deno.serve(async (req) => {
           error: 'يجب إدخال التاريخ والوصف وسطرين على الأقل', 
           code: 'MISSING_DATA' 
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -116,14 +147,14 @@ Deno.serve(async (req) => {
           error: `القيد غير متوازن: المدين (${totalDebit}) ≠ الدائن (${totalCredit})`, 
           code: 'UNBALANCED' 
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
     if (totalDebit === 0 && totalCredit === 0) {
       return new Response(
         JSON.stringify({ success: false, error: 'لا يمكن إنشاء قيد فارغ', code: 'EMPTY_JOURNAL' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -143,7 +174,7 @@ Deno.serve(async (req) => {
           error: 'لا توجد فترة مالية مفتوحة لهذا التاريخ', 
           code: 'NO_PERIOD' 
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -162,7 +193,7 @@ Deno.serve(async (req) => {
     if (!accounts || accounts.length !== accountIds.length) {
       return new Response(
         JSON.stringify({ success: false, error: 'بعض الحسابات غير موجودة', code: 'INVALID_ACCOUNTS' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -174,7 +205,7 @@ Deno.serve(async (req) => {
           error: `الحسابات التالية غير نشطة: ${inactiveAccounts.map(a => a.name).join(', ')}`, 
           code: 'INACTIVE_ACCOUNTS' 
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: respHeaders }
       );
     }
 
@@ -228,7 +259,7 @@ Deno.serve(async (req) => {
         journal_number: journal.journal_number,
         message: 'تم إنشاء القيد بنجاح'
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: respHeaders }
     );
 
   } catch (error) {
@@ -240,7 +271,7 @@ Deno.serve(async (req) => {
         error: 'Internal server error',
         code: 'INTERNAL_ERROR',
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: respHeaders }
     );
   }
 });

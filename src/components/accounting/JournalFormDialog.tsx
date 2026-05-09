@@ -81,12 +81,14 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
 
   const mutation = useMutation({
     mutationFn: async (data: JournalFormData) => {
+      const { buildRequestHeaders, newIdempotencyKey } = await import("@/lib/requestHeaders");
       const { data: result, error } = await supabase.functions.invoke("create-journal", {
         body: {
           journal_date: data.journal_date,
           description: data.description,
           entries: entries.filter((e) => e.account_id),
         },
+        headers: buildRequestHeaders({ idempotencyKey: newIdempotencyKey() }),
       });
 
       if (error) throw error;
