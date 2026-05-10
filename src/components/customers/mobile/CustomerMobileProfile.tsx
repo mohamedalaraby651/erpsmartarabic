@@ -17,6 +17,8 @@ import { vipColors, vipLabels } from "@/lib/customerConstants";
 import type { Customer } from "@/lib/customerConstants";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { useLongPress } from "@/hooks/useLongPress";
+import { haptics } from "@/lib/haptics";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
@@ -43,14 +45,20 @@ interface CustomerMobileProfileProps {
   onNewOrder?: () => void;
   onNewCreditNote?: () => void;
   onToggleActive?: () => void;
+  onChangeVip?: (level: string) => void;
 }
 
 export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   customer, customerId, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
   currentBalance = 0, balanceIsDebit = false, creditLimit, creditUsagePercent, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
-  onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
+  onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive, onChangeVip,
 }: CustomerMobileProfileProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [vipSheetOpen, setVipSheetOpen] = useState(false);
+  const vipLongPress = useLongPress({
+    onLongPress: () => { if (onChangeVip) { haptics.medium(); setVipSheetOpen(true); } },
+    delay: 450,
+  });
   const [copied, setCopied] = useState(false);
 
   return (
@@ -63,10 +71,22 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             <div className="absolute -bottom-1 -left-1">
               <ImageUpload currentImageUrl={customer.image_url} onImageUploaded={(url) => onImageUpdate(url)} onImageRemoved={() => onImageUpdate(null)} bucket="customer-images" folder={customerId} showAvatar={false} />
             </div>
-            <Badge className={`absolute -top-1 -right-1 text-[10px] px-1.5 py-0.5 ${vipColors[customer.vip_level] || vipColors.regular}`}>
-              <Crown className="h-2.5 w-2.5 ml-0.5" />
-              {vipLabels[customer.vip_level] || vipLabels.regular}
-            </Badge>
+            {onChangeVip ? (
+              <button
+                type="button"
+                {...vipLongPress}
+                aria-label={`المستوى: ${vipLabels[customer.vip_level] || vipLabels.regular} — اضغط مطولاً للتغيير`}
+                className={`absolute -top-1 -right-1 inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-md font-medium ${vipColors[customer.vip_level] || vipColors.regular}`}
+              >
+                <Crown className="h-2.5 w-2.5 ml-0.5" />
+                {vipLabels[customer.vip_level] || vipLabels.regular}
+              </button>
+            ) : (
+              <Badge className={`absolute -top-1 -right-1 text-[10px] px-1.5 py-0.5 ${vipColors[customer.vip_level] || vipColors.regular}`}>
+                <Crown className="h-2.5 w-2.5 ml-0.5" />
+                {vipLabels[customer.vip_level] || vipLabels.regular}
+              </Badge>
+            )}
           </div>
 
           <div>
@@ -223,6 +243,30 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           </Sheet>
         </div>
       </CardContent>
+
+      {/* VIP level changer (long-press on the badge) */}
+      {onChangeVip && (
+        <Sheet open={vipSheetOpen} onOpenChange={setVipSheetOpen}>
+          <SheetContent side="bottom" className="rounded-t-xl">
+            <SheetHeader>
+              <SheetTitle>تغيير مستوى العميل</SheetTitle>
+            </SheetHeader>
+            <div className="grid grid-cols-2 gap-3 mt-4 pb-4">
+              {Object.keys(vipLabels).map((level) => (
+                <Button
+                  key={level}
+                  variant={customer.vip_level === level ? "default" : "outline"}
+                  className="h-12"
+                  onClick={() => { onChangeVip(level); setVipSheetOpen(false); }}
+                >
+                  <Crown className="h-4 w-4 ml-2" />
+                  {vipLabels[level]}
+                </Button>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </Card>
   );
 });

@@ -15,14 +15,15 @@ interface CustomerIconStripProps {
   onSectionChange: (section: MobileSectionId) => void;
   /** Optional badge counts per section (e.g. overdue invoices, upcoming reminders) */
   badges?: Partial<Record<MobileSectionId, number>>;
+  /** Optional slot rendered after the primary icons (used for the "More" sheet) */
+  extraSlot?: React.ReactNode;
 }
 
-/**
- * Reordered by usage frequency: invoices/payments/statement first, then sales,
- * then analytics-heavy sections, then admin (notes/info/attachments).
- * All colors use semantic tokens (no raw tailwind palette references).
- */
-const stripIcons = [
+/** Top 6 most-used sections — secondary sections live in the "More" sheet. */
+export const PRIMARY_STRIP_IDS = ['invoices','payments','statement','reminders','sales','analytics'] as const;
+export const SECONDARY_STRIP_IDS = ['aging','communications','notes','info','attachments'] as const;
+
+const allStripIcons = [
   { id: 'invoices' as const,       label: 'فواتير',     icon: FileText,        tone: 'primary'     },
   { id: 'payments' as const,       label: 'مدفوعات',    icon: CreditCard,      tone: 'success'     },
   { id: 'statement' as const,      label: 'كشف حساب',   icon: Printer,         tone: 'primary'     },
@@ -36,6 +37,9 @@ const stripIcons = [
   { id: 'attachments' as const,    label: 'مرفقات',     icon: Paperclip,       tone: 'muted'       },
 ] as const;
 
+export const STRIP_META = allStripIcons;
+const stripIcons = allStripIcons.filter(i => (PRIMARY_STRIP_IDS as readonly string[]).includes(i.id));
+
 type Tone = typeof stripIcons[number]['tone'];
 
 const toneClass: Record<Tone, { fg: string; bg: string }> = {
@@ -47,7 +51,7 @@ const toneClass: Record<Tone, { fg: string; bg: string }> = {
 };
 
 export const CustomerIconStrip = memo(function CustomerIconStrip({
-  activeSection, onSectionChange, badges,
+  activeSection, onSectionChange, badges, extraSlot,
 }: CustomerIconStripProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
@@ -176,6 +180,7 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
               </button>
             );
           })}
+          {extraSlot}
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>

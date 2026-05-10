@@ -32,12 +32,12 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
         <FileText className="h-4 w-4" />
       </Button>
       {onNewPayment && (
-        <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onNewPayment} aria-label="دفعة جديدة">
+        <Button size="icon" variant="outline" className="hidden xs:inline-flex h-9 w-9 shrink-0" onClick={onNewPayment} aria-label="دفعة جديدة">
           <CreditCard className="h-4 w-4" />
         </Button>
       )}
       {onCall && customer.phone && (
-        <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" asChild aria-label={`اتصال بـ ${customer.phone}`}>
+        <Button size="icon" variant="outline" className="hidden min-[360px]:inline-flex h-9 w-9 shrink-0" asChild aria-label={`اتصال بـ ${customer.phone}`}>
           <a href={`tel:${customer.phone}`}>
             <Phone className="h-4 w-4" />
           </a>
