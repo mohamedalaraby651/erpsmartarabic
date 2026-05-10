@@ -21,10 +21,15 @@ import { CustomerPinnedNote } from "@/components/customers/details/CustomerPinne
 import { CustomerKPICards } from "@/components/customers/details/CustomerKPICards";
 import { CustomerHealthBadge } from "@/components/customers/details/CustomerHealthBadge";
 import { CustomerMobileProfile } from "@/components/customers/mobile/CustomerMobileProfile";
-import { CustomerIconStrip } from "@/components/customers/mobile/CustomerIconStrip";
+import { CustomerIconStrip, PRIMARY_STRIP_IDS, SECONDARY_STRIP_IDS, STRIP_META } from "@/components/customers/mobile/CustomerIconStrip";
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { CustomerQuickSuggestions } from "@/components/customers/mobile/CustomerQuickSuggestions";
+import { CustomerNavStrip } from "@/components/customers/mobile/CustomerNavStrip";
+import { CustomerSectionsSheet } from "@/components/customers/mobile/CustomerSectionsSheet";
+import { CustomerMobileFAB } from "@/components/customers/mobile/CustomerMobileFAB";
+import { useLastVisitedSection } from "@/hooks/customers/useLastVisitedSection";
+import { haptics } from "@/lib/haptics";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
