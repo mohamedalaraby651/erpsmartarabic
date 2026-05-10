@@ -125,21 +125,25 @@ interface MobileCustomerViewProps {
   onWhatsApp: () => void;
   onImageUpdate: (url: string | null) => void;
   onToggleActive: () => void;
+  onChangeVip: (level: string) => void;
   onQuickPay: (invoiceId: string) => void;
   setSelectedAddress: (a: CustomerAddress | null) => void;
   setAddressDialogOpen: (v: boolean) => void;
   upcomingReminders: number;
+  navProps: { hasPrev: boolean; hasNext: boolean; onPrev: () => void; onNext: () => void };
 }
 
 function MobileCustomerView({
   customer, customerId, detail, mobileSection, setMobileSection,
   onEdit, onNewInvoice, onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote,
-  onWhatsApp, onImageUpdate, onToggleActive, onQuickPay,
-  setSelectedAddress, setAddressDialogOpen, upcomingReminders,
+  onWhatsApp, onImageUpdate, onToggleActive, onChangeVip, onQuickPay,
+  setSelectedAddress, setAddressDialogOpen, upcomingReminders, navProps,
 }: MobileCustomerViewProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const [showCompressed, setShowCompressed] = useState(false);
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartY = useRef<number | null>(null);
 
   // Section badges (overdue invoices, upcoming reminders)
   const sectionBadges = useMemo(() => {
