@@ -71,10 +71,22 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             <div className="absolute -bottom-1 -left-1">
               <ImageUpload currentImageUrl={customer.image_url} onImageUploaded={(url) => onImageUpdate(url)} onImageRemoved={() => onImageUpdate(null)} bucket="customer-images" folder={customerId} showAvatar={false} />
             </div>
-            <Badge className={`absolute -top-1 -right-1 text-[10px] px-1.5 py-0.5 ${vipColors[customer.vip_level] || vipColors.regular}`}>
-              <Crown className="h-2.5 w-2.5 ml-0.5" />
-              {vipLabels[customer.vip_level] || vipLabels.regular}
-            </Badge>
+            {onChangeVip ? (
+              <button
+                type="button"
+                {...vipLongPress}
+                aria-label={`المستوى: ${vipLabels[customer.vip_level] || vipLabels.regular} — اضغط مطولاً للتغيير`}
+                className={`absolute -top-1 -right-1 inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-md font-medium ${vipColors[customer.vip_level] || vipColors.regular}`}
+              >
+                <Crown className="h-2.5 w-2.5 ml-0.5" />
+                {vipLabels[customer.vip_level] || vipLabels.regular}
+              </button>
+            ) : (
+              <Badge className={`absolute -top-1 -right-1 text-[10px] px-1.5 py-0.5 ${vipColors[customer.vip_level] || vipColors.regular}`}>
+                <Crown className="h-2.5 w-2.5 ml-0.5" />
+                {vipLabels[customer.vip_level] || vipLabels.regular}
+              </Badge>
+            )}
           </div>
 
           <div>
