@@ -636,6 +636,11 @@ const CustomerDetailsPage = () => {
           toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
         }}
       />
+
+      {/* FAB عائم — فاتورة جديدة بنقرة من أي مكان */}
+      {isMobile && (
+        <CustomerMobileFAB onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })} />
+      )}
     </div>
     </PageWrapper>
   );
