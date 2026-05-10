@@ -45,14 +45,20 @@ interface CustomerMobileProfileProps {
   onNewOrder?: () => void;
   onNewCreditNote?: () => void;
   onToggleActive?: () => void;
+  onChangeVip?: (level: string) => void;
 }
 
 export const CustomerMobileProfile = memo(function CustomerMobileProfile({
   customer, customerId, onEdit, onNewInvoice, onStatement, onWhatsApp, onImageUpdate,
   currentBalance = 0, balanceIsDebit = false, creditLimit, creditUsagePercent, totalOutstanding = 0, paymentRatio = 0, totalPurchases = 0, invoices = [], payments = [],
-  onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive,
+  onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote, onToggleActive, onChangeVip,
 }: CustomerMobileProfileProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [vipSheetOpen, setVipSheetOpen] = useState(false);
+  const vipLongPress = useLongPress({
+    onLongPress: () => { if (onChangeVip) { haptics.medium(); setVipSheetOpen(true); } },
+    delay: 450,
+  });
   const [copied, setCopied] = useState(false);
 
   return (
