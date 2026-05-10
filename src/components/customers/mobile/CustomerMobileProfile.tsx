@@ -243,6 +243,30 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           </Sheet>
         </div>
       </CardContent>
+
+      {/* VIP level changer (long-press on the badge) */}
+      {onChangeVip && (
+        <Sheet open={vipSheetOpen} onOpenChange={setVipSheetOpen}>
+          <SheetContent side="bottom" className="rounded-t-xl">
+            <SheetHeader>
+              <SheetTitle>تغيير مستوى العميل</SheetTitle>
+            </SheetHeader>
+            <div className="grid grid-cols-2 gap-3 mt-4 pb-4">
+              {Object.keys(vipLabels).map((level) => (
+                <Button
+                  key={level}
+                  variant={customer.vip_level === level ? "default" : "outline"}
+                  className="h-12"
+                  onClick={() => { onChangeVip(level); setVipSheetOpen(false); }}
+                >
+                  <Crown className="h-4 w-4 ml-2" />
+                  {vipLabels[level]}
+                </Button>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </Card>
   );
 });
