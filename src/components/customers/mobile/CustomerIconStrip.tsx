@@ -51,7 +51,7 @@ const toneClass: Record<Tone, { fg: string; bg: string }> = {
 };
 
 export const CustomerIconStrip = memo(function CustomerIconStrip({
-  activeSection, onSectionChange, badges,
+  activeSection, onSectionChange, badges, extraSlot,
 }: CustomerIconStripProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
