@@ -408,8 +408,11 @@ const CustomerDetailsPage = () => {
 
   const urlTab = searchParams.get('tab');
   const urlSection = searchParams.get('section') as MobileSectionId | null;
+  const lastVisited = useLastVisitedSection(id);
   const initialSection: MobileSectionId =
-    urlSection || (urlTab ? tabToSection(urlTab) : 'none');
+    urlSection
+      || (urlTab ? tabToSection(urlTab) : null)
+      || (isMobile ? (lastVisited.read() ?? 'none') : 'none');
   const [mobileSection, setMobileSectionState] = useState<MobileSectionId>(initialSection);
 
   const detail = useCustomerDetail(id);
@@ -441,6 +444,7 @@ const CustomerDetailsPage = () => {
   const setMobileSection = (s: MobileSectionId) => {
     setMobileSectionState(s);
     writeParams(sectionToTab(s), s);
+    lastVisited.write(s);
   };
 
 
