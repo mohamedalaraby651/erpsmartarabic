@@ -548,9 +548,11 @@ const CustomerDetailsPage = () => {
           onWhatsApp={handleWhatsApp}
           onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
           onToggleActive={handleToggleActive}
+          onChangeVip={handleChangeVip}
           onQuickPay={handleQuickPay}
           setSelectedAddress={setSelectedAddress}
           setAddressDialogOpen={setAddressDialogOpen}
+          navProps={{ hasPrev: !!prevId, hasNext: !!nextId, onPrev: goPrev, onNext: goNext }}
         />
       ) : (
         <Tabs value={detail.activeTab} onValueChange={handleTabChange} className="w-full">
