@@ -180,6 +180,7 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
               </button>
             );
           })}
+          {extraSlot}
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
