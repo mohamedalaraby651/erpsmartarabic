@@ -181,8 +181,69 @@ function MobileCustomerView({
     }
   };
 
+  // Swipe between sections — primary strip cycle
+  const allOrderedSections = useMemo<MobileSectionId[]>(
+    () => [...PRIMARY_STRIP_IDS, ...SECONDARY_STRIP_IDS] as MobileSectionId[],
+    [],
+  );
+  const navigateBySwipe = (dir: 1 | -1) => {
+    if (mobileSection === 'none') return;
+    const idx = allOrderedSections.indexOf(mobileSection);
+    if (idx === -1) return;
+    const nextIdx = (idx + dir + allOrderedSections.length) % allOrderedSections.length;
+    haptics.light();
+    selectSection(allOrderedSections[nextIdx]);
+  };
+  const onTouchStart = (e: React.TouchEvent) => {
+    swipeStartX.current = e.touches[0].clientX;
+    swipeStartY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (swipeStartX.current == null || swipeStartY.current == null) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX.current;
+    const dy = e.changedTouches[0].clientY - swipeStartY.current;
+    swipeStartX.current = null; swipeStartY.current = null;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+    // RTL: swipe LEFT (dx<0) → next section
+    navigateBySwipe(dx < 0 ? 1 : -1);
+  };
+
+  // Dynamic suggestion inputs
+  const creditOverflow = (detail.creditLimit ?? 0) > 0
+    ? Math.max(0, (detail.currentBalance ?? 0) - (detail.creditLimit ?? 0))
+    : 0;
+  const daysSinceContact = customer.last_communication_at
+    ? Math.floor((Date.now() - new Date(customer.last_communication_at).getTime()) / 86400000)
+    : null;
+  const staleQuotations = useMemo(() => {
+    const cutoff = Date.now() - 7 * 86400000;
+    return (detail.quotations || []).filter((q: { status?: string | null; created_at?: string | null }) => {
+      const isPending = !q.status || ['draft', 'sent', 'pending'].includes(q.status);
+      const created = q.created_at ? new Date(q.created_at).getTime() : Date.now();
+      return isPending && created < cutoff;
+    }).length;
+  }, [detail.quotations]);
+
+  // Sections shown inside the "More" sheet
+  const sheetItems = useMemo(
+    () => SECONDARY_STRIP_IDS.map((id) => {
+      const meta = STRIP_META.find(m => m.id === id)!;
+      return { id: id as MobileSectionId, label: meta.label, icon: meta.icon, badge: sectionBadges[id as MobileSectionId] ?? 0 };
+    }),
+    [sectionBadges],
+  );
+  const isSecondaryActive = (SECONDARY_STRIP_IDS as readonly string[]).includes(mobileSection);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      {/* تنقل سريع بين العملاء */}
+      <CustomerNavStrip
+        hasPrev={navProps.hasPrev}
+        hasNext={navProps.hasNext}
+        onPrev={navProps.onPrev}
+        onNext={navProps.onNext}
+      />
+
       <div ref={heroRef}>
         <CustomerMobileProfile
           customer={customer} customerId={customerId}
@@ -201,17 +262,16 @@ function MobileCustomerView({
           onNewOrder={onNewOrder}
           onNewCreditNote={onNewCreditNote}
           onToggleActive={onToggleActive}
+          onChangeVip={onChangeVip}
         />
       </div>
 
       <div className={cn(
-        "sticky top-0 z-30 -mx-3 px-3 bg-background/80 backdrop-blur-sm pb-1 space-y-1.5 transition-shadow",
+        "sticky top-0 z-30 -mx-3 px-3 bg-background/80 backdrop-blur-sm pb-1 transition-shadow",
         showCompressed && "shadow-[0_1px_0_0_hsl(var(--border))]",
       )}>
-        <div className={cn(
-          "transition-all duration-200 overflow-hidden",
-          showCompressed ? "max-h-20 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
-        )}>
+        {/* بدلاً من تكديس الهيدر المضغوط فوق الشريط، نُبدّل بينهما عند التمرير */}
+        {showCompressed ? (
           <CustomerCompressedHeader
             customer={customer}
             currentBalance={detail.currentBalance}
@@ -221,18 +281,42 @@ function MobileCustomerView({
             onCall={customer.phone ? openCall : undefined}
             onMoreActions={onEdit}
           />
-        </div>
-        <CustomerIconStrip activeSection={mobileSection} onSectionChange={selectSection} badges={sectionBadges} />
+        ) : (
+          <CustomerIconStrip
+            activeSection={mobileSection}
+            onSectionChange={selectSection}
+            badges={sectionBadges}
+            extraSlot={
+              <CustomerSectionsSheet
+                items={sheetItems}
+                activeSection={mobileSection}
+                onPick={selectSection}
+                isAnyActive={isSecondaryActive}
+              />
+            }
+          />
+        )}
       </div>
 
-      <div ref={sectionRef}>
+      <div ref={sectionRef} key={mobileSection} className="animate-fade-in">
         {mobileSection === 'none' ? (
           <CustomerQuickSuggestions
             overdueCount={sectionBadges.invoices ?? 0}
             upcomingReminders={upcomingReminders}
-            onPick={(id) => selectSection(id)}
+            creditOverflow={creditOverflow}
+            daysSinceContact={daysSinceContact}
+            staleQuotations={staleQuotations}
+            hasPhone={!!customer.phone}
+            onPick={(id) => selectSection(id as MobileSectionId)}
+            onWhatsApp={onWhatsApp}
           />
         ) : (
+          <></>
+        )}
+        {mobileSection !== 'none' && (
+          <>
+            <SectionHeader sectionId={mobileSection} onBack={() => selectSection('none')} />
+            <Suspense fallback={<TabSkeleton />}>
           <>
             <SectionHeader sectionId={mobileSection} onBack={() => selectSection('none')} />
             <Suspense fallback={<TabSkeleton />}>
