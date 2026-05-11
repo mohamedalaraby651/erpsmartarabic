@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { FileText, Printer, Bell, ArrowLeft, MessageCircle, Wallet, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -73,8 +73,8 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
       });
     }
 
-    // أولوية ٤: انقطاع تواصل
-    if (hasPhone && daysSinceContact != null && daysSinceContact >= 30 && onWhatsApp) {
+    // أولوية ٤: انقطاع تواصل (يتطلب رقم هاتف ودالة واتساب)
+    if (hasPhone && !!onWhatsApp && daysSinceContact != null && daysSinceContact >= 30) {
       list.push({
         id: 'whatsapp',
         label: 'تواصل مع العميل',
@@ -105,18 +105,43 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
     return list.slice(0, 4);
   }, [overdueCount, upcomingReminders, creditOverflow, daysSinceContact, staleQuotations, hasPhone, onWhatsApp]);
 
+  // تتبع التغييرات لتمييز الاقتراحات الجديدة بومضة خفيفة
+  const prevIdsRef = useRef<string>('');
+  const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
+  const [announce, setAnnounce] = useState<string>('');
+  useEffect(() => {
+    const ids = suggestions.map(s => s.id).join('|');
+    if (prevIdsRef.current && prevIdsRef.current !== ids) {
+      const prev = new Set(prevIdsRef.current.split('|'));
+      const fresh = new Set(suggestions.filter(s => !prev.has(s.id)).map(s => s.id));
+      if (fresh.size > 0) {
+        setFreshIds(fresh);
+        const top = suggestions.find(s => fresh.has(s.id));
+        if (top) setAnnounce(`اقتراح جديد: ${top.label}`);
+        const t = setTimeout(() => setFreshIds(new Set()), 1600);
+        return () => clearTimeout(t);
+      }
+    }
+    prevIdsRef.current = ids;
+  }, [suggestions]);
+
   const handleClick = (id: SuggestionId) => {
-    if (id === 'whatsapp' && onWhatsApp) { onWhatsApp(); return; }
+    if (id === 'whatsapp') {
+      if (hasPhone && onWhatsApp) onWhatsApp();
+      return;
+    }
     onPick(id);
   };
 
   return (
     <Card className="p-3 border bg-card/50">
+      <div className="sr-only" aria-live="polite" aria-atomic="true">{announce}</div>
       <div className="text-[11px] text-muted-foreground mb-2 font-medium">اقتراحات ذكية</div>
       <div className="grid grid-cols-1 gap-2">
         {suggestions.map((s) => {
           const Icon = s.icon;
           const tone = toneClass[s.tone];
+          const isFresh = freshIds.has(s.id);
           return (
             <button
               key={s.id + s.label}
@@ -126,6 +151,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
                 "flex items-center gap-3 p-3 rounded-lg border transition-all min-h-12 text-right",
                 "active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 tone.bg, tone.ring,
+                isFresh && "animate-fade-in ring-2 ring-ring/40",
               )}
               aria-label={`${s.label} — ${s.hint}`}
             >
@@ -151,3 +177,4 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
     </Card>
   );
 });
+
