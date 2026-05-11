@@ -1,7 +1,8 @@
 import { memo, useMemo, useRef, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { FileText, Printer, Bell, ArrowLeft, MessageCircle, Wallet, RefreshCw } from "lucide-react";
+import { FileText, Printer, Bell, ArrowLeft, MessageCircle, Wallet, RefreshCw, History, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSuggestionHistory } from "@/hooks/customers/useSuggestionHistory";
 
 export type SuggestionId =
   | 'invoices' | 'statement' | 'reminders' | 'payments' | 'sales' | 'whatsapp';
@@ -16,6 +17,7 @@ interface QuickSuggestion {
 }
 
 interface CustomerQuickSuggestionsProps {
+  customerId?: string;
   overdueCount?: number;
   upcomingReminders?: number;
   /** فجوة الائتمان (إن كانت موجبة فالعميل تجاوز الحد) */
@@ -36,7 +38,19 @@ const toneClass: Record<QuickSuggestion['tone'], { bg: string; ring: string; ico
   destructive: { bg: 'bg-destructive/5 hover:bg-destructive/10', ring: 'border-destructive/20', icon: 'text-destructive bg-destructive/10' },
 };
 
+function formatRelative(ts: number): string {
+  const diff = Math.max(0, Date.now() - ts);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'الآن';
+  if (mins < 60) return `قبل ${mins} د`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `قبل ${hrs} س`;
+  const days = Math.floor(hrs / 24);
+  return `قبل ${days} ي`;
+}
+
 export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
+  customerId,
   overdueCount = 0, upcomingReminders = 0, creditOverflow = 0,
   daysSinceContact, staleQuotations = 0, hasPhone, onPick, onWhatsApp,
 }: CustomerQuickSuggestionsProps) {
@@ -105,25 +119,38 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
     return list.slice(0, 4);
   }, [overdueCount, upcomingReminders, creditOverflow, daysSinceContact, staleQuotations, hasPhone, onWhatsApp]);
 
-  // تتبع التغييرات لتمييز الاقتراحات الجديدة بومضة خفيفة
+  const { entries: history, append, clear } = useSuggestionHistory(customerId);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // تتبع التغييرات لتمييز الاقتراحات الجديدة بومضة خفيفة + تسجيل في السجل
   const prevIdsRef = useRef<string>('');
+  const initRef = useRef<boolean>(false);
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
   const [announce, setAnnounce] = useState<string>('');
   useEffect(() => {
     const ids = suggestions.map(s => s.id).join('|');
-    if (prevIdsRef.current && prevIdsRef.current !== ids) {
-      const prev = new Set(prevIdsRef.current.split('|'));
-      const fresh = new Set(suggestions.filter(s => !prev.has(s.id)).map(s => s.id));
+    if (!initRef.current) {
+      // أول تحميل: لا نعتبره "جديدًا" لتفادي تضخم السجل
+      initRef.current = true;
+      prevIdsRef.current = ids;
+      return;
+    }
+    if (prevIdsRef.current !== ids) {
+      const prev = new Set(prevIdsRef.current.split('|').filter(Boolean));
+      const freshList = suggestions.filter(s => !prev.has(s.id));
+      const fresh = new Set(freshList.map(s => s.id));
+      prevIdsRef.current = ids;
       if (fresh.size > 0) {
         setFreshIds(fresh);
-        const top = suggestions.find(s => fresh.has(s.id));
+        const top = freshList[0];
         if (top) setAnnounce(`اقتراح جديد: ${top.label}`);
+        // سجّل الأحداث الجديدة
+        append(freshList.map(s => ({ id: s.id, label: s.label, reason: s.hint })));
         const t = setTimeout(() => setFreshIds(new Set()), 1600);
         return () => clearTimeout(t);
       }
     }
-    prevIdsRef.current = ids;
-  }, [suggestions]);
+  }, [suggestions, append]);
 
   const handleClick = (id: SuggestionId) => {
     if (id === 'whatsapp') {
@@ -136,7 +163,49 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
   return (
     <Card className="p-3 border bg-card/50">
       <div className="sr-only" aria-live="polite" aria-atomic="true">{announce}</div>
-      <div className="text-[11px] text-muted-foreground mb-2 font-medium">اقتراحات ذكية</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-[11px] text-muted-foreground font-medium">اقتراحات ذكية</div>
+        {customerId && history.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowHistory(v => !v)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+            aria-expanded={showHistory}
+            aria-label="سجل الأحداث"
+          >
+            <History className="h-3 w-3" />
+            <span>السجل ({history.length})</span>
+          </button>
+        )}
+      </div>
+
+      {showHistory && (
+        <div className="mb-3 rounded-lg border bg-muted/30 p-2 animate-fade-in">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] text-muted-foreground">آخر التغيرات (٢٤ ساعة)</span>
+            <button
+              type="button"
+              onClick={clear}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive"
+              aria-label="مسح السجل"
+            >
+              <X className="h-3 w-3" /> مسح
+            </button>
+          </div>
+          <ul className="space-y-1 max-h-40 overflow-y-auto">
+            {history.map((e, i) => (
+              <li key={`${e.at}-${i}`} className="flex items-start gap-2 text-[11px]">
+                <span className="text-muted-foreground shrink-0 tabular-nums">{formatRelative(e.at)}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="font-semibold">{e.label}</span>
+                  <span className="text-muted-foreground"> — {e.reason}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-2">
         {suggestions.map((s) => {
           const Icon = s.icon;
@@ -177,4 +246,3 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
     </Card>
   );
 });
-

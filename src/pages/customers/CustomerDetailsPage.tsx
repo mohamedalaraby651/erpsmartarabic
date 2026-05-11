@@ -301,6 +301,7 @@ function MobileCustomerView({
       <div ref={sectionRef} key={mobileSection} className="animate-fade-in">
         {mobileSection === 'none' ? (
           <CustomerQuickSuggestions
+            customerId={customerId}
             overdueCount={sectionBadges.invoices ?? 0}
             upcomingReminders={upcomingReminders}
             creditOverflow={creditOverflow}
