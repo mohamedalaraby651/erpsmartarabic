@@ -180,25 +180,49 @@ function MobileCustomerView({
     } as Partial<Record<MobileSectionId, number>>;
   }, [detail.invoices, detail.quotations, upcomingReminders, customer.last_communication_at]);
 
+  // Measure the actual MobileDetailHeader height for accurate sticky trigger
   useEffect(() => {
     const el = heroRef.current;
     if (!el) return;
+    const headerEl = document.querySelector<HTMLElement>('[data-mobile-detail-header]');
+    const offset = headerEl?.getBoundingClientRect().height ?? 56;
     const observer = new IntersectionObserver(
       ([entry]) => setShowCompressed(!entry.isIntersecting),
-      { threshold: 0, rootMargin: '-48px 0px 0px 0px' }
+      { threshold: 0, rootMargin: `-${Math.round(offset)}px 0px 0px 0px` }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const openCall = () => {
-    if (customer.phone) window.open(`tel:${customer.phone}`);
-  };
+  // Save/restore scroll position per section
+  const scrollKey = `customer-scroll-${customerId}-${mobileSection}`;
+  useEffect(() => {
+    if (mobileSection === 'none') return;
+    try {
+      const saved = sessionStorage.getItem(scrollKey);
+      if (saved) {
+        requestAnimationFrame(() => window.scrollTo({ top: parseInt(saved, 10), behavior: 'auto' }));
+      }
+    } catch { /* ignore */ }
+    const onScroll = () => {
+      try { sessionStorage.setItem(scrollKey, String(window.scrollY)); } catch { /* ignore */ }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [scrollKey, mobileSection]);
 
   const selectSection = (s: MobileSectionId) => {
     setMobileSection(s);
     if (s !== 'none') {
-      requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      // Only scroll-into-view if no saved position exists for this section
+      try {
+        const saved = sessionStorage.getItem(`customer-scroll-${customerId}-${s}`);
+        if (!saved) {
+          requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }
+      } catch {
+        requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      }
     }
   };
 
