@@ -7,14 +7,17 @@ export interface SuggestionHistoryEntry {
   at: number;          // timestamp ms
 }
 
-const MAX_ENTRIES = 20;
-const TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const MAX_ENTRIES = 30;
+const TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const keyFor = (customerId: string) => `customer:suggestion-history:${customerId}`;
 
 function readStore(customerId: string): SuggestionHistoryEntry[] {
   try {
-    const raw = sessionStorage.getItem(keyFor(customerId));
+    // قراءة من localStorage مع fallback للـ sessionStorage القديم لمرة واحدة
+    const raw =
+      localStorage.getItem(keyFor(customerId)) ||
+      sessionStorage.getItem(keyFor(customerId));
     if (!raw) return [];
     const parsed = JSON.parse(raw) as SuggestionHistoryEntry[];
     const now = Date.now();
@@ -26,14 +29,14 @@ function readStore(customerId: string): SuggestionHistoryEntry[] {
 
 function writeStore(customerId: string, entries: SuggestionHistoryEntry[]) {
   try {
-    sessionStorage.setItem(keyFor(customerId), JSON.stringify(entries.slice(0, MAX_ENTRIES)));
+    localStorage.setItem(keyFor(customerId), JSON.stringify(entries.slice(0, MAX_ENTRIES)));
   } catch { /* ignore quota */ }
 }
 
 /**
  * Tracks a per-customer log of newly surfaced smart suggestions, with
  * timestamps and the human reason that triggered them. Persists in
- * sessionStorage with a 24h TTL and a 20-entry cap.
+ * localStorage with a 7-day TTL and a 30-entry cap.
  */
 export function useSuggestionHistory(customerId: string | undefined) {
   const [entries, setEntries] = useState<SuggestionHistoryEntry[]>([]);
@@ -47,8 +50,14 @@ export function useSuggestionHistory(customerId: string | undefined) {
     if (!customerId || items.length === 0) return;
     const now = Date.now();
     setEntries(prev => {
+      // إزالة التكرار: لا تُسجِّل نفس الاقتراح إن سُجِّل خلال آخر 5 دقائق
+      const recent = new Set(
+        prev.filter(e => now - e.at < 5 * 60 * 1000).map(e => e.id),
+      );
+      const fresh = items.filter(i => !recent.has(i.id));
+      if (fresh.length === 0) return prev;
       const next = [
-        ...items.map(i => ({ ...i, at: now })),
+        ...fresh.map(i => ({ ...i, at: now })),
         ...prev,
       ].slice(0, MAX_ENTRIES);
       writeStore(customerId, next);
@@ -58,7 +67,8 @@ export function useSuggestionHistory(customerId: string | undefined) {
 
   const clear = useCallback(() => {
     if (!customerId) return;
-    sessionStorage.removeItem(keyFor(customerId));
+    try { localStorage.removeItem(keyFor(customerId)); } catch { /* ignore */ }
+    try { sessionStorage.removeItem(keyFor(customerId)); } catch { /* ignore */ }
     setEntries([]);
   }, [customerId]);
 
