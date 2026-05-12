@@ -107,6 +107,7 @@ export function useCustomerDetail(id: string | undefined) {
     enabled: !!id && (isMobile || activeTab === 'payments'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 
   // === CHART DATA via server-side RPC (aggregated monthly data — no record limits) ===
