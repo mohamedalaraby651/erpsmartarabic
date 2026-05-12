@@ -80,7 +80,7 @@ export const CustomerSectionsSheet = memo(function CustomerSectionsSheet({
                   active ? "bg-primary/10 border-primary/30 text-primary" : "bg-card hover:bg-muted text-foreground",
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" aria-hidden />
                 <span className="text-xs font-medium">{label}</span>
                 {badge && badge > 0 ? (
                   <span className="absolute top-1 right-1 min-w-[18px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center leading-none">
