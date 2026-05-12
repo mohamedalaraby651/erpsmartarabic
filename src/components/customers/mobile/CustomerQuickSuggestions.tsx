@@ -210,7 +210,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
               className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive"
               aria-label="مسح السجل"
             >
-              <X className="h-3 w-3" /> مسح
+              <X className="h-3 w-3" aria-hidden /> مسح
             </button>
           </div>
           <ul className="space-y-1 max-h-40 overflow-y-auto">
