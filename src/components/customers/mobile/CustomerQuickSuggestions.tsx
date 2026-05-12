@@ -259,7 +259,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{s.hint}</p>
               </div>
-              <ArrowLeft className="h-4 w-4 text-muted-foreground shrink-0" />
+              <ArrowLeft className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
             </button>
           );
         })}
