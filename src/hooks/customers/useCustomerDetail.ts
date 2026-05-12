@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
@@ -87,6 +87,7 @@ export function useCustomerDetail(id: string | undefined) {
     enabled: !!id && (isMobile || activeTab === 'invoices'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 
   // Non-paginated payments: needed for charts, hero header
@@ -106,6 +107,7 @@ export function useCustomerDetail(id: string | undefined) {
     enabled: !!id && (isMobile || activeTab === 'payments'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 
   // === CHART DATA via server-side RPC (aggregated monthly data — no record limits) ===

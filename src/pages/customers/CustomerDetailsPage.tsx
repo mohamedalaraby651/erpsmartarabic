@@ -387,7 +387,7 @@ function MobileCustomerView({
                 : <TabSkeleton />
             }>
             {mobileSection === 'invoices' && (
-              detail.paginatedInvoicesLoading && !detail.paginatedInvoices ? (
+              (!detail.paginatedInvoices && detail.invoices.length === 0 && (detail.paginatedInvoicesLoading || detail.invoicesLoading)) ? (
                 <MobileListSkeleton rows={5} ariaLabel="جارٍ تحميل الفواتير" />
               ) : (
                 <div className="space-y-4">
@@ -397,7 +397,7 @@ function MobileCustomerView({
               )
             )}
             {mobileSection === 'payments' && (
-              detail.paginatedPaymentsLoading && !detail.paginatedPayments ? (
+              (!detail.paginatedPayments && detail.payments.length === 0 && (detail.paginatedPaymentsLoading || detail.paymentsLoading)) ? (
                 <MobileListSkeleton rows={5} ariaLabel="جارٍ تحميل المدفوعات" />
               ) : (
                 <CustomerTabPayments payments={detail.payments} customerId={customerId} paginatedData={detail.paginatedPayments} currentPage={detail.paymentPage} pageSize={detail.paymentPageSize} onPageChange={detail.goToPaymentPage} />
