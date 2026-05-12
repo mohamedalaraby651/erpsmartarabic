@@ -174,8 +174,8 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 const remaining = total - paid;
                 const status = statusConfig[invoice.payment_status] || statusConfig.pending;
 
-                return (
-                  <div key={invoice.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                const card = (
+                  <div className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink>
@@ -219,6 +219,20 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                       )}
                     </div>
                   </div>
+                );
+
+                return isMobile ? (
+                  <InvoiceLongPressSheet
+                    key={invoice.id}
+                    invoiceId={invoice.id}
+                    invoiceNumber={invoice.invoice_number}
+                    remaining={remaining}
+                    onQuickPay={onQuickPay}
+                  >
+                    {card}
+                  </InvoiceLongPressSheet>
+                ) : (
+                  <div key={invoice.id}>{card}</div>
                 );
               })}
             </div>
