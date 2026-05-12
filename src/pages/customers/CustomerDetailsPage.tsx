@@ -455,11 +455,12 @@ const CustomerDetailsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSection]);
 
-  const writeParams = (tab: string | null, section: MobileSectionId | null) => {
+  const writeParams = (tab: string | null, section: MobileSectionId | null, opts?: { replace?: boolean }) => {
     const next = new URLSearchParams(searchParams);
     if (tab) next.set('tab', tab); else next.delete('tab');
     if (section && section !== 'none') next.set('section', section); else next.delete('section');
-    setSearchParams(next, { replace: true });
+    // افتراضياً: ادفع للسجل لكي يعمل زر "العودة" بين الأقسام
+    setSearchParams(next, { replace: opts?.replace ?? false });
   };
 
   const handleTabChange = (tab: string) => {
