@@ -72,7 +72,7 @@ export function useCustomerDetail(id: string | undefined) {
   // === LAZY queries (loaded on tab open) ===
   // Non-paginated invoices: needed for charts, alerts, hero header stats
   const invoicesNeeded = isMobile || ['invoices', 'financial'].includes(activeTab);
-  const { data: invoices = [] } = useQuery({
+  const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: () => customerRelationsRepo.findInvoices(id!),
     enabled: !!id && invoicesNeeded,
@@ -81,7 +81,7 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   // Paginated invoices for display in invoices tab only
-  const { data: paginatedInvoices } = useQuery({
+  const { data: paginatedInvoices, isLoading: paginatedInvoicesLoading } = useQuery({
     queryKey: ['customer-invoices-paginated', id, invoicePage, invoicePageSize],
     queryFn: () => customerRelationsRepo.findInvoicesPaginated(id!, invoicePage, invoicePageSize),
     enabled: !!id && (isMobile || activeTab === 'invoices'),
@@ -91,7 +91,7 @@ export function useCustomerDetail(id: string | undefined) {
 
   // Non-paginated payments: needed for charts, hero header
   const paymentsNeeded = isMobile || ['payments'].includes(activeTab);
-  const { data: payments = [] } = useQuery({
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRelationsRepo.findPayments(id!),
     enabled: !!id && paymentsNeeded,
@@ -100,7 +100,7 @@ export function useCustomerDetail(id: string | undefined) {
   });
 
   // Paginated payments for display in payments tab only
-  const { data: paginatedPayments } = useQuery({
+  const { data: paginatedPayments, isLoading: paginatedPaymentsLoading } = useQuery({
     queryKey: ['customer-payments-paginated', id, paymentPage, paymentPageSize],
     queryFn: () => customerRelationsRepo.findPaymentsPaginated(id!, paymentPage, paymentPageSize),
     enabled: !!id && (isMobile || activeTab === 'payments'),
