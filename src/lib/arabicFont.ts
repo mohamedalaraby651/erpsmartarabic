@@ -13,6 +13,12 @@ export interface FontConfig {
   googleFontFamily: string;
 }
 
+/**
+ * Local-first strategy: each font lists `/fonts/<file>.ttf` from the public/
+ * folder FIRST, then falls back to remote CDNs. To self-host a font, drop
+ * the TTF into `public/fonts/` matching the filename below — `loadArabicFont`
+ * will pick it up automatically with no other code changes.
+ */
 export const AVAILABLE_FONTS: FontConfig[] = [
   {
     key: 'amiri',
@@ -21,6 +27,7 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'أميري',
     description: 'خط كلاسيكي نسخي - الأفضل لتصدير PDF (يدعم كل الحروف)',
     urls: [
+      '/fonts/Amiri-Regular.ttf',
       'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf',
       'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf',
     ],
@@ -33,6 +40,7 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'القاهرة',
     description: 'خط حديث وواضح - قد لا يعرض بعض الحروف في PDF',
     urls: [
+      '/fonts/Cairo-Regular.ttf',
       'https://cdn.jsdelivr.net/gh/Gue3bara/Cairo@7030db78/fonts/ttf/Cairo-Regular.ttf',
     ],
     googleFontFamily: 'Cairo:wght@400;500;600;700',
@@ -44,6 +52,7 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'نوتو سانس',
     description: 'خط Google الشامل - توافقية قصوى',
     urls: [
+      '/fonts/NotoSansArabic-Regular.ttf',
       'https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyG2vu3CBFQLaig.ttf',
     ],
     googleFontFamily: 'Noto+Sans+Arabic:wght@400;500;600;700',
@@ -55,12 +64,37 @@ export const AVAILABLE_FONTS: FontConfig[] = [
     arabicName: 'تجوال',
     description: 'خط عصري خفيف - مناسب للعروض التقديمية',
     urls: [
+      '/fonts/Tajawal-Regular.ttf',
       'https://fonts.gstatic.com/s/tajawal/v9/Iura6YBj_oCad4k1rzaLCr5IlLA.ttf',
       'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/tajawal/Tajawal-Regular.ttf',
     ],
     googleFontFamily: 'Tajawal:wght@400;500;700',
   },
 ];
+
+/**
+ * Safe fallback CSS font stack: prefers the requested font, then any locally
+ * installed Arabic-capable system font, then generic sans-serif. Never breaks
+ * even when no network and no local TTF.
+ */
+export const SAFE_ARABIC_FONT_STACK =
+  "'Segoe UI','Tahoma','Geeza Pro','Damascus','Al Bayan','Noto Sans Arabic',Arial,sans-serif";
+
+/**
+ * Probe a local font URL with HEAD; resolves true only when the file exists
+ * with a sensible content-length. Used by the print window to decide whether
+ * to inject a local @font-face or fall back to Google Fonts.
+ */
+export async function isLocalFontAvailable(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD', cache: 'force-cache' });
+    if (!res.ok) return false;
+    const len = Number(res.headers.get('content-length') || 0);
+    return len === 0 || len > 10000; // some servers omit length; allow that
+  } catch {
+    return false;
+  }
+}
 
 // Default font name used in jsPDF
 export let ARABIC_FONT_NAME = 'Amiri';
