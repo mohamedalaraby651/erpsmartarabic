@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,15 +17,29 @@ interface CustomerSectionsSheetProps {
   onPick: (id: MobileSectionId) => void;
   /** سواء أحد الأقسام داخل الـ Sheet نشط حالياً (لإبراز زر "المزيد") */
   isAnyActive?: boolean;
+  /** تحكم خارجي اختياري */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const CustomerSectionsSheet = memo(function CustomerSectionsSheet({
-  items, activeSection, onPick, isAnyActive,
+  items, activeSection, onPick, isAnyActive, open, onOpenChange,
 }: CustomerSectionsSheetProps) {
   const totalBadge = items.reduce((sum, it) => sum + (it.badge ?? 0), 0);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (onOpenChange) onOpenChange(v);
+    else setInternalOpen(v);
+  };
+
+  const handlePick = (id: MobileSectionId) => {
+    onPick(id);
+    setOpen(false);
+  };
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           type="button"
@@ -58,7 +72,7 @@ export const CustomerSectionsSheet = memo(function CustomerSectionsSheet({
               <button
                 key={id}
                 type="button"
-                onClick={() => onPick(id)}
+                onClick={() => handlePick(id)}
                 aria-label={badge ? `${label} (${badge})` : label}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1.5 h-20 rounded-xl border transition-all min-h-16",
