@@ -87,6 +87,7 @@ export function useCustomerDetail(id: string | undefined) {
     enabled: !!id && (isMobile || activeTab === 'invoices'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 
   // Non-paginated payments: needed for charts, hero header
