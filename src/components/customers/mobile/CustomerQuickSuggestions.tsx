@@ -27,6 +27,8 @@ interface CustomerQuickSuggestionsProps {
   /** عروض سعر معلقة منذ ٧+ أيام */
   staleQuotations?: number;
   hasPhone?: boolean;
+  /** هل العميل نشط (افتراضياً true لتفادي إخفاء الاقتراحات بدون قصد) */
+  isActive?: boolean;
   onPick: (id: SuggestionId) => void;
   onWhatsApp?: () => void;
 }
@@ -52,7 +54,7 @@ function formatRelative(ts: number): string {
 export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
   customerId,
   overdueCount = 0, upcomingReminders = 0, creditOverflow = 0,
-  daysSinceContact, staleQuotations = 0, hasPhone, onPick, onWhatsApp,
+  daysSinceContact, staleQuotations = 0, hasPhone, isActive = true, onPick, onWhatsApp,
 }: CustomerQuickSuggestionsProps) {
   const suggestions = useMemo<QuickSuggestion[]>(() => {
     const list: QuickSuggestion[] = [];
@@ -123,34 +125,43 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
   const [showHistory, setShowHistory] = useState(false);
 
   // تتبع التغييرات لتمييز الاقتراحات الجديدة بومضة خفيفة + تسجيل في السجل
-  const prevIdsRef = useRef<string>('');
-  const initRef = useRef<boolean>(false);
+  // يستخدم بصمة (signature) تتأثر بقيم العتبة (overdue/credit/contact bucket) لا بمجرد ids
+  const sigRef = useRef<string>('');
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
   const [announce, setAnnounce] = useState<string>('');
   useEffect(() => {
-    const ids = suggestions.map(s => s.id).join('|');
-    if (!initRef.current) {
-      // أول تحميل: لا نعتبره "جديدًا" لتفادي تضخم السجل
-      initRef.current = true;
-      prevIdsRef.current = ids;
-      return;
-    }
-    if (prevIdsRef.current !== ids) {
-      const prev = new Set(prevIdsRef.current.split('|').filter(Boolean));
-      const freshList = suggestions.filter(s => !prev.has(s.id));
-      const fresh = new Set(freshList.map(s => s.id));
-      prevIdsRef.current = ids;
-      if (fresh.size > 0) {
-        setFreshIds(fresh);
-        const top = freshList[0];
-        if (top) setAnnounce(`اقتراح جديد: ${top.label}`);
-        // سجّل الأحداث الجديدة
-        append(freshList.map(s => ({ id: s.id, label: s.label, reason: s.hint })));
-        const t = setTimeout(() => setFreshIds(new Set()), 1600);
-        return () => clearTimeout(t);
-      }
-    }
-  }, [suggestions, append]);
+    // bucket لتقليل الضوضاء: تغيّر يوم تواصل بـ ±1 لا يُحسب
+    const contactBucket = daysSinceContact == null ? -1 : Math.floor(daysSinceContact / 7);
+    const creditBucket = Math.floor(creditOverflow);
+    const sig = [
+      suggestions.map(s => s.id).join('|'),
+      `o:${overdueCount}`,
+      `c:${creditBucket}`,
+      `q:${staleQuotations}`,
+      `r:${upcomingReminders}`,
+      `d:${contactBucket}`,
+    ].join(';');
+
+    if (sigRef.current === sig) return;
+    const prevIds = new Set((sigRef.current.split(';')[0] || '').split('|').filter(Boolean));
+    const isInitial = sigRef.current === '';
+    sigRef.current = sig;
+
+    // لأول تحميل: سجِّل الاقتراحات الحالية فقط إذا كانت ذات معنى (ليس "افتراضي")
+    const hasSignal = overdueCount > 0 || creditOverflow > 0 || staleQuotations > 0
+      || upcomingReminders > 0 || (daysSinceContact != null && daysSinceContact >= 30);
+    const freshList = isInitial
+      ? (hasSignal ? suggestions : [])
+      : suggestions.filter(s => !prevIds.has(s.id));
+
+    if (freshList.length === 0) return;
+    const fresh = new Set(freshList.map(s => s.id));
+    setFreshIds(fresh);
+    setAnnounce(`اقتراح جديد: ${freshList[0].label}`);
+    append(freshList.map(s => ({ id: s.id, label: s.label, reason: s.hint })));
+    const t = setTimeout(() => setFreshIds(new Set()), 1600);
+    return () => clearTimeout(t);
+  }, [suggestions, append, overdueCount, creditOverflow, staleQuotations, upcomingReminders, daysSinceContact]);
 
   const handleClick = (id: SuggestionId) => {
     if (id === 'whatsapp') {
