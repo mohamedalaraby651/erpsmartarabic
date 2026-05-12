@@ -350,6 +350,7 @@ function MobileCustomerView({
             daysSinceContact={daysSinceContact}
             staleQuotations={staleQuotations}
             hasPhone={!!customer.phone}
+            isActive={customer.is_active !== false}
             onPick={(id) => selectSection(id as MobileSectionId)}
             onWhatsApp={onWhatsApp}
           />
