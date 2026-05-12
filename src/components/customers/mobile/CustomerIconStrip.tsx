@@ -42,11 +42,12 @@ const stripIcons = allStripIcons.filter(i => (PRIMARY_STRIP_IDS as readonly stri
 
 type Tone = typeof stripIcons[number]['tone'];
 
+// Higher contrast bg (/15) + bold fg for the active tab — meets WCAG AA on light/dark
 const toneClass: Record<Tone, { fg: string; bg: string }> = {
-  primary:     { fg: 'text-primary',     bg: 'bg-primary/10'     },
-  success:     { fg: 'text-success',     bg: 'bg-success/10'     },
-  warning:     { fg: 'text-warning',     bg: 'bg-warning/10'     },
-  destructive: { fg: 'text-destructive', bg: 'bg-destructive/10' },
+  primary:     { fg: 'text-primary',     bg: 'bg-primary/15'     },
+  success:     { fg: 'text-success',     bg: 'bg-success/15'     },
+  warning:     { fg: 'text-warning',     bg: 'bg-warning/15'     },
+  destructive: { fg: 'text-destructive', bg: 'bg-destructive/15' },
   muted:       { fg: 'text-foreground',  bg: 'bg-muted'          },
 };
 
@@ -147,13 +148,14 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
                 key={item.id}
                 role="tab"
                 aria-selected={isActive}
-                aria-label={badge > 0 ? `${item.label} (${badge})` : item.label}
+                aria-current={isActive ? 'page' : undefined}
+                aria-label={badge > 0 ? `${item.label} — ${badge} عنصر بحاجة لانتباه` : item.label}
                 tabIndex={isActive ? 0 : -1}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 onClick={() => onSectionChange(activeSection === item.id ? 'none' : item.id)}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 min-w-[56px] min-h-11 shrink-0",
-                  "transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
                   isActive && tone.bg,
                 )}
               >
@@ -161,10 +163,13 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
                   "relative flex items-center justify-center w-8 h-8 rounded-lg transition-all",
                   isActive ? tone.bg : "bg-transparent",
                 )}>
-                  <Icon className={cn("h-[18px] w-[18px]", isActive ? tone.fg : "text-muted-foreground")} />
+                  <Icon
+                    aria-hidden
+                    className={cn("h-[18px] w-[18px]", isActive ? tone.fg : "text-foreground/70")}
+                  />
                   {badge > 0 && (
                     <span
-                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none shadow"
+                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none shadow ring-2 ring-card"
                       aria-hidden
                     >
                       {badge > 99 ? '99+' : badge}
@@ -172,8 +177,8 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
                   )}
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium leading-none whitespace-nowrap",
-                  isActive ? tone.fg : "text-muted-foreground",
+                  "text-[10px] leading-none whitespace-nowrap",
+                  isActive ? `${tone.fg} font-bold` : "text-foreground/80 font-medium",
                 )}>
                   {item.label}
                 </span>
