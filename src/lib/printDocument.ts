@@ -128,6 +128,7 @@ ${fontHead}
       </select>
     </label>
     <button class="secondary" onclick="window.close()">إغلاق</button>
+    <button class="secondary" id="downloadPdfBtn" type="button">تنزيل PDF</button>
     <button onclick="window.print()">طباعة</button>
   </div>
   <div class="preview-wrap">
@@ -142,6 +143,8 @@ ${fontHead}
       var orSel = document.getElementById('orientation');
       var pageStyle = document.getElementById('page-size-style');
       var pageEl = document.getElementById('printPage');
+      var dlBtn = document.getElementById('downloadPdfBtn');
+      var docTitle = ${JSON.stringify(title || 'document')};
       sizeSel.value = ${JSON.stringify(defaultPaperSize)};
       orSel.value = ${JSON.stringify(defaultOrientation)};
 
@@ -158,6 +161,47 @@ ${fontHead}
       sizeSel.addEventListener('change', apply);
       orSel.addEventListener('change', apply);
       apply();
+
+      // Lazy-load html2pdf only when the user clicks Download — keeps the
+      // print window light and falls back to native print-to-PDF if the
+      // CDN is blocked or offline.
+      function loadScript(src) {
+        return new Promise(function (resolve, reject) {
+          var s = document.createElement('script');
+          s.src = src; s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      dlBtn.addEventListener('click', function () {
+        var originalLabel = dlBtn.textContent;
+        dlBtn.disabled = true;
+        dlBtn.textContent = 'جاري التحضير...';
+        var size = sizeSel.value;
+        var or = orSel.value;
+        var ensure = window.html2pdf
+          ? Promise.resolve()
+          : loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+        ensure.then(function () {
+          if (!window.html2pdf) throw new Error('html2pdf unavailable');
+          var safeName = docTitle.replace(/[^\\w\\u0600-\\u06FF\\-]+/g, '_') || 'document';
+          return window.html2pdf().set({
+            margin: 10,
+            filename: safeName + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: size.toLowerCase(), orientation: or },
+            pagebreak: { mode: ['css', 'legacy'] }
+          }).from(pageEl).save();
+        }).catch(function (err) {
+          console.error('[print] PDF download failed, falling back to print dialog', err);
+          alert('تعذّر إنشاء PDF مباشرة. سيتم فتح حوار الطباعة — اختر "حفظ كـ PDF".');
+          window.print();
+        }).then(function () {
+          dlBtn.disabled = false;
+          dlBtn.textContent = originalLabel;
+        });
+      });
 
       window.addEventListener('load', function () {
         var ready = (document.fonts && document.fonts.ready) || Promise.resolve();
