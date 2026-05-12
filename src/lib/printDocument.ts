@@ -47,9 +47,14 @@ export async function printHtmlDocument(opts: {
     return;
   }
 
-  const fontLink = googleFontFamily
-    ? `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${googleFontFamily}&display=swap" />`
-    : '';
+  // Local @font-face wins; only use Google as fallback when no local file.
+  const fontHead = useLocal
+    ? `<style>@font-face{font-family:'${primaryFamily}';src:url('${localFontUrl}') format('truetype');font-display:swap;}</style>`
+    : googleFontFamily
+      ? `<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${googleFontFamily}&display=swap" onerror="this.remove()" />`
+      : '';
 
   // Approximate pixel sizes at 96dpi for on-screen preview pages
   const PAPER_PX: Record<PaperSize, { w: number; h: number }> = {
@@ -64,10 +69,10 @@ export async function printHtmlDocument(opts: {
 <head>
 <meta charset="utf-8" />
 <title>${title}</title>
-${fontLink}
+${fontHead}
 <style id="base-style">
   * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  html, body { margin: 0; padding: 0; background: #e5e7eb; color: #000; font-family: ${fontFamily}; }
+  html, body { margin: 0; padding: 0; background: #e5e7eb; color: #000; font-family: ${fullFontFamily}; }
   table { border-collapse: collapse; width: 100%; }
   .toolbar {
     position: sticky; top: 0; z-index: 100;
