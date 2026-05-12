@@ -706,7 +706,20 @@ const CustomerDetailsPage = () => {
 
       {/* FAB عائم — فاتورة جديدة بنقرة من أي مكان */}
       {isMobile && (
-        <CustomerMobileFAB onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })} />
+        <>
+          <WindowPullToRefresh
+            onRefresh={async () => {
+              await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['customer', id] }),
+                queryClient.invalidateQueries({ queryKey: ['customer-invoices', id] }),
+                queryClient.invalidateQueries({ queryKey: ['customer-payments', id] }),
+                queryClient.invalidateQueries({ queryKey: ['customer-financial-summary', id] }),
+                queryClient.invalidateQueries({ queryKey: ['customer-credit-notes', id] }),
+              ]);
+            }}
+          />
+          <CustomerMobileFAB onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })} />
+        </>
       )}
     </div>
     </PageWrapper>
