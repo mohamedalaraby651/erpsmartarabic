@@ -234,11 +234,11 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             aria-label={`${overdueCount} فواتير متأخرة — افتح التذكيرات`}
           >
             <span className="inline-flex items-center gap-1.5 font-semibold">
-              <AlertTriangle className="h-3.5 w-3.5" />
+              <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
               {overdueCount} {overdueCount === 1 ? 'فاتورة متأخرة' : 'فواتير متأخرة'}
             </span>
             <span className="inline-flex items-center gap-1 text-[11px] font-medium">
-              <Bell className="h-3 w-3" />
+              <Bell className="h-3 w-3" aria-hidden />
               إرسال تذكير
             </span>
           </button>
