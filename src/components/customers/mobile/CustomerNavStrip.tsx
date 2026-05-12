@@ -73,7 +73,7 @@ export const CustomerNavStrip = memo(function CustomerNavStrip({
         )}
       >
         التالي
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
