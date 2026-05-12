@@ -8,7 +8,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
   CreditCard, Bell, MessageSquare, BarChart3, Globe, Clock, Printer,
-  Wallet, StickyNote,
+  Wallet, StickyNote, ChevronLeft,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
@@ -28,6 +28,7 @@ import { CustomerQuickSuggestions } from "@/components/customers/mobile/Customer
 import { CustomerNavStrip } from "@/components/customers/mobile/CustomerNavStrip";
 import { CustomerSectionsSheet } from "@/components/customers/mobile/CustomerSectionsSheet";
 import { CustomerMobileFAB } from "@/components/customers/mobile/CustomerMobileFAB";
+import { CustomerSwipeHint } from "@/components/customers/mobile/CustomerSwipeHint";
 import { useLastVisitedSection } from "@/hooks/customers/useLastVisitedSection";
 import { haptics } from "@/lib/haptics";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
