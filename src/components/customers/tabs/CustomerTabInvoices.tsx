@@ -9,6 +9,8 @@ import { FileText, Plus, Search, CreditCard, Undo2, ArrowLeft } from "lucide-rea
 import { EntityLink } from "@/components/shared/EntityLink";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { InvoicesReturnsSummary } from "@/components/customers/details/InvoicesReturnsSummary";
+import { InvoiceLongPressSheet } from "@/components/customers/mobile/InvoiceLongPressSheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -52,6 +54,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   onPageChange,
 }: CustomerTabInvoicesProps) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [clientPage, setClientPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -171,8 +174,8 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 const remaining = total - paid;
                 const status = statusConfig[invoice.payment_status] || statusConfig.pending;
 
-                return (
-                  <div key={invoice.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                const card = (
+                  <div className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink>
@@ -216,6 +219,20 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                       )}
                     </div>
                   </div>
+                );
+
+                return isMobile ? (
+                  <InvoiceLongPressSheet
+                    key={invoice.id}
+                    invoiceId={invoice.id}
+                    invoiceNumber={invoice.invoice_number}
+                    remaining={remaining}
+                    onQuickPay={onQuickPay}
+                  >
+                    {card}
+                  </InvoiceLongPressSheet>
+                ) : (
+                  <div key={invoice.id}>{card}</div>
                 );
               })}
             </div>
