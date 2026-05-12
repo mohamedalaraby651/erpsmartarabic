@@ -171,6 +171,16 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
     onPick(id);
   };
 
+  if (!isActive) {
+    return (
+      <Card className="p-4 border bg-muted/30 text-center">
+        <p className="text-sm text-muted-foreground">
+          العميل غير نشط — لا توجد إجراءات مقترحة
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-3 border bg-card/50">
       <div className="sr-only" aria-live="polite" aria-atomic="true">{announce}</div>
