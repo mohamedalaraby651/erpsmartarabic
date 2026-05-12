@@ -29,8 +29,13 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
   onPrevCustomer, onNextCustomer, hasPrevCustomer, hasNextCustomer,
 }: CustomerCompressedHeaderProps) {
   const hasCustomerNav = (hasPrevCustomer || hasNextCustomer) && (onPrevCustomer || onNextCustomer);
+  const balanceLabel = `${currentBalance.toLocaleString()} جنيه — ${balanceIsDebit ? 'مدين' : 'دائن'}`;
   return (
-    <div className="bg-card/85 backdrop-blur-md border rounded-xl shadow-sm p-2 flex items-center gap-1.5">
+    <div
+      className="bg-card/85 backdrop-blur-md border rounded-xl shadow-sm p-2 flex items-center gap-1.5"
+      role="toolbar"
+      aria-label={`شريط أدوات العميل ${customer.name}`}
+    >
       {hasCustomerNav && (
         <Button
           size="icon"
@@ -40,20 +45,25 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
           disabled={!hasPrevCustomer}
           aria-label="العميل السابق"
         >
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Button>
       )}
       <CustomerAvatar name={customer.name} imageUrl={customer.image_url} customerType={customer.customer_type} size="sm" />
       <div className="flex-1 min-w-0">
         <h2 className="text-sm font-bold truncate leading-tight">{customer.name}</h2>
         <div className="flex items-center gap-1.5 leading-tight">
-          <p className={cn("text-[11px] font-semibold tabular-nums", balanceIsDebit ? "text-destructive" : "text-success")}>
-            {currentBalance.toLocaleString()} <span className="text-[9px] text-muted-foreground font-normal">ج.م</span>
+          <p
+            className={cn("text-[11px] font-semibold tabular-nums", balanceIsDebit ? "text-destructive" : "text-success")}
+            aria-label={`الرصيد الحالي ${balanceLabel}`}
+          >
+            {currentBalance.toLocaleString()} <span className="text-[9px] text-foreground/70 font-normal">ج.م</span>
           </p>
           {sectionLabel && (
             <>
-              <span className="text-muted-foreground/50 text-[10px]">·</span>
-              <span className="text-[10px] text-muted-foreground truncate">{sectionLabel}</span>
+              <span className="text-muted-foreground/60 text-[10px]" aria-hidden>·</span>
+              <span className="text-[10px] text-foreground/75 truncate" aria-label={`القسم الحالي: ${sectionLabel}`}>
+                {sectionLabel}
+              </span>
             </>
           )}
         </div>
@@ -67,35 +77,35 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
           disabled={!hasNextCustomer}
           aria-label="العميل التالي"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden />
         </Button>
       )}
       {(onPrevSection || onNextSection) && (
         <div className="flex items-center gap-0.5 shrink-0" role="group" aria-label="تنقل بين الأقسام">
           {onPrevSection && (
             <Button size="icon" variant="ghost" className="h-9 w-7" onClick={onPrevSection} aria-label="القسم السابق">
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden />
             </Button>
           )}
           {onNextSection && (
             <Button size="icon" variant="ghost" className="h-9 w-7" onClick={onNextSection} aria-label="القسم التالي">
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden />
             </Button>
           )}
         </div>
       )}
       {customer.phone && (
-        <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" asChild aria-label={`اتصال بـ ${customer.phone}`}>
+        <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" asChild aria-label={`اتصال بـ ${customer.name} على ${customer.phone}`}>
           <a href={`tel:${customer.phone}`}>
-            <Phone className="h-4 w-4 text-success" />
+            <Phone className="h-4 w-4 text-success" aria-hidden />
           </a>
         </Button>
       )}
-      <Button size="icon" className="h-9 w-9 shrink-0" onClick={onNewInvoice} aria-label="فاتورة جديدة">
-        <FileText className="h-4 w-4" />
+      <Button size="icon" className="h-9 w-9 shrink-0" onClick={onNewInvoice} aria-label={`إنشاء فاتورة جديدة للعميل ${customer.name}`}>
+        <FileText className="h-4 w-4" aria-hidden />
       </Button>
-      <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onMoreActions} aria-label="إجراءات أخرى">
-        <MoreHorizontal className="h-4 w-4" />
+      <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onMoreActions} aria-label="إجراءات أخرى" aria-haspopup="dialog">
+        <MoreHorizontal className="h-4 w-4" aria-hidden />
       </Button>
     </div>
   );
