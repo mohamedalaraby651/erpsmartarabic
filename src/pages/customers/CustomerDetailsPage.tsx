@@ -25,7 +25,7 @@ import { CustomerIconStrip, PRIMARY_STRIP_IDS, SECONDARY_STRIP_IDS, STRIP_META }
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { CustomerQuickSuggestions } from "@/components/customers/mobile/CustomerQuickSuggestions";
-import { CustomerNavStrip } from "@/components/customers/mobile/CustomerNavStrip";
+
 import { CustomerSectionsSheet } from "@/components/customers/mobile/CustomerSectionsSheet";
 import { CustomerMobileFAB } from "@/components/customers/mobile/CustomerMobileFAB";
 import { CustomerSwipeHint } from "@/components/customers/mobile/CustomerSwipeHint";
