@@ -133,13 +133,15 @@ interface MobileCustomerViewProps {
   setAddressDialogOpen: (v: boolean) => void;
   upcomingReminders: number;
   navProps: { hasPrev: boolean; hasNext: boolean; onPrev: () => void; onNext: () => void };
+  /** عناصر تُحشَر تحت بطاقة الملف مباشرةً (تنبيهات/شارة صحة/ملاحظة مثبّتة) */
+  belowProfileSlot?: React.ReactNode;
 }
 
 function MobileCustomerView({
   customer, customerId, detail, mobileSection, setMobileSection,
   onEdit, onNewInvoice, onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote,
   onWhatsApp, onImageUpdate, onToggleActive, onChangeVip, onQuickPay,
-  setSelectedAddress, setAddressDialogOpen, upcomingReminders, navProps,
+  setSelectedAddress, setAddressDialogOpen, upcomingReminders, navProps, belowProfileSlot,
 }: MobileCustomerViewProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -183,20 +185,27 @@ function MobileCustomerView({
     }
   };
 
-  // Swipe between sections — primary strip cycle
-  const allOrderedSections = useMemo<MobileSectionId[]>(
-    () => [...PRIMARY_STRIP_IDS, ...SECONDARY_STRIP_IDS] as MobileSectionId[],
+  // Swipe between sections — primary strip only (تجنّب الالتفاف عبر أقسام مخفية في "المزيد")
+  const primaryOrderedSections = useMemo<MobileSectionId[]>(
+    () => [...PRIMARY_STRIP_IDS] as MobileSectionId[],
     [],
   );
   const navigateBySwipe = (dir: 1 | -1) => {
     if (mobileSection === 'none') return;
-    const idx = allOrderedSections.indexOf(mobileSection);
-    if (idx === -1) return;
-    const nextIdx = (idx + dir + allOrderedSections.length) % allOrderedSections.length;
+    const idx = primaryOrderedSections.indexOf(mobileSection);
+    if (idx === -1) return; // قسم ثانوي — لا تدوير
+    const nextIdx = (idx + dir + primaryOrderedSections.length) % primaryOrderedSections.length;
     haptics.light();
-    selectSection(allOrderedSections[nextIdx]);
+    selectSection(primaryOrderedSections[nextIdx]);
   };
   const onTouchStart = (e: React.TouchEvent) => {
+    // استثناء العناصر القابلة للتمرير الأفقي/الجداول/الرسوم
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('[data-h-scroll], [data-no-swipe], table, .recharts-wrapper, [role="dialog"], input, textarea, select')) {
+      swipeStartX.current = null;
+      swipeStartY.current = null;
+      return;
+    }
     swipeStartX.current = e.touches[0].clientX;
     swipeStartY.current = e.touches[0].clientY;
   };
