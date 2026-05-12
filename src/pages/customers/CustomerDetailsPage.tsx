@@ -8,7 +8,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Edit, MapPin, Paperclip, ShoppingCart, Activity, FileText,
   CreditCard, Bell, MessageSquare, BarChart3, Globe, Clock, Printer,
-  Wallet, StickyNote,
+  Wallet, StickyNote, ChevronLeft,
 } from "lucide-react";
 import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
@@ -28,6 +28,7 @@ import { CustomerQuickSuggestions } from "@/components/customers/mobile/Customer
 import { CustomerNavStrip } from "@/components/customers/mobile/CustomerNavStrip";
 import { CustomerSectionsSheet } from "@/components/customers/mobile/CustomerSectionsSheet";
 import { CustomerMobileFAB } from "@/components/customers/mobile/CustomerMobileFAB";
+import { CustomerSwipeHint } from "@/components/customers/mobile/CustomerSwipeHint";
 import { useLastVisitedSection } from "@/hooks/customers/useLastVisitedSection";
 import { haptics } from "@/lib/haptics";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
@@ -100,10 +101,11 @@ function SectionHeader({ sectionId, onBack }: { sectionId: MobileSectionId; onBa
       <button
         type="button"
         onClick={onBack}
-        className="text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1.5 py-0.5"
+        className="inline-flex items-center gap-1 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1.5 py-0.5"
         aria-label="العودة للنظرة العامة"
       >
-        ← العودة للملخص
+        <ChevronLeft className="h-3.5 w-3.5" />
+        العودة للملخص
       </button>
     </div>
   );
@@ -131,13 +133,15 @@ interface MobileCustomerViewProps {
   setAddressDialogOpen: (v: boolean) => void;
   upcomingReminders: number;
   navProps: { hasPrev: boolean; hasNext: boolean; onPrev: () => void; onNext: () => void };
+  /** عناصر تُحشَر تحت بطاقة الملف مباشرةً (تنبيهات/شارة صحة/ملاحظة مثبّتة) */
+  belowProfileSlot?: React.ReactNode;
 }
 
 function MobileCustomerView({
   customer, customerId, detail, mobileSection, setMobileSection,
   onEdit, onNewInvoice, onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote,
   onWhatsApp, onImageUpdate, onToggleActive, onChangeVip, onQuickPay,
-  setSelectedAddress, setAddressDialogOpen, upcomingReminders, navProps,
+  setSelectedAddress, setAddressDialogOpen, upcomingReminders, navProps, belowProfileSlot,
 }: MobileCustomerViewProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -181,20 +185,27 @@ function MobileCustomerView({
     }
   };
 
-  // Swipe between sections — primary strip cycle
-  const allOrderedSections = useMemo<MobileSectionId[]>(
-    () => [...PRIMARY_STRIP_IDS, ...SECONDARY_STRIP_IDS] as MobileSectionId[],
+  // Swipe between sections — primary strip only (تجنّب الالتفاف عبر أقسام مخفية في "المزيد")
+  const primaryOrderedSections = useMemo<MobileSectionId[]>(
+    () => [...PRIMARY_STRIP_IDS] as MobileSectionId[],
     [],
   );
   const navigateBySwipe = (dir: 1 | -1) => {
     if (mobileSection === 'none') return;
-    const idx = allOrderedSections.indexOf(mobileSection);
-    if (idx === -1) return;
-    const nextIdx = (idx + dir + allOrderedSections.length) % allOrderedSections.length;
+    const idx = primaryOrderedSections.indexOf(mobileSection);
+    if (idx === -1) return; // قسم ثانوي — لا تدوير
+    const nextIdx = (idx + dir + primaryOrderedSections.length) % primaryOrderedSections.length;
     haptics.light();
-    selectSection(allOrderedSections[nextIdx]);
+    selectSection(primaryOrderedSections[nextIdx]);
   };
   const onTouchStart = (e: React.TouchEvent) => {
+    // استثناء العناصر القابلة للتمرير الأفقي/الجداول/الرسوم
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('[data-h-scroll], [data-no-swipe], table, .recharts-wrapper, [role="dialog"], input, textarea, select')) {
+      swipeStartX.current = null;
+      swipeStartY.current = null;
+      return;
+    }
     swipeStartX.current = e.touches[0].clientX;
     swipeStartY.current = e.touches[0].clientY;
   };
@@ -266,36 +277,51 @@ function MobileCustomerView({
         />
       </div>
 
+      {/* تنبيهات/شارة صحة/ملاحظة مثبّتة — تحت بطاقة الملف مباشرةً على الموبيل */}
+      {belowProfileSlot}
+
       <div className={cn(
         "sticky top-0 z-30 -mx-3 px-3 bg-background/80 backdrop-blur-sm pb-1 transition-shadow",
         showCompressed && "shadow-[0_1px_0_0_hsl(var(--border))]",
       )}>
-        {/* بدلاً من تكديس الهيدر المضغوط فوق الشريط، نُبدّل بينهما عند التمرير */}
-        {showCompressed ? (
-          <CustomerCompressedHeader
-            customer={customer}
-            currentBalance={detail.currentBalance}
-            balanceIsDebit={detail.balanceIsDebit}
-            onNewInvoice={onNewInvoice}
-            onNewPayment={onNewPayment}
-            onCall={customer.phone ? openCall : undefined}
-            onMoreActions={onEdit}
-          />
-        ) : (
-          <CustomerIconStrip
-            activeSection={mobileSection}
-            onSectionChange={selectSection}
-            badges={sectionBadges}
-            extraSlot={
-              <CustomerSectionsSheet
-                items={sheetItems}
-                activeSection={mobileSection}
-                onPick={selectSection}
-                isAnyActive={isSecondaryActive}
-              />
-            }
-          />
-        )}
+        {/* تبديل ناعم بين الهيدر المضغوط وشريط الأقسام */}
+        <div className="relative">
+          <div className={cn(
+            "transition-all duration-200",
+            showCompressed ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0",
+          )}>
+            <CustomerCompressedHeader
+              customer={customer}
+              currentBalance={detail.currentBalance}
+              balanceIsDebit={detail.balanceIsDebit}
+              onNewInvoice={onNewInvoice}
+              onNewPayment={onNewPayment}
+              onCall={customer.phone ? openCall : undefined}
+              onMoreActions={onEdit}
+              sectionLabel={mobileSection !== 'none' ? sectionLabels[mobileSection] : undefined}
+              onPrevSection={mobileSection !== 'none' ? () => navigateBySwipe(-1) : undefined}
+              onNextSection={mobileSection !== 'none' ? () => navigateBySwipe(1) : undefined}
+            />
+          </div>
+          <div className={cn(
+            "transition-all duration-200",
+            !showCompressed ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0",
+          )}>
+            <CustomerIconStrip
+              activeSection={mobileSection}
+              onSectionChange={selectSection}
+              badges={sectionBadges}
+              extraSlot={
+                <CustomerSectionsSheet
+                  items={sheetItems}
+                  activeSection={mobileSection}
+                  onPick={selectSection}
+                  isAnyActive={isSecondaryActive}
+                />
+              }
+            />
+          </div>
+        </div>
       </div>
 
       <div ref={sectionRef} key={mobileSection} className="animate-fade-in">
@@ -311,11 +337,10 @@ function MobileCustomerView({
             onPick={(id) => selectSection(id as MobileSectionId)}
             onWhatsApp={onWhatsApp}
           />
-        ) : (
-          <></>
-        )}
+        ) : null}
         {mobileSection !== 'none' && (
           <>
+            <CustomerSwipeHint signal={mobileSection} />
             <SectionHeader sectionId={mobileSection} onBack={() => selectSection('none')} />
             <Suspense fallback={<TabSkeleton />}>
             {mobileSection === 'invoices' && (
@@ -430,11 +455,12 @@ const CustomerDetailsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSection]);
 
-  const writeParams = (tab: string | null, section: MobileSectionId | null) => {
+  const writeParams = (tab: string | null, section: MobileSectionId | null, opts?: { replace?: boolean }) => {
     const next = new URLSearchParams(searchParams);
     if (tab) next.set('tab', tab); else next.delete('tab');
     if (section && section !== 'none') next.set('section', section); else next.delete('section');
-    setSearchParams(next, { replace: true });
+    // افتراضياً: ادفع للسجل لكي يعمل زر "العودة" بين الأقسام
+    setSearchParams(next, { replace: opts?.replace ?? false });
   };
 
   const handleTabChange = (tab: string) => {
@@ -516,21 +542,25 @@ const CustomerDetailsPage = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <CustomerSmartAlerts
-          currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
-          invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
-          lastCommunicationAt={customer.last_communication_at}
-          onEditCreditLimit={() => setEditDialogOpen(true)}
-          onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
-          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-          onContact={handleWhatsApp}
-          persistKey={id}
-        />
-        <CustomerHealthBadge customerId={id!} />
-      </div>
-
-      <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileSection('notes') : handleTabChange('notes')} />
+      {/* Desktop only — alerts/health/pinned-note عند أعلى الصفحة */}
+      {!isMobile && (
+        <>
+          <div className="flex items-center gap-3 flex-wrap">
+            <CustomerSmartAlerts
+              currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+              invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
+              lastCommunicationAt={customer.last_communication_at}
+              onEditCreditLimit={() => setEditDialogOpen(true)}
+              onSendReminder={() => handleTabChange('reminders')}
+              onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+              onContact={handleWhatsApp}
+              persistKey={id}
+            />
+            <CustomerHealthBadge customerId={id!} />
+          </div>
+          <CustomerPinnedNote customerId={id!} onViewAllNotes={() => handleTabChange('notes')} />
+        </>
+      )}
 
       {isMobile ? (
         <MobileCustomerView
@@ -554,6 +584,24 @@ const CustomerDetailsPage = () => {
           setSelectedAddress={setSelectedAddress}
           setAddressDialogOpen={setAddressDialogOpen}
           navProps={{ hasPrev: !!prevId, hasNext: !!nextId, onPrev: goPrev, onNext: goNext }}
+          belowProfileSlot={
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CustomerSmartAlerts
+                  currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+                  invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
+                  lastCommunicationAt={customer.last_communication_at}
+                  onEditCreditLimit={() => setEditDialogOpen(true)}
+                  onSendReminder={() => setMobileSection('reminders')}
+                  onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+                  onContact={handleWhatsApp}
+                  persistKey={id}
+                />
+                <CustomerHealthBadge customerId={id!} />
+              </div>
+              <CustomerPinnedNote customerId={id!} onViewAllNotes={() => setMobileSection('notes')} />
+            </div>
+          }
         />
       ) : (
         <Tabs value={detail.activeTab} onValueChange={handleTabChange} className="w-full">
