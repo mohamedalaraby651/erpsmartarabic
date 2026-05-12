@@ -136,36 +136,38 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
           </DialogTitle>
         </DialogHeader>
 
-        <PrintTemplate
-          companyName={settings?.company_name || "شركتي"}
-          companyAddress={settings?.address || undefined}
-          companyPhone={settings?.phone || undefined}
-          companyEmail={settings?.email || undefined}
-          taxNumber={settings?.tax_number || undefined}
-          logoUrl={settings?.logo_url || undefined}
-          primaryColor={settings?.primary_color || undefined}
-          secondaryColor={settings?.secondary_color || undefined}
-          documentTitle="فاتورة"
-          documentNumber={invoice.invoice_number}
-          documentDate={invoice.created_at}
-          dueDate={invoice.due_date || undefined}
-          customerName={invoice.customers?.name}
-          customerPhone={invoice.customers?.phone || undefined}
-          items={items.map((item) => ({
-            name: item.products?.name || "منتج",
-            quantity: item.quantity,
-            unitPrice: Number(item.unit_price),
-            discount: item.discount_percentage || 0,
-            total: Number(item.total_price),
-          }))}
-          subtotal={Number(invoice.subtotal)}
-          discount={invoice.discount_amount ? Number(invoice.discount_amount) : undefined}
-          tax={invoice.tax_amount ? Number(invoice.tax_amount) : undefined}
-          total={Number(invoice.total_amount)}
-          notes={invoice.notes || undefined}
-          paymentMethod={paymentMethodLabels[invoice.payment_method]}
-          paymentStatus={paymentStatusLabels[invoice.payment_status]}
-        />
+        <div ref={printRef}>
+          <PrintTemplate
+            companyName={settings?.company_name || "شركتي"}
+            companyAddress={settings?.address || undefined}
+            companyPhone={settings?.phone || undefined}
+            companyEmail={settings?.email || undefined}
+            taxNumber={settings?.tax_number || undefined}
+            logoUrl={settings?.logo_url || undefined}
+            primaryColor={settings?.primary_color || undefined}
+            secondaryColor={settings?.secondary_color || undefined}
+            documentTitle="فاتورة"
+            documentNumber={invoice.invoice_number}
+            documentDate={invoice.created_at}
+            dueDate={invoice.due_date || undefined}
+            customerName={invoice.customers?.name}
+            customerPhone={invoice.customers?.phone || undefined}
+            items={items.map((item) => ({
+              name: item.products?.name || "منتج",
+              quantity: item.quantity,
+              unitPrice: Number(item.unit_price),
+              discount: item.discount_percentage || 0,
+              total: Number(item.total_price),
+            }))}
+            subtotal={Number(invoice.subtotal)}
+            discount={invoice.discount_amount ? Number(invoice.discount_amount) : undefined}
+            tax={invoice.tax_amount ? Number(invoice.tax_amount) : undefined}
+            total={Number(invoice.total_amount)}
+            notes={invoice.notes || undefined}
+            paymentMethod={paymentMethodLabels[invoice.payment_method]}
+            paymentStatus={paymentStatusLabels[invoice.payment_status]}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
