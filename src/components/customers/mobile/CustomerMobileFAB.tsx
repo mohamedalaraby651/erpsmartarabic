@@ -65,7 +65,7 @@ export const CustomerMobileFAB = memo(function CustomerMobileFAB({
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none",
       )}
     >
-      <Icon className="h-5 w-5" />
+      <Icon className="h-5 w-5" aria-hidden />
       <span className="text-sm font-semibold">{label}</span>
     </button>
   );
