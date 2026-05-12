@@ -137,13 +137,13 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground flex-wrap">
+            <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-foreground/75 flex-wrap">
               <span>{customerTypeLabel}</span>
               {(customer.governorate || customer.city) && (
                 <>
-                  <span className="text-muted-foreground/50">·</span>
+                  <span className="text-muted-foreground/60" aria-hidden>·</span>
                   <span className="inline-flex items-center gap-0.5">
-                    <MapPin className="h-2.5 w-2.5" />
+                    <MapPin className="h-2.5 w-2.5" aria-hidden />
                     {[customer.governorate, customer.city].filter(Boolean).join(' - ')}
                   </span>
                 </>
