@@ -381,15 +381,27 @@ function MobileCustomerView({
           <>
             <CustomerSwipeHint signal={mobileSection} />
             <SectionHeader sectionId={mobileSection} onBack={() => selectSection('none')} />
-            <Suspense fallback={<TabSkeleton />}>
+            <Suspense fallback={
+              ['invoices','payments','reminders','sales','credit-notes'].includes(mobileSection)
+                ? <MobileListSkeleton rows={mobileSection === 'reminders' ? 3 : 5} />
+                : <TabSkeleton />
+            }>
             {mobileSection === 'invoices' && (
-              <div className="space-y-4">
-                <CustomerTabInvoices invoices={detail.invoices} customerId={customerId} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={onQuickPay} creditNotes={detail.creditNotes} currentBalance={detail.currentBalance} paginatedData={detail.paginatedInvoices} currentPage={detail.invoicePage} pageSize={detail.invoicePageSize} onPageChange={detail.goToInvoicePage} />
-                <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
-              </div>
+              detail.paginatedInvoicesLoading && !detail.paginatedInvoices ? (
+                <MobileListSkeleton rows={5} ariaLabel="جارٍ تحميل الفواتير" />
+              ) : (
+                <div className="space-y-4">
+                  <CustomerTabInvoices invoices={detail.invoices} customerId={customerId} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={onQuickPay} creditNotes={detail.creditNotes} currentBalance={detail.currentBalance} paginatedData={detail.paginatedInvoices} currentPage={detail.invoicePage} pageSize={detail.invoicePageSize} onPageChange={detail.goToInvoicePage} />
+                  <CustomerTabCreditNotes creditNotes={detail.creditNotes} />
+                </div>
+              )
             )}
             {mobileSection === 'payments' && (
-              <CustomerTabPayments payments={detail.payments} customerId={customerId} paginatedData={detail.paginatedPayments} currentPage={detail.paymentPage} pageSize={detail.paymentPageSize} onPageChange={detail.goToPaymentPage} />
+              detail.paginatedPaymentsLoading && !detail.paginatedPayments ? (
+                <MobileListSkeleton rows={5} ariaLabel="جارٍ تحميل المدفوعات" />
+              ) : (
+                <CustomerTabPayments payments={detail.payments} customerId={customerId} paginatedData={detail.paginatedPayments} currentPage={detail.paymentPage} pageSize={detail.paymentPageSize} onPageChange={detail.goToPaymentPage} />
+              )
             )}
             {mobileSection === 'info' && (
               <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(addrId) => detail.deleteAddressMutation.mutate(addrId)} onWhatsApp={onWhatsApp} />
