@@ -246,7 +246,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
               aria-label={`${s.label} — ${s.hint}`}
             >
               <div className={cn("flex items-center justify-center w-9 h-9 rounded-lg shrink-0", tone.icon)}>
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" aria-hidden />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
