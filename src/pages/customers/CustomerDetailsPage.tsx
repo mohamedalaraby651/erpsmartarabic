@@ -542,21 +542,25 @@ const CustomerDetailsPage = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <CustomerSmartAlerts
-          currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
-          invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
-          lastCommunicationAt={customer.last_communication_at}
-          onEditCreditLimit={() => setEditDialogOpen(true)}
-          onSendReminder={() => isMobile ? setMobileSection('reminders') : handleTabChange('reminders')}
-          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-          onContact={handleWhatsApp}
-          persistKey={id}
-        />
-        <CustomerHealthBadge customerId={id!} />
-      </div>
-
-      <CustomerPinnedNote customerId={id!} onViewAllNotes={() => isMobile ? setMobileSection('notes') : handleTabChange('notes')} />
+      {/* Desktop only — alerts/health/pinned-note عند أعلى الصفحة */}
+      {!isMobile && (
+        <>
+          <div className="flex items-center gap-3 flex-wrap">
+            <CustomerSmartAlerts
+              currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+              invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
+              lastCommunicationAt={customer.last_communication_at}
+              onEditCreditLimit={() => setEditDialogOpen(true)}
+              onSendReminder={() => handleTabChange('reminders')}
+              onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+              onContact={handleWhatsApp}
+              persistKey={id}
+            />
+            <CustomerHealthBadge customerId={id!} />
+          </div>
+          <CustomerPinnedNote customerId={id!} onViewAllNotes={() => handleTabChange('notes')} />
+        </>
+      )}
 
       {isMobile ? (
         <MobileCustomerView
@@ -580,6 +584,24 @@ const CustomerDetailsPage = () => {
           setSelectedAddress={setSelectedAddress}
           setAddressDialogOpen={setAddressDialogOpen}
           navProps={{ hasPrev: !!prevId, hasNext: !!nextId, onPrev: goPrev, onNext: goNext }}
+          belowProfileSlot={
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CustomerSmartAlerts
+                  currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
+                  invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
+                  lastCommunicationAt={customer.last_communication_at}
+                  onEditCreditLimit={() => setEditDialogOpen(true)}
+                  onSendReminder={() => setMobileSection('reminders')}
+                  onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+                  onContact={handleWhatsApp}
+                  persistKey={id}
+                />
+                <CustomerHealthBadge customerId={id!} />
+              </div>
+              <CustomerPinnedNote customerId={id!} onViewAllNotes={() => setMobileSection('notes')} />
+            </div>
+          }
         />
       ) : (
         <Tabs value={detail.activeTab} onValueChange={handleTabChange} className="w-full">
