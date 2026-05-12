@@ -207,6 +207,9 @@ export function useCustomerDetail(id: string | undefined) {
     totalPurchases, totalPayments, paymentRatio, avgInvoiceValue,
     lastPurchaseDate, dso, clv, totalOutstanding, invoiceCount,
     creditLimit, currentBalance, creditUsagePercent, balanceIsDebit,
+    // Loading flags for skeletons
+    invoicesLoading, paymentsLoading,
+    paginatedInvoicesLoading, paginatedPaymentsLoading,
     // Paginated data for tabs
     paginatedInvoices, invoicePage, invoicePageSize, goToInvoicePage,
     paginatedPayments, paymentPage, paymentPageSize, goToPaymentPage,
