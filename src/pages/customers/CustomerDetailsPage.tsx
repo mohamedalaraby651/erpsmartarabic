@@ -277,36 +277,51 @@ function MobileCustomerView({
         />
       </div>
 
+      {/* تنبيهات/شارة صحة/ملاحظة مثبّتة — تحت بطاقة الملف مباشرةً على الموبيل */}
+      {belowProfileSlot}
+
       <div className={cn(
         "sticky top-0 z-30 -mx-3 px-3 bg-background/80 backdrop-blur-sm pb-1 transition-shadow",
         showCompressed && "shadow-[0_1px_0_0_hsl(var(--border))]",
       )}>
-        {/* بدلاً من تكديس الهيدر المضغوط فوق الشريط، نُبدّل بينهما عند التمرير */}
-        {showCompressed ? (
-          <CustomerCompressedHeader
-            customer={customer}
-            currentBalance={detail.currentBalance}
-            balanceIsDebit={detail.balanceIsDebit}
-            onNewInvoice={onNewInvoice}
-            onNewPayment={onNewPayment}
-            onCall={customer.phone ? openCall : undefined}
-            onMoreActions={onEdit}
-          />
-        ) : (
-          <CustomerIconStrip
-            activeSection={mobileSection}
-            onSectionChange={selectSection}
-            badges={sectionBadges}
-            extraSlot={
-              <CustomerSectionsSheet
-                items={sheetItems}
-                activeSection={mobileSection}
-                onPick={selectSection}
-                isAnyActive={isSecondaryActive}
-              />
-            }
-          />
-        )}
+        {/* تبديل ناعم بين الهيدر المضغوط وشريط الأقسام */}
+        <div className="relative">
+          <div className={cn(
+            "transition-all duration-200",
+            showCompressed ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0",
+          )}>
+            <CustomerCompressedHeader
+              customer={customer}
+              currentBalance={detail.currentBalance}
+              balanceIsDebit={detail.balanceIsDebit}
+              onNewInvoice={onNewInvoice}
+              onNewPayment={onNewPayment}
+              onCall={customer.phone ? openCall : undefined}
+              onMoreActions={onEdit}
+              sectionLabel={mobileSection !== 'none' ? sectionLabels[mobileSection] : undefined}
+              onPrevSection={mobileSection !== 'none' ? () => navigateBySwipe(-1) : undefined}
+              onNextSection={mobileSection !== 'none' ? () => navigateBySwipe(1) : undefined}
+            />
+          </div>
+          <div className={cn(
+            "transition-all duration-200",
+            !showCompressed ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0",
+          )}>
+            <CustomerIconStrip
+              activeSection={mobileSection}
+              onSectionChange={selectSection}
+              badges={sectionBadges}
+              extraSlot={
+                <CustomerSectionsSheet
+                  items={sheetItems}
+                  activeSection={mobileSection}
+                  onPick={selectSection}
+                  isAnyActive={isSecondaryActive}
+                />
+              }
+            />
+          </div>
+        </div>
       </div>
 
       <div ref={sectionRef} key={mobileSection} className="animate-fade-in">
@@ -322,11 +337,10 @@ function MobileCustomerView({
             onPick={(id) => selectSection(id as MobileSectionId)}
             onWhatsApp={onWhatsApp}
           />
-        ) : (
-          <></>
-        )}
+        ) : null}
         {mobileSection !== 'none' && (
           <>
+            <CustomerSwipeHint signal={mobileSection} />
             <SectionHeader sectionId={mobileSection} onBack={() => selectSection('none')} />
             <Suspense fallback={<TabSkeleton />}>
             {mobileSection === 'invoices' && (
