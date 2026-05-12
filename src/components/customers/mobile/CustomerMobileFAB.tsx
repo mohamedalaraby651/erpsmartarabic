@@ -20,6 +20,7 @@ export const CustomerMobileFAB = memo(function CustomerMobileFAB({
   const lastY = useRef(typeof window !== 'undefined' ? window.scrollY : 0);
 
   useEffect(() => {
+    // ١) استمع للـ scroll على window
     const onScroll = () => {
       const y = window.scrollY;
       const dy = y - lastY.current;
@@ -28,7 +29,27 @@ export const CustomerMobileFAB = memo(function CustomerMobileFAB({
       lastY.current = y;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+
+    // ٢) استمع أيضاً لأقرب حاوية تمرير (PageWrapper مثلاً)
+    const scrollables: HTMLElement[] = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-scroll-container], main'),
+    );
+    let lastInner = scrollables.map(el => el.scrollTop);
+    const onInnerScroll = (e: Event) => {
+      const el = e.currentTarget as HTMLElement;
+      const idx = scrollables.indexOf(el);
+      const prev = lastInner[idx] ?? 0;
+      const dy = el.scrollTop - prev;
+      lastInner[idx] = el.scrollTop;
+      if (Math.abs(dy) < 8) return;
+      setVisible(dy < 0 || el.scrollTop < 80);
+    };
+    scrollables.forEach(el => el.addEventListener('scroll', onInnerScroll, { passive: true }));
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      scrollables.forEach(el => el.removeEventListener('scroll', onInnerScroll));
+    };
   }, []);
 
   return (
@@ -36,6 +57,7 @@ export const CustomerMobileFAB = memo(function CustomerMobileFAB({
       type="button"
       onClick={() => { haptics.light(); onClick(); }}
       aria-label={label}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       className={cn(
         "md:hidden fixed bottom-20 left-4 z-40 inline-flex items-center gap-2 h-12 px-4 rounded-full",
         "bg-primary text-primary-foreground shadow-lg active:scale-95",
