@@ -1,90 +1,149 @@
-# خطة تطوير صفحة تفاصيل العميل على الموبايل
+# خطة تطوير صفحة العميل للموبيل — تنفيذ متدرج
 
-## أولاً: المشاكل المكتشفة (Bugs / UX issues)
+## نظرة عامة
+الخطة مقسّمة إلى **٤ مراحل** مرتّبة حسب الأولوية والأثر. كل مرحلة قائمة بذاتها ويمكن إيقاف التنفيذ بعد أي منها مع نتيجة قابلة للاستخدام.
 
-| # | المشكلة | الأثر |
-|---|---|---|
-| 1 | `CustomerSmartAlerts` + `CustomerHealthBadge` + `CustomerPinnedNote` تُعرض **فوق** بطاقة الملف الرئيسية (`CustomerMobileProfile`) → ترتيب غير منطقي وزحام أعلى الشاشة | الهوية البصرية للعميل (الاسم/الرصيد/الإجراءات) تُدفع للأسفل |
-| 2 | الشريط اللاصق (`sticky top-0`) في الموبايل يحتوي **الهيدر المضغوط + شريط الأيقونات معاً** → يصل ارتفاعه ~140px ويأكل ثلث الشاشة عند التمرير | فقدان مساحة المحتوى |
-| 3 | `CustomerIconStrip` يحوي **11 قسماً** أفقياً → overwhelm + كثير منها نادر الاستخدام (مرفقات/تواصل/أعمار ديون) | صعوبة العثور على المهم |
-| 4 | لا يوجد تنقّل **سابق/تالي** بين العملاء على الموبايل (متاح فقط في Hero الديسكتوب) | مستخدم الموبايل مضطر للعودة للقائمة |
-| 5 | لا توجد **مؤشرات Swipe** للتنقل بين الأقسام (Tabs gesture) | UX دون مستوى التطبيقات الأصلية |
-| 6 | لا يتم **تذكر آخر قسم مفتوح** عند العودة للعميل (يبدأ دائماً من `none` ما لم يُمرَّر ?section في URL) | عناء متكرر |
-| 7 | لا توجد **Pull-to-Refresh** في صفحة التفاصيل (موجودة في القائمة فقط) | لا يمكن تحديث الرصيد بسرعة |
-| 8 | `CustomerQuickSuggestions` يعرض 3 اقتراحات ثابتة فقط (فواتير/كشف/تذكيرات) ولا يتفاعل مع حالة العميل (مثلاً: لا يقترح "اتصل به" إذا انقطع التواصل ٣٠ يوم) | اقتراحات سطحية |
-| 9 | تغيير **VIP** غير متاح على الموبايل (موجود فقط في `CustomerHeroHeader` الديسكتوب) | تكافؤ ميزات ناقص |
-| 10 | الانتقال بين الأقسام **فوري بلا انتقال بصري** | يبدو متقطع |
-| 11 | على شاشات صغيرة جداً (320px)، `CustomerCompressedHeader` يحوي ٣-٤ أزرار 36×36 + الاسم + الرصيد → احتمال overflow | كسر بصري |
-| 12 | لا يوجد **إجراء عائم (FAB)** سريع لإنشاء فاتورة من أي مكان داخل الصفحة | احتكاك مستمر |
+---
 
-## ثانياً: التحسينات المقترحة (مرتبة حسب الأولوية)
+## المرحلة ١ — إصلاحات بنيوية حرجة (Layout & Stacking)
 
-### A. إصلاحات بنيوية (أولوية عالية)
-1. **إعادة ترتيب الكتل على الموبايل** فقط:
-   - بطاقة الملف (`CustomerMobileProfile`) أولاً
-   - ثم `CustomerSmartAlerts` (مدمج، مع إخفاء `CustomerHealthBadge` المنفصل أو دمجه كـchip داخل البطاقة)
-   - ثم `CustomerPinnedNote` (مطوي افتراضياً إذا كان فارغاً)
-   - ثم الشريط اللاصق + المحتوى
-2. **تنحيف الشريط اللاصق**: عند ظهور الـCompressed header، إخفاء شريط الأيقونات تلقائياً واستبداله بزر "الأقسام" واحد يفتح Sheet — يوفر ~80px.
-3. **تجميع IconStrip**: إبقاء أهم 6 (فواتير، مدفوعات، كشف، تذكيرات، مبيعات، تحليلات) + زر "المزيد" يفتح Sheet بالباقي.
+**الهدف:** تقليل الازدحام البصري وتوحيد ترتيب العناصر على الموبيل.
 
-### B. ميزات تنقّل وذاكرة
-4. **شريط تنقّل عملاء** صغير في الموبايل (سهم سابق/تالي + اسم العميل التالي) أعلى البطاقة، مرتبط بـ`useCustomerNavigation` الموجود.
-5. **تذكر آخر قسم مفتوح** لكل عميل في `sessionStorage` (مفتاح `customer:last-section:<id>`) — يُحمّل تلقائياً عند الفتح إن لم يكن في URL.
-6. **Swipe بين الأقسام**: تمرير يميناً/يساراً داخل منطقة المحتوى ينتقل للقسم التالي/السابق في `stripIcons` (مع haptic خفيف).
+### الخطوة 1.1 — إعادة ترتيب العناصر العلوية
+- نقل `CustomerSmartAlerts` + `CustomerHealthBadge` + `CustomerPinnedNote` إلى **داخل** `MobileCustomerView` تحت بطاقة `CustomerMobileProfile` مباشرة (تظل كما هي على الديسكتوب).
+- دمج Alerts و Health Badge في صف أفقي واحد قابل للف (wrap) لتوفير المساحة.
 
-### C. تفاعلية
-7. **Pull-to-Refresh** على المحتوى — يستدعي `detail.refetch` (إن وُجد، وإلا `queryClient.invalidateQueries({ queryKey: ['customer', id] })`).
-8. **اقتراحات ذكية ديناميكية** في `CustomerQuickSuggestions`: إضافة قواعد:
-   - رصيد متجاوز حد الائتمان → "حصِّل دفعة"
-   - بدون نشاط 30+ يوم → "تواصل مع العميل" (واتساب)
-   - عرض سعر معلق منذ 7 أيام → "حوّل إلى فاتورة"
-9. **زر FAB عائم** أسفل اليمين للإجراء الأكثر استخداماً (فاتورة جديدة) — يختفي عند التمرير لأسفل ويظهر عند التمرير لأعلى.
-10. **انتقال محتوى الأقسام** بـ `motion.div` مع `AnimatePresence` (slide + fade خفيف 150ms).
+### الخطوة 1.2 — تنحيف الهيدرات الثلاث
+- إخفاء `CustomerNavStrip` تلقائياً عند التمرير (مثل FAB) وإظهاره فقط في أعلى الصفحة.
+- جعل سهم العودة في `SectionHeader` يستخدم `ChevronLeft` بدل النص `←`.
 
-### D. تكافؤ ميزات
-11. **تغيير VIP** عبر long-press على badge الـVIP في `CustomerMobileProfile` (يفتح Sheet بقائمة المستويات).
-12. **تحسين 320px**: في `CustomerCompressedHeader`، إخفاء زر "اتصال" (يبقى الواتساب) عند `< 360px` لمنع overflow.
+### الخطوة 1.3 — تنظيف الكود الميت
+- حذف `<></>` في فرع `mobileSection === 'none'`.
+- إزالة `CustomerKPICards` المكرر داخل `CustomerMobileProfile` إذا كان `currentBalance` معروضاً في الهيدر المضغوط (الإبقاء على حد الائتمان فقط).
 
-## ثالثاً: الملفات المتأثرة
+**الناتج:** صفحة بـ 3 طبقات منطقية فقط: (هيدر/ملف العميل) → (تنبيهات + ملاحظة) → (شريط الأقسام + المحتوى).
 
-**سيتم تعديلها:**
-- `src/pages/customers/CustomerDetailsPage.tsx` — إعادة ترتيب الكتل، Pull-to-Refresh، Swipe handler، تذكر القسم.
-- `src/components/customers/mobile/CustomerIconStrip.tsx` — تقليم لـ6 + زر "المزيد".
-- `src/components/customers/mobile/CustomerCompressedHeader.tsx` — توافق 320px.
-- `src/components/customers/mobile/CustomerQuickSuggestions.tsx` — اقتراحات ديناميكية.
-- `src/components/customers/mobile/CustomerMobileProfile.tsx` — long-press على VIP badge.
+---
 
-**ملفات جديدة:**
-- `src/components/customers/mobile/CustomerSectionsSheet.tsx` — Sheet "المزيد" للأقسام النادرة.
-- `src/components/customers/mobile/CustomerNavStrip.tsx` — شريط سابق/تالي.
-- `src/components/customers/mobile/CustomerMobileFAB.tsx` — زر FAB ذكي يختفي/يظهر مع التمرير.
-- `src/hooks/customers/useLastVisitedSection.ts` — حفظ/استرجاع آخر قسم.
+## المرحلة ٢ — إصلاح التنقل والـ Swipe
 
-## رابعاً: تفاصيل تقنية
+**الهدف:** جعل التنقل بين الأقسام طبيعياً بدون مفاجآت.
+
+### الخطوة 2.1 — حصر الـ Swipe على الأقسام الأساسية
+- تعديل `navigateBySwipe` ليدور فقط بين `PRIMARY_STRIP_IDS` (وليس + SECONDARY).
+- استثناء أحداث اللمس التي تبدأ داخل `[data-h-scroll]`، الـ ScrollArea، أو داخل الجداول/الرسوم.
+
+### الخطوة 2.2 — مؤشر بصري للـ Swipe
+- إظهار سهمي تلميح يمين/يسار أسفل `SectionHeader` عند تفعيل قسم (يختفيان بعد أول swipe ناجح أو 3 ثوان).
+
+### الخطوة 2.3 — تنقل الأقسام داخل CompressedHeader
+- إضافة زرّي Prev/Next صغيرين داخل `CustomerCompressedHeader` للتنقل بين الأقسام دون التمرير لأعلى.
+
+### الخطوة 2.4 — انتقال متدرج بين IconStrip ↔ CompressedHeader
+- استبدال التبديل الفوري بـ `transition-all` + crossfade (200ms) لمنع الوميض.
+
+### الخطوة 2.5 — دعم زر Back الفيزيائي
+- استبدال `setSearchParams(..., { replace: true })` بـ `replace: false` فقط عند تغيير القسم (وليس عند مزامنة URL ↔ state)، حتى يتنقل زر Back بين الأقسام طبيعياً.
+- إضافة `popstate` listener لتحديث `mobileSection` عند العودة.
+
+### الخطوة 2.6 — إغلاق Sheet تلقائياً
+- جعل `CustomerSectionsSheet` يقبل `open/onOpenChange` خارجياً ويُغلق تلقائياً بعد `onPick`.
+
+---
+
+## المرحلة ٣ — Badges + اقتراحات ذكية
+
+**الهدف:** إيصال المعلومة الصحيحة في المكان الصحيح.
+
+### الخطوة 3.1 — Badges حقيقية للأقسام الثانوية
+- توسيع `sectionBadges` لتشمل:
+  - `aging` — عدد الفواتير في فئة 60+ يوم
+  - `communications` — عدد أيام بدون تواصل (إذا > 30)
+  - `notes` — عدد الملاحظات المثبّتة
+  - `attachments` — عدد المرفقات الجديدة منذ آخر زيارة (اختياري)
+- استخدام هذه القيم لحساب `totalBadge` على زر "المزيد" بشكل صحيح.
+
+### الخطوة 3.2 — Badge لقسم sales
+- إضافة `staleQuotations` كـ badge على أيقونة `sales` في `IconStrip`.
+
+### الخطوة 3.3 — تحسين سجل الاقتراحات
+- إصلاح `useSuggestionHistory` لتسجيل الحدث الأول (إزالة skip في `initRef`) مع عتبة "تغير معنوي":
+  - فرق رصيد > 1 ج.م
+  - تغير عدد الفواتير المتأخرة
+  - تغير `last_communication_at` فعلياً
+- تخزين السجل في `localStorage` (TTL 7 أيام) بدلاً من `sessionStorage` لاستمرارية أطول.
+
+### الخطوة 3.4 — اقتراحات حسّاسة للسياق
+- إخفاء "اقتراحات ذكية" عند `customer.is_active === false` وعرض رسالة "العميل غير نشط — لا توجد إجراءات مقترحة" بدلاً منها.
+
+---
+
+## المرحلة ٤ — تحسينات لمسة أخيرة (Polish)
+
+**الهدف:** اللمسة الاحترافية والـ Micro-interactions.
+
+### الخطوة 4.1 — Pull-to-Refresh
+- استخدام `usePullToRefresh` الموجود لاستدعاء `queryClient.invalidateQueries(['customer', id])` + إعادة جلب الفواتير/الدفعات.
+
+### الخطوة 4.2 — Skeleton عند تبديل الأقسام
+- التأكد من أن `Suspense fallback={<TabSkeleton />}` يعمل بشكل ملحوظ (أحياناً يُتخطى بسبب الـ cache) — إضافة حدّ أدنى ارتفاع لمنع القفز.
+
+### الخطوة 4.3 — تلميح Long-press على VIP
+- إضافة `animate-pulse` لمرة واحدة لشارة VIP لمستخدم جديد (تخزين flag في `localStorage`)، مع tooltip صغير "اضغط مطولاً للتغيير".
+
+### الخطوة 4.4 — إجراءات سياقية على الفواتير
+- Long-press على بطاقة فاتورة → bottom sheet به: تسديد سريع / طباعة / مشاركة واتساب / تحويل لإشعار دائن.
+
+### الخطوة 4.5 — FAB ذكي
+- استبدال `window.scrollY` بـ `IntersectionObserver` على عنصر "نهاية المحتوى" — يضمن العمل مع أي container قابل للتمرير.
+- إضافة `pb-safe` (env(safe-area-inset-bottom)) للـ FAB والـ bottom sheets لتفادي تداخل مع iPhone notch.
+
+---
+
+## تفاصيل تقنية للمطوّر
+
+### الملفات التي ستُعدَّل
 
 ```text
-Layout (mobile, جديد):
-┌──────────────────────────┐
-│ MobileDetailHeader       │  (موجود)
-├──────────────────────────┤
-│ CustomerNavStrip ◀ ▶     │  (جديد: عميل سابق/تالي)
-├──────────────────────────┤
-│ CustomerMobileProfile    │  (موجود)
-├──────────────────────────┤
-│ SmartAlerts (مدمج)       │  (نقل من الأعلى)
-│ PinnedNote (مطوي)        │
-├══════════════════════════┤  ← sticky
-│ IconStrip (6 + المزيد)   │  (مُقلّم)
-├══════════════════════════┤
-│ Section content + swipe  │  (مع AnimatePresence)
-└──────────────────────────┘
-                       (FAB)  ← عائم
+src/pages/customers/CustomerDetailsPage.tsx          — مراحل 1, 2, 3, 4
+src/components/customers/mobile/
+  ├─ CustomerMobileProfile.tsx                       — مرحلة 1.3, 4.3
+  ├─ CustomerIconStrip.tsx                           — مرحلة 3.2
+  ├─ CustomerCompressedHeader.tsx                    — مرحلة 2.3, 2.4
+  ├─ CustomerSectionsSheet.tsx                       — مرحلة 2.6, 3.1
+  ├─ CustomerNavStrip.tsx                            — مرحلة 1.2 (auto-hide)
+  ├─ CustomerMobileFAB.tsx                           — مرحلة 4.5
+  └─ CustomerQuickSuggestions.tsx                    — مرحلة 3.4
+src/hooks/customers/
+  ├─ useLastVisitedSection.ts                        — مرحلة 2.5 (popstate)
+  └─ useSuggestionHistory.ts                         — مرحلة 3.3 (localStorage + threshold)
 ```
 
-- **مفتاح التذكر**: `sessionStorage["customer:last-section:" + id]`، يُمسح عند مغادرة الصفحة لأكثر من 30 دقيقة.
-- **Swipe threshold**: 60px أفقي + سرعة > 0.3 (نفس قواعد `useSwipeable` المستخدم في المشروع).
-- **FAB**: يستخدم `IntersectionObserver` على عنصر "نهاية الصفحة" + scroll direction detection.
-- **لا تغييرات في الباك إند ولا الـRLS** — تحسينات واجهة بحتة.
+### ملفات جديدة
 
-هل توافق على تنفيذ كامل الخطة، أم تفضّل أن أبدأ بقسم محدد فقط (مثلاً: A فقط — الإصلاحات البنيوية)؟
+```text
+src/components/customers/mobile/CustomerSwipeHint.tsx     — مرحلة 2.2
+src/hooks/customers/useCustomerPullToRefresh.ts           — مرحلة 4.1 (wrapper بسيط)
+```
+
+### قواعد البيانات
+لا تغييرات في الـ schema. جميع التحسينات Frontend-only.
+
+### الاختبارات (E2E)
+- تحديث `e2e/mobile-journey.spec.ts` لتغطية: swipe بين أقسام أساسية، badge على More، إغلاق Sheet بعد الاختيار، استرجاع آخر قسم، popstate.
+
+---
+
+## معايير القبول لكل مرحلة
+
+| المرحلة | معيار النجاح |
+|---|---|
+| 1 | لا يوجد عنصر خارج بطاقة الملف يَزِيد ارتفاع رأس الصفحة عن 280px قبل المحتوى |
+| 2 | Swipe لا يُفعَّل أثناء تمرير الجداول؛ زر Back المتصفح ينقل بين الأقسام |
+| 3 | Badge "المزيد" يعكس مجموع الإشارات الفعلية؛ سجل الاقتراحات يحوي ≥1 إدخال بعد أي تغير معنوي |
+| 4 | Pull-to-Refresh يعيد جلب البيانات بنجاح؛ FAB يختفي عند التمرير لأسفل بصرف النظر عن نوع container |
+
+---
+
+## التوصية
+البدء بالمرحلتين **١ و ٢** فقط في تنفيذ واحد (تحلّان أكبر مشاكل الاستخدام)، ثم مراجعة مع المستخدم قبل المتابعة للمرحلتين ٣ و ٤.
