@@ -88,11 +88,13 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
     }
     const fontKey = (settings?.pdf_font as PdfFontKey) || 'cairo';
     const fontConfig = AVAILABLE_FONTS.find((f) => f.key === fontKey) || AVAILABLE_FONTS[0];
-    const fontFamily = `'${fontConfig.displayName}','Segoe UI',Tahoma,Arial,sans-serif`;
-    printHtmlDocument({
+    // First URL is the local /fonts/... candidate (see arabicFont.ts)
+    const localUrl = fontConfig.urls.find((u) => u.startsWith('/fonts/'));
+    void printHtmlDocument({
       title: `فاتورة ${invoice?.invoice_number ?? ''}`.trim(),
       bodyHtml: node.outerHTML,
-      fontFamily,
+      fontFamily: fontConfig.displayName,
+      localFontUrl: localUrl,
       googleFontFamily: fontConfig.googleFontFamily,
       brandColor: settings?.primary_color || '#1e40af',
     });
