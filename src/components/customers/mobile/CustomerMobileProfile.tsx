@@ -180,12 +180,12 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
           <button
             type="button"
             onClick={() => setCreditSheetOpen(true)}
-            className="mt-3 w-full text-right group"
-            aria-label={`حد الائتمان مستخدَم بنسبة ${creditUsagePercent.toFixed(0)}%`}
+            className="mt-3 w-full text-right group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
+            aria-label={`حد الائتمان مستخدَم بنسبة ${creditUsagePercent.toFixed(0)} بالمئة من ${creditLimit.toLocaleString()} جنيه — اضغط للتفاصيل`}
           >
-            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+            <div className="flex items-center justify-between text-[11px] text-foreground/75 mb-1">
               <span className="inline-flex items-center gap-1">
-                <Target className="h-2.5 w-2.5" />
+                <Target className="h-2.5 w-2.5" aria-hidden />
                 حد الائتمان
               </span>
               <span className={cn(
@@ -196,7 +196,14 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                 {creditUsagePercent.toFixed(0)}%
               </span>
             </div>
-            <div className="h-1 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-1.5 rounded-full bg-muted overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.round(creditUsagePercent)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="نسبة استخدام حد الائتمان"
+            >
               <div
                 className={cn("h-full rounded-full transition-all", creditTone)}
                 style={{ width: `${Math.min(creditUsagePercent, 100)}%` }}
