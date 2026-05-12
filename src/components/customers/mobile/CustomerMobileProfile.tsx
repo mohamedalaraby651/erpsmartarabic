@@ -302,7 +302,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                   className="h-12"
                   onClick={() => { onChangeVip(level); setVipSheetOpen(false); toast.success(`تم تغيير المستوى إلى ${vipLabels[level]}`); }}
                 >
-                  <Crown className="h-4 w-4 ml-2" />
+                  <Crown className="h-4 w-4 ml-2" aria-hidden />
                   {vipLabels[level]}
                 </Button>
               ))}
