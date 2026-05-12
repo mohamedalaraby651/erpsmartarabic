@@ -194,7 +194,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
             aria-expanded={showHistory}
             aria-label="سجل الأحداث"
           >
-            <History className="h-3 w-3" />
+            <History className="h-3 w-3" aria-hidden />
             <span>السجل ({history.length})</span>
           </button>
         )}
