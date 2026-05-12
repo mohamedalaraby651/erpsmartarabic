@@ -288,14 +288,6 @@ function MobileCustomerView({
 
   return (
     <div className="space-y-3" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      {/* تنقل سريع بين العملاء */}
-      <CustomerNavStrip
-        hasPrev={navProps.hasPrev}
-        hasNext={navProps.hasNext}
-        onPrev={navProps.onPrev}
-        onNext={navProps.onNext}
-      />
-
       <div ref={heroRef}>
         <CustomerMobileProfile
           customer={customer} customerId={customerId}
@@ -315,6 +307,8 @@ function MobileCustomerView({
           onNewCreditNote={onNewCreditNote}
           onToggleActive={onToggleActive}
           onChangeVip={onChangeVip}
+          overdueCount={sectionBadges.invoices ?? 0}
+          onOpenReminders={() => selectSection('reminders')}
         />
       </div>
 
@@ -336,12 +330,14 @@ function MobileCustomerView({
               currentBalance={detail.currentBalance}
               balanceIsDebit={detail.balanceIsDebit}
               onNewInvoice={onNewInvoice}
-              onNewPayment={onNewPayment}
-              onCall={customer.phone ? openCall : undefined}
               onMoreActions={onEdit}
               sectionLabel={mobileSection !== 'none' ? sectionLabels[mobileSection] : undefined}
               onPrevSection={mobileSection !== 'none' ? () => navigateBySwipe(-1) : undefined}
               onNextSection={mobileSection !== 'none' ? () => navigateBySwipe(1) : undefined}
+              onPrevCustomer={navProps.onPrev}
+              onNextCustomer={navProps.onNext}
+              hasPrevCustomer={navProps.hasPrev}
+              hasNextCustomer={navProps.hasNext}
             />
           </div>
           <div className={cn(
@@ -365,7 +361,7 @@ function MobileCustomerView({
         </div>
       </div>
 
-      <div ref={sectionRef} key={mobileSection} className="animate-fade-in">
+      <div ref={sectionRef} className="animate-fade-in">
         {mobileSection === 'none' ? (
           <CustomerQuickSuggestions
             customerId={customerId}
