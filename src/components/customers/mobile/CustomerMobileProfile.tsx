@@ -247,20 +247,20 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
         {/* === Single action row (4 buttons max) === */}
         <div className="flex gap-1.5 mt-3">
           <Button size="sm" className="flex-1 min-h-11 px-2 text-xs" onClick={onNewInvoice} aria-label="فاتورة جديدة">
-            <FileText className="h-4 w-4 ml-1" />فاتورة
+            <FileText className="h-4 w-4 ml-1" aria-hidden />فاتورة
           </Button>
           {onNewPayment && (
             <Button size="sm" variant="secondary" className="flex-1 min-h-11 px-2 text-xs" onClick={onNewPayment} aria-label="تسجيل دفعة">
-              <Wallet className="h-4 w-4 ml-1" />دفعة
+              <Wallet className="h-4 w-4 ml-1" aria-hidden />دفعة
             </Button>
           )}
           <Button variant="outline" size="sm" className="flex-1 min-h-11 px-2 text-xs" onClick={onStatement} aria-label="كشف الحساب">
-            <Printer className="h-4 w-4 ml-1" />كشف
+            <Printer className="h-4 w-4 ml-1" aria-hidden />كشف
           </Button>
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="min-h-11 min-w-11 shrink-0" aria-label="إجراءات إضافية">
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-4 w-4" aria-hidden />
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-xl">
