@@ -127,7 +127,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                     vipColors[customer.vip_level] || vipColors.regular,
                   )}
                 >
-                  <Crown className="h-2.5 w-2.5 ml-0.5" />
+                  <Crown className="h-2.5 w-2.5 ml-0.5" aria-hidden />
                   {vipLabels[customer.vip_level] || vipLabels.regular}
                 </button>
               ) : (
