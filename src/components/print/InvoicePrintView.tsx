@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PrintTemplate } from "./PrintTemplate";
@@ -7,6 +7,8 @@ import { Printer, Download, Loader2 } from "lucide-react";
 import { generateDocumentPDF } from "@/lib/pdfGeneratorLazy";
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
+import { printHtmlDocument } from "@/lib/printDocument";
+import { AVAILABLE_FONTS, type PdfFontKey } from "@/lib/arabicFont";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,7 @@ const paymentStatusLabels: Record<string, string> = {
 
 export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrintViewProps) {
   const [downloading, setDownloading] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
@@ -78,7 +81,21 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
   });
 
   const handlePrint = () => {
-    window.print();
+    const node = printRef.current;
+    if (!node) {
+      window.print();
+      return;
+    }
+    const fontKey = (settings?.pdf_font as PdfFontKey) || 'cairo';
+    const fontConfig = AVAILABLE_FONTS.find((f) => f.key === fontKey) || AVAILABLE_FONTS[0];
+    const fontFamily = `'${fontConfig.displayName}','Segoe UI',Tahoma,Arial,sans-serif`;
+    printHtmlDocument({
+      title: `فاتورة ${invoice?.invoice_number ?? ''}`.trim(),
+      bodyHtml: node.outerHTML,
+      fontFamily,
+      googleFontFamily: fontConfig.googleFontFamily,
+      brandColor: settings?.primary_color || '#1e40af',
+    });
   };
 
   const handleDownloadPDF = async () => {
@@ -119,36 +136,38 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
           </DialogTitle>
         </DialogHeader>
 
-        <PrintTemplate
-          companyName={settings?.company_name || "شركتي"}
-          companyAddress={settings?.address || undefined}
-          companyPhone={settings?.phone || undefined}
-          companyEmail={settings?.email || undefined}
-          taxNumber={settings?.tax_number || undefined}
-          logoUrl={settings?.logo_url || undefined}
-          primaryColor={settings?.primary_color || undefined}
-          secondaryColor={settings?.secondary_color || undefined}
-          documentTitle="فاتورة"
-          documentNumber={invoice.invoice_number}
-          documentDate={invoice.created_at}
-          dueDate={invoice.due_date || undefined}
-          customerName={invoice.customers?.name}
-          customerPhone={invoice.customers?.phone || undefined}
-          items={items.map((item) => ({
-            name: item.products?.name || "منتج",
-            quantity: item.quantity,
-            unitPrice: Number(item.unit_price),
-            discount: item.discount_percentage || 0,
-            total: Number(item.total_price),
-          }))}
-          subtotal={Number(invoice.subtotal)}
-          discount={invoice.discount_amount ? Number(invoice.discount_amount) : undefined}
-          tax={invoice.tax_amount ? Number(invoice.tax_amount) : undefined}
-          total={Number(invoice.total_amount)}
-          notes={invoice.notes || undefined}
-          paymentMethod={paymentMethodLabels[invoice.payment_method]}
-          paymentStatus={paymentStatusLabels[invoice.payment_status]}
-        />
+        <div ref={printRef}>
+          <PrintTemplate
+            companyName={settings?.company_name || "شركتي"}
+            companyAddress={settings?.address || undefined}
+            companyPhone={settings?.phone || undefined}
+            companyEmail={settings?.email || undefined}
+            taxNumber={settings?.tax_number || undefined}
+            logoUrl={settings?.logo_url || undefined}
+            primaryColor={settings?.primary_color || undefined}
+            secondaryColor={settings?.secondary_color || undefined}
+            documentTitle="فاتورة"
+            documentNumber={invoice.invoice_number}
+            documentDate={invoice.created_at}
+            dueDate={invoice.due_date || undefined}
+            customerName={invoice.customers?.name}
+            customerPhone={invoice.customers?.phone || undefined}
+            items={items.map((item) => ({
+              name: item.products?.name || "منتج",
+              quantity: item.quantity,
+              unitPrice: Number(item.unit_price),
+              discount: item.discount_percentage || 0,
+              total: Number(item.total_price),
+            }))}
+            subtotal={Number(invoice.subtotal)}
+            discount={invoice.discount_amount ? Number(invoice.discount_amount) : undefined}
+            tax={invoice.tax_amount ? Number(invoice.tax_amount) : undefined}
+            total={Number(invoice.total_amount)}
+            notes={invoice.notes || undefined}
+            paymentMethod={paymentMethodLabels[invoice.payment_method]}
+            paymentStatus={paymentStatusLabels[invoice.payment_status]}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
