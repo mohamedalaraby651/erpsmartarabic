@@ -149,19 +149,35 @@ function MobileCustomerView({
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
 
-  // Section badges (overdue invoices, upcoming reminders)
+  // Section badges (overdue invoices, upcoming reminders, aging 60+, communications, sales)
   const sectionBadges = useMemo(() => {
     const now = Date.now();
+    const DAY = 86400000;
     const overdueInvoices = detail.invoices.filter(inv => {
       if (inv.payment_status === 'paid') return false;
       const due = inv.due_date ? new Date(inv.due_date).getTime() : new Date(inv.created_at).getTime();
       return due < now;
     }).length;
+    const aging60Plus = detail.invoices.filter(inv => {
+      if (inv.payment_status === 'paid') return false;
+      const due = inv.due_date ? new Date(inv.due_date).getTime() : new Date(inv.created_at).getTime();
+      return (now - due) > 60 * DAY;
+    }).length;
+    const stale = (detail.quotations || []).filter((q: { status?: string | null; created_at?: string | null }) => {
+      const isPending = !q.status || ['draft', 'sent', 'pending'].includes(q.status);
+      const created = q.created_at ? new Date(q.created_at).getTime() : now;
+      return isPending && created < (now - 7 * DAY);
+    }).length;
+    const lastComm = customer.last_communication_at ? new Date(customer.last_communication_at).getTime() : null;
+    const commStale = lastComm != null && (now - lastComm) > 30 * DAY ? 1 : 0;
     return {
       invoices: overdueInvoices,
       reminders: upcomingReminders,
+      aging: aging60Plus,
+      sales: stale,
+      communications: commStale,
     } as Partial<Record<MobileSectionId, number>>;
-  }, [detail.invoices, upcomingReminders]);
+  }, [detail.invoices, detail.quotations, upcomingReminders, customer.last_communication_at]);
 
   useEffect(() => {
     const el = heroRef.current;
