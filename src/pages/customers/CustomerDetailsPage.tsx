@@ -25,7 +25,7 @@ import { CustomerIconStrip, PRIMARY_STRIP_IDS, SECONDARY_STRIP_IDS, STRIP_META }
 import type { MobileSectionId } from "@/components/customers/mobile/CustomerIconStrip";
 import { CustomerCompressedHeader } from "@/components/customers/mobile/CustomerCompressedHeader";
 import { CustomerQuickSuggestions } from "@/components/customers/mobile/CustomerQuickSuggestions";
-import { CustomerNavStrip } from "@/components/customers/mobile/CustomerNavStrip";
+
 import { CustomerSectionsSheet } from "@/components/customers/mobile/CustomerSectionsSheet";
 import { CustomerMobileFAB } from "@/components/customers/mobile/CustomerMobileFAB";
 import { CustomerSwipeHint } from "@/components/customers/mobile/CustomerSwipeHint";
@@ -180,25 +180,49 @@ function MobileCustomerView({
     } as Partial<Record<MobileSectionId, number>>;
   }, [detail.invoices, detail.quotations, upcomingReminders, customer.last_communication_at]);
 
+  // Measure the actual MobileDetailHeader height for accurate sticky trigger
   useEffect(() => {
     const el = heroRef.current;
     if (!el) return;
+    const headerEl = document.querySelector<HTMLElement>('[data-mobile-detail-header]');
+    const offset = headerEl?.getBoundingClientRect().height ?? 56;
     const observer = new IntersectionObserver(
       ([entry]) => setShowCompressed(!entry.isIntersecting),
-      { threshold: 0, rootMargin: '-48px 0px 0px 0px' }
+      { threshold: 0, rootMargin: `-${Math.round(offset)}px 0px 0px 0px` }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const openCall = () => {
-    if (customer.phone) window.open(`tel:${customer.phone}`);
-  };
+  // Save/restore scroll position per section
+  const scrollKey = `customer-scroll-${customerId}-${mobileSection}`;
+  useEffect(() => {
+    if (mobileSection === 'none') return;
+    try {
+      const saved = sessionStorage.getItem(scrollKey);
+      if (saved) {
+        requestAnimationFrame(() => window.scrollTo({ top: parseInt(saved, 10), behavior: 'auto' }));
+      }
+    } catch { /* ignore */ }
+    const onScroll = () => {
+      try { sessionStorage.setItem(scrollKey, String(window.scrollY)); } catch { /* ignore */ }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [scrollKey, mobileSection]);
 
   const selectSection = (s: MobileSectionId) => {
     setMobileSection(s);
     if (s !== 'none') {
-      requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      // Only scroll-into-view if no saved position exists for this section
+      try {
+        const saved = sessionStorage.getItem(`customer-scroll-${customerId}-${s}`);
+        if (!saved) {
+          requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }
+      } catch {
+        requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      }
     }
   };
 
@@ -264,14 +288,6 @@ function MobileCustomerView({
 
   return (
     <div className="space-y-3" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      {/* تنقل سريع بين العملاء */}
-      <CustomerNavStrip
-        hasPrev={navProps.hasPrev}
-        hasNext={navProps.hasNext}
-        onPrev={navProps.onPrev}
-        onNext={navProps.onNext}
-      />
-
       <div ref={heroRef}>
         <CustomerMobileProfile
           customer={customer} customerId={customerId}
@@ -291,6 +307,8 @@ function MobileCustomerView({
           onNewCreditNote={onNewCreditNote}
           onToggleActive={onToggleActive}
           onChangeVip={onChangeVip}
+          overdueCount={sectionBadges.invoices ?? 0}
+          onOpenReminders={() => selectSection('reminders')}
         />
       </div>
 
@@ -312,12 +330,14 @@ function MobileCustomerView({
               currentBalance={detail.currentBalance}
               balanceIsDebit={detail.balanceIsDebit}
               onNewInvoice={onNewInvoice}
-              onNewPayment={onNewPayment}
-              onCall={customer.phone ? openCall : undefined}
               onMoreActions={onEdit}
               sectionLabel={mobileSection !== 'none' ? sectionLabels[mobileSection] : undefined}
               onPrevSection={mobileSection !== 'none' ? () => navigateBySwipe(-1) : undefined}
               onNextSection={mobileSection !== 'none' ? () => navigateBySwipe(1) : undefined}
+              onPrevCustomer={navProps.onPrev}
+              onNextCustomer={navProps.onNext}
+              hasPrevCustomer={navProps.hasPrev}
+              hasNextCustomer={navProps.hasNext}
             />
           </div>
           <div className={cn(
@@ -341,7 +361,7 @@ function MobileCustomerView({
         </div>
       </div>
 
-      <div ref={sectionRef} key={mobileSection} className="animate-fade-in">
+      <div ref={sectionRef} className="animate-fade-in">
         {mobileSection === 'none' ? (
           <CustomerQuickSuggestions
             customerId={customerId}

@@ -21,7 +21,7 @@ export function MobileDetailHeader({ title, backTo, action }: MobileDetailHeader
   if (!isMobile) return null;
 
   return (
-    <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b bg-background px-3 py-2 -mx-3 -mt-3 mb-3 md:hidden">
+    <div data-mobile-detail-header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b bg-background px-3 py-2 -mx-3 -mt-3 mb-3 md:hidden">
       <div className="flex items-center gap-2 min-w-0">
         <Button
           variant="ghost"

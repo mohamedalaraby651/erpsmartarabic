@@ -20,8 +20,8 @@ interface CustomerIconStripProps {
 }
 
 /** Top 6 most-used sections — secondary sections live in the "More" sheet. */
-export const PRIMARY_STRIP_IDS = ['invoices','payments','statement','reminders','sales','analytics'] as const;
-export const SECONDARY_STRIP_IDS = ['aging','communications','notes','info','attachments'] as const;
+export const PRIMARY_STRIP_IDS = ['invoices','payments','aging','statement','reminders','sales'] as const;
+export const SECONDARY_STRIP_IDS = ['analytics','communications','notes','info','attachments'] as const;
 
 const allStripIcons = [
   { id: 'invoices' as const,       label: 'فواتير',     icon: FileText,        tone: 'primary'     },

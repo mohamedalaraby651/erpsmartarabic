@@ -1,50 +1,67 @@
 import { memo, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PRIMARY_STRIP_IDS, type MobileSectionId } from "./CustomerIconStrip";
 
 interface CustomerSwipeHintProps {
-  /** يتغير عند تغيّر القسم النشط لإعادة إظهار التلميح */
-  signal: string;
+  /** القسم النشط حالياً — لإظهار النقطة الموافقة */
+  signal: MobileSectionId;
   storageKey?: string;
+  /** أظهر دائماً نقاط الموضع حتى لو رأى المستخدم التلميح من قبل */
+  alwaysShowDots?: boolean;
 }
 
 /**
- * تلميح بصري للسحب يمين/يسار للتنقل بين الأقسام.
- * يظهر مرة واحدة لأول 3 ثوان عند فتح القسم، ثم يختفي نهائياً بعد أول مرة.
+ * تلميح بصري للسحب يمين/يسار + نقاط موضع للقسم الحالي ضمن الأقسام الأساسية.
+ * النقاط دائمة — التلميح النصي يختفي بعد أول مرة.
  */
 export const CustomerSwipeHint = memo(function CustomerSwipeHint({
   signal,
   storageKey = "customer-swipe-hint-seen",
+  alwaysShowDots = true,
 }: CustomerSwipeHintProps) {
-  const [visible, setVisible] = useState(false);
+  const [showText, setShowText] = useState(false);
 
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
       if (window.localStorage.getItem(storageKey) === "1") return;
-      setVisible(true);
+      setShowText(true);
       const t = setTimeout(() => {
-        setVisible(false);
+        setShowText(false);
         try { window.localStorage.setItem(storageKey, "1"); } catch { /* ignore */ }
-      }, 3000);
+      }, 2500);
       return () => clearTimeout(t);
     } catch { /* ignore */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signal]);
+  }, [storageKey]);
 
-  if (!visible) return null;
+  const idx = (PRIMARY_STRIP_IDS as readonly string[]).indexOf(signal);
+  const isPrimary = idx !== -1;
+
+  if (!showText && !(alwaysShowDots && isPrimary)) return null;
 
   return (
-    <div
-      className={cn(
-        "flex items-center justify-center gap-2 text-[11px] text-muted-foreground mb-1.5 select-none",
-        "animate-fade-in",
+    <div className="flex items-center justify-center gap-2 mb-1.5 select-none" aria-hidden>
+      {showText && (
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground animate-fade-in">
+          <ChevronRight className="h-3 w-3 animate-pulse" />
+          <span>اسحب للتنقل</span>
+          <ChevronLeft className="h-3 w-3 animate-pulse" />
+        </div>
       )}
-      aria-hidden
-    >
-      <ChevronRight className="h-3 w-3 animate-pulse" />
-      <span>اسحب يميناً/يساراً للتنقل بين الأقسام</span>
-      <ChevronLeft className="h-3 w-3 animate-pulse" />
+      {alwaysShowDots && isPrimary && (
+        <div className="flex items-center gap-1" role="tablist" aria-label="موضع القسم">
+          {PRIMARY_STRIP_IDS.map((_, i) => (
+            <span
+              key={i}
+              className={cn(
+                "h-1 rounded-full transition-all",
+                i === idx ? "w-4 bg-primary" : "w-1 bg-muted-foreground/30",
+              )}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 });
