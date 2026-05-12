@@ -101,10 +101,11 @@ function SectionHeader({ sectionId, onBack }: { sectionId: MobileSectionId; onBa
       <button
         type="button"
         onClick={onBack}
-        className="text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1.5 py-0.5"
+        className="inline-flex items-center gap-1 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1.5 py-0.5"
         aria-label="العودة للنظرة العامة"
       >
-        ← العودة للملخص
+        <ChevronLeft className="h-3.5 w-3.5" />
+        العودة للملخص
       </button>
     </div>
   );
