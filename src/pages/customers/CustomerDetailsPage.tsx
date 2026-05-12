@@ -68,6 +68,7 @@ const CustomerTabCreditNotes = lazy(() => import("@/components/customers/tabs/Cu
 const CustomerSalesPipeline = lazy(() => import("@/components/customers/details/CustomerSalesPipeline").then(m => ({ default: m.CustomerSalesPipeline })));
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
+import { MobileListSkeleton } from "@/components/customers/mobile/MobileListSkeleton";
 
 const tabIcons: Record<string, React.ElementType> = {
   'basic-info': MapPin, notes: StickyNote, attachments: Paperclip, reminders: Bell,
