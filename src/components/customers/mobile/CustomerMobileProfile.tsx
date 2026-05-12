@@ -155,14 +155,15 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               {onToggleActive ? (
                 <button
                   onClick={() => { onToggleActive(); toast.success(customer.is_active ? "تم تعطيل العميل" : "تم تفعيل العميل"); }}
-                  aria-label={customer.is_active ? "تعطيل العميل" : "تفعيل العميل"}
+                  aria-pressed={!!customer.is_active}
+                  aria-label={customer.is_active ? "العميل نشط — اضغط للتعطيل" : "العميل غير نشط — اضغط للتفعيل"}
                   className={cn(
-                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium min-h-7 cursor-pointer",
-                    "transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    customer.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground",
+                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold min-h-7 cursor-pointer",
+                    "transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    customer.is_active ? "bg-success/15 text-success" : "bg-muted text-foreground/80",
                   )}
                 >
-                  {customer.is_active ? <UserCheck className="h-3 w-3" /> : <UserX className="h-3 w-3" />}
+                  {customer.is_active ? <UserCheck className="h-3 w-3" aria-hidden /> : <UserX className="h-3 w-3" aria-hidden />}
                   {customer.is_active ? "نشط" : "غير نشط"}
                 </button>
               ) : (
