@@ -59,7 +59,7 @@ export const CustomerNavStrip = memo(function CustomerNavStrip({
         السابق
       </button>
       <span className="inline-flex items-center gap-1 text-muted-foreground">
-        <Users className="h-3 w-3" />
+        <Users className="h-3 w-3" aria-hidden="true" />
         {positionLabel || "تصفح العملاء"}
       </span>
       <button
