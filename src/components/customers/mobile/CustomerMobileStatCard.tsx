@@ -63,7 +63,7 @@ export const CustomerMobileStatCard = memo(function CustomerMobileStatCard({
       <CardContent className="p-3.5">
         <div className="flex items-center gap-3">
           <div className={cn("p-2.5 rounded-xl shrink-0", colors.iconBg)}>
-            <Icon className={cn("h-5 w-5", colors.iconText)} />
+            <Icon className={cn("h-5 w-5", colors.iconText)} aria-hidden />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground mb-0.5">{title}</p>

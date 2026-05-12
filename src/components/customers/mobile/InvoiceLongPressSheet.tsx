@@ -82,7 +82,7 @@ export const InvoiceLongPressSheet = memo(function InvoiceLongPressSheet({
                 className="justify-start gap-2 min-h-12"
                 onClick={() => { onQuickPay(invoiceId); close(); }}
               >
-                <CreditCard className="h-4 w-4" />
+                <CreditCard className="h-4 w-4" aria-hidden />
                 سداد سريع
                 <span className="ms-auto text-xs opacity-80">{remaining.toLocaleString()} ج.م</span>
               </Button>
@@ -92,21 +92,21 @@ export const InvoiceLongPressSheet = memo(function InvoiceLongPressSheet({
               className="justify-start gap-2 min-h-12"
               onClick={() => { navigate(`/invoices/${invoiceId}`); close(); }}
             >
-              <Eye className="h-4 w-4" /> عرض التفاصيل
+              <Eye className="h-4 w-4" aria-hidden /> عرض التفاصيل
             </Button>
             <Button
               variant="outline"
               className="justify-start gap-2 min-h-12"
               onClick={share}
             >
-              <Share2 className="h-4 w-4" /> مشاركة الرابط
+              <Share2 className="h-4 w-4" aria-hidden /> مشاركة الرابط
             </Button>
             <Button
               variant="outline"
               className="justify-start gap-2 min-h-12"
               onClick={() => { window.print(); close(); }}
             >
-              <Printer className="h-4 w-4" /> طباعة
+              <Printer className="h-4 w-4" aria-hidden /> طباعة
             </Button>
             <Button
               variant="outline"
@@ -116,7 +116,7 @@ export const InvoiceLongPressSheet = memo(function InvoiceLongPressSheet({
                 close();
               }}
             >
-              <Undo2 className="h-4 w-4" /> تحويل لإشعار دائن
+              <Undo2 className="h-4 w-4" aria-hidden /> تحويل لإشعار دائن
             </Button>
           </div>
         </SheetContent>

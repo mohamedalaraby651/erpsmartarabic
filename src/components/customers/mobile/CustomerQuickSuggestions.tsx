@@ -194,7 +194,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
             aria-expanded={showHistory}
             aria-label="سجل الأحداث"
           >
-            <History className="h-3 w-3" />
+            <History className="h-3 w-3" aria-hidden />
             <span>السجل ({history.length})</span>
           </button>
         )}
@@ -210,7 +210,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
               className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive"
               aria-label="مسح السجل"
             >
-              <X className="h-3 w-3" /> مسح
+              <X className="h-3 w-3" aria-hidden /> مسح
             </button>
           </div>
           <ul className="space-y-1 max-h-40 overflow-y-auto">
@@ -246,7 +246,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
               aria-label={`${s.label} — ${s.hint}`}
             >
               <div className={cn("flex items-center justify-center w-9 h-9 rounded-lg shrink-0", tone.icon)}>
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" aria-hidden />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -259,7 +259,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{s.hint}</p>
               </div>
-              <ArrowLeft className="h-4 w-4 text-muted-foreground shrink-0" />
+              <ArrowLeft className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
             </button>
           );
         })}

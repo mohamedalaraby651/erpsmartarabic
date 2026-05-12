@@ -127,12 +127,12 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                     vipColors[customer.vip_level] || vipColors.regular,
                   )}
                 >
-                  <Crown className="h-2.5 w-2.5 ml-0.5" />
+                  <Crown className="h-2.5 w-2.5 ml-0.5" aria-hidden />
                   {vipLabels[customer.vip_level] || vipLabels.regular}
                 </button>
               ) : (
                 <Badge className={cn("text-[9px] px-1.5 py-0.5", vipColors[customer.vip_level] || vipColors.regular)}>
-                  <Crown className="h-2.5 w-2.5 ml-0.5" />
+                  <Crown className="h-2.5 w-2.5 ml-0.5" aria-hidden />
                   {vipLabels[customer.vip_level] || vipLabels.regular}
                 </Badge>
               )}
@@ -234,11 +234,11 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             aria-label={`${overdueCount} فواتير متأخرة — افتح التذكيرات`}
           >
             <span className="inline-flex items-center gap-1.5 font-semibold">
-              <AlertTriangle className="h-3.5 w-3.5" />
+              <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
               {overdueCount} {overdueCount === 1 ? 'فاتورة متأخرة' : 'فواتير متأخرة'}
             </span>
             <span className="inline-flex items-center gap-1 text-[11px] font-medium">
-              <Bell className="h-3 w-3" />
+              <Bell className="h-3 w-3" aria-hidden />
               إرسال تذكير
             </span>
           </button>
@@ -247,20 +247,20 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
         {/* === Single action row (4 buttons max) === */}
         <div className="flex gap-1.5 mt-3">
           <Button size="sm" className="flex-1 min-h-11 px-2 text-xs" onClick={onNewInvoice} aria-label="فاتورة جديدة">
-            <FileText className="h-4 w-4 ml-1" />فاتورة
+            <FileText className="h-4 w-4 ml-1" aria-hidden />فاتورة
           </Button>
           {onNewPayment && (
             <Button size="sm" variant="secondary" className="flex-1 min-h-11 px-2 text-xs" onClick={onNewPayment} aria-label="تسجيل دفعة">
-              <Wallet className="h-4 w-4 ml-1" />دفعة
+              <Wallet className="h-4 w-4 ml-1" aria-hidden />دفعة
             </Button>
           )}
           <Button variant="outline" size="sm" className="flex-1 min-h-11 px-2 text-xs" onClick={onStatement} aria-label="كشف الحساب">
-            <Printer className="h-4 w-4 ml-1" />كشف
+            <Printer className="h-4 w-4 ml-1" aria-hidden />كشف
           </Button>
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="min-h-11 min-w-11 shrink-0" aria-label="إجراءات إضافية">
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-4 w-4" aria-hidden />
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-xl">
@@ -302,7 +302,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
                   className="h-12"
                   onClick={() => { onChangeVip(level); setVipSheetOpen(false); toast.success(`تم تغيير المستوى إلى ${vipLabels[level]}`); }}
                 >
-                  <Crown className="h-4 w-4 ml-2" />
+                  <Crown className="h-4 w-4 ml-2" aria-hidden />
                   {vipLabels[level]}
                 </Button>
               ))}
