@@ -9,6 +9,8 @@ import { FileText, Plus, Search, CreditCard, Undo2, ArrowLeft } from "lucide-rea
 import { EntityLink } from "@/components/shared/EntityLink";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { InvoicesReturnsSummary } from "@/components/customers/details/InvoicesReturnsSummary";
+import { InvoiceLongPressSheet } from "@/components/customers/mobile/InvoiceLongPressSheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
