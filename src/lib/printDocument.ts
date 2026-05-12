@@ -1,30 +1,45 @@
+import { isLocalFontAvailable, SAFE_ARABIC_FONT_STACK } from './arabicFont';
+
 /**
  * Open a dedicated print window with isolated HTML content.
  * Includes a built-in preview toolbar with paper size + orientation controls.
+ *
+ * Font strategy (local-first with safe fallback):
+ *   1. If `localFontUrl` exists at /fonts/..., inject @font-face for it.
+ *   2. Otherwise, load the matching family from Google Fonts via <link>.
+ *   3. CSS font-family always ends with a system Arabic-capable stack so
+ *      text remains readable even when both 1 and 2 fail (offline / blocked).
  */
 export type PaperSize = 'A4' | 'A5' | 'Letter' | 'Legal';
 export type PaperOrientation = 'portrait' | 'landscape';
 
-export function printHtmlDocument(opts: {
+export async function printHtmlDocument(opts: {
   title: string;
   bodyHtml: string;
-  fontFamily?: string;
-  googleFontFamily?: string; // e.g. "Cairo:wght@400;600;700"
+  fontFamily?: string;            // primary family name, e.g. "Cairo"
+  localFontUrl?: string;          // e.g. "/fonts/Cairo-Regular.ttf"
+  googleFontFamily?: string;      // e.g. "Cairo:wght@400;600;700"
   brandColor?: string;
   defaultPaperSize?: PaperSize;
   defaultOrientation?: PaperOrientation;
-  autoPrint?: boolean; // default false — user previews first
+  autoPrint?: boolean;
 }) {
   const {
     title,
     bodyHtml,
-    fontFamily = "'Cairo','Segoe UI',Tahoma,Arial,sans-serif",
+    fontFamily,
+    localFontUrl,
     googleFontFamily,
     brandColor = '#1e40af',
     defaultPaperSize = 'A4',
     defaultOrientation = 'portrait',
     autoPrint = false,
   } = opts;
+
+  // Decide local vs remote BEFORE writing the document so the head is final.
+  const useLocal = !!localFontUrl && (await isLocalFontAvailable(localFontUrl));
+  const primaryFamily = fontFamily || 'Cairo';
+  const fullFontFamily = `'${primaryFamily}', ${SAFE_ARABIC_FONT_STACK}`;
 
   const printWindow = window.open('', '_blank', 'width=1100,height=1000');
   if (!printWindow) {
