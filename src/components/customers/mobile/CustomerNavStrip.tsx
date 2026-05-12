@@ -55,7 +55,7 @@ export const CustomerNavStrip = memo(function CustomerNavStrip({
           hasPrev ? "text-foreground hover:bg-muted active:scale-95" : "text-muted-foreground/40",
         )}
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-4 w-4" aria-hidden="true" />
         السابق
       </button>
       <span className="inline-flex items-center gap-1 text-muted-foreground">
