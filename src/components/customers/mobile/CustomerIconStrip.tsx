@@ -42,11 +42,12 @@ const stripIcons = allStripIcons.filter(i => (PRIMARY_STRIP_IDS as readonly stri
 
 type Tone = typeof stripIcons[number]['tone'];
 
+// Higher contrast bg (/15) + bold fg for the active tab — meets WCAG AA on light/dark
 const toneClass: Record<Tone, { fg: string; bg: string }> = {
-  primary:     { fg: 'text-primary',     bg: 'bg-primary/10'     },
-  success:     { fg: 'text-success',     bg: 'bg-success/10'     },
-  warning:     { fg: 'text-warning',     bg: 'bg-warning/10'     },
-  destructive: { fg: 'text-destructive', bg: 'bg-destructive/10' },
+  primary:     { fg: 'text-primary',     bg: 'bg-primary/15'     },
+  success:     { fg: 'text-success',     bg: 'bg-success/15'     },
+  warning:     { fg: 'text-warning',     bg: 'bg-warning/15'     },
+  destructive: { fg: 'text-destructive', bg: 'bg-destructive/15' },
   muted:       { fg: 'text-foreground',  bg: 'bg-muted'          },
 };
 
