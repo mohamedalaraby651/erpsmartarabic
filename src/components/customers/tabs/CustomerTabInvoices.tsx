@@ -54,6 +54,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
   onPageChange,
 }: CustomerTabInvoicesProps) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [clientPage, setClientPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
