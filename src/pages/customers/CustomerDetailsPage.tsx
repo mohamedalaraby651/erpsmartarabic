@@ -29,6 +29,7 @@ import { CustomerNavStrip } from "@/components/customers/mobile/CustomerNavStrip
 import { CustomerSectionsSheet } from "@/components/customers/mobile/CustomerSectionsSheet";
 import { CustomerMobileFAB } from "@/components/customers/mobile/CustomerMobileFAB";
 import { CustomerSwipeHint } from "@/components/customers/mobile/CustomerSwipeHint";
+import { WindowPullToRefresh } from "@/components/mobile/WindowPullToRefresh";
 import { useLastVisitedSection } from "@/hooks/customers/useLastVisitedSection";
 import { haptics } from "@/lib/haptics";
 import { MobileDetailHeader } from "@/components/mobile/MobileDetailHeader";
@@ -76,7 +77,7 @@ const tabIcons: Record<string, React.ElementType> = {
 };
 
 const TabSkeleton = () => (
-  <div className="space-y-3 py-4 animate-pulse">
+  <div className="space-y-3 py-4 animate-pulse min-h-[280px]">
     <div className="h-10 bg-muted rounded-lg w-full" />
     <div className="h-24 bg-muted rounded-lg w-full" />
     <div className="h-16 bg-muted rounded-lg w-full" />
