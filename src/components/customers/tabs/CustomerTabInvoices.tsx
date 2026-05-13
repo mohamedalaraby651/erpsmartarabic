@@ -140,6 +140,41 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
               )}
             </div>
 
+            {/* Quick filter chips — أبرز على الموبايل */}
+            <div
+              className="flex items-center gap-1.5 mb-2 overflow-x-auto -mx-1 px-1 pb-1 sm:hidden"
+              data-h-scroll
+              role="tablist"
+              aria-label="فلتر حالة الفاتورة"
+            >
+              {[
+                { value: 'all', label: 'الكل' },
+                { value: 'unpaid', label: 'غير مدفوع' },
+                { value: 'overdue', label: 'متأخر' },
+                { value: 'partial', label: 'جزئي' },
+                { value: 'paid', label: 'مدفوع' },
+              ].map((chip) => {
+                const active = statusFilter === chip.value;
+                return (
+                  <button
+                    key={chip.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setStatusFilter(chip.value)}
+                    className={
+                      'shrink-0 inline-flex items-center justify-center px-3 min-h-9 rounded-full text-xs font-medium transition-colors border ' +
+                      (active
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-foreground/80 border-border hover:bg-muted')
+                    }
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Filters */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
               <div className="relative flex-1">
@@ -152,7 +187,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[130px] min-h-11 sm:h-9">
+                <SelectTrigger className="w-full sm:w-[130px] min-h-11 sm:h-9 hidden sm:flex">
                   <SelectValue placeholder="الحالة" />
                 </SelectTrigger>
                 <SelectContent>
