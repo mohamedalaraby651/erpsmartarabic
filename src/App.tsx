@@ -9,11 +9,12 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReloadPrompt } from "@/components/offline/ReloadPrompt";
 import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
-import { useCanonical } from "@/hooks/useCanonical";
+import { useSeo } from "@/hooks/useSeo";
 
-/** Mounts inside <BrowserRouter> so it can read useLocation(). */
-function CanonicalLink(): null {
-  useCanonical();
+/** Mounts inside <BrowserRouter> so it can read useLocation().
+ *  Drives <title>, description, canonical, Open Graph & Twitter tags per route. */
+function RouteSeo(): null {
+  useSeo();
   return null;
 }
 
@@ -188,7 +189,7 @@ const App = () => (
           <Sonner />
           <ReloadPrompt />
           <BrowserRouter>
-            <CanonicalLink />
+            <RouteSeo />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/landing" element={<LandingPage />} />
