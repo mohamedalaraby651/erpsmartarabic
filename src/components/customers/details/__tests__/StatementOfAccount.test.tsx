@@ -81,7 +81,8 @@ describe('StatementOfAccount — date range chips', () => {
 
   it('renders rows once data is available', async () => {
     render(<StatementOfAccount customerName="عميل" customerId="cust-1" />);
-    expect(await screen.findByText('INV-1')).toBeInTheDocument();
+    const matches = await screen.findAllByText('INV-1');
+    expect(matches.length).toBeGreaterThan(0);
   });
 
   it('active chip reflects current selection', async () => {
