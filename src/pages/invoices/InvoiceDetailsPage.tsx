@@ -33,6 +33,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useInvoiceDetails } from "@/hooks/invoices/useInvoiceDetails";
+import { useSeo } from "@/hooks/useSeo";
+import { buildOgImageUrl } from "@/lib/seo/ogImage";
 
 const paymentStatusLabels: Record<string, string> = {
   pending: "غير مدفوع", partial: "جزئي", paid: "مدفوع", overdue: "متأخر",
@@ -75,6 +77,26 @@ const InvoiceDetailsPage = () => {
     invoice, loadingInvoice, invoiceItems, payments, activities,
     totalAmount, paidAmount, remainingAmount, paymentProgress, isOverdue,
   } = useInvoiceDetails(id);
+
+  // Per-invoice SEO: dynamic title, description, and og:image generated
+  // from the actual invoice number, customer name, and total amount.
+  const customerName = invoice?.customers?.name ?? '';
+  const invoiceNumber = invoice?.invoice_number ?? '';
+  useSeo(
+    invoice
+      ? {
+          title: `فاتورة ${invoiceNumber} - ${customerName || 'نظرة'}`,
+          description: `تفاصيل الفاتورة ${invoiceNumber}${customerName ? ` للعميل ${customerName}` : ''} بقيمة ${totalAmount.toLocaleString('ar')} ر.س.`,
+          image: buildOgImageUrl({
+            title: `فاتورة ${invoiceNumber}`,
+            subtitle: customerName || 'نظرة',
+            meta: `${totalAmount.toLocaleString('ar')} ر.س`,
+            variant: 'invoice',
+          }),
+          noindex: true,
+        }
+      : undefined,
+  );
 
   if (loadingInvoice) return <DetailPageSkeleton variant="invoice" tabCount={4} />;
 
