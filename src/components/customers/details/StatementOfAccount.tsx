@@ -193,7 +193,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
         {/* Subtle refetch bar — appears only when data is already shown */}
         {isFetching && !isPending && (
           <div className="h-0.5 w-full overflow-hidden rounded bg-muted" aria-hidden="true">
-            <div className="h-full w-1/3 bg-primary/70 animate-[loading-bar_1.2s_ease-in-out_infinite]" />
+            <div className="h-full w-full bg-primary/60 animate-pulse" />
           </div>
         )}
 
