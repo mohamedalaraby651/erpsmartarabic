@@ -16,46 +16,25 @@ export interface BusinessInsight {
 export function useBusinessInsights() {
   const { errorAlerts, warningAlerts, infoAlerts } = useCustomerAlerts();
 
-  // Low stock products
+  // Low stock products — server-side aggregation (no full table scan on client)
   const { data: lowStockProducts } = useQuery({
     queryKey: ['insights-low-stock'],
     queryFn: async () => {
-      const { data: products } = await supabase
-        .from('products')
-        .select('id, name, min_stock, is_active')
-        .eq('is_active', true);
-
-      const { data: stocks } = await supabase
-        .from('product_stock')
-        .select('product_id, quantity');
-
-      const stockMap = new Map<string, number>();
-      stocks?.forEach((s) => {
-        stockMap.set(s.product_id, (stockMap.get(s.product_id) || 0) + s.quantity);
-      });
-
-      return products?.filter((p) => {
-        const current = stockMap.get(p.id) || 0;
-        return current <= (p.min_stock || 0);
-      }) || [];
+      const { data, error } = await supabase.rpc('get_low_stock_products');
+      if (error) return [];
+      return data ?? [];
     },
     staleTime: 300000,
   });
 
-  // Unpaid invoices ratio
+  // Unpaid invoices summary — server-side SUM/COUNT instead of fetching every row
   const { data: cashFlowData } = useQuery({
     queryKey: ['insights-cash-flow'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('invoices')
-        .select('total_amount, paid_amount, payment_status')
-        .neq('payment_status', 'paid');
-
-      const totalUnpaid = data?.reduce((sum, inv) => {
-        return sum + Number(inv.total_amount) - Number(inv.paid_amount || 0);
-      }, 0) || 0;
-
-      return { totalUnpaid, count: data?.length || 0 };
+      const { data, error } = await supabase.rpc('get_unpaid_invoices_summary');
+      if (error || !data || data.length === 0) return { totalUnpaid: 0, count: 0 };
+      const row = data[0] as { total_unpaid: number; invoice_count: number };
+      return { totalUnpaid: Number(row.total_unpaid) || 0, count: Number(row.invoice_count) || 0 };
     },
     staleTime: 300000,
   });
