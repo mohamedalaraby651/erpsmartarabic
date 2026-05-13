@@ -5,8 +5,13 @@ const SITE_ORIGIN = 'https://erpsmartarabic1.lovable.app';
 /**
  * Bump when any og-*.jpg file in /public is regenerated. Appended as a query
  * param to bust browser, CDN, and social-scraper caches without renaming files.
+ *
+ * Override at build time via the `VITE_OG_IMAGE_VERSION` env variable
+ * (e.g. set it in Lovable Cloud env or a `.env` file) so you can roll a new
+ * version without editing this file.
  */
-const OG_IMAGE_VERSION = '2';
+const OG_IMAGE_VERSION =
+  (import.meta.env.VITE_OG_IMAGE_VERSION as string | undefined)?.trim() || '2';
 const v = (path: string) => `${SITE_ORIGIN}${path}?v=${OG_IMAGE_VERSION}`;
 
 /** Brand-wide Open Graph fallback (1200x630, optimized for social shares). */
