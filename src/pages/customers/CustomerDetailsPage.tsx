@@ -153,18 +153,18 @@ function MobileCustomerView({
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
 
-  /* ─── ARIA live announcements ─── */
-  const [liveMessage, setLiveMessage] = useState("");
+  /* ─── ARIA live announcements (deduplicated) ─── */
+  const { message: liveMessage, announce } = useAnnouncer({ dedupWindow: 3000, debounceMs: 150 });
 
   // Announce section changes
   useEffect(() => {
     if (mobileSection === 'none') {
-      setLiveMessage("العودة إلى النظرة العامة");
+      announce("العودة إلى النظرة العامة");
     } else {
       const label = sectionLabels[mobileSection] ?? mobileSection;
-      setLiveMessage(`تم فتح قسم ${label}`);
+      announce(`تم فتح قسم ${label}`);
     }
-  }, [mobileSection]);
+  }, [mobileSection, announce]);
 
   // Announce when invoices finish loading (with count)
   const prevInvoicesLoading = useRef(detail.paginatedInvoicesLoading || detail.invoicesLoading);
@@ -175,9 +175,9 @@ function MobileCustomerView({
     if (wasLoading && !nowLoading && mobileSection === 'invoices') {
       const count = detail.paginatedInvoices?.data?.length ?? detail.invoices?.length ?? 0;
       const label = count === 0 ? "لا توجد فواتير" : `تم تحميل ${count} فاتورة`;
-      setLiveMessage(label);
+      announce(label);
     }
-  }, [detail.paginatedInvoicesLoading, detail.invoicesLoading, detail.paginatedInvoices, detail.invoices, mobileSection]);
+  }, [detail.paginatedInvoicesLoading, detail.invoicesLoading, detail.paginatedInvoices, detail.invoices, mobileSection, announce]);
 
   // Announce when payments finish loading (with count)
   const prevPaymentsLoading = useRef(detail.paginatedPaymentsLoading || detail.paymentsLoading);
@@ -188,9 +188,9 @@ function MobileCustomerView({
     if (wasLoading && !nowLoading && mobileSection === 'payments') {
       const count = detail.paginatedPayments?.data?.length ?? detail.payments?.length ?? 0;
       const label = count === 0 ? "لا توجد مدفوعات" : `تم تحميل ${count} عملية دفع`;
-      setLiveMessage(label);
+      announce(label);
     }
-  }, [detail.paginatedPaymentsLoading, detail.paymentsLoading, detail.paginatedPayments, detail.payments, mobileSection]);
+  }, [detail.paginatedPaymentsLoading, detail.paymentsLoading, detail.paginatedPayments, detail.payments, mobileSection, announce]);
 
   // Section badges (overdue invoices, upcoming reminders, aging 60+, communications, sales)
   const sectionBadges = useMemo(() => {
