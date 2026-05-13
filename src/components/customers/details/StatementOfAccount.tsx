@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Printer, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { generateStatementPdf } from "@/lib/statementPdfGenerator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +36,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
   const [currentPage, setCurrentPage] = useState(1);
 
   // Server-side statement via RPC — no 500 record limit
-  const { data: statementData = [], isLoading } = useQuery({
+  const { data: statementData = [], isPending, isFetching } = useQuery({
     queryKey: ['customer-statement', customerId, dateFrom, dateTo],
     queryFn: async (): Promise<StatementRow[]> => {
       const params: Record<string, unknown> = { _customer_id: customerId };
@@ -55,6 +57,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
     },
     enabled: !!customerId,
     staleTime: 60000,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => { setCurrentPage(1); }, [dateFrom, dateTo]);
@@ -110,7 +113,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           <Calendar className="h-5 w-5" />
           كشف الحساب
         </CardTitle>
-        <Button variant="outline" size="sm" onClick={handlePrint} disabled={isPrinting || isLoading}>
+        <Button variant="outline" size="sm" onClick={handlePrint} disabled={isPrinting || isPending}>
           {isPrinting ? <span className="h-4 w-4 ml-2 animate-spin border-2 border-current border-t-transparent rounded-full" /> : <Printer className="h-4 w-4 ml-2" />}
           تصدير PDF
         </Button>
@@ -187,12 +190,47 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           </div>
         </div>
 
+        {/* Subtle refetch bar — appears only when data is already shown */}
+        {isFetching && !isPending && (
+          <div className="h-0.5 w-full overflow-hidden rounded bg-muted" aria-hidden="true">
+            <div className="h-full w-full bg-primary/60 animate-pulse" />
+          </div>
+        )}
+
         {/* Table */}
-        {isLoading ? (
-          <div className="space-y-3 py-4 animate-pulse">
-            <div className="h-10 bg-muted rounded-lg w-full" />
-            <div className="h-10 bg-muted rounded-lg w-full" />
-            <div className="h-10 bg-muted rounded-lg w-3/4" />
+        {isPending ? (
+          <div className="py-2" aria-busy="true" aria-live="polite">
+            {/* Desktop skeleton */}
+            <div className="hidden md:block space-y-2">
+              <div className="grid grid-cols-7 gap-3 px-2">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <Skeleton key={i} className="h-4" />
+                ))}
+              </div>
+              {Array.from({ length: 6 }).map((_, r) => (
+                <div key={r} className="grid grid-cols-7 gap-3 px-2 py-2 border-b border-border/50">
+                  {Array.from({ length: 7 }).map((_, c) => (
+                    <Skeleton key={c} className="h-5" />
+                  ))}
+                </div>
+              ))}
+            </div>
+            {/* Mobile skeleton */}
+            <div className="md:hidden space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="rounded-lg border bg-card p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-3/4" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : statementData.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">لا توجد حركات في الفترة المحددة</div>
