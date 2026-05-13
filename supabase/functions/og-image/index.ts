@@ -24,7 +24,9 @@ const corsHeaders = {
 };
 
 // Bump when the SVG template changes so caches refresh.
-const TEMPLATE_VERSION = "v2";
+// Override at deploy time via the `OG_TEMPLATE_VERSION` runtime secret
+// without editing this file.
+const TEMPLATE_VERSION = (Deno.env.get("OG_TEMPLATE_VERSION") ?? "v2").trim();
 
 // FNV-1a 32-bit hash — small, dependency-free, good enough for ETag.
 function fnv1a(str: string): string {
