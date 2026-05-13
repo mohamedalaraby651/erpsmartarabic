@@ -132,6 +132,49 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           </div>
         </div>
 
+        {/* Quick range chips — موبايل بالأخص */}
+        <div className="flex items-center gap-1.5 overflow-x-auto -mx-1 px-1 pb-1" data-h-scroll>
+          {[
+            { key: 'all', label: 'الكل', days: null },
+            { key: '7', label: 'آخر 7 أيام', days: 7 },
+            { key: '30', label: 'آخر 30 يوم', days: 30 },
+            { key: '90', label: 'آخر 90 يوم', days: 90 },
+          ].map((r) => {
+            const isActive =
+              r.days == null
+                ? !dateFrom && !dateTo
+                : (() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - r.days);
+                    return dateFrom === d.toISOString().slice(0, 10) && !dateTo;
+                  })();
+            return (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => {
+                  if (r.days == null) {
+                    setDateFrom(''); setDateTo('');
+                  } else {
+                    const d = new Date();
+                    d.setDate(d.getDate() - r.days);
+                    setDateFrom(d.toISOString().slice(0, 10));
+                    setDateTo('');
+                  }
+                }}
+                className={
+                  'shrink-0 inline-flex items-center px-3 min-h-9 rounded-full text-xs font-medium border transition-colors ' +
+                  (isActive
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card text-foreground/80 border-border hover:bg-muted')
+                }
+              >
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Date Filters */}
         <div className="flex gap-3">
           <div className="flex-1">
