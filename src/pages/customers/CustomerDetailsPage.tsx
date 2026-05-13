@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -15,6 +15,7 @@ import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddres
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { LiveRegion } from "@/components/shared/LiveRegion";
 import { useCustomerDetail, useCustomerNavigation, useUpcomingReminders } from "@/hooks/customers";
+import { useAnnouncer } from "@/hooks/useAnnouncer";
 import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
 import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
 import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
@@ -152,18 +153,18 @@ function MobileCustomerView({
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
 
-  /* ─── ARIA live announcements ─── */
-  const [liveMessage, setLiveMessage] = useState("");
+  /* ─── ARIA live announcements (deduplicated) ─── */
+  const { message: liveMessage, announce } = useAnnouncer({ dedupWindow: 3000, debounceMs: 150 });
 
   // Announce section changes
   useEffect(() => {
     if (mobileSection === 'none') {
-      setLiveMessage("العودة إلى النظرة العامة");
+      announce("العودة إلى النظرة العامة");
     } else {
       const label = sectionLabels[mobileSection] ?? mobileSection;
-      setLiveMessage(`تم فتح قسم ${label}`);
+      announce(`تم فتح قسم ${label}`);
     }
-  }, [mobileSection]);
+  }, [mobileSection, announce]);
 
   // Announce when invoices finish loading (with count)
   const prevInvoicesLoading = useRef(detail.paginatedInvoicesLoading || detail.invoicesLoading);
@@ -174,9 +175,9 @@ function MobileCustomerView({
     if (wasLoading && !nowLoading && mobileSection === 'invoices') {
       const count = detail.paginatedInvoices?.data?.length ?? detail.invoices?.length ?? 0;
       const label = count === 0 ? "لا توجد فواتير" : `تم تحميل ${count} فاتورة`;
-      setLiveMessage(label);
+      announce(label);
     }
-  }, [detail.paginatedInvoicesLoading, detail.invoicesLoading, detail.paginatedInvoices, detail.invoices, mobileSection]);
+  }, [detail.paginatedInvoicesLoading, detail.invoicesLoading, detail.paginatedInvoices, detail.invoices, mobileSection, announce]);
 
   // Announce when payments finish loading (with count)
   const prevPaymentsLoading = useRef(detail.paginatedPaymentsLoading || detail.paymentsLoading);
@@ -187,9 +188,9 @@ function MobileCustomerView({
     if (wasLoading && !nowLoading && mobileSection === 'payments') {
       const count = detail.paginatedPayments?.data?.length ?? detail.payments?.length ?? 0;
       const label = count === 0 ? "لا توجد مدفوعات" : `تم تحميل ${count} عملية دفع`;
-      setLiveMessage(label);
+      announce(label);
     }
-  }, [detail.paginatedPaymentsLoading, detail.paymentsLoading, detail.paginatedPayments, detail.payments, mobileSection]);
+  }, [detail.paginatedPaymentsLoading, detail.paymentsLoading, detail.paginatedPayments, detail.payments, mobileSection, announce]);
 
   // Section badges (overdue invoices, upcoming reminders, aging 60+, communications, sales)
   const sectionBadges = useMemo(() => {
@@ -561,7 +562,7 @@ const CustomerDetailsPage = () => {
   };
 
   /* ─── Desktop tab announcement ─── */
-  const [desktopLiveMessage, setDesktopLiveMessage] = useState("");
+  const { message: desktopLiveMessage, announce: announceDesktop } = useAnnouncer({ dedupWindow: 3000, debounceMs: 150 });
   useEffect(() => {
     let tabLabel: string | undefined;
     for (const group of tabGroups) {
@@ -569,9 +570,9 @@ const CustomerDetailsPage = () => {
       if (tab) { tabLabel = tab.label; break; }
     }
     if (tabLabel) {
-      setDesktopLiveMessage(`تم فتح تبويب ${tabLabel}`);
+      announceDesktop(`تم فتح تبويب ${tabLabel}`);
     }
-  }, [detail.activeTab]);
+  }, [detail.activeTab, announceDesktop]);
 
   const setMobileSection = (s: MobileSectionId) => {
     setMobileSectionState(s);
