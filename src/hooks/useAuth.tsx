@@ -129,12 +129,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    // Track the access_token of the session we've already processed so the
+    // INITIAL_SESSION callback (which fires AFTER getSession resolves) does
+    // not trigger a duplicate user_roles fetch. Saves 1 network round-trip
+    // on every cold start.
+    let lastProcessedToken: string | null = null;
 
     // 1. Set up auth state listener FIRST (per Supabase guidance — avoids race
     //    where a sign-in event fires before our listener is attached).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, nextSession) => {
         if (cancelled) return;
+        const token = nextSession?.access_token ?? null;
+        // Skip work if this session is identical to the one we just bootstrapped.
+        if (token && token === lastProcessedToken) {
+          setLoading(false);
+          return;
+        }
+        lastProcessedToken = token;
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
 
