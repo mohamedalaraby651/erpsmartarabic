@@ -197,6 +197,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
+        // Mark this token as processed so the upcoming INITIAL_SESSION event
+        // (fired by onAuthStateChange right after) skips the redundant fetch.
+        lastProcessedToken = nextSession?.access_token ?? null;
         if (nextSession?.user) fetchUserRole(nextSession.user.id);
       }
       setLoading(false);
