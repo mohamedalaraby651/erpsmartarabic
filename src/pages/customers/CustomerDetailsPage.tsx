@@ -15,6 +15,8 @@ import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddres
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { LiveRegion } from "@/components/shared/LiveRegion";
 import { useCustomerDetail, useCustomerNavigation, useUpcomingReminders } from "@/hooks/customers";
+import { useSeo } from "@/hooks/useSeo";
+import { buildOgImageUrl } from "@/lib/seo/ogImage";
 import { useAnnouncer } from "@/hooks/useAnnouncer";
 import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
 import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
@@ -536,6 +538,30 @@ const CustomerDetailsPage = () => {
 
   const detail = useCustomerDetail(id);
   const { prevId, nextId, goNext, goPrev } = useCustomerNavigation(id);
+
+  // Per-customer SEO: dynamic title/description and og:image generated
+  // from the customer's name and current balance.
+  const seoCustomer = detail.customer;
+  const seoBalance = detail.currentBalance ?? 0;
+  useSeo(
+    seoCustomer
+      ? {
+          title: `العميل ${seoCustomer.name} - نظرة`,
+          description: `ملف العميل ${seoCustomer.name}${
+            seoBalance ? ` — الرصيد الحالي ${Number(seoBalance).toLocaleString('ar')} ر.س` : ''
+          }.`,
+          image: buildOgImageUrl({
+            title: seoCustomer.name,
+            subtitle: 'ملف العميل',
+            meta: seoBalance
+              ? `الرصيد: ${Number(seoBalance).toLocaleString('ar')} ر.س`
+              : undefined,
+            variant: 'customer',
+          }),
+          noindex: true,
+        }
+      : undefined,
+  );
 
   // Sync URL tab → desktop active tab
   useEffect(() => {
