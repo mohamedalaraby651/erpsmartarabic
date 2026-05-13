@@ -1,4 +1,40 @@
 project_id = "npwofemokwddtutugmas"
 
+[functions.validate-invoice]
+verify_jwt = false
+
+[functions.process-payment]
+verify_jwt = false
+
+[functions.approve-expense]
+verify_jwt = false
+
+[functions.stock-movement]
+verify_jwt = false
+
+[functions.approve-invoice]
+verify_jwt = false
+
+[functions.create-journal]
+verify_jwt = false
+
+[functions.verify-totp]
+verify_jwt = false
+
+[functions.merge-customers]
+verify_jwt = false
+
+[functions.event-dispatcher]
+verify_jwt = false
+
+[functions.log-event]
+verify_jwt = false
+
+[functions.restore-backup]
+verify_jwt = false
+
+[functions.rollback-restore]
+verify_jwt = false
+
 [functions.og-image]
 verify_jwt = false
