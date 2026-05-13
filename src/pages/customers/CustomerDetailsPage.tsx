@@ -329,6 +329,7 @@ function MobileCustomerView({
 
   return (
     <div className="space-y-3" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <LiveRegion message={liveMessage} />
       <div ref={heroRef}>
         <CustomerMobileProfile
           customer={customer} customerId={customerId}
