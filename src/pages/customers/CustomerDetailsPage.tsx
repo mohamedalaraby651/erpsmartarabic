@@ -13,6 +13,7 @@ import {
 import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
+import { LiveRegion } from "@/components/shared/LiveRegion";
 import { useCustomerDetail, useCustomerNavigation, useUpcomingReminders } from "@/hooks/customers";
 import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
 import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
@@ -150,6 +151,45 @@ function MobileCustomerView({
   const [showCompressed, setShowCompressed] = useState(false);
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
+
+  /* ─── ARIA live announcements ─── */
+  const [liveMessage, setLiveMessage] = useState("");
+
+  // Announce section changes
+  useEffect(() => {
+    if (mobileSection === 'none') {
+      setLiveMessage("العودة إلى النظرة العامة");
+    } else {
+      const label = sectionLabels[mobileSection] ?? mobileSection;
+      setLiveMessage(`تم فتح قسم ${label}`);
+    }
+  }, [mobileSection]);
+
+  // Announce when invoices finish loading (with count)
+  const prevInvoicesLoading = useRef(detail.paginatedInvoicesLoading || detail.invoicesLoading);
+  useEffect(() => {
+    const wasLoading = prevInvoicesLoading.current;
+    const nowLoading = detail.paginatedInvoicesLoading || detail.invoicesLoading;
+    prevInvoicesLoading.current = nowLoading;
+    if (wasLoading && !nowLoading && mobileSection === 'invoices') {
+      const count = detail.paginatedInvoices?.data?.length ?? detail.invoices?.length ?? 0;
+      const label = count === 0 ? "لا توجد فواتير" : `تم تحميل ${count} فاتورة`;
+      setLiveMessage(label);
+    }
+  }, [detail.paginatedInvoicesLoading, detail.invoicesLoading, detail.paginatedInvoices, detail.invoices, mobileSection]);
+
+  // Announce when payments finish loading (with count)
+  const prevPaymentsLoading = useRef(detail.paginatedPaymentsLoading || detail.paymentsLoading);
+  useEffect(() => {
+    const wasLoading = prevPaymentsLoading.current;
+    const nowLoading = detail.paginatedPaymentsLoading || detail.paymentsLoading;
+    prevPaymentsLoading.current = nowLoading;
+    if (wasLoading && !nowLoading && mobileSection === 'payments') {
+      const count = detail.paginatedPayments?.data?.length ?? detail.payments?.length ?? 0;
+      const label = count === 0 ? "لا توجد مدفوعات" : `تم تحميل ${count} عملية دفع`;
+      setLiveMessage(label);
+    }
+  }, [detail.paginatedPaymentsLoading, detail.paymentsLoading, detail.paginatedPayments, detail.payments, mobileSection]);
 
   // Section badges (overdue invoices, upcoming reminders, aging 60+, communications, sales)
   const sectionBadges = useMemo(() => {
@@ -289,6 +329,7 @@ function MobileCustomerView({
 
   return (
     <div className="space-y-3" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <LiveRegion message={liveMessage} />
       <div ref={heroRef}>
         <CustomerMobileProfile
           customer={customer} customerId={customerId}
@@ -519,6 +560,19 @@ const CustomerDetailsPage = () => {
     writeParams(tab, tabToSection(tab));
   };
 
+  /* ─── Desktop tab announcement ─── */
+  const [desktopLiveMessage, setDesktopLiveMessage] = useState("");
+  useEffect(() => {
+    let tabLabel: string | undefined;
+    for (const group of tabGroups) {
+      const tab = group.tabs.find(t => t.value === detail.activeTab);
+      if (tab) { tabLabel = tab.label; break; }
+    }
+    if (tabLabel) {
+      setDesktopLiveMessage(`تم فتح تبويب ${tabLabel}`);
+    }
+  }, [detail.activeTab]);
+
   const setMobileSection = (s: MobileSectionId) => {
     setMobileSectionState(s);
     writeParams(sectionToTab(s), s);
@@ -656,6 +710,7 @@ const CustomerDetailsPage = () => {
         />
       ) : (
         <Tabs value={detail.activeTab} onValueChange={handleTabChange} className="w-full">
+          <LiveRegion message={desktopLiveMessage} />
           <ScrollArea className="w-full">
             <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
               {tabGroups.map((group, gi) => (
