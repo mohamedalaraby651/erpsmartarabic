@@ -36,7 +36,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
   const [currentPage, setCurrentPage] = useState(1);
 
   // Server-side statement via RPC — no 500 record limit
-  const { data: statementData = [], isLoading } = useQuery({
+  const { data: statementData = [], isPending, isFetching } = useQuery({
     queryKey: ['customer-statement', customerId, dateFrom, dateTo],
     queryFn: async (): Promise<StatementRow[]> => {
       const params: Record<string, unknown> = { _customer_id: customerId };
@@ -57,6 +57,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
     },
     enabled: !!customerId,
     staleTime: 60000,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => { setCurrentPage(1); }, [dateFrom, dateTo]);
