@@ -156,5 +156,122 @@ describe('StatementOfAccount — date range chips', () => {
     expect(screen.getByRole('button', { name: 'آخر 7 أيام' }).className).not.toMatch(/bg-primary/);
     expect(screen.getByRole('button', { name: 'آخر 30 يوم' }).className).not.toMatch(/bg-primary/);
   });
+
+  // ─── Stress: extreme/uneven response timings ────────────────────────────────
+  // Helper: builds an rpc mock that returns distinct rows per range with custom delays
+  function buildTimedRpc(delays: Record<string, number>) {
+    const datasets: Record<string, typeof sampleRow[]> = {
+      none: [{ ...sampleRow, reference: 'ALL-ROW' }],
+      [daysAgoIso(7)]: [{ ...sampleRow, reference: 'ROW-7' }],
+      [daysAgoIso(30)]: [{ ...sampleRow, reference: 'ROW-30' }],
+      [daysAgoIso(90)]: [{ ...sampleRow, reference: 'ROW-90' }],
+    };
+    rpcMock.mockReset();
+    rpcMock.mockImplementation((_fn: string, params: Record<string, unknown>) => {
+      const key = (params._date_from as string) ?? 'none';
+      const delay = delays[key] ?? 0;
+      return new Promise((resolve) => {
+        setTimeout(() => resolve({ data: datasets[key] ?? [], error: null }), delay);
+      });
+    });
+  }
+
+  async function expectFinalRow(expected: string, others: string[]) {
+    await waitFor(
+      () => {
+        expect(screen.getAllByText(expected).length).toBeGreaterThan(0);
+      },
+      { timeout: 2000 }
+    );
+    // Drain any remaining late responses
+    await new Promise((r) => setTimeout(r, 400));
+    expect(screen.getAllByText(expected).length).toBeGreaterThan(0);
+    for (const o of others) {
+      expect(screen.queryByText(o)).not.toBeInTheDocument();
+    }
+  }
+
+  it('all responses 0ms (synchronous-like): last click still wins', async () => {
+    buildTimedRpc({ none: 0, [daysAgoIso(7)]: 0, [daysAgoIso(30)]: 0, [daysAgoIso(90)]: 0 });
+
+    render(<StatementOfAccount customerName="عميل" customerId="cust-1" />);
+    await waitFor(() => expect(rpcMock).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 7 أيام' }));
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 30 يوم' }));
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 90 يوم' }));
+
+    await expectFinalRow('ROW-90', ['ROW-7', 'ROW-30', 'ALL-ROW']);
+  });
+
+  it('extreme inversion: 7=300ms, 30=200ms, 90=0ms — slowest is the oldest, must NOT overwrite', async () => {
+    buildTimedRpc({
+      none: 0,
+      [daysAgoIso(7)]: 300, // first click, slowest — arrives LAST
+      [daysAgoIso(30)]: 200,
+      [daysAgoIso(90)]: 0, // last click, fastest — arrives FIRST
+    });
+
+    render(<StatementOfAccount customerName="عميل" customerId="cust-1" />);
+    await waitFor(() => expect(rpcMock).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 7 أيام' }));
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 30 يوم' }));
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 90 يوم' }));
+
+    // ROW-90 must be visible immediately, and must SURVIVE the late ROW-7/ROW-30 arrivals
+    await expectFinalRow('ROW-90', ['ROW-7', 'ROW-30', 'ALL-ROW']);
+    expect(screen.getByRole('button', { name: 'آخر 90 يوم' }).className).toMatch(/bg-primary/);
+  });
+
+  it('mixed 0ms / 300ms with toggling back to "الكل": final state is "الكل"', async () => {
+    buildTimedRpc({
+      none: 300, // toggling back to "الكل" — slowest of all
+      [daysAgoIso(7)]: 0,
+      [daysAgoIso(30)]: 0,
+      [daysAgoIso(90)]: 0,
+    });
+
+    render(<StatementOfAccount customerName="عميل" customerId="cust-1" />);
+    await waitFor(() => expect(rpcMock).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 7 أيام' }));
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 30 يوم' }));
+    fireEvent.click(screen.getByRole('button', { name: 'آخر 90 يوم' }));
+    fireEvent.click(screen.getByRole('button', { name: 'الكل' }));
+
+    await expectFinalRow('ALL-ROW', ['ROW-7', 'ROW-30', 'ROW-90']);
+    expect(screen.getByRole('button', { name: 'الكل' }).className).toMatch(/bg-primary/);
+
+    // Last RPC call must be the "الكل" (no _date_from)
+    const last = rpcMock.mock.calls[rpcMock.mock.calls.length - 1][1];
+    expect(last).toEqual({ _customer_id: 'cust-1' });
+  });
+
+  it('burst of 6 rapid clicks alternating ranges: only the very last range renders', async () => {
+    buildTimedRpc({
+      none: 0,
+      [daysAgoIso(7)]: 250,
+      [daysAgoIso(30)]: 50,
+      [daysAgoIso(90)]: 150,
+    });
+
+    render(<StatementOfAccount customerName="عميل" customerId="cust-1" />);
+    await waitFor(() => expect(rpcMock).toHaveBeenCalledTimes(1));
+
+    const b7 = () => screen.getByRole('button', { name: 'آخر 7 أيام' });
+    const b30 = () => screen.getByRole('button', { name: 'آخر 30 يوم' });
+    const b90 = () => screen.getByRole('button', { name: 'آخر 90 يوم' });
+
+    fireEvent.click(b7());
+    fireEvent.click(b30());
+    fireEvent.click(b90());
+    fireEvent.click(b7());
+    fireEvent.click(b30());
+    fireEvent.click(b7()); // ← winner
+
+    await expectFinalRow('ROW-7', ['ROW-30', 'ROW-90', 'ALL-ROW']);
+    expect(b7().className).toMatch(/bg-primary/);
+  });
 });
 
