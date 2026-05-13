@@ -560,6 +560,15 @@ const CustomerDetailsPage = () => {
     writeParams(tab, tabToSection(tab));
   };
 
+  /* ─── Desktop tab announcement ─── */
+  const [desktopLiveMessage, setDesktopLiveMessage] = useState("");
+  useEffect(() => {
+    const tabLabel = tabGroups.flatMap(g => g.tabs).find(t => t.value === detail.activeTab)?.label;
+    if (tabLabel) {
+      setDesktopLiveMessage(`تم فتح تبويب ${tabLabel}`);
+    }
+  }, [detail.activeTab]);
+
   const setMobileSection = (s: MobileSectionId) => {
     setMobileSectionState(s);
     writeParams(sectionToTab(s), s);
