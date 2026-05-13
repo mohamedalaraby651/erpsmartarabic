@@ -5829,6 +5829,25 @@ export type Database = {
             Args: { _include_drafts?: boolean; _invoice_item_id: string }
             Returns: number
           }
+      get_low_stock_products: {
+        Args: never
+        Returns: {
+          current_stock: number
+          min_stock: number
+          product_id: string
+          product_name: string
+        }[]
+      }
+      get_monthly_sales_decline: {
+        Args: never
+        Returns: {
+          customer_id: string
+          customer_name: string
+          customer_phone: string
+          previous_sales: number
+          recent_sales: number
+        }[]
+      }
       get_permission_matrix: { Args: { _user_id?: string }; Returns: Json }
       get_platform_role: { Args: { _user_id?: string }; Returns: string }
       get_platform_stats: { Args: never; Returns: Json }
@@ -5863,6 +5882,13 @@ export type Database = {
           reference: string
           running_balance: number
           status: string
+        }[]
+      }
+      get_unpaid_invoices_summary: {
+        Args: never
+        Returns: {
+          invoice_count: number
+          total_unpaid: number
         }[]
       }
       get_user_tenants: { Args: { _user_id: string }; Returns: string[] }

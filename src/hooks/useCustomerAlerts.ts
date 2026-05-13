@@ -99,35 +99,21 @@ export function useCustomerAlerts(enabled = true) {
     enabled: enabled && settings.enableUpcomingDue,
   });
 
-  // Monthly sales comparison for decline detection
+  // Monthly sales comparison for decline detection — server-side aggregation
+  // (replaces 60-day full invoice fetch + client-side bucketing)
   const { data: monthlySales } = useQuery({
     queryKey: ['monthly-sales-alerts'],
     queryFn: async () => {
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
-      const sixtyDaysAgo = new Date(now.getTime() - 60 * 86400000);
-
-      const { data: recentInvoices } = await supabase
-        .from('invoices')
-        .select('customer_id, total_amount, created_at, customers(name, phone)')
-        .gte('created_at', sixtyDaysAgo.toISOString());
-
-      if (!recentInvoices) return new Map<string, { recent: number; previous: number; name: string; phone: string | null }>();
-
       const map = new Map<string, { recent: number; previous: number; name: string; phone: string | null }>();
-      (recentInvoices as unknown as InvoiceWithCustomer[]).forEach(inv => {
-        const entry = map.get(inv.customer_id) || {
-          recent: 0, previous: 0,
-          name: inv.customers?.name || '',
-          phone: inv.customers?.phone || null,
-        };
-        const created = new Date(inv.created_at).getTime();
-        if (created >= thirtyDaysAgo.getTime()) {
-          entry.recent += Number(inv.total_amount || 0);
-        } else {
-          entry.previous += Number(inv.total_amount || 0);
-        }
-        map.set(inv.customer_id, entry);
+      const { data, error } = await supabase.rpc('get_monthly_sales_decline');
+      if (error || !data) return map;
+      (data as Array<{ customer_id: string; customer_name: string; customer_phone: string | null; recent_sales: number; previous_sales: number }>).forEach(row => {
+        map.set(row.customer_id, {
+          recent: Number(row.recent_sales) || 0,
+          previous: Number(row.previous_sales) || 0,
+          name: row.customer_name,
+          phone: row.customer_phone,
+        });
       });
       return map;
     },

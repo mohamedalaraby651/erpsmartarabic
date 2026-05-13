@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, lazy, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,11 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 // Widget components
 import { StatsWidget } from '@/components/dashboard/StatsWidget';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
-import { SalesChartWidget } from '@/components/dashboard/SalesChartWidget';
+// SalesChartWidget pulls in `recharts` (~90KB gz). Lazy-load it so it
+// doesn't block the dashboard's first paint.
+const SalesChartWidget = lazy(() =>
+  import('@/components/dashboard/SalesChartWidget').then(m => ({ default: m.SalesChartWidget }))
+);
 import { TasksWidget } from '@/components/dashboard/TasksWidget';
 import { RecentInvoicesWidget } from '@/components/dashboard/RecentInvoicesWidget';
 import { InsightsWidget } from '@/components/dashboard/InsightsWidget';
@@ -119,7 +123,11 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
       case 'quick_actions':
         return <QuickActionsWidget quickActions={quickActions} onAction={handleQuickAction} />;
       case 'chart':
-        return <SalesChartWidget data={monthlySalesData} />;
+        return (
+          <Suspense fallback={<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" />}>
+            <SalesChartWidget data={monthlySalesData} />
+          </Suspense>
+        );
       case 'tasks':
         return <TasksWidget tasks={tasks} />;
       case 'activities':
