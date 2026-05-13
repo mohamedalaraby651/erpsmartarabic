@@ -29,7 +29,7 @@ import { CustomerCompressedHeader } from "@/components/customers/mobile/Customer
 import { CustomerQuickSuggestions } from "@/components/customers/mobile/CustomerQuickSuggestions";
 
 import { CustomerSectionsSheet } from "@/components/customers/mobile/CustomerSectionsSheet";
-import { CustomerMobileFAB } from "@/components/customers/mobile/CustomerMobileFAB";
+
 import { CustomerSwipeHint } from "@/components/customers/mobile/CustomerSwipeHint";
 import { WindowPullToRefresh } from "@/components/mobile/WindowPullToRefresh";
 import { useLastVisitedSection } from "@/hooks/customers/useLastVisitedSection";
@@ -597,9 +597,12 @@ const CustomerDetailsPage = () => {
   };
   const handleChangeVip = (level: string) => { updateFieldMutation.mutate({ vip_level: level }); };
   const handleWhatsApp = () => {
-    if (detail.customer?.phone) {
-      window.open(`https://wa.me/${detail.customer.phone.replace(/\D/g, '')}`, '_blank');
+    const phone = detail.customer?.phone?.replace(/\D/g, '');
+    if (!phone) {
+      toast({ title: 'لا يوجد رقم هاتف', description: 'أضف رقم هاتف للعميل أولاً', variant: 'destructive' });
+      return;
     }
+    window.open(`https://wa.me/${phone}`, '_blank');
   };
 
   if (detail.isLoading) return <DetailPageSkeleton variant="customer" tabCount={6} />;
@@ -793,22 +796,19 @@ const CustomerDetailsPage = () => {
         }}
       />
 
-      {/* FAB عائم — فاتورة جديدة بنقرة من أي مكان */}
+      {/* Pull-to-refresh على الموبايل */}
       {isMobile && (
-        <>
-          <WindowPullToRefresh
-            onRefresh={async () => {
-              await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['customer', id] }),
-                queryClient.invalidateQueries({ queryKey: ['customer-invoices', id] }),
-                queryClient.invalidateQueries({ queryKey: ['customer-payments', id] }),
-                queryClient.invalidateQueries({ queryKey: ['customer-financial-summary', id] }),
-                queryClient.invalidateQueries({ queryKey: ['customer-credit-notes', id] }),
-              ]);
-            }}
-          />
-          <CustomerMobileFAB onClick={() => navigate('/invoices', { state: { prefillCustomerId: id } })} />
-        </>
+        <WindowPullToRefresh
+          onRefresh={async () => {
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['customer', id] }),
+              queryClient.invalidateQueries({ queryKey: ['customer-invoices', id] }),
+              queryClient.invalidateQueries({ queryKey: ['customer-payments', id] }),
+              queryClient.invalidateQueries({ queryKey: ['customer-financial-summary', id] }),
+              queryClient.invalidateQueries({ queryKey: ['customer-credit-notes', id] }),
+            ]);
+          }}
+        />
       )}
     </div>
     </PageWrapper>
