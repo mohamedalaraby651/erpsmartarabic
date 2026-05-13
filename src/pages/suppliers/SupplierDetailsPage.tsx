@@ -38,6 +38,8 @@ import SupplierPaymentDialog from "@/components/suppliers/SupplierPaymentDialog"
 
 import { useSupplierDetail, useSupplierNavigation } from "@/hooks/suppliers";
 import { useAuth } from "@/hooks/useAuth";
+import { useSeo } from "@/hooks/useSeo";
+import { buildOgImageUrl } from "@/lib/seo/ogImage";
 
 // Lazy-loaded tabs
 const SupplierInfoTab = lazy(() => import("@/components/suppliers/SupplierInfoTab"));
@@ -88,6 +90,27 @@ const SupplierDetailsPage = () => {
     paginatedOrders, orderPage, orderPageSize, goToOrderPage,
     paginatedPayments, paymentPage, paymentPageSize, goToPaymentPage,
   } = detail;
+
+  // Per-supplier SEO with dynamic og:image
+  useSeo(
+    supplier
+      ? {
+          title: `المورد ${supplier.name} - نظرة`,
+          description: `ملف المورد ${supplier.name}${
+            currentBalance ? ` — الرصيد الحالي ${Number(currentBalance).toLocaleString('ar')} ر.س` : ''
+          }.`,
+          image: buildOgImageUrl({
+            title: supplier.name,
+            subtitle: 'ملف المورد',
+            meta: currentBalance
+              ? `الرصيد: ${Number(currentBalance).toLocaleString('ar')} ر.س`
+              : undefined,
+            variant: 'supplier',
+          }),
+          noindex: true,
+        }
+      : undefined,
+  );
 
   useEffect(() => {
     if (!isMobile || !heroRef.current) return;

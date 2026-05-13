@@ -35,6 +35,8 @@ import { MobileDetailItems, type DetailItemData } from "@/components/mobile/Mobi
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
+import { useSeo } from "@/hooks/useSeo";
+import { buildOgImageUrl } from "@/lib/seo/ogImage";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -77,6 +79,26 @@ const QuotationDetailsPage = () => {
     },
     enabled: !!id,
   });
+
+  // Per-quotation SEO with dynamic og:image
+  const qCustomerName = quotation?.customers?.name ?? '';
+  const qNumber = quotation?.quotation_number ?? '';
+  const qTotal = Number(quotation?.total_amount || 0);
+  useSeo(
+    quotation
+      ? {
+          title: `عرض سعر ${qNumber} - ${qCustomerName || 'نظرة'}`,
+          description: `تفاصيل عرض السعر ${qNumber}${qCustomerName ? ` للعميل ${qCustomerName}` : ''} بقيمة ${qTotal.toLocaleString('ar')} ر.س.`,
+          image: buildOgImageUrl({
+            title: `عرض سعر ${qNumber}`,
+            subtitle: qCustomerName || 'نظرة',
+            meta: `${qTotal.toLocaleString('ar')} ر.س`,
+            variant: 'quote',
+          }),
+          noindex: true,
+        }
+      : undefined,
+  );
 
   const { data: salesOrders = [] } = useQuery({
     queryKey: ['quotation-sales-orders', id],
