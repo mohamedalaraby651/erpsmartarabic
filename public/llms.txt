@@ -1,0 +1,14 @@
+# نظرة (Nazra ERP)
+
+> نظام ERP عربي متكامل لإدارة العملاء والمبيعات والمخزون والمحاسبة، يعمل بدون إنترنت ويدعم تعدد الشركات.
+
+Nazra is an Arabic-first, RTL ERP platform for small and mid-sized businesses. It covers customer management, sales (quotes → orders → invoices), payments, inventory, suppliers, purchase cycle (PO → goods receipt → purchase invoice), credit notes, double-entry accounting, and reporting. The app is offline-capable (PWA) and multi-tenant.
+
+## Pages
+
+- [Landing](/landing): Product overview, features, and pricing.
+- [Sign in / Sign up](/auth): Authentication for existing and new users.
+
+## Optional
+
+- [Published app](https://erpsmartarabic1.lovable.app/): Live deployment.
