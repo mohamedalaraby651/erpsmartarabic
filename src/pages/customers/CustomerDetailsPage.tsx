@@ -379,10 +379,10 @@ function MobileCustomerView({
               sectionLabel={mobileSection !== 'none' ? sectionLabels[mobileSection] : undefined}
               onPrevSection={mobileSection !== 'none' ? () => navigateBySwipe(-1) : undefined}
               onNextSection={mobileSection !== 'none' ? () => navigateBySwipe(1) : undefined}
-              onPrevCustomer={navProps.onPrev}
-              onNextCustomer={navProps.onNext}
-              hasPrevCustomer={navProps.hasPrev}
-              hasNextCustomer={navProps.hasNext}
+              onPrevCustomer={undefined}
+              onNextCustomer={undefined}
+              hasPrevCustomer={false}
+              hasNextCustomer={false}
             />
           </div>
           <div className={cn(

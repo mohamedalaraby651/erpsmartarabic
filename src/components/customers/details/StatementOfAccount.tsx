@@ -132,6 +132,49 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           </div>
         </div>
 
+        {/* Quick range chips — موبايل بالأخص */}
+        <div className="flex items-center gap-1.5 overflow-x-auto -mx-1 px-1 pb-1" data-h-scroll>
+          {[
+            { key: 'all', label: 'الكل', days: null },
+            { key: '7', label: 'آخر 7 أيام', days: 7 },
+            { key: '30', label: 'آخر 30 يوم', days: 30 },
+            { key: '90', label: 'آخر 90 يوم', days: 90 },
+          ].map((r) => {
+            const isActive =
+              r.days == null
+                ? !dateFrom && !dateTo
+                : (() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - r.days);
+                    return dateFrom === d.toISOString().slice(0, 10) && !dateTo;
+                  })();
+            return (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => {
+                  if (r.days == null) {
+                    setDateFrom(''); setDateTo('');
+                  } else {
+                    const d = new Date();
+                    d.setDate(d.getDate() - r.days);
+                    setDateFrom(d.toISOString().slice(0, 10));
+                    setDateTo('');
+                  }
+                }}
+                className={
+                  'shrink-0 inline-flex items-center px-3 min-h-9 rounded-full text-xs font-medium border transition-colors ' +
+                  (isActive
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card text-foreground/80 border-border hover:bg-muted')
+                }
+              >
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Date Filters */}
         <div className="flex gap-3">
           <div className="flex-1">
@@ -155,7 +198,8 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           <div className="text-center py-8 text-muted-foreground">لا توجد حركات في الفترة المحددة</div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Desktop: table */}
+            <div className="overflow-x-auto hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -192,6 +236,40 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-2">
+              {pagedData.map((entry, i) => (
+                <div key={i} className="rounded-lg border bg-card p-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge variant={getTypeBadgeVariant(entry.entry_type)} className="text-[10px]">
+                      {entry.entry_type}
+                    </Badge>
+                    <span className="text-[11px] text-muted-foreground">
+                      {new Date(entry.entry_date).toLocaleDateString('ar-EG')}
+                    </span>
+                  </div>
+                  <div className="text-sm font-medium truncate">{entry.reference}</div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex gap-3">
+                      {entry.debit > 0 && (
+                        <span className="text-destructive font-semibold">
+                          مدين {entry.debit.toLocaleString()}
+                        </span>
+                      )}
+                      {entry.credit > 0 && (
+                        <span className="text-success font-semibold">
+                          دائن {entry.credit.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    <span className={`font-bold ${entry.running_balance > 0 ? 'text-destructive' : 'text-success'}`}>
+                      {entry.running_balance.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination */}
