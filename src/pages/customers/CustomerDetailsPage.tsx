@@ -15,6 +15,7 @@ import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddres
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
 import { LiveRegion } from "@/components/shared/LiveRegion";
 import { useCustomerDetail, useCustomerNavigation, useUpcomingReminders } from "@/hooks/customers";
+import { useAnnouncer } from "@/hooks/useAnnouncer";
 import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
 import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
 import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
