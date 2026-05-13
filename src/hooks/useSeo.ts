@@ -2,8 +2,15 @@ import { useEffect } from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 
 const SITE_ORIGIN = 'https://erpsmartarabic1.lovable.app';
+/**
+ * Bump when any og-*.jpg file in /public is regenerated. Appended as a query
+ * param to bust browser, CDN, and social-scraper caches without renaming files.
+ */
+const OG_IMAGE_VERSION = '2';
+const v = (path: string) => `${SITE_ORIGIN}${path}?v=${OG_IMAGE_VERSION}`;
+
 /** Brand-wide Open Graph fallback (1200x630, optimized for social shares). */
-const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.jpg`;
+const DEFAULT_IMAGE = v('/og-image.jpg');
 
 /**
  * Section-specific defaults — used when a route's meta doesn't set its own
@@ -12,18 +19,18 @@ const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.jpg`;
  * a customer profile) should pass `image` via `useSeo({ image })`.
  */
 const SECTION_IMAGES: Record<string, string> = {
-  '/customers': `${SITE_ORIGIN}/og-customers.jpg`,
-  '/invoices': `${SITE_ORIGIN}/og-invoices.jpg`,
-  '/quotations': `${SITE_ORIGIN}/og-invoices.jpg`,
-  '/sales-orders': `${SITE_ORIGIN}/og-invoices.jpg`,
-  '/credit-notes': `${SITE_ORIGIN}/og-invoices.jpg`,
-  '/payments': `${SITE_ORIGIN}/og-invoices.jpg`,
-  '/suppliers': `${SITE_ORIGIN}/og-suppliers.jpg`,
-  '/purchase-orders': `${SITE_ORIGIN}/og-suppliers.jpg`,
-  '/products': `${SITE_ORIGIN}/og-inventory.jpg`,
-  '/inventory': `${SITE_ORIGIN}/og-inventory.jpg`,
-  '/categories': `${SITE_ORIGIN}/og-inventory.jpg`,
-  '/reports': `${SITE_ORIGIN}/og-reports.jpg`,
+  '/customers': v('/og-customers.jpg'),
+  '/invoices': v('/og-invoices.jpg'),
+  '/quotations': v('/og-invoices.jpg'),
+  '/sales-orders': v('/og-invoices.jpg'),
+  '/credit-notes': v('/og-invoices.jpg'),
+  '/payments': v('/og-invoices.jpg'),
+  '/suppliers': v('/og-suppliers.jpg'),
+  '/purchase-orders': v('/og-suppliers.jpg'),
+  '/products': v('/og-inventory.jpg'),
+  '/inventory': v('/og-inventory.jpg'),
+  '/categories': v('/og-inventory.jpg'),
+  '/reports': v('/og-reports.jpg'),
 };
 
 function imageForPath(pathname: string): string {
