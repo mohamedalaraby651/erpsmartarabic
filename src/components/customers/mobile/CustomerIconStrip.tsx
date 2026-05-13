@@ -20,25 +20,28 @@ interface CustomerIconStripProps {
 }
 
 /** Top 6 most-used sections — secondary sections live in the "More" sheet. */
-export const PRIMARY_STRIP_IDS = ['invoices','payments','aging','statement','reminders','sales'] as const;
+/** الترتيب مُجمَّع منطقياً: مالي → متابعة → مبيعات */
+export const PRIMARY_STRIP_IDS = ['invoices','payments','statement','reminders','aging','sales'] as const;
 export const SECONDARY_STRIP_IDS = ['analytics','communications','notes','info','attachments'] as const;
 
+type StripGroup = 'finance' | 'followup' | 'sales';
+
 const allStripIcons = [
-  { id: 'invoices' as const,       label: 'فواتير',     icon: FileText,        tone: 'primary'     },
-  { id: 'payments' as const,       label: 'مدفوعات',    icon: CreditCard,      tone: 'success'     },
-  { id: 'statement' as const,      label: 'كشف حساب',   icon: Printer,         tone: 'primary'     },
-  { id: 'reminders' as const,      label: 'تذكيرات',    icon: Bell,            tone: 'warning'     },
-  { id: 'sales' as const,          label: 'مبيعات',     icon: ShoppingCart,    tone: 'primary'     },
-  { id: 'analytics' as const,      label: 'تحليلات',    icon: BarChart3,       tone: 'primary'     },
-  { id: 'aging' as const,          label: 'أعمار ديون', icon: Clock,           tone: 'destructive' },
-  { id: 'communications' as const, label: 'تواصل',      icon: MessageSquare,   tone: 'success'     },
-  { id: 'notes' as const,          label: 'ملاحظات',    icon: StickyNote,      tone: 'warning'     },
-  { id: 'info' as const,           label: 'بيانات',     icon: Info,            tone: 'primary'     },
-  { id: 'attachments' as const,    label: 'مرفقات',     icon: Paperclip,       tone: 'muted'       },
+  { id: 'invoices' as const,       label: 'فواتير',     icon: FileText,        tone: 'primary',     group: 'finance'  as StripGroup },
+  { id: 'payments' as const,       label: 'مدفوعات',    icon: CreditCard,      tone: 'success',     group: 'finance'  as StripGroup },
+  { id: 'statement' as const,      label: 'كشف حساب',   icon: Printer,         tone: 'primary',     group: 'finance'  as StripGroup },
+  { id: 'reminders' as const,      label: 'تذكيرات',    icon: Bell,            tone: 'warning',     group: 'followup' as StripGroup },
+  { id: 'aging' as const,          label: 'أعمار ديون', icon: Clock,           tone: 'destructive', group: 'followup' as StripGroup },
+  { id: 'sales' as const,          label: 'مبيعات',     icon: ShoppingCart,    tone: 'primary',     group: 'sales'    as StripGroup },
+  { id: 'analytics' as const,      label: 'تحليلات',    icon: BarChart3,       tone: 'primary',     group: 'sales'    as StripGroup },
+  { id: 'communications' as const, label: 'تواصل',      icon: MessageSquare,   tone: 'success',     group: 'followup' as StripGroup },
+  { id: 'notes' as const,          label: 'ملاحظات',    icon: StickyNote,      tone: 'warning',     group: 'followup' as StripGroup },
+  { id: 'info' as const,           label: 'بيانات',     icon: Info,            tone: 'primary',     group: 'sales'    as StripGroup },
+  { id: 'attachments' as const,    label: 'مرفقات',     icon: Paperclip,       tone: 'muted',       group: 'sales'    as StripGroup },
 ] as const;
 
 export const STRIP_META = allStripIcons;
-const stripIcons = allStripIcons.filter(i => (PRIMARY_STRIP_IDS as readonly string[]).includes(i.id));
+const stripIcons = PRIMARY_STRIP_IDS.map(pid => allStripIcons.find(i => i.id === pid)!);
 
 type Tone = typeof stripIcons[number]['tone'];
 
@@ -132,7 +135,7 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
 
       <ScrollArea className="w-full">
         <div
-          className="flex items-center gap-1 px-2"
+          className="flex items-center gap-1.5 px-2"
           role="tablist"
           aria-orientation="horizontal"
           aria-label="أقسام ملف العميل"
@@ -142,47 +145,56 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
             const isActive = activeSection === item.id;
             const badge = badges?.[item.id] ?? 0;
             const tone = toneClass[item.tone];
+            const prevGroup = index > 0 ? stripIcons[index - 1].group : null;
+            const showSeparator = prevGroup !== null && prevGroup !== item.group;
 
             return (
-              <button
-                key={item.id}
-                role="tab"
-                aria-selected={isActive}
-                aria-current={isActive ? 'page' : undefined}
-                aria-label={badge > 0 ? `${item.label} — ${badge} عنصر بحاجة لانتباه` : item.label}
-                tabIndex={isActive ? 0 : -1}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                onClick={() => onSectionChange(activeSection === item.id ? 'none' : item.id)}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 min-w-[56px] min-h-11 shrink-0",
-                  "transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
-                  isActive && tone.bg,
-                )}
-              >
-                <div className={cn(
-                  "relative flex items-center justify-center w-8 h-8 rounded-lg transition-all",
-                  isActive ? tone.bg : "bg-transparent",
-                )}>
-                  <Icon
+              <div key={item.id} className="flex items-center gap-1.5 shrink-0">
+                {showSeparator && (
+                  <span
                     aria-hidden
-                    className={cn("h-[18px] w-[18px]", isActive ? tone.fg : "text-foreground/70")}
+                    className="h-8 w-px bg-border/60 mx-1 shrink-0"
                   />
-                  {badge > 0 && (
-                    <span
-                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none shadow ring-2 ring-card"
-                      aria-hidden
-                    >
-                      {badge > 99 ? '99+' : badge}
-                    </span>
+                )}
+                <button
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-current={isActive ? 'page' : undefined}
+                  aria-label={badge > 0 ? `${item.label} — ${badge} عنصر بحاجة لانتباه` : item.label}
+                  tabIndex={isActive ? 0 : -1}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  onClick={() => onSectionChange(activeSection === item.id ? 'none' : item.id)}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 min-w-[64px] min-h-11 shrink-0",
+                    "transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                    isActive && tone.bg,
                   )}
-                </div>
-                <span className={cn(
-                  "text-[10px] leading-none whitespace-nowrap",
-                  isActive ? `${tone.fg} font-bold` : "text-foreground/80 font-medium",
-                )}>
-                  {item.label}
-                </span>
-              </button>
+                >
+                  <div className={cn(
+                    "relative flex items-center justify-center w-8 h-8 rounded-lg transition-all",
+                    isActive ? tone.bg : "bg-transparent",
+                  )}>
+                    <Icon
+                      aria-hidden
+                      className={cn("h-[18px] w-[18px]", isActive ? tone.fg : "text-foreground/70")}
+                    />
+                    {badge > 0 && (
+                      <span
+                        className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none shadow ring-2 ring-card"
+                        aria-hidden
+                      >
+                        {badge > 99 ? '99+' : badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-[10px] leading-none whitespace-nowrap",
+                    isActive ? `${tone.fg} font-bold` : "text-foreground/80 font-medium",
+                  )}>
+                    {item.label}
+                  </span>
+                </button>
+              </div>
             );
           })}
           {extraSlot}

@@ -102,7 +102,10 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               customerType={customer.customer_type}
               size="md"
             />
-            <div className="absolute -bottom-1 -left-1 scale-75 origin-bottom-left">
+            <div
+              className="absolute -bottom-2 -left-2 min-w-11 min-h-11 flex items-end justify-start"
+              aria-label="تغيير صورة العميل"
+            >
               <ImageUpload
                 currentImageUrl={customer.image_url}
                 onImageUploaded={(url) => onImageUpdate(url)}
