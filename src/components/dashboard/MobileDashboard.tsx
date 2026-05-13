@@ -58,59 +58,30 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
     !userRole || action.roles.includes(userRole)
   );
 
-  // Fetch stats with proper loading states
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: async () => {
-      const [customers, products, invoices, quotations] = await Promise.all([
-        supabase.from('customers_safe').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('*', { count: 'exact', head: true }),
-        supabase.from('invoices').select('*', { count: 'exact', head: true }),
-        supabase.from('quotations').select('*', { count: 'exact', head: true }),
-      ]);
-      return {
-        customers: customers.count || 0,
-        products: products.count || 0,
-        invoices: invoices.count || 0,
-        quotations: quotations.count || 0,
-      };
-    },
-    staleTime: 30000,
-    gcTime: 60000,
-  });
-
-  const { data: tasks, isLoading: tasksLoading, refetch: refetchTasks } = useQuery({
-    queryKey: ['mobile-dashboard-tasks'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('is_completed', false)
-        .order('due_date', { ascending: true })
-        .limit(3);
-      return data || [];
-    },
-    staleTime: 15000,
-  });
-
-  const { data: recentInvoices, isLoading: invoicesLoading, refetch: refetchInvoices } = useQuery({
-    queryKey: ['mobile-dashboard-invoices'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('invoices')
-        .select('*, customers(name)')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      return data || [];
-    },
-    staleTime: 15000,
-  });
+  // Reuse the shared dashboard data hook so mobile + desktop share the same
+  // React Query cache (eliminates duplicate count(*) queries on viewport
+  // switches). Tasks/invoices are sliced down for mobile.
+  const queryClient = useQueryClient();
+  const { dashboardStats, isStatsLoading, tasks: allTasks, recentInvoices: allInvoices } = useDashboardData();
+  const stats = dashboardStats
+    ? {
+        customers: dashboardStats.customersCount,
+        products: dashboardStats.productsCount,
+        invoices: dashboardStats.invoicesCount,
+        quotations: dashboardStats.quotationsCount,
+      }
+    : undefined;
+  const statsLoading = isStatsLoading;
+  const tasks = (allTasks ?? []).slice(0, 3);
+  const tasksLoading = !allTasks;
+  const recentInvoices = (allInvoices ?? []).slice(0, 3);
+  const invoicesLoading = !allInvoices;
 
   const handleRefresh = async () => {
     await Promise.all([
-      refetchStats(),
-      refetchTasks(),
-      refetchInvoices(),
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] }),
+      queryClient.invalidateQueries({ queryKey: ['dashboard-tasks'] }),
+      queryClient.invalidateQueries({ queryKey: ['dashboard-recent-invoices'] }),
     ]);
   };
 
