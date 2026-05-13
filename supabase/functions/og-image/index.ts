@@ -19,8 +19,22 @@
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, if-none-match",
+  "Access-Control-Expose-Headers": "etag",
 };
+
+// Bump when the SVG template changes so caches refresh.
+const TEMPLATE_VERSION = "v2";
+
+// FNV-1a 32-bit hash — small, dependency-free, good enough for ETag.
+function fnv1a(str: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
 
 const VARIANT_COLORS: Record<string, string> = {
   invoice: "#3b82f6",
@@ -101,13 +115,30 @@ Deno.serve((req) => {
         font-size="20" fill="#64748b" direction="rtl">erpsmartarabic1.lovable.app</text>
 </svg>`;
 
+  // Strong ETag derived from inputs + template version. Same params → same
+  // ETag → social crawlers and CDNs can revalidate with a cheap 304.
+  const etag = `"${TEMPLATE_VERSION}-${fnv1a(`${title}|${subtitle}|${meta}|${variant}`)}"`;
+  const ifNoneMatch = req.headers.get("if-none-match");
+  if (ifNoneMatch && ifNoneMatch === etag) {
+    return new Response(null, {
+      status: 304,
+      headers: {
+        ...corsHeaders,
+        ETag: etag,
+        "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800, immutable",
+      },
+    });
+  }
+
   return new Response(svg, {
     headers: {
       ...corsHeaders,
       "Content-Type": "image/svg+xml; charset=utf-8",
-      // Cache aggressively at the edge — share images for the same params
-      // never change content.
-      "Cache-Control": "public, max-age=86400, s-maxage=86400, immutable",
+      ETag: etag,
+      Vary: "Accept-Encoding",
+      // Cache aggressively at the browser + edge; allow stale-while-revalidate
+      // so social previews stay snappy even as we iterate the template.
+      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800, immutable",
     },
   });
 });
