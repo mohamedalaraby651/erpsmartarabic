@@ -172,7 +172,7 @@ function MobileCustomerView({
     const nowLoading = detail.paginatedInvoicesLoading || detail.invoicesLoading;
     prevInvoicesLoading.current = nowLoading;
     if (wasLoading && !nowLoading && mobileSection === 'invoices') {
-      const count = detail.paginatedInvoices?.length ?? detail.invoices?.length ?? 0;
+      const count = detail.paginatedInvoices?.data?.length ?? detail.invoices?.length ?? 0;
       const label = count === 0 ? "لا توجد فواتير" : `تم تحميل ${count} فاتورة`;
       setLiveMessage(label);
     }
@@ -185,7 +185,7 @@ function MobileCustomerView({
     const nowLoading = detail.paginatedPaymentsLoading || detail.paymentsLoading;
     prevPaymentsLoading.current = nowLoading;
     if (wasLoading && !nowLoading && mobileSection === 'payments') {
-      const count = detail.paginatedPayments?.length ?? detail.payments?.length ?? 0;
+      const count = detail.paginatedPayments?.data?.length ?? detail.payments?.length ?? 0;
       const label = count === 0 ? "لا توجد مدفوعات" : `تم تحميل ${count} عملية دفع`;
       setLiveMessage(label);
     }
