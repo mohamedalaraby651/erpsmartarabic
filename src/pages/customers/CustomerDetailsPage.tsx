@@ -13,6 +13,7 @@ import {
 import CustomerFormDialog from "@/components/customers/dialogs/CustomerFormDialog";
 import CustomerAddressDialog from "@/components/customers/dialogs/CustomerAddressDialog";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
+import { LiveRegion } from "@/components/shared/LiveRegion";
 import { useCustomerDetail, useCustomerNavigation, useUpcomingReminders } from "@/hooks/customers";
 import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
 import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
