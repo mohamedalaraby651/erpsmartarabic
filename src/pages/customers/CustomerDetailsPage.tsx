@@ -562,7 +562,7 @@ const CustomerDetailsPage = () => {
   };
 
   /* ─── Desktop tab announcement ─── */
-  const [desktopLiveMessage, setDesktopLiveMessage] = useState("");
+  const { message: desktopLiveMessage, announce: announceDesktop } = useAnnouncer({ dedupWindow: 3000, debounceMs: 150 });
   useEffect(() => {
     let tabLabel: string | undefined;
     for (const group of tabGroups) {
@@ -570,9 +570,9 @@ const CustomerDetailsPage = () => {
       if (tab) { tabLabel = tab.label; break; }
     }
     if (tabLabel) {
-      setDesktopLiveMessage(`تم فتح تبويب ${tabLabel}`);
+      announceDesktop(`تم فتح تبويب ${tabLabel}`);
     }
-  }, [detail.activeTab]);
+  }, [detail.activeTab, announceDesktop]);
 
   const setMobileSection = (s: MobileSectionId) => {
     setMobileSectionState(s);
