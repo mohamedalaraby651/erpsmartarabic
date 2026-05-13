@@ -12,9 +12,18 @@ const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.jpg`;
  * a customer profile) should pass `image` via `useSeo({ image })`.
  */
 const SECTION_IMAGES: Record<string, string> = {
-  // Add per-section OG images here as they're generated:
-  // '/customers': `${SITE_ORIGIN}/og-customers.jpg`,
-  // '/invoices':  `${SITE_ORIGIN}/og-invoices.jpg`,
+  '/customers': `${SITE_ORIGIN}/og-customers.jpg`,
+  '/invoices': `${SITE_ORIGIN}/og-invoices.jpg`,
+  '/quotations': `${SITE_ORIGIN}/og-invoices.jpg`,
+  '/sales-orders': `${SITE_ORIGIN}/og-invoices.jpg`,
+  '/credit-notes': `${SITE_ORIGIN}/og-invoices.jpg`,
+  '/payments': `${SITE_ORIGIN}/og-invoices.jpg`,
+  '/suppliers': `${SITE_ORIGIN}/og-suppliers.jpg`,
+  '/purchase-orders': `${SITE_ORIGIN}/og-suppliers.jpg`,
+  '/products': `${SITE_ORIGIN}/og-inventory.jpg`,
+  '/inventory': `${SITE_ORIGIN}/og-inventory.jpg`,
+  '/categories': `${SITE_ORIGIN}/og-inventory.jpg`,
+  '/reports': `${SITE_ORIGIN}/og-reports.jpg`,
 };
 
 function imageForPath(pathname: string): string {
