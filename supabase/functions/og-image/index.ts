@@ -59,17 +59,40 @@ function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max - 1) + "…" : s;
 }
 
+// Static brand-safe fallback used if SVG rendering fails or inputs are
+// missing — guarantees social previews never end up broken.
+const FALLBACK_IMAGE_URL =
+  Deno.env.get("OG_FALLBACK_IMAGE_URL") ??
+  "https://erpsmartarabic1.lovable.app/og-image.jpg";
+
+function fallbackResponse(): Response {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      ...corsHeaders,
+      Location: FALLBACK_IMAGE_URL,
+      // Short cache so a recovered template starts serving fresh content soon.
+      "Cache-Control": "public, max-age=300, s-maxage=300",
+    },
+  });
+}
+
 Deno.serve((req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const url = new URL(req.url);
-  const title = escapeXml(truncate(url.searchParams.get("title") ?? "نظرة", 40));
-  const subtitle = escapeXml(truncate(url.searchParams.get("subtitle") ?? "نظام إدارة الأعمال الذكي", 60));
-  const meta = escapeXml(truncate(url.searchParams.get("meta") ?? "", 50));
-  const variant = url.searchParams.get("variant") ?? "default";
-  const accent = VARIANT_COLORS[variant] ?? VARIANT_COLORS.default;
+  try {
+    const url = new URL(req.url);
+    const rawTitle = url.searchParams.get("title")?.trim();
+    // Missing required input → static fallback.
+    if (!rawTitle) return fallbackResponse();
 
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+    const title = escapeXml(truncate(rawTitle, 40));
+    const subtitle = escapeXml(truncate(url.searchParams.get("subtitle") ?? "نظام إدارة الأعمال الذكي", 60));
+    const meta = escapeXml(truncate(url.searchParams.get("meta") ?? "", 50));
+    const variant = url.searchParams.get("variant") ?? "default";
+    const accent = VARIANT_COLORS[variant] ?? VARIANT_COLORS.default;
+
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -117,30 +140,30 @@ Deno.serve((req) => {
         font-size="20" fill="#64748b" direction="rtl">erpsmartarabic1.lovable.app</text>
 </svg>`;
 
-  // Strong ETag derived from inputs + template version. Same params → same
-  // ETag → social crawlers and CDNs can revalidate with a cheap 304.
-  const etag = `"${TEMPLATE_VERSION}-${fnv1a(`${title}|${subtitle}|${meta}|${variant}`)}"`;
-  const ifNoneMatch = req.headers.get("if-none-match");
-  if (ifNoneMatch && ifNoneMatch === etag) {
-    return new Response(null, {
-      status: 304,
+    const etag = `"${TEMPLATE_VERSION}-${fnv1a(`${title}|${subtitle}|${meta}|${variant}`)}"`;
+    const ifNoneMatch = req.headers.get("if-none-match");
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new Response(null, {
+        status: 304,
+        headers: {
+          ...corsHeaders,
+          ETag: etag,
+          "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800, immutable",
+        },
+      });
+    }
+
+    return new Response(svg, {
       headers: {
         ...corsHeaders,
+        "Content-Type": "image/svg+xml; charset=utf-8",
         ETag: etag,
+        Vary: "Accept-Encoding",
         "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800, immutable",
       },
     });
+  } catch (err) {
+    console.error("og-image render failed", err);
+    return fallbackResponse();
   }
-
-  return new Response(svg, {
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "image/svg+xml; charset=utf-8",
-      ETag: etag,
-      Vary: "Accept-Encoding",
-      // Cache aggressively at the browser + edge; allow stale-while-revalidate
-      // so social previews stay snappy even as we iterate the template.
-      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800, immutable",
-    },
-  });
 });
