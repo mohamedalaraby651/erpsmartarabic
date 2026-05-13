@@ -198,7 +198,8 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           <div className="text-center py-8 text-muted-foreground">لا توجد حركات في الفترة المحددة</div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Desktop: table */}
+            <div className="overflow-x-auto hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -235,6 +236,40 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-2">
+              {pagedData.map((entry, i) => (
+                <div key={i} className="rounded-lg border bg-card p-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge variant={getTypeBadgeVariant(entry.entry_type)} className="text-[10px]">
+                      {entry.entry_type}
+                    </Badge>
+                    <span className="text-[11px] text-muted-foreground">
+                      {new Date(entry.entry_date).toLocaleDateString('ar-EG')}
+                    </span>
+                  </div>
+                  <div className="text-sm font-medium truncate">{entry.reference}</div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex gap-3">
+                      {entry.debit > 0 && (
+                        <span className="text-destructive font-semibold">
+                          مدين {entry.debit.toLocaleString()}
+                        </span>
+                      )}
+                      {entry.credit > 0 && (
+                        <span className="text-success font-semibold">
+                          دائن {entry.credit.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    <span className={`font-bold ${entry.running_balance > 0 ? 'text-destructive' : 'text-success'}`}>
+                      {entry.running_balance.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination */}
