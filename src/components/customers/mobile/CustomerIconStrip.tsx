@@ -20,25 +20,28 @@ interface CustomerIconStripProps {
 }
 
 /** Top 6 most-used sections — secondary sections live in the "More" sheet. */
-export const PRIMARY_STRIP_IDS = ['invoices','payments','aging','statement','reminders','sales'] as const;
+/** الترتيب مُجمَّع منطقياً: مالي → متابعة → مبيعات */
+export const PRIMARY_STRIP_IDS = ['invoices','payments','statement','reminders','aging','sales'] as const;
 export const SECONDARY_STRIP_IDS = ['analytics','communications','notes','info','attachments'] as const;
 
+type StripGroup = 'finance' | 'followup' | 'sales';
+
 const allStripIcons = [
-  { id: 'invoices' as const,       label: 'فواتير',     icon: FileText,        tone: 'primary'     },
-  { id: 'payments' as const,       label: 'مدفوعات',    icon: CreditCard,      tone: 'success'     },
-  { id: 'statement' as const,      label: 'كشف حساب',   icon: Printer,         tone: 'primary'     },
-  { id: 'reminders' as const,      label: 'تذكيرات',    icon: Bell,            tone: 'warning'     },
-  { id: 'sales' as const,          label: 'مبيعات',     icon: ShoppingCart,    tone: 'primary'     },
-  { id: 'analytics' as const,      label: 'تحليلات',    icon: BarChart3,       tone: 'primary'     },
-  { id: 'aging' as const,          label: 'أعمار ديون', icon: Clock,           tone: 'destructive' },
-  { id: 'communications' as const, label: 'تواصل',      icon: MessageSquare,   tone: 'success'     },
-  { id: 'notes' as const,          label: 'ملاحظات',    icon: StickyNote,      tone: 'warning'     },
-  { id: 'info' as const,           label: 'بيانات',     icon: Info,            tone: 'primary'     },
-  { id: 'attachments' as const,    label: 'مرفقات',     icon: Paperclip,       tone: 'muted'       },
+  { id: 'invoices' as const,       label: 'فواتير',     icon: FileText,        tone: 'primary',     group: 'finance'  as StripGroup },
+  { id: 'payments' as const,       label: 'مدفوعات',    icon: CreditCard,      tone: 'success',     group: 'finance'  as StripGroup },
+  { id: 'statement' as const,      label: 'كشف حساب',   icon: Printer,         tone: 'primary',     group: 'finance'  as StripGroup },
+  { id: 'reminders' as const,      label: 'تذكيرات',    icon: Bell,            tone: 'warning',     group: 'followup' as StripGroup },
+  { id: 'aging' as const,          label: 'أعمار ديون', icon: Clock,           tone: 'destructive', group: 'followup' as StripGroup },
+  { id: 'sales' as const,          label: 'مبيعات',     icon: ShoppingCart,    tone: 'primary',     group: 'sales'    as StripGroup },
+  { id: 'analytics' as const,      label: 'تحليلات',    icon: BarChart3,       tone: 'primary',     group: 'sales'    as StripGroup },
+  { id: 'communications' as const, label: 'تواصل',      icon: MessageSquare,   tone: 'success',     group: 'followup' as StripGroup },
+  { id: 'notes' as const,          label: 'ملاحظات',    icon: StickyNote,      tone: 'warning',     group: 'followup' as StripGroup },
+  { id: 'info' as const,           label: 'بيانات',     icon: Info,            tone: 'primary',     group: 'sales'    as StripGroup },
+  { id: 'attachments' as const,    label: 'مرفقات',     icon: Paperclip,       tone: 'muted',       group: 'sales'    as StripGroup },
 ] as const;
 
 export const STRIP_META = allStripIcons;
-const stripIcons = allStripIcons.filter(i => (PRIMARY_STRIP_IDS as readonly string[]).includes(i.id));
+const stripIcons = PRIMARY_STRIP_IDS.map(pid => allStripIcons.find(i => i.id === pid)!);
 
 type Tone = typeof stripIcons[number]['tone'];
 
