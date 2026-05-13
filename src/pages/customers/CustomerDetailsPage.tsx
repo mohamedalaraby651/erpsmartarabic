@@ -710,6 +710,7 @@ const CustomerDetailsPage = () => {
         />
       ) : (
         <Tabs value={detail.activeTab} onValueChange={handleTabChange} className="w-full">
+          <LiveRegion message={desktopLiveMessage} />
           <ScrollArea className="w-full">
             <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
               {tabGroups.map((group, gi) => (
