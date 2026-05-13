@@ -145,7 +145,7 @@ export function useSeo(override?: Partial<SeoMeta>) {
         ? meta.canonical
         : `${SITE_ORIGIN}${meta.canonical}`
       : `${SITE_ORIGIN}${path}`;
-    const image = meta.image ?? DEFAULT_IMAGE;
+    const image = meta.image ?? imageForPath(pathname);
     const type = meta.type ?? 'website';
 
     document.title = meta.title;
