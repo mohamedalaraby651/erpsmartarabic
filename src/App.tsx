@@ -189,7 +189,7 @@ const App = () => (
           <Sonner />
           <ReloadPrompt />
           <BrowserRouter>
-            <CanonicalLink />
+            <RouteSeo />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/landing" element={<LandingPage />} />
