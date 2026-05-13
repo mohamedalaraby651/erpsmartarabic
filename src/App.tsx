@@ -12,7 +12,7 @@ import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
 import { useCanonical } from "@/hooks/useCanonical";
 
 /** Mounts inside <BrowserRouter> so it can read useLocation(). */
-function CanonicalLink() {
+function CanonicalLink(): null {
   useCanonical();
   return null;
 }
