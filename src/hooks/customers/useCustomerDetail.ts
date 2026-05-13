@@ -32,10 +32,24 @@ export function useCustomerDetail(id: string | undefined) {
   const paymentPageSize = 20;
 
   // === CORE: customer data ===
+  // Use the customer record already cached by the list page as instant
+  // placeholder data — eliminates the blank-header flash on mobile (improves LCP).
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: () => customerRepository.findById(id!),
     enabled: !!id,
+    placeholderData: () => {
+      if (!id) return undefined;
+      const lists = queryClient.getQueriesData<{ data?: Customer[] } | Customer[] | undefined>({
+        queryKey: ['customers'],
+      });
+      for (const [, value] of lists) {
+        const arr = Array.isArray(value) ? value : value?.data;
+        const found = arr?.find((c) => c?.id === id);
+        if (found) return found as Customer;
+      }
+      return undefined;
+    },
   });
 
   const { data: addresses = [] } = useQuery({
