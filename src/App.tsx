@@ -9,6 +9,13 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReloadPrompt } from "@/components/offline/ReloadPrompt";
 import { AppErrorBoundary } from "@/components/errors/AppErrorBoundary";
+import { useCanonical } from "@/hooks/useCanonical";
+
+/** Mounts inside <BrowserRouter> so it can read useLocation(). */
+function CanonicalLink(): null {
+  useCanonical();
+  return null;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EAGER imports — critical path. Shipped in the main entry chunk so the first
@@ -181,6 +188,7 @@ const App = () => (
           <Sonner />
           <ReloadPrompt />
           <BrowserRouter>
+            <CanonicalLink />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/landing" element={<LandingPage />} />
