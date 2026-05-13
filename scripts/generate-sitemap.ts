@@ -12,6 +12,21 @@
 
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+
+// Block the build if required environment variables are missing or invalid.
+// Runs before sitemap generation so a misconfigured project fails fast with
+// a clear, actionable message instead of a cryptic Vite error mid-build.
+// Skip with SKIP_ENV_CHECK=1 (e.g. for CI smoke tests).
+if (!process.env.SKIP_ENV_CHECK) {
+  const envCheck = spawnSync(
+    process.execPath.endsWith("bun") ? "bun" : "bunx",
+    ["tsx", resolve(import.meta.dirname ?? ".", "check-env.ts")],
+    { stdio: "inherit" },
+  );
+  if (envCheck.status !== 0) process.exit(envCheck.status ?? 1);
+}
+
 
 const BASE_URL = "https://erpsmartarabic1.lovable.app";
 
