@@ -12,3 +12,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /platform/
+Disallow: /settings/
+Disallow: /notifications
+Disallow: /tasks
+Disallow: /search
+
+Sitemap: https://erpsmartarabic1.lovable.app/sitemap.xml
