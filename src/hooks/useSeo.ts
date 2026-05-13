@@ -2,7 +2,28 @@ import { useEffect } from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 
 const SITE_ORIGIN = 'https://erpsmartarabic1.lovable.app';
-const DEFAULT_IMAGE = `${SITE_ORIGIN}/icons/icon-512x512.png`;
+/** Brand-wide Open Graph fallback (1200x630, optimized for social shares). */
+const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-image.jpg`;
+
+/**
+ * Section-specific defaults — used when a route's meta doesn't set its own
+ * image. Lets each top-level section get a contextual share preview without
+ * having to author one per page. Pages with truly dynamic content (an invoice,
+ * a customer profile) should pass `image` via `useSeo({ image })`.
+ */
+const SECTION_IMAGES: Record<string, string> = {
+  // Add per-section OG images here as they're generated:
+  // '/customers': `${SITE_ORIGIN}/og-customers.jpg`,
+  // '/invoices':  `${SITE_ORIGIN}/og-invoices.jpg`,
+};
+
+function imageForPath(pathname: string): string {
+  // Match the longest section prefix.
+  const match = Object.keys(SECTION_IMAGES)
+    .filter((p) => pathname === p || pathname.startsWith(`${p}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  return match ? SECTION_IMAGES[match] : DEFAULT_IMAGE;
+}
 
 export interface SeoMeta {
   title: string;
