@@ -83,9 +83,31 @@ export function useCustomerDetail(id: string | undefined) {
     staleTime: 60000,
   });
 
-  // === LAZY queries (loaded on tab open) ===
-  // Non-paginated invoices: needed for charts, alerts, hero header stats
-  const invoicesNeeded = isMobile || ['invoices', 'financial'].includes(activeTab);
+  // === STAGED LAZY queries ===
+  // Previously every query was enabled when `isMobile` was true → up to 12
+  // parallel requests on first paint. Now we activate them progressively:
+  //   • Stage A (immediate): customer, addresses, financial-summary
+  //   • Stage B (active tab): the data the current tab actually renders
+  //   • Stage C (mobile, deferred): scroll-down sections after first paint
+  // The mobile-deferred stage flips ON shortly after mount so swipe/scroll
+  // is still instant, but it never blocks the initial header render.
+  const [mobileSecondaryReady, setMobileSecondaryReady] = useState(!isMobile);
+  // Use a stable effect to defer extra mobile queries by ~600ms after mount.
+  // (Plain setState in useEffect avoids extra renders before the deferral.)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!isMobile || mobileSecondaryReady) return;
+    const t = setTimeout(() => setMobileSecondaryReady(true), 600);
+    return () => clearTimeout(t);
+  }, [isMobile]);
+
+  // Helper: a query is needed if the active tab matches OR (mobile AND
+  // mobileSecondaryReady AND the section is part of the mobile profile feed).
+  const needsForTab = (tab: string) => activeTab === tab;
+  const needsForMobile = isMobile && mobileSecondaryReady;
+
+  // Non-paginated invoices: header stats + financial tab + mobile feed
+  const invoicesNeeded = needsForTab('invoices') || needsForTab('financial') || needsForMobile;
   const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
     queryKey: ['customer-invoices', id],
     queryFn: () => customerRelationsRepo.findInvoices(id!),
@@ -94,18 +116,17 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  // Paginated invoices for display in invoices tab only
+  // Paginated invoices: only the invoices tab actually paginates the table.
   const { data: paginatedInvoices, isLoading: paginatedInvoicesLoading } = useQuery({
     queryKey: ['customer-invoices-paginated', id, invoicePage, invoicePageSize],
     queryFn: () => customerRelationsRepo.findInvoicesPaginated(id!, invoicePage, invoicePageSize),
-    enabled: !!id && (isMobile || activeTab === 'invoices'),
+    enabled: !!id && needsForTab('invoices'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });
 
-  // Non-paginated payments: needed for charts, hero header
-  const paymentsNeeded = isMobile || ['payments'].includes(activeTab);
+  const paymentsNeeded = needsForTab('payments') || needsForMobile;
   const { data: payments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ['customer-payments', id],
     queryFn: () => customerRelationsRepo.findPayments(id!),
@@ -114,17 +135,17 @@ export function useCustomerDetail(id: string | undefined) {
     refetchOnWindowFocus: false,
   });
 
-  // Paginated payments for display in payments tab only
   const { data: paginatedPayments, isLoading: paginatedPaymentsLoading } = useQuery({
     queryKey: ['customer-payments-paginated', id, paymentPage, paymentPageSize],
     queryFn: () => customerRelationsRepo.findPaymentsPaginated(id!, paymentPage, paymentPageSize),
-    enabled: !!id && (isMobile || activeTab === 'payments'),
+    enabled: !!id && needsForTab('payments'),
     staleTime: 60000,
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });
 
-  // === CHART DATA via server-side RPC (aggregated monthly data — no record limits) ===
+  // Chart data — only the analytics tab needs it on desktop; on mobile it's
+  // shown in the feed but only after the secondary stage (deferred).
   const { data: chartData } = useQuery({
     queryKey: ['customer-chart-data', id],
     queryFn: async () => {
@@ -132,37 +153,37 @@ export function useCustomerDetail(id: string | undefined) {
       if (error) throw error;
       return data as { monthly_data: Array<{ month: string; invoice_total: number; invoice_count: number; payment_total: number; payment_count: number }>; top_products: Array<{ product_name: string; total_quantity: number; total_revenue: number }> };
     },
-    enabled: !!id && (isMobile || activeTab === 'analytics'),
+    enabled: !!id && (needsForTab('analytics') || needsForMobile),
     staleTime: 120000,
     refetchOnWindowFocus: false,
   });
 
-  // Credit notes for statement are now fetched by the StatementOfAccount RPC
   const { data: creditNotes = [] } = useQuery({
     queryKey: ['customer-credit-notes', id],
     queryFn: () => customerRelationsRepo.findCreditNotes(id!),
-    enabled: !!id && (isMobile || ['credit-notes'].includes(activeTab)),
+    enabled: !!id && (needsForTab('credit-notes') || needsForMobile),
     staleTime: 60000,
   });
 
   const { data: salesOrders = [] } = useQuery({
     queryKey: ['customer-sales-orders', id],
     queryFn: () => customerRelationsRepo.findSalesOrders(id!),
-    enabled: !!id && (isMobile || activeTab === 'orders'),
+    enabled: !!id && (needsForTab('orders') || needsForMobile),
     staleTime: 60000,
   });
 
   const { data: quotations = [] } = useQuery({
     queryKey: ['customer-quotations', id],
     queryFn: () => customerRelationsRepo.findQuotations(id!),
-    enabled: !!id && (isMobile || activeTab === 'quotations'),
+    enabled: !!id && (needsForTab('quotations') || needsForMobile),
     staleTime: 60000,
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ['customer-activities', id],
     queryFn: () => customerRelationsRepo.findActivities(id!),
-    enabled: !!id && (isMobile || activeTab === 'activity'),
+    // Activity log is bottom-of-page on mobile — defer to the secondary stage.
+    enabled: !!id && (needsForTab('activity') || needsForMobile),
   });
 
   const updateImageMutation = useMutation({
