@@ -563,8 +563,11 @@ const CustomerDetailsPage = () => {
   /* ─── Desktop tab announcement ─── */
   const [desktopLiveMessage, setDesktopLiveMessage] = useState("");
   useEffect(() => {
-    const allTabs = tabGroups.flatMap(g => g.tabs) as { value: string; label: string }[];
-    const tabLabel = allTabs.find(t => t.value === detail.activeTab)?.label;
+    let tabLabel: string | undefined;
+    for (const group of tabGroups) {
+      const tab = group.tabs.find(t => t.value === detail.activeTab);
+      if (tab) { tabLabel = tab.label; break; }
+    }
     if (tabLabel) {
       setDesktopLiveMessage(`تم فتح تبويب ${tabLabel}`);
     }
