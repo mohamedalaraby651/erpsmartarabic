@@ -190,6 +190,13 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           </div>
         </div>
 
+        {/* Subtle refetch bar — appears only when data is already shown */}
+        {isFetching && !isPending && (
+          <div className="h-0.5 w-full overflow-hidden rounded bg-muted" aria-hidden="true">
+            <div className="h-full w-1/3 bg-primary/70 animate-[loading-bar_1.2s_ease-in-out_infinite]" />
+          </div>
+        )}
+
         {/* Table */}
         {isPending ? (
           <div className="py-2" aria-busy="true" aria-live="polite">
