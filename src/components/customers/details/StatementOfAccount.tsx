@@ -113,7 +113,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
           <Calendar className="h-5 w-5" />
           كشف الحساب
         </CardTitle>
-        <Button variant="outline" size="sm" onClick={handlePrint} disabled={isPrinting || isLoading}>
+        <Button variant="outline" size="sm" onClick={handlePrint} disabled={isPrinting || isPending}>
           {isPrinting ? <span className="h-4 w-4 ml-2 animate-spin border-2 border-current border-t-transparent rounded-full" /> : <Printer className="h-4 w-4 ml-2" />}
           تصدير PDF
         </Button>
