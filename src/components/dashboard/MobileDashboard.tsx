@@ -256,7 +256,7 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
               </div>
             ) : tasks && tasks.length > 0 ? (
               <div className="space-y-2">
-                {tasks.map((task) => (
+                {tasks.map((task: { id: string; title: string; priority?: string; due_date?: string | null }) => (
                   <div
                     key={task.id}
                     className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 active:bg-muted transition-colors"
