@@ -3,7 +3,8 @@ import { lazyWithRetry as lazy } from '@/lib/lazyWithRetry';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
+import { emitTelemetry } from "@/lib/runtimeTelemetry";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -142,7 +143,48 @@ const PlatformBillingPage = lazy(() => import("./pages/platform/PlatformBillingP
 const PlatformReportsPage = lazy(() => import("./pages/platform/PlatformReportsPage"));
 const PlatformSettingsPage = lazy(() => import("./pages/platform/PlatformSettingsPage"));
 
+/**
+ * Global telemetry sink for every failed query / mutation.
+ * Silent failures previously only surfaced as red Sonner toasts (or nothing
+ * at all if the caller didn't display the error). Now they all flow into
+ * runtimeTelemetry — visible in DevTools, ringbuffer, and Edge logs.
+ */
+const queryCache = new QueryCache({
+  onError: (error, query) => {
+    const msg = (error as Error)?.message || String(error);
+    // Skip auth/permission errors — they're expected and noisy.
+    const status = (error as { status?: number })?.status;
+    const code = (error as { code?: string })?.code;
+    if (status === 401 || status === 403 || code === '42501' || code === 'PGRST301') return;
+    emitTelemetry('query_error', msg, {
+      errorName: (error as Error)?.name,
+      metadata: {
+        queryKey: Array.isArray(query.queryKey) ? query.queryKey.slice(0, 3) : String(query.queryKey),
+        status,
+        code,
+      },
+    });
+  },
+});
+
+const mutationCache = new MutationCache({
+  onError: (error, _vars, _ctx, mutation) => {
+    const msg = (error as Error)?.message || String(error);
+    const status = (error as { status?: number })?.status;
+    if (status === 401 || status === 403) return;
+    emitTelemetry('mutation_error', msg, {
+      errorName: (error as Error)?.name,
+      metadata: {
+        mutationKey: mutation.options.mutationKey ?? null,
+        status,
+      },
+    });
+  },
+});
+
 const queryClient = new QueryClient({
+  queryCache,
+  mutationCache,
   defaultOptions: {
     queries: {
       // Default = `standard` preset from src/lib/queryConfig.ts.
