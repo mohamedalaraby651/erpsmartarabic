@@ -88,11 +88,14 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     return <MobileDashboard />;
   }
 
-  // First-load skeleton: auth + widget prefs + overview RPC all in flight,
-  // and we have nothing cached yet. Avoids the "blank page then pop-in".
-  if ((authLoading || widgetsLoading || isStatsLoading) && !dashboardStats) {
+  // Only block on auth + widget preferences (needed to render the layout).
+  // Stats/chart loading is handled with partial skeletons so the rest of
+  // the page (welcome banner, quick actions, tasks, invoices) stays interactive.
+  if ((authLoading || widgetsLoading) && !dashboardStats) {
     return <DashboardSkeleton />;
   }
+
+  const statsLoading = isStatsLoading && !dashboardStats;
 
   const greeting = () => {
     const hour = new Date().getHours();
