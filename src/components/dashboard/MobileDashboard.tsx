@@ -63,7 +63,15 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
   // React Query cache (eliminates duplicate count(*) queries on viewport
   // switches). Tasks/invoices are sliced down for mobile.
   const queryClient = useQueryClient();
-  const { dashboardStats, isStatsLoading, tasks: allTasks, recentInvoices: allInvoices } = useDashboardData();
+  const {
+    dashboardStats,
+    isStatsLoading,
+    overviewError,
+    isOverviewFetching,
+    refetchOverview,
+    tasks: allTasks,
+    recentInvoices: allInvoices,
+  } = useDashboardData();
   const stats = dashboardStats
     ? {
         customers: dashboardStats.customersCount,
