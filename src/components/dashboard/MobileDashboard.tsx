@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { ShimmerSkeleton } from '@/components/shared/ShimmerSkeleton';
+import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 import { useBusinessInsights, type BusinessInsight } from '@/hooks/useBusinessInsights';
 
 const roleLabels: Record<string, string> = {
@@ -62,7 +63,15 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
   // React Query cache (eliminates duplicate count(*) queries on viewport
   // switches). Tasks/invoices are sliced down for mobile.
   const queryClient = useQueryClient();
-  const { dashboardStats, isStatsLoading, tasks: allTasks, recentInvoices: allInvoices } = useDashboardData();
+  const {
+    dashboardStats,
+    isStatsLoading,
+    overviewError,
+    isOverviewFetching,
+    refetchOverview,
+    tasks: allTasks,
+    recentInvoices: allInvoices,
+  } = useDashboardData();
   const stats = dashboardStats
     ? {
         customers: dashboardStats.customersCount,
@@ -100,8 +109,9 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
     { title: 'عروض الأسعار', value: stats?.quotations || 0, icon: FileText, color: 'text-blue-500' },
   ];
 
-  // Show full skeleton on initial load
-  if (authLoading) {
+  // Show full skeleton on initial load (auth still resolving OR first RPC
+  // round-trip in flight with nothing cached yet).
+  if (authLoading || (isStatsLoading && !dashboardStats && !overviewError)) {
     return (
       <div className="space-y-3 pb-14 animate-fade-in">
         {/* Header skeleton */}
@@ -152,6 +162,17 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
             </Badge>
           )}
         </div>
+
+        {/* Inline error banner — keeps the page interactive and offers retry */}
+        {overviewError && (
+          <div className="px-1">
+            <DashboardErrorBanner
+              error={overviewError}
+              onRetry={() => refetchOverview()}
+              isRetrying={isOverviewFetching}
+            />
+          </div>
+        )}
 
         {/* Stats - Horizontal Scroll */}
         {statsLoading ? (
