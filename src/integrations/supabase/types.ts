@@ -5813,6 +5813,7 @@ export type Database = {
         }[]
       }
       get_customer_stats: { Args: never; Returns: Json }
+      get_dashboard_overview: { Args: never; Returns: Json }
       get_inventory_valuation_mv: {
         Args: never
         Returns: unknown[]

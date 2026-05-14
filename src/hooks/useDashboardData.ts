@@ -37,65 +37,55 @@ type InvoiceWithCustomer = {
 // ============================================
 
 export function useDashboardData() {
-  const { data: dashboardStats, isLoading: isStatsLoading } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: async (): Promise<DashboardStats> => {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-      const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString();
-
-      const [customersRes, productsRes, invoicesRes, quotationsRes, currentPeriodRes, previousPeriodRes] = await Promise.all([
-        supabase.from('customers_safe').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('*', { count: 'exact', head: true }),
-        supabase.from('invoices').select('*', { count: 'exact', head: true }),
-        supabase.from('quotations').select('*', { count: 'exact', head: true }),
-        supabase.from('invoices').select('*', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgo),
-        supabase.from('invoices').select('*', { count: 'exact', head: true }).gte('created_at', sixtyDaysAgo).lt('created_at', thirtyDaysAgo),
-      ]);
-
-      const currentPeriodInvoices = currentPeriodRes.count || 0;
-      const previousPeriodInvoices = previousPeriodRes.count || 0;
-      const invoiceTrend = previousPeriodInvoices > 0
-        ? ((currentPeriodInvoices - previousPeriodInvoices) / previousPeriodInvoices * 100)
-        : null;
-
-      return {
-        customersCount: customersRes.count || 0,
-        productsCount: productsRes.count || 0,
-        invoicesCount: invoicesRes.count || 0,
-        quotationsCount: quotationsRes.count || 0,
-        invoiceTrend,
+  // Single RPC returns counts + trend + monthly sales (Phase 3)
+  const { data: overview, isLoading: isStatsLoading } = useQuery({
+    queryKey: ['dashboard-overview'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_dashboard_overview');
+      if (error) throw error;
+      return data as {
+        customers_count: number;
+        products_count: number;
+        invoices_count: number;
+        quotations_count: number;
+        current_period_invoices: number;
+        previous_period_invoices: number;
+        monthly_sales: { month: string; sales: number }[];
       };
     },
     staleTime: 300000,
     gcTime: 600000,
   });
 
-  const { data: monthlySalesData } = useQuery({
-    queryKey: ['dashboard-monthly-sales'],
-    queryFn: async (): Promise<MonthlySalesPoint[]> => {
-      const months: { name: string; start: string; end: string }[] = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const start = new Date(d.getFullYear(), d.getMonth(), 1);
-        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-        const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-        months.push({ name: monthNames[start.getMonth()], start: start.toISOString(), end: end.toISOString() });
+  const dashboardStats: DashboardStats | undefined = overview
+    ? {
+        customersCount: overview.customers_count || 0,
+        productsCount: overview.products_count || 0,
+        invoicesCount: overview.invoices_count || 0,
+        quotationsCount: overview.quotations_count || 0,
+        invoiceTrend:
+          overview.previous_period_invoices > 0
+            ? ((overview.current_period_invoices - overview.previous_period_invoices) /
+                overview.previous_period_invoices) *
+              100
+            : null,
       }
-      const { data } = await supabase
-        .from('invoices')
-        .select('total_amount, created_at')
-        .gte('created_at', months[0].start)
-        .lte('created_at', months[months.length - 1].end);
+    : undefined;
 
-      return months.map(m => {
-        const sales = data?.filter(inv => inv.created_at >= m.start && inv.created_at <= m.end)
-          .reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
-        return { name: m.name, sales };
-      });
-    },
-    staleTime: 300000,
-  });
+  const monthlyNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const monthlySalesData: MonthlySalesPoint[] | undefined = overview
+    ? (() => {
+        const map = new Map(overview.monthly_sales.map(m => [m.month, Number(m.sales)]));
+        const out: MonthlySalesPoint[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          out.push({ name: monthlyNames[d.getMonth()], sales: map.get(key) ?? 0 });
+        }
+        return out;
+      })()
+    : undefined;
 
   const { data: tasks } = useQuery({
     queryKey: ['dashboard-tasks'],
