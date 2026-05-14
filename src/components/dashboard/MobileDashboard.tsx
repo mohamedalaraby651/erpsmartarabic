@@ -109,8 +109,9 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
     { title: 'عروض الأسعار', value: stats?.quotations || 0, icon: FileText, color: 'text-blue-500' },
   ];
 
-  // Show full skeleton on initial load
-  if (authLoading) {
+  // Show full skeleton on initial load (auth still resolving OR first RPC
+  // round-trip in flight with nothing cached yet).
+  if (authLoading || (isStatsLoading && !dashboardStats && !overviewError)) {
     return (
       <div className="space-y-3 pb-14 animate-fade-in">
         {/* Header skeleton */}
