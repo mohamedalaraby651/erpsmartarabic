@@ -38,7 +38,13 @@ type InvoiceWithCustomer = {
 
 export function useDashboardData() {
   // Single RPC returns counts + trend + monthly sales (Phase 3)
-  const { data: overview, isLoading: isStatsLoading } = useQuery({
+  const {
+    data: overview,
+    isLoading: isStatsLoading,
+    error: overviewError,
+    refetch: refetchOverview,
+    isFetching: isOverviewFetching,
+  } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_dashboard_overview');
@@ -55,6 +61,8 @@ export function useDashboardData() {
     },
     staleTime: 300000,
     gcTime: 600000,
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 4000),
   });
 
   const dashboardStats: DashboardStats | undefined = overview
@@ -117,6 +125,9 @@ export function useDashboardData() {
   return {
     dashboardStats,
     isStatsLoading,
+    overviewError: overviewError as Error | null,
+    isOverviewFetching,
+    refetchOverview,
     monthlySalesData,
     tasks,
     recentInvoices,

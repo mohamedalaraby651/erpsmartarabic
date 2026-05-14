@@ -17,6 +17,8 @@ import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
 import { useBusinessInsights } from '@/hooks/useBusinessInsights';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 
 // Widget components
 import { StatsWidget } from '@/components/dashboard/StatsWidget';
@@ -67,7 +69,16 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
   const { currentTenantName } = useTenant();
   const { insights } = useBusinessInsights();
-  const { dashboardStats, monthlySalesData, tasks, recentInvoices } = useDashboardData();
+  const {
+    dashboardStats,
+    isStatsLoading,
+    overviewError,
+    isOverviewFetching,
+    refetchOverview,
+    monthlySalesData,
+    tasks,
+    recentInvoices,
+  } = useDashboardData();
 
   const quickActions = allQuickActions.filter(action =>
     !userRole || action.roles.includes(userRole)
@@ -77,20 +88,10 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     return <MobileDashboard />;
   }
 
-  if (authLoading || widgetsLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-64 bg-muted rounded animate-pulse" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
-          ))}
-        </div>
-        <div className="h-64 bg-muted rounded-lg animate-pulse" />
-      </div>
-    );
+  // First-load skeleton: auth + widget prefs + overview RPC all in flight,
+  // and we have nothing cached yet. Avoids the "blank page then pop-in".
+  if ((authLoading || widgetsLoading || isStatsLoading) && !dashboardStats) {
+    return <DashboardSkeleton />;
   }
 
   const greeting = () => {
@@ -148,6 +149,14 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   return (
     <div ref={ref} className="space-y-6 animate-fade-in" {...props}>
       <WelcomeBanner />
+
+      {overviewError && (
+        <DashboardErrorBanner
+          error={overviewError}
+          onRetry={() => refetchOverview()}
+          isRetrying={isOverviewFetching}
+        />
+      )}
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
