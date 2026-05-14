@@ -79,7 +79,7 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
 
   const handleRefresh = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] }),
+      queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] }),
       queryClient.invalidateQueries({ queryKey: ['dashboard-tasks'] }),
       queryClient.invalidateQueries({ queryKey: ['dashboard-recent-invoices'] }),
     ]);
