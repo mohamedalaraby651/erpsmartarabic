@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { ShimmerSkeleton } from '@/components/shared/ShimmerSkeleton';
+import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 import { useBusinessInsights, type BusinessInsight } from '@/hooks/useBusinessInsights';
 
 const roleLabels: Record<string, string> = {
