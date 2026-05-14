@@ -41,6 +41,43 @@ function versionJsonPlugin() {
   return plugin;
 }
 
+/**
+ * Inject `<link rel="modulepreload">` tags for the most critical vendor
+ * chunks into index.html at build time. The browser's default behavior is to
+ * preload chunks referenced by `<script type="module">`, but only the entry —
+ * not the dynamically-imported vendor chunks. By preloading vendor-react,
+ * vendor-supabase and vendor-query in parallel with the entry, we shave a
+ * full network round-trip off the cold-start waterfall.
+ */
+function criticalChunkPreloadPlugin() {
+  const CRITICAL = ['vendor-react', 'vendor-supabase', 'vendor-query'];
+  const plugin: import('vite').Plugin = {
+    name: 'lvbl-critical-preload',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        try {
+          const bundle = ctx.bundle;
+          if (!bundle) return html;
+          const tags: string[] = [];
+          for (const fileName of Object.keys(bundle)) {
+            if (!fileName.endsWith('.js')) continue;
+            if (CRITICAL.some((c) => fileName.includes(`${c}-`))) {
+              tags.push(`<link rel="modulepreload" crossorigin href="/${fileName}">`);
+            }
+          }
+          if (!tags.length) return html;
+          return html.replace('</head>', `  ${tags.join('\n  ')}\n  </head>`);
+        } catch {
+          return html;
+        }
+      },
+    },
+  };
+  return plugin;
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -147,6 +184,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     versionJsonPlugin(),
+    criticalChunkPreloadPlugin(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {

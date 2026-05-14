@@ -9,6 +9,9 @@ import {
   drainBootstrapEvents,
   emitTelemetry,
 } from "./lib/runtimeTelemetry";
+import { markPhase } from "./lib/bootMarks";
+
+markPhase('js_executed');
 
 // Install global error capture as early as possible — before React mounts —
 // so we catch errors thrown during initial module evaluation too.
@@ -65,6 +68,7 @@ measureWebVitals();
 
 // Render the app
 createRoot(document.getElementById("root")!).render(<App />);
+markPhase('react_mounted');
 
 // Drain any events the index.html shield buffered before React loaded.
 drainBootstrapEvents();

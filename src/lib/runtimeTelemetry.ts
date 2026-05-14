@@ -28,7 +28,11 @@ export type TelemetryEventType =
   | 'white_screen'
   | 'unhandled_error'
   | 'unhandled_rejection'
-  | 'sw_cleanup_reload';
+  | 'sw_cleanup_reload'
+  | 'query_error'        // React Query queryCache global onError
+  | 'mutation_error'     // React Query mutationCache global onError
+  | 'perf_mark'          // boot/phase performance markers
+  | 'slow_query';        // RPC/query exceeding SLA
 
 export interface TelemetryEvent {
   type: TelemetryEventType;
