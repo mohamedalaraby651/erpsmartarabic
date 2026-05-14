@@ -125,6 +125,9 @@ export function useDashboardData() {
   return {
     dashboardStats,
     isStatsLoading,
+    overviewError: overviewError as Error | null,
+    isOverviewFetching,
+    refetchOverview,
     monthlySalesData,
     tasks,
     recentInvoices,
