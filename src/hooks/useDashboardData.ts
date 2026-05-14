@@ -5,6 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { markPhase } from '@/lib/bootMarks';
 
 // ============================================
 // Types
@@ -47,8 +48,10 @@ export function useDashboardData() {
   } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: async () => {
+      markPhase('first_rpc_start');
       const { data, error } = await supabase.rpc('get_dashboard_overview');
       if (error) throw error;
+      markPhase('first_rpc_done');
       return data as {
         customers_count: number;
         products_count: number;
