@@ -109,40 +109,19 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
     { title: 'عروض الأسعار', value: stats?.quotations || 0, icon: FileText, color: 'text-blue-500' },
   ];
 
-  // Show full skeleton on initial load (auth still resolving OR first RPC
-  // round-trip in flight with nothing cached yet).
-  if (authLoading || (isStatsLoading && !dashboardStats && !overviewError)) {
+  // Block only on auth. Stats/tasks/invoices each render their own partial
+  // skeletons so the header and quick actions stay interactive while loading.
+  if (authLoading) {
     return (
       <div className="space-y-3 pb-14 animate-fade-in">
-        {/* Header skeleton */}
         <div className="px-1">
           <ShimmerSkeleton variant="text" className="h-6 w-40 mb-1.5" />
           <ShimmerSkeleton variant="rounded" className="h-5 w-24" />
         </div>
-        
-        {/* Stats shimmer - horizontal scroll */}
         <div className="flex gap-2.5 pb-2 px-1 overflow-hidden">
           {[1, 2, 3, 4].map((i) => (
             <ShimmerSkeleton key={i} variant="card" className="min-w-[120px] h-[72px] shrink-0" />
           ))}
-        </div>
-        
-        {/* Quick actions shimmer */}
-        <div className="grid grid-cols-4 gap-2 px-1">
-          {[1, 2, 3, 4].map((i) => (
-            <ShimmerSkeleton key={i} variant="rounded" className="h-[68px]" />
-          ))}
-        </div>
-        
-        {/* Section shimmer */}
-        <div className="px-1 space-y-2.5">
-          <ShimmerSkeleton variant="text" className="h-5 w-24" />
-          <ShimmerSkeleton variant="card" className="h-44" />
-        </div>
-        
-        <div className="px-1 space-y-2.5">
-          <ShimmerSkeleton variant="text" className="h-5 w-28" />
-          <ShimmerSkeleton variant="card" className="h-44" />
         </div>
       </div>
     );

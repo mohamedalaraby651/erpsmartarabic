@@ -88,11 +88,14 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     return <MobileDashboard />;
   }
 
-  // First-load skeleton: auth + widget prefs + overview RPC all in flight,
-  // and we have nothing cached yet. Avoids the "blank page then pop-in".
-  if ((authLoading || widgetsLoading || isStatsLoading) && !dashboardStats) {
+  // Only block on auth + widget preferences (needed to render the layout).
+  // Stats/chart loading is handled with partial skeletons so the rest of
+  // the page (welcome banner, quick actions, tasks, invoices) stays interactive.
+  if ((authLoading || widgetsLoading) && !dashboardStats) {
     return <DashboardSkeleton />;
   }
+
+  const statsLoading = isStatsLoading && !dashboardStats;
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -120,10 +123,29 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const renderWidget = (widget: WidgetConfig) => {
     switch (widget.id) {
       case 'stats':
+        if (statsLoading) {
+          return (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" aria-busy="true">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="rounded-lg border bg-card p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                    <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+                  </div>
+                  <div className="h-8 w-20 bg-muted rounded animate-pulse" />
+                  <div className="h-3 w-16 bg-muted rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          );
+        }
         return <StatsWidget dashboardStats={dashboardStats} />;
       case 'quick_actions':
         return <QuickActionsWidget quickActions={quickActions} onAction={handleQuickAction} />;
       case 'chart':
+        if (statsLoading) {
+          return <div className="h-[260px] bg-muted/30 rounded-md animate-pulse" aria-busy="true" />;
+        }
         return (
           <Suspense fallback={<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" />}>
             <SalesChartWidget data={monthlySalesData} />
