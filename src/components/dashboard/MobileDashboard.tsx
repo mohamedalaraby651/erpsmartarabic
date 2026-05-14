@@ -163,6 +163,17 @@ export const MobileDashboard = React.forwardRef<HTMLDivElement, React.HTMLAttrib
           )}
         </div>
 
+        {/* Inline error banner — keeps the page interactive and offers retry */}
+        {overviewError && (
+          <div className="px-1">
+            <DashboardErrorBanner
+              error={overviewError}
+              onRetry={() => refetchOverview()}
+              isRetrying={isOverviewFetching}
+            />
+          </div>
+        )}
+
         {/* Stats - Horizontal Scroll */}
         {statsLoading ? (
           <div className="flex gap-2.5 pb-2 px-1 overflow-hidden">
