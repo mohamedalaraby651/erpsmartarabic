@@ -1,0 +1,1 @@
+REVOKE ALL ON public.mv_dashboard_counts FROM anon, authenticated, PUBLIC;
