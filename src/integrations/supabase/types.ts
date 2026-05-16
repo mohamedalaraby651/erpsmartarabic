@@ -6393,6 +6393,7 @@ export type Database = {
           total_unpaid: number
         }[]
       }
+      get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       get_user_tenants: { Args: { _user_id: string }; Returns: string[] }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
