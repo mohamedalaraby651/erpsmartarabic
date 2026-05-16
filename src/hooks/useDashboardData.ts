@@ -19,6 +19,15 @@ export interface DashboardStats {
   invoiceTrend: number | null;
 }
 
+export interface FinancialKPIs {
+  todayRevenue: number;
+  mtdRevenue: number;
+  outstandingAR: number;
+  overdueAR: number;
+  cashBalance: number;
+  pendingApprovals: number;
+}
+
 export interface MonthlySalesPoint {
   name: string;
   sales: number;
