@@ -219,6 +219,8 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         </div>
       </div>
 
+      <FinancialKPIRow data={financialKPIs} isLoading={statsLoading} />
+
       <WidgetContainer
         widgets={widgets}
         onWidgetsChange={handleWidgetsChange}
