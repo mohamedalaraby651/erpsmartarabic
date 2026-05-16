@@ -17,6 +17,8 @@ import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
 import { useBusinessInsights } from '@/hooks/useBusinessInsights';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
+import { FinancialKPIRow } from '@/components/dashboard/FinancialKPIRow';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 
@@ -67,10 +69,11 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
-  const { currentTenantName } = useTenant();
+  const { currentTenantName, tenantId } = useTenant();
   const { insights } = useBusinessInsights();
   const {
     dashboardStats,
+    financialKPIs,
     isStatsLoading,
     overviewError,
     isOverviewFetching,
@@ -79,6 +82,8 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     tasks,
     recentInvoices,
   } = useDashboardData();
+
+  useDashboardRealtime(tenantId);
 
   const quickActions = allQuickActions.filter(action =>
     !userRole || action.roles.includes(userRole)
@@ -213,6 +218,8 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
           ))}
         </div>
       </div>
+
+      <FinancialKPIRow data={financialKPIs} isLoading={statsLoading} />
 
       <WidgetContainer
         widgets={widgets}

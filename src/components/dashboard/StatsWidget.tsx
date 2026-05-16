@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Package, FileText, Receipt, TrendingUp, TrendingDown } from 'lucide-react';
 import type { DashboardStats } from '@/hooks/useDashboardData';
@@ -7,7 +7,7 @@ interface StatsWidgetProps {
   dashboardStats: DashboardStats | undefined;
 }
 
-export function StatsWidget({ dashboardStats }: StatsWidgetProps) {
+export const StatsWidget = memo(function StatsWidget({ dashboardStats }: StatsWidgetProps) {
   const invoiceTrend = dashboardStats?.invoiceTrend;
   const trendLabel = invoiceTrend !== null && invoiceTrend !== undefined
     ? `${invoiceTrend >= 0 ? '+' : ''}${invoiceTrend.toFixed(0)}%`
@@ -59,4 +59,4 @@ export function StatsWidget({ dashboardStats }: StatsWidgetProps) {
       </CardContent>
     </>
   );
-}
+});

@@ -19,6 +19,15 @@ export interface DashboardStats {
   invoiceTrend: number | null;
 }
 
+export interface FinancialKPIs {
+  todayRevenue: number;
+  mtdRevenue: number;
+  outstandingAR: number;
+  overdueAR: number;
+  cashBalance: number;
+  pendingApprovals: number;
+}
+
 export interface MonthlySalesPoint {
   name: string;
   sales: number;
@@ -60,6 +69,12 @@ export function useDashboardData() {
         current_period_invoices: number;
         previous_period_invoices: number;
         monthly_sales: { month: string; sales: number }[];
+        today_revenue?: number;
+        mtd_revenue?: number;
+        outstanding_ar?: number;
+        overdue_ar?: number;
+        cash_balance?: number;
+        pending_approvals?: number;
       };
     },
     staleTime: 300000,
@@ -80,6 +95,17 @@ export function useDashboardData() {
                 overview.previous_period_invoices) *
               100
             : null,
+      }
+    : undefined;
+
+  const financialKPIs: FinancialKPIs | undefined = overview
+    ? {
+        todayRevenue: Number(overview.today_revenue ?? 0),
+        mtdRevenue: Number(overview.mtd_revenue ?? 0),
+        outstandingAR: Number(overview.outstanding_ar ?? 0),
+        overdueAR: Number(overview.overdue_ar ?? 0),
+        cashBalance: Number(overview.cash_balance ?? 0),
+        pendingApprovals: Number(overview.pending_approvals ?? 0),
       }
     : undefined;
 
@@ -127,6 +153,7 @@ export function useDashboardData() {
 
   return {
     dashboardStats,
+    financialKPIs,
     isStatsLoading,
     overviewError: overviewError as Error | null,
     isOverviewFetching,
