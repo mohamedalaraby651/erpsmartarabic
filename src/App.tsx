@@ -299,6 +299,7 @@ const App = () => (
                     <Route path="sod-rules" element={<SodRulesPage />} />
                     <Route path="tenants" element={<TenantsPage />} />
                     <Route path="domain-events" element={<DomainEventsPage />} />
+                    <Route path="dispatcher-batches" element={<DispatcherBatchesPage />} />
                   </Route>
                   <Route path="approvals" element={<ApprovalsPage />} />
                   <Route path="employees" element={<EmployeesPage />} />
