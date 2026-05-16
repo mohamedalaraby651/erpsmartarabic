@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Loader2, Eye, EyeOff, Layers, ArrowRight, Shield } from 'lucide-react';
 import { logErrorSafely } from '@/lib/errorHandler';
+import { lovable } from '@/integrations/lovable';
 
 export default function Auth() {
   const navigate = useNavigate();
