@@ -17,6 +17,8 @@ import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
 import { useBusinessInsights } from '@/hooks/useBusinessInsights';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
+import { FinancialKPIRow } from '@/components/dashboard/FinancialKPIRow';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 
