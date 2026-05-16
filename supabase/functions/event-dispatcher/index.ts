@@ -1,8 +1,10 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-dispatcher-secret, x-correlation-id',
 };
 
 interface DomainEvent {
@@ -15,24 +17,85 @@ interface DomainEvent {
   attempts: number;
 }
 
+const MAX_BATCH = 200;
+const DEFAULT_BATCH = 50;
+const PER_EVENT_TIMEOUT_MS = 15_000;
+const MAX_CONCURRENCY = 8;
+
+const jsonResponse = (body: unknown, status = 200, corr?: string) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      ...(corr ? { 'x-correlation-id': corr } : {}),
+    },
+  });
+
+const log = (corr: string, level: 'info' | 'warn' | 'error', msg: string, extra?: Record<string, unknown>) => {
+  const line = { ts: new Date().toISOString(), corr, level, msg, ...(extra || {}) };
+  if (level === 'error') console.error(JSON.stringify(line));
+  else if (level === 'warn') console.warn(JSON.stringify(line));
+  else console.log(JSON.stringify(line));
+};
+
+const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+  new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`Timeout after ${ms}ms: ${label}`)), ms);
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let idx = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (true) {
+      const i = idx++;
+      if (i >= items.length) return;
+      results[i] = await worker(items[i]);
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
 Deno.serve(async (req) => {
+  const correlationId =
+    req.headers.get('x-correlation-id') || req.headers.get('X-Correlation-Id') || crypto.randomUUID();
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') {
+    return jsonResponse({ success: false, error: 'Method not allowed' }, 405, correlationId);
+  }
 
-  // ===== Authentication: shared secret OR authenticated user with platform/admin role =====
+  // ===== Authentication =====
   const expectedSecret = Deno.env.get('DISPATCHER_SECRET');
   const providedSecret = req.headers.get('x-dispatcher-secret');
   const authHeader = req.headers.get('authorization');
 
   let isAuthorized = false;
+  let authMode = 'none';
 
-  // Path A: trusted cron / internal caller with shared secret
   if (expectedSecret && providedSecret && providedSecret === expectedSecret) {
     isAuthorized = true;
+    authMode = 'secret';
   }
 
-  // Path B: authenticated platform admin (manual trigger from UI)
   if (!isAuthorized && authHeader?.startsWith('Bearer ')) {
     try {
       const userClient = createClient(
@@ -45,65 +108,120 @@ Deno.serve(async (req) => {
         const { data: roleData } = await userClient.rpc('get_platform_role', {
           _user_id: userData.user.id,
         });
-        if (roleData) isAuthorized = true;
+        // Accept only explicit platform admin roles, not any truthy value
+        if (roleData && ['owner', 'admin', 'super_admin'].includes(String(roleData))) {
+          isAuthorized = true;
+          authMode = `user:${roleData}`;
+        }
       }
-    } catch (_e) {
-      // fall through — isAuthorized stays false
+    } catch (e) {
+      log(correlationId, 'warn', 'auth.user_check_failed', { err: (e as Error).message });
     }
   }
 
   if (!isAuthorized) {
-    return new Response(
-      JSON.stringify({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    log(correlationId, 'warn', 'auth.unauthorized');
+    return jsonResponse(
+      { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      401,
+      correlationId,
     );
+  }
+
+  // ===== Parse optional body =====
+  let batchSize = DEFAULT_BATCH;
+  try {
+    if (req.headers.get('content-length') && Number(req.headers.get('content-length')) > 0) {
+      const body = await req.json().catch(() => ({}));
+      if (body && typeof body.batch_size === 'number') {
+        batchSize = Math.max(1, Math.min(MAX_BATCH, Math.floor(body.batch_size)));
+      }
+    }
+  } catch (_) {
+    // ignore
   }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  try {
-    // Atomic claim with FOR UPDATE SKIP LOCKED + attempts increment
-    const { data: events, error: claimErr } = await supabase
-      .rpc('claim_pending_events', { _batch_size: 50 });
+  const startedTotal = Date.now();
 
-    if (claimErr) throw claimErr;
+  try {
+    const { data: events, error: claimErr } = await supabase.rpc('claim_pending_events', {
+      _batch_size: batchSize,
+    });
+
+    if (claimErr) {
+      log(correlationId, 'error', 'claim.error', { err: claimErr.message });
+      throw claimErr;
+    }
     if (!events || events.length === 0) {
-      return new Response(
-        JSON.stringify({ success: true, processed: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      log(correlationId, 'info', 'claim.empty', { auth_mode: authMode });
+      return jsonResponse(
+        { success: true, processed: 0, failed: 0, skipped: 0, batch_size: batchSize },
+        200,
+        correlationId,
       );
     }
 
-    const results = { processed: 0, failed: 0 };
+    log(correlationId, 'info', 'claim.ok', {
+      count: events.length,
+      auth_mode: authMode,
+      batch_size: batchSize,
+    });
 
-    for (const event of events as DomainEvent[]) {
+    const counters = { processed: 0, failed: 0, skipped: 0 };
+
+    await runWithConcurrency(events as DomainEvent[], MAX_CONCURRENCY, async (event) => {
       const startedAt = Date.now();
       let success = false;
+      let skipped = false;
+      let errMsg: string | null = null;
 
       try {
-        await handleEvent(supabase, event);
-        const { error: markErr } = await supabase.rpc('mark_event_processed', {
-          _event_id: event.id,
-          _new_status: 'processed',
-          _error: null,
-        });
-        if (markErr) throw markErr;
-        success = true;
-        results.processed++;
+        const result = await withTimeout(
+          handleEvent(supabase, event, correlationId),
+          PER_EVENT_TIMEOUT_MS,
+          `event:${event.event_type}:${event.id}`,
+        );
+        if (result === 'skipped') {
+          skipped = true;
+          await supabase.rpc('mark_event_processed', {
+            _event_id: event.id,
+            _new_status: 'processed',
+            _error: 'skipped: unknown_event_type',
+          });
+          counters.skipped++;
+        } else {
+          await supabase.rpc('mark_event_processed', {
+            _event_id: event.id,
+            _new_status: 'processed',
+            _error: null,
+          });
+          success = true;
+          counters.processed++;
+        }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Unknown error';
-        console.error(`[event-dispatcher] Failed event ${event.id}:`, msg);
-        await supabase.rpc('mark_event_processed', {
-          _event_id: event.id,
-          _new_status: 'failed',
-          _error: msg.slice(0, 500),
+        errMsg = err instanceof Error ? err.message : 'Unknown error';
+        log(correlationId, 'error', 'event.failed', {
+          event_id: event.id,
+          event_type: event.event_type,
+          attempts: event.attempts,
+          err: errMsg,
         });
-        results.failed++;
+        await supabase
+          .rpc('mark_event_processed', {
+            _event_id: event.id,
+            _new_status: 'failed',
+            _error: errMsg.slice(0, 500),
+          })
+          .then(({ error }) => {
+            if (error) log(correlationId, 'warn', 'mark_failed.error', { err: error.message });
+          });
+        counters.failed++;
       } finally {
-        // Observability: record metric (best-effort, never throw)
         const latency = Date.now() - startedAt;
         await supabase
           .rpc('record_event_metric', {
@@ -112,134 +230,159 @@ Deno.serve(async (req) => {
             _latency_ms: latency,
           })
           .then(({ error }) => {
-            if (error) console.warn('[metric] record fail:', error.message);
+            if (error) log(correlationId, 'warn', 'metric.error', { err: error.message });
           });
+        log(correlationId, success ? 'info' : skipped ? 'warn' : 'error', 'event.done', {
+          event_id: event.id,
+          event_type: event.event_type,
+          latency_ms: latency,
+          success,
+          skipped,
+        });
       }
-    }
+    });
 
-    return new Response(
-      JSON.stringify({ success: true, ...results }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    const totalMs = Date.now() - startedTotal;
+    log(correlationId, 'info', 'batch.done', { ...counters, total_ms: totalMs });
+
+    return jsonResponse(
+      { success: true, ...counters, batch_size: batchSize, total_ms: totalMs },
+      200,
+      correlationId,
     );
   } catch (error) {
-    console.error('[event-dispatcher] Fatal:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: 'Internal error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    const msg = error instanceof Error ? error.message : 'Unknown';
+    log(correlationId, 'error', 'fatal', { err: msg });
+    return jsonResponse(
+      { success: false, error: 'Internal error', correlation_id: correlationId },
+      500,
+      correlationId,
     );
   }
 });
 
-// deno-lint-ignore no-explicit-any
-async function handleEvent(supabase: any, event: DomainEvent) {
+async function handleEvent(
+  supabase: SupabaseClient,
+  event: DomainEvent,
+  corr: string,
+): Promise<'ok' | 'skipped'> {
   const { event_type, aggregate_id, payload, tenant_id } = event;
+  const p = (payload || {}) as Record<string, unknown>;
+  const str = (k: string): string | null => {
+    const v = p[k];
+    return typeof v === 'string' ? v : v == null ? null : String(v);
+  };
 
   switch (event_type) {
     case 'invoice.approved': {
-      // 1) Create double-entry journal (idempotent)
-      const { data: journalRes, error: journalErr } = await supabase.rpc('create_journal_for_invoice', {
-        _invoice_id: aggregate_id,
-      });
-      if (journalErr) {
-        console.error('[event] create_journal_for_invoice RPC error:', journalErr.message);
-        throw new Error(`Journal posting failed: ${journalErr.message}`);
-      }
+      const { data: journalRes, error: journalErr } = await supabase.rpc(
+        'create_journal_for_invoice',
+        { _invoice_id: aggregate_id },
+      );
+      if (journalErr) throw new Error(`Journal posting failed: ${journalErr.message}`);
       if (journalRes && journalRes.success === false) {
-        console.error('[event] create_journal_for_invoice failed:', journalRes);
         throw new Error(`Journal posting failed: ${journalRes.error || 'unknown'}`);
       }
-      console.log(`[event] invoice.approved journal:`, journalRes);
+      log(corr, 'info', 'invoice.approved.journal', { aggregate_id });
 
-      // 2) Notify creator (best-effort)
-      await supabase.from('notifications').insert({
-        tenant_id,
-        user_id: (payload.created_by as string) || null,
-        title: 'فاتورة معتمدة',
-        message: `الفاتورة ${payload.invoice_number} اعتُمدت بقيمة ${payload.total_amount}`,
-        type: 'success',
-        link: `/invoices/${aggregate_id}`,
-      }).then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('[event] notification fail:', error.message); });
-      break;
+      const createdBy = str('created_by');
+      if (createdBy) {
+        await supabase
+          .from('notifications')
+          .insert({
+            tenant_id,
+            user_id: createdBy,
+            title: 'فاتورة معتمدة',
+            message: `الفاتورة ${str('invoice_number') ?? ''} اعتُمدت بقيمة ${str('total_amount') ?? ''}`,
+            type: 'success',
+            link: `/invoices/${aggregate_id}`,
+          })
+          .then(({ error }) => {
+            if (error) log(corr, 'warn', 'notification.fail', { err: error.message });
+          });
+      }
+      return 'ok';
     }
     case 'payment.received': {
-      // Create cash/AR journal (idempotent)
-      const { data: journalRes, error: journalErr } = await supabase.rpc('create_journal_for_payment', {
-        _payment_id: aggregate_id,
-      });
-      if (journalErr) {
-        console.error('[event] create_journal_for_payment RPC error:', journalErr.message);
-        throw new Error(`Journal posting failed: ${journalErr.message}`);
-      }
+      const { data: journalRes, error: journalErr } = await supabase.rpc(
+        'create_journal_for_payment',
+        { _payment_id: aggregate_id },
+      );
+      if (journalErr) throw new Error(`Journal posting failed: ${journalErr.message}`);
       if (journalRes && journalRes.success === false) {
-        console.error('[event] create_journal_for_payment failed:', journalRes);
         throw new Error(`Journal posting failed: ${journalRes.error || 'unknown'}`);
       }
-      console.log(`[event] payment.received journal:`, journalRes);
-      break;
+      log(corr, 'info', 'payment.received.journal', { aggregate_id });
+      return 'ok';
     }
     case 'expense.approved': {
-      // 1) Create expense journal (idempotent)
-      const { data: journalRes, error: journalErr } = await supabase.rpc('create_journal_for_expense', {
-        _expense_id: aggregate_id,
-      });
-      if (journalErr) {
-        console.error('[event] create_journal_for_expense RPC error:', journalErr.message);
-        throw new Error(`Journal posting failed: ${journalErr.message}`);
-      }
+      const { data: journalRes, error: journalErr } = await supabase.rpc(
+        'create_journal_for_expense',
+        { _expense_id: aggregate_id },
+      );
+      if (journalErr) throw new Error(`Journal posting failed: ${journalErr.message}`);
       if (journalRes && journalRes.success === false) {
         throw new Error(`Journal posting failed: ${journalRes.error || 'unknown'}`);
       }
-      console.log(`[event] expense.approved journal:`, journalRes);
+      log(corr, 'info', 'expense.approved.journal', { aggregate_id });
 
-      // 2) Notify (best-effort)
-      await supabase.from('notifications').insert({
-        tenant_id,
-        user_id: (payload.created_by as string) || null,
-        title: 'مصروف معتمد',
-        message: `المصروف ${payload.expense_number} اعتُمد بقيمة ${payload.amount}`,
-        type: 'info',
-      }).then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('[event] notification fail:', error.message); });
-      break;
+      const createdBy = str('created_by');
+      if (createdBy) {
+        await supabase
+          .from('notifications')
+          .insert({
+            tenant_id,
+            user_id: createdBy,
+            title: 'مصروف معتمد',
+            message: `المصروف ${str('expense_number') ?? ''} اعتُمد بقيمة ${str('amount') ?? ''}`,
+            type: 'info',
+          })
+          .then(({ error }) => {
+            if (error) log(corr, 'warn', 'notification.fail', { err: error.message });
+          });
+      }
+      return 'ok';
     }
     case 'customer.credit_exceeded': {
       const { data: admins } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'admin');
-      if (admins) {
-        for (const admin of admins) {
-          await supabase.from('notifications').insert({
-            tenant_id,
-            user_id: admin.user_id,
-            title: '⚠️ تجاوز حد الائتمان',
-            message: `العميل "${payload.customer_name}" تجاوز حد الائتمان (الرصيد: ${payload.current_balance} / الحد: ${payload.credit_limit})`,
-            type: 'warning',
-            link: `/customers/${aggregate_id}`,
-          });
-        }
+      if (admins && admins.length > 0) {
+        const rows = admins.map((a: { user_id: string }) => ({
+          tenant_id,
+          user_id: a.user_id,
+          title: '⚠️ تجاوز حد الائتمان',
+          message: `العميل "${str('customer_name') ?? ''}" تجاوز حد الائتمان (الرصيد: ${str('current_balance') ?? ''} / الحد: ${str('credit_limit') ?? ''})`,
+          type: 'warning',
+          link: `/customers/${aggregate_id}`,
+        }));
+        const { error } = await supabase.from('notifications').insert(rows);
+        if (error) log(corr, 'warn', 'notify.bulk.fail', { err: error.message });
       }
-      break;
+      return 'ok';
     }
     case 'stock.depleted': {
       const { data: admins } = await supabase
         .from('user_roles')
         .select('user_id')
         .in('role', ['admin', 'manager']);
-      if (admins) {
-        for (const admin of admins) {
-          await supabase.from('notifications').insert({
-            tenant_id,
-            user_id: admin.user_id,
-            title: '📦 مخزون منخفض',
-            message: `المنتج "${payload.product_name}" وصل لمستوى منخفض (${payload.current_quantity} / الحد الأدنى ${payload.min_stock})`,
-            type: 'warning',
-            link: `/products/${aggregate_id}`,
-          });
-        }
+      if (admins && admins.length > 0) {
+        const rows = admins.map((a: { user_id: string }) => ({
+          tenant_id,
+          user_id: a.user_id,
+          title: '📦 مخزون منخفض',
+          message: `المنتج "${str('product_name') ?? ''}" وصل لمستوى منخفض (${str('current_quantity') ?? ''} / الحد الأدنى ${str('min_stock') ?? ''})`,
+          type: 'warning',
+          link: `/products/${aggregate_id}`,
+        }));
+        const { error } = await supabase.from('notifications').insert(rows);
+        if (error) log(corr, 'warn', 'notify.bulk.fail', { err: error.message });
       }
-      break;
+      return 'ok';
     }
     default:
-      console.warn(`[event-dispatcher] Unknown event type: ${event_type}`);
+      log(corr, 'warn', 'event.unknown', { event_type, event_id: event.id });
+      return 'skipped';
   }
 }
