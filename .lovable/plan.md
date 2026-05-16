@@ -1,119 +1,169 @@
-# خطة تدقيق وتحسين الأداء والموثوقية
+# تدقيق 360° + خارطة طريق
 
-## ما هو موجود فعلياً (لا حاجة لإعادة عمله)
-- تقسيم Bundle عبر `manualChunks` في `vite.config.ts` (vendor-react/query/charts/pdf/excel + 7 مجموعات صفحات).
-- `lazyWithRetry` لكل الصفحات + `Suspense` بـ skeleton.
-- `QueryClient` بإعدادات ذكية (5min stale، عدم retry على 401/403، backoff exponential) + ملف `queryConfig.ts` موحّد.
-- Dashboard يعتمد على RPC واحد `get_dashboard_overview` + Materialized View محدّث بـ pg_cron.
-- Skeleton جزئي (KPI/Chart فقط) — تم إنجازه في الجولة السابقة.
-- `runtimeTelemetry` + Edge Function `log-event` + درع White-Screen في `index.html`.
-- Service Worker cleanup, font preloading، 25s shield، CSP صارم.
-- لا يوجد Realtime subscriptions نشطة (نقطة قوة).
+## ملاحظة جوهرية قبل الـ Gap Report
 
-## النتيجة: لا توجد كوارث معمارية. التركيز على التحسينات المتدرّجة.
+المشروع **ناضج جداً**: ~100 جدول، 14 Edge Function، 148 migration، 41 وحدة صفحات، RLS مفعّل على كل جدول، 44 ملف اختبار، تقسيم Bundle احترافي، Telemetry شامل. لا يوجد "ثقب" معماري كبير. الفجوات المرصودة محدّدة وقابلة للإصلاح.
 
 ---
 
-## المحور 1 — Frontend / React (إعادة التصيير وتسريبات الذاكرة)
+## 1. Gap Report (ما هو مفقود أو يحتاج إصلاح)
 
-### الفحص (يدوي عبر أدوات المتصفح)
-1. تشغيل `browser--performance_profile` على `/` و `/customers` و `/invoices` لقياس Long Tasks / DOM nodes / JS heap الفعليّة.
-2. تشغيل `browser--start_profiling` ثم تنقل سريع بين 4 صفحات → `browser--stop_profiling` لمعرفة أعلى Self-time.
-3. مراقبة JS heap بعد 5 جلسات تنقل: ارتفاع > 30 MB دون رجوع = تسريب.
+### 1.1 ازدواج وحدات (دَين معماري)
+- **`pages/quotes/` و `pages/quotations/`** يحتويان على نفس المفهوم (عرض أسعار) بأسماء وجداول مختلفة (`quotes`/`quote_items` vs `quotations`/`quotation_items`). يجب توحيدهما واختيار واحد كمصدر حقيقي مع migration بيانات + redirect routes.
+- نفس الازدواج محتمل في Sales Cycle (`sales-orders` + `quotes/SalesPipelinePage`).
 
-### التحسينات المرجّحة
-- إضافة `React.memo` لمكوّنات القوائم الكبيرة في `CustomersPage` / `InvoicesPage` / `ProductsPage` (صفوف الجدول/البطاقات).
-- استخدام `useStableCallback` (موجود) داخل القوائم لمنع إعادة تصيير الـ children عند كل render للأب.
-- مراجعة `useEffect` بدون cleanup داخل `src/hooks/useAlertNotifier.ts` و `useAppBadge.ts` و `usePushNotifications.ts` — هذه أنواع مشهورة بالاشتراكات اللي تنسى تُلغى.
-- تحويل القوائم الطويلة (> 50 صفاً) إلى `useVirtualScroll` (موجود بالفعل لكن غير مستخدم في كل القوائم) — ابدأ بـ `InvoicesPage`.
-- نقل `useState` الثقيلة في `AppLayout` (sidebarCollapsed, mobileMenuOpen) إلى `useReducer` لتقليل re-renders للـ shell كله.
+### 1.2 تدفقات مستخدم ناقصة
+- **استرجاع كلمة المرور (Forgot Password)**: غير موجود في `Auth.tsx` — فقط Login/Signup.
+- **تأكيد البريد بعد التسجيل (Email confirmation)**: لا توجد صفحة `/auth/confirm` لاستقبال الـ callback.
+- **Google Sign-In**: مفقود من `Auth.tsx` رغم أنه افتراضي في Lovable Cloud.
+- **صفحة Onboarding** للمستخدم الجديد: لا يوجد wizard لاختيار اللغة/إعداد الشركة/إنشاء أول عميل.
+- **صفحة Profile مستقلة**: حالياً `/profile` يعيد توجيه إلى `UnifiedSettingsPage`.
+- **شاشة "غير مصرّح" (403)**: `RouteErrorPage` موجودة لكن لا يوجد فحص دور قبل الدخول لصفحات admin/platform → المستخدم يرى صفحة فارغة بدل 403 واضح.
 
----
+### 1.3 جداول/سياسات RLS تستحق المراجعة
+| الجدول | الحالة | التوصية |
+|---|---|---|
+| `event_metrics` | SELECT فقط | ✓ مقصود (للأدمن فقط) |
+| `journal_reversals` | SELECT فقط | ✓ مقصود (تُكتب عبر trigger) |
+| الباقي بسياسة واحدة | `cmd=ALL` يغطي CRUD | ✓ صحيح، لكن استبدلها بـ 4 سياسات منفصلة لوضوح الـ audit |
+| `slow_queries_log` | موجود لكن لا يبدو مرتبطاً بـ trigger Postgres | تحقّق أنه يُملأ فعلياً |
+| `customers_safe`, `employees_safe`, `suppliers_safe` | views للـ PII masking | تأكد أنها مستخدمة في كل مكان بدل الجدول الأصلي |
 
-## المحور 2 — قاعدة البيانات و RPC (Lovable Cloud)
+### 1.4 Edge Functions
+- **مفقود**: webhook handler عام (لاستقبال webhooks خارجية، مثلاً payment gateway).
+- **مفقود**: Cron job منفصل لـ `refresh_dashboard_mv` (موجود pg_cron لكن بدون مراقبة).
+- `log-event` يحتاج Rate Limiting لمنع إغراق الـ logs.
+- لا توجد ملفات `*_test.ts` داخل `supabase/functions/*` رغم وجود `test_edge_functions` tool.
 
-### الفحص (عبر أدوات Supabase)
-1. `supabase--linter` → التقاط فهارس مفقودة، RLS مع `auth.uid()` غير ملفوف في `(select ...)`.
-2. `supabase--analytics_query` على `postgres_logs` لاستخراج أبطأ 20 query في آخر 24 ساعة:
-   ```sql
-   select event_message, parsed.error_severity, postgres_logs.timestamp
-   from postgres_logs
-   cross join unnest(metadata) as m
-   cross join unnest(m.parsed) as parsed
-   where event_message ilike '%duration%'
-   order by timestamp desc limit 50
-   ```
-3. مراجعة كل سياسات RLS التي تستخدم `auth.uid()` مباشرة → استبدالها بـ `(select auth.uid())` للسماح للـ Postgres بـ caching النتيجة لكل query (تحسين 10–100x على الجداول الكبيرة).
-4. التأكد من وجود فهارس على كل عمود `tenant_id` + الأعمدة الأكثر فلترةً (`customer_id`, `created_at`, `payment_status`).
-5. مراجعة دوال `SECURITY DEFINER` للتأكد من `SET search_path = public` (تم في Memory).
+### 1.5 UI/UX
+- **Dark Mode**: متغيرات HSL موجودة لكن يحتاج جولة QA على كل صفحة (المتغيرات مدعومة، التطبيق ليس مضموناً).
+- **Empty States**: مذكورة في الذاكرة كمعيار، لكن لم أتأكد من تطبيقها على كل القوائم (تحتاج جولة).
+- **Tooltips على الأزرار الأيقونية**: محتمل ناقص في صفحات admin الكثيفة.
+- **Toast feedback** بعد كل mutation: يحتاج فحص (سياسة "لا mutation بدون toast نجاح/خطأ").
+- **Skeleton جزئي** في صفحات غير الـ Dashboard: مفقود — معظم الصفحات تستخدم spinner بسيط.
+- **Mobile responsive**: 29 صفحة فقط تستخدم `useIsMobile` من أصل 41 — البقية قد تكون مكسورة على الجوال.
+- **i18n**: التطبيق عربي فقط. الذاكرة تذكر RTL لكن لا يوجد إعداد لإضافة اللغة الإنجليزية مستقبلاً.
 
-### تحسينات محتملة
-- تحويل أي استعلام يجلب `count(*)` على جدول كبير إلى Materialized View جديد أو عمود مُحسوب مع trigger.
-- ضغط `useSidebarCounts` — لو يستدعي 6+ counts، اجمعهم في RPC واحد مشابه لـ `get_dashboard_overview`.
-- مراجعة `useCustomerAlerts` و `useBusinessInsights` (موجود استدعاء RPC في كلٍ) — تأكد من `staleTime` مناسب (`reference` أو `report`).
+### 1.6 Auth & Security
+- **2FA** مذكور في الذاكرة (`user_2fa_settings` + `verify-totp`) لكن غير مفروض على Admin/Platform.
+- **Password HIBP Check** غير مُفعّل (موصى به لـ Lovable Cloud).
+- لا توجد سياسة **Session Timeout** للمستخدمين غير النشطين.
+- لا توجد **Audit log viewer** يقرأ من Edge logs مباشرة (موجود `activity_logs` فقط — DB-side).
 
----
-
-## المحور 3 — Assets و Loading Waterfall
-
-### الفحص
-1. `browser--list_network_requests resource_types=all` على أول تحميل → التقاط:
-   - حجم index.html
-   - حجم vendor-react / vendor-query / vendor-misc
-   - عدد الـ chunks المُحمّلة قبل first paint
-   - ترتيب تحميل الخطوط
-2. مراجعة شلال الشبكة: أي طلب Supabase يبدأ قبل اكتمال bundle = جيد. أي chunk يُحمّل بعد chunk آخر بدلاً من بالتوازي = مشكلة.
-
-### تحسينات
-- إضافة `<link rel="modulepreload">` للـ chunks الحرجة (vendor-react, vendor-supabase) في `index.html` بعد البناء.
-- التحقق أن خط Cairo يستخدم `font-display: swap` (موجود في الرابط).
-- مراجعة الصور في `src/assets/` — تحويل أي PNG > 50KB إلى WebP عبر `vite-imagetools` (غير مثبّت حالياً).
-- تأكد أن أيقونات `lucide-react` تُستورد مفردةً (`import { X } from 'lucide-react'`) وليس بالكامل.
-- فحص وجود `og-image.jpg` على الدومين (تم الإشارة إليه في `<head>`) لتجنّب 404 يبطئ social previews.
+### 1.7 Performance & Code Quality
+- **44 ملف اختبار**: تغطية معقولة لكن معظمها في `__tests__/` — لا توجد E2E (Playwright/Cypress).
+- **TODO/FIXME**: صفر — جيد لكن مشبوه (قد يعني عدم توثيق الديون).
+- **Documentation**: لا يوجد `README.md` فني للمطوّرين الجدد، لا `CONTRIBUTING.md`، لا `docs/architecture.md`.
+- **Storybook**: غير موجود — مع 200+ مكوّن، يستحق التفكير.
+- **Bundle analyzer**: غير مُعدّ — لا يمكن قياس حجم كل chunk بدون بناء يدوي.
 
 ---
 
-## المحور 4 — معالجة الأخطاء و Logging
+## 2. Strategic Roadmap
 
-### ما هو موجود
-- `runtimeTelemetry.installGlobalErrorHandlers()` يلتقط `error` + `unhandledrejection`.
-- `AppErrorBoundary` + `PageErrorBoundary` + `RouteErrorPage`.
-- Edge Function `log-event` + ring buffer في localStorage.
-- White-screen shield بعد 25s.
+### المرحلة 1 — إصلاحات فورية (1–2 أسبوع)
+أولوية: ما يضرّ المستخدم النهائي اليوم.
 
-### تحسينات مقترحة
-- إضافة `QueryClient` global error handler:
-  ```ts
-  queryCache: new QueryCache({
-    onError: (error, query) => emitTelemetry('query_error', error.message, { queryKey: query.queryKey })
-  })
-  ```
-- إضافة Performance Marks لمراحل التحميل الحرجة (auth init, first RPC, dashboard paint) ودفعها إلى Telemetry.
-- إضافة لوحة "آخر الأخطاء" في `/admin/activity-log` لقراءة Edge logs مباشرة بدل مراجعتها يدوياً.
-- إضافة Sentry-style breadcrumbs خفيفة (route changes, supabase calls) لتسهيل تتبع الأخطاء الصامتة.
+```text
+[Auth & Security]
+├── إضافة Forgot Password flow (صفحة /auth/forgot + email template)
+├── إضافة Google Sign-In إلى Auth.tsx
+├── إضافة صفحة /auth/confirm لاستقبال email verification callback
+├── تفعيل Password HIBP Check عبر configure_auth
+├── فرض 2FA على المستخدمين بدور admin/platform_owner
+└── إضافة فحص دور قبل routes الإدارية → 403 صريح
+
+[UX Critical]
+├── Toast feedback موحّد بعد كل mutation (helper hook useMutationToast)
+├── Empty States موحّدة على أعلى 10 قوائم استخداماً
+├── Tooltips على كل أزرار الأيقونات في admin/
+└── جولة QA على Dark Mode لكل الصفحات
+
+[Data Hygiene]
+└── توحيد quotes/quotations: اختيار واحد + migration + redirects
+```
+
+### المرحلة 2 — تحسينات أساسية (3–6 أسابيع)
+أولوية: ما يرفع جودة المنتج لمستوى احترافي.
+
+```text
+[UX Polish]
+├── Skeleton جزئي على كل الصفحات (نمط Dashboard)
+├── جعل كل الـ 41 صفحة responsive (إضافة useIsMobile + MobileXxx variants)
+├── Onboarding wizard للمستخدم الجديد (3 خطوات: لغة → شركة → أول عميل)
+└── صفحة Profile مستقلة (تجنّب redirect)
+
+[Backend Robustness]
+├── تقسيم سياسات RLS من cmd=ALL إلى SELECT/INSERT/UPDATE/DELETE منفصلة (لـ audit أوضح)
+├── إضافة Deno tests لكل Edge Function (process-payment, approve-*, validate-invoice)
+├── Rate Limiting على log-event Edge Function
+├── Cron monitoring + alert لو فشل refresh_dashboard_mv
+└── إضافة webhook handler عام (Stripe-style signature verification)
+
+[Developer Experience]
+├── إضافة README.md + CONTRIBUTING.md + docs/architecture.md
+├── إعداد bundle analyzer (rollup-plugin-visualizer)
+├── إضافة GitHub Actions CI لتشغيل bunx vitest run + linter على كل PR
+└── Storybook لمكوّنات shared/ و ui/
+
+[Performance Validation]
+├── قراءة slow_queries_log الفعلي بعد أسبوع تشغيل
+├── إصلاح فهارس على tenant_id حيث ينقص
+└── استبدال auth.uid() بـ (select auth.uid()) في كل سياسات RLS
+```
+
+### المرحلة 3 — توسعة مستقبلية (3–6 أشهر)
+أولوية: ما يفتح أسواقاً/شرائح جديدة.
+
+```text
+[Internationalization]
+├── إضافة i18n (react-i18next) مع EN كلغة ثانية
+├── دعم LTR ديناميكي (الذاكرة الحالية RTL strict)
+└── ترجمة كل النصوص عبر استخراج إلى ملفات locales/
+
+[Mobile Native]
+├── PWA install prompts محسّنة (موجود InstallPage)
+├── Push notifications فعلية (Edge Function + VAPID keys)
+└── Background Sync لإجراءات offline
+
+[AI & Intelligence]
+├── ربط Lovable AI Gateway للـ Decision Engine الموجود
+├── ملخّصات AI للمحادثات مع العملاء
+├── توقّع المبيعات بناءً على tabs الـ Reports
+└── OCR لاستخراج بيانات الفواتير من صور (Edge Function + Vision model)
+
+[Enterprise Features]
+├── SAML SSO (مدعوم في Lovable Cloud لكن غير مفعّل)
+├── Multi-currency + exchange rates table
+├── Multi-warehouse advanced (currently single)
+├── e-Invoicing integration (للأسواق التي تتطلبه: السعودية، مصر)
+└── API publique مع API keys management
+
+[Observability]
+├── E2E tests بـ Playwright لأهم 5 user flows
+├── Sentry-style external error tracking
+├── Real-user monitoring (RUM) dashboard من Telemetry الموجود
+└── Status page عام للـ uptime
+```
 
 ---
 
-## ترتيب التنفيذ المقترح (متدرّج، آمن)
+## 3. ما لن نفعله الآن (شُحن مؤخراً، لا حاجة لإعادة عمله)
+- Bundle splitting + lazyWithRetry ✓
+- Dashboard RPC واحد + skeleton جزئي ✓
+- QueryCache global error telemetry ✓
+- Performance marks للإقلاع ✓
+- Modulepreload للـ vendors ✓
+- White-screen shield + SW cleanup ✓
+- Materialized views + pg_cron refresh ✓
 
-| # | المهمة | الأثر | المخاطرة |
-|---|---|---|---|
-| 1 | تشغيل `supabase--linter` + إصلاح RLS بـ `(select auth.uid())` | 🔴 عالي | منخفضة |
-| 2 | فهرسة الأعمدة الناقصة على tenant_id والأعمدة المفلترة كثيراً | 🔴 عالي | منخفضة |
-| 3 | تجميع `useSidebarCounts` في RPC واحد | 🟡 متوسط | منخفضة |
-| 4 | إضافة QueryCache onError + breadcrumbs | 🟡 متوسط | لا توجد |
-| 5 | Virtualization لقوائم > 50 صف | 🟡 متوسط | متوسطة (يحتاج اختبار) |
-| 6 | React.memo + useStableCallback في القوائم الكبيرة | 🟢 منخفض | منخفضة |
-| 7 | modulepreload للـ vendors + WebP للصور الكبيرة | 🟢 منخفض | لا توجد |
+---
 
-## تشخيص قبل التنفيذ
-سأستخدم بشكل فعلي:
-- `supabase--linter` للحصول على قائمة المشاكل الفعلية (لا تخمين).
-- `supabase--analytics_query` لاستخراج أبطأ استعلامات حقيقية من logs.
-- `browser--performance_profile` + `browser--list_network_requests` لقياس واقع المتصفح وليس افتراضات.
+## 4. سؤال للمستخدم (قبل التنفيذ)
 
-ثم أنفّذ المهام بالترتيب أعلاه، مع تحقّق بصري/شبكي بعد كل مرحلة.
+أي مرحلة نبدأ بها فعلياً، وهل لديك أولوية محددة داخل المرحلة 1؟ أقترح ترتيباً:
+1. **Auth gaps** (Forgot Password + Google Sign-In + HIBP) — أعلى أثر مرئي.
+2. **توحيد quotes/quotations** — أعلى أثر معماري طويل المدى.
+3. **Toast/Empty States/Tooltips** — أعلى أثر جمالي ومتسق.
 
-## Output النهائي للمستخدم
-- تقرير مختصر بالأرقام: قبل/بعد لكل تحسين (TTI, JS heap, RLS query duration).
-- ملف `docs/PERFORMANCE_AUDIT_2026_05.md` يحتوي قائمة كاملة بالنتائج والإصلاحات.
+إن وافقت، أبدأ بالمسار 1 فوراً وأشحنه قبل الانتقال للتالي.
