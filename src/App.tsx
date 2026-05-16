@@ -29,6 +29,8 @@ function RouteSeo(): null {
 //   - NotFound     : tiny + must render even if a chunk fetch fails
 // ─────────────────────────────────────────────────────────────────────────────
 import Auth from "./pages/Auth";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -236,6 +238,8 @@ const App = () => (
               <Routes>
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/" element={<AppLayout />}>
                   <Route index element={<Dashboard />} />
                   <Route path="customers" element={<CustomersPage />} />
