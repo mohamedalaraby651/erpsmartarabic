@@ -82,6 +82,18 @@ export default function Auth() {
     }
   };
 
+  const handleGoogle = async () => {
+    setIsLoading(true);
+    const result = await lovable.auth.signInWithOAuth('google', {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      setIsLoading(false);
+      logErrorSafely('Auth.handleGoogle', result.error);
+      toast.error('تعذّر تسجيل الدخول عبر Google. حاول مرة أخرى.');
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
