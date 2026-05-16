@@ -129,6 +129,7 @@ const MetricsPage = lazy(() => import("./pages/admin/MetricsPage"));
 const SodRulesPage = lazy(() => import("./pages/admin/SodRulesPage"));
 const TenantsPage = lazy(() => import("./pages/admin/TenantsPage"));
 const DomainEventsPage = lazy(() => import("./pages/admin/DomainEventsPage"));
+const DispatcherBatchesPage = lazy(() => import("./pages/admin/DispatcherBatchesPage"));
 
 // PWA 2025 handler routes (only triggered by OS share/file/protocol intents)
 const ShareTargetPage = lazy(() => import("./pages/share/ShareTargetPage"));
@@ -298,6 +299,7 @@ const App = () => (
                     <Route path="sod-rules" element={<SodRulesPage />} />
                     <Route path="tenants" element={<TenantsPage />} />
                     <Route path="domain-events" element={<DomainEventsPage />} />
+                    <Route path="dispatcher-batches" element={<DispatcherBatchesPage />} />
                   </Route>
                   <Route path="approvals" element={<ApprovalsPage />} />
                   <Route path="employees" element={<EmployeesPage />} />
