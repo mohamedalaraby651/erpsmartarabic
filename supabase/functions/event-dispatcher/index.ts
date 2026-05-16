@@ -264,11 +264,19 @@ Deno.serve(async (req) => {
       }
     });
 
-    const totalMs = Date.now() - startedTotal;
-    log(correlationId, 'info', 'batch.done', { ...counters, total_ms: totalMs });
+    const claimedCount = (events as DomainEvent[]).length;
+    const totalMs = await recordBatch(counters, claimedCount);
+    log(correlationId, 'info', 'batch.done', { ...counters, total_ms: totalMs, claimed: claimedCount });
 
     return jsonResponse(
-      { success: true, ...counters, batch_size: batchSize, total_ms: totalMs },
+      {
+        success: true,
+        ...counters,
+        claimed: claimedCount,
+        batch_size: batchSize,
+        total_ms: totalMs,
+        correlation_id: correlationId,
+      },
       200,
       correlationId,
     );
