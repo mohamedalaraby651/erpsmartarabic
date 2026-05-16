@@ -174,6 +174,13 @@ export default function Auth() {
                       'تسجيل الدخول'
                     )}
                   </Button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password')}
+                    className="block w-full text-sm text-primary hover:text-primary/80 transition-colors text-center"
+                  >
+                    نسيت كلمة المرور؟
+                  </button>
                 </form>
               </TabsContent>
               
