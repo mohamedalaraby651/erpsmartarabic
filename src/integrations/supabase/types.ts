@@ -1554,6 +1554,51 @@ export type Database = {
         }
         Relationships: []
       }
+      dispatcher_event_executions: {
+        Row: {
+          aggregate_id: string | null
+          aggregate_type: string | null
+          attempts: number
+          correlation_id: string
+          error: string | null
+          event_id: string
+          event_type: string
+          executed_at: string
+          id: string
+          latency_ms: number
+          status: string
+          tenant_id: string | null
+        }
+        Insert: {
+          aggregate_id?: string | null
+          aggregate_type?: string | null
+          attempts?: number
+          correlation_id: string
+          error?: string | null
+          event_id: string
+          event_type: string
+          executed_at?: string
+          id?: string
+          latency_ms?: number
+          status: string
+          tenant_id?: string | null
+        }
+        Update: {
+          aggregate_id?: string | null
+          aggregate_type?: string | null
+          attempts?: number
+          correlation_id?: string
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          executed_at?: string
+          id?: string
+          latency_ms?: number
+          status?: string
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
       document_posting_log: {
         Row: {
           created_at: string
@@ -6507,6 +6552,21 @@ export type Database = {
           _skipped: number
           _started_at: string
           _total_ms: number
+        }
+        Returns: undefined
+      }
+      record_dispatcher_event_execution: {
+        Args: {
+          _aggregate_id: string
+          _aggregate_type: string
+          _attempts: number
+          _correlation_id: string
+          _error: string
+          _event_id: string
+          _event_type: string
+          _latency_ms: number
+          _status: string
+          _tenant_id: string
         }
         Returns: undefined
       }

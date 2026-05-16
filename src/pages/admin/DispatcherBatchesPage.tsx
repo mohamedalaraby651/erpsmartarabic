@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -154,7 +155,12 @@ export default function DispatcherBatchesPage() {
                           {fmtTime(r.started_at)}
                         </td>
                         <td className="p-2 font-mono text-xs" title={r.correlation_id}>
-                          {r.correlation_id.slice(0, 8)}…
+                          <Link
+                            to={`/admin/dispatcher-batches/${encodeURIComponent(r.correlation_id)}`}
+                            className="text-primary hover:underline"
+                          >
+                            {r.correlation_id.slice(0, 8)}…
+                          </Link>
                         </td>
                         <td className="p-2">{r.batch_size}</td>
                         <td className="p-2">{r.claimed_count}</td>
