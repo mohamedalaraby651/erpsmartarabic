@@ -82,11 +82,6 @@ export function useDashboardData() {
     retry: 2,
     retryDelay: (i) => Math.min(1000 * 2 ** i, 4000),
   });
-    staleTime: 300000,
-    gcTime: 600000,
-    retry: 2,
-    retryDelay: (i) => Math.min(1000 * 2 ** i, 4000),
-  });
 
   const dashboardStats: DashboardStats | undefined = overview
     ? {
