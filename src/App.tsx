@@ -301,6 +301,7 @@ const App = () => (
                     <Route path="tenants" element={<TenantsPage />} />
                     <Route path="domain-events" element={<DomainEventsPage />} />
                     <Route path="dispatcher-batches" element={<DispatcherBatchesPage />} />
+                    <Route path="dispatcher-batches/:correlationId" element={<DispatcherBatchDetailPage />} />
                   </Route>
                   <Route path="approvals" element={<ApprovalsPage />} />
                   <Route path="employees" element={<EmployeesPage />} />
