@@ -98,6 +98,17 @@ export function useDashboardData() {
       }
     : undefined;
 
+  const financialKPIs: FinancialKPIs | undefined = overview
+    ? {
+        todayRevenue: Number(overview.today_revenue ?? 0),
+        mtdRevenue: Number(overview.mtd_revenue ?? 0),
+        outstandingAR: Number(overview.outstanding_ar ?? 0),
+        overdueAR: Number(overview.overdue_ar ?? 0),
+        cashBalance: Number(overview.cash_balance ?? 0),
+        pendingApprovals: Number(overview.pending_approvals ?? 0),
+      }
+    : undefined;
+
   const monthlyNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
   const monthlySalesData: MonthlySalesPoint[] | undefined = overview
     ? (() => {
