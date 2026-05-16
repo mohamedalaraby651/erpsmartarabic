@@ -1509,6 +1509,51 @@ export type Database = {
           },
         ]
       }
+      dispatcher_batch_runs: {
+        Row: {
+          auth_mode: string | null
+          batch_size: number
+          claimed_count: number
+          correlation_id: string
+          created_at: string
+          failed: number
+          finished_at: string
+          id: string
+          processed: number
+          skipped: number
+          started_at: string
+          total_ms: number
+        }
+        Insert: {
+          auth_mode?: string | null
+          batch_size?: number
+          claimed_count?: number
+          correlation_id: string
+          created_at?: string
+          failed?: number
+          finished_at?: string
+          id?: string
+          processed?: number
+          skipped?: number
+          started_at?: string
+          total_ms?: number
+        }
+        Update: {
+          auth_mode?: string | null
+          batch_size?: number
+          claimed_count?: number
+          correlation_id?: string
+          created_at?: string
+          failed?: number
+          finished_at?: string
+          id?: string
+          processed?: number
+          skipped?: number
+          started_at?: string
+          total_ms?: number
+        }
+        Relationships: []
+      }
       document_posting_log: {
         Row: {
           created_at: string
@@ -6451,6 +6496,20 @@ export type Database = {
       post_purchase_invoice: { Args: { p_id: string }; Returns: Json }
       prune_expired_idempotency: { Args: never; Returns: number }
       purge_old_audit_records: { Args: never; Returns: undefined }
+      record_dispatcher_batch: {
+        Args: {
+          _auth_mode: string
+          _batch_size: number
+          _claimed_count: number
+          _correlation_id: string
+          _failed: number
+          _processed: number
+          _skipped: number
+          _started_at: string
+          _total_ms: number
+        }
+        Returns: undefined
+      }
       record_event_metric: {
         Args: { _event_type: string; _latency_ms?: number; _success: boolean }
         Returns: undefined
