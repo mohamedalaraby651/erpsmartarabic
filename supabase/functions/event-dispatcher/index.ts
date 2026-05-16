@@ -245,21 +245,39 @@ Deno.serve(async (req) => {
         counters.failed++;
       } finally {
         const latency = Date.now() - startedAt;
-        await supabase
-          .rpc('record_event_metric', {
-            _event_type: event.event_type,
-            _success: success,
-            _latency_ms: latency,
-          })
-          .then(({ error }) => {
-            if (error) log(correlationId, 'warn', 'metric.error', { err: error.message });
-          });
+        const execStatus = success ? 'processed' : skipped ? 'skipped' : 'failed';
+        await Promise.all([
+          supabase
+            .rpc('record_event_metric', {
+              _event_type: event.event_type,
+              _success: success,
+              _latency_ms: latency,
+            })
+            .then(({ error }) => {
+              if (error) log(correlationId, 'warn', 'metric.error', { err: error.message });
+            }),
+          supabase
+            .rpc('record_dispatcher_event_execution', {
+              _correlation_id: correlationId,
+              _event_id: event.id,
+              _event_type: event.event_type,
+              _aggregate_type: event.aggregate_type ?? null,
+              _aggregate_id: event.aggregate_id ?? null,
+              _tenant_id: event.tenant_id ?? null,
+              _status: execStatus,
+              _error: errMsg ? errMsg.slice(0, 1000) : null,
+              _latency_ms: latency,
+              _attempts: event.attempts ?? 0,
+            })
+            .then(({ error }) => {
+              if (error) log(correlationId, 'warn', 'exec_record.error', { err: error.message });
+            }),
+        ]);
         log(correlationId, success ? 'info' : skipped ? 'warn' : 'error', 'event.done', {
           event_id: event.id,
           event_type: event.event_type,
           latency_ms: latency,
-          success,
-          skipped,
+          status: execStatus,
         });
       }
     });
