@@ -69,8 +69,19 @@ export function useDashboardData() {
         current_period_invoices: number;
         previous_period_invoices: number;
         monthly_sales: { month: string; sales: number }[];
+        today_revenue?: number;
+        mtd_revenue?: number;
+        outstanding_ar?: number;
+        overdue_ar?: number;
+        cash_balance?: number;
+        pending_approvals?: number;
       };
     },
+    staleTime: 300000,
+    gcTime: 600000,
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 4000),
+  });
     staleTime: 300000,
     gcTime: 600000,
     retry: 2,
