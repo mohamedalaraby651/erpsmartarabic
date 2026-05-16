@@ -59,4 +59,4 @@ export const StatsWidget = memo(function StatsWidget({ dashboardStats }: StatsWi
       </CardContent>
     </>
   );
-}
+});
