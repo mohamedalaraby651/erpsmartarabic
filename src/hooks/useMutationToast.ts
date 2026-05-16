@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { extractErrorMessage } from '@/lib/errorHandler';
+import { getSafeErrorMessage } from '@/lib/errorHandler';
 
 interface MutationToastOptions {
   /** Title shown on success (Arabic). */
@@ -45,7 +45,7 @@ export function useMutationToast(options: MutationToastOptions = {}) {
 
   const onError = useCallback(
     (error: unknown) => {
-      const description = errorDescription ?? extractErrorMessage(error);
+      const description = errorDescription ?? getSafeErrorMessage(error);
       toast({
         title: errorTitle,
         description,
