@@ -69,10 +69,11 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
-  const { currentTenantName } = useTenant();
+  const { currentTenantName, tenantId } = useTenant();
   const { insights } = useBusinessInsights();
   const {
     dashboardStats,
+    financialKPIs,
     isStatsLoading,
     overviewError,
     isOverviewFetching,
@@ -81,6 +82,8 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     tasks,
     recentInvoices,
   } = useDashboardData();
+
+  useDashboardRealtime(tenantId);
 
   const quickActions = allQuickActions.filter(action =>
     !userRole || action.roles.includes(userRole)
