@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { getSafeErrorMessage } from '@/lib/errorHandler';
 
 interface MutationToastOptions {
@@ -11,7 +11,7 @@ interface MutationToastOptions {
   errorTitle?: string;
   /** Optional override for the error description; otherwise extracted from the error. */
   errorDescription?: string;
-  /** If true, suppress the success toast (still shows error). Useful when caller wants custom UI. */
+  /** If true, suppress the success toast (still shows error). */
   silentSuccess?: boolean;
 }
 
@@ -19,6 +19,7 @@ interface MutationToastOptions {
  * useMutationToast — unified success/error toast helpers for mutations.
  *
  * Standardizes the "every mutation must produce feedback" rule from the audit.
+ * Built on sonner to match project convention (all existing mutations use sonner).
  *
  * Usage:
  * ```tsx
@@ -30,27 +31,28 @@ export function useMutationToast(options: MutationToastOptions = {}) {
   const {
     successTitle = 'تم بنجاح',
     successDescription,
-    errorTitle = 'حدث خطأ',
+    errorTitle,
     errorDescription,
     silentSuccess = false,
   } = options;
 
   const onSuccess = useCallback(() => {
     if (silentSuccess) return;
-    toast({
-      title: successTitle,
-      description: successDescription,
-    });
+    if (successDescription) {
+      toast.success(successTitle, { description: successDescription });
+    } else {
+      toast.success(successTitle);
+    }
   }, [successTitle, successDescription, silentSuccess]);
 
   const onError = useCallback(
     (error: unknown) => {
       const description = errorDescription ?? getSafeErrorMessage(error);
-      toast({
-        title: errorTitle,
-        description,
-        variant: 'destructive',
-      });
+      if (errorTitle) {
+        toast.error(errorTitle, { description });
+      } else {
+        toast.error(description);
+      }
     },
     [errorTitle, errorDescription]
   );
