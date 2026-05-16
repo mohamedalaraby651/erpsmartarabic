@@ -155,7 +155,12 @@ export default function DispatcherBatchesPage() {
                           {fmtTime(r.started_at)}
                         </td>
                         <td className="p-2 font-mono text-xs" title={r.correlation_id}>
-                          {r.correlation_id.slice(0, 8)}…
+                          <Link
+                            to={`/admin/dispatcher-batches/${encodeURIComponent(r.correlation_id)}`}
+                            className="text-primary hover:underline"
+                          >
+                            {r.correlation_id.slice(0, 8)}…
+                          </Link>
                         </td>
                         <td className="p-2">{r.batch_size}</td>
                         <td className="p-2">{r.claimed_count}</td>
