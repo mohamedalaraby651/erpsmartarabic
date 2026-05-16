@@ -147,6 +147,27 @@ Deno.serve(async (req) => {
   );
 
   const startedTotal = Date.now();
+  const startedAtIso = new Date(startedTotal).toISOString();
+
+  const recordBatch = async (
+    counters: { processed: number; failed: number; skipped: number },
+    claimedCount: number,
+  ) => {
+    const totalMs = Date.now() - startedTotal;
+    const { error } = await supabase.rpc('record_dispatcher_batch', {
+      _correlation_id: correlationId,
+      _processed: counters.processed,
+      _failed: counters.failed,
+      _skipped: counters.skipped,
+      _batch_size: batchSize,
+      _claimed_count: claimedCount,
+      _total_ms: totalMs,
+      _auth_mode: authMode,
+      _started_at: startedAtIso,
+    });
+    if (error) log(correlationId, 'warn', 'batch_record.error', { err: error.message });
+    return totalMs;
+  };
 
   try {
     const { data: events, error: claimErr } = await supabase.rpc('claim_pending_events', {
@@ -159,8 +180,9 @@ Deno.serve(async (req) => {
     }
     if (!events || events.length === 0) {
       log(correlationId, 'info', 'claim.empty', { auth_mode: authMode });
+      await recordBatch({ processed: 0, failed: 0, skipped: 0 }, 0);
       return jsonResponse(
-        { success: true, processed: 0, failed: 0, skipped: 0, batch_size: batchSize },
+        { success: true, processed: 0, failed: 0, skipped: 0, batch_size: batchSize, correlation_id: correlationId },
         200,
         correlationId,
       );
