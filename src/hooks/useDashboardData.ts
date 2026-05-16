@@ -153,6 +153,7 @@ export function useDashboardData() {
 
   return {
     dashboardStats,
+    financialKPIs,
     isStatsLoading,
     overviewError: overviewError as Error | null,
     isOverviewFetching,
