@@ -281,21 +281,23 @@ const App = () => (
                   <Route path="search" element={<SearchPage />} />
                   <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="tasks" element={<TasksPage />} />
-                  <Route path="admin/roles" element={<RolesPage />} />
-                  <Route path="admin/permissions" element={<PermissionsPage />} />
-                  <Route path="admin/customizations" element={<CustomizationsPage />} />
-                  <Route path="admin/users" element={<UsersPage />} />
-                  <Route path="admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="admin/activity-log" element={<ActivityLogPage />} />
-                  <Route path="admin/audit-trail" element={<AuditTrailPage />} />
-                  <Route path="admin/role-limits" element={<RoleLimitsPage />} />
-                  <Route path="admin/backup" element={<BackupPage />} />
-                  <Route path="admin/export-templates" element={<ExportTemplatesPage />} />
-                  <Route path="admin/approval-chains" element={<ApprovalChainsPage />} />
-                  <Route path="admin/metrics" element={<MetricsPage />} />
-                  <Route path="admin/sod-rules" element={<SodRulesPage />} />
-                  <Route path="admin/tenants" element={<TenantsPage />} />
-                  <Route path="admin/domain-events" element={<DomainEventsPage />} />
+                  <Route path="admin" element={<RoleGuard allow={['admin']}><Outlet /></RoleGuard>}>
+                    <Route path="roles" element={<RolesPage />} />
+                    <Route path="permissions" element={<PermissionsPage />} />
+                    <Route path="customizations" element={<CustomizationsPage />} />
+                    <Route path="users" element={<UsersPage />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="activity-log" element={<ActivityLogPage />} />
+                    <Route path="audit-trail" element={<AuditTrailPage />} />
+                    <Route path="role-limits" element={<RoleLimitsPage />} />
+                    <Route path="backup" element={<BackupPage />} />
+                    <Route path="export-templates" element={<ExportTemplatesPage />} />
+                    <Route path="approval-chains" element={<ApprovalChainsPage />} />
+                    <Route path="metrics" element={<MetricsPage />} />
+                    <Route path="sod-rules" element={<SodRulesPage />} />
+                    <Route path="tenants" element={<TenantsPage />} />
+                    <Route path="domain-events" element={<DomainEventsPage />} />
+                  </Route>
                   <Route path="approvals" element={<ApprovalsPage />} />
                   <Route path="employees" element={<EmployeesPage />} />
                   <Route path="employees/:id" element={<EmployeeDetailsPage />} />
