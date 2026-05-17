@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
+import { useQuickActionSize, getQuickActionClasses } from '@/hooks/useQuickActionSize';
 import { cn } from '@/lib/utils';
 
 interface Props {
