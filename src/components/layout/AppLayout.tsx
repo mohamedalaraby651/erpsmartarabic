@@ -183,12 +183,13 @@ export default function AppLayout() {
         </div>
       </div>
       
-      {/* Keyboard Shortcuts Modal */}
+      {/* Keyboard Shortcuts Modal + Command Palette */}
       <Suspense fallback={null}>
-        <ShortcutsModal 
-          open={showShortcutsModal} 
-          onOpenChange={setShowShortcutsModal} 
+        <ShortcutsModal
+          open={showShortcutsModal}
+          onOpenChange={setShowShortcutsModal}
         />
+        <CommandBar />
       </Suspense>
     </>
   );
