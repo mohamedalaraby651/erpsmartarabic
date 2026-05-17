@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { prefetchByPath } from '@/lib/prefetch';
 
 export interface FinancialKPIData {
   todayRevenue: number;
@@ -70,6 +71,9 @@ const KpiCardView = memo(function KpiCardView({ card }: { card: KpiCard }) {
         clickable && 'cursor-pointer hover:-translate-y-0.5'
       )}
       onClick={clickable ? () => navigate(card.href!) : undefined}
+      onMouseEnter={clickable ? () => prefetchByPath(card.href!.split('?')[0]) : undefined}
+      onTouchStart={clickable ? () => prefetchByPath(card.href!.split('?')[0]) : undefined}
+      onFocus={clickable ? () => prefetchByPath(card.href!.split('?')[0]) : undefined}
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}
     >
