@@ -28,6 +28,7 @@ import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 import { AlertsBell } from '@/components/dashboard/AlertsBell';
 import { WidgetErrorBoundary } from '@/components/dashboard/WidgetErrorBoundary';
+import { cn } from '@/lib/utils';
 
 import { StatsWidget } from '@/components/dashboard/StatsWidget';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
@@ -120,13 +121,21 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 
   const handleRetry = useCallback(() => refetchOverview(), [refetchOverview]);
 
-  // Block initial render only until auth + widget prefs are ready.
-  if ((authLoading || widgetsLoading) && !dashboardStats) {
-    return <DashboardSkeleton />;
-  }
-
   const statsLoading = isStatsLoading && !dashboardStats;
   const userName = user?.user_metadata?.full_name || 'المستخدم';
+
+  // Shimmer skeleton with a fixed min-height matching the loaded widget,
+  // so there's NO layout shift when data arrives. Heights are tuned per
+  // widget across breakpoints (mobile / tablet / desktop).
+  const skeleton = (cls: string) => (
+    <div
+      aria-busy="true"
+      className={cn(
+        'rounded-lg bg-muted/40 animate-pulse',
+        cls,
+      )}
+    />
+  );
 
   const renderWidget = useCallback((widget: WidgetConfig) => {
     const wrap = (node: React.ReactNode) => (
@@ -136,9 +145,9 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
       case 'stats':
         if (statsLoading) {
           return wrap(
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 min-h-[372px] sm:min-h-[184px] lg:min-h-[124px]" aria-busy="true">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="rounded-lg border bg-card p-5 space-y-3">
+                <div key={i} className="rounded-lg border bg-card p-5 space-y-3 h-[124px]">
                   <div className="flex items-center justify-between">
                     <div className="h-4 w-24 bg-muted rounded animate-pulse" />
                     <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
@@ -155,10 +164,10 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         return wrap(<QuickActionsWidget quickActions={quickActions} onAction={handleQuickAction} />);
       case 'chart':
         if (statsLoading) {
-          return wrap(<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" aria-busy="true" />);
+          return wrap(skeleton('h-[280px] sm:h-[320px] lg:h-[340px]'));
         }
         return wrap(
-          <Suspense fallback={<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" />}>
+          <Suspense fallback={skeleton('h-[280px] sm:h-[320px] lg:h-[340px]')}>
             <SalesChartWidget data={monthlySalesData} />
           </Suspense>
         );
@@ -168,7 +177,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         return wrap(<RecentInvoicesWidget invoices={recentInvoices} />);
       case 'today_performance':
         return wrap(
-          <Suspense fallback={<div className="h-[220px] bg-muted/30 rounded-md animate-pulse" />}>
+          <Suspense fallback={skeleton('h-[240px] sm:h-[220px] lg:h-[220px]')}>
             <TodayPerformanceWidget />
           </Suspense>
         );
@@ -176,7 +185,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         return wrap(<LowStockWidget />);
       case 'calendar':
         return wrap(
-          <Suspense fallback={<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" />}>
+          <Suspense fallback={skeleton('h-[300px] sm:h-[340px] lg:h-[360px]')}>
             <CalendarWidget />
           </Suspense>
         );
@@ -186,6 +195,11 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         return null;
     }
   }, [statsLoading, dashboardStats, quickActions, handleQuickAction, monthlySalesData, tasks, recentInvoices, insights]);
+
+  // Block initial render only until auth + widget prefs are ready.
+  if ((authLoading || widgetsLoading) && !dashboardStats) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div ref={ref} className="space-y-5 sm:space-y-6 animate-fade-in" {...props}>
