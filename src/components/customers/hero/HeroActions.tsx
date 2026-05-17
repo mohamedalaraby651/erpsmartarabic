@@ -4,6 +4,12 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Edit, FileText, Printer, Wallet, MoreVertical, Globe, ShoppingCart, Receipt, Download,
 } from "lucide-react";
 import type { Customer } from "@/lib/customerConstants";
