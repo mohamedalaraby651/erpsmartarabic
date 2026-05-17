@@ -6,13 +6,13 @@ import { prefetchByPath } from '@/lib/prefetch';
 
 export type ChipTone = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'muted';
 
-const toneClasses: Record<ChipTone, { icon: string; count: string }> = {
-  primary: { icon: 'text-primary', count: 'bg-primary/10 text-primary' },
-  success: { icon: 'text-success', count: 'bg-success/10 text-success' },
-  warning: { icon: 'text-warning', count: 'bg-warning/10 text-warning' },
-  destructive: { icon: 'text-destructive', count: 'bg-destructive/10 text-destructive' },
-  info: { icon: 'text-accent-foreground', count: 'bg-accent text-accent-foreground' },
-  muted: { icon: 'text-muted-foreground', count: 'bg-muted text-foreground' },
+const toneClasses: Record<ChipTone, { icon: string; count: string; bg: string }> = {
+  primary: { icon: 'text-primary', count: 'bg-primary/15 text-primary', bg: 'bg-primary/5 border-primary/20 hover:bg-primary/10' },
+  success: { icon: 'text-success', count: 'bg-success/15 text-success', bg: 'bg-success/5 border-success/20 hover:bg-success/10' },
+  warning: { icon: 'text-warning', count: 'bg-warning/15 text-warning', bg: 'bg-warning/5 border-warning/20 hover:bg-warning/10' },
+  destructive: { icon: 'text-destructive', count: 'bg-destructive/15 text-destructive', bg: 'bg-destructive/5 border-destructive/25 hover:bg-destructive/10' },
+  info: { icon: 'text-accent-foreground', count: 'bg-accent text-accent-foreground', bg: 'bg-accent/30 border-accent/40 hover:bg-accent/50' },
+  muted: { icon: 'text-muted-foreground', count: 'bg-muted text-foreground', bg: 'bg-card border-border hover:bg-accent' },
 };
 
 interface DashboardChipProps {
