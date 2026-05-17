@@ -221,6 +221,16 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <AlertsBell insights={insights} />
+          <button
+            type="button"
+            onClick={toggleDensity}
+            className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
+            aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
+            aria-pressed={isCompact}
+            title={isCompact ? 'عرض عادي' : 'عرض مضغوط'}
+          >
+            {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
+          </button>
           {quickActions.slice(0, 1).map((action) => (
             <button
               key={action.href}
