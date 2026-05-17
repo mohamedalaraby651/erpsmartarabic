@@ -153,7 +153,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
         </DropdownMenu>
         {layoutCustomizerSlot}
         {canEdit && (
-          <TapTooltip content="إضافة سريعة لعميل جديد" side="bottom" autoCloseMs={1500}>
+          <TapTooltip content={tooltips.quickAddCustomer} side="bottom" autoCloseMs={1500}>
             <Button onClick={onAdd} className="flex-1 sm:flex-none">
               <Plus className="h-4 w-4 ml-2" />إضافة عميل
             </Button>
