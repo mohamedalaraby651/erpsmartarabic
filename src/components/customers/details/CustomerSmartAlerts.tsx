@@ -120,7 +120,7 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
   const hiddenCount = visibleAlerts.length - shown.length;
 
   return (
-    <div className="space-y-2 w-full" role="region" aria-label="تنبيهات العميل" aria-live="polite">
+    <div className="space-y-2 w-full" role="region" aria-label={regions.customerAlerts} aria-live="polite">
       {shown.map(alert => {
         const Icon = alert.icon;
         return (
