@@ -7,6 +7,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TapTooltip } from "@/components/ui/tap-tooltip";
 import { CustomerSearchPreview } from "@/components/customers/filters/CustomerSearchPreview";
+import { tooltips } from "@/lib/uiCopy";
 
 interface CustomerPageHeaderProps {
   isMobile: boolean;
