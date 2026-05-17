@@ -151,7 +151,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
       {/* Infinite scroll sentinel — skeleton أثناء جلب المزيد */}
       <div ref={observerRef} className="mt-3" aria-hidden={!isFetchingNextPage}>
         {isFetchingNextPage ? (
-          <div className="space-y-2.5" role="status" aria-live="polite" aria-label="جارٍ تحميل المزيد">
+          <div className="space-y-2.5" role="status" aria-live="polite" aria-label={regions.loadingMore}>
             <span className="sr-only">جارٍ تحميل المزيد من العملاء…</span>
             <CustomerMobileSkeleton count={2} showSummary={false} showSortBar={false} />
           </div>
