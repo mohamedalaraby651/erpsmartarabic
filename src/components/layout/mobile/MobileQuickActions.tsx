@@ -32,26 +32,33 @@ export function MobileQuickActions({ onNavigate }: MobileQuickActionsProps) {
         <Plus className="h-2.5 w-2.5" />
         <span>إنشاء سريع</span>
       </div>
-      <div className="grid grid-cols-4 gap-1.5">
-        {quickActions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <Button
-              key={action.title}
-              variant="ghost"
-              className={cn(
-                'flex-col h-auto py-2 gap-1',
-                action.bgColor,
-                action.color
-              )}
-              onClick={() => onNavigate(action.href)}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="text-[9px]">{action.title}</span>
-            </Button>
-          );
-        })}
-      </div>
+      <TooltipProvider delayDuration={200}>
+        <div className="grid grid-cols-4 gap-1.5">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Tooltip key={action.title}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      'flex-col h-auto py-2 gap-1',
+                      action.bgColor,
+                      action.color
+                    )}
+                    onClick={() => onNavigate(action.href)}
+                    aria-label={`إنشاء ${action.title} جديد`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="text-[9px]">{action.title}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">إنشاء {action.title} جديد</TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
     </div>
   );
 }
