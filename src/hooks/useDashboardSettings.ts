@@ -46,21 +46,33 @@ export function useDashboardSettings() {
 
       if (error && error.code !== 'PGRST116') throw error;
       
-      // Update localStorage with DB data
+      // Update localStorage with DB data (defensive: tolerate legacy
+      // rows where `widgets` was double-stringified into a JSON string).
       if (data?.widgets) {
-        const dbWidgets = data.widgets as unknown as WidgetConfig[];
-        localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(dbWidgets));
-        setLocalWidgets(dbWidgets);
+        let dbWidgets: WidgetConfig[] = [];
+        const raw = data.widgets as unknown;
+        if (Array.isArray(raw)) {
+          dbWidgets = raw as WidgetConfig[];
+        } else if (typeof raw === 'string') {
+          try { dbWidgets = JSON.parse(raw) as WidgetConfig[]; } catch { dbWidgets = []; }
+        }
+        if (Array.isArray(dbWidgets)) {
+          localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(dbWidgets));
+          setLocalWidgets(dbWidgets);
+        }
       }
-      
+
       return data;
     },
     enabled: !!user?.id,
   });
 
-  const widgets: WidgetConfig[] = settings?.widgets 
-    ? (settings.widgets as unknown as WidgetConfig[])
-    : localWidgets;
+  const rawWidgets = settings?.widgets as unknown;
+  const widgets: WidgetConfig[] = Array.isArray(rawWidgets)
+    ? (rawWidgets as WidgetConfig[])
+    : typeof rawWidgets === 'string'
+      ? (() => { try { return JSON.parse(rawWidgets) as WidgetConfig[]; } catch { return localWidgets; } })()
+      : localWidgets;
 
   const mutation = useMutation({
     mutationFn: async (newWidgets: WidgetConfig[]) => {
@@ -70,13 +82,14 @@ export function useDashboardSettings() {
       localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newWidgets));
       setLocalWidgets(newWidgets);
 
-      // Then save to database
+      // Then save to database — pass the array directly so jsonb stores
+      // it as a JSON array (not a JSON-encoded string).
       const { error } = await supabase
         .from('user_dashboard_settings')
         .upsert([
           {
             user_id: user.id,
-            widgets: JSON.stringify(newWidgets),
+            widgets: newWidgets as unknown as never,
           },
         ], { onConflict: 'user_id' });
 
