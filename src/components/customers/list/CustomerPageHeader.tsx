@@ -122,7 +122,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
         <DropdownMenu>
-          <TapTooltip content="استيراد، تصدير، كشف مكررين، ودمج" side="bottom" autoCloseMs={1600}>
+          <TapTooltip content={tooltips.toolsMenu} side="bottom" autoCloseMs={1600}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <MoreVertical className="h-4 w-4 ml-2" />أدوات
