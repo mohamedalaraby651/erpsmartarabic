@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   Plus, Users, Package, FileText, Receipt, ShoppingCart,
   ClipboardList, Truck, CreditCard, Briefcase, ListChecks, Building2,
+  Rows3, Rows2,
 } from 'lucide-react';
+import { useDashboardDensity } from '@/hooks/useDashboardDensity';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
 import { useDashboardSettings } from '@/hooks/useDashboardSettings';
@@ -83,6 +86,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
   const { currentTenantName, tenantId } = useTenant();
   const { insights } = useBusinessInsights();
+  const { density, toggle: toggleDensity, isCompact } = useDashboardDensity();
   const {
     dashboardStats,
     financialKPIs,
