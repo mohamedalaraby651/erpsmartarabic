@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Phone, MoreHorizontal, ChevronRight, ChevronLeft, ArrowRight, ArrowLeft } from "lucide-react";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
-import { tooltips } from "@/lib/uiCopy";
+import { tooltips, regions } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerCompressedHeaderProps {
