@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendingUp, TrendingDown, Receipt, CreditCard, FileText, ShoppingCart } from 'lucide-react';
+import { DashboardChip, type ChipTone } from './_shared/DashboardChip';
 
 export function TodayPerformanceWidget() {
   const { data: todayStats, isLoading } = useQuery({
