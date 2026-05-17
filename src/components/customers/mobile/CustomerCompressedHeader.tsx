@@ -44,7 +44,7 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
           className="h-9 w-7 shrink-0"
           onClick={onPrevCustomer}
           disabled={!hasPrevCustomer}
-          aria-label="العميل السابق"
+          aria-label={tooltips.prevCustomer}
         >
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Button>
