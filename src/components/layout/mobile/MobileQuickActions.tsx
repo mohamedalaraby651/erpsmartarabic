@@ -1,6 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Receipt,
   Users,
   ShoppingCart,
