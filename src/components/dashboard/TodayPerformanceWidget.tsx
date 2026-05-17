@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendingUp, TrendingDown, Receipt, CreditCard, FileText, ShoppingCart } from 'lucide-react';
+import { DashboardChip, type ChipTone } from './_shared/DashboardChip';
 
 export function TodayPerformanceWidget() {
   const { data: todayStats, isLoading } = useQuery({
@@ -84,14 +85,18 @@ export function TodayPerformanceWidget() {
   if (isLoading) {
     return (
       <>
-        <CardHeader className="px-3 pt-2.5 pb-1.5 sm:px-6 sm:pt-6">
-          <CardTitle className="text-[13px] sm:text-lg">أداء اليوم</CardTitle>
+        <div className="sm:hidden flex items-center justify-between px-3 pt-2.5 pb-1.5">
+          <h3 className="text-base font-bold">أداء اليوم</h3>
+        </div>
+        <CardHeader className="hidden sm:block px-6 pt-6 pb-1.5">
+          <CardTitle className="text-lg">أداء اليوم</CardTitle>
         </CardHeader>
         <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
-            {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-[68px] sm:h-24 rounded-lg" />
-            ))}
+          <div className="sm:hidden flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-3 px-3">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-9 w-[120px] rounded-lg shrink-0" />)}
+          </div>
+          <div className="hidden sm:grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
           </div>
         </CardContent>
       </>
@@ -100,7 +105,16 @@ export function TodayPerformanceWidget() {
 
   if (!todayStats) return null;
 
-  const stats = [
+  const stats: Array<{
+    title: string;
+    value: number | null;
+    count: number;
+    change: number | null;
+    icon: typeof Receipt;
+    color: string;
+    bgColor: string;
+    chipTone: ChipTone;
+  }> = [
     {
       title: 'الفواتير',
       value: todayStats.invoicesTotal,
@@ -109,6 +123,7 @@ export function TodayPerformanceWidget() {
       icon: Receipt,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
+      chipTone: 'primary',
     },
     {
       title: 'التحصيلات',
@@ -118,6 +133,7 @@ export function TodayPerformanceWidget() {
       icon: CreditCard,
       color: 'text-success',
       bgColor: 'bg-success/10',
+      chipTone: 'success',
     },
     {
       title: 'عروض الأسعار',
@@ -127,6 +143,7 @@ export function TodayPerformanceWidget() {
       icon: FileText,
       color: 'text-accent-foreground',
       bgColor: 'bg-accent',
+      chipTone: 'info',
     },
     {
       title: 'أوامر البيع',
@@ -136,55 +153,91 @@ export function TodayPerformanceWidget() {
       icon: ShoppingCart,
       color: 'text-warning',
       bgColor: 'bg-warning/10',
+      chipTone: 'warning',
     },
   ];
 
+  const fmtChipValue = (s: typeof stats[number]) => {
+    if (s.value !== null) {
+      // Compact currency for chips
+      const v = s.value;
+      if (v >= 1000) return `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}ك`;
+      return v.toLocaleString('ar-EG');
+    }
+    return s.count.toLocaleString('ar-EG');
+  };
+
   return (
     <>
-      <CardHeader className="px-3 pt-2.5 pb-1.5 sm:px-6 sm:pt-6">
-        <CardTitle className="text-[13px] sm:text-lg">أداء اليوم</CardTitle>
-        <CardDescription className="text-[10px] sm:text-sm leading-tight">
-          {new Date().toLocaleDateString('ar-EG', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+      {/* Mobile compact header */}
+      <div className="sm:hidden flex items-center justify-between px-3 pt-2.5 pb-1.5">
+        <h3 className="text-base font-bold">أداء اليوم</h3>
+        <span className="text-[10px] text-muted-foreground">
+          {new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'short' })}
+        </span>
+      </div>
+
+      {/* Desktop header */}
+      <CardHeader className="hidden sm:block px-6 pt-6 pb-1.5">
+        <CardTitle className="text-lg">أداء اليوم</CardTitle>
+        <CardDescription className="text-sm leading-tight">
+          {new Date().toLocaleDateString('ar-EG', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           })}
         </CardDescription>
       </CardHeader>
+
       <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 animate-fade-in">
+        {/* Mobile: chip strip */}
+        <div className="sm:hidden flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-3 px-3 animate-fade-in">
+          {stats.map((s) => (
+            <DashboardChip
+              key={s.title}
+              label={s.title}
+              value={fmtChipValue(s)}
+              icon={s.icon}
+              tone={s.chipTone}
+              trend={s.change}
+            />
+          ))}
+        </div>
+
+        {/* Desktop: original 2x2 grid */}
+        <div className="hidden sm:grid grid-cols-2 gap-4 animate-fade-in">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.title} className="p-2 sm:p-4 rounded-lg bg-muted/50">
-                <div className="flex items-center justify-between mb-1 sm:mb-2">
-                  <div className={`h-7 w-7 sm:h-9 sm:w-9 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
-                    <Icon className={`h-3 w-3 sm:h-4 sm:w-4 ${stat.color}`} />
+              <div key={stat.title} className="p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`h-9 w-9 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
+                    <Icon className={`h-4 w-4 ${stat.color}`} />
                   </div>
                   {stat.change !== null && (
-                    <div className={`flex items-center gap-0.5 text-[9px] sm:text-xs ${
+                    <div className={`flex items-center gap-0.5 text-xs ${
                       stat.change >= 0 ? 'text-success' : 'text-destructive'
                     }`}>
                       {stat.change >= 0 ? (
-                        <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        <TrendingUp className="h-3 w-3" />
                       ) : (
-                        <TrendingDown className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        <TrendingDown className="h-3 w-3" />
                       )}
                       <span className="tabular-nums">{Math.abs(stat.change).toFixed(0)}%</span>
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">{stat.title}</p>
+                <p className="text-xs text-muted-foreground leading-tight">{stat.title}</p>
                 {stat.value !== null ? (
-                  <p className="text-sm sm:text-lg font-bold mt-0.5 sm:mt-1 tabular-nums truncate leading-tight">
+                  <p className="text-lg font-bold mt-1 tabular-nums truncate leading-tight">
                     {stat.value.toLocaleString('ar-EG')} ج.م
                   </p>
                 ) : (
-                  <p className="text-sm sm:text-lg font-bold mt-0.5 sm:mt-1 tabular-nums leading-tight">{stat.count}</p>
+                  <p className="text-lg font-bold mt-1 tabular-nums leading-tight">{stat.count}</p>
                 )}
                 {stat.value !== null && (
-                  <p className="text-[9px] sm:text-xs text-muted-foreground leading-tight">{stat.count} عملية</p>
+                  <p className="text-xs text-muted-foreground leading-tight">{stat.count} عملية</p>
                 )}
               </div>
             );

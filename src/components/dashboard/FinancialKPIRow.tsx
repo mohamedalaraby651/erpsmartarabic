@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { prefetchByPath } from '@/lib/prefetch';
+import { DashboardChip } from './_shared/DashboardChip';
 
 export interface FinancialKPIData {
   todayRevenue: number;
@@ -99,11 +100,20 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
 }: FinancialKPIRowProps) {
   if (isLoading && !data) {
     return (
-      <div className="flex gap-2 sm:gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-2.5 px-2.5 md:mx-0 md:px-0 pb-2 md:pb-0">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-[58px] sm:h-[92px] min-w-[140px] md:min-w-0 rounded-lg snap-start shrink-0 md:shrink" />
-        ))}
-      </div>
+      <>
+        {/* Mobile: chip strip skeleton */}
+        <div className="md:hidden flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-2.5 px-2.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-[120px] rounded-lg shrink-0" />
+          ))}
+        </div>
+        {/* Desktop: card grid skeleton */}
+        <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-8 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-[92px] rounded-lg" />
+          ))}
+        </div>
+      </>
     );
   }
 
@@ -172,13 +182,40 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     },
   ];
 
+  // Mobile labels (shorter) for chip strip
+  const mobileLabels: Record<string, string> = {
+    'إيرادات اليوم': 'اليوم',
+    'إيرادات الشهر': 'الشهر',
+    'هامش الربح (شهري)': 'الهامش',
+    'مستحقات العملاء': 'مستحقات',
+    'متأخرات': 'متأخرات',
+    'DSO (متوسط التحصيل)': 'DSO',
+    'رصيد الخزينة': 'الخزينة',
+    'بانتظار الاعتماد': 'اعتمادات',
+  };
+
   return (
-    <div className="flex gap-2 sm:gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-2.5 px-2.5 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-thin">
-      {cards.map((c) => (
-        <div key={c.label} className="min-w-[140px] md:min-w-0 snap-start shrink-0 md:shrink">
-          <KpiCardView card={c} />
-        </div>
-      ))}
-    </div>
+    <>
+      {/* Mobile: chip strip — matches CustomerStatsBar pattern */}
+      <div className="md:hidden flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-2.5 px-2.5">
+        {cards.map((c) => (
+          <DashboardChip
+            key={c.label}
+            label={mobileLabels[c.label] || c.label}
+            value={c.value}
+            icon={c.icon}
+            tone={c.tone}
+            href={c.href}
+          />
+        ))}
+      </div>
+
+      {/* Desktop: original card grid */}
+      <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-8 gap-3">
+        {cards.map((c) => (
+          <KpiCardView key={c.label} card={c} />
+        ))}
+      </div>
+    </>
   );
 });
