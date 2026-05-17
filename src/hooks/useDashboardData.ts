@@ -40,8 +40,11 @@ type InvoiceWithCustomer = {
   id: string;
   invoice_number: string;
   total_amount: number;
+  amount_paid: number | null;
   payment_status: string;
+  due_date: string | null;
   created_at: string;
+  customer_id: string;
   customers: { name: string } | null;
 };
 
@@ -153,10 +156,10 @@ export function useDashboardData() {
     queryFn: async () => {
       const { data } = await supabase
         .from('invoices')
-        .select('*, customers(name)')
+        .select('id, invoice_number, total_amount, amount_paid, payment_status, due_date, created_at, customer_id, customers(name)')
         .order('created_at', { ascending: false })
         .limit(5);
-      return (data || []) as InvoiceWithCustomer[];
+      return (data || []) as unknown as InvoiceWithCustomer[];
     },
     staleTime: 60000,
     gcTime: 300000,
