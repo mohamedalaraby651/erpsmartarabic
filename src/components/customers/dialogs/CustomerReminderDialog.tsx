@@ -183,7 +183,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                 variant="outline"
                 className="h-8 text-xs gap-1"
                 onClick={() => toggleMutation.mutate({ id: r.id, completed: true })}
-                aria-label="متابعة وإغلاق التذكير"
+                aria-label={tooltips.closeReminderAsDone}
               >
                 <Check className="h-3.5 w-3.5" />
                 تمت المتابعة
