@@ -77,15 +77,15 @@ const KpiCardView = memo(function KpiCardView({ card }: { card: KpiCard }) {
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}
     >
-      <CardContent className="p-4 flex items-start gap-3">
-        <div className={cn('p-2.5 rounded-lg shrink-0', tone.bg)}>
-          <Icon className={cn('h-5 w-5', tone.icon)} />
+      <CardContent className="p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3">
+        <div className={cn('p-2 sm:p-2.5 rounded-lg shrink-0', tone.bg)}>
+          <Icon className={cn('h-4 w-4 sm:h-5 sm:w-5', tone.icon)} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground truncate">{card.label}</p>
-          <p className="text-xl font-bold mt-0.5 truncate">{card.value}</p>
+          <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{card.label}</p>
+          <p className="text-base sm:text-xl font-bold mt-0.5 truncate tabular-nums">{card.value}</p>
           {card.hint && (
-            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{card.hint}</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{card.hint}</p>
           )}
         </div>
       </CardContent>
@@ -99,9 +99,9 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
 }: FinancialKPIRowProps) {
   if (isLoading && !data) {
     return (
-      <div className="flex gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+      <div className="flex gap-2.5 sm:gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-2.5 px-2.5 md:mx-0 md:px-0 pb-2 md:pb-0">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-[92px] min-w-[160px] md:min-w-0 rounded-lg snap-start shrink-0 md:shrink" />
+          <Skeleton key={i} className="h-[72px] sm:h-[92px] min-w-[150px] md:min-w-0 rounded-lg snap-start shrink-0 md:shrink" />
         ))}
       </div>
     );
@@ -173,9 +173,9 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
   ];
 
   return (
-    <div className="flex gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-thin">
+    <div className="flex gap-2.5 sm:gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-2.5 px-2.5 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-thin">
       {cards.map((c) => (
-        <div key={c.label} className="min-w-[180px] md:min-w-0 snap-start shrink-0 md:shrink">
+        <div key={c.label} className="min-w-[160px] md:min-w-0 snap-start shrink-0 md:shrink">
           <KpiCardView card={c} />
         </div>
       ))}

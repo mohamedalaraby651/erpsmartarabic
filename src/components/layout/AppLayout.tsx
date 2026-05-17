@@ -128,10 +128,10 @@ export default function AppLayout() {
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-14">
+      <div className="min-h-screen bg-background pb-12">
         <EnvironmentBadge />
         <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
-        <main className="p-3">
+        <main className="p-2.5">
           <PageErrorBoundary>
             <Suspense fallback={<PageSkeleton />}>
               <PageTransition direction="fade" duration="fast">

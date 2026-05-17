@@ -127,7 +127,7 @@ export function WidgetContainer({
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={sortedWidgets.map(w => w.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {sortedWidgets.map((widget) => (
               <DraggableWidget
                 key={widget.id}

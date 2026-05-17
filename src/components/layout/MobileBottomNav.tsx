@@ -140,7 +140,7 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-sm border-t border-border/50 shadow-[0_-4px_30px_-5px_rgba(0,0,0,0.1)] md:hidden safe-area-bottom-compact">
-      <div className="flex items-center justify-around h-14 px-1.5">
+      <div className="flex items-center justify-around h-11 px-1.5">
         {filteredItems.map((item) => {
           const isActive = location.pathname === item.href;
           const Icon = item.icon;
@@ -154,10 +154,10 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
               // is still on the button.
               onTouchStart={() => prefetchByPath(item.href)}
               className={cn(
-                'relative flex items-center justify-center gap-1 py-1.5 rounded-2xl transition-all duration-200 overflow-hidden touch-target',
+                'relative flex items-center justify-center gap-1 py-1 rounded-xl transition-all duration-200 overflow-hidden',
                 isActive 
-                  ? `${item.color} ${item.bgColor} px-3 min-w-fit shadow-md ${item.activeColor}` 
-                  : 'text-muted-foreground hover:text-foreground px-2.5 active:scale-95'
+                  ? `${item.color} ${item.bgColor} px-2.5 min-w-fit shadow-sm ${item.activeColor}` 
+                  : 'text-muted-foreground hover:text-foreground px-2 active:scale-95'
               )}
             >
               {/* Ripple container */}
@@ -166,13 +166,13 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
               )}
               
               <Icon className={cn(
-                'h-[18px] w-[18px] transition-all duration-200 flex-shrink-0',
+                'h-4 w-4 transition-all duration-200 flex-shrink-0',
                 isActive && 'scale-105'
               )} />
               
               {/* Title appears only for active item - beside the icon */}
               <span className={cn(
-                'text-[11px] font-bold transition-all duration-200 whitespace-nowrap overflow-hidden',
+                'text-[10px] font-bold transition-all duration-200 whitespace-nowrap overflow-hidden',
                 isActive 
                   ? 'max-w-[70px] opacity-100' 
                   : 'max-w-0 opacity-0'
@@ -191,12 +191,12 @@ function MobileBottomNav({ onMenuOpen }: MobileBottomNavProps) {
         {/* More Button */}
         <button
           onClick={handleMenuOpen}
-          className="relative flex items-center justify-center p-2 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95 rounded-2xl overflow-hidden touch-target hover:bg-muted/50"
+          className="relative flex items-center justify-center p-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95 rounded-xl overflow-hidden hover:bg-muted/50"
         >
           {ripple && (
             <RippleEffect x={ripple.x} y={ripple.y} size={ripple.size} />
           )}
-          <MoreHorizontal className="h-[18px] w-[18px]" />
+          <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
     </nav>
