@@ -96,7 +96,9 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   );
 
   const handleQuickAction = useCallback(
-    (action: QuickAction) => navigate(action.href + '?action=new'),
+    (action: QuickAction) => {
+      navigate(action.href + '?action=new');
+    },
     [navigate],
   );
 
