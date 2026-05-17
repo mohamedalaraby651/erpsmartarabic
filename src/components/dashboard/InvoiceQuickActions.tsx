@@ -21,6 +21,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
 import { useQuickActionSize, getQuickActionClasses } from '@/hooks/useQuickActionSize';
 import { cn } from '@/lib/utils';
+import { tooltips } from '@/lib/uiCopy';
 
 interface Props {
   invoiceId: string;
