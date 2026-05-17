@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   Plus, Users, Package, FileText, Receipt, ShoppingCart,
   ClipboardList, Truck, CreditCard, Briefcase, ListChecks, Building2,
+  Rows3, Rows2,
 } from 'lucide-react';
+import { useDashboardDensity } from '@/hooks/useDashboardDensity';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
 import { useDashboardSettings } from '@/hooks/useDashboardSettings';
@@ -83,6 +86,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { widgets, updateWidgets, isSaving, isLoading: widgetsLoading } = useDashboardSettings();
   const { currentTenantName, tenantId } = useTenant();
   const { insights } = useBusinessInsights();
+  const { density, toggle: toggleDensity, isCompact } = useDashboardDensity();
   const {
     dashboardStats,
     financialKPIs,
@@ -202,7 +206,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   }
 
   return (
-    <div ref={ref} className="space-y-3 sm:space-y-6 animate-fade-in" {...props}>
+    <div ref={ref} data-density={density} className="space-y-3 sm:space-y-6 animate-fade-in" {...props}>
       {/* Mobile compact header (CustomerPageHeader pattern) */}
       <section className="sm:hidden flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -217,6 +221,16 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <AlertsBell insights={insights} />
+          <button
+            type="button"
+            onClick={toggleDensity}
+            className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
+            aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
+            aria-pressed={isCompact}
+            title={isCompact ? 'عرض عادي' : 'عرض مضغوط'}
+          >
+            {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
+          </button>
           {quickActions.slice(0, 1).map((action) => (
             <button
               key={action.href}
@@ -255,6 +269,23 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <AlertsBell insights={insights} />
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleDensity}
+                    aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
+                    aria-pressed={isCompact}
+                  >
+                    {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className="flex items-center gap-2">
               {quickActions.slice(0, 2).map((action) => (
                 <Button
