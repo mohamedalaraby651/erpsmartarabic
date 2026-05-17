@@ -4,6 +4,7 @@ import { X, AlertTriangle, Clock, UserX, Sparkles, ChevronDown, ChevronUp } from
 import { cn } from "@/lib/utils";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import type { Database } from "@/integrations/supabase/types";
+import { tooltips, regions } from "@/lib/uiCopy";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 
