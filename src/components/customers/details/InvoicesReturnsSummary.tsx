@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { FileText, Wallet, Undo2, Scale, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { regions } from "@/lib/uiCopy";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
