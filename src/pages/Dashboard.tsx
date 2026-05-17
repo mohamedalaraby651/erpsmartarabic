@@ -167,11 +167,19 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
       case 'activities':
         return wrap(<RecentInvoicesWidget invoices={recentInvoices} />);
       case 'today_performance':
-        return wrap(<TodayPerformanceWidget />);
+        return wrap(
+          <Suspense fallback={<div className="h-[220px] bg-muted/30 rounded-md animate-pulse" />}>
+            <TodayPerformanceWidget />
+          </Suspense>
+        );
       case 'low_stock':
         return wrap(<LowStockWidget />);
       case 'calendar':
-        return wrap(<CalendarWidget />);
+        return wrap(
+          <Suspense fallback={<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" />}>
+            <CalendarWidget />
+          </Suspense>
+        );
       case 'insights':
         return wrap(<InsightsWidget insights={insights} />);
       default:
