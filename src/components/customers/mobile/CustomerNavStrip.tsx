@@ -50,7 +50,7 @@ export const CustomerNavStrip = memo(function CustomerNavStrip({
         type="button"
         onClick={onPrev}
         disabled={!hasPrev}
-        aria-label="العميل السابق"
+        aria-label={tooltips.prevCustomer}
         className={cn(
           "inline-flex items-center gap-1 px-2 h-9 min-h-9 rounded-md font-medium transition-colors",
           hasPrev ? "text-foreground hover:bg-muted active:scale-95" : "text-muted-foreground/40",
