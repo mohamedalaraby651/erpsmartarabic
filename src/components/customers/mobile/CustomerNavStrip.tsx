@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { ChevronRight, ChevronLeft, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 
 interface CustomerNavStripProps {
   hasPrev: boolean;
