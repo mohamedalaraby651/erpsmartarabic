@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 import type { MobileSectionId } from "./CustomerIconStrip";
 
 export interface SheetSectionItem {
