@@ -146,7 +146,7 @@ export const CustomerTabInvoices = memo(function CustomerTabInvoices({
               className="flex items-center gap-1.5 mb-2 overflow-x-auto -mx-1 px-1 pb-1 sm:hidden"
               data-h-scroll
               role="tablist"
-              aria-label="فلتر حالة الفاتورة"
+              aria-label={tooltips.invoiceStatusFilter}
             >
               {[
                 { value: 'all', label: 'الكل' },
