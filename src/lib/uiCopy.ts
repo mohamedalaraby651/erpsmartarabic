@@ -23,7 +23,12 @@ export const tooltips = {
 
   // عرض/تفاصيل
   viewInvoiceDetails: 'عرض تفاصيل الفاتورة',
+  viewCustomerStatement: 'عرض كشف حساب العميل',
   moreActions: 'إجراءات إضافية',
+  moreTools: 'المزيد من الأدوات',
+  moreSections: 'المزيد من الأقسام',
+  prevSection: 'القسم السابق',
+  nextSection: 'القسم التالي',
 
   // طباعة وتصدير
   printInvoicePdf: 'طباعة الفاتورة (PDF)',
