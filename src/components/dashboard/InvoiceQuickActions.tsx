@@ -134,48 +134,66 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
 
   return (
     <>
-      <div className={cn('flex items-center shrink-0', qa.gap)} onClick={stop}>
-        <button
-          type="button"
-          onClick={(e) => { stop(e); setDetailsOpen(true); }}
-          aria-label="عرض التفاصيل"
-          title="عرض التفاصيل"
-          className={cn(
-            'inline-flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-90 transition-transform hover:bg-primary/15',
-            qa.button,
-          )}
-        >
-          <Eye className={qa.icon} />
-        </button>
-        <button
-          type="button"
-          onClick={handlePrint}
-          disabled={printing}
-          aria-label="طباعة"
-          title="طباعة PDF"
-          className={cn(
-            'inline-flex items-center justify-center rounded-full bg-muted text-foreground active:scale-90 transition-transform hover:bg-accent disabled:opacity-50',
-            qa.button,
-          )}
-        >
-          {printing ? <Loader2 className={cn(qa.icon, 'animate-spin')} /> : <Printer className={qa.icon} />}
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { stop(e); setReminderOpen(true); }}
-          aria-label="إصدار تذكير"
-          title="إصدار تذكير"
-          className={cn(
-            'inline-flex items-center justify-center rounded-full active:scale-90 transition-transform',
-            qa.button,
-            remaining > 0
-              ? 'bg-warning/15 text-warning hover:bg-warning/25'
-              : 'bg-muted text-muted-foreground hover:bg-accent',
-          )}
-        >
-          <BellPlus className={qa.icon} />
-        </button>
-      </div>
+      <TooltipProvider delayDuration={200}>
+        <div className={cn('flex items-center shrink-0', qa.gap)} onClick={stop}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => { stop(e); setDetailsOpen(true); }}
+                aria-label="عرض تفاصيل الفاتورة"
+                className={cn(
+                  'inline-flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-90 transition-transform hover:bg-primary/15',
+                  qa.button,
+                )}
+              >
+                <Eye className={qa.icon} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">عرض تفاصيل الفاتورة</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handlePrint}
+                disabled={printing}
+                aria-label="طباعة الفاتورة PDF"
+                className={cn(
+                  'inline-flex items-center justify-center rounded-full bg-muted text-foreground active:scale-90 transition-transform hover:bg-accent disabled:opacity-50',
+                  qa.button,
+                )}
+              >
+                {printing ? <Loader2 className={cn(qa.icon, 'animate-spin')} /> : <Printer className={qa.icon} />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">طباعة الفاتورة PDF</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => { stop(e); setReminderOpen(true); }}
+                aria-label="إصدار تذكير متابعة للفاتورة"
+                className={cn(
+                  'inline-flex items-center justify-center rounded-full active:scale-90 transition-transform',
+                  qa.button,
+                  remaining > 0
+                    ? 'bg-warning/15 text-warning hover:bg-warning/25'
+                    : 'bg-muted text-muted-foreground hover:bg-accent',
+                )}
+              >
+                <BellPlus className={qa.icon} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              {remaining > 0 ? 'إصدار تذكير لمتابعة السداد' : 'إصدار تذكير'}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
 
       {/* Details Sheet — no full page navigation */}
       <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
