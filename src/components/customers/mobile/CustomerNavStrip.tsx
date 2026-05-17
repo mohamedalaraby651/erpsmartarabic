@@ -67,7 +67,7 @@ export const CustomerNavStrip = memo(function CustomerNavStrip({
         type="button"
         onClick={onNext}
         disabled={!hasNext}
-        aria-label="العميل التالي"
+        aria-label={tooltips.nextCustomer}
         className={cn(
           "inline-flex items-center gap-1 px-2 h-9 min-h-9 rounded-md font-medium transition-colors",
           hasNext ? "text-foreground hover:bg-muted active:scale-95" : "text-muted-foreground/40",
