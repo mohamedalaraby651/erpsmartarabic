@@ -101,6 +101,7 @@ export const regions = {
   loadingMore: 'جارٍ تحميل المزيد',
   loadingCustomerList: 'جارٍ تحميل قائمة العملاء',
   customerQuickActions: 'إجراءات سريعة للعميل',
+  creditUsageBar: 'نسبة استخدام حد الائتمان',
 } as const;
 
 /**
