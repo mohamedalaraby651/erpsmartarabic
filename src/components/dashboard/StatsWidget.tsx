@@ -27,32 +27,32 @@ const StatCard = memo(function StatCard({ stat }: { stat: StatItem }) {
       type="button"
       onClick={() => navigate(stat.href)}
       className={cn(
-        'group text-right p-4 rounded-xl border bg-card',
-        'transition-all hover:shadow-md hover:-translate-y-0.5',
+        'group text-right p-3 sm:p-4 rounded-xl border bg-card',
+        'transition-all active:scale-[0.98] md:hover:shadow-md md:hover:-translate-y-0.5',
         'focus:outline-none focus:ring-2 focus:ring-primary/40'
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{stat.title}</p>
-          <p className="text-2xl sm:text-3xl font-bold mt-1 tabular-nums">
+          <p className="text-[11px] sm:text-sm text-muted-foreground truncate">{stat.title}</p>
+          <p className="text-xl sm:text-3xl font-bold mt-0.5 sm:mt-1 tabular-nums">
             {new Intl.NumberFormat('ar-EG').format(stat.value)}
           </p>
           {stat.change && (
-            <div className="flex items-center gap-1 mt-2">
+            <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
               {stat.positive ? (
-                <TrendingUp className="h-3.5 w-3.5 text-success" />
+                <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-success" />
               ) : (
-                <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+                <TrendingDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-destructive" />
               )}
-              <span className={cn('text-xs font-medium', stat.positive ? 'text-success' : 'text-destructive')}>
+              <span className={cn('text-[10px] sm:text-xs font-medium', stat.positive ? 'text-success' : 'text-destructive')}>
                 {stat.change}
               </span>
             </div>
           )}
         </div>
-        <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center shrink-0', stat.tone)}>
-          <Icon className="h-5 w-5" />
+        <div className={cn('h-8 w-8 sm:h-10 sm:w-10 rounded-lg flex items-center justify-center shrink-0', stat.tone)}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
       </div>
     </button>
@@ -83,11 +83,11 @@ export const StatsWidget = memo(function StatsWidget({ dashboardStats }: StatsWi
 
   return (
     <>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">الإحصائيات</CardTitle>
+      <CardHeader className="pb-2 px-3 pt-3 sm:px-6 sm:pt-6">
+        <CardTitle className="text-sm sm:text-lg">الإحصائيات</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
           {stats.map((stat) => (
             <StatCard key={stat.title} stat={stat} />
           ))}
