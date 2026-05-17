@@ -206,7 +206,43 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   }
 
   return (
-    <div ref={ref} className="space-y-3 sm:space-y-6 animate-fade-in" {...props}>
+    <div ref={ref} data-density={density} className="space-y-3 sm:space-y-6 animate-fade-in" {...props}>
+      {(() => {
+        const DensityBtnMobile = (
+          <button
+            type="button"
+            onClick={toggleDensity}
+            className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
+            aria-label={isCompact ? 'عرض عادي' : 'عرض مضغوط'}
+            aria-pressed={isCompact}
+            title={isCompact ? 'عرض عادي' : 'عرض مضغوط'}
+          >
+            {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
+          </button>
+        );
+        const DensityBtnDesktop = (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={toggleDensity}
+                  aria-label={isCompact ? 'عرض عادي' : 'عرض مضغوط'}
+                  aria-pressed={isCompact}
+                >
+                  {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+        // expose to JSX below via closure
+        (Dashboard as unknown as { _d?: unknown })._d = { DensityBtnMobile, DensityBtnDesktop };
+        return null;
+      })()}
       {/* Mobile compact header (CustomerPageHeader pattern) */}
       <section className="sm:hidden flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-1">
