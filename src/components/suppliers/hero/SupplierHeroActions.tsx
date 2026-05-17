@@ -1,4 +1,10 @@
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ShoppingCart, CreditCard, Printer, Edit, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SupplierHeroActionsProps {
