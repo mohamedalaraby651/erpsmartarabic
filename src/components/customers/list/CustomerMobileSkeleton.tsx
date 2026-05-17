@@ -19,7 +19,7 @@ export const CustomerMobileSkeleton = memo(function CustomerMobileSkeleton({
   showSortBar = true,
 }: CustomerMobileSkeletonProps) {
   return (
-    <div role="status" aria-live="polite" aria-label="جارٍ تحميل قائمة العملاء">
+    <div role="status" aria-live="polite" aria-label={regions.loadingCustomerList}>
       <span className="sr-only">جارٍ تحميل العملاء…</span>
 
       {showSummary && (
