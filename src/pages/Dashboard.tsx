@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   Plus, Users, Package, FileText, Receipt, ShoppingCart,
   ClipboardList, Truck, CreditCard, Briefcase, ListChecks, Building2,
-  Rows3, Rows2,
+  Rows3, Rows2, Minimize2, Maximize2,
 } from 'lucide-react';
 import { useDashboardDensity } from '@/hooks/useDashboardDensity';
+import { useQuickActionSize } from '@/hooks/useQuickActionSize';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
@@ -87,6 +88,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { currentTenantName, tenantId } = useTenant();
   const { insights } = useBusinessInsights();
   const { density, toggle: toggleDensity, isCompact } = useDashboardDensity();
+  const { size: qaSize, toggle: toggleQaSize, isSmall: isQaSmall } = useQuickActionSize();
   const {
     dashboardStats,
     financialKPIs,
@@ -223,6 +225,16 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
           <AlertsBell insights={insights} />
           <button
             type="button"
+            onClick={toggleQaSize}
+            className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
+            aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
+            aria-pressed={isQaSmall}
+            title={isQaSmall ? 'أزرار سريعة: صغيرة' : 'أزرار سريعة: متوسطة'}
+          >
+            {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
             onClick={toggleDensity}
             className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
             aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
@@ -270,6 +282,21 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
           <div className="flex items-center gap-2 shrink-0">
             <AlertsBell insights={insights} />
             <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleQaSize}
+                    aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
+                    aria-pressed={isQaSmall}
+                  >
+                    {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isQaSmall ? 'أزرار الاستجابة السريعة: صغيرة' : 'أزرار الاستجابة السريعة: متوسطة'}</TooltipContent>
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
