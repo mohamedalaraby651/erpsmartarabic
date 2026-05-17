@@ -131,7 +131,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
     <div
       aria-busy="true"
       className={cn(
-        'rounded-lg bg-gradient-to-l from-muted/40 via-muted/60 to-muted/40 bg-[length:200%_100%] animate-[shimmer_1.6s_ease-in-out_infinite]',
+        'rounded-lg bg-muted/40 animate-pulse',
         cls,
       )}
     />
