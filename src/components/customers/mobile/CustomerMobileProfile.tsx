@@ -206,7 +206,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               aria-valuenow={Math.round(creditUsagePercent)}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label="نسبة استخدام حد الائتمان"
+              aria-label={regions.creditUsageBar}
             >
               <div
                 className={cn("h-full rounded-full transition-all", creditTone)}
