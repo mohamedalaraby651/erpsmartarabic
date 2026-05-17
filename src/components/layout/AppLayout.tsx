@@ -20,7 +20,9 @@ import { EnvironmentBadge } from '@/components/system/EnvironmentBadge';
 import PageTransition from '@/components/transitions/PageTransition';
 
 // Lazy load ShortcutsModal
+// Lazy load ShortcutsModal
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
+const CommandBar = lazy(() => import('@/components/dashboard/CommandBar').then(m => ({ default: m.CommandBar })));
 
 // Use unified PageLoadingState as fallback
 function PageSkeleton() {
