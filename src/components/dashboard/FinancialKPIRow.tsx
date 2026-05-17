@@ -8,6 +8,8 @@ import {
   AlertTriangle,
   Banknote,
   CheckCircle2,
+  Hourglass,
+  Percent,
   LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,6 +22,9 @@ export interface FinancialKPIData {
   overdueAR: number;
   cashBalance: number;
   pendingApprovals: number;
+  dsoDays: number;
+  grossMarginValue: number;
+  grossMarginPct: number;
 }
 
 interface FinancialKPIRowProps {
@@ -90,8 +95,8 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
 }: FinancialKPIRowProps) {
   if (isLoading && !data) {
     return (
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
+        {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-[88px] rounded-lg" />
         ))}
       </div>
@@ -116,6 +121,14 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
       href: '/reports',
     },
     {
+      label: 'هامش الربح (شهري)',
+      value: `${data.grossMarginPct}%`,
+      icon: Percent,
+      tone: data.grossMarginPct >= 20 ? 'success' : data.grossMarginPct >= 10 ? 'warning' : 'destructive',
+      href: '/reports',
+      hint: fmtCurrency(data.grossMarginValue),
+    },
+    {
       label: 'مستحقات العملاء',
       value: fmtCurrency(data.outstandingAR),
       icon: Wallet,
@@ -129,6 +142,14 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
       tone: data.overdueAR > 0 ? 'destructive' : 'success',
       href: '/invoices?filter=overdue',
       hint: data.overdueAR > 0 ? 'يحتاج متابعة' : 'لا توجد متأخرات',
+    },
+    {
+      label: 'DSO (متوسط التحصيل)',
+      value: `${data.dsoDays} يوم`,
+      icon: Hourglass,
+      tone: data.dsoDays <= 30 ? 'success' : data.dsoDays <= 60 ? 'warning' : 'destructive',
+      href: '/reports',
+      hint: 'آخر 90 يوم',
     },
     {
       label: 'رصيد الخزينة',
@@ -148,7 +169,7 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
   ];
 
   return (
-    <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+    <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
       {cards.map((c) => (
         <KpiCardView key={c.label} card={c} />
       ))}

@@ -20,7 +20,9 @@ import { EnvironmentBadge } from '@/components/system/EnvironmentBadge';
 import PageTransition from '@/components/transitions/PageTransition';
 
 // Lazy load ShortcutsModal
+// Lazy load ShortcutsModal
 const ShortcutsModal = lazy(() => import('@/components/keyboard/ShortcutsModal'));
+const CommandBar = lazy(() => import('@/components/dashboard/CommandBar').then(m => ({ default: m.CommandBar })));
 
 // Use unified PageLoadingState as fallback
 function PageSkeleton() {
@@ -181,12 +183,13 @@ export default function AppLayout() {
         </div>
       </div>
       
-      {/* Keyboard Shortcuts Modal */}
+      {/* Keyboard Shortcuts Modal + Command Palette */}
       <Suspense fallback={null}>
-        <ShortcutsModal 
-          open={showShortcutsModal} 
-          onOpenChange={setShowShortcutsModal} 
+        <ShortcutsModal
+          open={showShortcutsModal}
+          onOpenChange={setShowShortcutsModal}
         />
+        <CommandBar />
       </Suspense>
     </>
   );

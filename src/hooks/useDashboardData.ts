@@ -26,6 +26,9 @@ export interface FinancialKPIs {
   overdueAR: number;
   cashBalance: number;
   pendingApprovals: number;
+  dsoDays: number;
+  grossMarginValue: number;
+  grossMarginPct: number;
 }
 
 export interface MonthlySalesPoint {
@@ -75,6 +78,9 @@ export function useDashboardData() {
         overdue_ar?: number;
         cash_balance?: number;
         pending_approvals?: number;
+        dso_days?: number;
+        gross_margin_value?: number;
+        gross_margin_pct?: number;
       };
     },
     staleTime: 300000,
@@ -106,6 +112,9 @@ export function useDashboardData() {
         overdueAR: Number(overview.overdue_ar ?? 0),
         cashBalance: Number(overview.cash_balance ?? 0),
         pendingApprovals: Number(overview.pending_approvals ?? 0),
+        dsoDays: Number(overview.dso_days ?? 0),
+        grossMarginValue: Number(overview.gross_margin_value ?? 0),
+        grossMarginPct: Number(overview.gross_margin_pct ?? 0),
       }
     : undefined;
 
