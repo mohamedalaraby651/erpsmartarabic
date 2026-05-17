@@ -223,37 +223,51 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <AlertsBell insights={insights} />
-          <button
-            type="button"
-            onClick={toggleQaSize}
-            className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
-            aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
-            aria-pressed={isQaSmall}
-            title={isQaSmall ? 'أزرار سريعة: صغيرة' : 'أزرار سريعة: متوسطة'}
-          >
-            {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={toggleDensity}
-            className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
-            aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
-            aria-pressed={isCompact}
-            title={isCompact ? 'عرض عادي' : 'عرض مضغوط'}
-          >
-            {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
-          </button>
-          {quickActions.slice(0, 1).map((action) => (
-            <button
-              key={action.href}
-              type="button"
-              onClick={() => handleQuickAction(action)}
-              className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-primary hover:bg-accent transition-colors"
-              aria-label={action.title}
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          ))}
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={toggleQaSize}
+                  className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
+                  aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
+                  aria-pressed={isQaSmall}
+                >
+                  {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={toggleDensity}
+                  className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
+                  aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
+                  aria-pressed={isCompact}
+                >
+                  {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}</TooltipContent>
+            </Tooltip>
+            {quickActions.slice(0, 1).map((action) => (
+              <Tooltip key={action.href}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickAction(action)}
+                    className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-primary hover:bg-accent transition-colors"
+                    aria-label={action.title}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{action.title}</TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
         </div>
       </section>
 
