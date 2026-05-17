@@ -55,7 +55,7 @@ export const AlertsBell = memo(function AlertsBell({ insights }: AlertsBellProps
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" sideOffset={8} className="w-[calc(100vw-1.5rem)] sm:w-80 max-w-sm">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>التنبيهات الذكية</span>
           {count > 0 && <span className="text-xs text-muted-foreground">{count} عنصر</span>}

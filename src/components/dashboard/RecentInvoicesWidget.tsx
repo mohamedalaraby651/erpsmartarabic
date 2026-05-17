@@ -69,9 +69,13 @@ export function RecentInvoicesWidget({ invoices }: RecentInvoicesWidgetProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            <Receipt className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p>لا توجد فواتير بعد</p>
+          <div className="text-center py-8 px-4">
+            <Receipt className="h-10 w-10 mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-medium mb-1">لا توجد فواتير بعد</p>
+            <p className="text-xs text-muted-foreground mb-4">أنشئ أول فاتورة لبدء تتبّع المبيعات</p>
+            <Button size="sm" variant="outline" onClick={() => navigate('/invoices?action=new')}>
+              إنشاء فاتورة
+            </Button>
           </div>
         )}
       </CardContent>

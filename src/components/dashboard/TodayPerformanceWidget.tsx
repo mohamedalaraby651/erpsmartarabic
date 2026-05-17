@@ -125,8 +125,8 @@ export function TodayPerformanceWidget() {
       count: todayStats.quotationsCount,
       change: null,
       icon: FileText,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
+      color: 'text-accent-foreground',
+      bgColor: 'bg-accent',
     },
     {
       title: 'أوامر البيع',
@@ -134,8 +134,8 @@ export function TodayPerformanceWidget() {
       count: todayStats.ordersCount,
       change: null,
       icon: ShoppingCart,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/10',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
     },
   ];
 
