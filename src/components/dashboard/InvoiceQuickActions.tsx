@@ -124,41 +124,40 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
 
   return (
     <>
-      <div className="flex items-center gap-0 sm:gap-0.5 shrink-0" onClick={stop}>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+      <div className="flex items-center gap-1.5 shrink-0" onClick={stop}>
+        <button
+          type="button"
           onClick={(e) => { stop(e); setDetailsOpen(true); }}
           aria-label="عرض التفاصيل"
           title="عرض التفاصيل"
+          className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary active:scale-90 transition-transform hover:bg-primary/15"
         >
-          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+          <Eye className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
           onClick={handlePrint}
           disabled={printing}
           aria-label="طباعة"
           title="طباعة PDF"
+          className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-muted text-foreground active:scale-90 transition-transform hover:bg-accent disabled:opacity-50"
         >
-          {printing ? <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> : <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            'h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground',
-            remaining > 0 && 'text-warning hover:text-warning',
-          )}
+          {printing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
+        </button>
+        <button
+          type="button"
           onClick={(e) => { stop(e); setReminderOpen(true); }}
           aria-label="إصدار تذكير"
           title="إصدار تذكير"
+          className={cn(
+            'inline-flex items-center justify-center h-8 w-8 rounded-full active:scale-90 transition-transform',
+            remaining > 0
+              ? 'bg-warning/15 text-warning hover:bg-warning/25'
+              : 'bg-muted text-muted-foreground hover:bg-accent',
+          )}
         >
-          <BellPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        </Button>
+          <BellPlus className="h-3.5 w-3.5" />
+        </button>
       </div>
 
       {/* Details Sheet — no full page navigation */}
