@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Users, Building2, Crown, DollarSign, UserCheck, UserX, TrendingUp, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 
 interface FilterChipDef {
   id: string;
