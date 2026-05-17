@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { prefetchByPath } from '@/lib/prefetch';
+import { DashboardChip } from './_shared/DashboardChip';
 
 export interface FinancialKPIData {
   todayRevenue: number;
