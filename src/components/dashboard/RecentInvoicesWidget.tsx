@@ -4,12 +4,17 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from '@/component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Receipt } from 'lucide-react';
+import { InvoiceQuickActions } from './InvoiceQuickActions';
 
 interface InvoiceWithCustomer {
   id: string;
   invoice_number: string;
   total_amount: number;
+  amount_paid: number | null;
   payment_status: string;
+  due_date: string | null;
+  created_at: string;
+  customer_id: string;
   customers: { name: string } | null;
 }
 
@@ -44,33 +49,51 @@ export const RecentInvoicesWidget = memo(function RecentInvoicesWidget({ invoice
             {invoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-muted/50 active:scale-[0.99] md:hover:bg-muted transition-all cursor-pointer"
-                onClick={() => navigate(`/invoices/${invoice.id}`)}
+                className="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-lg bg-muted/50 md:hover:bg-muted transition-colors"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/invoices/${invoice.id}`)}
+                  className="flex items-center gap-2.5 min-w-0 flex-1 text-right active:scale-[0.99] transition-transform"
+                >
                   <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 text-right">
                     <p className="font-medium text-xs sm:text-sm truncate">{invoice.invoice_number}</p>
                     <p className="text-[11px] text-muted-foreground truncate">
                       {invoice.customers?.name || 'عميل'}
                     </p>
                   </div>
-                </div>
-                <div className="text-left shrink-0">
-                  <p className="font-bold text-xs sm:text-sm tabular-nums">{invoice.total_amount.toLocaleString()} ج.م</p>
+                </button>
+
+                <div className="flex flex-col items-end shrink-0 min-w-0">
+                  <p className="font-bold text-xs sm:text-sm tabular-nums truncate">
+                    {invoice.total_amount.toLocaleString()} ج.م
+                  </p>
                   <Badge
                     variant={
                       invoice.payment_status === 'paid' ? 'default' :
                       invoice.payment_status === 'partial' ? 'secondary' : 'destructive'
                     }
-                    className="text-[10px] sm:text-xs"
+                    className="text-[10px] sm:text-xs mt-0.5"
                   >
                     {invoice.payment_status === 'paid' ? 'مدفوع' :
                      invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}
                   </Badge>
                 </div>
+
+                <InvoiceQuickActions
+                  invoiceId={invoice.id}
+                  invoiceNumber={invoice.invoice_number}
+                  customerId={invoice.customer_id}
+                  customerName={invoice.customers?.name || 'عميل'}
+                  totalAmount={invoice.total_amount}
+                  amountPaid={invoice.amount_paid || 0}
+                  paymentStatus={invoice.payment_status}
+                  dueDate={invoice.due_date}
+                  createdAt={invoice.created_at}
+                />
               </div>
             ))}
           </div>
@@ -88,4 +111,3 @@ export const RecentInvoicesWidget = memo(function RecentInvoicesWidget({ invoice
     </>
   );
 });
-
