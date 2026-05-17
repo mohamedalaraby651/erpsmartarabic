@@ -202,15 +202,15 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   }
 
   return (
-    <div ref={ref} className="space-y-4 sm:space-y-6 animate-fade-in" {...props}>
+    <div ref={ref} className="space-y-3 sm:space-y-6 animate-fade-in" {...props}>
       {/* Unified responsive hero */}
-      <section className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-primary/10 bg-gradient-to-l from-primary/10 via-accent/30 to-transparent p-3 sm:p-6">
-        <div className="flex items-start gap-3 sm:items-center sm:gap-4 sm:flex-row sm:justify-between">
+      <section className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-primary/10 bg-gradient-to-l from-primary/10 via-accent/30 to-transparent p-2.5 sm:p-6">
+        <div className="flex items-start gap-2.5 sm:items-center sm:gap-4 sm:flex-row sm:justify-between">
           <div className="min-w-0 flex-1">
-            <h1 className="text-base sm:text-2xl lg:text-3xl font-bold truncate">
+            <h1 className="text-sm sm:text-2xl lg:text-3xl font-bold truncate leading-tight">
               {greetingText()}، {userName} 👋
             </h1>
-            <div className="text-muted-foreground mt-0.5 sm:mt-1.5 flex items-center flex-wrap gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
+            <div className="text-muted-foreground mt-0.5 sm:mt-1.5 flex items-center flex-wrap gap-1 sm:gap-2 text-[10px] sm:text-sm">
               <span className="hidden sm:inline">مرحباً بك في لوحة التحكم</span>
               {currentTenantName && (
                 <Badge variant="outline" className="gap-1 text-[10px] sm:text-xs">
@@ -232,7 +232,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                 key={action.href}
                 onClick={() => handleQuickAction(action)}
                 size="icon"
-                className="sm:hidden h-9 w-9"
+                className="sm:hidden h-8 w-8"
                 aria-label={action.title}
               >
                 <Plus className="h-4 w-4" />
