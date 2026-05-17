@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-interface QuickAction {
+export interface QuickAction {
   title: string;
   icon: React.ElementType;
   href: string;
-  color: string;
+  tone: string;
   roles: string[];
 }
 
@@ -15,7 +16,9 @@ interface QuickActionsWidgetProps {
   onAction: (action: QuickAction) => void;
 }
 
-export function QuickActionsWidget({ quickActions, onAction }: QuickActionsWidgetProps) {
+export const QuickActionsWidget = memo(function QuickActionsWidget({
+  quickActions, onAction,
+}: QuickActionsWidgetProps) {
   return (
     <>
       <CardHeader className="pb-3">
@@ -29,11 +32,11 @@ export function QuickActionsWidget({ quickActions, onAction }: QuickActionsWidge
               <Button
                 key={action.href + action.title}
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 hover:bg-accent"
+                className="h-auto py-4 flex-col gap-2 hover:bg-accent transition-all hover:-translate-y-0.5"
                 onClick={() => onAction(action)}
               >
-                <div className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center`}>
-                  <Icon className="h-5 w-5 text-white" />
+                <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', action.tone)}>
+                  <Icon className="h-5 w-5" />
                 </div>
                 <span className="text-sm font-medium">{action.title}</span>
               </Button>
@@ -43,4 +46,4 @@ export function QuickActionsWidget({ quickActions, onAction }: QuickActionsWidge
       </CardContent>
     </>
   );
-}
+});
