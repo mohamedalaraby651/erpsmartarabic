@@ -269,6 +269,23 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <AlertsBell insights={insights} />
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleDensity}
+                    aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
+                    aria-pressed={isCompact}
+                  >
+                    {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className="flex items-center gap-2">
               {quickActions.slice(0, 2).map((action) => (
                 <Button
