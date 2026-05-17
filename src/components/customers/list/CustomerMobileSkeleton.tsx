@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
+import { regions } from '@/lib/uiCopy';
 
 interface CustomerMobileSkeletonProps {
   count?: number;
