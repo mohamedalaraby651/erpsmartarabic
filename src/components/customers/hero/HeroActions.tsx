@@ -4,6 +4,12 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Edit, FileText, Printer, Wallet, MoreVertical, Globe, ShoppingCart, Receipt, Download,
 } from "lucide-react";
 import type { Customer } from "@/lib/customerConstants";
@@ -31,55 +37,72 @@ export const HeroActions = memo(function HeroActions({
   onNewPayment, onNewQuotation, onNewOrder, onNewCreditNote,
 }: HeroActionsProps) {
   return (
-    <div className="flex flex-wrap gap-2 lg:self-start lg:flex-col">
-      <Button size="sm" onClick={onNewInvoice}>
-        <FileText className="h-4 w-4 ml-2" />فاتورة جديدة
-      </Button>
-      <Button variant="outline" size="sm" onClick={onStatement}>
-        <Printer className="h-4 w-4 ml-2" />كشف حساب
-      </Button>
-      {onNewPayment && (
-        <Button variant="outline" size="sm" onClick={onNewPayment}>
-          <Wallet className="h-4 w-4 ml-2" />تسجيل دفعة
-        </Button>
-      )}
-      
-      {/* More actions dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
-            <MoreVertical className="h-4 w-4 ml-2" />المزيد
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={onEdit}>
-            <Edit className="h-4 w-4 ml-2" />تعديل البيانات
-          </DropdownMenuItem>
-          {onNewQuotation && (
-            <DropdownMenuItem onClick={onNewQuotation}>
-              <Globe className="h-4 w-4 ml-2" />عرض سعر جديد
+    <TooltipProvider delayDuration={200}>
+      <div className="flex flex-wrap gap-2 lg:self-start lg:flex-col">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button size="sm" onClick={onNewInvoice} aria-label="إنشاء فاتورة جديدة للعميل">
+              <FileText className="h-4 w-4 ml-2" />فاتورة جديدة
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">إنشاء فاتورة جديدة للعميل</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={onStatement} aria-label="طباعة كشف حساب العميل">
+              <Printer className="h-4 w-4 ml-2" />كشف حساب
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">طباعة كشف حساب العميل</TooltipContent>
+        </Tooltip>
+        {onNewPayment && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={onNewPayment} aria-label="تسجيل دفعة من العميل">
+                <Wallet className="h-4 w-4 ml-2" />تسجيل دفعة
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">تسجيل دفعة من العميل</TooltipContent>
+          </Tooltip>
+        )}
+        
+        {/* More actions dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" aria-label="المزيد من الإجراءات">
+              <MoreVertical className="h-4 w-4 ml-2" />المزيد
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={onEdit} aria-label="تعديل بيانات العميل">
+              <Edit className="h-4 w-4 ml-2" />تعديل البيانات
             </DropdownMenuItem>
-          )}
-          {onNewOrder && (
-            <DropdownMenuItem onClick={onNewOrder}>
-              <ShoppingCart className="h-4 w-4 ml-2" />أمر بيع جديد
+            {onNewQuotation && (
+              <DropdownMenuItem onClick={onNewQuotation} aria-label="إنشاء عرض سعر جديد">
+                <Globe className="h-4 w-4 ml-2" />عرض سعر جديد
+              </DropdownMenuItem>
+            )}
+            {onNewOrder && (
+              <DropdownMenuItem onClick={onNewOrder} aria-label="إنشاء أمر بيع جديد">
+                <ShoppingCart className="h-4 w-4 ml-2" />أمر بيع جديد
+              </DropdownMenuItem>
+            )}
+            {onNewCreditNote && (
+              <DropdownMenuItem onClick={onNewCreditNote} aria-label="إنشاء إشعار دائن">
+                <Receipt className="h-4 w-4 ml-2" />إشعار دائن
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              import('@/lib/exports/customerExcelExport').then(m => {
+                m.exportCustomerToExcel({ customer, invoices, payments, creditNotes: [] });
+              });
+            }} aria-label="تصدير بيانات العميل إلى Excel">
+              <Download className="h-4 w-4 ml-2" />تصدير Excel
             </DropdownMenuItem>
-          )}
-          {onNewCreditNote && (
-            <DropdownMenuItem onClick={onNewCreditNote}>
-              <Receipt className="h-4 w-4 ml-2" />إشعار دائن
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => {
-            import('@/lib/exports/customerExcelExport').then(m => {
-              m.exportCustomerToExcel({ customer, invoices, payments, creditNotes: [] });
-            });
-          }}>
-            <Download className="h-4 w-4 ml-2" />تصدير Excel
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </TooltipProvider>
   );
 });
