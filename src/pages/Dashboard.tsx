@@ -12,9 +12,14 @@ import { useDashboardSettings } from '@/hooks/useDashboardSettings';
 import { WidgetConfig } from '@/components/dashboard/DraggableWidget';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
-import { TodayPerformanceWidget } from '@/components/dashboard/TodayPerformanceWidget';
 import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
-import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
+const TodayPerformanceWidget = lazyWithRetry(() =>
+  import('@/components/dashboard/TodayPerformanceWidget').then(m => ({ default: m.TodayPerformanceWidget }))
+);
+const CalendarWidget = lazyWithRetry(() =>
+  import('@/components/dashboard/CalendarWidget').then(m => ({ default: m.CalendarWidget }))
+);
 import { useBusinessInsights } from '@/hooks/useBusinessInsights';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
