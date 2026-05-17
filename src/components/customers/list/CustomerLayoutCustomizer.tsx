@@ -114,7 +114,7 @@ export const CustomerLayoutCustomizer = memo(function CustomerLayoutCustomizer({
   layout, isMobile, trigger,
 }: Props) {
   const triggerEl = trigger ?? (
-    <Button variant="outline" size="sm" aria-label="تخصيص العرض">
+    <Button variant="outline" size="sm" aria-label={tooltips.customizeView}>
       <Eye className="h-4 w-4 ml-2" />
       تخصيص العرض
     </Button>
