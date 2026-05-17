@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -33,6 +33,16 @@ export function WidgetContainer({
 }: WidgetContainerProps) {
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [localWidgets, setLocalWidgets] = useState<WidgetConfig[]>(widgets);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -90,7 +100,7 @@ export function WidgetContainer({
   return (
     <div className="space-y-4">
       <div className="flex justify-end gap-2">
-        {isCustomizing ? (
+        {isCustomizing && isMobile ? null : isCustomizing ? (
           <>
             <Button
               variant="outline"
