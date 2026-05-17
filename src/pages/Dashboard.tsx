@@ -288,6 +288,21 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                     type="button"
                     variant="outline"
                     size="icon"
+                    onClick={toggleQaSize}
+                    aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
+                    aria-pressed={isQaSmall}
+                  >
+                    {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isQaSmall ? 'أزرار الاستجابة السريعة: صغيرة' : 'أزرار الاستجابة السريعة: متوسطة'}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
                     onClick={toggleDensity}
                     aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
                     aria-pressed={isCompact}
