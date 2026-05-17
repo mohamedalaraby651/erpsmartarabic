@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { ShoppingCart, CreditCard, Printer, Edit, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { tooltips } from '@/lib/uiCopy';
 
 interface SupplierHeroActionsProps {
   onEdit: () => void;
@@ -27,31 +28,31 @@ const SupplierHeroActions = ({
   return (
     <div className="flex flex-col gap-3 lg:self-start shrink-0">
       <div className="flex flex-wrap gap-2">
-        <Button onClick={onCreatePurchaseOrder} size="sm" className="gap-2" aria-label="إنشاء أمر شراء جديد"><ShoppingCart className="h-4 w-4" />أمر شراء</Button>
-        <Button onClick={onRecordPayment} variant="outline" size="sm" className="gap-2" aria-label="تسجيل دفعة للمورد"><CreditCard className="h-4 w-4" />دفعة</Button>
-        <Button onClick={onPrintStatement} variant="outline" size="sm" className="gap-2" disabled={isPrintingStatement} aria-label="طباعة كشف حساب المورد">
+        <Button onClick={onCreatePurchaseOrder} size="sm" className="gap-2" aria-label={tooltips.newPurchaseOrder}><ShoppingCart className="h-4 w-4" />أمر شراء</Button>
+        <Button onClick={onRecordPayment} variant="outline" size="sm" className="gap-2" aria-label={tooltips.newPayment}><CreditCard className="h-4 w-4" />دفعة</Button>
+        <Button onClick={onPrintStatement} variant="outline" size="sm" className="gap-2" disabled={isPrintingStatement} aria-label={tooltips.printSupplierStatement}>
           {isPrintingStatement ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}كشف حساب
         </Button>
-        <Button onClick={onEdit} variant="ghost" size="sm" className="gap-2" aria-label="تعديل بيانات المورد"><Edit className="h-4 w-4" />تعديل</Button>
+        <Button onClick={onEdit} variant="ghost" size="sm" className="gap-2" aria-label={tooltips.editSupplier}><Edit className="h-4 w-4" />تعديل</Button>
       </div>
       {(hasPrev || hasNext) && (
         <div className="flex items-center gap-2 justify-end">
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={!hasPrev} onClick={onPrev} aria-label="المورد السابق">
+                <Button variant="outline" size="icon" className="h-8 w-8" disabled={!hasPrev} onClick={onPrev} aria-label={tooltips.prevSupplier}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">المورد السابق</TooltipContent>
+              <TooltipContent side="top">{tooltips.prevSupplier}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={!hasNext} onClick={onNext} aria-label="المورد التالي">
+                <Button variant="outline" size="icon" className="h-8 w-8" disabled={!hasNext} onClick={onNext} aria-label={tooltips.nextSupplier}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">المورد التالي</TooltipContent>
+              <TooltipContent side="top">{tooltips.nextSupplier}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>

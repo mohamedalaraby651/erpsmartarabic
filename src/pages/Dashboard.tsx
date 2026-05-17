@@ -10,6 +10,7 @@ import {
 import { useDashboardDensity } from '@/hooks/useDashboardDensity';
 import { useQuickActionSize } from '@/hooks/useQuickActionSize';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { tooltips } from '@/lib/uiCopy';
 import { useNavigate } from 'react-router-dom';
 import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
 import { useDashboardSettings } from '@/hooks/useDashboardSettings';
@@ -230,13 +231,13 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                   type="button"
                   onClick={toggleQaSize}
                   className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
-                  aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
+                  aria-label={isQaSmall ? tooltips.enlargeQuickActions : tooltips.shrinkQuickActions}
                   aria-pressed={isQaSmall}
                 >
                   {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}</TooltipContent>
+              <TooltipContent>{isQaSmall ? tooltips.enlargeQuickActions : tooltips.shrinkQuickActions}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -244,13 +245,13 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                   type="button"
                   onClick={toggleDensity}
                   className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
-                  aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
+                  aria-label={isCompact ? tooltips.toNormalView : tooltips.toCompactView}
                   aria-pressed={isCompact}
                 >
                   {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}</TooltipContent>
+              <TooltipContent>{isCompact ? tooltips.toNormalView : tooltips.toCompactView}</TooltipContent>
             </Tooltip>
             {quickActions.slice(0, 1).map((action) => (
               <Tooltip key={action.href}>
@@ -303,13 +304,13 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                     variant="outline"
                     size="icon"
                     onClick={toggleQaSize}
-                    aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
+                    aria-label={isQaSmall ? tooltips.enlargeQuickActions : tooltips.shrinkQuickActions}
                     aria-pressed={isQaSmall}
                   >
                     {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{isQaSmall ? 'أزرار الاستجابة السريعة: صغيرة' : 'أزرار الاستجابة السريعة: متوسطة'}</TooltipContent>
+                <TooltipContent>{isQaSmall ? tooltips.enlargeQuickActions : tooltips.shrinkQuickActions}</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -318,13 +319,13 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
                     variant="outline"
                     size="icon"
                     onClick={toggleDensity}
-                    aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
+                    aria-label={isCompact ? tooltips.toNormalView : tooltips.toCompactView}
                     aria-pressed={isCompact}
                   >
                     {isCompact ? <Rows3 className="h-4 w-4" /> : <Rows2 className="h-4 w-4" />}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}</TooltipContent>
+                <TooltipContent>{isCompact ? tooltips.toNormalView : tooltips.toCompactView}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <div className="flex items-center gap-2">

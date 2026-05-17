@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { tooltips } from '@/lib/uiCopy';
 import {
   Tooltip,
   TooltipContent,
@@ -47,13 +48,13 @@ export function MobileQuickActions({ onNavigate }: MobileQuickActionsProps) {
                       action.color
                     )}
                     onClick={() => onNavigate(action.href)}
-                    aria-label={`إنشاء ${action.title} جديد`}
+                    aria-label={tooltips.quickCreate(action.title)}
                   >
                     <Icon className="h-4 w-4" />
                     <span className="text-[9px]">{action.title}</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">إنشاء {action.title} جديد</TooltipContent>
+                <TooltipContent side="top">{tooltips.quickCreate(action.title)}</TooltipContent>
               </Tooltip>
             );
           })}
