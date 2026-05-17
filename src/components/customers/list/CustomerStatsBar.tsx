@@ -54,7 +54,7 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
           <button
             onClick={() => onFilterChange?.(null)}
             className="shrink-0 inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15 transition-colors animate-fade-in"
-            aria-label="مسح الفلتر النشط"
+            aria-label={tooltips.clearActiveFilter}
           >
             <X className="h-3.5 w-3.5" />
             مسح
