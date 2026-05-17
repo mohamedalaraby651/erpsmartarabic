@@ -99,38 +99,27 @@ export function WidgetContainer({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        {isCustomizing && isMobile ? null : isCustomizing ? (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCancel}
-              disabled={isSaving}
-            >
-              <X className="h-4 w-4 ml-2" />
-              إلغاء
+      {!isMobile && (
+        <div className="flex justify-end gap-2">
+          {isCustomizing ? (
+            <>
+              <Button variant="outline" size="sm" onClick={handleCancel} disabled={isSaving}>
+                <X className="h-4 w-4 ml-2" />
+                إلغاء
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                <Check className="h-4 w-4 ml-2" />
+                {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleStartCustomizing}>
+              <Settings2 className="h-4 w-4 ml-2" />
+              تخصيص لوحة التحكم
             </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              <Check className="h-4 w-4 ml-2" />
-              {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-            </Button>
-          </>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleStartCustomizing}
-          >
-            <Settings2 className="h-4 w-4 ml-2" />
-            تخصيص لوحة التحكم
-          </Button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}
