@@ -10,6 +10,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import type { UseCustomerLayoutPrefs } from "@/hooks/customers/useCustomerLayoutPrefs";
+import { tooltips } from "@/lib/uiCopy";
 
 interface Props {
   layout: UseCustomerLayoutPrefs;
