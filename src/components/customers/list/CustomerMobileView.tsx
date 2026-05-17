@@ -6,6 +6,7 @@ import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptySta
 import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
 import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
 import { cn } from "@/lib/utils";
+import { tooltips, regions } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
@@ -94,7 +95,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
         <div
           className="flex items-center gap-1.5 mb-3 overflow-x-auto -mx-1 px-1 pb-1 scrollbar-hide"
           role="toolbar"
-          aria-label="ترتيب سريع"
+          aria-label={tooltips.quickSort}
         >
           {[
             { key: 'created_at', label: 'الأحدث', Icon: Clock },
@@ -127,7 +128,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
         </div>
       )}
 
-      <div className="space-y-2.5" role="list" aria-label="قائمة العملاء">
+      <div className="space-y-2.5" role="list" aria-label={regions.customerList}>
         {data.map((customer, i) => (
           <div key={customer.id} role="listitem" className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
             <CustomerListCard
@@ -150,7 +151,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
       {/* Infinite scroll sentinel — skeleton أثناء جلب المزيد */}
       <div ref={observerRef} className="mt-3" aria-hidden={!isFetchingNextPage}>
         {isFetchingNextPage ? (
-          <div className="space-y-2.5" role="status" aria-live="polite" aria-label="جارٍ تحميل المزيد">
+          <div className="space-y-2.5" role="status" aria-live="polite" aria-label={regions.loadingMore}>
             <span className="sr-only">جارٍ تحميل المزيد من العملاء…</span>
             <CustomerMobileSkeleton count={2} showSummary={false} showSortBar={false} />
           </div>

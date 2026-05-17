@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
 import SharedEmptyState from "@/components/shared/SharedEmptyState";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 
 interface CustomerReminderDialogProps {
   customerId: string;
@@ -145,7 +146,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
           checked={false}
           onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: true })}
           className="mt-0.5"
-          aria-label="وضع علامة كمكتمل"
+          aria-label={tooltips.markReminderDone}
         />
         <div className="flex-1 min-w-0">
           <p className="text-sm break-words">{r.note}</p>
@@ -170,7 +171,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                 variant="outline"
                 className="h-8 text-xs gap-1"
                 onClick={() => navigate(`/invoices/${r.linked_invoice_id}`)}
-                aria-label="فتح الفاتورة المرتبطة"
+                aria-label={tooltips.openLinkedInvoice}
               >
                 <FileText className="h-3.5 w-3.5" />
                 فتح الفاتورة
@@ -182,7 +183,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                 variant="outline"
                 className="h-8 text-xs gap-1"
                 onClick={() => toggleMutation.mutate({ id: r.id, completed: true })}
-                aria-label="متابعة وإغلاق التذكير"
+                aria-label={tooltips.closeReminderAsDone}
               >
                 <Check className="h-3.5 w-3.5" />
                 تمت المتابعة
@@ -193,7 +194,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
               variant="ghost"
               className="h-8 text-xs gap-1"
               onClick={() => openEdit(r)}
-              aria-label="تعديل التذكير"
+              aria-label={tooltips.editReminder}
             >
               <Pencil className="h-3.5 w-3.5" />
               تعديل
@@ -288,7 +289,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                     checked={true}
                     onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: false })}
                     className="mt-0.5"
-                    aria-label="إعادة فتح التذكير"
+                    aria-label={tooltips.reopenReminder}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm line-through break-words">{r.note}</p>

@@ -4,6 +4,7 @@ import { X, AlertTriangle, Clock, UserX, Sparkles, ChevronDown, ChevronUp } from
 import { cn } from "@/lib/utils";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import type { Database } from "@/integrations/supabase/types";
+import { tooltips, regions } from "@/lib/uiCopy";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 
@@ -119,7 +120,7 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
   const hiddenCount = visibleAlerts.length - shown.length;
 
   return (
-    <div className="space-y-2 w-full" role="region" aria-label="تنبيهات العميل" aria-live="polite">
+    <div className="space-y-2 w-full" role="region" aria-label={regions.customerAlerts} aria-live="polite">
       {shown.map(alert => {
         const Icon = alert.icon;
         return (
@@ -145,7 +146,7 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
             <button
               onClick={() => setDismissedArr(prev => prev.includes(alert.id) ? prev : [...prev, alert.id])}
               className="shrink-0 p-0.5 rounded hover:bg-background/50"
-              aria-label="إخفاء التنبيه"
+              aria-label={tooltips.dismissAlert}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>

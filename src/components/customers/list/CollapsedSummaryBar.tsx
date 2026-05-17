@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { ChevronDown, Filter as FilterIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 
 interface Props {
   filteredCount: number;
@@ -31,7 +32,7 @@ export const CollapsedSummaryBar = memo(function CollapsedSummaryBar({
         "hover:bg-muted/70 active:scale-[0.99] transition-all",
         className,
       )}
-      aria-label="إظهار شريط الأدوات"
+      aria-label={tooltips.showToolbar}
     >
       <div className="flex items-center gap-2 min-w-0">
         {hasActiveFilters && <FilterIcon className="h-3.5 w-3.5 text-primary shrink-0" />}

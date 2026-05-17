@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { useLongPress } from "@/hooks/useLongPress";
 import { haptics } from "@/lib/haptics";
 import { toast } from "sonner";
-import { tooltips } from "@/lib/uiCopy";
+import { tooltips, regions } from "@/lib/uiCopy";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
@@ -105,7 +105,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
             />
             <div
               className="absolute -bottom-2 -left-2 min-w-11 min-h-11 flex items-end justify-start"
-              aria-label="تغيير صورة العميل"
+              aria-label={tooltips.uploadCustomerImage}
             >
               <ImageUpload
                 currentImageUrl={customer.image_url}
@@ -206,7 +206,7 @@ export const CustomerMobileProfile = memo(function CustomerMobileProfile({
               aria-valuenow={Math.round(creditUsagePercent)}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label="نسبة استخدام حد الائتمان"
+              aria-label={regions.creditUsageBar}
             >
               <div
                 className={cn("h-full rounded-full transition-all", creditTone)}

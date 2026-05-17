@@ -10,6 +10,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import type { UseCustomerLayoutPrefs } from "@/hooks/customers/useCustomerLayoutPrefs";
+import { tooltips } from "@/lib/uiCopy";
 
 interface Props {
   layout: UseCustomerLayoutPrefs;
@@ -48,7 +49,7 @@ const Body = ({ layout, isMobile }: { layout: UseCustomerLayoutPrefs; isMobile: 
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">يُخفي كل شيء فوق القائمة عدا شريط البحث.</div>
           </div>
-          <Switch checked={compact} onCheckedChange={setCompact} aria-label="وضع التركيز الكامل" />
+          <Switch checked={compact} onCheckedChange={setCompact} aria-label={tooltips.focusMode} />
         </div>
       </div>
 
@@ -113,7 +114,7 @@ export const CustomerLayoutCustomizer = memo(function CustomerLayoutCustomizer({
   layout, isMobile, trigger,
 }: Props) {
   const triggerEl = trigger ?? (
-    <Button variant="outline" size="sm" aria-label="تخصيص العرض">
+    <Button variant="outline" size="sm" aria-label={tooltips.customizeView}>
       <Eye className="h-4 w-4 ml-2" />
       تخصيص العرض
     </Button>

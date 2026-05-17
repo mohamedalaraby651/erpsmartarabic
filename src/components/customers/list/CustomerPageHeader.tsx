@@ -61,7 +61,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
           <div className="flex items-center gap-2">
             {mobileTitleSlot}
             <DropdownMenu>
-              <TapTooltip content="المزيد من الأدوات (إضافة، استيراد، تصدير، دمج)" side="bottom" autoCloseMs={1600}>
+              <TapTooltip content={tooltips.moreToolsDetailed} side="bottom" autoCloseMs={1600}>
                 <DropdownMenuTrigger asChild>
                   <button
                     className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
@@ -122,7 +122,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
         <DropdownMenu>
-          <TapTooltip content="استيراد، تصدير، كشف مكررين، ودمج" side="bottom" autoCloseMs={1600}>
+          <TapTooltip content={tooltips.toolsMenu} side="bottom" autoCloseMs={1600}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <MoreVertical className="h-4 w-4 ml-2" />أدوات
@@ -153,7 +153,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
         </DropdownMenu>
         {layoutCustomizerSlot}
         {canEdit && (
-          <TapTooltip content="إضافة سريعة لعميل جديد" side="bottom" autoCloseMs={1500}>
+          <TapTooltip content={tooltips.quickAddCustomer} side="bottom" autoCloseMs={1500}>
             <Button onClick={onAdd} className="flex-1 sm:flex-none">
               <Plus className="h-4 w-4 ml-2" />إضافة عميل
             </Button>

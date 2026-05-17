@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { FileText, Wallet, Undo2, Scale, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { regions } from "@/lib/uiCopy";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -84,7 +85,7 @@ export const InvoicesReturnsSummary = memo(function InvoicesReturnsSummary({
   ] as const;
 
   return (
-    <Card className="overflow-hidden border shadow-sm" role="region" aria-label="ملخص الفواتير والمرتجعات">
+    <Card className="overflow-hidden border shadow-sm" role="region" aria-label={regions.invoicesReturnsSummary}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 p-2">
         {tiles.map((t) => {
           const Icon = t.icon;

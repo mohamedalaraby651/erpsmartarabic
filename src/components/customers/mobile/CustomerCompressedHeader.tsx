@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Phone, MoreHorizontal, ChevronRight, ChevronLeft, ArrowRight, ArrowLeft } from "lucide-react";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
-import { tooltips } from "@/lib/uiCopy";
+import { tooltips, regions } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerCompressedHeaderProps {
@@ -82,7 +82,7 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
         </Button>
       )}
       {(onPrevSection || onNextSection) && (
-        <div className="flex items-center gap-0.5 shrink-0" role="group" aria-label="تنقل بين الأقسام">
+        <div className="flex items-center gap-0.5 shrink-0" role="group" aria-label={regions.customerSectionsGroup}>
           {onPrevSection && (
             <Button size="icon" variant="ghost" className="h-9 w-7" onClick={onPrevSection} aria-label={tooltips.prevSection}>
               <ChevronRight className="h-4 w-4" aria-hidden />

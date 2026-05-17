@@ -10,6 +10,7 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { useCustomerSwipeActions } from '@/hooks/customers/useCustomerSwipeActions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { haptics } from '@/lib/haptics';
+import { regions } from '@/lib/uiCopy';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -504,7 +505,7 @@ function QuickActionsMenu({ customerId, expanded, onNavigate, onNewInvoice, onNe
     <div
       role="menu"
       aria-orientation="horizontal"
-      aria-label="إجراءات سريعة للعميل"
+      aria-label={regions.customerQuickActions}
       aria-activedescendant={items[activeIdx] ? itemId(items[activeIdx].id) : undefined}
       tabIndex={-1}
       onKeyDown={handleKey}

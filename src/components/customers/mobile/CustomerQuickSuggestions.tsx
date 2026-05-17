@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { FileText, Printer, Bell, ArrowLeft, MessageCircle, Wallet, RefreshCw, History, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSuggestionHistory } from "@/hooks/customers/useSuggestionHistory";
+import { tooltips } from "@/lib/uiCopy";
 
 export type SuggestionId =
   | 'invoices' | 'statement' | 'reminders' | 'payments' | 'sales' | 'whatsapp';
@@ -192,7 +193,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
             onClick={() => setShowHistory(v => !v)}
             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
             aria-expanded={showHistory}
-            aria-label="سجل الأحداث"
+            aria-label={tooltips.eventLog}
           >
             <History className="h-3 w-3" aria-hidden />
             <span>السجل ({history.length})</span>
@@ -208,7 +209,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
               type="button"
               onClick={clear}
               className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive"
-              aria-label="مسح السجل"
+              aria-label={tooltips.clearEventHistory}
             >
               <X className="h-3 w-3" aria-hidden /> مسح
             </button>
