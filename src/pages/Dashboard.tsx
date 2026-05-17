@@ -88,6 +88,7 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const { currentTenantName, tenantId } = useTenant();
   const { insights } = useBusinessInsights();
   const { density, toggle: toggleDensity, isCompact } = useDashboardDensity();
+  const { size: qaSize, toggle: toggleQaSize, isSmall: isQaSmall } = useQuickActionSize();
   const {
     dashboardStats,
     financialKPIs,
