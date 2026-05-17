@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { regions } from "@/lib/uiCopy";
 
 export type MobileSectionId =
   | 'none' | 'invoices' | 'payments' | 'info' | 'notes' | 'analytics'
