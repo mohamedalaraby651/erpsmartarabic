@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { ChevronDown, Filter as FilterIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 
 interface Props {
   filteredCount: number;
