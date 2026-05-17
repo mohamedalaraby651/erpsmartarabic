@@ -144,8 +144,8 @@ export function useDashboardData() {
         .limit(5);
       return data || [];
     },
-    staleTime: 15000,
-  });
+    staleTime: 60000,
+    gcTime: 300000,
 
   const { data: recentInvoices } = useQuery({
     queryKey: ['dashboard-recent-invoices'],
@@ -157,8 +157,8 @@ export function useDashboardData() {
         .limit(5);
       return (data || []) as InvoiceWithCustomer[];
     },
-    staleTime: 15000,
-  });
+    staleTime: 60000,
+    gcTime: 300000,
 
   return {
     dashboardStats,

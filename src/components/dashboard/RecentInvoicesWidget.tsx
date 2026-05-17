@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,49 +17,55 @@ interface RecentInvoicesWidgetProps {
   invoices: InvoiceWithCustomer[] | undefined;
 }
 
-export function RecentInvoicesWidget({ invoices }: RecentInvoicesWidgetProps) {
+export const RecentInvoicesWidget = memo(function RecentInvoicesWidget({ invoices }: RecentInvoicesWidgetProps) {
   const navigate = useNavigate();
 
   return (
     <>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-lg">آخر الفواتير</CardTitle>
-          <CardDescription>أحدث الفواتير المصدرة</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between px-3 pt-3 pb-2 sm:px-6 sm:pt-6">
+        <div className="min-w-0">
+          <CardTitle className="text-sm sm:text-lg">آخر الفواتير</CardTitle>
+          <CardDescription className="text-[11px] sm:text-sm">أحدث الفواتير المصدرة</CardDescription>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/invoices')}>
+        <Button variant="ghost" size="sm" className="h-8 text-xs shrink-0" onClick={() => navigate('/invoices')}>
           عرض الكل
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
         </Button>
       </CardHeader>
-      <CardContent>
-        {invoices && invoices.length > 0 ? (
-          <div className="space-y-2">
+      <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6 min-h-[200px]">
+        {invoices === undefined ? (
+          <div className="space-y-2" aria-busy="true">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/40 animate-pulse h-[60px]" />
+            ))}
+          </div>
+        ) : invoices.length > 0 ? (
+          <div className="space-y-2 animate-fade-in">
             {invoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-muted/50 active:scale-[0.99] md:hover:bg-muted transition-all cursor-pointer"
                 onClick={() => navigate(`/invoices/${invoice.id}`)}
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Receipt className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">{invoice.invoice_number}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="min-w-0">
+                    <p className="font-medium text-xs sm:text-sm truncate">{invoice.invoice_number}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
                       {invoice.customers?.name || 'عميل'}
                     </p>
                   </div>
                 </div>
-                <div className="text-left">
-                  <p className="font-bold text-sm">{invoice.total_amount.toLocaleString()} ج.م</p>
+                <div className="text-left shrink-0">
+                  <p className="font-bold text-xs sm:text-sm tabular-nums">{invoice.total_amount.toLocaleString()} ج.م</p>
                   <Badge
                     variant={
                       invoice.payment_status === 'paid' ? 'default' :
                       invoice.payment_status === 'partial' ? 'secondary' : 'destructive'
                     }
-                    className="text-xs"
+                    className="text-[10px] sm:text-xs"
                   >
                     {invoice.payment_status === 'paid' ? 'مدفوع' :
                      invoice.payment_status === 'partial' ? 'جزئي' : 'معلق'}
@@ -69,10 +75,10 @@ export function RecentInvoicesWidget({ invoices }: RecentInvoicesWidgetProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 px-4">
-            <Receipt className="h-10 w-10 mx-auto mb-3 opacity-50" />
+          <div className="text-center py-6 px-4">
+            <Receipt className="h-9 w-9 mx-auto mb-2 opacity-50" />
             <p className="text-sm font-medium mb-1">لا توجد فواتير بعد</p>
-            <p className="text-xs text-muted-foreground mb-4">أنشئ أول فاتورة لبدء تتبّع المبيعات</p>
+            <p className="text-xs text-muted-foreground mb-3">أنشئ أول فاتورة لبدء تتبّع المبيعات</p>
             <Button size="sm" variant="outline" onClick={() => navigate('/invoices?action=new')}>
               إنشاء فاتورة
             </Button>
@@ -81,4 +87,5 @@ export function RecentInvoicesWidget({ invoices }: RecentInvoicesWidgetProps) {
       </CardContent>
     </>
   );
-}
+});
+
