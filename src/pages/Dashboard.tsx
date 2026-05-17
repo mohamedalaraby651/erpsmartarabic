@@ -28,6 +28,7 @@ import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 import { AlertsBell } from '@/components/dashboard/AlertsBell';
 import { WidgetErrorBoundary } from '@/components/dashboard/WidgetErrorBoundary';
+import { cn } from '@/lib/utils';
 
 import { StatsWidget } from '@/components/dashboard/StatsWidget';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
