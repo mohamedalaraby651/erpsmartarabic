@@ -49,8 +49,8 @@ export const DashboardChip = memo(function DashboardChip({
       onTouchStart={onHover}
       className={cn(
         'shrink-0 inline-flex items-center gap-1.5 px-3 h-9 rounded-lg text-xs font-medium border',
-        'bg-card text-foreground border-border transition-all duration-200',
-        'active:scale-95 md:hover:bg-accent md:hover:text-accent-foreground',
+        'text-foreground transition-all duration-200 active:scale-95',
+        t.bg,
       )}
       aria-label={`${label}: ${value}`}
     >
