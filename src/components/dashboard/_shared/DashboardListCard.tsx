@@ -40,7 +40,7 @@ export const DashboardListCard = memo(function DashboardListCard({
   ariaLabel,
   className,
 }: DashboardListCardProps) {
-  const longPress = useLongPress({
+  const { isPressed: _ip, ...longPressHandlers } = useLongPress({
     onLongPress: () => onLongPress?.(),
     onPress: () => onTap?.(),
     delay: 500,
@@ -48,7 +48,7 @@ export const DashboardListCard = memo(function DashboardListCard({
 
   // Use long-press handlers only when onLongPress is provided; otherwise simple onClick.
   const interactiveProps = onLongPress
-    ? longPress
+    ? longPressHandlers
     : onTap
     ? { onClick: onTap }
     : {};
