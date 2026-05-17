@@ -95,7 +95,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
         <div
           className="flex items-center gap-1.5 mb-3 overflow-x-auto -mx-1 px-1 pb-1 scrollbar-hide"
           role="toolbar"
-          aria-label="ترتيب سريع"
+          aria-label={tooltips.quickSort}
         >
           {[
             { key: 'created_at', label: 'الأحدث', Icon: Clock },
