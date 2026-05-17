@@ -193,7 +193,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
             onClick={() => setShowHistory(v => !v)}
             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
             aria-expanded={showHistory}
-            aria-label="سجل الأحداث"
+            aria-label={tooltips.eventLog}
           >
             <History className="h-3 w-3" aria-hidden />
             <span>السجل ({history.length})</span>
