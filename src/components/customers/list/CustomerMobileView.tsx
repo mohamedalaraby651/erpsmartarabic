@@ -6,6 +6,7 @@ import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptySta
 import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
 import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
 import { cn } from "@/lib/utils";
+import { tooltips, regions } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerMobileViewProps {
