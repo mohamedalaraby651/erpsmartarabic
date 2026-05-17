@@ -141,7 +141,7 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
               <button
                 type="button"
                 onClick={(e) => { stop(e); setDetailsOpen(true); }}
-                aria-label="عرض تفاصيل الفاتورة"
+                aria-label={tooltips.viewInvoiceDetails}
                 className={cn(
                   'inline-flex items-center justify-center rounded-full bg-primary/10 text-primary active:scale-90 transition-transform hover:bg-primary/15',
                   qa.button,
@@ -150,7 +150,7 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
                 <Eye className={qa.icon} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">عرض تفاصيل الفاتورة</TooltipContent>
+            <TooltipContent side="top">{tooltips.viewInvoiceDetails}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -159,7 +159,7 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
                 type="button"
                 onClick={handlePrint}
                 disabled={printing}
-                aria-label="طباعة الفاتورة PDF"
+                aria-label={tooltips.printInvoicePdf}
                 className={cn(
                   'inline-flex items-center justify-center rounded-full bg-muted text-foreground active:scale-90 transition-transform hover:bg-accent disabled:opacity-50',
                   qa.button,
@@ -168,7 +168,7 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
                 {printing ? <Loader2 className={cn(qa.icon, 'animate-spin')} /> : <Printer className={qa.icon} />}
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">طباعة الفاتورة PDF</TooltipContent>
+            <TooltipContent side="top">{tooltips.printInvoicePdf}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -176,7 +176,7 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
               <button
                 type="button"
                 onClick={(e) => { stop(e); setReminderOpen(true); }}
-                aria-label="إصدار تذكير متابعة للفاتورة"
+                aria-label={remaining > 0 ? tooltips.remindOverdue : tooltips.remindGeneric}
                 className={cn(
                   'inline-flex items-center justify-center rounded-full active:scale-90 transition-transform',
                   qa.button,
@@ -189,7 +189,7 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
               </button>
             </TooltipTrigger>
             <TooltipContent side="top">
-              {remaining > 0 ? 'إصدار تذكير لمتابعة السداد' : 'إصدار تذكير'}
+              {remaining > 0 ? tooltips.remindOverdue : tooltips.remindGeneric}
             </TooltipContent>
           </Tooltip>
         </div>
