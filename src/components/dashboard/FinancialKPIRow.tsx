@@ -8,6 +8,8 @@ import {
   AlertTriangle,
   Banknote,
   CheckCircle2,
+  Hourglass,
+  Percent,
   LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,6 +22,9 @@ export interface FinancialKPIData {
   overdueAR: number;
   cashBalance: number;
   pendingApprovals: number;
+  dsoDays: number;
+  grossMarginValue: number;
+  grossMarginPct: number;
 }
 
 interface FinancialKPIRowProps {
