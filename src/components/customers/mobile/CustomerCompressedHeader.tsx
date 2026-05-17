@@ -102,10 +102,10 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
           </a>
         </Button>
       )}
-      <Button size="icon" className="h-9 w-9 shrink-0" onClick={onNewInvoice} aria-label={`إنشاء فاتورة جديدة للعميل ${customer.name}`}>
+      <Button size="icon" className="h-9 w-9 shrink-0" onClick={onNewInvoice} aria-label={tooltips.newInvoice}>
         <FileText className="h-4 w-4" aria-hidden />
       </Button>
-      <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onMoreActions} aria-label="إجراءات أخرى" aria-haspopup="dialog">
+      <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onMoreActions} aria-label={tooltips.moreActions} aria-haspopup="dialog">
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </Button>
     </div>
