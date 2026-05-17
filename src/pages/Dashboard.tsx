@@ -12,9 +12,14 @@ import { useDashboardSettings } from '@/hooks/useDashboardSettings';
 import { WidgetConfig } from '@/components/dashboard/DraggableWidget';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/hooks/useTenant';
-import { TodayPerformanceWidget } from '@/components/dashboard/TodayPerformanceWidget';
 import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
-import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
+const TodayPerformanceWidget = lazyWithRetry(() =>
+  import('@/components/dashboard/TodayPerformanceWidget').then(m => ({ default: m.TodayPerformanceWidget }))
+);
+const CalendarWidget = lazyWithRetry(() =>
+  import('@/components/dashboard/CalendarWidget').then(m => ({ default: m.CalendarWidget }))
+);
 import { useBusinessInsights } from '@/hooks/useBusinessInsights';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
@@ -162,11 +167,19 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
       case 'activities':
         return wrap(<RecentInvoicesWidget invoices={recentInvoices} />);
       case 'today_performance':
-        return wrap(<TodayPerformanceWidget />);
+        return wrap(
+          <Suspense fallback={<div className="h-[220px] bg-muted/30 rounded-md animate-pulse" />}>
+            <TodayPerformanceWidget />
+          </Suspense>
+        );
       case 'low_stock':
         return wrap(<LowStockWidget />);
       case 'calendar':
-        return wrap(<CalendarWidget />);
+        return wrap(
+          <Suspense fallback={<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" />}>
+            <CalendarWidget />
+          </Suspense>
+        );
       case 'insights':
         return wrap(<InsightsWidget insights={insights} />);
       default:
