@@ -171,7 +171,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                 variant="outline"
                 className="h-8 text-xs gap-1"
                 onClick={() => navigate(`/invoices/${r.linked_invoice_id}`)}
-                aria-label="فتح الفاتورة المرتبطة"
+                aria-label={tooltips.openLinkedInvoice}
               >
                 <FileText className="h-3.5 w-3.5" />
                 فتح الفاتورة
