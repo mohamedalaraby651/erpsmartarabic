@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useLongPress } from "@/hooks/useLongPress";
 import { haptics } from "@/lib/haptics";
 import { toast } from "sonner";
+import { tooltips } from "@/lib/uiCopy";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
