@@ -95,9 +95,9 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
 }: FinancialKPIRowProps) {
   if (isLoading && !data) {
     return (
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
+      <div className="flex gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-[88px] rounded-lg" />
+          <Skeleton key={i} className="h-[92px] min-w-[160px] md:min-w-0 rounded-lg snap-start shrink-0 md:shrink" />
         ))}
       </div>
     );
@@ -169,9 +169,11 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
   ];
 
   return (
-    <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
+    <div className="flex gap-3 overflow-x-auto md:grid md:grid-cols-4 lg:grid-cols-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-thin">
       {cards.map((c) => (
-        <KpiCardView key={c.label} card={c} />
+        <div key={c.label} className="min-w-[180px] md:min-w-0 snap-start shrink-0 md:shrink">
+          <KpiCardView card={c} />
+        </div>
       ))}
     </div>
   );

@@ -1,169 +1,104 @@
-# تدقيق 360° + خارطة طريق
-
-## ملاحظة جوهرية قبل الـ Gap Report
-
-المشروع **ناضج جداً**: ~100 جدول، 14 Edge Function، 148 migration، 41 وحدة صفحات، RLS مفعّل على كل جدول، 44 ملف اختبار، تقسيم Bundle احترافي، Telemetry شامل. لا يوجد "ثقب" معماري كبير. الفجوات المرصودة محدّدة وقابلة للإصلاح.
+## ملاحظة قبل البدء
+ذكرت "المرفقات" لكن لم تصلني أي صور. الخطة مبنية على الفحص الحالي للكود + الـ viewport الحالي (393×699). إن أرفقت لقطات سأعدّل القرارات البصرية وفقاً لها.
 
 ---
 
-## 1. Gap Report (ما هو مفقود أو يحتاج إصلاح)
+## 1) تقرير الفجوات والأخطاء (Gap & Bug Report)
 
-### 1.1 ازدواج وحدات (دَين معماري)
-- **`pages/quotes/` و `pages/quotations/`** يحتويان على نفس المفهوم (عرض أسعار) بأسماء وجداول مختلفة (`quotes`/`quote_items` vs `quotations`/`quotation_items`). يجب توحيدهما واختيار واحد كمصدر حقيقي مع migration بيانات + redirect routes.
-- نفس الازدواج محتمل في Sales Cycle (`sales-orders` + `quotes/SalesPipelinePage`).
+### A. UI/UX & Responsive
+- **Hero hero RTL**: زر إنشاء + AlertsBell + شارات بـ `flex-wrap` ينتج صفّين على 393px (مزدحم).
+- **FinancialKPIRow**: 8 بطاقات بـ `grid-cols-2` على الموبايل = 4 صفوف، KPI «هامش الربح» و«DSO» مهمّان جداً لكن مدفونان أسفل الـ scroll.
+- **StatsWidget**: ألوان `text-muted-foreground` فقط — بلا تمييز بصري. لا يستخدم `kpi-value` utility المعتمد في Pro Design System v2.
+- **TodayPerformanceWidget**: `bg-purple-500/10` و `bg-orange-500/10` انتهاك للنظام (يجب tokens دلالية).
+- **WidgetContainer Drag**: على الموبايل drag-and-drop غير قابل للاستخدام (touch target صغير + horizontal scroll محتمل عند drag).
+- **WelcomeBanner** ما زال ملفه موجوداً لكنه لم يعد مستورداً (dead code).
+- **Empty states**: TasksWidget / RecentInvoicesWidget بدون CTA عند الفراغ (smart empty state policy).
+- **AlertsBell** على الموبايل: dropdown w-80 قد يخرج عن الشاشة عند `align="end"`.
 
-### 1.2 تدفقات مستخدم ناقصة
-- **استرجاع كلمة المرور (Forgot Password)**: غير موجود في `Auth.tsx` — فقط Login/Signup.
-- **تأكيد البريد بعد التسجيل (Email confirmation)**: لا توجد صفحة `/auth/confirm` لاستقبال الـ callback.
-- **Google Sign-In**: مفقود من `Auth.tsx` رغم أنه افتراضي في Lovable Cloud.
-- **صفحة Onboarding** للمستخدم الجديد: لا يوجد wizard لاختيار اللغة/إعداد الشركة/إنشاء أول عميل.
-- **صفحة Profile مستقلة**: حالياً `/profile` يعيد توجيه إلى `UnifiedSettingsPage`.
-- **شاشة "غير مصرّح" (403)**: `RouteErrorPage` موجودة لكن لا يوجد فحص دور قبل الدخول لصفحات admin/platform → المستخدم يرى صفحة فارغة بدل 403 واضح.
+### B. Performance & Data
+- **3 استعلامات متوازية**: `useDashboardData` يطلق `dashboard-overview` + `dashboard-tasks` + `dashboard-recent-invoices`. الثلاثة لها `staleTime` مختلف وتعيد جلب مستقلّة.
+- **useDashboardSettings** يقرأ من DB + localStorage بدون `staleTime` → refetch على كل focus.
+- **useDashboardRealtime**: يشترك في 4 جداول؛ كل INSERT يبطل query keys ثقيلة → re-fetch كامل عوضاً عن patch موضعي.
+- **SalesChartWidget** lazy ✅ لكن **recharts** يُحمَّل دفعة واحدة (~90KB). يمكن استبداله بـ skeleton أعلى دقّة على الموبايل.
+- **CalendarWidget** 224 سطر + **TodayPerformanceWidget** 196 سطر → يدخلان في bundle الرئيسي بدون lazy.
+- لا يوجد `prefetch` للوجهات الشائعة (`/invoices`, `/customers`) رغم وجود `lib/prefetch.ts`.
 
-### 1.3 جداول/سياسات RLS تستحق المراجعة
-| الجدول | الحالة | التوصية |
-|---|---|---|
-| `event_metrics` | SELECT فقط | ✓ مقصود (للأدمن فقط) |
-| `journal_reversals` | SELECT فقط | ✓ مقصود (تُكتب عبر trigger) |
-| الباقي بسياسة واحدة | `cmd=ALL` يغطي CRUD | ✓ صحيح، لكن استبدلها بـ 4 سياسات منفصلة لوضوح الـ audit |
-| `slow_queries_log` | موجود لكن لا يبدو مرتبطاً بـ trigger Postgres | تحقّق أنه يُملأ فعلياً |
-| `customers_safe`, `employees_safe`, `suppliers_safe` | views للـ PII masking | تأكد أنها مستخدمة في كل مكان بدل الجدول الأصلي |
-
-### 1.4 Edge Functions
-- **مفقود**: webhook handler عام (لاستقبال webhooks خارجية، مثلاً payment gateway).
-- **مفقود**: Cron job منفصل لـ `refresh_dashboard_mv` (موجود pg_cron لكن بدون مراقبة).
-- `log-event` يحتاج Rate Limiting لمنع إغراق الـ logs.
-- لا توجد ملفات `*_test.ts` داخل `supabase/functions/*` رغم وجود `test_edge_functions` tool.
-
-### 1.5 UI/UX
-- **Dark Mode**: متغيرات HSL موجودة لكن يحتاج جولة QA على كل صفحة (المتغيرات مدعومة، التطبيق ليس مضموناً).
-- **Empty States**: مذكورة في الذاكرة كمعيار، لكن لم أتأكد من تطبيقها على كل القوائم (تحتاج جولة).
-- **Tooltips على الأزرار الأيقونية**: محتمل ناقص في صفحات admin الكثيفة.
-- **Toast feedback** بعد كل mutation: يحتاج فحص (سياسة "لا mutation بدون toast نجاح/خطأ").
-- **Skeleton جزئي** في صفحات غير الـ Dashboard: مفقود — معظم الصفحات تستخدم spinner بسيط.
-- **Mobile responsive**: 29 صفحة فقط تستخدم `useIsMobile` من أصل 41 — البقية قد تكون مكسورة على الجوال.
-- **i18n**: التطبيق عربي فقط. الذاكرة تذكر RTL لكن لا يوجد إعداد لإضافة اللغة الإنجليزية مستقبلاً.
-
-### 1.6 Auth & Security
-- **2FA** مذكور في الذاكرة (`user_2fa_settings` + `verify-totp`) لكن غير مفروض على Admin/Platform.
-- **Password HIBP Check** غير مُفعّل (موصى به لـ Lovable Cloud).
-- لا توجد سياسة **Session Timeout** للمستخدمين غير النشطين.
-- لا توجد **Audit log viewer** يقرأ من Edge logs مباشرة (موجود `activity_logs` فقط — DB-side).
-
-### 1.7 Performance & Code Quality
-- **44 ملف اختبار**: تغطية معقولة لكن معظمها في `__tests__/` — لا توجد E2E (Playwright/Cypress).
-- **TODO/FIXME**: صفر — جيد لكن مشبوه (قد يعني عدم توثيق الديون).
-- **Documentation**: لا يوجد `README.md` فني للمطوّرين الجدد، لا `CONTRIBUTING.md`، لا `docs/architecture.md`.
-- **Storybook**: غير موجود — مع 200+ مكوّن، يستحق التفكير.
-- **Bundle analyzer**: غير مُعدّ — لا يمكن قياس حجم كل chunk بدون بناء يدوي.
+### C. Code Quality & Errors
+- **renderWidget** في Dashboard ليس داخل `useCallback` → كل re-render يولّد دوال جديدة لكل widget.
+- **handlers في hero** (`() => handleQuickAction(action)`) inline arrow → re-render أزرار في كل تحديث realtime.
+- **`navigate` errors**: لا يوجد ErrorBoundary خاص بالـ widgets (إذا فشل CalendarWidget يكسر اللوحة كلها).
+- **Console.log/raw errors**: لا فحص شامل، يحتاج audit عبر `rg "console\.(log|error)" src/`.
+- **Realtime cleanup**: غير مفحوص — تسرّب محتمل عند تبديل tenants.
 
 ---
 
-## 2. Strategic Roadmap
+## 2) خارطة الطريق (Roadmap) — 3 مراحل
 
-### المرحلة 1 — إصلاحات فورية (1–2 أسبوع)
-أولوية: ما يضرّ المستخدم النهائي اليوم.
+### Phase 1 — إصلاحات حرجة + موبايل (الأولوية القصوى)
+1. **Hero responsive**: على موبايل: العنوان + الشارات في صف، Bell + زر "+" عائمان أعلى-اليسار بنفس الارتفاع، إخفاء "مرحباً بك" على <sm.
+2. **KPI ranking للموبايل**: على <md نعرض 4 KPIs الأساسية فقط (Today, MTD, Overdue, Cash) ضمن أفقي قابل للتمرير-snap، والباقي خلف زر «المزيد».
+3. **استبدال ألوان TodayPerformanceWidget** بـ semantic tokens (`bg-accent`, `bg-warning/10`).
+4. **حذف WelcomeBanner.tsx** (dead code).
+5. **WidgetErrorBoundary**: كل widget داخل boundary منعزل لا يكسر اللوحة.
+6. **Smart empty states** لـ TasksWidget و RecentInvoicesWidget مع CTA.
+7. **AlertsBell**: `align="end"` + `w-[calc(100vw-1rem)] sm:w-80` لمنع overflow.
+
+### Phase 2 — UX & Feature Completion
+1. **StatsWidget redesign**: استخدام `kpi-value` utility + sparkline صغير + tone semantic لكل بطاقة.
+2. **Drag-and-drop**: تعطيل DnD على <md، استبداله بزر «ترتيب يدوي» يفتح Sheet لإعادة الترتيب باللمس.
+3. **Skeletons احترافية**: shimmer متدرّج للـ chart بدلاً من `bg-muted/30 animate-pulse`.
+4. **CommandBar**: إضافة اختصارات حسب الدور + recent items + counts (مثل «الفواتير (12)»).
+5. **Tooltips** على كل KPI تشرح كيف تُحسب القيمة (DSO = AR/Credit×90 إلخ).
+6. **Sticky KPI bar** عند scroll على الموبايل (شريط مضغوط يعرض Cash + Overdue).
+
+### Phase 3 — تصلّب الأداء (Performance Hardening)
+1. **دمج TanStack Queries**: استبدال 3 hooks بـ `useQueries` واحد + cache key موحّد + `placeholderData: keepPreviousData`.
+2. **Realtime debounced invalidation**: تجميع invalidations في 500ms window بدل invalidation فوري لكل event.
+3. **Lazy-load CalendarWidget + TodayPerformanceWidget** عبر `lazyWithRetry` + Suspense skeleton.
+4. **Route prefetch**: عند hover/touch على بطاقة KPI نستدعي `prefetchRoute(href)`.
+5. **Memoization audit**: تحويل كل handler إلى `useCallback`, تثبيت kpi cards array بـ `useMemo`, مراجعة dependencies في `useDashboardData`.
+6. **Bundle audit**: تشغيل `rollup-plugin-visualizer` على Dashboard chunk والتأكد <150KB gz.
+7. **Global error boundary**: إضافة `logErrorSafely` daily-summary + Sentry-like sink (إن وُجد) في `lib/errorHandler.ts`.
+8. **E2E test**: Playwright سيناريو يفتح Dashboard على 3 viewports ويتحقق من عدم overflow و KPI render <2s.
+
+---
+
+## 3) خطة تنفيذ Phase 1 (سأبدأ بها فور الموافقة)
 
 ```text
-[Auth & Security]
-├── إضافة Forgot Password flow (صفحة /auth/forgot + email template)
-├── إضافة Google Sign-In إلى Auth.tsx
-├── إضافة صفحة /auth/confirm لاستقبال email verification callback
-├── تفعيل Password HIBP Check عبر configure_auth
-├── فرض 2FA على المستخدمين بدور admin/platform_owner
-└── إضافة فحص دور قبل routes الإدارية → 403 صريح
+Step 1: Hero responsive refactor
+  - src/pages/Dashboard.tsx
+  - إخفاء welcome subtitle <sm
+  - إعادة ترتيب أزرار hero بـ grid على الموبايل
 
-[UX Critical]
-├── Toast feedback موحّد بعد كل mutation (helper hook useMutationToast)
-├── Empty States موحّدة على أعلى 10 قوائم استخداماً
-├── Tooltips على كل أزرار الأيقونات في admin/
-└── جولة QA على Dark Mode لكل الصفحات
+Step 2: Mobile KPI strip
+  - src/components/dashboard/FinancialKPIRow.tsx
+  - أضف prop `compact` ينشّط 4-cards + horizontal-snap على <md
 
-[Data Hygiene]
-└── توحيد quotes/quotations: اختيار واحد + migration + redirects
+Step 3: Semantic tokens cleanup
+  - src/components/dashboard/TodayPerformanceWidget.tsx (سطور 129, 138)
+
+Step 4: Dead code removal
+  - حذف src/components/dashboard/WelcomeBanner.tsx
+
+Step 5: Per-widget error boundary
+  - مكوّن جديد: src/components/dashboard/WidgetErrorBoundary.tsx
+  - لفّ كل return داخل renderWidget
+
+Step 6: Smart empty states
+  - src/components/dashboard/TasksWidget.tsx
+  - src/components/dashboard/RecentInvoicesWidget.tsx
+
+Step 7: AlertsBell viewport-safe
+  - src/components/dashboard/AlertsBell.tsx (width responsive)
 ```
 
-### المرحلة 2 — تحسينات أساسية (3–6 أسابيع)
-أولوية: ما يرفع جودة المنتج لمستوى احترافي.
-
-```text
-[UX Polish]
-├── Skeleton جزئي على كل الصفحات (نمط Dashboard)
-├── جعل كل الـ 41 صفحة responsive (إضافة useIsMobile + MobileXxx variants)
-├── Onboarding wizard للمستخدم الجديد (3 خطوات: لغة → شركة → أول عميل)
-└── صفحة Profile مستقلة (تجنّب redirect)
-
-[Backend Robustness]
-├── تقسيم سياسات RLS من cmd=ALL إلى SELECT/INSERT/UPDATE/DELETE منفصلة (لـ audit أوضح)
-├── إضافة Deno tests لكل Edge Function (process-payment, approve-*, validate-invoice)
-├── Rate Limiting على log-event Edge Function
-├── Cron monitoring + alert لو فشل refresh_dashboard_mv
-└── إضافة webhook handler عام (Stripe-style signature verification)
-
-[Developer Experience]
-├── إضافة README.md + CONTRIBUTING.md + docs/architecture.md
-├── إعداد bundle analyzer (rollup-plugin-visualizer)
-├── إضافة GitHub Actions CI لتشغيل bunx vitest run + linter على كل PR
-└── Storybook لمكوّنات shared/ و ui/
-
-[Performance Validation]
-├── قراءة slow_queries_log الفعلي بعد أسبوع تشغيل
-├── إصلاح فهارس على tenant_id حيث ينقص
-└── استبدال auth.uid() بـ (select auth.uid()) في كل سياسات RLS
-```
-
-### المرحلة 3 — توسعة مستقبلية (3–6 أشهر)
-أولوية: ما يفتح أسواقاً/شرائح جديدة.
-
-```text
-[Internationalization]
-├── إضافة i18n (react-i18next) مع EN كلغة ثانية
-├── دعم LTR ديناميكي (الذاكرة الحالية RTL strict)
-└── ترجمة كل النصوص عبر استخراج إلى ملفات locales/
-
-[Mobile Native]
-├── PWA install prompts محسّنة (موجود InstallPage)
-├── Push notifications فعلية (Edge Function + VAPID keys)
-└── Background Sync لإجراءات offline
-
-[AI & Intelligence]
-├── ربط Lovable AI Gateway للـ Decision Engine الموجود
-├── ملخّصات AI للمحادثات مع العملاء
-├── توقّع المبيعات بناءً على tabs الـ Reports
-└── OCR لاستخراج بيانات الفواتير من صور (Edge Function + Vision model)
-
-[Enterprise Features]
-├── SAML SSO (مدعوم في Lovable Cloud لكن غير مفعّل)
-├── Multi-currency + exchange rates table
-├── Multi-warehouse advanced (currently single)
-├── e-Invoicing integration (للأسواق التي تتطلبه: السعودية، مصر)
-└── API publique مع API keys management
-
-[Observability]
-├── E2E tests بـ Playwright لأهم 5 user flows
-├── Sentry-style external error tracking
-├── Real-user monitoring (RUM) dashboard من Telemetry الموجود
-└── Status page عام للـ uptime
-```
+### المعايير القابلة للقياس بعد Phase 1
+- لا horizontal scroll على 360/375/393/414px.
+- LCP الـ Dashboard على 4G simulated ≤ 2.5s.
+- لا CLS عند ظهور KPIs (skeletons بنفس الارتفاع).
+- كل widget يحتوي على skeleton + error + empty state.
 
 ---
 
-## 3. ما لن نفعله الآن (شُحن مؤخراً، لا حاجة لإعادة عمله)
-- Bundle splitting + lazyWithRetry ✓
-- Dashboard RPC واحد + skeleton جزئي ✓
-- QueryCache global error telemetry ✓
-- Performance marks للإقلاع ✓
-- Modulepreload للـ vendors ✓
-- White-screen shield + SW cleanup ✓
-- Materialized views + pg_cron refresh ✓
-
----
-
-## 4. سؤال للمستخدم (قبل التنفيذ)
-
-أي مرحلة نبدأ بها فعلياً، وهل لديك أولوية محددة داخل المرحلة 1؟ أقترح ترتيباً:
-1. **Auth gaps** (Forgot Password + Google Sign-In + HIBP) — أعلى أثر مرئي.
-2. **توحيد quotes/quotations** — أعلى أثر معماري طويل المدى.
-3. **Toast/Empty States/Tooltips** — أعلى أثر جمالي ومتسق.
-
-إن وافقت، أبدأ بالمسار 1 فوراً وأشحنه قبل الانتقال للتالي.
+هل أبدأ تنفيذ Phase 1 بهذا الترتيب؟ أو تفضّل الترتيب من الموبايل أولاً (Step 1+2+7) ثم الباقي؟

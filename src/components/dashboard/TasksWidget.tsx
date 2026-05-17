@@ -60,9 +60,13 @@ export function TasksWidget({ tasks }: TasksWidgetProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            <CheckCircle2 className="h-10 w-10 mx-auto mb-2 text-success" />
-            <p>لا توجد مهام معلقة</p>
+          <div className="text-center py-8 px-4">
+            <CheckCircle2 className="h-10 w-10 mx-auto mb-3 text-success" />
+            <p className="text-sm font-medium mb-1">لا توجد مهام معلقة</p>
+            <p className="text-xs text-muted-foreground mb-4">ابدأ بإضافة مهمة جديدة لتنظيم عملك</p>
+            <Button size="sm" variant="outline" onClick={() => navigate('/tasks?action=new')}>
+              إضافة مهمة
+            </Button>
           </div>
         )}
       </CardContent>

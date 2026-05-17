@@ -22,6 +22,7 @@ import { FinancialKPIRow } from '@/components/dashboard/FinancialKPIRow';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { DashboardErrorBanner } from '@/components/dashboard/DashboardErrorBanner';
 import { AlertsBell } from '@/components/dashboard/AlertsBell';
+import { WidgetErrorBoundary } from '@/components/dashboard/WidgetErrorBoundary';
 
 import { StatsWidget } from '@/components/dashboard/StatsWidget';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
@@ -122,11 +123,14 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
   const statsLoading = isStatsLoading && !dashboardStats;
   const userName = user?.user_metadata?.full_name || 'المستخدم';
 
-  const renderWidget = (widget: WidgetConfig) => {
+  const renderWidget = useCallback((widget: WidgetConfig) => {
+    const wrap = (node: React.ReactNode) => (
+      <WidgetErrorBoundary name={widget.id}>{node}</WidgetErrorBoundary>
+    );
     switch (widget.id) {
       case 'stats':
         if (statsLoading) {
-          return (
+          return wrap(
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true">
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="rounded-lg border bg-card p-5 space-y-3">
@@ -141,68 +145,85 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
             </div>
           );
         }
-        return <StatsWidget dashboardStats={dashboardStats} />;
+        return wrap(<StatsWidget dashboardStats={dashboardStats} />);
       case 'quick_actions':
-        return <QuickActionsWidget quickActions={quickActions} onAction={handleQuickAction} />;
+        return wrap(<QuickActionsWidget quickActions={quickActions} onAction={handleQuickAction} />);
       case 'chart':
         if (statsLoading) {
-          return <div className="h-[260px] bg-muted/30 rounded-md animate-pulse" aria-busy="true" />;
+          return wrap(<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" aria-busy="true" />);
         }
-        return (
+        return wrap(
           <Suspense fallback={<div className="h-[260px] bg-muted/30 rounded-md animate-pulse" />}>
             <SalesChartWidget data={monthlySalesData} />
           </Suspense>
         );
       case 'tasks':
-        return <TasksWidget tasks={tasks} />;
+        return wrap(<TasksWidget tasks={tasks} />);
       case 'activities':
-        return <RecentInvoicesWidget invoices={recentInvoices} />;
+        return wrap(<RecentInvoicesWidget invoices={recentInvoices} />);
       case 'today_performance':
-        return <TodayPerformanceWidget />;
+        return wrap(<TodayPerformanceWidget />);
       case 'low_stock':
-        return <LowStockWidget />;
+        return wrap(<LowStockWidget />);
       case 'calendar':
-        return <CalendarWidget />;
+        return wrap(<CalendarWidget />);
       case 'insights':
-        return <InsightsWidget insights={insights} />;
+        return wrap(<InsightsWidget insights={insights} />);
       default:
         return null;
     }
-  };
+  }, [statsLoading, dashboardStats, quickActions, handleQuickAction, monthlySalesData, tasks, recentInvoices, insights]);
 
   return (
     <div ref={ref} className="space-y-5 sm:space-y-6 animate-fade-in" {...props}>
-      {/* Unified Hero — replaces WelcomeBanner + duplicate greeting header */}
+      {/* Unified responsive hero */}
       <section className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-l from-primary/10 via-accent/30 to-transparent p-4 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
+        <div className="flex items-start gap-3 sm:items-center sm:gap-4 sm:flex-row sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold truncate">
               {greetingText()}، {userName} 👋
             </h1>
-            <div className="text-muted-foreground mt-1.5 flex items-center flex-wrap gap-2 text-sm">
-              <span>مرحباً بك في لوحة التحكم</span>
+            <div className="text-muted-foreground mt-1 sm:mt-1.5 flex items-center flex-wrap gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <span className="hidden sm:inline">مرحباً بك في لوحة التحكم</span>
               {currentTenantName && (
-                <Badge variant="outline" className="gap-1">
+                <Badge variant="outline" className="gap-1 text-[10px] sm:text-xs">
                   <Building2 className="h-3 w-3" />
-                  {currentTenantName}
+                  <span className="truncate max-w-[120px] sm:max-w-none">{currentTenantName}</span>
                 </Badge>
               )}
-              {userRole && <Badge variant="secondary">{roleLabels[userRole]}</Badge>}
+              {userRole && (
+                <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                  {roleLabels[userRole]}
+                </Badge>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0">
             <AlertsBell insights={insights} />
-            {quickActions.slice(0, 2).map((action) => (
+            {quickActions.slice(0, 1).map((action) => (
               <Button
                 key={action.href}
                 onClick={() => handleQuickAction(action)}
-                className="gap-2"
-                size="sm"
+                size="icon"
+                className="sm:hidden h-10 w-10"
+                aria-label={action.title}
               >
                 <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">{action.title}</span>
               </Button>
             ))}
+            <div className="hidden sm:flex items-center gap-2">
+              {quickActions.slice(0, 2).map((action) => (
+                <Button
+                  key={action.href}
+                  onClick={() => handleQuickAction(action)}
+                  className="gap-2"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>{action.title}</span>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
