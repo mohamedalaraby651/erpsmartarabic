@@ -146,7 +146,7 @@ export const CustomerSmartAlerts = memo(function CustomerSmartAlerts({
             <button
               onClick={() => setDismissedArr(prev => prev.includes(alert.id) ? prev : [...prev, alert.id])}
               className="shrink-0 p-0.5 rounded hover:bg-background/50"
-              aria-label="إخفاء التنبيه"
+              aria-label={tooltips.dismissAlert}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
