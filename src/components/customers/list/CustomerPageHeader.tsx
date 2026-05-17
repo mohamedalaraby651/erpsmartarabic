@@ -65,7 +65,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
                 <DropdownMenuTrigger asChild>
                   <button
                     className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
-                    aria-label="المزيد من الأدوات"
+                    aria-label={tooltips.moreTools}
                   >
                     <MoreVertical className="h-4.5 w-4.5" />
                   </button>
