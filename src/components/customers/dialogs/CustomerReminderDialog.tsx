@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
 import SharedEmptyState from "@/components/shared/SharedEmptyState";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 
 interface CustomerReminderDialogProps {
   customerId: string;
