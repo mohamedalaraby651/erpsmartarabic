@@ -64,7 +64,7 @@ export const CustomerSummaryBar = memo(function CustomerSummaryBar({
   const isClickable = !!onQuickFilter;
 
   return (
-    <div className="mb-3 space-y-1.5" role="region" aria-label="ملخص الحالة المالية">
+    <div className="mb-3 space-y-1.5" role="region" aria-label={regions.customerFinancialSummary}>
       <button
         type="button"
         onClick={isClickable ? () => onQuickFilter?.(isActive ? null : debtCard.id) : undefined}
