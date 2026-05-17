@@ -146,7 +146,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
           checked={false}
           onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: true })}
           className="mt-0.5"
-          aria-label="وضع علامة كمكتمل"
+          aria-label={tooltips.markReminderDone}
         />
         <div className="flex-1 min-w-0">
           <p className="text-sm break-words">{r.note}</p>
