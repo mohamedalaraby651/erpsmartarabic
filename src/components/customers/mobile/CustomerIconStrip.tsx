@@ -139,7 +139,7 @@ export const CustomerIconStrip = memo(function CustomerIconStrip({
           className="flex items-center gap-1.5 px-2"
           role="tablist"
           aria-orientation="horizontal"
-          aria-label="أقسام ملف العميل"
+          aria-label={regions.customerSections}
         >
           {stripIcons.map((item, index) => {
             const Icon = item.icon;
