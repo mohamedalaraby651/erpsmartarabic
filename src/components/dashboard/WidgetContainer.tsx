@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -33,6 +33,16 @@ export function WidgetContainer({
 }: WidgetContainerProps) {
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [localWidgets, setLocalWidgets] = useState<WidgetConfig[]>(widgets);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -89,38 +99,27 @@ export function WidgetContainer({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        {isCustomizing ? (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCancel}
-              disabled={isSaving}
-            >
-              <X className="h-4 w-4 ml-2" />
-              إلغاء
+      {!isMobile && (
+        <div className="flex justify-end gap-2">
+          {isCustomizing ? (
+            <>
+              <Button variant="outline" size="sm" onClick={handleCancel} disabled={isSaving}>
+                <X className="h-4 w-4 ml-2" />
+                إلغاء
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                <Check className="h-4 w-4 ml-2" />
+                {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleStartCustomizing}>
+              <Settings2 className="h-4 w-4 ml-2" />
+              تخصيص لوحة التحكم
             </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              <Check className="h-4 w-4 ml-2" />
-              {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-            </Button>
-          </>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleStartCustomizing}
-          >
-            <Settings2 className="h-4 w-4 ml-2" />
-            تخصيص لوحة التحكم
-          </Button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}
