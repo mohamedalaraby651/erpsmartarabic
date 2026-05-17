@@ -84,13 +84,13 @@ export function TodayPerformanceWidget() {
   if (isLoading) {
     return (
       <>
-        <CardHeader>
-          <CardTitle className="text-lg">أداء اليوم</CardTitle>
+        <CardHeader className="px-3 pt-3 pb-2 sm:px-6 sm:pt-6">
+          <CardTitle className="text-sm sm:text-lg">أداء اليوم</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
             {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-24 rounded-lg" />
+              <Skeleton key={i} className="h-[88px] sm:h-24 rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -141,9 +141,9 @@ export function TodayPerformanceWidget() {
 
   return (
     <>
-      <CardHeader>
-        <CardTitle className="text-lg">أداء اليوم</CardTitle>
-        <CardDescription>
+      <CardHeader className="px-3 pt-3 pb-2 sm:px-6 sm:pt-6">
+        <CardTitle className="text-sm sm:text-lg">أداء اليوم</CardTitle>
+        <CardDescription className="text-[11px] sm:text-sm">
           {new Date().toLocaleDateString('ar-EG', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -152,18 +152,18 @@ export function TodayPerformanceWidget() {
           })}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
+      <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 animate-fade-in">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.title} className="p-4 rounded-lg bg-muted/50">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`h-9 w-9 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
-                    <Icon className={`h-4 w-4 ${stat.color}`} />
+              <div key={stat.title} className="p-3 sm:p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <div className={`h-8 w-8 sm:h-9 sm:w-9 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
+                    <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${stat.color}`} />
                   </div>
                   {stat.change !== null && (
-                    <div className={`flex items-center gap-1 text-xs ${
+                    <div className={`flex items-center gap-1 text-[10px] sm:text-xs ${
                       stat.change >= 0 ? 'text-success' : 'text-destructive'
                     }`}>
                       {stat.change >= 0 ? (
@@ -171,20 +171,20 @@ export function TodayPerformanceWidget() {
                       ) : (
                         <TrendingDown className="h-3 w-3" />
                       )}
-                      <span>{Math.abs(stat.change).toFixed(0)}%</span>
+                      <span className="tabular-nums">{Math.abs(stat.change).toFixed(0)}%</span>
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">{stat.title}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground">{stat.title}</p>
                 {stat.value !== null ? (
-                  <p className="text-lg font-bold mt-1">
+                  <p className="text-base sm:text-lg font-bold mt-0.5 sm:mt-1 tabular-nums truncate">
                     {stat.value.toLocaleString('ar-EG')} ج.م
                   </p>
                 ) : (
-                  <p className="text-lg font-bold mt-1">{stat.count}</p>
+                  <p className="text-base sm:text-lg font-bold mt-0.5 sm:mt-1 tabular-nums">{stat.count}</p>
                 )}
                 {stat.value !== null && (
-                  <p className="text-xs text-muted-foreground">{stat.count} عملية</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{stat.count} عملية</p>
                 )}
               </div>
             );
