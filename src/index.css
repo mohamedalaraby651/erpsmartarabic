@@ -165,6 +165,18 @@
 }
 
 @layer utilities {
+  /* Dashboard density: compact mode tightens spacing across all widgets.
+     Activated via data-density="compact" on the dashboard root. */
+  [data-density="compact"] { --density-scale: 0.85; }
+  [data-density="compact"].space-y-3 > * + * { margin-top: 0.5rem; }
+  [data-density="compact"].space-y-6 > * + * { margin-top: 0.75rem; }
+  [data-density="compact"] [data-density-card] { padding: 0.5rem 0.625rem !important; }
+  [data-density="compact"] [data-density-list] > * + * { margin-top: 0.375rem !important; }
+  [data-density="compact"] [data-density-section] { padding: 0.625rem !important; }
+  [data-density="compact"] [data-density-hide] { display: none !important; }
+  [data-density="compact"] [data-density-title] { font-size: 0.8125rem !important; line-height: 1.1rem !important; }
+  [data-density="compact"] [data-density-value] { font-size: 1rem !important; line-height: 1.25rem !important; }
+
   /* Basic fade animation */
   .animate-fade-in { animation: fadeIn 0.3s ease-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
