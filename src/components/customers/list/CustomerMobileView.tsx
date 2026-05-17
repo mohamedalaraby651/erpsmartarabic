@@ -128,7 +128,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
         </div>
       )}
 
-      <div className="space-y-2.5" role="list" aria-label="قائمة العملاء">
+      <div className="space-y-2.5" role="list" aria-label={regions.customerList}>
         {data.map((customer, i) => (
           <div key={customer.id} role="listitem" className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
             <CustomerListCard
