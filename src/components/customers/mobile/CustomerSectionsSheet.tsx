@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 import type { MobileSectionId } from "./CustomerIconStrip";
 
 export interface SheetSectionItem {
@@ -43,7 +44,7 @@ export const CustomerSectionsSheet = memo(function CustomerSectionsSheet({
       <SheetTrigger asChild>
         <button
           type="button"
-          aria-label="المزيد من الأقسام"
+          aria-label={tooltips.moreSections}
           className={cn(
             "flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 min-w-[56px] min-h-11 shrink-0",
             "transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",

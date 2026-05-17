@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Phone, MoreHorizontal, ChevronRight, ChevronLeft, ArrowRight, ArrowLeft } from "lucide-react";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
 
 interface CustomerCompressedHeaderProps {
@@ -43,7 +44,7 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
           className="h-9 w-7 shrink-0"
           onClick={onPrevCustomer}
           disabled={!hasPrevCustomer}
-          aria-label="العميل السابق"
+          aria-label={tooltips.prevCustomer}
         >
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Button>
@@ -75,7 +76,7 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
           className="h-9 w-7 shrink-0"
           onClick={onNextCustomer}
           disabled={!hasNextCustomer}
-          aria-label="العميل التالي"
+          aria-label={tooltips.nextCustomer}
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
         </Button>
@@ -83,12 +84,12 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
       {(onPrevSection || onNextSection) && (
         <div className="flex items-center gap-0.5 shrink-0" role="group" aria-label="تنقل بين الأقسام">
           {onPrevSection && (
-            <Button size="icon" variant="ghost" className="h-9 w-7" onClick={onPrevSection} aria-label="القسم السابق">
+            <Button size="icon" variant="ghost" className="h-9 w-7" onClick={onPrevSection} aria-label={tooltips.prevSection}>
               <ChevronRight className="h-4 w-4" aria-hidden />
             </Button>
           )}
           {onNextSection && (
-            <Button size="icon" variant="ghost" className="h-9 w-7" onClick={onNextSection} aria-label="القسم التالي">
+            <Button size="icon" variant="ghost" className="h-9 w-7" onClick={onNextSection} aria-label={tooltips.nextSection}>
               <ChevronLeft className="h-4 w-4" aria-hidden />
             </Button>
           )}
@@ -101,10 +102,10 @@ export const CustomerCompressedHeader = memo(function CustomerCompressedHeader({
           </a>
         </Button>
       )}
-      <Button size="icon" className="h-9 w-9 shrink-0" onClick={onNewInvoice} aria-label={`إنشاء فاتورة جديدة للعميل ${customer.name}`}>
+      <Button size="icon" className="h-9 w-9 shrink-0" onClick={onNewInvoice} aria-label={tooltips.newInvoice}>
         <FileText className="h-4 w-4" aria-hidden />
       </Button>
-      <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onMoreActions} aria-label="إجراءات أخرى" aria-haspopup="dialog">
+      <Button size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={onMoreActions} aria-label={tooltips.moreActions} aria-haspopup="dialog">
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </Button>
     </div>

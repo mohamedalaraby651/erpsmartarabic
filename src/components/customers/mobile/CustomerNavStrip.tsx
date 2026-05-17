@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { ChevronRight, ChevronLeft, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tooltips } from "@/lib/uiCopy";
 
 interface CustomerNavStripProps {
   hasPrev: boolean;
@@ -49,7 +50,7 @@ export const CustomerNavStrip = memo(function CustomerNavStrip({
         type="button"
         onClick={onPrev}
         disabled={!hasPrev}
-        aria-label="العميل السابق"
+        aria-label={tooltips.prevCustomer}
         className={cn(
           "inline-flex items-center gap-1 px-2 h-9 min-h-9 rounded-md font-medium transition-colors",
           hasPrev ? "text-foreground hover:bg-muted active:scale-95" : "text-muted-foreground/40",
@@ -66,7 +67,7 @@ export const CustomerNavStrip = memo(function CustomerNavStrip({
         type="button"
         onClick={onNext}
         disabled={!hasNext}
-        aria-label="العميل التالي"
+        aria-label={tooltips.nextCustomer}
         className={cn(
           "inline-flex items-center gap-1 px-2 h-9 min-h-9 rounded-md font-medium transition-colors",
           hasNext ? "text-foreground hover:bg-muted active:scale-95" : "text-muted-foreground/40",
