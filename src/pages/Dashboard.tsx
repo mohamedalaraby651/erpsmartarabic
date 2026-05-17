@@ -225,6 +225,16 @@ const Dashboard = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
           <AlertsBell insights={insights} />
           <button
             type="button"
+            onClick={toggleQaSize}
+            className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
+            aria-label={isQaSmall ? 'تكبير أزرار الاستجابة السريعة' : 'تصغير أزرار الاستجابة السريعة'}
+            aria-pressed={isQaSmall}
+            title={isQaSmall ? 'أزرار سريعة: صغيرة' : 'أزرار سريعة: متوسطة'}
+          >
+            {isQaSmall ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
             onClick={toggleDensity}
             className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-foreground/80 hover:bg-accent transition-colors"
             aria-label={isCompact ? 'تبديل إلى العرض العادي' : 'تبديل إلى العرض المضغوط'}
