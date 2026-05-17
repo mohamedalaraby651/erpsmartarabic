@@ -26,6 +26,9 @@ export interface FinancialKPIs {
   overdueAR: number;
   cashBalance: number;
   pendingApprovals: number;
+  dsoDays: number;
+  grossMarginValue: number;
+  grossMarginPct: number;
 }
 
 export interface MonthlySalesPoint {
