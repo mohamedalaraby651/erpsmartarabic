@@ -194,7 +194,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
               variant="ghost"
               className="h-8 text-xs gap-1"
               onClick={() => openEdit(r)}
-              aria-label="تعديل التذكير"
+              aria-label={tooltips.editReminder}
             >
               <Pencil className="h-3.5 w-3.5" />
               تعديل
