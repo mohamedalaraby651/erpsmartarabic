@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   Plus, Users, Package, FileText, Receipt, ShoppingCart,
   ClipboardList, Truck, CreditCard, Briefcase, ListChecks, Building2,
-  Rows3, Rows2,
+  Rows3, Rows2, Minimize2, Maximize2,
 } from 'lucide-react';
 import { useDashboardDensity } from '@/hooks/useDashboardDensity';
+import { useQuickActionSize } from '@/hooks/useQuickActionSize';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
