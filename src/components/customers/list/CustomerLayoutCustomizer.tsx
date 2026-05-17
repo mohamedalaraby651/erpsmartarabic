@@ -49,7 +49,7 @@ const Body = ({ layout, isMobile }: { layout: UseCustomerLayoutPrefs; isMobile: 
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">يُخفي كل شيء فوق القائمة عدا شريط البحث.</div>
           </div>
-          <Switch checked={compact} onCheckedChange={setCompact} aria-label="وضع التركيز الكامل" />
+          <Switch checked={compact} onCheckedChange={setCompact} aria-label={tooltips.focusMode} />
         </div>
       </div>
 
