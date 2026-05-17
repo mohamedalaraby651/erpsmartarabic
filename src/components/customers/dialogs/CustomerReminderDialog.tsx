@@ -289,7 +289,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
                     checked={true}
                     onCheckedChange={() => toggleMutation.mutate({ id: r.id, completed: false })}
                     className="mt-0.5"
-                    aria-label="إعادة فتح التذكير"
+                    aria-label={tooltips.reopenReminder}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm line-through break-words">{r.note}</p>
