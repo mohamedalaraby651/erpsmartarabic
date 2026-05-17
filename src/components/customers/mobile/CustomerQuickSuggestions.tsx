@@ -209,7 +209,7 @@ export const CustomerQuickSuggestions = memo(function CustomerQuickSuggestions({
               type="button"
               onClick={clear}
               className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive"
-              aria-label="مسح السجل"
+              aria-label={tooltips.clearEventHistory}
             >
               <X className="h-3 w-3" aria-hidden /> مسح
             </button>
