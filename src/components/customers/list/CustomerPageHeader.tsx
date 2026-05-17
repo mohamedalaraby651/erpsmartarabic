@@ -61,7 +61,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
           <div className="flex items-center gap-2">
             {mobileTitleSlot}
             <DropdownMenu>
-              <TapTooltip content="المزيد من الأدوات (إضافة، استيراد، تصدير، دمج)" side="bottom" autoCloseMs={1600}>
+              <TapTooltip content={tooltips.moreToolsDetailed} side="bottom" autoCloseMs={1600}>
                 <DropdownMenuTrigger asChild>
                   <button
                     className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
