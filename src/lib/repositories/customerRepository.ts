@@ -289,4 +289,18 @@ export const customerRepository = {
     if (error) throw error;
     return (data || []) as CustomerCategory[];
   },
+
+  // ============================================
+  // Lightweight pickers (for Select/Combobox)
+  // ============================================
+
+  async listForSelect(limit = 500): Promise<Array<Pick<Customer, 'id' | 'name'>>> {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, name')
+      .order('name')
+      .limit(limit);
+    if (error) throw error;
+    return (data || []) as Array<Pick<Customer, 'id' | 'name'>>;
+  },
 };
