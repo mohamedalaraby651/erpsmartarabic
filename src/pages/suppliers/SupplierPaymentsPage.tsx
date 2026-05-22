@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supplierPaymentRepository } from '@/lib/repositories/supplierPaymentRepository';
-import { supplierRepository } from '@/lib/repositories/supplierRepository';
+import { listActiveSuppliersForSelect } from '@/lib/repositories/supplierRepository';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,7 +58,7 @@ export default function SupplierPaymentsPage() {
 
   const { data: suppliers } = useQuery({
     queryKey: ['suppliers-active-select'],
-    queryFn: () => supplierRepository.listActiveSuppliersForSelect(),
+    queryFn: () => listActiveSuppliersForSelect(),
   });
 
   const filteredPayments = payments?.filter((payment) => {
