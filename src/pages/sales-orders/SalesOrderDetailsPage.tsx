@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,10 +31,7 @@ import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { MobileDetailItems, type DetailItemData } from "@/components/mobile/MobileDetailItems";
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { Database } from "@/integrations/supabase/types";
-
-type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
-type Customer = Database['public']['Tables']['customers']['Row'];
+import { useSalesOrderDetails } from "@/hooks/useSalesOrders";
 
 const statusLabels: Record<string, string> = { draft: 'مسودة', pending: 'قيد الانتظار', approved: 'معتمد', cancelled: 'ملغي', completed: 'مكتمل' };
 const statusColors: Record<string, string> = { draft: 'bg-muted text-muted-foreground', pending: 'bg-warning/10 text-warning border-warning/20', approved: 'bg-success/10 text-success border-success/20', cancelled: 'bg-destructive/10 text-destructive border-destructive/20', completed: 'bg-info/10 text-info border-info/20' };
