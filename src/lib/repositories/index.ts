@@ -28,3 +28,4 @@ export { expenseRepository } from './expenseRepository';
 export type { ExpenseFilters, ExpenseInput, ExpensePaymentMethod, ExpenseStatus } from './expenseRepository';
 export { mapRepoError, buildRange, unwrap } from './_base';
 export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepository } from './_base';
+export { referenceRepository } from './referenceRepository';
