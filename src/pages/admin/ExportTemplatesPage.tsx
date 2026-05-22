@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { adminRepository } from '@/lib/repositories';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,22 +32,11 @@ const ExportTemplatesPage = () => {
 
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ['all-export-templates'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('export_templates')
-        .select('*')
-        .order('section')
-        .order('is_default', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => adminRepository.listAllExportTemplates(),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('export_templates').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => adminRepository.deleteExportTemplate(id),
     onSuccess: () => {
       toast.success('تم حذف القالب بنجاح');
       queryClient.invalidateQueries({ queryKey: ['all-export-templates'] });
@@ -58,24 +47,10 @@ const ExportTemplatesPage = () => {
     },
   });
 
+
   const toggleDefaultMutation = useMutation({
-    mutationFn: async ({ id, section, isDefault }: { id: string; section: string; isDefault: boolean }) => {
-      // First, unset all defaults for this section
-      if (!isDefault) {
-        await supabase
-          .from('export_templates')
-          .update({ is_default: false })
-          .eq('section', section);
-      }
-      
-      // Then set/unset this one
-      const { error } = await supabase
-        .from('export_templates')
-        .update({ is_default: !isDefault })
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
+    mutationFn: ({ id, section, isDefault }: { id: string; section: string; isDefault: boolean }) =>
+      adminRepository.setExportTemplateDefault(id, section, isDefault),
     onSuccess: () => {
       toast.success('تم تحديث القالب الافتراضي');
       queryClient.invalidateQueries({ queryKey: ['all-export-templates'] });

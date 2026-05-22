@@ -42,3 +42,5 @@ export type { EmployeePickerRow, AttendanceRecordRow, LeaveRequestRow, LeaveRequ
 export { legacyQuotationsRepository } from './legacyQuotationsRepository';
 export type { LegacyQuotationWithCustomer, LegacyQuotationItemWithRefs } from './legacyQuotationsRepository';
 export { activityLogsRepository } from './activityLogsRepository';
+export { adminRepository } from './adminRepository';
+export type { SodRule, Tenant, RoleSectionPermission, ApprovalChain, ExportTemplate } from './adminRepository';
