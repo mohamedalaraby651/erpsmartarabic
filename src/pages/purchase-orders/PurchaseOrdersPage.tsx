@@ -60,7 +60,6 @@ const PurchaseOrdersPage = () => {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printOrderId, setPrintOrderId] = useState<string | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { userRole } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -88,62 +87,32 @@ const PurchaseOrdersPage = () => {
     }
   }, [location.state]);
 
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: ['purchase-orders-count', debouncedSearch],
-    queryFn: async () => {
-      let query = supabase.from('purchase_orders').select('*', { count: 'exact', head: true });
-      if (debouncedSearch) query = query.or(`order_number.ilike.%${debouncedSearch}%`);
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    },
-  });
-
+  const filters = { search: debouncedSearch };
+  const { data: totalCount = 0 } = usePurchaseOrdersCount(filters);
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+  const {
+    data: orders = [],
+    isLoading,
+    refetch,
+  } = usePurchaseOrdersList(filters, pagination.range);
 
-  const { data: orders = [], isLoading, refetch } = useQuery({
-    queryKey: ['purchase-orders', debouncedSearch, pagination.currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('purchase_orders')
-        .select('*, suppliers(name)')
-        .order('created_at', { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) query = query.or(`order_number.ilike.%${debouncedSearch}%`);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as PurchaseOrder[];
-    },
-  });
+  const deleteMutation = useDeletePurchaseOrder();
+  const handleDelete = async (id: string) => {
+    const ok = await verifyPermissionOnServer('purchase_orders', 'delete');
+    if (!ok) {
+      toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف أوامر الشراء", variant: "destructive" });
+      return;
+    }
+    deleteMutation.mutate(id);
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const hasPermission = await verifyPermissionOnServer('purchase_orders', 'delete');
-      if (!hasPermission) throw new Error('UNAUTHORIZED');
-      await supabase.from('purchase_order_items').delete().eq('order_id', id);
-      const { error } = await supabase.from('purchase_orders').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      toast({ title: "تم حذف أمر الشراء بنجاح" });
-    },
-    onError: (error) => {
-      if (error.message === 'UNAUTHORIZED') {
-        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف أوامر الشراء", variant: "destructive" });
-      } else {
-        toast({ title: "حدث خطأ أثناء الحذف", variant: "destructive" });
-      }
-    },
-  });
-
-  const { filteredData, filters, setFilter } = useTableFilter(orders);
+  const { filteredData, filters: tableFilters, setFilter } = useTableFilter(orders);
   const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
 
   const stats = {
     total: orders.length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    completed: orders.filter(o => o.status === 'completed').length,
+    pending: orders.filter((o) => o.status === 'pending').length,
+    completed: orders.filter((o) => o.status === 'completed').length,
     totalValue: orders.reduce((sum, o) => sum + Number(o.total_amount), 0),
   };
 
@@ -158,6 +127,7 @@ const PurchaseOrdersPage = () => {
   };
 
   const handleRefresh = async () => {
+
     await refetch();
   };
 
