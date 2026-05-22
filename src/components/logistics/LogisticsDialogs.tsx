@@ -6,12 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { referenceRepository } from "@/lib/repositories/referenceRepository";
 import LogisticsItemsTable, { ItemRow } from "./LogisticsItemsTable";
 
 interface BaseProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (draft: any) => Promise<void>;
   loading?: boolean;
 }
@@ -19,41 +20,25 @@ interface BaseProps {
 function useSuppliers() {
   return useQuery({
     queryKey: ["lg-suppliers"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("suppliers").select("id,name").order("name").limit(500);
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => referenceRepository.listSuppliersForSelect(),
   });
 }
 function useCustomers() {
   return useQuery({
     queryKey: ["lg-customers"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("id,name").order("name").limit(500);
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => referenceRepository.listCustomersForSelect(),
   });
 }
 function useWarehouses() {
   return useQuery({
     queryKey: ["lg-warehouses"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("warehouses").select("id,name").eq("is_active", true).order("name");
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => referenceRepository.listActiveWarehouses(),
   });
 }
 function usePOs() {
   return useQuery({
     queryKey: ["lg-pos"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("purchase_orders").select("id,order_number").order("created_at", { ascending: false }).limit(200);
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => referenceRepository.listRecentPurchaseOrders(),
   });
 }
 

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierRelationsRepo } from '@/lib/repositories/supplierRelationsRepo';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, CreditCard, Wallet, TrendingUp } from 'lucide-react';
@@ -27,27 +27,27 @@ const SupplierTimelineDrawer = ({ supplierId, type, open, onClose }: SupplierTim
     queryFn: async () => {
       if (!type) return [];
       if (type === 'payments') {
-        const { data } = await supabase.from('supplier_payments').select('*')
-          .eq('supplier_id', supplierId).order('payment_date', { ascending: false }).limit(20);
-        return (data || []).map((p: any) => ({
+        const payments = await supplierRelationsRepo.findPayments(supplierId);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return payments.slice(0, 20).map((p: any) => ({
           id: p.id, kind: 'payment' as const,
           title: p.payment_number, date: p.payment_date,
           amount: Number(p.amount), status: 'مسدد',
+          navigateTo: undefined as string | undefined,
         }));
       }
       // orders / purchases / outstanding
-      let query = supabase.from('purchase_orders').select('*')
-        .eq('supplier_id', supplierId).order('created_at', { ascending: false }).limit(20);
-      if (type === 'outstanding') {
-        query = query.in('status', ['pending', 'approved']);
-      }
-      const { data } = await query;
-      return (data || []).map((o: any) => ({
+      const orders = await supplierRelationsRepo.findPurchaseOrders(supplierId);
+      const filtered = type === 'outstanding'
+        ? orders.filter(o => o.status === 'pending' || o.status === 'approved')
+        : orders;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return filtered.slice(0, 20).map((o: any) => ({
         id: o.id, kind: 'order' as const,
         title: o.order_number, date: o.created_at,
         amount: Number(o.total_amount),
         status: o.status === 'completed' ? 'مكتمل' : o.status === 'approved' ? 'معتمد' : o.status === 'pending' ? 'معلق' : o.status,
-        navigateTo: `/purchase-orders/${o.id}`,
+        navigateTo: `/purchase-orders/${o.id}` as string | undefined,
       }));
     },
     enabled: open && !!type,
