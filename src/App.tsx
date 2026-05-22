@@ -290,6 +290,7 @@ const App = () => (
                     <Route path="permissions" element={<PermissionsPage />} />
                     <Route path="customizations" element={<CustomizationsPage />} />
                     <Route path="users" element={<UsersPage />} />
+                    <Route path="user-management" element={<UserManagementPage />} />
                     <Route path="dashboard" element={<AdminDashboard />} />
                     <Route path="activity-log" element={<ActivityLogPage />} />
                     <Route path="audit-trail" element={<AuditTrailPage />} />
