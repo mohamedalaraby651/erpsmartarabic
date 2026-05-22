@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierRelationsRepo } from '@/lib/repositories/supplierRelationsRepo';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,15 +25,13 @@ const SupplierQuickHistory = ({ supplierId }: SupplierQuickHistoryProps) => {
   const { data } = useQuery({
     queryKey: ['supplier-quick-history', supplierId],
     queryFn: async () => {
-      const [ordersRes, paymentsRes] = await Promise.all([
-        supabase.from('purchase_orders').select('id, order_number, total_amount, status, created_at')
-          .eq('supplier_id', supplierId).order('created_at', { ascending: false }).limit(3),
-        supabase.from('supplier_payments').select('id, payment_number, amount, payment_date')
-          .eq('supplier_id', supplierId).order('payment_date', { ascending: false }).limit(1),
+      const [orders, payments] = await Promise.all([
+        supplierRelationsRepo.findPurchaseOrders(supplierId),
+        supplierRelationsRepo.findPayments(supplierId),
       ]);
       return {
-        orders: ordersRes.data || [],
-        lastPayment: paymentsRes.data?.[0] || null,
+        orders: orders.slice(0, 3),
+        lastPayment: payments[0] || null,
       };
     },
     staleTime: 60000,
