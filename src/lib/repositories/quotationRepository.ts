@@ -120,17 +120,19 @@ export const quotationRepository = {
 
     const subtotal = round2(draft.items.reduce((s, it) => s + lineTotal(it), 0));
 
+    const headerPayload = {
+      tenant_id,
+      customer_id: draft.customer_id,
+      quote_date: draft.quote_date,
+      valid_until: draft.valid_until,
+      notes: draft.notes ?? null,
+      subtotal,
+      total_amount: subtotal,
+    };
     const { data: header, error: hErr } = await supabase
       .from("quotes")
-      .insert({
-        tenant_id,
-        customer_id: draft.customer_id,
-        quote_date: draft.quote_date,
-        valid_until: draft.valid_until,
-        notes: draft.notes ?? null,
-        subtotal,
-        total_amount: subtotal,
-      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert(headerPayload as any)
       .select("id, quote_number")
       .single();
     if (hErr) throw mapRepoError(hErr, "تعذّر إنشاء عرض السعر.");
