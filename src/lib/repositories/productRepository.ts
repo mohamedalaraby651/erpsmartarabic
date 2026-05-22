@@ -148,9 +148,18 @@ export const productRepository = {
     const { data, error } = await supabase
       .from('product_variants')
       .select('*')
-      .eq('product_id', productId);
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return (data || []) as ProductVariant[];
+  },
+
+  async deleteVariant(variantId: string): Promise<void> {
+    const { error } = await supabase
+      .from('product_variants')
+      .delete()
+      .eq('id', variantId);
+    if (error) throw error;
   },
 
   // Categories
@@ -161,6 +170,38 @@ export const productRepository = {
       .order('name');
     if (error) throw error;
     return (data || []) as ProductCategory[];
+  },
+
+  async findCategoryById(categoryId: string): Promise<ProductCategory | null> {
+    const { data, error } = await supabase
+      .from('product_categories')
+      .select('*')
+      .eq('id', categoryId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  // Stock per warehouse
+  async findStockByProduct(
+    productId: string,
+  ): Promise<
+    Array<
+      Database['public']['Tables']['product_stock']['Row'] & {
+        warehouses: { name: string } | null;
+      }
+    >
+  > {
+    const { data, error } = await supabase
+      .from('product_stock')
+      .select('*, warehouses(name)')
+      .eq('product_id', productId);
+    if (error) throw error;
+    return (data || []) as Array<
+      Database['public']['Tables']['product_stock']['Row'] & {
+        warehouses: { name: string } | null;
+      }
+    >;
   },
 };
 
