@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ServerPagination } from "@/components/shared/ServerPagination";
@@ -26,20 +25,19 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { logErrorSafely } from "@/lib/errorHandler";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
-import type { Database } from "@/integrations/supabase/types";
 import MultiInvoiceSettlement from "@/components/payments/MultiInvoiceSettlement";
-
-type PaymentWithRelations = Database['public']['Tables']['payments']['Row'] & {
-  customers: { name: string } | null;
-  invoices: { invoice_number: string } | null;
-};
+import {
+  usePaymentsList,
+  usePaymentsCount,
+  useDeletePayment,
+} from "@/hooks/usePayments";
+import type { PaymentWithRelations } from "@/lib/repositories/paymentRepository";
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "نقدي",
