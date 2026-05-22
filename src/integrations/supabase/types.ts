@@ -17,6 +17,7 @@ export type Database = {
       activity_logs: {
         Row: {
           action: string
+          correlation_id: string | null
           created_at: string
           entity_id: string | null
           entity_name: string | null
@@ -30,6 +31,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          correlation_id?: string | null
           created_at?: string
           entity_id?: string | null
           entity_name?: string | null
@@ -43,6 +45,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          correlation_id?: string | null
           created_at?: string
           entity_id?: string | null
           entity_name?: string | null
