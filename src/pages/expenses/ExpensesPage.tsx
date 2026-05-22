@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { expenseRepository } from '@/lib/repositories/expenseRepository';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -108,42 +108,15 @@ export default function ExpensesPage() {
 
   const { data: expenses, isLoading, refetch } = useQuery({
     queryKey: ['expenses', statusFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from('expenses')
-        .select(`
-          *,
-          category:expense_categories(id, name),
-          supplier:suppliers(id, name)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data as Expense[];
-    },
+    queryFn: async () =>
+      (await expenseRepository.list({
+        status: statusFilter as 'all' | 'pending' | 'approved' | 'rejected',
+      })) as unknown as Expense[],
   });
 
   const { data: stats } = useQuery({
     queryKey: ['expenses-stats'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('status, amount');
-      
-      if (error) throw error;
-      
-      const pending = data?.filter(e => e.status === 'pending').reduce((sum, e) => sum + Number(e.amount), 0) || 0;
-      const approved = data?.filter(e => e.status === 'approved').reduce((sum, e) => sum + Number(e.amount), 0) || 0;
-      const pendingCount = data?.filter(e => e.status === 'pending').length || 0;
-      
-      return { pending, approved, pendingCount };
-    },
+    queryFn: () => expenseRepository.stats(),
   });
 
   const approveMutation = useMutation({
