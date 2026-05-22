@@ -20,5 +20,7 @@ export { salesOrderRepository, salesOrderLineTotal } from './salesOrderRepositor
 export type { SalesOrderFilters, SalesOrderRow, SalesOrderWithRelations, SalesOrderItemRow, SalesOrderHeaderInput, SalesOrderItemInput, SalesOrderStatus } from './salesOrderRepository';
 export { purchaseOrderRepository, purchaseOrderLineTotal } from './purchaseOrderRepository';
 export type { PurchaseOrderFilters, PurchaseOrderRow, PurchaseOrderWithRelations, PurchaseOrderItemRow, PurchaseOrderHeaderInput, PurchaseOrderItemInput, PurchaseOrderStatus } from './purchaseOrderRepository';
+export { goodsReceiptRepository, deliveryNoteRepository, purchaseInvoiceRepository } from './logisticsRepository';
+export type { GoodsReceiptDraft, GoodsReceiptItemInput, DeliveryNoteDraft, DeliveryNoteItemInput, PurchaseInvoiceDraft, PurchaseInvoiceItemInput, MatchingStatus } from './logisticsRepository';
 export { mapRepoError, buildRange, unwrap } from './_base';
 export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepository } from './_base';
