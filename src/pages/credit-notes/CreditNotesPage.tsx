@@ -1,9 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { Plus, Search, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,13 +16,18 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 import CreditNoteFormDialog from '@/components/credit-notes/CreditNoteFormDialog';
 import { CreditNoteStats } from './components/CreditNoteStats';
 import { CreditNoteTable } from './components/CreditNoteTable';
-import { CREDIT_NOTE_STATUS_LABELS, type CreditNoteWithRelations } from './types';
+import { CREDIT_NOTE_STATUS_LABELS } from './types';
+import {
+  useCreditNotesCount,
+  useCreditNotesList,
+  useConfirmCreditNote,
+  useCancelCreditNote,
+} from '@/hooks/useCreditNotes';
 
 const PAGE_SIZE = 25;
 
 export default function CreditNotesPage() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { userRole } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,72 +38,39 @@ export default function CreditNotesPage() {
   const canCreate = userRole === 'admin' || userRole === 'sales' || userRole === 'accountant';
   const canManage = userRole === 'admin' || userRole === 'accountant';
 
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: ['credit-notes-count', debouncedSearch],
-    queryFn: async () => {
-      let query = supabase.from('credit_notes').select('*', { count: 'exact', head: true });
-      if (debouncedSearch) {
-        query = query.or(`credit_note_number.ilike.%${debouncedSearch}%,reason.ilike.%${debouncedSearch}%`);
-      }
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    },
-  });
-
+  const filters = { search: debouncedSearch };
+  const { data: totalCount = 0 } = useCreditNotesCount(filters);
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  const { data: creditNotes = [], isLoading, refetch } = useQuery({
-    queryKey: ['credit-notes', debouncedSearch, pagination.currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('credit_notes')
-        .select('*, customers(name), invoices(invoice_number)')
-        .order('created_at', { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) {
-        query = query.or(`credit_note_number.ilike.%${debouncedSearch}%,reason.ilike.%${debouncedSearch}%`);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as CreditNoteWithRelations[];
-    },
-  });
+  const { data: listResult, isLoading, refetch } = useCreditNotesList(
+    filters,
+    pagination.currentPage,
+    PAGE_SIZE,
+  );
+  const creditNotes = listResult?.data ?? [];
 
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['credit-notes'] });
-    queryClient.invalidateQueries({ queryKey: ['credit-notes-count'] });
-    queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    queryClient.invalidateQueries({ queryKey: ['customers'] });
+  const confirmMutation = useConfirmCreditNote();
+  const cancelMutation = useCancelCreditNote();
+
+  const handleConfirm = (id: string) => {
+    setPendingId(id);
+    confirmMutation.mutate(id, {
+      onSuccess: () => toast({ title: 'تم تأكيد إشعار الإرجاع' }),
+      onError: (e: Error) =>
+        toast({ title: 'فشل التأكيد', description: e.message, variant: 'destructive' }),
+      onSettled: () => setPendingId(undefined),
+    });
   };
 
-  const confirmMutation = useMutation({
-    mutationFn: async (id: string) => {
-      setPendingId(id);
-      const { error } = await supabase.rpc('confirm_credit_note', { p_credit_note_id: id });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: 'تم تأكيد إشعار الإرجاع' });
-      invalidate();
-    },
-    onError: (e: Error) => toast({ title: 'فشل التأكيد', description: e.message, variant: 'destructive' }),
-    onSettled: () => setPendingId(undefined),
-  });
-
-  const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      setPendingId(id);
-      const { error } = await supabase.rpc('cancel_credit_note', { p_credit_note_id: id });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: 'تم إلغاء إشعار الإرجاع' });
-      invalidate();
-    },
-    onError: (e: Error) => toast({ title: 'فشل الإلغاء', description: e.message, variant: 'destructive' }),
-    onSettled: () => setPendingId(undefined),
-  });
+  const handleCancel = (id: string) => {
+    setPendingId(id);
+    cancelMutation.mutate(id, {
+      onSuccess: () => toast({ title: 'تم إلغاء إشعار الإرجاع' }),
+      onError: (e: Error) =>
+        toast({ title: 'فشل الإلغاء', description: e.message, variant: 'destructive' }),
+      onSettled: () => setPendingId(undefined),
+    });
+  };
 
   const handleRefresh = useCallback(async () => { await refetch(); }, [refetch]);
 
@@ -173,8 +142,8 @@ export default function CreditNotesPage() {
         <CreditNoteTable
           creditNotes={creditNotes}
           canManage={canManage}
-          onConfirm={(id) => confirmMutation.mutate(id)}
-          onCancel={(id) => cancelMutation.mutate(id)}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
           pendingId={pendingId}
         />
       )}
@@ -192,7 +161,7 @@ export default function CreditNotesPage() {
       <CreditNoteFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSuccess={invalidate}
+        onSuccess={() => refetch()}
       />
     </div>
   );
