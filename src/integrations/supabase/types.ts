@@ -3429,6 +3429,7 @@ export type Database = {
           department: string | null
           full_name: string
           id: string
+          is_active: boolean
           job_title: string | null
           last_login_at: string | null
           login_count: number | null
@@ -3443,6 +3444,7 @@ export type Database = {
           department?: string | null
           full_name?: string
           id: string
+          is_active?: boolean
           job_title?: string | null
           last_login_at?: string | null
           login_count?: number | null
@@ -3457,6 +3459,7 @@ export type Database = {
           department?: string | null
           full_name?: string
           id?: string
+          is_active?: boolean
           job_title?: string | null
           last_login_at?: string | null
           login_count?: number | null
@@ -6200,6 +6203,10 @@ export type Database = {
         Returns: string
       }
       admin_requeue_event: { Args: { _event_id: string }; Returns: undefined }
+      admin_set_user_active: {
+        Args: { _active: boolean; _user_id: string }
+        Returns: boolean
+      }
       atomic_customer_balance_update: {
         Args: { _amount: number; _customer_id: string }
         Returns: undefined
