@@ -43,6 +43,10 @@ export default function AdminMenu() {
           <Settings className="h-4 w-4" />
           إعدادات النظام
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/admin/user-management')} className="gap-3 cursor-pointer">
+          <Users className="h-4 w-4" />
+          مركز إدارة المستخدمين
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/admin/users')} className="gap-3 cursor-pointer">
           <Users className="h-4 w-4" />
           إدارة المستخدمين
