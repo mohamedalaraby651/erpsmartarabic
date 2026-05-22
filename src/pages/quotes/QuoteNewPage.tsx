@@ -82,7 +82,7 @@ export default function QuoteNewPage() {
                 <SelectValue placeholder="اختر العميل" />
               </SelectTrigger>
               <SelectContent>
-                {customers.map((c: any) => (
+                {customers.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
                   </SelectItem>
