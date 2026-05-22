@@ -62,21 +62,14 @@ const QuotationDetailsPage = () => {
     queryKey: ['quotation', id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase.from('quotations').select('*, customers(*)').eq('id', id).maybeSingle();
-      if (error) throw error;
-      return data as (Quotation & { customers: Customer | null }) | null;
+      return legacyQuotationsRepository.findById(id) as Promise<(Quotation & { customers: Customer | null }) | null>;
     },
     enabled: !!id,
   });
 
   const { data: quotationItems = [] } = useQuery({
     queryKey: ['quotation-items', id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase.from('quotation_items').select('*, products(id, name, sku), product_variants(id, name)').eq('quotation_id', id);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => (id ? legacyQuotationsRepository.listItems(id) : Promise.resolve([])),
     enabled: !!id,
   });
 
@@ -102,23 +95,13 @@ const QuotationDetailsPage = () => {
 
   const { data: salesOrders = [] } = useQuery({
     queryKey: ['quotation-sales-orders', id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase.from('sales_orders').select('*').eq('quotation_id', id).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => (id ? legacyQuotationsRepository.listLinkedSalesOrders(id) : Promise.resolve([])),
     enabled: !!id,
   });
 
   const { data: activities = [] } = useQuery({
     queryKey: ['quotation-activities', id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase.from('activity_logs').select('*').eq('entity_type', 'quotation').eq('entity_id', id).order('created_at', { ascending: false }).limit(20);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => (id ? activityLogsRepository.listForEntity('quotation', id, 20) : Promise.resolve([])),
     enabled: !!id,
   });
 
