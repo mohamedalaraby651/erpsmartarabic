@@ -190,14 +190,15 @@ const PurchaseOrdersPage = () => {
               </div>
 
               <PurchaseOrderMobileList
-                orders={sortedData}
+                orders={sortedData as unknown as PurchaseOrder[]}
                 canEdit={canEdit}
                 canDelete={canDelete}
                 onEdit={handleEdit}
-                onDelete={(id) => deleteMutation.mutate(id)}
+                onDelete={handleDelete}
                 onNew={handleNew}
                 statusLabels={statusLabels}
               />
+
             </div>
           </PullToRefresh>
         )
@@ -226,18 +227,19 @@ const PurchaseOrdersPage = () => {
             </CardHeader>
             <CardContent>
               <PurchaseOrderTable
-                orders={sortedData}
+                orders={sortedData as unknown as PurchaseOrder[]}
                 isLoading={isLoading}
                 sortConfig={sortConfig}
                 requestSort={requestSort}
-                filters={filters}
+                filters={tableFilters}
                 setFilter={setFilter}
                 canEdit={canEdit}
                 canDelete={canDelete}
                 onEdit={handleEdit}
-                onDelete={(id) => deleteMutation.mutate(id)}
+                onDelete={handleDelete}
                 onPrint={handlePrint}
                 onNew={handleNew}
+
                 statusLabels={statusLabels}
                 statusColors={statusColors}
               />
