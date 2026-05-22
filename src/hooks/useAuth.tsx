@@ -121,10 +121,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUserRole(data?.role ?? null);
+
+      // Enforce activation: disabled users are signed out immediately.
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_active')
+        .eq('id', userId)
+        .maybeSingle();
+      if (profile && profile.is_active === false) {
+        toast({
+          variant: 'destructive',
+          title: 'الحساب معطّل',
+          description: 'تواصل مع المسؤول لإعادة تفعيل حسابك.',
+        });
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+      }
     } catch (error) {
       if (import.meta.env.DEV) console.error('Error fetching user role:', error);
     }
   }, []);
+
 
   useEffect(() => {
     let cancelled = false;
