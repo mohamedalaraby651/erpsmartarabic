@@ -14,5 +14,7 @@ export { paymentRepository } from './paymentRepository';
 export type { PaymentFilters, PaymentListParams, PaymentListResult, PaymentWithRelations } from './paymentRepository';
 export { creditNoteRepository } from './creditNoteRepository';
 export type { CreditNoteFilters, CreditNoteListParams, CreditNoteListResult, CreditNoteWithRelations } from './creditNoteRepository';
+export { quotationRepository } from './quotationRepository';
+export type { QuotationFilters, QuotationRow, QuotationItemRow, QuotationDraft, QuotationItemInput, QuotationStatus } from './quotationRepository';
 export { mapRepoError, buildRange, unwrap } from './_base';
 export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepository } from './_base';

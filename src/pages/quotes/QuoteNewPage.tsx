@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,7 @@ import {
 import { ArrowRight, Save } from "lucide-react";
 import LogisticsItemsTable, { ItemRow } from "@/components/logistics/LogisticsItemsTable";
 import { useCreateQuote } from "@/hooks/sales-cycle/useQuotes";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 export default function QuoteNewPage() {
   const navigate = useNavigate();
@@ -31,16 +31,8 @@ export default function QuoteNewPage() {
   const [items, setItems] = useState<ItemRow[]>([]);
 
   const { data: customers = [] } = useQuery({
-    queryKey: ["sc-customers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("id,name")
-        .order("name")
-        .limit(500);
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryKey: ["customers", "select"],
+    queryFn: () => customerRepository.listForSelect(500),
   });
 
   const total = items.reduce(
@@ -90,7 +82,7 @@ export default function QuoteNewPage() {
                 <SelectValue placeholder="اختر العميل" />
               </SelectTrigger>
               <SelectContent>
-                {customers.map((c: any) => (
+                {customers.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
                   </SelectItem>
