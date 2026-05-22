@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { legacyQuotationsRepository } from "@/lib/repositories";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -84,39 +84,26 @@ const QuotationsPage = () => {
 
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['quotations-count', debouncedSearch],
-    queryFn: async () => {
-      let query = supabase.from('quotations').select('*', { count: 'exact', head: true });
-      if (debouncedSearch) query = query.or(`quotation_number.ilike.%${debouncedSearch}%`);
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    },
+    queryFn: () => legacyQuotationsRepository.count(debouncedSearch || undefined),
   });
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
   const { data: quotations = [], isLoading, refetch } = useQuery({
     queryKey: ['quotations', debouncedSearch, pagination.currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('quotations')
-        .select('*, customers(name)')
-        .order('created_at', { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) query = query.or(`quotation_number.ilike.%${debouncedSearch}%`);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () =>
+      legacyQuotationsRepository.list({
+        search: debouncedSearch || undefined,
+        from: pagination.range.from,
+        to: pagination.range.to,
+      }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const hasPermission = await verifyPermissionOnServer('quotations', 'delete');
       if (!hasPermission) throw new Error('UNAUTHORIZED');
-      await supabase.from('quotation_items').delete().eq('quotation_id', id);
-      const { error } = await supabase.from('quotations').delete().eq('id', id);
-      if (error) throw error;
+      await legacyQuotationsRepository.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });

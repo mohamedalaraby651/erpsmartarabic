@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { productRepository } from "@/lib/repositories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,9 +26,6 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database['public']['Tables']['products']['Row'];
 type ProductVariant = Database['public']['Tables']['product_variants']['Row'];
-type ProductStock = Database['public']['Tables']['product_stock']['Row'] & {
-  warehouses?: { name: string } | null;
-};
 
 const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,42 +40,25 @@ const ProductDetailsPage = () => {
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('products').select('*').eq('id', id!).single();
-      if (error) throw error;
-      return data as Product;
-    },
+    queryFn: () => productRepository.findById(id!) as Promise<Product | null>,
     enabled: !!id,
   });
 
   const { data: category } = useQuery({
     queryKey: ['product-category', product?.category_id],
-    queryFn: async () => {
-      if (!product?.category_id) return null;
-      const { data, error } = await supabase.from('product_categories').select('*').eq('id', product.category_id).single();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => productRepository.findCategoryById(product!.category_id!),
     enabled: !!product?.category_id,
   });
 
   const { data: variants = [] } = useQuery({
     queryKey: ['product-variants', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('product_variants').select('*').eq('product_id', id!).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as ProductVariant[];
-    },
+    queryFn: () => productRepository.findVariants(id!),
     enabled: !!id,
   });
 
   const { data: stockData = [] } = useQuery({
     queryKey: ['product-stock', id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('product_stock').select('*, warehouses(name)').eq('product_id', id!);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => productRepository.findStockByProduct(id!),
     enabled: !!id,
   });
 
@@ -86,10 +66,7 @@ const ProductDetailsPage = () => {
   const isLowStock = totalStock <= (product?.min_stock || 0);
 
   const deleteVariantMutation = useMutation({
-    mutationFn: async (variantId: string) => {
-      const { error } = await supabase.from('product_variants').delete().eq('id', variantId);
-      if (error) throw error;
-    },
+    mutationFn: (variantId: string) => productRepository.deleteVariant(variantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['product-variants', id] });
       toast({ title: "تم حذف المتغير بنجاح" });
@@ -121,7 +98,7 @@ const ProductDetailsPage = () => {
     badge: <Badge variant={v.is_active ? "default" : "secondary"} className="text-[10px]">{v.is_active ? "نشط" : "غير نشط"}</Badge>,
   }));
 
-  const stockCards: DetailItemData[] = (stockData as ProductStock[]).map(s => ({
+  const stockCards: DetailItemData[] = stockData.map(s => ({
     id: s.id,
     title: s.warehouses?.name || 'مستودع غير محدد',
     value: `${s.quantity} وحدة`,
@@ -311,7 +288,7 @@ const ProductDetailsPage = () => {
                   <p className="text-muted-foreground text-center py-8">لا يوجد مخزون مسجل</p>
                 ) : (
                   <div className="space-y-3">
-                    {(stockData as ProductStock[]).map((stock) => (
+                    {stockData.map((stock) => (
                       <div key={stock.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <span className="font-medium">{stock.warehouses?.name || 'مستودع غير محدد'}</span>
                         <span className="text-lg font-bold">{stock.quantity} وحدة</span>
