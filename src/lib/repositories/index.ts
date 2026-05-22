@@ -39,3 +39,6 @@ export { tasksRepository } from './tasksRepository';
 export type { TaskRow, TaskCreateInput } from './tasksRepository';
 export { attendanceRepository } from './attendanceRepository';
 export type { EmployeePickerRow, AttendanceRecordRow, LeaveRequestRow, LeaveRequestInput } from './attendanceRepository';
+export { legacyQuotationsRepository } from './legacyQuotationsRepository';
+export type { LegacyQuotationWithCustomer, LegacyQuotationItemWithRefs } from './legacyQuotationsRepository';
+export { activityLogsRepository } from './activityLogsRepository';
