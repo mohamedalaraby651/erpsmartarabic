@@ -117,6 +117,7 @@ const AdminDashboard = () => {
     { title: 'إدارة الأدوار', icon: Lock, href: '/admin/roles', color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
     { title: 'إدارة الصلاحيات', icon: Shield, href: '/admin/permissions', color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
     { title: 'تخصيص الأقسام', icon: Settings, href: '/admin/customizations', color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
+    { title: 'مركز إدارة المستخدمين', icon: Users, href: '/admin/user-management', color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
     { title: 'إدارة المستخدمين', icon: Users, href: '/admin/users', color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
     { title: 'سجل النشاطات', icon: Activity, href: '/admin/activity-log', color: 'text-pink-500', bgColor: 'bg-pink-500/10' },
     { title: 'الحدود المالية', icon: DollarSign, href: '/admin/role-limits', color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' },
