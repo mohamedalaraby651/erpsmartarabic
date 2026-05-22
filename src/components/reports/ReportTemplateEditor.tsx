@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportTemplateRepository } from '@/lib/repositories/reportTemplateRepository';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -24,30 +24,18 @@ export function ReportTemplateEditor() {
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ['report-templates', selectedType],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('report_templates')
-        .select('*')
-        .eq('type', selectedType)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as unknown as ReportTemplate[];
-    },
+    queryFn: () => reportTemplateRepository.listByType(selectedType) as unknown as Promise<ReportTemplate[]>,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (template: Partial<ReportTemplate>) => {
-      const { error } = await supabase.from('report_templates').insert([
-        {
-          name: template.name,
-          type: template.type,
-          template_data: JSON.parse(JSON.stringify(template.template_data)),
-          is_default: template.is_default || false,
-          created_by: user?.id,
-        },
-      ]);
-      if (error) throw error;
-    },
+    mutationFn: (template: Partial<ReportTemplate>) =>
+      reportTemplateRepository.create({
+        name: template.name!,
+        type: template.type!,
+        template_data: template.template_data,
+        is_default: template.is_default,
+        created_by: user?.id ?? null,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['report-templates'] });
       toast({ title: 'تم إنشاء القالب بنجاح' });
@@ -57,17 +45,13 @@ export function ReportTemplateEditor() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (template: ReportTemplate) => {
-      const { error } = await supabase
-        .from('report_templates')
-        .update({
-          name: template.name,
-          template_data: JSON.parse(JSON.stringify(template.template_data)),
-          is_default: template.is_default,
-        })
-        .eq('id', template.id);
-      if (error) throw error;
-    },
+    mutationFn: (template: ReportTemplate) =>
+      reportTemplateRepository.update({
+        id: template.id,
+        name: template.name,
+        template_data: template.template_data,
+        is_default: template.is_default,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['report-templates'] });
       toast({ title: 'تم تحديث القالب بنجاح' });
@@ -77,10 +61,7 @@ export function ReportTemplateEditor() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('report_templates').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => reportTemplateRepository.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['report-templates'] });
       toast({ title: 'تم حذف القالب' });
