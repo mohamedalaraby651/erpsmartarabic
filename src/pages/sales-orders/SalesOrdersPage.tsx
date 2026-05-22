@@ -59,7 +59,6 @@ const SalesOrdersPage = () => {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printOrderId, setPrintOrderId] = useState<string | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { userRole } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
