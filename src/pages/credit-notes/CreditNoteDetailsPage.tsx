@@ -1,6 +1,4 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,93 +7,46 @@ import { ArrowRight, CheckCircle, XCircle, FileText, Loader2, AlertTriangle } fr
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { CREDIT_NOTE_STATUS_LABELS } from './types';
+import {
+  useCreditNoteDetail,
+  useCreditNoteItems,
+  useCreditNoteJournal,
+  useConfirmCreditNote,
+  useCancelCreditNote,
+} from '@/hooks/useCreditNotes';
 
 export default function CreditNoteDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userRole } = useAuth();
-  const qc = useQueryClient();
 
   const canManage = userRole === 'admin' || userRole === 'accountant';
 
-  const { data: cn, isLoading } = useQuery({
-    queryKey: ['credit-note', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('credit_notes')
-        .select('*, customers(id, name, phone), invoices(id, invoice_number, total_amount, paid_amount)')
-        .eq('id', id!)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const { data: cn, isLoading } = useCreditNoteDetail(id);
+  const { data: items = [] } = useCreditNoteItems(id);
+  const { data: journal } = useCreditNoteJournal(id);
 
-  const { data: items = [] } = useQuery({
-    queryKey: ['credit-note-items', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('credit_note_items')
-        .select('*, products(name, sku), invoice_items:invoice_item_id(id, quantity, unit_price)')
-        .eq('credit_note_id', id!);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const confirmMut = useConfirmCreditNote(id);
+  const cancelMut = useCancelCreditNote(id);
 
-  const { data: journal } = useQuery({
-    queryKey: ['credit-note-journal', id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('journals')
-        .select('id, journal_number, journal_date, description, is_posted')
-        .eq('source_type', 'credit_note')
-        .eq('source_id', id!)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!id,
-  });
+  const handleConfirm = () =>
+    confirmMut.mutate(id!, {
+      onSuccess: (res: unknown) => {
+        const r = (res ?? {}) as { journal?: { success?: boolean }; stock?: { success?: boolean } };
+        toast({
+          title: 'تم تأكيد المرتجع',
+          description: `قيد محاسبي: ${r.journal?.success ? 'تم ✓' : 'فشل'} • مخزون: ${r.stock?.success ? 'تم ✓' : 'تخطّى'}`,
+        });
+      },
+      onError: (e: Error) => toast({ title: 'فشل التأكيد', description: e.message, variant: 'destructive' }),
+    });
 
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ['credit-note', id] });
-    qc.invalidateQueries({ queryKey: ['credit-note-journal', id] });
-    qc.invalidateQueries({ queryKey: ['credit-notes'] });
-    qc.invalidateQueries({ queryKey: ['invoices'] });
-  };
-
-  const confirmMut = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.rpc('confirm_credit_note', { p_credit_note_id: id! });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (res: any) => {
-      const journalOk = res?.journal?.success;
-      const stockOk = res?.stock?.success;
-      toast({
-        title: 'تم تأكيد المرتجع',
-        description: `قيد محاسبي: ${journalOk ? 'تم ✓' : 'فشل'} • مخزون: ${stockOk ? 'تم ✓' : 'تخطّى'}`,
-      });
-      invalidate();
-    },
-    onError: (e: Error) => toast({ title: 'فشل التأكيد', description: e.message, variant: 'destructive' }),
-  });
-
-  const cancelMut = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc('cancel_credit_note', { p_credit_note_id: id! });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: 'تم إلغاء المرتجع', description: 'تم عكس الرصيد والقيد المحاسبي' });
-      invalidate();
-    },
-    onError: (e: Error) => toast({ title: 'فشل الإلغاء', description: e.message, variant: 'destructive' }),
-  });
+  const handleCancel = () =>
+    cancelMut.mutate(id!, {
+      onSuccess: () => toast({ title: 'تم إلغاء المرتجع', description: 'تم عكس الرصيد والقيد المحاسبي' }),
+      onError: (e: Error) => toast({ title: 'فشل الإلغاء', description: e.message, variant: 'destructive' }),
+    });
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -127,14 +78,14 @@ export default function CreditNoteDetailsPage() {
 
         {canManage && cn.status === 'draft' && (
           <div className="flex gap-2">
-            <Button onClick={() => confirmMut.mutate()} disabled={confirmMut.isPending}>
+            <Button onClick={handleConfirm} disabled={confirmMut.isPending}>
               {confirmMut.isPending ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <CheckCircle className="h-4 w-4 ml-2" />}
               تأكيد المرتجع
             </Button>
           </div>
         )}
         {canManage && cn.status !== 'cancelled' && (
-          <Button variant="outline" onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending}>
+          <Button variant="outline" onClick={handleCancel} disabled={cancelMut.isPending}>
             {cancelMut.isPending ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <XCircle className="h-4 w-4 ml-2" />}
             إلغاء المرتجع
           </Button>
@@ -162,7 +113,7 @@ export default function CreditNoteDetailsPage() {
                 {cn.invoices.invoice_number}
               </Link>
             ) : '—'}
-            {cn.invoices && (
+            {cn.invoices?.total_amount != null && (
               <p className="text-xs text-muted-foreground mt-1">
                 إجمالي: {Number(cn.invoices.total_amount).toLocaleString()} ج.م
               </p>
@@ -197,7 +148,7 @@ export default function CreditNoteDetailsPage() {
             </div>
           ) : (
             <div className="divide-y">
-              {items.map((it: any) => {
+              {items.map((it: Record<string, any>) => {
                 const origQty = it.invoice_items?.quantity;
                 const linked  = !!it.invoice_item_id;
                 return (
