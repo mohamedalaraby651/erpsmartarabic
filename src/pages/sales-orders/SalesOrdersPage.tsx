@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +30,10 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
-import type { Database } from "@/integrations/supabase/types";
+import { useSalesOrdersList, useDeleteSalesOrder } from "@/hooks/useSalesOrders";
+import type { SalesOrderRow } from "@/lib/repositories/salesOrderRepository";
 
-type SalesOrder = Database['public']['Tables']['sales_orders']['Row'] & {
-  customers: { name: string } | null;
-};
+type SalesOrder = SalesOrderRow;
 
 const statusLabels: Record<string, string> = {
   draft: 'مسودة',
