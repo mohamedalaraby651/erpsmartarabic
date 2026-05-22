@@ -30,13 +30,13 @@ export function CashFlowReport({ startDate, endDate }: Props) {
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
       const inflow = payments
-        .filter(p => p.payment_date?.startsWith(dayStr))
+        .filter(p => p.date?.startsWith(dayStr))
         .reduce((s, p) => s + Number(p.amount), 0);
       const expenseOut = expenses
-        .filter(e => e.expense_date?.startsWith(dayStr))
+        .filter(e => e.date?.startsWith(dayStr))
         .reduce((s, e) => s + Number(e.amount), 0);
       const supplierOut = supplierPayments
-        .filter(sp => sp.payment_date?.startsWith(dayStr))
+        .filter(sp => sp.date?.startsWith(dayStr))
         .reduce((s, sp) => s + Number(sp.amount), 0);
       return {
         date: format(day, 'MM/dd', { locale: ar }),
