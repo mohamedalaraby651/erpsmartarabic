@@ -31,3 +31,5 @@ export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepo
 export { referenceRepository } from './referenceRepository';
 export { reportsRepository } from './reportsRepository';
 export type { CashFlowRow, CashFlowBundle } from './reportsRepository';
+export { reportTemplateRepository } from './reportTemplateRepository';
+export type { ReportTemplateRow, ReportTemplateCreate, ReportTemplateUpdate } from './reportTemplateRepository';
