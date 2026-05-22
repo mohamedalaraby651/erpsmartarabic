@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { adminRepository } from '@/lib/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,32 +76,17 @@ const ApprovalChainsPage = () => {
 
   const { data: chains = [], isLoading } = useQuery({
     queryKey: ['approval-chains-admin'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('approval_chains')
-        .select('*')
-        .order('entity_type')
-        .order('amount_threshold', { ascending: true });
-      if (error) throw error;
-      return data as ApprovalChain[];
-    },
+    queryFn: async () => (await adminRepository.listApprovalChains()) as unknown as ApprovalChain[],
     enabled: !!user,
   });
 
   const saveMutation = useMutation({
     mutationFn: async (values: typeof form) => {
       if (editingId) {
-        const { error } = await supabase
-          .from('approval_chains')
-          .update(values)
-          .eq('id', editingId);
-        if (error) throw error;
+        await adminRepository.updateApprovalChain(editingId, values);
       } else {
         if (!tenantId) throw new Error('لا يوجد مستأجر نشط');
-        const { error } = await supabase
-          .from('approval_chains')
-          .insert({ ...values, tenant_id: tenantId });
-        if (error) throw error;
+        await adminRepository.createApprovalChain({ ...values, tenant_id: tenantId });
       }
     },
     onSuccess: () => {
@@ -113,10 +98,7 @@ const ApprovalChainsPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('approval_chains').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => adminRepository.deleteApprovalChain(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['approval-chains-admin'] });
       toast.success('تم حذف القاعدة');
@@ -125,13 +107,8 @@ const ApprovalChainsPage = () => {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase
-        .from('approval_chains')
-        .update({ is_active })
-        .eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      adminRepository.updateApprovalChain(id, { is_active }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['approval-chains-admin'] });
     },

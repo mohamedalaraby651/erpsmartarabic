@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { adminRepository } from '@/lib/repositories';
 import { toast } from 'sonner';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import PageHeader from '@/components/navigation/PageHeader';
@@ -153,14 +154,17 @@ export default function PermissionsPage() {
 
   const copyPermissionsFrom = async (sourceRoleId: string) => {
     if (!sourceRoleId) return;
-    const { data, error } = await supabase.from('role_section_permissions').select('*').eq('role_id', sourceRoleId);
-    if (error) { toast.error('خطأ في نسخ الصلاحيات'); return; }
-    const permMap: Record<string, Record<string, boolean>> = {};
-    data?.forEach(p => {
-      permMap[p.section] = { can_view: p.can_view, can_create: p.can_create, can_edit: p.can_edit, can_delete: p.can_delete };
-    });
-    setPermissions(permMap);
-    toast.success('تم نسخ الصلاحيات - اضغط حفظ لتطبيقها');
+    try {
+      const data = await adminRepository.listRolePermissions(sourceRoleId);
+      const permMap: Record<string, Record<string, boolean>> = {};
+      data.forEach(p => {
+        permMap[p.section] = { can_view: p.can_view, can_create: p.can_create, can_edit: p.can_edit, can_delete: p.can_delete };
+      });
+      setPermissions(permMap);
+      toast.success('تم نسخ الصلاحيات - اضغط حفظ لتطبيقها');
+    } catch {
+      toast.error('خطأ في نسخ الصلاحيات');
+    }
   };
 
   const selectedRole = roles?.find(r => r.id === selectedRoleId);

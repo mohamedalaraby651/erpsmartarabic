@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { adminRepository } from '@/lib/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,21 +77,10 @@ const TenantsPage = () => {
   const { data: tenantsWithCounts = [], isLoading } = useQuery({
     queryKey: ['admin-tenants'],
     queryFn: async () => {
-      const { data: tenants, error } = await supabase
-        .from('tenants')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-
-      const { data: userTenants } = await supabase
-        .from('user_tenants')
-        .select('tenant_id');
-
-      const countMap: Record<string, number> = {};
-      userTenants?.forEach((ut) => {
-        countMap[ut.tenant_id] = (countMap[ut.tenant_id] || 0) + 1;
-      });
-
+      const [tenants, countMap] = await Promise.all([
+        adminRepository.listTenants(),
+        adminRepository.listUserTenantCounts(),
+      ]);
       return (tenants as Tenant[]).map((t) => ({
         ...t,
         userCount: countMap[t.id] || 0,
@@ -110,11 +99,9 @@ const TenantsPage = () => {
         is_active: values.is_active,
       };
       if (editingId) {
-        const { error } = await supabase.from('tenants').update(payload).eq('id', editingId);
-        if (error) throw error;
+        await adminRepository.updateTenant(editingId, payload);
       } else {
-        const { error } = await supabase.from('tenants').insert(payload);
-        if (error) throw error;
+        await adminRepository.createTenant(payload);
       }
     },
     onSuccess: () => {
@@ -126,10 +113,8 @@ const TenantsPage = () => {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from('tenants').update({ is_active }).eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      adminRepository.updateTenant(id, { is_active }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-tenants'] });
       toast.success('تم تحديث حالة الشركة');

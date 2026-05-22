@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { adminRepository } from '@/lib/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,14 +74,7 @@ const SodRulesPage = () => {
 
   const { data: rules = [], isLoading } = useQuery({
     queryKey: ['sod-rules'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('sod_rules')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as SodRule[];
-    },
+    queryFn: async () => (await adminRepository.listSodRules()) as unknown as SodRule[],
     enabled: !!user,
   });
 
@@ -94,11 +87,9 @@ const SodRulesPage = () => {
         is_active: values.is_active,
       };
       if (editingId) {
-        const { error } = await supabase.from('sod_rules').update(payload).eq('id', editingId);
-        if (error) throw error;
+        await adminRepository.updateSodRule(editingId, payload);
       } else {
-        const { error } = await supabase.from('sod_rules').insert(payload);
-        if (error) throw error;
+        await adminRepository.createSodRule(payload);
       }
     },
     onSuccess: () => {
@@ -110,10 +101,7 @@ const SodRulesPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('sod_rules').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => adminRepository.deleteSodRule(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sod-rules'] });
       toast.success('تم حذف القاعدة');
@@ -122,10 +110,8 @@ const SodRulesPage = () => {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from('sod_rules').update({ is_active }).eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      adminRepository.updateSodRule(id, { is_active }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sod-rules'] }),
   });
 
