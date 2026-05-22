@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierPaymentRepository } from '@/lib/repositories/supplierPaymentRepository';
+import { listActiveSuppliersForSelect } from '@/lib/repositories/supplierRepository';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,33 +53,12 @@ export default function SupplierPaymentsPage() {
 
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ['supplier-payments'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('supplier_payments')
-        .select(`
-          *,
-          suppliers (id, name),
-          purchase_orders (id, order_number)
-        `)
-        .order('payment_date', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => supplierPaymentRepository.list(),
   });
 
   const { data: suppliers } = useQuery({
-    queryKey: ['suppliers-list'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
+    queryKey: ['suppliers-active-select'],
+    queryFn: () => listActiveSuppliersForSelect(),
   });
 
   const filteredPayments = payments?.filter((payment) => {
