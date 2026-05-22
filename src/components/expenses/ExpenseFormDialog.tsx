@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { expenseRepository } from '@/lib/repositories/expenseRepository';
+import { listActiveSuppliersForSelect } from '@/lib/repositories/supplierRepository';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -86,46 +88,19 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
   // Fetch categories
   const { data: categories } = useQuery({
     queryKey: ['expense-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expense_categories')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => expenseRepository.listCategories(),
   });
 
   // Fetch cash registers
   const { data: registers } = useQuery({
     queryKey: ['cash-registers-active'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cash_registers')
-        .select('id, name, current_balance')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => expenseRepository.listActiveCashRegisters(),
   });
 
   // Fetch suppliers
   const { data: suppliers } = useQuery({
     queryKey: ['suppliers-active'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => listActiveSuppliersForSelect(),
   });
 
   useEffect(() => {
@@ -155,36 +130,22 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const user = await supabase.auth.getUser();
-      
-      const expenseData = {
+
+      const input = {
         category_id: data.category_id || null,
         amount: data.amount,
         payment_method: data.payment_method,
-        register_id: data.payment_method === 'cash' && data.register_id ? data.register_id : null,
+        register_id: data.register_id || null,
         expense_date: data.expense_date,
         description: data.description || null,
         supplier_id: data.supplier_id || null,
-        created_by: user.data.user?.id,
+        created_by: user.data.user?.id ?? null,
       };
 
       if (isEditing && expense) {
-        const { error } = await supabase
-          .from('expenses')
-          .update(expenseData)
-          .eq('id', expense.id);
-        
-        if (error) throw error;
+        await expenseRepository.update(expense.id, input);
       } else {
-        // Generate expense number
-        const expenseNumber = `EXP-${Date.now()}`;
-        const { error } = await supabase
-          .from('expenses')
-          .insert({
-            ...expenseData,
-            expense_number: expenseNumber,
-          });
-        
-        if (error) throw error;
+        await expenseRepository.create(input);
       }
     },
     onSuccess: () => {
