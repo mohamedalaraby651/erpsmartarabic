@@ -159,3 +159,18 @@ export const supplierRepository = {
     });
   },
 };
+
+// ============================================
+// Lightweight pickers (for Select/Combobox)
+// ============================================
+export async function listActiveSuppliersForSelect(limit = 1000): Promise<Supplier[]> {
+  const { data, error } = await supabase
+    .from('suppliers')
+    .select('*')
+    .eq('is_active', true)
+    .order('name')
+    .limit(limit);
+  if (error) throw error;
+  return (data || []) as Supplier[];
+}
+

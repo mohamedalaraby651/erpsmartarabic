@@ -18,5 +18,7 @@ export { quotationRepository } from './quotationRepository';
 export type { QuotationFilters, QuotationRow, QuotationItemRow, QuotationDraft, QuotationItemInput, QuotationStatus } from './quotationRepository';
 export { salesOrderRepository, salesOrderLineTotal } from './salesOrderRepository';
 export type { SalesOrderFilters, SalesOrderRow, SalesOrderWithRelations, SalesOrderItemRow, SalesOrderHeaderInput, SalesOrderItemInput, SalesOrderStatus } from './salesOrderRepository';
+export { purchaseOrderRepository, purchaseOrderLineTotal } from './purchaseOrderRepository';
+export type { PurchaseOrderFilters, PurchaseOrderRow, PurchaseOrderWithRelations, PurchaseOrderItemRow, PurchaseOrderHeaderInput, PurchaseOrderItemInput, PurchaseOrderStatus } from './purchaseOrderRepository';
 export { mapRepoError, buildRange, unwrap } from './_base';
 export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepository } from './_base';
