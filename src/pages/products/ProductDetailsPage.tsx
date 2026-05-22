@@ -98,7 +98,7 @@ const ProductDetailsPage = () => {
     badge: <Badge variant={v.is_active ? "default" : "secondary"} className="text-[10px]">{v.is_active ? "نشط" : "غير نشط"}</Badge>,
   }));
 
-  const stockCards: DetailItemData[] = (stockData as ProductStock[]).map(s => ({
+  const stockCards: DetailItemData[] = stockData.map(s => ({
     id: s.id,
     title: s.warehouses?.name || 'مستودع غير محدد',
     value: `${s.quantity} وحدة`,
@@ -288,7 +288,7 @@ const ProductDetailsPage = () => {
                   <p className="text-muted-foreground text-center py-8">لا يوجد مخزون مسجل</p>
                 ) : (
                   <div className="space-y-3">
-                    {(stockData as ProductStock[]).map((stock) => (
+                    {stockData.map((stock) => (
                       <div key={stock.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <span className="font-medium">{stock.warehouses?.name || 'مستودع غير محدد'}</span>
                         <span className="text-lg font-bold">{stock.quantity} وحدة</span>
