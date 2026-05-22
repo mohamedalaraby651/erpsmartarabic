@@ -113,22 +113,29 @@ const QuotationDetailsPage = () => {
       if (!quotation) throw new Error('No quotation to duplicate');
       const timestamp = Date.now().toString().slice(-6);
       const newQuotationNumber = `QT-${new Date().getFullYear()}-${timestamp}`;
-      const { data: newQuotation, error: quotationError } = await supabase.from('quotations').insert({
-        customer_id: quotation.customer_id, quotation_number: newQuotationNumber, status: 'draft',
-        subtotal: quotation.subtotal, discount_amount: quotation.discount_amount, tax_amount: quotation.tax_amount,
-        total_amount: quotation.total_amount, valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], notes: quotation.notes,
-      }).select().single();
-      if (quotationError) throw quotationError;
-      if (quotationItems.length > 0) {
-        type QI = { product_id: string; variant_id: string | null; quantity: number; unit_price: number; discount_percentage: number | null; total_price: number; notes: string | null };
-        const newItems = (quotationItems as QI[]).map(item => ({
-          quotation_id: newQuotation.id, product_id: item.product_id, variant_id: item.variant_id,
-          quantity: item.quantity, unit_price: item.unit_price, discount_percentage: item.discount_percentage,
-          total_price: item.total_price, notes: item.notes,
-        }));
-        const { error: itemsError } = await supabase.from('quotation_items').insert(newItems);
-        if (itemsError) throw itemsError;
-      }
+      type QI = { product_id: string; variant_id: string | null; quantity: number; unit_price: number; discount_percentage: number | null; total_price: number; notes: string | null };
+      const newQuotation = await legacyQuotationsRepository.create(
+        {
+          customer_id: quotation.customer_id,
+          quotation_number: newQuotationNumber,
+          status: 'draft',
+          subtotal: quotation.subtotal,
+          discount_amount: quotation.discount_amount,
+          tax_amount: quotation.tax_amount,
+          total_amount: quotation.total_amount,
+          valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          notes: quotation.notes,
+        },
+        (quotationItems as QI[]).map(item => ({
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_percentage: item.discount_percentage,
+          total_price: item.total_price,
+          notes: item.notes,
+        })),
+      );
       return newQuotation;
     },
     onSuccess: (nq) => { queryClient.invalidateQueries({ queryKey: ['quotations'] }); toast({ title: "تم نسخ عرض السعر بنجاح", description: `تم إنشاء عرض سعر جديد برقم ${nq.quotation_number}` }); navigate(`/quotations/${nq.id}`); },
