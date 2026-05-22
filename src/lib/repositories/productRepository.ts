@@ -163,3 +163,19 @@ export const productRepository = {
     return (data || []) as ProductCategory[];
   },
 };
+
+// ============================================
+// Lightweight pickers (for Select/Combobox)
+// ============================================
+export async function listActiveProductsForSelect(
+  limit = 1000,
+): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('name')
+    .limit(limit);
+  if (error) throw error;
+  return (data || []) as Product[];
+}
