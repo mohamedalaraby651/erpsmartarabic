@@ -145,7 +145,7 @@ const PaymentsPage = () => {
         { label: "التاريخ", value: new Date(payment.payment_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
         payment.invoices?.invoice_number ? { label: "الفاتورة", value: payment.invoices.invoice_number } : null,
       ] as const).filter(Boolean) as Array<{ label: string; value: string | number | React.ReactNode; icon?: React.ReactNode }>}
-      onDelete={canDelete ? () => deleteMutation.mutate(payment.id) : undefined}
+      onDelete={canDelete ? () => handleDelete(payment.id) : undefined}
     />
   );
 
@@ -364,7 +364,7 @@ const PaymentsPage = () => {
                       <TableCell>{payment.reference_number || '-'}</TableCell>
                       <TableCell>
                         <DataTableActions
-                          onDelete={() => deleteMutation.mutate(payment.id)}
+                          onDelete={() => handleDelete(payment.id)}
                           canEdit={false}
                           canDelete={canDelete}
                           deleteDescription="سيتم حذف هذه الدفعة نهائياً."

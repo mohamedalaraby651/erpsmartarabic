@@ -10,3 +10,7 @@ export { invoiceRepository } from './invoiceRepository';
 export type { InvoiceFilters, InvoiceSort, InvoicePagination } from './invoiceRepository';
 export { productRepository } from './productRepository';
 export type { ProductFilters, ProductSort, ProductPagination } from './productRepository';
+export { paymentRepository } from './paymentRepository';
+export type { PaymentFilters, PaymentListParams, PaymentListResult, PaymentWithRelations } from './paymentRepository';
+export { mapRepoError, buildRange, unwrap } from './_base';
+export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepository } from './_base';
