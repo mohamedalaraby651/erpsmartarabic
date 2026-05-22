@@ -30,7 +30,7 @@ import { PurchaseOrderMobileList } from "./components/PurchaseOrderMobileList";
 
 const PAGE_SIZE = 25;
 
-type PurchaseOrder = PurchaseOrderRow;
+type PurchaseOrder = PurchaseOrderRow & { suppliers: { name: string } | null };
 
 
 const statusLabels: Record<string, string> = {
