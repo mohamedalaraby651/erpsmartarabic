@@ -162,6 +162,25 @@ export const adminRepository = {
       .eq("id", id);
     if (error) throw mapRepoError(error, "تعذّر حذف القالب.");
   },
+
+  async setExportTemplateDefault(
+    id: string,
+    section: string,
+    isDefault: boolean,
+  ): Promise<void> {
+    if (!isDefault) {
+      const { error: clearErr } = await supabase
+        .from("export_templates")
+        .update({ is_default: false })
+        .eq("section", section);
+      if (clearErr) throw mapRepoError(clearErr, "تعذّر تحديث القوالب.");
+    }
+    const { error } = await supabase
+      .from("export_templates")
+      .update({ is_default: !isDefault })
+      .eq("id", id);
+    if (error) throw mapRepoError(error, "تعذّر تحديث القالب الافتراضي.");
+  },
 };
 
 export type {

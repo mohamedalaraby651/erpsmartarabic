@@ -49,23 +49,8 @@ const ExportTemplatesPage = () => {
 
 
   const toggleDefaultMutation = useMutation({
-    mutationFn: async ({ id, section, isDefault }: { id: string; section: string; isDefault: boolean }) => {
-      // First, unset all defaults for this section
-      if (!isDefault) {
-        await supabase
-          .from('export_templates')
-          .update({ is_default: false })
-          .eq('section', section);
-      }
-      
-      // Then set/unset this one
-      const { error } = await supabase
-        .from('export_templates')
-        .update({ is_default: !isDefault })
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
+    mutationFn: ({ id, section, isDefault }: { id: string; section: string; isDefault: boolean }) =>
+      adminRepository.setExportTemplateDefault(id, section, isDefault),
     onSuccess: () => {
       toast.success('تم تحديث القالب الافتراضي');
       queryClient.invalidateQueries({ queryKey: ['all-export-templates'] });
