@@ -110,6 +110,16 @@ export const adminRepository = {
   },
 
   // ---------- Approval Chains ----------
+  async listApprovalChains(): Promise<ApprovalChain[]> {
+    const { data, error } = await supabase
+      .from("approval_chains")
+      .select("*")
+      .order("entity_type")
+      .order("amount_threshold", { ascending: true });
+    if (error) throw mapRepoError(error, "تعذّر تحميل قواعد الاعتماد.");
+    return (data ?? []) as ApprovalChain[];
+  },
+
   async createApprovalChain(payload: ApprovalChainInsert): Promise<void> {
     const { error } = await supabase.from("approval_chains").insert(payload);
     if (error) throw mapRepoError(error, "تعذّر إنشاء قاعدة الاعتماد.");
