@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportsRepository } from '@/lib/repositories';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, DollarSign, ArrowUpDown } from 'lucide-react';
-import { format, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, eachDayOfInterval } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -17,45 +16,14 @@ export function CashFlowReport({ startDate, endDate }: Props) {
   const fromStr = startDate.toISOString();
   const toStr = endDate.toISOString();
 
-  // Payments (inflows)
-  const { data: payments = [] } = useQuery({
-    queryKey: ['cashflow-payments', fromStr, toStr],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('payments')
-        .select('amount, payment_date, payment_method')
-        .gte('payment_date', fromStr)
-        .lte('payment_date', toStr);
-      return data || [];
-    },
+  const { data } = useQuery({
+    queryKey: ['cashflow-bundle', fromStr, toStr],
+    queryFn: () => reportsRepository.cashFlow(startDate, endDate),
   });
 
-  // Expenses (outflows)
-  const { data: expenses = [] } = useQuery({
-    queryKey: ['cashflow-expenses', fromStr, toStr],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('expenses')
-        .select('amount, expense_date, payment_method')
-        .gte('expense_date', fromStr)
-        .lte('expense_date', toStr)
-        .eq('status', 'approved');
-      return data || [];
-    },
-  });
-
-  // Supplier payments (outflows)
-  const { data: supplierPayments = [] } = useQuery({
-    queryKey: ['cashflow-supplier-payments', fromStr, toStr],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('supplier_payments')
-        .select('amount, payment_date, payment_method')
-        .gte('payment_date', fromStr)
-        .lte('payment_date', toStr);
-      return data || [];
-    },
-  });
+  const payments = data?.payments ?? [];
+  const expenses = data?.expenses ?? [];
+  const supplierPayments = data?.supplierPayments ?? [];
 
   const chartData = useMemo(() => {
     const days = eachDayOfInterval({ start: startDate, end: endDate });
