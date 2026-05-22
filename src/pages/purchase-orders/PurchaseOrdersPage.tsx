@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ServerPagination } from "@/components/shared/ServerPagination";
@@ -20,16 +18,20 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
-import type { Database } from "@/integrations/supabase/types";
+import {
+  usePurchaseOrdersList,
+  usePurchaseOrdersCount,
+  useDeletePurchaseOrder,
+} from "@/hooks/usePurchaseOrders";
+import type { PurchaseOrderRow } from "@/lib/repositories/purchaseOrderRepository";
 import { PurchaseOrderStats } from "./components/PurchaseOrderStats";
 import { PurchaseOrderTable } from "./components/PurchaseOrderTable";
 import { PurchaseOrderMobileList } from "./components/PurchaseOrderMobileList";
 
 const PAGE_SIZE = 25;
 
-type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'] & {
-  suppliers: { name: string } | null;
-};
+type PurchaseOrder = PurchaseOrderRow;
+
 
 const statusLabels: Record<string, string> = {
   draft: 'مسودة',
