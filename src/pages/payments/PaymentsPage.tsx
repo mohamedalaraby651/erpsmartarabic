@@ -72,63 +72,49 @@ const PaymentsPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
 
-  // Count query
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: ['payments-count', debouncedSearch],
-    queryFn: async () => {
-      let query = supabase.from('payments').select('*', { count: 'exact', head: true });
-      if (debouncedSearch) {
-        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
-      }
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    },
-  });
+  const filters = { search: debouncedSearch };
+
+  // Count
+  const { data: totalCount = 0 } = usePaymentsCount(filters);
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  const { data: payments = [], isLoading, refetch } = useQuery({
-    queryKey: ['payments', debouncedSearch, pagination.currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('payments')
-        .select('*, customers(name), invoices(invoice_number)')
-        .order('created_at', { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) {
-        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
+  const {
+    data: listResult,
+    isLoading,
+    refetch,
+  } = usePaymentsList(filters, pagination.currentPage, PAGE_SIZE);
+  const payments = listResult?.data ?? [];
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { deletePayment } = await import('@/lib/services/paymentService');
-      await deletePayment(id);
+  const deleteMutation = useDeletePayment();
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast({ title: "تم حذف الدفعة بنجاح" });
+        },
+        onError: (error: Error) => {
+          if (error.message === "UNAUTHORIZED") {
+            toast({
+              title: "غير مصرح",
+              description: "ليس لديك صلاحية حذف المدفوعات",
+              variant: "destructive",
+            });
+          } else {
+            toast({ title: "خطأ في حذف الدفعة", variant: "destructive" });
+          }
+          logErrorSafely("PaymentsPage.delete", error);
+        },
+      });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      toast({ title: "تم حذف الدفعة بنجاح" });
-    },
-    onError: (error) => {
-      if (error.message === 'UNAUTHORIZED') {
-        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف المدفوعات", variant: "destructive" });
-      } else {
-        toast({ title: "خطأ في حذف الدفعة", variant: "destructive" });
-      }
-      logErrorSafely('PaymentsPage.delete', error);
-    },
-  });
+    [deleteMutation, toast],
+  );
 
   const handleRefresh = useCallback(async () => {
     await refetch();
   }, [refetch]);
+
 
   // Filter by search
   const searchFiltered = (payments as PaymentWithRelations[]).filter((p) =>
