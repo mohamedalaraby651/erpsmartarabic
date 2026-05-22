@@ -16,5 +16,7 @@ export { creditNoteRepository } from './creditNoteRepository';
 export type { CreditNoteFilters, CreditNoteListParams, CreditNoteListResult, CreditNoteWithRelations } from './creditNoteRepository';
 export { quotationRepository } from './quotationRepository';
 export type { QuotationFilters, QuotationRow, QuotationItemRow, QuotationDraft, QuotationItemInput, QuotationStatus } from './quotationRepository';
+export { salesOrderRepository, salesOrderLineTotal } from './salesOrderRepository';
+export type { SalesOrderFilters, SalesOrderRow, SalesOrderWithRelations, SalesOrderItemRow, SalesOrderHeaderInput, SalesOrderItemInput, SalesOrderStatus } from './salesOrderRepository';
 export { mapRepoError, buildRange, unwrap } from './_base';
 export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepository } from './_base';

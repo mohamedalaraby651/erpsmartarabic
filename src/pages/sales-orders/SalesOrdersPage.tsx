@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +30,10 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
-import type { Database } from "@/integrations/supabase/types";
+import { useSalesOrdersList, useDeleteSalesOrder } from "@/hooks/useSalesOrders";
+import type { SalesOrderRow } from "@/lib/repositories/salesOrderRepository";
 
-type SalesOrder = Database['public']['Tables']['sales_orders']['Row'] & {
-  customers: { name: string } | null;
-};
+type SalesOrder = SalesOrderRow;
 
 const statusLabels: Record<string, string> = {
   draft: 'مسودة',
@@ -61,7 +59,6 @@ const SalesOrdersPage = () => {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [printOrderId, setPrintOrderId] = useState<string | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { userRole } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -78,38 +75,18 @@ const SalesOrdersPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: orders = [], isLoading, refetch } = useQuery({
-    queryKey: ['sales-orders'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('sales_orders')
-        .select('*, customers(name)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as SalesOrder[];
-    },
-  });
+  const { data: orders = [], isLoading, refetch } = useSalesOrdersList({}, 1000);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const hasPermission = await verifyPermissionOnServer('sales_orders', 'delete');
-      if (!hasPermission) throw new Error('UNAUTHORIZED');
-      await supabase.from('sales_order_items').delete().eq('order_id', id);
-      const { error } = await supabase.from('sales_orders').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
-      toast({ title: "تم حذف أمر البيع بنجاح" });
-    },
-    onError: (error) => {
-      if (error.message === 'UNAUTHORIZED') {
-        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف أوامر البيع", variant: "destructive" });
-      } else {
-        toast({ title: "حدث خطأ أثناء الحذف", variant: "destructive" });
-      }
-    },
-  });
+  const deleteSO = useDeleteSalesOrder();
+  const handleDelete = async (id: string) => {
+    const hasPermission = await verifyPermissionOnServer('sales_orders', 'delete');
+    if (!hasPermission) {
+      toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف أوامر البيع", variant: "destructive" });
+      return;
+    }
+    deleteSO.mutate(id);
+  };
+  const deleteMutation = { mutate: handleDelete };
 
   // Filter by search
   const searchFiltered = orders.filter(order =>

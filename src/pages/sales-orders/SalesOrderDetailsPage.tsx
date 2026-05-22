@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,10 +31,7 @@ import { MobileStatsScroll } from "@/components/shared/MobileStatsScroll";
 import { MobileDetailItems, type DetailItemData } from "@/components/mobile/MobileDetailItems";
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { Database } from "@/integrations/supabase/types";
-
-type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
-type Customer = Database['public']['Tables']['customers']['Row'];
+import { useSalesOrderDetails } from "@/hooks/useSalesOrders";
 
 const statusLabels: Record<string, string> = { draft: 'مسودة', pending: 'قيد الانتظار', approved: 'معتمد', cancelled: 'ملغي', completed: 'مكتمل' };
 const statusColors: Record<string, string> = { draft: 'bg-muted text-muted-foreground', pending: 'bg-warning/10 text-warning border-warning/20', approved: 'bg-success/10 text-success border-success/20', cancelled: 'bg-destructive/10 text-destructive border-destructive/20', completed: 'bg-info/10 text-info border-info/20' };
@@ -50,49 +46,17 @@ const SalesOrderDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
 
-  const { data: order, isLoading } = useQuery({
-    queryKey: ['sales-order', id],
-    queryFn: async () => {
-      if (!id) return null;
-      const { data, error } = await supabase.from('sales_orders').select('*, customers(*), quotations(id, quotation_number)').eq('id', id).maybeSingle();
-      if (error) throw error;
-      return data as (SalesOrder & { customers: Customer | null; quotations: { id: string; quotation_number: string } | null }) | null;
-    },
-    enabled: !!id,
-  });
-
-  const { data: orderItems = [] } = useQuery({
-    queryKey: ['sales-order-items', id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase.from('sales_order_items').select('*, products(id, name, sku), product_variants(id, name)').eq('order_id', id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  const { data: invoices = [] } = useQuery({
-    queryKey: ['sales-order-invoices', id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase.from('invoices').select('*').eq('order_id', id).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  const { data: activities = [] } = useQuery({
-    queryKey: ['sales-order-activities', id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await supabase.from('activity_logs').select('*').eq('entity_type', 'sales_order').eq('entity_id', id).order('created_at', { ascending: false }).limit(20);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const {
+    order: orderQ,
+    items: itemsQ,
+    invoices: invoicesQ,
+    activities: activitiesQ,
+  } = useSalesOrderDetails(id);
+  const order = orderQ.data;
+  const isLoading = orderQ.isLoading;
+  const orderItems = itemsQ.data ?? [];
+  const invoices = invoicesQ.data ?? [];
+  const activities = activitiesQ.data ?? [];
 
   const handleCreateInvoice = () => { if (id) convert('order-to-invoice', id); };
 

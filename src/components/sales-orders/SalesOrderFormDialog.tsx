@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -23,15 +22,24 @@ import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secure
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { customerRepository } from "@/lib/repositories/customerRepository";
+import { listActiveProductsForSelect } from "@/lib/repositories/productRepository";
+import { salesOrderRepository } from "@/lib/repositories/salesOrderRepository";
 import type { Database } from "@/integrations/supabase/types";
 
 type SalesOrder = Database['public']['Tables']['sales_orders']['Row'];
-type Customer = Database['public']['Tables']['customers']['Row'];
 type Product = Database['public']['Tables']['products']['Row'];
 
 interface SalesOrderFormDialogProps { open: boolean; onOpenChange: (open: boolean) => void; order?: SalesOrder | null; }
 interface OrderItem { product_id: string; product_name: string; quantity: number; unit_price: number; discount_percentage: number; total_price: number; }
 interface FormData { customer_id: string; delivery_date: string; delivery_address: string; notes: string; discount_amount: number; tax_amount: number; }
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+const generateOrderNumber = () => {
+  const d = new Date();
+  return `SO-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+};
 
 const SalesOrderFormDialog = ({ open, onOpenChange, order }: SalesOrderFormDialogProps) => {
   const { toast } = useToast();
@@ -40,50 +48,97 @@ const SalesOrderFormDialog = ({ open, onOpenChange, order }: SalesOrderFormDialo
   const isEditing = !!order;
   const [items, setItems] = useState<OrderItem[]>([]);
 
-  const { data: customers = [] } = useQuery({ queryKey: ['customers'], queryFn: async () => { const { data, error } = await supabase.from('customers_safe').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as unknown as Customer[]; } });
-  const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: async () => { const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name'); if (error) throw error; return data as Product[]; } });
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers', 'select'],
+    queryFn: () => customerRepository.listForSelect(1000),
+  });
+  const { data: products = [] } = useQuery({
+    queryKey: ['products', 'select'],
+    queryFn: () => listActiveProductsForSelect(1000),
+  });
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({ defaultValues: { customer_id: '', delivery_date: '', delivery_address: '', notes: '', discount_amount: 0, tax_amount: 0 } });
   const wizard = useFormWizard({ totalSteps: 3 });
 
   useEffect(() => {
-    if (order) { reset({ customer_id: order.customer_id, delivery_date: order.delivery_date || '', delivery_address: order.delivery_address || '', notes: order.notes || '', discount_amount: Number(order.discount_amount) || 0, tax_amount: Number(order.tax_amount) || 0 }); loadOrderItems(order.id); }
-    else { reset({ customer_id: '', delivery_date: '', delivery_address: '', notes: '', discount_amount: 0, tax_amount: 0 }); setItems([]); }
+    let cancelled = false;
+    if (order) {
+      reset({ customer_id: order.customer_id, delivery_date: order.delivery_date || '', delivery_address: order.delivery_address || '', notes: order.notes || '', discount_amount: Number(order.discount_amount) || 0, tax_amount: Number(order.tax_amount) || 0 });
+      salesOrderRepository.listItems(order.id).then((rows) => {
+        if (cancelled) return;
+        setItems(rows.map((i) => ({
+          product_id: i.product_id,
+          product_name: i.products?.name || '',
+          quantity: Number(i.quantity),
+          unit_price: Number(i.unit_price),
+          discount_percentage: Number(i.discount_percentage) || 0,
+          total_price: Number(i.total_price),
+        })));
+      }).catch((err) => logErrorSafely('SalesOrderFormDialog.loadItems', err));
+    } else {
+      reset({ customer_id: '', delivery_date: '', delivery_address: '', notes: '', discount_amount: 0, tax_amount: 0 });
+      setItems([]);
+    }
     wizard.reset();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order, reset]);
-
-  const loadOrderItems = async (orderId: string) => {
-    const { data, error } = await supabase.from('sales_order_items').select('*, products(name)').eq('order_id', orderId);
-    if (!error && data) { type L = { product_id: string; quantity: number; unit_price: number; discount_percentage: number | null; total_price: number; products: { name: string } | null; }; setItems((data as L[]).map((i) => ({ product_id: i.product_id, product_name: i.products?.name || '', quantity: i.quantity, unit_price: Number(i.unit_price), discount_percentage: Number(i.discount_percentage) || 0, total_price: Number(i.total_price) }))); }
-  };
 
   const addItem = () => setItems([...items, { product_id: '', product_name: '', quantity: 1, unit_price: 0, discount_percentage: 0, total_price: 0 }]);
   const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
     const n = [...items]; n[index] = { ...n[index], [field]: value };
-    if (field === 'product_id') { const p = products.find(p => p.id === value); if (p) { n[index].product_name = p.name; n[index].unit_price = Number(p.selling_price); } }
-    const it = n[index]; const s = it.quantity * it.unit_price; it.total_price = s - s * (it.discount_percentage / 100);
+    if (field === 'product_id') {
+      const p = products.find((p: Product) => p.id === value);
+      if (p) { n[index].product_name = p.name; n[index].unit_price = Number(p.selling_price); }
+    }
+    const it = n[index]; const s = it.quantity * it.unit_price;
+    it.total_price = round2(s - s * (it.discount_percentage / 100));
     setItems(n);
   };
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
-  const subtotal = items.reduce((s, i) => s + i.total_price, 0);
+  const subtotal = round2(items.reduce((s, i) => s + i.total_price, 0));
   const discountAmount = watch('discount_amount') || 0;
   const taxAmount = watch('tax_amount') || 0;
-  const total = subtotal - discountAmount + taxAmount;
-
-  const generateOrderNumber = () => { const d = new Date(); return `SO-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`; };
+  const total = round2(subtotal - discountAmount + taxAmount);
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       if (items.length === 0) throw new Error('يجب إضافة منتج واحد على الأقل');
-      const orderData = { customer_id: data.customer_id, order_number: order?.order_number || generateOrderNumber(), delivery_date: data.delivery_date || null, delivery_address: data.delivery_address || null, notes: data.notes || null, subtotal, discount_amount: discountAmount, tax_amount: taxAmount, total_amount: total, status: 'pending' as const, created_by: user?.id || null };
-      let orderId: string;
-      if (isEditing) { const { error } = await supabase.from('sales_orders').update(orderData).eq('id', order.id); if (error) throw error; orderId = order.id; await supabase.from('sales_order_items').delete().eq('order_id', order.id); }
-      else { const { data: n, error } = await supabase.from('sales_orders').insert(orderData).select().single(); if (error) throw error; orderId = n.id; }
-      const itemsData = items.map(i => ({ order_id: orderId, product_id: i.product_id, quantity: i.quantity, unit_price: i.unit_price, discount_percentage: i.discount_percentage, total_price: i.total_price }));
-      const { error: ie } = await supabase.from('sales_order_items').insert(itemsData); if (ie) throw ie;
+      const header = {
+        customer_id: data.customer_id,
+        order_number: order?.order_number || generateOrderNumber(),
+        delivery_date: data.delivery_date || null,
+        delivery_address: data.delivery_address || null,
+        notes: data.notes || null,
+        subtotal,
+        discount_amount: discountAmount,
+        tax_amount: taxAmount,
+        total_amount: total,
+        status: 'pending' as const,
+        created_by: user?.id || null,
+      };
+      const itemInputs = items.map((i) => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+        discount_percentage: i.discount_percentage,
+      }));
+      if (isEditing) {
+        await salesOrderRepository.update(order.id, header, itemInputs);
+      } else {
+        await salesOrderRepository.create(header, itemInputs);
+      }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['sales-orders'] }); toast({ title: isEditing ? "تم تحديث أمر البيع بنجاح" : "تم إنشاء أمر البيع بنجاح" }); onOpenChange(false); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
+      if (order) {
+        queryClient.invalidateQueries({ queryKey: ['sales-order', order.id] });
+        queryClient.invalidateQueries({ queryKey: ['sales-order-items', order.id] });
+      }
+      toast({ title: isEditing ? "تم تحديث أمر البيع بنجاح" : "تم إنشاء أمر البيع بنجاح" });
+      onOpenChange(false);
+    },
     onError: (error) => { logErrorSafely('SalesOrderFormDialog', error); toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" }); },
   });
 
@@ -106,7 +161,7 @@ const SalesOrderFormDialog = ({ open, onOpenChange, order }: SalesOrderFormDialo
             {items.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">لا توجد منتجات</TableCell></TableRow> :
               items.map((item, index) => (
                 <TableRow key={index}>
-                  <TableCell><Select value={item.product_id} onValueChange={(v) => updateItem(index, 'product_id', v)}><SelectTrigger><SelectValue placeholder="اختر المنتج" /></SelectTrigger><SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></TableCell>
+                  <TableCell><Select value={item.product_id} onValueChange={(v) => updateItem(index, 'product_id', v)}><SelectTrigger><SelectValue placeholder="اختر المنتج" /></SelectTrigger><SelectContent>{products.map((p: Product) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></TableCell>
                   <TableCell><Input type="number" min="1" value={item.quantity} onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)} /></TableCell>
                   <TableCell><Input type="number" step="0.01" value={item.unit_price} onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)} /></TableCell>
                   <TableCell><Input type="number" min="0" max="100" value={item.discount_percentage} onChange={(e) => updateItem(index, 'discount_percentage', parseFloat(e.target.value) || 0)} /></TableCell>
