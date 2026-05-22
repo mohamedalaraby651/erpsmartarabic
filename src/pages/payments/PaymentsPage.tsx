@@ -72,10 +72,10 @@ const PaymentsPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
 
-  const filters = { search: debouncedSearch };
+  const paymentFilters = { search: debouncedSearch };
 
   // Count
-  const { data: totalCount = 0 } = usePaymentsCount(filters);
+  const { data: totalCount = 0 } = usePaymentsCount(paymentFilters);
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
@@ -83,7 +83,7 @@ const PaymentsPage = () => {
     data: listResult,
     isLoading,
     refetch,
-  } = usePaymentsList(filters, pagination.currentPage, PAGE_SIZE);
+  } = usePaymentsList(paymentFilters, pagination.currentPage, PAGE_SIZE);
   const payments = listResult?.data ?? [];
 
   const deleteMutation = useDeletePayment();
