@@ -29,3 +29,5 @@ export type { ExpenseFilters, ExpenseInput, ExpensePaymentMethod, ExpenseStatus 
 export { mapRepoError, buildRange, unwrap } from './_base';
 export type { RepoSort, RepoPagination, RepoListParams, RepoListResult, BaseRepository } from './_base';
 export { referenceRepository } from './referenceRepository';
+export { reportsRepository } from './reportsRepository';
+export type { CashFlowRow, CashFlowBundle } from './reportsRepository';
