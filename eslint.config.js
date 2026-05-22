@@ -83,6 +83,37 @@ export default tseslint.config(
     },
   },
   {
+    /**
+     * Repository boundary: لا يجوز استيراد عميل Supabase
+     * من داخل مكوّنات/صفحات UI. يُسمح فقط في:
+     *  - src/lib/repositories/**
+     *  - src/lib/services/**
+     *  - src/lib/financial-engine/**
+     *  - src/hooks/useTenant.ts
+     *  - src/integrations/** (الملفات المُوَلَّدة)
+     * المستوى warn حالياً لتفادي كسر البناء؛ يُرفع إلى error في نهاية Phase 1.
+     */
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/lib/repositories/**",
+      "src/lib/services/**",
+      "src/lib/financial-engine/**",
+      "src/hooks/useTenant.ts",
+      "src/integrations/**",
+      "**/*.test.{ts,tsx}",
+      "src/__tests__/**",
+    ],
+    rules: {
+      "no-restricted-imports": ["warn", {
+        paths: [{
+          name: "@/integrations/supabase/client",
+          message:
+            "لا تستورد عميل Supabase مباشرة في UI. استخدم repository من '@/lib/repositories' أو service من '@/lib/services'.",
+        }],
+      }],
+    },
+  },
+  {
     // ملف المصدر الموحّد نفسه + ملفات الاختبار مستثناة
     files: [
       "src/lib/uiCopy.ts",

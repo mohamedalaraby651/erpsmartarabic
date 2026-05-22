@@ -1,148 +1,362 @@
-## دراسة صفحة العملاء (المعيار)
+# الخطة الموحّدة الشاملة — نضوج وتثبيت مشروع ERP Smart Arabic / Nazra
 
-### الهيكل العام للجوال
-```
-PageWrapper
-└── space-y-3 (mobile)
-    ├── CustomerPageHeader
-    │     ├── شريط بحث بارز (CustomerSearchPreview – مرتفع 44px)
-    │     └── صف عنوان مدمج:
-    │           [h1 text-base] [chip count text-xs px-2 py-0.5 rounded-full]
-    │           ←→ [زر أيقوني h-10 w-10 rounded-xl] × 2-3
-    ├── CustomerStatsBar  ← chips أفقية scrollable
-    │     شريحة واحدة: h-9 px-3 rounded-lg text-xs + Icon h-3.5 + عدّاد دائري h-[18px]
-    ├── CustomerFiltersBar (drawer trigger)
-    └── قائمة CustomerListCard (space-y-2)
-          بطاقة: p-3.5، border-s-[3px]
-          • Avatar sm + name text-sm bold + نقطة حالة 2×2 + شارة تنبيه h-4
-          • نوع text-[11px]، VIP pill text-[10px]
-          • الرصيد text-sm bold + label text-[10px]
-          • صف موقع/هاتف text-[11px] مع أيقونات h-3
-          • شريط ائتمان h-1.5
-          • Long-press → menu، Swipe → فاتورة/اتصال
-```
-
-### المقاييس الموحّدة المعتمدة
-| عنصر | القياس |
-|---|---|
-| تباعد عمودي للصفحة | `space-y-3` |
-| ارتفاع زر أيقوني للأدوات | `h-10 w-10 rounded-xl` |
-| chip أفقي قابل للنقر | `h-9 px-3 rounded-lg text-xs` + أيقونة `h-3.5` + عدّاد `h-[18px] text-[10px]` |
-| عنوان قسم/صفحة | `text-base font-bold` |
-| نص أساسي للبطاقة | `text-sm font-medium` |
-| نص ثانوي | `text-[11px] text-muted-foreground` |
-| نص تلميح | `text-[10px]` |
-| حشوة بطاقة قائمة | `p-3.5` |
-| تباعد عناصر داخل البطاقة | `gap-3` |
-| أيقونات داخل البطاقة | `h-3 / h-3.5` |
-| Badge صغير | `h-4 px-1.5 text-[10px] rounded-full` |
-| نقطة حالة | `h-2 w-2 rounded-full` |
-| ارتفاع لمسة لمس | ≥ 44px |
+> دمج خطة النضوج (6 مراحل) + خطة التثبيت المعماري (11 مرحلة) في **خارطة طريق واحدة من 7 مراحل** (10–12 أسبوعًا).  
+> الفلسفة: لا إعادة كتابة، لا كسر تدفقات، تنفيذ تدريجي ملف-ملف مع الحفاظ على RLS متعدد المستأجرين، RTL العربية، Mobile-first، ومنطق المحاسبة بالكامل.
 
 ---
 
-## الفجوات الحالية في الداشبورد (مقارنة بالمعيار)
+## خط الأساس المُقاس (Baseline)
 
-1. **Hero ضخم** يأخذ ارتفاعًا كبيرًا، بينما العملاء عنوان مدمج في صف واحد.
-2. **FinancialKPIRow**: 8 بطاقات scrollable كبيرة (`min-w-[140px]`، h≈58px) — بينما المعيار `chips h-9`.
-3. **StatsWidget**: شبكة 2×2 من بطاقات `p-2.5` بأرقام `text-base` — مكررة لما في الـ KPI.
-4. **TasksWidget / RecentInvoicesWidget**: صفوف `bg-muted/50 rounded-lg min-h-[44px]` بدون نفس الهوية البصرية للبطاقة (border-s-[3px]، p-3.5، تسلسل العناصر).
-5. **TodayPerformanceWidget**: بطاقات `p-2` صغيرة بدون فواصل/أيقونات بنفس المقاس.
-6. لا يوجد **شريط chips أفقي** للتنقل السريع بين الـ widgets (Tasks / Invoices / Today / Quick Actions).
-7. التباعد العمودي للصفحة `space-y-3 sm:space-y-6` لكن داخل WidgetContainer مازال `gap-2.5 sm:gap-4` — يختلف عن نمط العملاء.
 
----
+| المؤشر                                           | الحالي                                               | الهدف |
+| ------------------------------------------------ | ---------------------------------------------------- | ----- |
+| ملفات تحوي `supabase.from()` خارج repos/services | **63**                                               | **0** |
+| `as any` في الإنتاج                              | 111                                                  | 0     |
+| `console.log/warn`                               | 45                                                   | 0     |
+| ملفات إنتاج > 500 سطر                            | 4 (854/637/546/543/509)                              | 0     |
+| Supabase Linter WARN                             | 76                                                   | 0     |
+| Repositories موجودة                              | 5 (customer, supplier, invoice, product + relations) | +15   |
 
-## الخطة (تطبيق نفس بنية صفحة العملاء على الداشبورد)
-
-### 1) `src/pages/Dashboard.tsx` — Hero مدمج بنمط CustomerPageHeader
-استبدال الـ hero الحالي بصف بنفس بنية العملاء:
-```
-[h1 text-base "صباح الخير، {name}"] [chip role text-xs px-2 py-0.5 rounded-full]
-                                  ←→ [AlertsBell h-10 w-10] [زر + h-10 w-10 rounded-xl]
-```
-- إزالة gradient الكبير → بطاقة مسطّحة بسيطة بدون padding كبير (`py-1`).
-- نقل التحية إلى سطر مدمج + chip للدور + chip للـ tenant (text-[10px] h-4).
-- زر "+" بصيغة `h-10 w-10 rounded-xl border bg-card` بدلاً من زر مملوء كبير.
-
-### 2) `FinancialKPIRow.tsx` — تحويل إلى شريط KPI-Chips بنمط `CustomerStatsBar`
-بدلاً من 8 بطاقات scroll كبيرة:
-```
-chip أفقي: [Icon h-3.5] [label text-xs] [قيمة tabular-nums text-[11px] h-[18px] bg-muted/primary-foreground/20 rounded-full]
-الارتفاع h-9 px-3 rounded-lg، نفس مكونات chip العملاء
-```
-- نفس آلية `ScrollArea` + `pb-1` + `gap-2`.
-- النقر يفتح المسار (نفس آلية href الحالي).
-- على ≥ md تتحول إلى grid 4 أعمدة بصيغة بطاقات (كما هو، بدون تغيير ديسكتوب).
-
-### 3) `StatsWidget.tsx` — تحويل إلى شريط chips أيضًا (نفس النمط)
-- إزالة شبكة 2×2 الكبيرة على الجوال.
-- صف chips أفقي قابل للتمرير: [العملاء 12] [المنتجات 50] [عروض 8] [فواتير 30 ↑12%].
-- على ≥ md يبقى grid 4 الحالي.
-- الترند يظهر داخل العدّاد بلون success/destructive.
-
-### 4) `TasksWidget.tsx` — صف مهمة بنمط CustomerListCard المصغّر
-نموذج كل صف:
-```
-Card rounded-lg border-s-[3px] (لون الأولوية بدلاً من vip)
-  p-3 (بدلاً من 2.5)
-  ├── نقطة أولوية h-2 + عنوان text-sm font-medium truncate
-  ├── ميتا: Clock h-3 + التاريخ text-[11px] text-muted-foreground
-  └── Badge أولوية: h-4 px-1.5 text-[10px] rounded-full (نفس badge شارة تنبيه العملاء)
-```
-- إضافة long-press → menu (إكمال / حذف) كما في `useLongPress`.
-- header القسم بنفس بنية CustomerPageHeader المدمج: `text-base font-bold` + count chip + زر "عرض الكل" h-9 px-3.
-- skeleton 5 صفوف بنفس ارتفاع 56px.
-
-### 5) `RecentInvoicesWidget.tsx` — صف فاتورة بنمط CustomerListCard
-```
-Card rounded-lg border-s-[3px] (لون حسب payment_status)
-  p-3
-  ├── Avatar مربّع h-9 w-9 rounded-md bg-primary/10 + Receipt h-4
-  ├── min-w-0:
-  │     [اسم العميل text-sm font-medium truncate] [نقطة حالة h-2]
-  │     [رقم الفاتورة + تاريخ text-[11px] فاصل ·]
-  ├── يسار:
-  │     [المبلغ text-sm bold tabular-nums]
-  │     [Badge حالة h-4 px-1.5 text-[10px]]
-  └── ChevronDown h-4 (يفتح InvoiceQuickActions داخل البطاقة)
-```
-- نقل أزرار `InvoiceQuickActions` (Eye/Printer/BellPlus) إلى صف يظهر فقط عند التوسيع بنفس آلية `expanded` في CustomerListCard.
-- إضافة swipe gestures: يسار → quick payment، يمين → اتصال بالعميل (إن وُجد رقم).
-- إزالة الأزرار الظاهرة دائمًا → تخفيف العرض البصري بشكل كبير.
-
-### 6) `TodayPerformanceWidget.tsx` — توحيد الكروت
-- استبدال بطاقات `p-2 bg-muted/50` بـ chips أفقية على الجوال (نفس نمط KPI/Stats): 4 chips × `h-10`.
-- شكل chip: `[Icon h-3.5 in colored circle h-6 w-6] [title text-[11px]] [value text-xs bold] [↑% text-[10px]]`.
-- على ≥ sm يبقى grid 2×2 الحالي.
-
-### 7) `WidgetContainer.tsx` + ترتيب الصفحة
-- تباعد عمودي موحّد: `space-y-3` على الجوال (مطابق لـ CustomersPage)، `sm:space-y-5`.
-- داخل WidgetContainer: `gap-3` بدل `gap-2.5`.
-- ترتيب افتراضي مقترح للجوال: `Hero → KPI-chips → Stats-chips → Today-chips → Tasks → Invoices`.
-- إضافة CollapsedSummaryBar اختياري لطي قسم KPI/Stats عند الحاجة (مماثل لـ `layout.prefs.compact` في العملاء) — لاحقًا، خارج هذه المرحلة.
-
-### 8) Shared utility — `mobile-row` و `mobile-chip` classes
-- إنشاء `src/components/dashboard/_shared/DashboardChip.tsx` للـ chip الموحّد (KPI/Stat/Today)، يستقبل `{label, value, icon, tone, href, trend?}`.
-- إنشاء `src/components/dashboard/_shared/DashboardListCard.tsx` للصف الموحّد (مهمة/فاتورة)، يستقبل `{leading, title, meta, trailing, accentTone, onTap, onLongPress?}`.
-- يضمن نفس المقاييس بالضبط (border-s-[3px]، p-3، gap-3، text-sm/[11px]/[10px]).
 
 ---
 
-## معايير القبول
-- على عرض 393×699px:
-  - الـ Hero + شريط KPI + شريط Stats + أوّل صفّين من Tasks وأوّل فاتورتين تظهر **بدون أي تمرير**.
-  - باقي المحتوى ضمن تمريرة قصيرة واحدة.
-- جميع أزرار الأدوات `h-10 w-10` (≥ 44px).
-- جميع البطاقات تستخدم نفس `text-sm / text-[11px] / text-[10px]` و `p-3 / p-3.5`.
-- لا تغيير على تخطيط ≥ md (الديسكتوب يبقى كما هو).
-- لا تعديل في منطق البيانات أو RPCs.
-- إضافة long-press في Tasks/Invoices لا يكسر النقرة العادية.
+## PHASE 0 — Baseline & Guardrails (يومان)
 
-## ترتيب التنفيذ
-1. إنشاء `DashboardChip` و `DashboardListCard` المشتركان.
-2. تحديث `Dashboard.tsx` (Hero مدمج + تباعد).
-3. إعادة كتابة `FinancialKPIRow` و `StatsWidget` و `TodayPerformanceWidget` لاستخدام `DashboardChip` على الجوال.
-4. إعادة كتابة `TasksWidget` و `RecentInvoicesWidget` لاستخدام `DashboardListCard` (مع توسيع داخلي لإجراءات الفاتورة).
-5. تحديث `WidgetContainer` للتباعد.
-6. مراجعة بصرية على 393px (لقطة شاشة) للتأكد من المعايير.
+- تثبيت `rollup-plugin-visualizer` لقياس bundle.
+- تشغيل `supabase--linter` وتخزين 76 WARN كـ baseline.
+- توليد عدّادات (`supabase.from`, `as any`, `console.log`) مُؤرشفة.
+- رفع قاعدة ESLint الحالية (uiCopy) إلى مستوى `error`.
+- إضافة `no-restricted-imports` يمنع `@/integrations/supabase/client` خارج `repositories/`, `services/`, `lib/financial-engine/`, `hooks/useTenant.ts`.
+- لقطة Lighthouse (LCP/CLS/INP) للمقارنة لاحقًا.
+
+---
+
+## PHASE 1 — Repository Boundary Enforcement (أسبوع 1–2)
+
+### المعمار الجديد
+
+```text
+pages/ + components/   ← UI فقط
+        ↓
+hooks/                 ← useQuery/useMutation
+        ↓
+services/              ← orchestration (multi-repo + side effects)
+        ↓
+repositories/          ← الموقع الوحيد لـ supabase.from()
+   • TenantContext تلقائي
+   • Pagination/Sort/Filter موحّد
+   • mapRepoError → رسائل عربية
+   • DTOs من types/entities.ts
+        ↓
+   Supabase client
+```
+
+### العقد الأساسي
+
+`src/lib/repositories/_base.ts` يوفّر:
+
+- `BaseRepository<T, F, S>` interface (findAll/findById/create/update/delete).
+- `withTenant(query)` helper يحقن `tenant_id`.
+- `mapRepoError(err)` رسائل موحّدة.
+- `RepoListParams`/`RepoListResult` typed.
+
+### Repositories الجديدة (15) — مرتبة بالأولوية المالية
+
+
+| Repository                                    | يستوعب                                                    | أولوية |
+| --------------------------------------------- | --------------------------------------------------------- | ------ |
+| `paymentRepository`                           | pages/payments, components/payments                       | 🔴     |
+| `creditNoteRepository`                        | pages/credit-notes, components/credit-notes               | 🔴     |
+| `quotationRepository` (دمج quotes+quotations) | pages/quotations, pages/quotes, components/quotations     | 🔴     |
+| `salesOrderRepository`                        | pages/sales-orders, components/sales-orders               | 🔴     |
+| `purchaseOrderRepository`                     | pages/purchase-orders, components/purchase-orders         | 🔴     |
+| `logisticsRepository`                         | hooks/logistics/* (3), components/logistics               | 🟠     |
+| `employeeRepository`                          | components/employees, hooks/employees, pages/attendance   | 🟠     |
+| `taskRepository`                              | pages/tasks                                               | 🟠     |
+| `reportRepository`                            | pages/reports, components/reports, useReportsData         | 🟠     |
+| `inventoryRepository` (توسيع)                 | pages/inventory, pages/products                           | 🟢     |
+| `adminRepository`                             | pages/admin/* (5)                                         | 🟢     |
+| `platformRepository`                          | pages/platform                                            | 🟢     |
+| `syncRepository`                              | pages/sync, useOfflineData, useOfflineMutation            | 🟢     |
+| `printRepository`                             | components/print (3)                                      | 🟢     |
+| `notificationRepository`                      | useAlertNotifier, useDuplicateInvoice, useConvertDocument | 🟢     |
+
+
+### خطوات لكل ملف
+
+1. توسعة/إنشاء repo.
+2. hook (`use<Entity>List/Detail/Mutations`) يستدعي repo فقط.
+3. استبدال `supabase.from()` في UI بـ hook.
+4. تشغيل Vitest + Playwright للـ journey المتأثر.
+5. Commit مستقل (سهولة rollback).
+
+### معايير القبول
+
+- `rg "supabase\.from\("` خارج repos/services = 0.
+- ESLint `no-restricted-imports` مُفعّل بمستوى `error`.
+- صفر تراجع E2E.
+
+---
+
+## PHASE 2 — Code Quality & Type Safety (أسبوع 3)
+
+### Refactor الملفات الكبيرة
+
+- `CustomerDetailsPage.tsx` (854) → header + tabs + sidebar + `useCustomerDetailsPage` hook.
+- `CustomerListCard.tsx` (543) → CardHeader + KPIs + Actions.
+- `arabicFont.ts` (546) → `fonts/loader.ts` + `fonts/registry.ts`.
+- `pdfGenerator.ts` (509) → `pdf/layout.ts` + `pdf/sections/*` + `pdf/theme.ts`.
+- (sidebar.tsx shadcn — يُترك).
+
+### Business Logic Extraction → `src/domain/`
+
+- `domain/invoice/{calculations,validation}.ts`
+- `domain/inventory/constraints.ts`
+- `domain/accounting/period.ts`
+- `domain/approval/workflow.ts`
+- Pure functions، Zod schemas، 100% قابلة للاختبار بدون React.
+
+### Type Safety
+
+- استبدال 111 `as any` بأنواع من `types/entities.ts`.
+- Discriminated unions: `Invoice.status`, `Payment.status`, `Journal.posting_state`.
+- تفعيل `noUncheckedIndexedAccess` في tsconfig.
+
+### Logging
+
+- استبدال 45 `console.log` بـ `logErrorSafely`/`emitTelemetry`.
+- إزالة prop drilling عبر context محلي لكل feature.
+- Zod schemas لكل form (invoice/payment/quotation/credit-note).
+
+---
+
+## PHASE 3 — Accounting Integrity & Offline Safety (أسبوع 4–5)
+
+### Accounting Hardening
+
+- مراجعة `financial-engine/journal.service.ts`:
+  - كل posting داخل `BEGIN/COMMIT` (RPC atomic).
+  - فحص `SUM(debit) = SUM(credit)` قبل insert.
+  - فحص الفترة المفتوحة عبر `period.service`.
+  - رفض UPDATE/DELETE على journals مرحّلة — reversal فقط.
+- إضافة `journal_idempotency_key` (UUID) لكل posting.
+- اختبار `__tests__/accounting/double-entry.test.ts` للـ 3 invariants.
+
+### Offline Sync Hardening
+
+- كل عملية queue: `client_op_id` (UUID) + `fingerprint = sha256(entity+payload)`.
+- Edge functions مالية تفحص `Idempotency-Key` في `operation_idempotency` قبل التنفيذ.
+- Optimistic concurrency: عمود `version` + `WHERE version = :expected`.
+- TTL 24h على idempotency keys + `pg_cron` للتنظيف.
+- اختبار محاكاة فقد اتصال + replay → 0 تكرار.
+
+---
+
+## PHASE 4 — Security Hardening (أسبوع 6)
+
+- إغلاق 76 WARN عبر migrations:
+  - `function_search_path_mutable` → `SET search_path = public`.
+  - `auth_otp_long_expiry`.
+  - `auth_leaked_password_protection`.
+- تشفير `user_2fa_settings.secret` بـ `pgp_sym_encrypt`.
+- Views آمنة لـ PII: `customers_safe_view`, `employees_safe_view`, `suppliers_safe_view`.
+- تقييد `activity_logs` INSERTs بـ SECURITY DEFINER فقط.
+- كل `SECURITY DEFINER` يبدأ بـ `tenant_id = current_tenant()`.
+- اختبار `tenant-isolation.spec.ts` يفشل قراءة tenant آخر.
+
+---
+
+## PHASE 5 — Functional Gaps & UX Polish (أسبوع 7–8)
+
+### إغلاق الفجوات الوظيفية
+
+- دمج `quotes` + `quotations` (DB + UI).
+- مركز إشعارات داخلي (notification center).
+- صفحة "إغلاق فترة محاسبية" (الـ backend موجود).
+- صفحة "Offline Sync Status" (تستخدم `sync_logs` + `useOfflineSync`).
+- استكمال CRUD لـ `sales-pipeline` (Leads/Opportunities).
+- واجهة موحّدة لـ `attachments`.
+- Kanban لجدول `tasks`.
+- إزالة/استكمال routes ميتة: `protocol`, `share`, `install`.
+
+### Performance & Cache
+
+- `queryKeys` factory مركزي (توسيع).
+- `staleTime`/`gcTime` من `queryConfig.ts` فقط.
+- Virtualization للقوائم > 200 صف.
+- Prefetch on hover للروابط الجانبية.
+- إزالة waterfalls بـ `Promise.all` في services.
+- `React.memo` + `useStableCallback` داخل صفوف القوائم.
+- خفض default `useInfiniteCustomers` من 1000 إلى 50/صفحة.
+
+### UI Governance
+
+- `MobileBottomNav` من `h-12` إلى `h-11` (44px touch).
+- توحيد spacing scale (4/8/12/16/24).
+- توحيد EmptyStates + Skeletons بأبعاد حقيقية.
+- RTL audit: `start`/`end` بدل `left`/`right`.
+- `uiCopy.ts` مصدر وحيد للنصوص (ESLint `error`).
+
+---
+
+## PHASE 6 — Observability & Testing (أسبوع 9)
+
+- توسيع `runtimeTelemetry` ليرسل لـ edge function `log-event`.
+- `withInstrumentation(repoMethod)` لقياس latency استعلامات DB.
+- ErrorBoundary لكل route عبر `PageWrapper`.
+- جاهزية Sentry: محوّل `emitTelemetry → Sentry.captureException` خلف flag.
+- صفحة observability داخلية (slow_queries_log + sync_logs + telemetry).
+- Vitest ≥ 80% coverage.
+- Playwright لكل journey رئيسي + tenant isolation.
+- Storybook للمكونات المشتركة.
+
+---
+
+## PHASE 7 — Documentation & Release (أسبوع 10)
+
+توليد الوثائق في `docs/`:
+
+1. `refactoring-report.md` — قبل/بعد لكل entity (LOC, تعقيد, اختبارات).
+2. `security-fixes.md` — كل WARN أُغلق + RLS قبل/بعد.
+3. `performance-optimizations.md` — LCP/CLS/INP قبل/بعد + bundle size.
+4. `accounting-integrity.md` — invariants + reversal flow + fiscal lock.
+5. `engineering-governance.md` — توسيع `engineering-standards.md` بقواعد PR review.
+
+CI/CD checks + smoke tests + إصدار `v1.0.0`.
+
+---
+
+## مصفوفة القبول النهائية (Definition of Done)
+
+
+| البند                                                | الهدف                    |
+| ---------------------------------------------------- | ------------------------ |
+| `supabase.from()` خارج repos/services                | 0                        |
+| ESLint `no-restricted-imports` للـ supabase client   | فعّال (error)            |
+| `as any` في كود الإنتاج                              | 0                        |
+| `console.log` في كود الإنتاج                         | 0                        |
+| ملفات إنتاج > 500 سطر                                | 0                        |
+| Supabase Linter WARN/ERROR                           | 0                        |
+| Double-entry invariants tested                       | ✓                        |
+| Idempotency على كل posting/payment                   | ✓                        |
+| LCP / CLS / INP                                      | < 2.5s / < 0.1 / < 200ms |
+| Tenant isolation E2E                                 | 100% pass                |
+| Touch targets موبايل                                 | ≥ 44px                   |
+| Vitest coverage                                      | ≥ 80%                    |
+| كل route لديه PageWrapper + ErrorBoundary + Skeleton | 100%                     |
+| Routes ميتة (protocol/share/install)                 | مستكملة أو محذوفة        |
+
+
+---
+
+## التسلسل الزمني
+
+```text
+P0 (2د) → P1 (أسبوع 1–2) → P2 (أسبوع 3) → P3 (أسبوع 4–5)
+       → P4 (أسبوع 6) → P5 (أسبوع 7–8) → P6 (أسبوع 9) → P7 (أسبوع 10)
+```
+
+كل مرحلة = batch قابل للمراجعة + اختبارات خضراء قبل الانتقال.
+
+---
+
+## نقطة البدء الفورية بعد الموافقة
+
+**Phase 0 (يومان)** ثم مباشرة **Phase 1**:
+
+1. `src/lib/repositories/_base.ts` + helpers.
+2. أول repo حسب الأولوية المالية: **paymentRepository** (أعلى مخاطرة).
+3. ثم creditNote → quotation (دمج) → salesOrder → purchaseOrder.
+4. تكرار النمط حتى آخر entity ثم تفعيل ESLint rule المانعة.
+
+You are now operating as a Principal ERP Architect, Senior Refactoring Engineer, and PostgreSQL Performance Specialist. Your absolute mission is to execute the Unified Maturity and Architectural Stabilization Plan for our production-grade Arabic ERP SaaS platform (React, TypeScript, Tailwind, Supabase, PostgreSQL).
+
+&nbsp;
+
+CRITICAL DIRECTIVES:
+
+- DO NOT rewrite the system from scratch. DO NOT break existing business flows.
+
+- Preserve Arabic RTL UX, mobile-first layouts, multi-tenant isolation, and core accounting integrity.
+
+- Execute all changes incrementally, file-by-file, maintaining clean Git-ready atomic commits.
+
+&nbsp;
+
+Please evaluate the codebase against the measured baseline KPIs and execute the roadmap strictly according to the following phased specifications:
+
+&nbsp;
+
+PHASE 0 — BASELINE & GUARDRAILS (Duration: 2 Days)
+
+- Establish bundle monitoring using `rollup-plugin-visualizer` and document the 76 Supabase Linter warnings as the baseline.
+
+- Freeze code anti-patterns by raising ESLint rule `uiCopy` to error level.
+
+- Enforce strict import protection via `no-restricted-imports` to prevent calling the Supabase client (`@/integrations/supabase/client`) outside the `/repositories`, `/services`, `/lib/financial-engine/`, and `hooks/useTenant.ts` boundaries.
+
+&nbsp;
+
+PHASE 1 — REPOSITORY BOUNDARY ENFORCEMENT (Weeks 1-2)
+
+- Migrate all data access out of the UI. Establish the core repository interface contract inside `src/lib/repositories/_base.ts` supporting `BaseRepository<T, F, S>` with `withTenant(query)` injection, pagination/filtering abstraction, and localized `mapRepoError` handling.
+
+- Build and implement the 15 missing repositories and their corresponding query hooks, ordered strictly by financial priority:
+
+  1. Financial/High-Risk: `paymentRepository`, `creditNoteRepository`, `quotationRepository` (merged from quotes+quotations), `salesOrderRepository`, `purchaseOrderRepository`.
+
+  2. HR & Logistical: `logisticsRepository`, `employeeRepository`, `taskRepository`, `reportRepository`.
+
+  3. Core Operations & Platform: `inventoryRepository`, `adminRepository`, `platformRepository`, `syncRepository`, `printRepository`, `notificationRepository`.
+
+- Acceptance Criteria: `rg "supabase\.from\("` outside repositories/services must equal exactly ZERO.
+
+&nbsp;
+
+PHASE 2 — CODE QUALITY & TYPE SAFETY (Week 3)
+
+- Refactor and split oversized files (>500 lines) into compact UI presenters, custom containers, and local hooks: `CustomerDetailsPage.tsx` (854 lines), `CustomerListCard.tsx` (543 lines), `arabicFont.ts` (546 lines), and `pdfGenerator.ts` (509 lines).
+
+- Extract pure business logic out of components and place into `src/domain/` (e.g., invoice calculations, inventory constraints, fiscal period rules).
+
+- Eradicate 111 instances of `as any` with strict models from `types/entities.ts` and activate `noUncheckedIndexedAccess` in tsconfig.
+
+- Replace all 45 `console.log` statements with secure telemetry emitting hooks (`logErrorSafely`).
+
+&nbsp;
+
+PHASE 3 — ACCOUNTING INTEGRITY & OFFLINE SAFETY (Weeks 4-5)
+
+- Harden `financial-engine/journal.service.ts`: Enforce that all journal entries are atomic (RPC wrapped in BEGIN/COMMIT), enforce zero-balance checks (`SUM(debit) == SUM(credit)`), prevent modifications on posted records (reversal-only flow), and attach UUID-based `journal_idempotency_key` tokens.
+
+- Secure the offline sync engine: Enforce optimistic concurrency control on local writes using a `version` schema constraint, tag local mutations with dynamic fingerprints, and configure a server-side 24-hour TTL table for transaction deduplication.
+
+&nbsp;
+
+PHASE 4 & 5 — SECURITY HARDENING, FUNCTIONAL GAPS & UX POLISH (Weeks 6-8)
+
+- Resolve all 76 Supabase linter issues. Enforce explicit search paths (`SET search_path = public`) for all SECURITY DEFINER functions and inject multi-tenant validation server-side.
+
+- Clean and fix structural UX features: Unify the responsive spacing system. Decrease the `MobileBottomNav` vertical height down to `h-11` (44px target) to optimize mobile screen real estate.
+
+- Implement real-dimension Skeleton Loaders across all metrics, graphs, and tabular layouts to maximize loading UX.
+
+- Complete missing CRUD paths for the sales pipeline, tasks Kanban, and the "Fiscal Period Locking" dashboard interface.
+
+&nbsp;
+
+PHASE 6 & 7 — OBSERVABILITY, TESTING & DOCUMENTATION (Weeks 9-10)
+
+- Ensure total application coverage with Error Boundaries via a localized `PageWrapper`.
+
+- Reach ≥80% Vitest coverage and pass localized Playwright E2E integration routines ensuring data isolation.
+
+- Generate standard governance documentation under `docs/`: `refactoring-report.md`, `security-fixes.md`, `performance-optimizations.md`, `accounting-integrity.md`, and `engineering-governance.md`.
+
+&nbsp;
+
+Immediate Next Step: 
+
+Analyze the current directory structure and file setup for `src/lib/repositories/` and the components under `pages/payments`. Initialize Phase 0 and lay out the core architecture for `src/lib/repositories/_base.ts` alongside our top financial priority: `paymentRepository`. Present the implementat
+
+ion strategy before applying code mutations.

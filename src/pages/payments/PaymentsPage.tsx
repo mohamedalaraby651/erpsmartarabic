@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ServerPagination } from "@/components/shared/ServerPagination";
@@ -26,20 +25,19 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableFilter } from "@/hooks/useTableFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { logErrorSafely } from "@/lib/errorHandler";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
-import type { Database } from "@/integrations/supabase/types";
 import MultiInvoiceSettlement from "@/components/payments/MultiInvoiceSettlement";
-
-type PaymentWithRelations = Database['public']['Tables']['payments']['Row'] & {
-  customers: { name: string } | null;
-  invoices: { invoice_number: string } | null;
-};
+import {
+  usePaymentsList,
+  usePaymentsCount,
+  useDeletePayment,
+} from "@/hooks/usePayments";
+import type { PaymentWithRelations } from "@/lib/repositories/paymentRepository";
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "نقدي",
@@ -74,63 +72,49 @@ const PaymentsPage = () => {
   const canEdit = userRole === 'admin' || userRole === 'accountant';
   const canDelete = userRole === 'admin';
 
-  // Count query
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: ['payments-count', debouncedSearch],
-    queryFn: async () => {
-      let query = supabase.from('payments').select('*', { count: 'exact', head: true });
-      if (debouncedSearch) {
-        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
-      }
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    },
-  });
+  const paymentFilters = { search: debouncedSearch };
+
+  // Count
+  const { data: totalCount = 0 } = usePaymentsCount(paymentFilters);
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  const { data: payments = [], isLoading, refetch } = useQuery({
-    queryKey: ['payments', debouncedSearch, pagination.currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('payments')
-        .select('*, customers(name), invoices(invoice_number)')
-        .order('created_at', { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) {
-        query = query.or(`payment_number.ilike.%${debouncedSearch}%`);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
+  const {
+    data: listResult,
+    isLoading,
+    refetch,
+  } = usePaymentsList(paymentFilters, pagination.currentPage, PAGE_SIZE);
+  const payments = listResult?.data ?? [];
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { deletePayment } = await import('@/lib/services/paymentService');
-      await deletePayment(id);
+  const deleteMutation = useDeletePayment();
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          toast({ title: "تم حذف الدفعة بنجاح" });
+        },
+        onError: (error: Error) => {
+          if (error.message === "UNAUTHORIZED") {
+            toast({
+              title: "غير مصرح",
+              description: "ليس لديك صلاحية حذف المدفوعات",
+              variant: "destructive",
+            });
+          } else {
+            toast({ title: "خطأ في حذف الدفعة", variant: "destructive" });
+          }
+          logErrorSafely("PaymentsPage.delete", error);
+        },
+      });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      toast({ title: "تم حذف الدفعة بنجاح" });
-    },
-    onError: (error) => {
-      if (error.message === 'UNAUTHORIZED') {
-        toast({ title: "غير مصرح", description: "ليس لديك صلاحية حذف المدفوعات", variant: "destructive" });
-      } else {
-        toast({ title: "خطأ في حذف الدفعة", variant: "destructive" });
-      }
-      logErrorSafely('PaymentsPage.delete', error);
-    },
-  });
+    [deleteMutation, toast],
+  );
 
   const handleRefresh = useCallback(async () => {
     await refetch();
   }, [refetch]);
+
 
   // Filter by search
   const searchFiltered = (payments as PaymentWithRelations[]).filter((p) =>
@@ -161,7 +145,7 @@ const PaymentsPage = () => {
         { label: "التاريخ", value: new Date(payment.payment_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
         payment.invoices?.invoice_number ? { label: "الفاتورة", value: payment.invoices.invoice_number } : null,
       ] as const).filter(Boolean) as Array<{ label: string; value: string | number | React.ReactNode; icon?: React.ReactNode }>}
-      onDelete={canDelete ? () => deleteMutation.mutate(payment.id) : undefined}
+      onDelete={canDelete ? () => handleDelete(payment.id) : undefined}
     />
   );
 
@@ -380,7 +364,7 @@ const PaymentsPage = () => {
                       <TableCell>{payment.reference_number || '-'}</TableCell>
                       <TableCell>
                         <DataTableActions
-                          onDelete={() => deleteMutation.mutate(payment.id)}
+                          onDelete={() => handleDelete(payment.id)}
                           canEdit={false}
                           canDelete={canDelete}
                           deleteDescription="سيتم حذف هذه الدفعة نهائياً."
