@@ -118,6 +118,7 @@ const RolesPage = lazy(() => import("./pages/admin/RolesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/PermissionsPage"));
 const CustomizationsPage = lazy(() => import("./pages/admin/CustomizationsPage"));
 const UsersPage = lazy(() => import("./pages/admin/UsersPage"));
+const UserManagementPage = lazy(() => import("./pages/admin/UserManagementPage"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const ActivityLogPage = lazy(() => import("./pages/admin/ActivityLogPage"));
 const AuditTrailPage = lazy(() => import("./pages/admin/AuditTrailPage"));
@@ -289,6 +290,7 @@ const App = () => (
                     <Route path="permissions" element={<PermissionsPage />} />
                     <Route path="customizations" element={<CustomizationsPage />} />
                     <Route path="users" element={<UsersPage />} />
+                    <Route path="user-management" element={<UserManagementPage />} />
                     <Route path="dashboard" element={<AdminDashboard />} />
                     <Route path="activity-log" element={<ActivityLogPage />} />
                     <Route path="audit-trail" element={<AuditTrailPage />} />
