@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { attendanceRepository } from '@/lib/repositories';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,35 +26,28 @@ export default function LeaveRequestDialog({ open, onOpenChange, onSuccess }: Pr
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-leave-select'],
-    queryFn: async () => {
-      const { data } = await supabase.from('employees').select('id, full_name, employee_number')
-        .eq('employment_status', 'active').order('full_name');
-      return data || [];
-    },
+    queryFn: () => attendanceRepository.listActiveEmployees(),
     enabled: open,
   });
 
   const mutation = useMutation({
-    mutationFn: async () => {
-      const { data: tenantData } = await supabase.rpc('get_current_tenant');
-      const { error } = await supabase.from('leave_requests').insert({
+    mutationFn: () =>
+      attendanceRepository.createLeaveRequest({
         employee_id: employeeId,
         leave_type: leaveType,
         start_date: startDate,
         end_date: endDate,
         reason: reason || null,
-        tenant_id: tenantData,
-      });
-      if (error) throw error;
-    },
+      }),
     onSuccess: () => {
       toast({ title: 'تم تقديم طلب الإجازة بنجاح' });
       resetForm();
       onOpenChange(false);
       onSuccess();
     },
-    onError: () => toast({ title: 'خطأ في تقديم الطلب', variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: e.message || 'خطأ في تقديم الطلب', variant: 'destructive' }),
   });
+
 
   const resetForm = () => { setEmployeeId(''); setLeaveType('annual'); setStartDate(''); setEndDate(''); setReason(''); };
 

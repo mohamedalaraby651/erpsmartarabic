@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { attendanceRepository } from '@/lib/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,100 +34,50 @@ const AttendancePage = () => {
   // Fetch employees
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-attendance'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('employees')
-        .select('id, full_name, employee_number, department, job_title')
-        .eq('employment_status', 'active')
-        .order('full_name');
-      return data || [];
-    },
+    queryFn: () => attendanceRepository.listActiveEmployees(),
   });
 
   // Fetch attendance records for the month
   const { data: attendanceRecords = [], isLoading } = useQuery({
     queryKey: ['attendance', selectedMonth, selectedEmployeeFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from('attendance_records')
-        .select('*, employees(full_name, employee_number, department)')
-        .gte('check_in', monthStart.toISOString())
-        .lte('check_in', monthEnd.toISOString())
-        .order('check_in', { ascending: false });
-
-      if (selectedEmployeeFilter !== 'all') {
-        query = query.eq('employee_id', selectedEmployeeFilter);
-      }
-      const { data } = await query;
-      return data || [];
-    },
+    queryFn: () => attendanceRepository.listRecords(monthStart, monthEnd, selectedEmployeeFilter),
   });
 
   // Fetch today's active sessions (no check_out)
   const { data: activeSessions = [] } = useQuery({
     queryKey: ['active-sessions'],
-    queryFn: async () => {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const { data } = await supabase
-        .from('attendance_records')
-        .select('*, employees(full_name, employee_number)')
-        .gte('check_in', today + 'T00:00:00')
-        .is('check_out', null);
-      return data || [];
-    },
+    queryFn: () => attendanceRepository.listActiveSessions(),
     refetchInterval: 30000,
   });
 
   // Fetch leave requests
   const { data: leaveRequests = [] } = useQuery({
     queryKey: ['leave-requests', selectedMonth],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('leave_requests')
-        .select('*, employees(full_name, employee_number)')
-        .gte('start_date', format(monthStart, 'yyyy-MM-dd'))
-        .lte('start_date', format(monthEnd, 'yyyy-MM-dd'))
-        .order('created_at', { ascending: false });
-      return data || [];
-    },
+    queryFn: () => attendanceRepository.listLeaveRequests(monthStart, monthEnd),
   });
 
   // Check-in mutation
   const checkInMutation = useMutation({
-    mutationFn: async (employeeId: string) => {
-      const { data: tenantData } = await supabase.rpc('get_current_tenant');
-      const { error } = await supabase.from('attendance_records').insert({
-        employee_id: employeeId,
-        check_in: new Date().toISOString(),
-        tenant_id: tenantData,
-        created_by: user?.id,
-      });
-      if (error) throw error;
-    },
+    mutationFn: (employeeId: string) => attendanceRepository.checkIn(employeeId, user?.id ?? null),
     onSuccess: () => {
       toast({ title: 'تم تسجيل الحضور بنجاح' });
       queryClient.invalidateQueries({ queryKey: ['attendance'] });
       queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
     },
-    onError: () => toast({ title: 'خطأ في تسجيل الحضور', variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: e.message || 'خطأ في تسجيل الحضور', variant: 'destructive' }),
   });
 
   // Check-out mutation
   const checkOutMutation = useMutation({
-    mutationFn: async (recordId: string) => {
-      const { error } = await supabase
-        .from('attendance_records')
-        .update({ check_out: new Date().toISOString() })
-        .eq('id', recordId);
-      if (error) throw error;
-    },
+    mutationFn: (recordId: string) => attendanceRepository.checkOut(recordId),
     onSuccess: () => {
       toast({ title: 'تم تسجيل الانصراف بنجاح' });
       queryClient.invalidateQueries({ queryKey: ['attendance'] });
       queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
     },
-    onError: () => toast({ title: 'خطأ في تسجيل الانصراف', variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: e.message || 'خطأ في تسجيل الانصراف', variant: 'destructive' }),
   });
+
 
   const formatDuration = (checkIn: string, checkOut: string | null) => {
     if (!checkOut) return 'قيد العمل';
