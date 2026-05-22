@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { tasksRepository, type TaskRow } from "@/lib/repositories";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,14 +26,13 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CheckSquare, Plus, Calendar, Clock, User, ListTodo, CheckCircle } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 
-type Task = Database['public']['Tables']['tasks']['Row'];
+type Task = TaskRow;
 
 const TasksPage = () => {
   const { user } = useAuth();
@@ -61,51 +60,38 @@ const TasksPage = () => {
 
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ['tasks'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Task[];
-    },
+    queryFn: () => tasksRepository.list(),
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase.from('tasks').insert({
+    mutationFn: (data: typeof formData) =>
+      tasksRepository.create({
         title: data.title,
         description: data.description || null,
         priority: data.priority,
         due_date: data.due_date || null,
-        created_by: user?.id,
-        assigned_to: user?.id,
-      });
-      if (error) throw error;
-    },
+        created_by: user?.id ?? null,
+        assigned_to: user?.id ?? null,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({ title: "تم إضافة المهمة بنجاح" });
       setIsDialogOpen(false);
       setFormData({ title: '', description: '', priority: 'medium', due_date: '' });
     },
-    onError: () => {
-      toast({ title: "حدث خطأ أثناء إضافة المهمة", variant: "destructive" });
+    onError: (e: Error) => {
+      toast({ title: e.message || "حدث خطأ أثناء إضافة المهمة", variant: "destructive" });
     },
   });
 
   const toggleTaskMutation = useMutation({
-    mutationFn: async ({ id, is_completed }: { id: string; is_completed: boolean }) => {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ is_completed })
-        .eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, is_completed }: { id: string; is_completed: boolean }) =>
+      tasksRepository.toggleCompletion(id, is_completed),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
+
 
   const handleRefresh = useCallback(async () => {
     await refetch();

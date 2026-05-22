@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { priceListRepository, type PriceListRow, type PriceListItemRow } from '@/lib/repositories';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,24 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Tag, Trash2, Edit, Loader2, Package } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 
-interface PriceList {
-  id: string;
-  name: string;
-  description: string | null;
-  is_default: boolean;
-  is_active: boolean;
-  created_at: string;
-}
-
-interface PriceListItem {
-  id: string;
-  price_list_id: string;
-  product_id: string;
-  price: number;
-  min_quantity: number;
-  discount_percentage: number;
-  products?: { name: string; selling_price: number | null; sku: string | null } | null;
-}
+type PriceList = PriceListRow;
+type PriceListItem = PriceListItemRow;
 
 const PriceListsPage = () => {
   const { toast } = useToast();
@@ -53,92 +37,64 @@ const PriceListsPage = () => {
 
   const { data: priceLists = [], isLoading } = useQuery({
     queryKey: ['price-lists'],
-    queryFn: async () => {
-      const { data } = await supabase.from('price_lists').select('*').order('is_default', { ascending: false }).order('name');
-      return (data || []) as PriceList[];
-    },
+    queryFn: () => priceListRepository.list(),
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ['products-for-pricing'],
-    queryFn: async () => {
-      const { data } = await supabase.from('products').select('id, name, selling_price, sku').eq('is_active', true).order('name');
-      return data || [];
-    },
+    queryFn: () => priceListRepository.listProductsForPricing(),
   });
 
   const { data: listItems = [], refetch: refetchItems } = useQuery({
     queryKey: ['price-list-items', selectedList?.id],
-    queryFn: async () => {
-      if (!selectedList) return [];
-      const { data } = await supabase
-        .from('price_list_items')
-        .select('*, products(name, selling_price, sku)')
-        .eq('price_list_id', selectedList.id)
-        .order('created_at');
-      return (data || []) as unknown as PriceListItem[];
-    },
+    queryFn: () => (selectedList ? priceListRepository.listItems(selectedList.id) : Promise.resolve([] as PriceListItem[])),
     enabled: !!selectedList,
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { data: tenantData } = await supabase.rpc('get_current_tenant');
-      const payload = { name, description: description || null, is_default: isDefault, tenant_id: tenantData };
-      if (editingList) {
-        const { error } = await supabase.from('price_lists').update(payload).eq('id', editingList.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('price_lists').insert(payload);
-        if (error) throw error;
-      }
+      const payload = { name, description: description || null, is_default: isDefault };
+      if (editingList) await priceListRepository.update(editingList.id, payload);
+      else await priceListRepository.create(payload);
     },
     onSuccess: () => {
       toast({ title: editingList ? 'تم تحديث قائمة الأسعار' : 'تم إنشاء قائمة الأسعار' });
       queryClient.invalidateQueries({ queryKey: ['price-lists'] });
       closeForm();
     },
-    onError: () => toast({ title: 'خطأ في الحفظ', variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: e.message || 'خطأ في الحفظ', variant: 'destructive' }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('price_lists').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => priceListRepository.remove(id),
     onSuccess: () => {
       toast({ title: 'تم حذف قائمة الأسعار' });
       queryClient.invalidateQueries({ queryKey: ['price-lists'] });
     },
+    onError: (e: Error) => toast({ title: e.message || 'تعذّر الحذف', variant: 'destructive' }),
   });
 
   const addItemMutation = useMutation({
     mutationFn: async () => {
       if (!selectedList) return;
-      const { data: tenantData } = await supabase.rpc('get_current_tenant');
-      const { error } = await supabase.from('price_list_items').insert({
+      await priceListRepository.addItem({
         price_list_id: selectedList.id,
         product_id: productId,
         price: parseFloat(itemPrice),
         min_quantity: parseInt(minQty) || 1,
         discount_percentage: parseFloat(discountPct) || 0,
-        tenant_id: tenantData,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast({ title: 'تم إضافة المنتج للقائمة' });
       refetchItems();
       setProductId(''); setItemPrice(''); setMinQty('1'); setDiscountPct('0');
     },
-    onError: () => toast({ title: 'خطأ - ربما المنتج مضاف مسبقاً', variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: e.message || 'خطأ - ربما المنتج مضاف مسبقاً', variant: 'destructive' }),
   });
 
   const removeItemMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('price_list_items').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => priceListRepository.removeItem(id),
     onSuccess: () => { toast({ title: 'تم حذف المنتج من القائمة' }); refetchItems(); },
   });
 
@@ -153,6 +109,7 @@ const PriceListsPage = () => {
   const openItems = (list: PriceList) => { setSelectedList(list); setItemsOpen(true); };
 
   const selectedProduct = products.find(p => p.id === productId);
+
 
   return (
     <div className="space-y-6">
