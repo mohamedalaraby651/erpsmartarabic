@@ -2,9 +2,12 @@ import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { invoiceRepository } from '@/lib/repositories/invoiceRepository';
+import { salesOrderRepository } from '@/lib/repositories/salesOrderRepository';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
+
 
 type ConvertType = 'quotation-to-order' | 'order-to-invoice' | 'quotation-to-invoice';
 
