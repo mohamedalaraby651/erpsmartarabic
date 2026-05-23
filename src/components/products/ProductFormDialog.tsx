@@ -27,7 +27,7 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
   const queryClient = useQueryClient();
   const isEditing = !!product;
 
-  const { data: categories = [] } = useQuery({ queryKey: ['product-categories'], queryFn: async () => { const { data, error } = await supabase.from('product_categories').select('*').order('name'); if (error) throw error; return data as ProductCategory[]; } });
+  const { data: categories = [] } = useQuery({ queryKey: ['product-categories'], queryFn: () => productRepository.findCategories() as Promise<ProductCategory[]> });
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
