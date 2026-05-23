@@ -45,13 +45,12 @@ export function CustomerSavedViews({ currentFilters, onApplyView }: CustomerSave
 
   const createMutation = useMutation({
     mutationFn: async (name: string) => {
-      const { error } = await supabase.from('user_saved_views').insert({
-        user_id: user!.id,
+      await savedViewsRepository.create({
+        userId: user!.id,
         section: 'customers',
         name,
-        filters: currentFilters as any,
+        filters: currentFilters,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-saved-views'] });
@@ -61,10 +60,7 @@ export function CustomerSavedViews({ currentFilters, onApplyView }: CustomerSave
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('user_saved_views').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => savedViewsRepository.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-saved-views'] });
     },
