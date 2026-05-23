@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { savedViewsRepository } from "@/lib/repositories";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,30 +21,19 @@ const SupplierSavedViews = ({ onApply, currentFilters }: SupplierSavedViewsProps
 
   const { data: views = [] } = useQuery({
     queryKey: ['saved-views', 'suppliers', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('user_saved_views')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('section', 'suppliers')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => savedViewsRepository.list<Record<string, string>>('suppliers', user?.id),
     enabled: !!user?.id,
   });
 
   const saveMutation = useMutation({
     mutationFn: async (name: string) => {
       if (!user?.id) throw new Error('Not authenticated');
-      const { error } = await supabase.from('user_saved_views').insert({
-        user_id: user.id,
+      await savedViewsRepository.create({
+        userId: user.id,
         section: 'suppliers',
         name,
         filters: currentFilters,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-views', 'suppliers'] });
@@ -56,10 +45,7 @@ const SupplierSavedViews = ({ onApply, currentFilters }: SupplierSavedViewsProps
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('user_saved_views').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => savedViewsRepository.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['saved-views', 'suppliers'] });
       toast.success('تم حذف العرض');
@@ -78,7 +64,7 @@ const SupplierSavedViews = ({ onApply, currentFilters }: SupplierSavedViewsProps
           key={view.id}
           variant="outline"
           className="cursor-pointer hover:bg-primary/10 gap-1 py-1 px-2"
-          onClick={() => onApply(view.filters as Record<string, string>)}
+          onClick={() => onApply(view.filters)}
         >
           <Star className="h-3 w-3" />
           {view.name}

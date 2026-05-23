@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, MessageCircle, StickyNote, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
+import { customerRepository } from '@/lib/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { CustomerAlert } from '@/hooks/useCustomerAlerts';
@@ -40,13 +40,12 @@ export const AlertItemActions = ({ alert, onDismiss }: AlertItemActionsProps) =>
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('customer_notes').insert({
-        customer_id: alert.customerId,
-        user_id: user.id,
+      await customerRepository.createNote({
+        customerId: alert.customerId,
+        userId: user.id,
         content: `[تنبيه: ${alert.type}] ${note.trim()}`,
-        is_pinned: false,
+        isPinned: false,
       });
-      if (error) throw error;
       setNote('');
       setShowNote(false);
       toast.success('تم حفظ الملاحظة');

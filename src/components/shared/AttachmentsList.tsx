@@ -48,6 +48,7 @@ import { ar } from 'date-fns/locale';
 import { AttachmentsSearch, AttachmentFilters, defaultFilters } from './AttachmentsSearch';
 import { ATTACHMENT_CATEGORIES } from './AttachmentUploadForm';
 import { cn } from '@/lib/utils';
+import { attachmentsRepository } from '@/lib/repositories';
 
 const FILE_ICONS = {
   image: Image,
@@ -165,8 +166,7 @@ export function AttachmentsList({
       }
 
       // Delete from database
-      const { error } = await supabase.from('attachments').delete().eq('id', id);
-      if (error) throw error;
+      await attachmentsRepository.deleteById(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['attachments', entityType, entityId] });

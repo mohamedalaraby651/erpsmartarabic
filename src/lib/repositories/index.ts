@@ -44,3 +44,8 @@ export type { LegacyQuotationWithCustomer, LegacyQuotationItemWithRefs } from '.
 export { activityLogsRepository } from './activityLogsRepository';
 export { adminRepository } from './adminRepository';
 export type { SodRule, Tenant, RoleSectionPermission, ApprovalChain, ExportTemplate } from './adminRepository';
+export { savedViewsRepository } from './savedViewsRepository';
+export type { SavedViewRow, SavedViewSection } from './savedViewsRepository';
+export { notificationsRepository } from './notificationsRepository';
+export type { NotificationInsert } from './notificationsRepository';
+export { attachmentsRepository } from './attachmentsRepository';

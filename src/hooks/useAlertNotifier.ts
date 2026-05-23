@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { notificationsRepository } from '@/lib/repositories';
 import { useAlertSettings } from './useAlertSettings';
 import { useTenant } from './useTenant';
 import { logErrorSafely } from '@/lib/errorHandler';
@@ -72,7 +72,6 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
     if (!tid) return; // can't insert without tenant — RLS will block
 
     // Insert notifications with dedup (max 10 per batch)
-    const today = new Date().toISOString().slice(0, 10);
     const toInsert = newAlerts.slice(0, 10).map(a => ({
       user_id: uid,
       tenant_id: tid,
@@ -85,21 +84,11 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
 
     if (toInsert.length > 0) {
       try {
-        // Check for existing notifications created today with same title+link to avoid duplicates
         const links = toInsert.map(n => n.link);
-        const { data: existing } = await supabase
-          .from('notifications')
-          .select('link, title')
-          .eq('user_id', uid)
-          .gte('created_at', `${today}T00:00:00`)
-          .in('link', links);
-
-        const existingSet = new Set((existing || []).map(e => `${e.title}|${e.link}`));
+        const existingSet = await notificationsRepository.existingTodayKeys(uid, links);
         const filtered = toInsert.filter(n => !existingSet.has(`${n.title}|${n.link}`));
-
         if (filtered.length > 0) {
-          const { error } = await supabase.from('notifications').insert(filtered);
-          if (error) logErrorSafely('useAlertNotifier:insert', error.message);
+          await notificationsRepository.insertMany(filtered);
         }
       } catch (err) {
         logErrorSafely('useAlertNotifier:process', err);
