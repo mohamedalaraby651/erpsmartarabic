@@ -41,10 +41,11 @@ export function useProductsList() {
     }
   }, [searchParams, setSearchParams]);
 
-  const filters = {
+  const repoFilters = {
     search: debouncedSearch,
     categoryId: categoryFilter,
   };
+
 
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['products-count', debouncedSearch, categoryFilter],
