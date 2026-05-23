@@ -40,13 +40,12 @@ export const AlertItemActions = ({ alert, onDismiss }: AlertItemActionsProps) =>
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('customer_notes').insert({
-        customer_id: alert.customerId,
-        user_id: user.id,
+      await customerRepository.createNote({
+        customerId: alert.customerId,
+        userId: user.id,
         content: `[تنبيه: ${alert.type}] ${note.trim()}`,
-        is_pinned: false,
+        isPinned: false,
       });
-      if (error) throw error;
       setNote('');
       setShowNote(false);
       toast.success('تم حفظ الملاحظة');
