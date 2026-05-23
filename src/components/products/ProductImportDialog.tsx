@@ -78,9 +78,9 @@ export default function ProductImportDialog({ open, onOpenChange }: Props) {
 
   const importMutation = useMutation({
     mutationFn: async (rows: ImportRow[]) => {
-      const { data: existing } = await supabase.from('products').select('name, sku');
-      const existingNames = new Set((existing || []).map(p => p.name.toLowerCase().trim()));
-      const existingSkus = new Set((existing || []).filter(p => p.sku).map(p => p.sku!));
+      const existing = await productRepository.listNameSkuPairs();
+      const existingNames = new Set(existing.map(p => p.name.toLowerCase().trim()));
+      const existingSkus = new Set(existing.filter(p => p.sku).map(p => p.sku!));
       const importResults: ImportResult[] = [];
 
       for (const row of rows) {
@@ -88,7 +88,7 @@ export default function ProductImportDialog({ open, onOpenChange }: Props) {
           (row.sku && existingSkus.has(row.sku));
         if (isDuplicate) { importResults.push({ row, status: 'duplicate', message: 'منتج مكرر' }); continue; }
         try {
-          const { error } = await supabase.from('products').insert({
+          await productRepository.create({
             name: row.name.trim(),
             sku: row.sku?.trim() || null,
             selling_price: row.price || 0,
@@ -96,7 +96,7 @@ export default function ProductImportDialog({ open, onOpenChange }: Props) {
             min_stock: row.min_stock_level || 0,
             description: row.description?.trim() || null,
           });
-          if (error) throw error;
+
           importResults.push({ row, status: 'success', message: 'تم الاستيراد' });
           existingNames.add(row.name.toLowerCase().trim());
           if (row.sku) existingSkus.add(row.sku);
