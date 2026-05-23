@@ -6,7 +6,7 @@ import { Bookmark, Plus, Trash2, Check, Loader2 } from "lucide-react";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { supabase } from "@/integrations/supabase/client";
+import { savedViewsRepository } from "@/lib/repositories";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface SavedView {
@@ -36,17 +36,8 @@ export function CustomerSavedViews({ currentFilters, onApplyView }: CustomerSave
   const { data: views = [], isLoading } = useQuery({
     queryKey: ['customer-saved-views', user?.id],
     queryFn: async (): Promise<SavedView[]> => {
-      const { data, error } = await supabase
-        .from('user_saved_views')
-        .select('id, name, filters')
-        .eq('section', 'customers')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map(row => ({
-        id: row.id,
-        name: row.name,
-        filters: row.filters as unknown as SavedView['filters'],
-      }));
+      const rows = await savedViewsRepository.list<SavedView['filters']>('customers');
+      return rows.map(row => ({ id: row.id, name: row.name, filters: row.filters }));
     },
     enabled: !!user?.id,
     staleTime: 60000,
