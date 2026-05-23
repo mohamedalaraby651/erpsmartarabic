@@ -40,14 +40,12 @@ const SupplierNotesTab = ({ supplierId }: SupplierNotesTabProps) => {
   const addMutation = useMutation({
     mutationFn: async (note: string) => {
       if (!tenantId) throw new Error('No tenant');
-      const { error } = await supabase.from('supplier_notes').insert({
-        supplier_id: supplierId,
+      await supplierRepository.createNote({
+        supplierId,
         note,
-        user_id: user?.id,
-        created_by: user?.id,
-        tenant_id: tenantId,
+        userId: user?.id ?? null,
+        tenantId,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-notes', supplierId] });
@@ -59,18 +57,13 @@ const SupplierNotesTab = ({ supplierId }: SupplierNotesTabProps) => {
   });
 
   const togglePinMutation = useMutation({
-    mutationFn: async ({ id, pinned }: { id: string; pinned: boolean }) => {
-      const { error } = await supabase.from('supplier_notes').update({ is_pinned: pinned }).eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) =>
+      supplierRepository.setNotePinned(id, pinned),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['supplier-notes', supplierId] }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('supplier_notes').delete().eq('id', id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => supplierRepository.deleteNote(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-notes', supplierId] });
       toast({ title: 'تم حذف الملاحظة' });
