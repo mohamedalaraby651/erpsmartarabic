@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierRepository } from '@/lib/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,16 +34,7 @@ const SupplierNotesTab = ({ supplierId }: SupplierNotesTabProps) => {
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ['supplier-notes', supplierId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('supplier_notes')
-        .select('*')
-        .eq('supplier_id', supplierId)
-        .order('is_pinned', { ascending: false })
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as SupplierNote[];
-    },
+    queryFn: async () => (await supplierRepository.listNotes(supplierId)) as SupplierNote[],
   });
 
   const addMutation = useMutation({
