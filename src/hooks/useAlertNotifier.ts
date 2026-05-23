@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { notificationsRepository } from '@/lib/repositories';
 import { useAlertSettings } from './useAlertSettings';
 import { useTenant } from './useTenant';
 import { logErrorSafely } from '@/lib/errorHandler';
