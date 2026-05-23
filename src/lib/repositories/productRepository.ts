@@ -203,7 +203,17 @@ export const productRepository = {
       }
     >;
   },
+
+  /** Lightweight stock summary for grid views (id+qty only). */
+  async findStockSummary(): Promise<Array<{ product_id: string; quantity: number }>> {
+    const { data, error } = await supabase
+      .from('product_stock')
+      .select('product_id, quantity');
+    if (error) throw error;
+    return (data || []) as Array<{ product_id: string; quantity: number }>;
+  },
 };
+
 
 // ============================================
 // Lightweight pickers (for Select/Combobox)

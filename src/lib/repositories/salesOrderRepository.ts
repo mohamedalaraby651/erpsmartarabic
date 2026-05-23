@@ -209,6 +209,18 @@ export const salesOrderRepository = {
     const { error } = await supabase.from("sales_orders").delete().eq("id", id);
     if (error) throw mapRepoError(error, "تعذّر حذف أمر البيع.");
   },
+
+  async bulkInsertItems(
+    orderId: string,
+    items: SalesOrderItemInput[],
+  ): Promise<void> {
+    if (!items.length) return;
+    const { error } = await supabase
+      .from("sales_order_items")
+      .insert(buildItemRows(orderId, items));
+    if (error) throw mapRepoError(error, "تعذّر حفظ بنود أمر البيع.");
+  },
 };
 
 export { lineTotal as salesOrderLineTotal };
+

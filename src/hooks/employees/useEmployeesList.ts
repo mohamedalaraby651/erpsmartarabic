@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { employeeRepository } from '@/lib/repositories/employeeRepository';
 import { useServerPagination } from '@/hooks/useServerPagination';
 import { useDebounce } from '@/hooks/useDebounce';
 import { verifyPermissionOnServer } from '@/lib/api/secureOperations';
 import { useToast } from '@/hooks/use-toast';
+
 
 export interface Employee {
   id: string;
@@ -53,46 +54,29 @@ export function useEmployeesList() {
     }
   }, [searchParamsState, setSearchParamsState]);
 
+  const filters = { search: debouncedSearch, department: departmentFilter, status: statusFilter };
+
   // Count query
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['employees-count', debouncedSearch, departmentFilter, statusFilter],
-    queryFn: async () => {
-      let query = supabase.from('employees').select('*', { count: 'exact', head: true });
-      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
-      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
-      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    },
+    queryFn: () => employeeRepository.count(filters),
   });
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
   const { data: employees = [], isLoading, refetch } = useQuery({
     queryKey: ['employees', debouncedSearch, departmentFilter, statusFilter, pagination.currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('employees')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) query = query.or(`full_name.ilike.%${debouncedSearch}%,employee_number.ilike.%${debouncedSearch}%,phone.ilike.%${debouncedSearch}%`);
-      if (departmentFilter !== 'all') query = query.eq('department', departmentFilter);
-      if (statusFilter !== 'all') query = query.eq('employment_status', statusFilter);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Employee[];
-    },
+    queryFn: () =>
+      employeeRepository.list({ filters, page: pagination.currentPage, pageSize: PAGE_SIZE }) as Promise<Employee[]>,
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const hasPermission = await verifyPermissionOnServer('employees', 'delete');
       if (!hasPermission) throw new Error('UNAUTHORIZED');
-      const { error } = await supabase.from('employees').delete().eq('id', id);
-      if (error) throw error;
+      await employeeRepository.delete(id);
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       toast({ title: 'تم حذف الموظف بنجاح' });

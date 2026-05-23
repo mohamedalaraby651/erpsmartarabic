@@ -2,9 +2,12 @@ import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { invoiceRepository } from '@/lib/repositories/invoiceRepository';
+import { salesOrderRepository } from '@/lib/repositories/salesOrderRepository';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
+
 
 type ConvertType = 'quotation-to-order' | 'order-to-invoice' | 'quotation-to-invoice';
 
@@ -60,18 +63,18 @@ export function useConvertDocument() {
 
         // Copy items
         if (items && items.length > 0) {
-          const orderItems = items.map((item) => ({
-            order_id: order.id,
-            product_id: item.product_id,
-            variant_id: item.variant_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            discount_percentage: item.discount_percentage,
-            total_price: item.total_price,
-          }));
-          const { error: copyErr } = await supabase.from('sales_order_items').insert(orderItems);
-          if (copyErr) throw copyErr;
+          await salesOrderRepository.bulkInsertItems(
+            order.id,
+            items.map((item) => ({
+              product_id: item.product_id,
+              variant_id: item.variant_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              discount_percentage: item.discount_percentage ?? 0,
+            })),
+          );
         }
+
 
         return { type: 'order' as const, id: order.id, number: order.order_number };
 
@@ -165,18 +168,19 @@ export function useConvertDocument() {
 
         // Copy items
         if (sourceItems.length > 0) {
-          const invoiceItems = sourceItems.map((item) => ({
-            invoice_id: invoice.id,
-            product_id: item.product_id,
-            variant_id: item.variant_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            discount_percentage: item.discount_percentage,
-            total_price: item.total_price,
-          }));
-          const { error: copyErr } = await supabase.from('invoice_items').insert(invoiceItems);
-          if (copyErr) throw copyErr;
+          await invoiceRepository.bulkInsertItems(
+            sourceItems.map((item) => ({
+              invoice_id: invoice.id,
+              product_id: item.product_id,
+              variant_id: item.variant_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              discount_percentage: item.discount_percentage,
+              total_price: item.total_price,
+            })),
+          );
         }
+
 
         return { type: 'invoice' as const, id: invoice.id, number: invoice.invoice_number };
       }
