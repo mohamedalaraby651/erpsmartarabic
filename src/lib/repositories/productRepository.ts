@@ -204,6 +204,15 @@ export const productRepository = {
     >;
   },
 
+  /** Name+SKU pairs only — for duplicate-detection during bulk import. */
+  async listNameSkuPairs(): Promise<Array<{ name: string; sku: string | null }>> {
+    const { data, error } = await supabase
+      .from('products')
+      .select('name, sku');
+    if (error) throw error;
+    return (data || []) as Array<{ name: string; sku: string | null }>;
+  },
+
   /** Lightweight stock summary for grid views (id+qty only). */
   async findStockSummary(): Promise<Array<{ product_id: string; quantity: number }>> {
     const { data, error } = await supabase
@@ -213,6 +222,7 @@ export const productRepository = {
     return (data || []) as Array<{ product_id: string; quantity: number }>;
   },
 };
+
 
 
 // ============================================

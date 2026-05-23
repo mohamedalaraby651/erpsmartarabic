@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { settingsRepository } from "@/lib/repositories/settingsRepository";
+import { purchaseOrderRepository } from "@/lib/repositories/purchaseOrderRepository";
+
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
@@ -25,32 +27,21 @@ export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: Purchase
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("company_settings").select("*").maybeSingle();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => settingsRepository.getCompany(),
   });
 
   const { data: order } = useQuery({
     queryKey: ["purchase-order-print", orderId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("purchase_orders").select(`*, suppliers (name, phone, email, address)`).eq("id", orderId).single();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => purchaseOrderRepository.findById(orderId),
     enabled: !!orderId && open,
   });
 
   const { data: items } = useQuery({
     queryKey: ["purchase-order-items-print", orderId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("purchase_order_items").select(`*, products (name)`).eq("order_id", orderId);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => purchaseOrderRepository.listItems(orderId),
     enabled: !!orderId && open,
   });
+
 
   const handlePrint = () => window.print();
 

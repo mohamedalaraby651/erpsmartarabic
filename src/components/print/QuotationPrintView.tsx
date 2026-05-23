@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { settingsRepository } from "@/lib/repositories/settingsRepository";
+import { legacyQuotationsRepository } from "@/lib/repositories/legacyQuotationsRepository";
+
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
@@ -24,32 +26,21 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("company_settings").select("*").maybeSingle();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => settingsRepository.getCompany(),
   });
 
   const { data: quotation } = useQuery({
     queryKey: ["quotation-print", quotationId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("quotations").select(`*, customers (name, phone, email)`).eq("id", quotationId).single();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => legacyQuotationsRepository.findById(quotationId),
     enabled: !!quotationId && open,
   });
 
   const { data: items } = useQuery({
     queryKey: ["quotation-items-print", quotationId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("quotation_items").select(`*, products (name)`).eq("quotation_id", quotationId);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => legacyQuotationsRepository.listItems(quotationId),
     enabled: !!quotationId && open,
   });
+
 
   const handlePrint = () => window.print();
 

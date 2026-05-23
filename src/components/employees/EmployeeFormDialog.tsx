@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { employeeRepository } from '@/lib/repositories/employeeRepository';
 import {
   Dialog,
   DialogContent,
@@ -186,11 +186,8 @@ export default function EmployeeFormDialog({
           notes: data.notes || null,
         };
         
-        const { error } = await supabase
-          .from('employees')
-          .update(updateData)
-          .eq('id', employee.id);
-        if (error) throw error;
+        await employeeRepository.update(employee.id, updateData);
+
       } else {
         const insertData = {
           employee_number: data.employee_number,
@@ -217,8 +214,8 @@ export default function EmployeeFormDialog({
           created_by: user?.id || null,
         };
         
-        const { error } = await supabase.from('employees').insert([insertData]);
-        if (error) throw error;
+        await employeeRepository.create(insertData);
+
       }
     },
     onSuccess: () => {

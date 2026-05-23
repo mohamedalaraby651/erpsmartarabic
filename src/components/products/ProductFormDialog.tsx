@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { productRepository } from "@/lib/repositories/productRepository";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +27,7 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
   const queryClient = useQueryClient();
   const isEditing = !!product;
 
-  const { data: categories = [] } = useQuery({ queryKey: ['product-categories'], queryFn: async () => { const { data, error } = await supabase.from('product_categories').select('*').order('name'); if (error) throw error; return data as ProductCategory[]; } });
+  const { data: categories = [] } = useQuery({ queryKey: ['product-categories'], queryFn: () => productRepository.findCategories() as Promise<ProductCategory[]> });
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -61,8 +61,9 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
   const mutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
       const payload: ProductInsert = { name: data.name.trim(), sku: data.sku?.trim() || null, description: data.description?.trim() || null, category_id: data.category_id || null, cost_price: data.cost_price, selling_price: data.selling_price, min_stock: data.min_stock, image_url: data.image_url?.trim() || null, weight_kg: data.weight_kg || null, length_cm: data.length_cm || null, width_cm: data.width_cm || null, height_cm: data.height_cm || null, is_active: data.is_active };
-      if (isEditing) { const { error } = await supabase.from('products').update(payload).eq('id', product.id); if (error) throw error; }
-      else { const { error } = await supabase.from('products').insert(payload); if (error) throw error; }
+      if (isEditing) { await productRepository.update(product.id, payload); }
+      else { await productRepository.create(payload); }
+
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); clearDraft(); toast({ title: isEditing ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح" }); onOpenChange(false); },
     onError: (error) => { logErrorSafely('ProductFormDialog', error); toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" }); },

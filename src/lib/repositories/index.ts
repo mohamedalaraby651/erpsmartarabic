@@ -51,4 +51,7 @@ export type { NotificationInsert } from './notificationsRepository';
 export { attachmentsRepository } from './attachmentsRepository';
 export { employeeRepository } from './employeeRepository';
 export type { EmployeeRow, EmployeeInsert, EmployeeUpdate, EmployeeFilters } from './employeeRepository';
+export { settingsRepository } from './settingsRepository';
+export type { CompanySettingsRow, CompanySettingsUpdate, CompanySettingsInsert } from './settingsRepository';
+
 
