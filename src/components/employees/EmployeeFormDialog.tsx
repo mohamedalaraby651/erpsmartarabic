@@ -186,11 +186,8 @@ export default function EmployeeFormDialog({
           notes: data.notes || null,
         };
         
-        const { error } = await supabase
-          .from('employees')
-          .update(updateData)
-          .eq('id', employee.id);
-        if (error) throw error;
+        await employeeRepository.update(employee.id, updateData);
+
       } else {
         const insertData = {
           employee_number: data.employee_number,
