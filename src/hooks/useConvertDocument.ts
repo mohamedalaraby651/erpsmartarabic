@@ -63,18 +63,18 @@ export function useConvertDocument() {
 
         // Copy items
         if (items && items.length > 0) {
-          const orderItems = items.map((item) => ({
-            order_id: order.id,
-            product_id: item.product_id,
-            variant_id: item.variant_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            discount_percentage: item.discount_percentage,
-            total_price: item.total_price,
-          }));
-          const { error: copyErr } = await supabase.from('sales_order_items').insert(orderItems);
-          if (copyErr) throw copyErr;
+          await salesOrderRepository.bulkInsertItems(
+            order.id,
+            items.map((item) => ({
+              product_id: item.product_id,
+              variant_id: item.variant_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              discount_percentage: item.discount_percentage ?? 0,
+            })),
+          );
         }
+
 
         return { type: 'order' as const, id: order.id, number: order.order_number };
 
