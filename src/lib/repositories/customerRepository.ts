@@ -303,4 +303,22 @@ export const customerRepository = {
     if (error) throw error;
     return (data || []) as Array<Pick<Customer, 'id' | 'name'>>;
   },
+
+  // ============================================
+  // Customer Notes (quick-note insert from alerts/details)
+  // ============================================
+  async createNote(input: {
+    customerId: string;
+    userId: string;
+    content: string;
+    isPinned?: boolean;
+  }) {
+    const { error } = await supabase.from('customer_notes').insert({
+      customer_id: input.customerId,
+      user_id: input.userId,
+      content: input.content,
+      is_pinned: input.isPinned ?? false,
+    });
+    if (error) throw error;
+  },
 };
