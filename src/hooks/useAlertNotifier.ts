@@ -72,7 +72,6 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
     if (!tid) return; // can't insert without tenant — RLS will block
 
     // Insert notifications with dedup (max 10 per batch)
-    const today = new Date().toISOString().slice(0, 10);
     const toInsert = newAlerts.slice(0, 10).map(a => ({
       user_id: uid,
       tenant_id: tid,
