@@ -168,18 +168,19 @@ export function useConvertDocument() {
 
         // Copy items
         if (sourceItems.length > 0) {
-          const invoiceItems = sourceItems.map((item) => ({
-            invoice_id: invoice.id,
-            product_id: item.product_id,
-            variant_id: item.variant_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            discount_percentage: item.discount_percentage,
-            total_price: item.total_price,
-          }));
-          const { error: copyErr } = await supabase.from('invoice_items').insert(invoiceItems);
-          if (copyErr) throw copyErr;
+          await invoiceRepository.bulkInsertItems(
+            sourceItems.map((item) => ({
+              invoice_id: invoice.id,
+              product_id: item.product_id,
+              variant_id: item.variant_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              discount_percentage: item.discount_percentage,
+              total_price: item.total_price,
+            })),
+          );
         }
+
 
         return { type: 'invoice' as const, id: invoice.id, number: invoice.invoice_number };
       }
