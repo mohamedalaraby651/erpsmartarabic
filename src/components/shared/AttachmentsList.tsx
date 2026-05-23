@@ -165,8 +165,7 @@ export function AttachmentsList({
       }
 
       // Delete from database
-      const { error } = await supabase.from('attachments').delete().eq('id', id);
-      if (error) throw error;
+      await attachmentsRepository.deleteById(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['attachments', entityType, entityId] });
