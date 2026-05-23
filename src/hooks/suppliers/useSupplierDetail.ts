@@ -103,9 +103,9 @@ export function useSupplierDetail(id: string | undefined) {
   // === MUTATIONS ===
   const updateRatingMutation = useMutation({
     mutationFn: async (rating: number) => {
-      const { error } = await supabase.from('suppliers').update({ rating }).eq('id', id!);
-      if (error) throw error;
+      await supplierRepository.update(id!, { rating });
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier', id] });
       toast({ title: "تم تحديث التقييم بنجاح" });
