@@ -21,8 +21,12 @@ type QuotationItemRow = Tables["quotation_items"]["Row"];
 type QuotationItemInsert = Tables["quotation_items"]["Insert"];
 
 export type LegacyQuotationWithCustomer = QuotationRow & {
-  customers: { id: string; name: string } | null;
+  customers: (Pick<
+    Tables["customers"]["Row"],
+    "id" | "name" | "phone" | "email" | "address"
+  > & Partial<Tables["customers"]["Row"]>) | null;
 };
+
 export type LegacyQuotationItemWithRefs = QuotationItemRow & {
   products?: { id: string; name: string; sku: string | null } | null;
   product_variants?: { id: string; name: string } | null;
