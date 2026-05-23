@@ -27,32 +27,21 @@ export function SalesOrderPrintView({ orderId, open, onOpenChange }: SalesOrderP
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("company_settings").select("*").maybeSingle();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => settingsRepository.getCompany(),
   });
 
   const { data: order } = useQuery({
     queryKey: ["sales-order-print", orderId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("sales_orders").select(`*, customers (name, phone, email)`).eq("id", orderId).single();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => salesOrderRepository.findById(orderId),
     enabled: !!orderId && open,
   });
 
   const { data: items } = useQuery({
     queryKey: ["sales-order-items-print", orderId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("sales_order_items").select(`*, products (name)`).eq("order_id", orderId);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => salesOrderRepository.listItems(orderId),
     enabled: !!orderId && open,
   });
+
 
   const handlePrint = () => window.print();
 
