@@ -214,8 +214,8 @@ export default function EmployeeFormDialog({
           created_by: user?.id || null,
         };
         
-        const { error } = await supabase.from('employees').insert([insertData]);
-        if (error) throw error;
+        await employeeRepository.create(insertData);
+
       }
     },
     onSuccess: () => {
