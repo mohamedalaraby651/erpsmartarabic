@@ -51,7 +51,7 @@ export function useProductsList() {
     queryKey: ['products-count', debouncedSearch, categoryFilter],
     queryFn: async () => {
       const result = await productRepository.findAll(
-        filters,
+        repoFilters,
         { key: 'created_at', direction: 'desc' },
         { page: 1, pageSize: 1 },
       );
@@ -65,7 +65,7 @@ export function useProductsList() {
     queryKey: ['products', debouncedSearch, categoryFilter, pagination.currentPage],
     queryFn: async () => {
       const result = await productRepository.findAll(
-        filters,
+        repoFilters,
         { key: 'created_at', direction: 'desc' },
         { page: pagination.currentPage, pageSize: PAGE_SIZE },
       );
