@@ -158,6 +158,49 @@ export const supplierRepository = {
       _details: JSON.stringify(details),
     });
   },
+
+  // ============================================
+  // Supplier Notes
+  // ============================================
+  async listNotes(supplierId: string) {
+    const { data, error } = await supabase
+      .from('supplier_notes')
+      .select('*')
+      .eq('supplier_id', supplierId)
+      .order('is_pinned', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createNote(input: {
+    supplierId: string;
+    note: string;
+    userId: string | null;
+    tenantId: string;
+  }) {
+    const { error } = await supabase.from('supplier_notes').insert({
+      supplier_id: input.supplierId,
+      note: input.note,
+      user_id: input.userId,
+      created_by: input.userId,
+      tenant_id: input.tenantId,
+    });
+    if (error) throw error;
+  },
+
+  async setNotePinned(id: string, pinned: boolean) {
+    const { error } = await supabase
+      .from('supplier_notes')
+      .update({ is_pinned: pinned })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async deleteNote(id: string) {
+    const { error } = await supabase.from('supplier_notes').delete().eq('id', id);
+    if (error) throw error;
+  },
 };
 
 // ============================================
