@@ -61,8 +61,9 @@ const ProductFormDialog = ({ open, onOpenChange, product }: ProductFormDialogPro
   const mutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
       const payload: ProductInsert = { name: data.name.trim(), sku: data.sku?.trim() || null, description: data.description?.trim() || null, category_id: data.category_id || null, cost_price: data.cost_price, selling_price: data.selling_price, min_stock: data.min_stock, image_url: data.image_url?.trim() || null, weight_kg: data.weight_kg || null, length_cm: data.length_cm || null, width_cm: data.width_cm || null, height_cm: data.height_cm || null, is_active: data.is_active };
-      if (isEditing) { const { error } = await supabase.from('products').update(payload).eq('id', product.id); if (error) throw error; }
-      else { const { error } = await supabase.from('products').insert(payload); if (error) throw error; }
+      if (isEditing) { await productRepository.update(product.id, payload); }
+      else { await productRepository.create(payload); }
+
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['products'] }); clearDraft(); toast({ title: isEditing ? "تم تحديث المنتج بنجاح" : "تم إضافة المنتج بنجاح" }); onOpenChange(false); },
     onError: (error) => { logErrorSafely('ProductFormDialog', error); toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" }); },
