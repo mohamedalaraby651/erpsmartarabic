@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { invoiceRepository } from '@/lib/repositories/invoiceRepository';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
+
 
 export function useDuplicateInvoice() {
   const { toast } = useToast();
