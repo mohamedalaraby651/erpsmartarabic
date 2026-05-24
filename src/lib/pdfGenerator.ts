@@ -358,113 +358,132 @@ export async function generateDocumentPDF(
 
   const p = (text: string) => processText(text, hasArabicFont);
 
-  // Logo
-  if (company?.logo_url) {
-    try {
-      const logoBase64 = await loadImageAsBase64(company.logo_url);
-      if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', pageWidth - margin - 25, startY - 5, 25, 25);
-      }
-    } catch { /* skip logo */ }
-  }
-
-  // Company Header
-  if (company) {
-    const textX = company.logo_url ? pageWidth - margin - 30 : pageWidth - margin;
-    
-    doc.setFontSize(20);
-    doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-    doc.text(p(company.company_name), textX, startY, { align: 'right' });
-    startY += 8;
-
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    
-    if (company.address) {
-      doc.text(p(company.address), textX, startY, { align: 'right' });
-      startY += 5;
-    }
-    
-    if (company.phone) {
-      doc.text(p('هاتف: ' + company.phone), textX, startY, { align: 'right' });
-      startY += 5;
-    }
-    
-    if (company.tax_number) {
-      doc.text(p('الرقم الضريبي: ' + company.tax_number), textX, startY, { align: 'right' });
-      startY += 5;
-    }
-  }
-
-  // Divider
-  doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b);
-  doc.setLineWidth(1);
-  doc.line(margin, startY + 3, pageWidth - margin, startY + 3);
-  startY += 15;
-
-  // Document Title
-  doc.setFontSize(16);
-  doc.setTextColor(0, 0, 0);
-  doc.text(p(titles[type]), pageWidth / 2, startY, { align: 'center' });
-  startY += 10;
-
-  // Document number and date — formatted to match PrintTemplate (ar-EG, 2 decimals, long date)
-  doc.setFontSize(11);
-  const docNumber = data.invoice_number || data.quotation_number || data.order_number || '';
-  const currency = company?.currency || 'ج.م';
+  // ========= Formatters (match PrintTemplate exactly) =========
+  const currency = 'ج.م'; // PrintTemplate hardcodes ج.م
   const fmtMoney = (n: number | null | undefined) =>
     new Intl.NumberFormat('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       .format(Number(n || 0)) + ' ' + currency;
   const fmtDate = (d: string | null | undefined) => {
     if (!d) return '';
-    try { return new Date(d).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: '2-digit' }); }
-    catch { return String(d); }
+    try {
+      return new Date(d).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: '2-digit' });
+    } catch { return String(d); }
   };
 
-  doc.text(p('رقم: ' + docNumber), pageWidth - margin, startY, { align: 'right' });
-  doc.text(p('التاريخ: ' + fmtDate(data.created_at)), margin, startY, { align: 'left' });
-  startY += 7;
+  // ========= Header (company on right, document block on left) =========
+  const headerTopY = startY;
+  let companyY = headerTopY;
+  let docY = headerTopY;
+
+  if (company?.logo_url) {
+    try {
+      const logoBase64 = await loadImageAsBase64(company.logo_url);
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', pageWidth - margin - 20, companyY - 4, 20, 20);
+        companyY += 18;
+      }
+    } catch { /* skip logo */ }
+  }
+
+  if (company) {
+    doc.setFontSize(16);
+    doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
+    doc.text(p(company.company_name), pageWidth - margin, companyY, { align: 'right' });
+    companyY += 6;
+
+    doc.setFontSize(9);
+    doc.setTextColor(107, 114, 128);
+    if (company.address) {
+      doc.text(p(company.address), pageWidth - margin, companyY, { align: 'right' });
+      companyY += 4.5;
+    }
+    if (company.phone) {
+      doc.text(p('هاتف: ' + company.phone), pageWidth - margin, companyY, { align: 'right' });
+      companyY += 4.5;
+    }
+    if (company.email) {
+      doc.text(p('بريد: ' + company.email), pageWidth - margin, companyY, { align: 'right' });
+      companyY += 4.5;
+    }
+    if (company.tax_number) {
+      doc.text(p('الرقم الضريبي: ' + company.tax_number), pageWidth - margin, companyY, { align: 'right' });
+      companyY += 4.5;
+    }
+  }
+
+  const docNumber = data.invoice_number || data.quotation_number || data.order_number || '';
+  doc.setFontSize(20);
+  doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
+  doc.text(p(titles[type]), margin, docY + 2, { align: 'left' });
+  docY += 9;
+
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
+  doc.text(p('رقم: ' + docNumber), margin, docY, { align: 'left' });
+  docY += 5;
+
+  doc.setFontSize(9);
+  doc.setTextColor(107, 114, 128);
+  doc.text(p('التاريخ: ' + fmtDate(data.created_at)), margin, docY, { align: 'left' });
+  docY += 4.5;
 
   const dueDate = data.due_date || data.valid_until || data.delivery_date || data.expected_date;
   if (dueDate) {
-    const dueLabel = data.valid_until ? 'صالح حتى' : 'تاريخ الاستحقاق';
-    doc.text(p(dueLabel + ': ' + fmtDate(dueDate)), pageWidth - margin, startY, { align: 'right' });
-    startY += 7;
+    doc.text(p('تاريخ الاستحقاق: ' + fmtDate(dueDate)), margin, docY, { align: 'left' });
+    docY += 4.5;
   }
-  startY += 3;
 
-  // Customer/Supplier info box (name + phone + address) — mirrors PrintTemplate info-box
+  startY = Math.max(companyY, docY) + 2;
+
+  doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b);
+  doc.setLineWidth(0.7);
+  doc.line(margin, startY, pageWidth - margin, startY);
+  startY += 8;
+
+  // ========= Customer / Supplier info box =========
   const entity = data.customer || data.supplier || data.customers || data.suppliers || {};
-  const entityName = entity.name || '-';
+  const entityName = entity.name || '';
   const entityPhone = entity.phone || '';
   const entityAddress = entity.address || data.delivery_address || '';
   const isPurchase = type === 'purchase_order';
   const entityLabel = isPurchase ? 'بيانات المورد' : 'بيانات العميل';
 
-  const boxHeight = 8 + (entityPhone ? 6 : 0) + (entityAddress ? 6 : 0);
-  doc.setFillColor(241, 245, 249);
-  doc.rect(margin, startY - 4, pageWidth - margin * 2, boxHeight, 'F');
-  doc.setFontSize(10);
-  doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
-  doc.text(p(entityLabel), pageWidth - margin - 3, startY, { align: 'right' });
-  startY += 5;
-  doc.setTextColor(0, 0, 0);
-  doc.text(p(entityName), pageWidth - margin - 3, startY, { align: 'right' });
-  startY += 5;
-  if (entityPhone) {
-    doc.setTextColor(100, 100, 100);
-    doc.text(p('هاتف: ' + entityPhone), pageWidth - margin - 3, startY, { align: 'right' });
-    startY += 5;
+  if (entityName) {
+    const linesCount = 1 + (entityAddress ? 1 : 0) + (entityPhone ? 1 : 0);
+    const boxHeight = 8 + linesCount * 5;
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(margin, startY, pageWidth - margin * 2, boxHeight, 2, 2, 'F');
+
+    let by = startY + 5.5;
+    doc.setFontSize(10);
+    doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
+    doc.text(p(entityLabel), pageWidth - margin - 3, by, { align: 'right' });
+    by += 5;
+
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(p(entityName), pageWidth - margin - 3, by, { align: 'right' });
+    by += 5;
+
+    doc.setFontSize(9);
+    doc.setTextColor(107, 114, 128);
+    if (entityAddress) {
+      doc.text(p(entityAddress), pageWidth - margin - 3, by, {
+        align: 'right',
+        maxWidth: pageWidth - margin * 2 - 6,
+      });
+      by += 5;
+    }
+    if (entityPhone) {
+      doc.text(p('هاتف: ' + entityPhone), pageWidth - margin - 3, by, { align: 'right' });
+      by += 5;
+    }
+    startY += boxHeight + 6;
   }
-  if (entityAddress) {
-    doc.setTextColor(100, 100, 100);
-    doc.text(p(entityAddress), pageWidth - margin - 3, startY, { align: 'right', maxWidth: pageWidth - margin * 2 - 6 });
-    startY += 5;
-  }
-  startY += 5;
+
   doc.setTextColor(0, 0, 0);
 
-  // Items table — index column + optional discount column to mirror PrintTemplate
+  // ========= Items table =========
   interface PDFItem {
     product?: { name: string };
     products?: { name: string };
@@ -484,7 +503,7 @@ export async function generateDocumentPDF(
       : [p('#'), p('المنتج'), p('الكمية'), p('سعر الوحدة'), p('الإجمالي')];
 
     const body = items.map((item, idx) => {
-      const name = item.product?.name || item.products?.name || item.name || '-';
+      const name = item.product?.name || item.products?.name || item.name || 'منتج';
       const row: string[] = [
         String(idx + 1),
         p(name),
@@ -499,12 +518,25 @@ export async function generateDocumentPDF(
     });
 
     const fontName = hasArabicFont ? ARABIC_FONT_NAME : 'helvetica';
+    const columnStyles: Record<number, { halign: 'left' | 'right' | 'center' }> = {
+      0: { halign: 'right' },
+      1: { halign: 'right' },
+      2: { halign: 'center' },
+      3: { halign: 'left' },
+    };
+    if (hasDiscount) {
+      columnStyles[4] = { halign: 'center' };
+      columnStyles[5] = { halign: 'left' };
+    } else {
+      columnStyles[4] = { halign: 'left' };
+    }
+
     autoTable(doc, {
       head: [headers],
       body,
       startY,
       theme: 'grid',
-      styles: { font: fontName, fontSize: 10, cellPadding: 4, halign: 'right' },
+      styles: { font: fontName, fontSize: 10, cellPadding: 3, halign: 'right', lineColor: [203, 213, 225], lineWidth: 0.1 },
       headStyles: {
         font: fontName,
         fillColor: [primaryColor.r, primaryColor.g, primaryColor.b],
@@ -514,12 +546,13 @@ export async function generateDocumentPDF(
       },
       bodyStyles: { font: fontName },
       alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles,
     });
 
-    startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+    startY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
   }
 
-  // Totals (matches PrintTemplate: subtotal → discount (negative, red) → tax → total)
+  // ========= Totals =========
   doc.setFontSize(11);
   const labelX = pageWidth - margin;
   const valueX = pageWidth - margin - 60;
@@ -540,31 +573,39 @@ export async function generateDocumentPDF(
   if (Number(data.tax_amount || 0) > 0) {
     writeTotal('الضريبة', fmtMoney(data.tax_amount));
   }
-  // Separator line above grand total
   doc.setDrawColor(primaryColor.r, primaryColor.g, primaryColor.b);
   doc.setLineWidth(0.5);
   doc.line(valueX - 5, startY - 4, labelX, startY - 4);
   writeTotal('الإجمالي', fmtMoney(data.total_amount), { bold: true, color: [primaryColor.r, primaryColor.g, primaryColor.b] });
 
-  // Notes
+  // ========= Notes =========
   if (data.notes) {
     startY += 6;
+    const noteLines = doc.splitTextToSize(p(String(data.notes)), pageWidth - margin * 2 - 6);
+    const noteBoxH = 10 + noteLines.length * 5;
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(margin, startY, pageWidth - margin * 2, noteBoxH, 2, 2, 'F');
     doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text(p('ملاحظات:'), pageWidth - margin, startY, { align: 'right' });
-    startY += 6;
-    doc.text(p(data.notes), pageWidth - margin, startY, { align: 'right', maxWidth: pageWidth - margin * 2 });
+    doc.setTextColor(0, 0, 0);
+    doc.text(p('ملاحظات'), pageWidth - margin - 3, startY + 5.5, { align: 'right' });
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text(noteLines, pageWidth - margin - 3, startY + 11, { align: 'right' });
+    startY += noteBoxH + 4;
   }
 
-  // Footer
-  doc.setFontSize(8);
-  doc.setTextColor(128, 128, 128);
-  doc.text(
-    p(`تم إنشاء هذا المستند بواسطة ${company?.company_name || 'النظام'}`),
-    pageWidth / 2,
-    doc.internal.pageSize.height - 10,
-    { align: 'center' }
-  );
+  // ========= Footer =========
+  const footerY = doc.internal.pageSize.height - 15;
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.3);
+  doc.line(margin, footerY - 4, pageWidth - margin, footerY - 4);
+  doc.setFontSize(9);
+  doc.setTextColor(107, 114, 128);
+  doc.text(p('شكراً لتعاملكم معنا'), pageWidth / 2, footerY, { align: 'center' });
+  if (company) {
+    const tail = [company.company_name, company.phone].filter(Boolean).join(' - ');
+    doc.text(p(tail), pageWidth / 2, footerY + 5, { align: 'center' });
+  }
 
   const fileName = `${titles[type]}_${docNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fileName);
