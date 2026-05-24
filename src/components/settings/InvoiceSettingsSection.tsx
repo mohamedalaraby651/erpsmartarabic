@@ -43,6 +43,9 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
     }
     if (settings?.pdf_font) {
       setPdfFont(settings.pdf_font as PdfFontKey);
+      // Mirror into localStorage so v2 PDF engines pick it up instantly,
+      // without an extra DB round-trip on every export.
+      setPdfFontPreference(settings.pdf_font as PdfFontKey);
     }
   }, [settings]);
 
