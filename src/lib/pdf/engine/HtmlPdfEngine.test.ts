@@ -4,6 +4,14 @@ import { DEFAULT_PAGE_CONFIG } from '../config/PageConfig';
 import { DEFAULT_THEME } from '../config/ThemeConfig';
 import { resetPdfMetrics, getMetricsFor } from '../diagnostics/telemetrySink';
 
+vi.mock('../fonts/fontRegistry', () => ({
+  resolveFont: vi.fn(async () => ({
+    key: 'amiri',
+    config: { key: 'amiri', name: 'Amiri', file: 'amiri.ttf' },
+    base64: 'AAAA',
+  })),
+}));
+
 const ctx = { page: DEFAULT_PAGE_CONFIG, theme: DEFAULT_THEME };
 
 describe('HtmlPdfEngine', () => {
@@ -65,5 +73,45 @@ describe('HtmlPdfEngine', () => {
     ).rejects.toThrow();
     const m = getMetricsFor('quotation');
     expect(m?.failures).toBe(1);
+  });
+
+  it('auto-injects Arabic @font-face and RTL base CSS into the container', async () => {
+    let capturedHtml = '';
+    const html2pdfStub = vi.fn((el: HTMLElement) => {
+      capturedHtml = el.outerHTML;
+      return {
+        outputPdf: async () => new Blob([], { type: 'application/pdf' }),
+        save: async () => undefined,
+      };
+    });
+    const engine = new HtmlPdfEngine(async () => html2pdfStub as never);
+    await engine.render(
+      ctx,
+      { html: '<p>سلام</p>', documentType: 'invoice' } as never,
+      'x.pdf',
+    );
+    expect(capturedHtml).toContain('class="pdf-root"');
+    expect(capturedHtml).toContain('dir="rtl"');
+    expect(capturedHtml).toContain('@font-face');
+    expect(capturedHtml).toContain("font-family: 'Amiri'");
+    expect(capturedHtml).toMatch(/direction:\s*rtl/);
+  });
+
+  it('skips font embedding when embedArabicFont=false', async () => {
+    let capturedHtml = '';
+    const html2pdfStub = vi.fn((el: HTMLElement) => {
+      capturedHtml = el.outerHTML;
+      return {
+        outputPdf: async () => new Blob([], { type: 'application/pdf' }),
+        save: async () => undefined,
+      };
+    });
+    const engine = new HtmlPdfEngine(async () => html2pdfStub as never);
+    await engine.render(
+      ctx,
+      { html: '<p>x</p>', embedArabicFont: false } as never,
+      'x.pdf',
+    );
+    expect(capturedHtml).not.toContain('@font-face');
   });
 });
