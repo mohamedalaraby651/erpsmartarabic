@@ -1,4 +1,5 @@
 import { logErrorSafely } from '@/lib/errorHandler';
+import { recordPdfSuccess, recordPdfFailure } from './telemetrySink';
 
 /**
  * Lightweight client-side logger for PDF export events.
@@ -32,13 +33,14 @@ export function startTimer(docType: string): () => number {
 }
 
 export function logPdfSuccess(ev: PdfSuccessEvent): void {
-  // Keep noise low in production — only debug-level by default.
+  recordPdfSuccess(ev);
   if (typeof console !== 'undefined') {
     console.debug('[pdf]', 'success', ev);
   }
 }
 
 export function logPdfFailure(ev: PdfFailureEvent): void {
+  recordPdfFailure(ev);
   logErrorSafely(`pdf.${ev.docType}`, ev.error);
   if (typeof console !== 'undefined') {
     console.warn('[pdf]', 'failure', { ...ev, error: String((ev.error as any)?.message ?? ev.error) });
