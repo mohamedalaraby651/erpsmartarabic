@@ -73,6 +73,11 @@ markPhase('react_mounted');
 // Drain any events the index.html shield buffered before React loaded.
 drainBootstrapEvents();
 
+// Auto-flush PDF export telemetry on idle / page hide (best-effort).
+import('./lib/pdf/diagnostics/telemetryScheduler')
+  .then(({ installPdfTelemetryAutoFlush }) => installPdfTelemetryAutoFlush())
+  .catch(() => { /* never block boot */ });
+
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
   console.log('[main] React root mounted');

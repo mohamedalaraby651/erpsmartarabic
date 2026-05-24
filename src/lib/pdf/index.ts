@@ -8,6 +8,7 @@ export * from './diagnostics/PdfLogger';
 export * from './diagnostics/resilience';
 export * from './diagnostics/telemetrySink';
 export * from './diagnostics/telemetryFlush';
+export * from './diagnostics/telemetryScheduler';
 export * from './utils/filename';
 export * from './utils/formatters';
 export * from './featureFlags';

@@ -1,0 +1,81 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+const flushMock = vi.fn().mockResolvedValue({ ok: true, flushed: 1 });
+const snapshotMock = vi.fn(() => [] as unknown[]);
+
+vi.mock('./telemetryFlush', () => ({
+  flushPdfMetrics: (...a: unknown[]) => flushMock(...a),
+}));
+vi.mock('./telemetrySink', () => ({
+  getMetricsSnapshot: () => snapshotMock(),
+}));
+
+import {
+  installPdfTelemetryAutoFlush,
+  uninstallPdfTelemetryAutoFlush,
+} from './telemetryScheduler';
+
+describe('telemetryScheduler', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    flushMock.mockClear();
+    snapshotMock.mockReset();
+    snapshotMock.mockReturnValue([{ docType: 'invoice' }]);
+    // Stub requestIdleCallback so scheduleIdle runs synchronously
+    // instead of recursing through setTimeout under fake timers.
+    (globalThis as Record<string, unknown>).requestIdleCallback = (cb: () => void) => {
+      cb();
+      return 0;
+    };
+  });
+  afterEach(() => {
+    uninstallPdfTelemetryAutoFlush();
+    vi.useRealTimers();
+    delete (globalThis as Record<string, unknown>).requestIdleCallback;
+  });
+
+  it('flushes on interval when metrics exist', async () => {
+    installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
+    vi.advanceTimersByTime(5_000);
+    uninstallPdfTelemetryAutoFlush();
+    await Promise.resolve();
+    expect(flushMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips flush when snapshot is empty (default)', async () => {
+    snapshotMock.mockReturnValue([]);
+    installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
+    vi.advanceTimersByTime(5_000);
+    uninstallPdfTelemetryAutoFlush();
+    await Promise.resolve();
+    expect(flushMock).not.toHaveBeenCalled();
+  });
+
+  it('flushes when page becomes hidden', async () => {
+    installPdfTelemetryAutoFlush();
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'hidden',
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+    await Promise.resolve();
+    expect(flushMock).toHaveBeenCalled();
+  });
+
+  it('is idempotent — second install is a no-op', async () => {
+    installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
+    installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
+    vi.advanceTimersByTime(5_000);
+    uninstallPdfTelemetryAutoFlush();
+    await Promise.resolve();
+    expect(flushMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('uninstall stops the interval', async () => {
+    installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
+    uninstallPdfTelemetryAutoFlush();
+    vi.advanceTimersByTime(20_000);
+    await vi.runAllTimersAsync();
+    expect(flushMock).not.toHaveBeenCalled();
+  });
+});
