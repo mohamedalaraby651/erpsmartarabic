@@ -16,6 +16,7 @@ import { jsPdfEngine } from '../engine/JsPdfEngine';
 
 const validInvoice = {
   invoice_number: 'INV-42',
+  date: '2026-05-24',
   items: [{ name: 'A', quantity: 2, unit_price: 5, total_price: 10 }],
   subtotal: 10,
   total: 10,

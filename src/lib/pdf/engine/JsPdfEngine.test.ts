@@ -46,6 +46,7 @@ describe('JsPdfEngine', () => {
         documentType: 'invoice',
         data: {
           invoice_number: 'INV-1',
+          date: '2026-05-24',
           items: [{ name: 'X', quantity: 1, unit_price: 10, total_price: 10 }],
           subtotal: 10,
           total: 10,
