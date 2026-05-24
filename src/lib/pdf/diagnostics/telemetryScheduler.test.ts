@@ -21,10 +21,17 @@ describe('telemetryScheduler', () => {
     flushMock.mockClear();
     snapshotMock.mockReset();
     snapshotMock.mockReturnValue([{ docType: 'invoice' }]);
+    // Stub requestIdleCallback so scheduleIdle runs synchronously
+    // instead of recursing through setTimeout under fake timers.
+    (globalThis as Record<string, unknown>).requestIdleCallback = (cb: () => void) => {
+      cb();
+      return 0;
+    };
   });
   afterEach(() => {
     uninstallPdfTelemetryAutoFlush();
     vi.useRealTimers();
+    delete (globalThis as Record<string, unknown>).requestIdleCallback;
   });
 
   it('flushes on interval when metrics exist', async () => {
