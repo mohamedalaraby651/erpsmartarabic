@@ -1,115 +1,181 @@
-# خطة التحويل إلى ERP مؤسسي — موجة قابلة للتنفيذ
+# خطة إعادة هيكلة نظام التصدير وتوليد PDF (دعم عربي كامل)
 
-استناداً إلى `docs/architecture-hardening-audit.md` الموجود (المخرج الرسمي للـ Phase 1)، النواة جاهزة: 22 repository، financial-engine كامل، 13 edge function، idempotency helper، correlation IDs، اختبارات أمنية وتكاملية. لن أعيد بناء ما يعمل — أُغلق الفجوات المُحدَّدة فقط، بترتيب يحمي العمليات المالية والمستأجرين.
-
-## مبدأ التنفيذ
-- Strangler-fig: 6 موجات ≤ 6 ملفات/موجة، كل واحدة قابلة لـ revert منفرد.
-- لا تغيير سلوك مالي قائم بدون migration توافقي + اختبار يثبّت السلوك الجديد.
-- كل migration مالي يأتي مع نص rollback في وصفه.
-- قياس قبل/بعد: عدد `supabase.from` في UI، ملفات > 500 سطر، تغطية اختبارات replay.
+هدف الخطة: تحويل طبقة التصدير الحالية (`pdfGenerator`, `printDocument`, `UnifiedExportMenu`, `arabicFont`) إلى محرّك إنتاجي صلب، قابل للتخصيص بالكامل، خالٍ من مشاكل تقطيع الحروف العربية وعكس الاتجاه، مع إطار تشخيص وأخطاء متكامل.
 
 ---
 
-## الموجة 1 — Idempotency + Correlation (Critical من التدقيق)
-الفجوة #1 في التدقيق: لا يوجد جدول `operation_idempotency` يمنع replay الدفعات.
+## المرحلة 1: التدقيق والاكتشاف (Audit & Discovery)
 
-1. **Migration**: جدول `operation_idempotency` (idempotency_key PK، tenant_id، operation_type، request_hash، response jsonb، status، expires_at).
-   - RLS: `tenant_id = get_current_tenant_id()` على الأربعة (deny by default).
-   - Index على `(tenant_id, operation_type, created_at)`.
-2. **حقن في Edge Functions المالية**: `process-payment` و `approve-invoice` و `create-journal` تستخدم `_shared/idempotency.ts` (موجود بالفعل) — تحقّق من الجدول قبل التنفيذ، خزّن الاستجابة بعده.
-3. **`x-correlation-id` end-to-end**: تأكد أن كل edge function يقرأ الـ header ويمرّره إلى `activity_logs` (عمود `correlation_id` يُضاف إن لم يكن).
-4. **اختبار replay**: `__tests__/security/idempotency-replay.test.ts` — استدعاء `process-payment` مرتين بنفس المفتاح → نتيجة واحدة + journal واحد.
+### 1.1 جرد نقاط الإنتاج الحالية
+- مسح كل استدعاءات `jsPDF` و `html2pdf` و `pdfGenerator.ts` و `bulkInvoicePdfGenerator.ts` و `statementPdfGenerator.ts`.
+- توثيق كل صفحة طباعة (`InvoicePrintView`, `QuotationPrintView`, `SalesOrderPrintView`, `PurchaseOrderPrintView`, `PrintTemplate`) ومصدر بياناتها.
+- بناء جدول `export-matrix.md` يربط: نوع المستند ↔ مولّد PDF ↔ قالب الطباعة ↔ Repository.
 
-**Rollback**: `DROP TABLE operation_idempotency` — الـ edge functions تستمر بدون فحص.
+### 1.2 كشف الأخطاء الحالية
+- تشغيل سكربت تشخيص `scripts/pdf-audit.ts` يولّد PDF لكل نوع مستند ببيانات وهمية (قصيرة/طويلة/مختلطة عربي-لاتيني-أرقام) ويحفظ المخرجات في `/mnt/documents/pdf-audit/`.
+- فحص بصري إلزامي (`pdftoppm -r 150`) للكشف عن: تقطيع الحروف، عكس الأرقام، تداخل الأعمدة، قص النصوص عند حواف الصفحة، فقدان الخط الاحتياطي.
+- تشغيل اختبارات `arabicFont.test.ts` و `exportRtl.test.ts` و `e2e/export-rtl.spec.ts` وتسجيل أي إخفاقات.
+- تحليل ذاكرة: قياس حجم الـ bundle عند تحميل `jsPDF + Amiri base64` (متوقع >800KB) ووضعه في `docs/baseline-metrics.md`.
 
----
-
-## الموجة 2 — قفل القيود المُرحَّلة (Posted Journal Immutability)
-الفجوة من التدقيق §4: لا trigger يمنع UPDATE/DELETE على `journal_entries.status='posted'`.
-
-1. **Migration**:
-   - `BEFORE UPDATE OR DELETE ON journal_entries` trigger يرفع `RAISE 'POSTED_JOURNAL_IMMUTABLE'` عندما `OLD.status='posted'` (يُسمح فقط بتحديث `reversed_by_id` لربط القيد العكسي).
-   - Trigger مماثل على `journal_lines` ينظر إلى صف الـ entry الأب.
-   - CHECK trigger على `journal_lines` يحرس `SUM(debit)=SUM(credit)` لكل entry عند `status='posted'`.
-2. **Tests**: 
-   - `accounting-integrity-immutability.test.ts`: UPDATE على entry مرحَّل → throws.
-   - `journal-balance-invariant.test.ts`: posting بـ debit≠credit → throws.
-3. **Reversal API**: تأكيد أن `journal.service.reverseEntry()` ينشئ entry جديداً يربط بالأصل (لا UPDATE).
-
-**Rollback**: `DROP TRIGGER` — سلوك المحرر يعود كما كان.
+### 1.3 مخرجات المرحلة
+- تقرير `docs/pdf-audit-2026.md` يحوي: قائمة الأعطال المؤكّدة، لقطات قبل/بعد، تصنيف الخطورة (Critical/Major/Minor).
 
 ---
 
-## الموجة 3 — موجة Repository (تنظيف 50 ملف UI)
-الفجوة #1: 133 استدعاء `supabase.from` في UI. سأنفذها بـ 3 دفعات داخل الموجة:
+## المرحلة 2: العمارة الأساسية واختيار التقنيات
 
-- **3a**: `quotations` (3 ملفات) + `products` (3 ملفات) → repos موجودة.
-- **3b**: `customers/list/CustomerSavedViews`, `customers/alerts/AlertItemActions`, `credit-notes/CreditNoteFormDialog`, `employees/EmployeeFormDialog` → repos موجودة أو يضاف stub.
-- **3c**: admin (Tenants, Sod, Permissions, ExportTemplates, ApprovalChains) → repo جديد `adminRepository.ts`.
-
-**ESLint guard**: قاعدة محلية ترفض `supabase.from(` خارج `src/lib/repositories/` و `src/integrations/` و edge functions. تُضاف في نهاية الموجة لمنع الانحدار.
-
-**Rollback**: كل ملف UI revert مستقل.
-
----
-
-## الموجة 4 — تقسيم الملفات الكبيرة (>500 سطر)
-من جدول §2: 5 أهداف منتجة عالياً (تجنّب shadcn/data/types):
-- `pages/customers/CustomerDetailsPage.tsx` (558) → header / tabs / actions
-- `components/customers/list/CustomerListCard.tsx` (538) → subviews + hook
-- `lib/pdfGenerator.ts` (509) → header/items/totals/footer modules
-- `components/layout/MobileDrawer.tsx` (489) → nav/search/footer
-- `pages/reports/ReturnsReportPage.tsx` (487) → hook + filters + table
-
-النمط المرجعي: constants → views → hook → presentational shell (مُجرَّب على RestoreBackupDialog −86%).
-
----
-
-## الموجة 5 — Offline & Concurrency (الفجوة §5)
-1. **Migration**: `client_op_id uuid` و `version int default 0` على: `invoices`, `payments`, `journal_entries`, `stock_movements` (nullable للسجلات القديمة).
-2. **Optimistic concurrency**: RPC `update_with_version(table, id, expected_version, payload)` ترفع `STALE_VERSION` عند عدم التطابق.
-3. **`syncManager.ts`**: تمرير `client_op_id = idempotency_key` لكل عملية مالية offline.
-4. **`sync_conflicts` table**: تسجيل التعارضات بدلاً من تجاهلها صامتاً.
-5. **Tests**: `sync-replay.test.ts` و `optimistic-concurrency.test.ts`.
-
----
-
-## الموجة 6 — Observability + Type safety + Docs
-1. **Logger sweep**: استبدال 105 استخدام `console.*` بـ `logErrorSafely` (codemod محدود + ESLint rule).
-2. **`as any` sweep**: 189 موضع — إنتاج فقط (نتجاهل tests). هدف < 30.
-3. **Zod schemas**: `domain/invoice.schema.ts`, `payment.schema.ts`, `journal.schema.ts` للـ DTOs الحرجة.
-4. **توثيق نهائي**:
-   - `docs/refactoring-report.md` (تحديث)
-   - `docs/security-fixes.md` (الموجتان 1 و2)
-   - `docs/accounting-integrity.md` (قواعد القفل + reversal flow)
-   - `docs/performance-optimizations.md`
-   - `docs/engineering-governance.md` (تأكيد المعايير من `engineering-standards.md`)
-
----
-
-## مقاييس النجاح (مطابقة §10 من التدقيق)
-| المقياس | الهدف | المصدر |
+### 2.1 الاستراتيجية المختارة: محرّك مزدوج (Dual-Engine)
+| المحرّك | الاستخدام | السبب |
 |---|---|---|
-| `supabase.from` في UI | 0 | موجة 3 + ESLint |
-| ملفات > 500 سطر (إنتاج) | 0 | موجة 4 |
-| edge functions مالية بـ idempotency | 100% | موجة 1 |
-| replay test passes | ✅ | موجة 1 + 5 |
-| `console.*` في إنتاج | < 10 | موجة 6 |
-| اختبار posted-immutability | ✅ | موجة 2 |
+| **jsPDF + Amiri (مدمج حاليًا)** | المستندات الجدولية البسيطة (تقارير، كشوف، فواتير قياسية) | خفيف، يعمل client-side، لا يحتاج شبكة |
+| **html2pdf (puppeteer-lite عبر CDN)** | المستندات ذات التنسيق الغني (قوالب مخصصة، توقيعات، شعارات معقدة) | يستفيد من محرّك المتصفح في RTL والـ ligatures طبيعيًا |
+| **Edge Function `generate-pdf` (puppeteer headless)** اختياري Phase 5 | التصدير المجمّع الكبير (>50 صفحة) والإرسال بالبريد | يخرج العبء من المتصفح |
+
+### 2.2 طبقة التجريد `PdfEngine`
+إنشاء `src/lib/pdf/engine/` بهيكل:
+```text
+src/lib/pdf/
+├── engine/
+│   ├── IPdfEngine.ts        # واجهة موحّدة (render, addPage, drawText, drawTable)
+│   ├── JsPdfEngine.ts       # تطبيق jsPDF
+│   ├── HtmlPdfEngine.ts     # تطبيق html2pdf
+│   └── index.ts             # factory: pickEngine(docType, options)
+├── templates/
+│   ├── BaseTemplate.ts      # header/footer/watermark/pageNumber
+│   ├── InvoiceTemplate.ts
+│   ├── QuotationTemplate.ts
+│   ├── StatementTemplate.ts
+│   └── ReportTemplate.ts
+├── fonts/
+│   ├── fontRegistry.ts      # تحميل ديناميكي للخطوط
+│   └── assets/              # Amiri, Cairo, Tajawal (woff2 + base64)
+├── arabic/
+│   ├── reshaper.ts          # الموجود حاليًا منقول
+│   ├── bidi.ts              # خوارزمية UAX#9 مبسّطة
+│   └── shaper.test.ts
+├── diagnostics/
+│   ├── PdfLogger.ts
+│   ├── DataValidator.ts     # Zod schemas لكل نوع مستند
+│   └── ErrorBoundary.ts
+└── config/
+    ├── PageConfig.ts        # A4/A3/A5/Letter/Legal + portrait/landscape
+    └── ThemeConfig.ts       # ألوان/خطوط/هوامش
+```
+
+### 2.3 مبادئ تصميم ثابتة
+- **مصدر بيانات واحد**: كل مستند يُغذّى عبر Zod schema قبل التوليد.
+- **لا تسريب Supabase**: المولّد يستقبل بيانات جاهزة، يستدعي `settingsRepository` فقط لإعدادات الشركة.
+- **Lazy loading إلزامي**: الخطوط والمحرّكات تُحمّل عند الطلب عبر `pdfGeneratorLazy`.
 
 ---
 
-## ضمانات السلامة
-- لا حذف عمود ولا فرض NOT NULL على بيانات قائمة.
-- كل trigger مالي يرفض العملية بـ message عربي صريح (`POSTED_JOURNAL_IMMUTABLE`, `STALE_VERSION`).
-- لا تعديل على schemas المحجوزة (`auth`, `storage`, `realtime`, `vault`).
-- كل RPC جديد: `SET search_path = public` + فحص tenant.
-- لا hard-delete على كيان مالي.
+## المرحلة 3: محرّك العربية والتخصيص
+
+### 3.1 طبقة الخطوط الديناميكية (`fontRegistry`)
+- تسجيل خطوط متعددة: Amiri (افتراضي)، Cairo، Tajawal، Noto Sans Arabic.
+- API: `registerFont(name, source)`، `loadFont(name): Promise<ArrayBuffer>`.
+- مصادر مدعومة بالترتيب: ملف محلي `/fonts/*.ttf` ← IndexedDB cache ← Google Fonts ← Base64 مضمّن (احتياط نهائي).
+- إعداد المستخدم: `companySettings.pdf_font` يحدّد الخط الافتراضي على مستوى المستأجر.
+
+### 3.2 معالجة RTL والـ Shaping
+- استبدال خوارزمية `toVisualOrder` الحالية بـ **bidi.js** (مكتبة UAX#9 مرخّصة MIT) لمعالجة دقيقة للنصوص المختلطة.
+- الحفاظ على `reshapeArabicText` (يعتمد على `arabic-persian-reshaper`) مع اختبارات ligature إضافية للام-ألف ولام-ألف-همزة.
+- منع عكس: الأرقام، رموز العملة، البريد الإلكتروني، أرقام الهواتف، رموز المنتجات (SKU).
+- تنقية إلزامية لرموز Bidi غير المرئية (U+200E…U+202E، U+2066…U+2069) في كل نص قبل الرسم.
+
+### 3.3 محرّك القوالب القابل للتخصيص
+- **رأس وتذييل**: لكل قالب `header(ctx)` و `footer(ctx)` ترسم الشعار، اسم الشركة، رقم الصفحة (`صفحة X من Y`)، التاريخ.
+- **علامة مائية**: نص قطري نصف شفاف (مثال: "مسودة"، "مدفوع") قابلة للتفعيل من `ThemeConfig.watermark`.
+- **هوامش وحجم وتوجه**: يُمرّر `PageConfig { size: 'A4'|'A3'|'A5'|'Letter'|'Legal', orientation, margins: {t,r,b,l} }`.
+- **حقن البيانات**: قوالب تعتمد على JSON Schema، مع `templateRegistry.render(templateId, data)` يُرجع PDF Blob.
+- **تخصيص الشركة**: جدول `pdf_templates` (موجود) يحفظ ألوان وشعار وخط ومحتوى الترويسة لكل مستأجر.
+
+### 3.4 جداول متعددة الصفحات
+- استخدام `jspdf-autotable` مع: `didDrawPage` لرسم الرأس/التذييل، `rowPageBreak: 'avoid'` للصفوف الحساسة، `showHead: 'everyPage'`.
+- لـ HtmlPdfEngine: استخدام CSS `break-inside: avoid` و `thead { display: table-header-group }`.
 
 ---
 
-## ترتيب الجلسة القادمة (إن وافقت)
-أبدأ بـ **الموجة 1 كاملة** (idempotency + correlation + replay test) لأنها Critical من التدقيق وتفتح الباب لتأمين باقي الموجات. ثم **الموجة 2** (قفل القيود) في نفس الجلسة إن سمح الحجم.
+## المرحلة 4: التشخيص ومعالجة الأخطاء
 
-## سؤال
-هل ابدأ بالترتيب أعلاه (1 ثم 2)، أم تفضّل البدء بموجة Repository (3) لتقليل تسريب Supabase في الواجهة أولاً قبل تشديد الـ DB؟
+### 4.1 التحقق من البيانات (Pre-flight)
+- لكل نوع مستند Zod schema في `pdf/diagnostics/schemas/`:
+  - تحقق من وجود الحقول الإلزامية (رقم المستند، التاريخ، الإجمالي).
+  - تحقق من تطابق المجاميع (subtotal + tax − discount = total) ضمن دقة `±0.01`.
+  - رفض المصفوفات الفارغة (`items.length >= 1`).
+- في حال الفشل: throw `PdfValidationError` مع تفاصيل كل خطأ، يُعرض للمستخدم بـ toast عربي مفهوم.
+
+### 4.2 سياج الأخطاء (Error Boundary)
+- لف كل عملية توليد بـ `try/catch/finally` مع:
+  - Timeout قابل للضبط (افتراضي 30s، 90s للتصدير المجمّع).
+  - Cleanup للذاكرة (`doc = null`، إلغاء URLs المؤقتة عبر `URL.revokeObjectURL`).
+  - Retry تلقائي مرة واحدة عند فشل تحميل الخط أو الشعار.
+- Fallback مرتّب:
+  1. فشل الخط المخصص → الرجوع لـ Amiri المضمّن.
+  2. فشل Amiri → الرجوع لخط النظام مع تنبيه.
+  3. فشل المحرّك الرئيسي → التبديل التلقائي للمحرّك الثاني.
+  4. فشل كامل → فتح نافذة الطباعة الأصلية كحل أخير.
+
+### 4.3 السجلات والمراقبة
+- `PdfLogger` يكتب في `activity_logs` (action=`pdf.export`): نوع المستند، المدّة، حجم الناتج، المحرّك المستخدم، الأخطاء.
+- قياسات أداء عبر `performance.mark`/`measure` تُرسل لـ `performanceMonitor`.
+- تنبيه `Sentry/observability` عند: مدّة >10s، فشل متكرر، حجم ناتج >10MB.
+
+### 4.4 رسائل مستخدم موحّدة (عربية)
+- "جاري تحضير الملف…" (loading)
+- "فشل تحميل الخط، تم استخدام الخط الاحتياطي" (warning)
+- "تعذّر إنشاء الملف. تحقّق من البيانات وحاول مجددًا." (error)
+- "الملف كبير جدًا، سيتم تقسيمه إلى عدة ملفات" (info)
+
+---
+
+## المرحلة 5: الاختبار والتحقق والحالات الحدّية
+
+### 5.1 اختبارات وحدة (Vitest)
+- توسعة `arabicFont.test.ts` بحالات: لام-ألف، أحرف فارسية، رموز عملات، نصوص مختلطة طويلة (>500 حرف).
+- اختبار `DataValidator` لكل schema بحالات صحيحة وفاشلة.
+- اختبار `fontRegistry` مع mock للشبكة (نجاح/فشل/timeout).
+
+### 5.2 اختبارات تكامل
+- `__tests__/integration/export-print.test.tsx` (موجود) يُوسَّع ليغطي كل قالب جديد.
+- اختبار التبديل بين المحرّكين عند الفشل المتعمّد.
+
+### 5.3 اختبارات E2E (Playwright)
+- `e2e/export-rtl.spec.ts` (موجود) يضاف له:
+  - تصدير فاتورة بـ 200 بندًا (page breaks).
+  - تصدير بأحجام ورق وتوجّهات مختلفة.
+  - التحقق من `assertPdfArabic` و `assertCsvArabic` و `assertXlsxRtl` لكل قالب.
+
+### 5.4 فحص بصري تلقائي (Visual QA)
+- سكربت `scripts/pdf-visual-qa.ts` يولّد كل قوالب PDF، يحوّلها لصور عبر `pdftoppm`، ويقارنها مع لقطات مرجعية في `tests/__snapshots__/pdf/` (تسامح بكسل 2%).
+- يُشغَّل في CI ويفشل البناء عند الانحراف.
+
+### 5.5 الحالات الحدّية المُغطّاة
+- جداول تمتدّ على 10+ صفحات مع تكرار الرأس.
+- بنود بأسماء طويلة جدًا (>200 حرف) → wrapping تلقائي.
+- خصومات سالبة، ضرائب صفرية، عملات متعددة.
+- شعار شركة مفقود/تالف → استخدام placeholder.
+- اتصال إنترنت منقطع → الاعتماد على الأصول المحلية/المخزّنة.
+- مستندات بدون أصناف (`items=[]`) → رفض مبكر برسالة واضحة.
+- نصوص مختلطة عربي/إنجليزي/أرقام/رموز (IBAN, email, URL).
+
+### 5.6 مقاييس النجاح
+- زمن توليد فاتورة قياسية <1.5s على جهاز متوسط.
+- صفر تقطيع حروف في 100% من قوالب QA.
+- معدّل فشل التصدير <0.5% في الإنتاج (يُقاس عبر `activity_logs`).
+- تغطية اختبارات ≥85% لطبقة `src/lib/pdf/`.
+
+---
+
+## ملحق تقني — ترتيب التنفيذ المقترح
+
+1. **أسبوع 1**: المرحلة 1 (تدقيق) + إعداد هيكل `src/lib/pdf/`.
+2. **أسبوع 2**: المرحلة 2 + 3.1-3.2 (المحرّك المزدوج + الخطوط + Bidi).
+3. **أسبوع 3**: المرحلة 3.3-3.4 (القوالب + الجداول متعدّدة الصفحات).
+4. **أسبوع 4**: المرحلة 4 (التشخيص والأخطاء).
+5. **أسبوع 5**: المرحلة 5 (الاختبارات + Visual QA + إطلاق تدريجي خلف feature flag `pdf_engine_v2`).
+
+### المخاطر والتخفيف
+- **حجم الـ bundle**: يُعالَج بـ dynamic import للخطوط والمحرّكات.
+- **اختلاف عرض المتصفحات للـ html2pdf**: تثبيت إصدار وتوحيد CSS reset.
+- **توافق مع قوالب قديمة**: المحرّك الجديد خلف flag، الرجوع للقديم لحظيًا عند الحاجة.
