@@ -5,6 +5,7 @@ import {
   type FontConfig,
 } from '@/lib/arabicFont';
 import { PdfFontLoadError } from '../diagnostics/errors';
+import { getPdfFontPreference, DEFAULT_PDF_FONT } from './fontPreference';
 
 /**
  * Dynamic font registry on top of the legacy loadArabicFont().
