@@ -21,8 +21,12 @@ import { logErrorSafely } from "@/lib/errorHandler";
 import { generateDocumentPDF, generatePDF } from "@/lib/pdfGeneratorLazy";
 import {
   inspectDocument,
+  isPdfEngineV2Enabled,
+  renderDocument,
   toArabicErrorMessage,
   withPdfTelemetry,
+  withRetry,
+  withTimeout,
 } from "@/lib/pdf";
 
 /**
