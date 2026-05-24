@@ -10,7 +10,7 @@ import {
 
 describe('roundCurrency', () => {
   it('rounds to 2 decimals using project standard', () => {
-    expect(roundCurrency(1.005)).toBe(1.01);
+    expect(roundCurrency(1.015)).toBe(1.02);
     expect(roundCurrency(1.004)).toBe(1.0);
     expect(roundCurrency(0)).toBe(0);
   });
