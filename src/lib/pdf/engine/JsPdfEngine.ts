@@ -55,7 +55,7 @@ export class JsPdfEngine implements IPdfEngine {
           durationMs: performance.now() - start,
         };
       } catch (e) {
-        throw new PdfEngineError(toArabicErrorMessage(e), { cause: e });
+        throw new PdfEngineError(toArabicErrorMessage(e), e);
       }
     });
   }
