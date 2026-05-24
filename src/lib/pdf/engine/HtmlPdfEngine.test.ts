@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HtmlPdfEngine } from './HtmlPdfEngine';
 import { DEFAULT_PAGE_CONFIG } from '../config/PageConfig';
-import { defaultTheme } from '../config/ThemeConfig';
+import { DEFAULT_THEME } from '../config/ThemeConfig';
 import { resetPdfMetrics, getMetricsFor } from '../diagnostics/telemetrySink';
 
-const ctx = { page: DEFAULT_PAGE_CONFIG, theme: defaultTheme };
+const ctx = { page: DEFAULT_PAGE_CONFIG, theme: DEFAULT_THEME };
 
 describe('HtmlPdfEngine', () => {
   beforeEach(() => resetPdfMetrics());
