@@ -49,7 +49,7 @@ const PROTECT_PATTERNS: RegExp[] = [
   /\b[A-Z0-9]{2}\d{2}[A-Z0-9]{10,30}\b/g,                // IBAN-ish
   /\b[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g,               // email
   /\bhttps?:\/\/[^\s\u0600-\u06FF]+/g,                    // URL
-  /\b\+?\d[\d\s\-().]{6,}\d\b/g,                          // phone
+  /(?:(?<=^)|(?<=[\s\u0600-\u06FF]))\+?\d[\d\s\-().]{6,}\d(?=$|[\s\u0600-\u06FF])/g, // phone
   /\b[A-Z]{2,}-?\d{2,}[A-Z0-9-]*\b/g,                     // SKU / product code
 ];
 
