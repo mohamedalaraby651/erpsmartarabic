@@ -1,15 +1,17 @@
 import type { IPdfEngine, PdfRenderContext, PdfRenderResult } from './IPdfEngine';
 import { withPdfTelemetry } from '../diagnostics/PdfLogger';
 import { PdfEngineError, toArabicErrorMessage } from '../diagnostics/errors';
+import { buildArabicCss } from '../arabic/arabicCss';
+import type { PdfFontKey } from '@/lib/arabicFont';
 
 /**
  * HTML-to-PDF engine. Renders rich HTML/CSS templates (RTL-friendly via
  * the browser's native bidi engine) using `html2pdf.js`, which wraps
  * html2canvas + jsPDF. Loaded lazily — never inflates the initial bundle.
  *
- * Payload contract: either a raw HTML string or an existing HTMLElement.
- * The engine handles wrapping, A4/landscape, margins, and direction=rtl
- * automatically based on PdfRenderContext.
+ * By default the engine auto-injects an `@font-face` block with the
+ * resolved Arabic font (Amiri) and an RTL-safe stylesheet so callers
+ * don't have to wire fonts/alignment themselves.
  */
 export interface HtmlPdfPayload {
   /** Raw HTML markup OR a live HTMLElement reference. */
@@ -18,6 +20,12 @@ export interface HtmlPdfPayload {
   css?: string;
   /** Force direction. Defaults to 'rtl'. */
   dir?: 'rtl' | 'ltr';
+  /** Auto-embed the Arabic font + RTL base CSS. Default true. */
+  embedArabicFont?: boolean;
+  /** Override the font (default: Amiri). */
+  fontKey?: PdfFontKey;
+  /** Document type for telemetry bucketing. */
+  documentType?: string;
 }
 
 type Html2PdfFn = (el: HTMLElement, opts: unknown) => {
