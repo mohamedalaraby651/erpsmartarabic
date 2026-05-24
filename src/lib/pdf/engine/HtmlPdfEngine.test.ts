@@ -4,6 +4,14 @@ import { DEFAULT_PAGE_CONFIG } from '../config/PageConfig';
 import { DEFAULT_THEME } from '../config/ThemeConfig';
 import { resetPdfMetrics, getMetricsFor } from '../diagnostics/telemetrySink';
 
+vi.mock('../fonts/fontRegistry', () => ({
+  resolveFont: vi.fn(async () => ({
+    key: 'amiri',
+    config: { key: 'amiri', name: 'Amiri', file: 'amiri.ttf' },
+    base64: 'AAAA',
+  })),
+}));
+
 const ctx = { page: DEFAULT_PAGE_CONFIG, theme: DEFAULT_THEME };
 
 describe('HtmlPdfEngine', () => {
