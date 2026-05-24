@@ -64,7 +64,7 @@ SEED.forEach((docType) =>
   register({
     docType,
     engine: jsPdfEngine,
-    page: DEFAULT_PAGE,
+    page: DEFAULT_PAGE_CONFIG,
     theme: DEFAULT_THEME,
     filename: defaultFilename(docType),
   }),
