@@ -2,6 +2,7 @@ import type { IPdfEngine, PdfRenderContext, PdfRenderResult } from '../engine/IP
 import { jsPdfEngine, type JsPdfDocumentPayload } from '../engine/JsPdfEngine';
 import { DEFAULT_PAGE_CONFIG, type PageConfig } from '../config/PageConfig';
 import { DEFAULT_THEME, mergeTheme, type PdfTheme } from '../config/ThemeConfig';
+import { buildDocFilename } from '../utils/filename';
 
 /**
  * Maps a document type (the same string used throughout the app — invoice,
@@ -38,8 +39,7 @@ function defaultFilename(prefix: string) {
       (data['order_number'] as string) ||
       (data['number'] as string) ||
       'document';
-    const safe = String(num).replace(/[^\p{L}\p{N}_\-]/gu, '_');
-    return `${prefix}_${safe}.pdf`;
+    return buildDocFilename(prefix, num);
   };
 }
 
