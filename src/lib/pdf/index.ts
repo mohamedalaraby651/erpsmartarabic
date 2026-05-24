@@ -5,4 +5,5 @@ export * from './config/ThemeConfig';
 export * from './diagnostics/errors';
 export * from './diagnostics/DataValidator';
 export * from './diagnostics/PdfLogger';
+export * from './fonts/fontRegistry';
 export type { IPdfEngine, PdfRenderContext, PdfRenderResult } from './engine/IPdfEngine';

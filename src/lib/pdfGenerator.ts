@@ -330,6 +330,20 @@ export async function generateDocumentPDF(
   type: DocumentPdfType,
   data: any
 ): Promise<void> {
+  // Defense-in-depth: validate before the heavy render path so a bad
+  // payload throws a typed PdfValidationError instead of producing a
+  // corrupted PDF. UnifiedExportMenu already pre-flights, but direct
+  // callers (legacy code paths) get the same guarantee here.
+  try {
+    const { validateDocumentForPdf } = await import('./pdf/diagnostics/DataValidator');
+    validateDocumentForPdf(data);
+  } catch (e) {
+    // Surface validation errors to the caller — non-validation errors
+    // (e.g. dynamic import failure) must not block PDF generation.
+    if ((e as Error)?.name === 'PdfValidationError') throw e;
+    console.warn('[pdf] pre-flight validation skipped:', e);
+  }
+
   const company = await getCompanySettings();
   const primaryColor = company?.primary_color ? hexToRgb(company.primary_color) : { r: 37, g: 99, b: 235 };
   const fontKey = (company?.pdf_font as PdfFontKey) || 'amiri';
