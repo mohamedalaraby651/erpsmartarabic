@@ -28,8 +28,8 @@ export interface LoadedFont {
 const _memCache = new Map<PdfFontKey, LoadedFont>();
 const _inflight = new Map<PdfFontKey, Promise<LoadedFont>>();
 
-/** Hard fallback chain: try the requested font, then Amiri (most reliable). */
-const FALLBACK_ORDER: PdfFontKey[] = ['amiri'];
+/** Hard fallback chain — Cairo first (modern default), Amiri last (most reliable shaping). */
+const FALLBACK_ORDER: PdfFontKey[] = ['cairo', 'amiri'];
 
 export function listAvailableFonts(): FontConfig[] {
   return AVAILABLE_FONTS;
