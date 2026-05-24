@@ -1,6 +1,6 @@
 import type { IPdfEngine, PdfRenderContext, PdfRenderResult } from '../engine/IPdfEngine';
 import { jsPdfEngine, type JsPdfDocumentPayload } from '../engine/JsPdfEngine';
-import { DEFAULT_PAGE, type PageConfig } from '../config/PageConfig';
+import { DEFAULT_PAGE_CONFIG, type PageConfig } from '../config/PageConfig';
 import { DEFAULT_THEME, mergeTheme, type PdfTheme } from '../config/ThemeConfig';
 
 /**
