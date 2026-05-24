@@ -18,4 +18,5 @@ export * from './templates/BaseTemplate';
 export * from './templates/templateRegistry';
 export { jsPdfEngine, JsPdfEngine, type JsPdfDocumentPayload } from './engine/JsPdfEngine';
 export { htmlPdfEngine, HtmlPdfEngine, loadHtml2Pdf, type HtmlPdfPayload } from './engine/HtmlPdfEngine';
+export { pickEngine, isHtmlEngineEnabledFor, type PickEngineOptions } from './engine/pickEngine';
 export type { IPdfEngine, PdfRenderContext, PdfRenderResult } from './engine/IPdfEngine';
