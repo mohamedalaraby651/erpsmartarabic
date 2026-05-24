@@ -1,6 +1,6 @@
 import type { IPdfEngine, PdfRenderContext, PdfRenderResult } from './IPdfEngine';
 import { withPdfTelemetry } from '../diagnostics/PdfLogger';
-import { PdfRenderError, toArabicErrorMessage } from '../diagnostics/errors';
+import { PdfEngineError, toArabicErrorMessage } from '../diagnostics/errors';
 import { validateDocumentForPdf } from '../diagnostics/DataValidator';
 
 /**
