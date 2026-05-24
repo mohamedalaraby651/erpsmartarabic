@@ -35,7 +35,7 @@ export class JsPdfEngine implements IPdfEngine {
     const start = performance.now();
     const p = payload as JsPdfDocumentPayload;
     if (!p || typeof p !== 'object' || !p.documentType) {
-      throw new PdfRenderError('jspdf', 'invalid payload: documentType missing');
+      throw new PdfEngineError('invalid payload: documentType missing');
     }
     // Pre-flight validation — fast failure before loading the heavy chunk.
     validateDocumentForPdf(p.data);
@@ -55,7 +55,7 @@ export class JsPdfEngine implements IPdfEngine {
           durationMs: performance.now() - start,
         };
       } catch (e) {
-        throw new PdfRenderError('jspdf', toArabicErrorMessage(e), { cause: e });
+        throw new PdfEngineError(toArabicErrorMessage(e), { cause: e });
       }
     });
   }
