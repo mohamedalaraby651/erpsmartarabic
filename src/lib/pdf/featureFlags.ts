@@ -8,7 +8,8 @@
  */
 export function isPdfEngineV2Enabled(): boolean {
   try {
-    if (typeof localStorage !== 'undefined' && localStorage.getItem('pdf_engine_v2') === '1') {
+    const ls = typeof window !== 'undefined' ? window.localStorage : undefined;
+    if (ls && ls.getItem('pdf_engine_v2') === '1') {
       return true;
     }
   } catch {
