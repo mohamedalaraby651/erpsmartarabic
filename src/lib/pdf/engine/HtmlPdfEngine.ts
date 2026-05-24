@@ -79,10 +79,21 @@ export class HtmlPdfEngine implements IPdfEngine {
       throw new PdfEngineError('HtmlPdfEngine requires a DOM environment');
     }
 
-    const docType = (p as { documentType?: string }).documentType ?? 'html';
+    const docType = p.documentType ?? 'html';
+    const embed = p.embedArabicFont !== false;
 
     return withPdfTelemetry(docType, 'html2pdf' as never, async () => {
-      const container = buildContainer(p, ctx);
+      let arabicCss = '';
+      if (embed) {
+        try {
+          const built = await buildArabicCss({ fontKey: p.fontKey });
+          arabicCss = built.css;
+        } catch {
+          // Non-fatal: continue without embedded font (browser fallback).
+          arabicCss = '';
+        }
+      }
+      const container = buildContainer(p, arabicCss);
       document.body.appendChild(container);
       try {
         const html2pdf = await this._loader();
@@ -120,13 +131,20 @@ export class HtmlPdfEngine implements IPdfEngine {
   }
 }
 
-function buildContainer(p: HtmlPdfPayload, _ctx: PdfRenderContext): HTMLElement {
+function buildContainer(p: HtmlPdfPayload, arabicCss: string): HTMLElement {
   const wrap = document.createElement('div');
+  wrap.className = 'pdf-root';
   wrap.dir = p.dir ?? 'rtl';
   wrap.style.position = 'fixed';
   wrap.style.left = '-10000px';
   wrap.style.top = '0';
   wrap.style.background = '#fff';
+  if (arabicCss) {
+    const style = document.createElement('style');
+    style.setAttribute('data-pdf-arabic', '1');
+    style.textContent = arabicCss;
+    wrap.appendChild(style);
+  }
   if (p.css) {
     const style = document.createElement('style');
     style.textContent = p.css;
