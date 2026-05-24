@@ -67,6 +67,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-settings'] });
+      setPdfFontPreference(pdfFont);
       toast({ title: 'تم حفظ إعدادات الفواتير بنجاح' });
     },
     onError: () => {
