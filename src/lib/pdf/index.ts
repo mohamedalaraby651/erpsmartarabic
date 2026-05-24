@@ -8,4 +8,6 @@ export * from './diagnostics/PdfLogger';
 export * from './fonts/fontRegistry';
 export * from './arabic/bidi';
 export * from './templates/BaseTemplate';
+export * from './templates/templateRegistry';
+export { jsPdfEngine, JsPdfEngine, type JsPdfDocumentPayload } from './engine/JsPdfEngine';
 export type { IPdfEngine, PdfRenderContext, PdfRenderResult } from './engine/IPdfEngine';
