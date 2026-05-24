@@ -5,6 +5,8 @@ export * from './config/ThemeConfig';
 export * from './diagnostics/errors';
 export * from './diagnostics/DataValidator';
 export * from './diagnostics/PdfLogger';
+export * from './diagnostics/resilience';
+export * from './featureFlags';
 export * from './fonts/fontRegistry';
 export * from './arabic/bidi';
 export * from './templates/BaseTemplate';
