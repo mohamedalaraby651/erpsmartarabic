@@ -21,8 +21,12 @@ import { logErrorSafely } from "@/lib/errorHandler";
 import { generateDocumentPDF, generatePDF } from "@/lib/pdfGeneratorLazy";
 import {
   inspectDocument,
+  isPdfEngineV2Enabled,
+  renderDocument,
   toArabicErrorMessage,
   withPdfTelemetry,
+  withRetry,
+  withTimeout,
 } from "@/lib/pdf";
 
 /**
@@ -112,9 +116,27 @@ export function UnifiedExportMenu({
           );
           return;
         }
-        await withPdfTelemetry(documentType!, "jspdf", () =>
-          generateDocumentPDF(documentType!, documentData as any),
-        );
+        if (isPdfEngineV2Enabled()) {
+          // v2 path: registry → engine, with timeout + one retry on
+          // transient font/timeout errors. Falls back to legacy on hard fail.
+          try {
+            await withTimeout(
+              withRetry(() =>
+                renderDocument(documentType! as never, documentData as never),
+              ),
+              30_000,
+            );
+          } catch (v2Err) {
+            console.warn('[pdf] v2 failed, falling back to legacy', v2Err);
+            await withPdfTelemetry(documentType!, "jspdf", () =>
+              generateDocumentPDF(documentType!, documentData as any),
+            );
+          }
+        } else {
+          await withPdfTelemetry(documentType!, "jspdf", () =>
+            generateDocumentPDF(documentType!, documentData as any),
+          );
+        }
       } else if (isReportMode) {
         await withPdfTelemetry(reportTitle!, "jspdf", () =>
           generatePDF({
