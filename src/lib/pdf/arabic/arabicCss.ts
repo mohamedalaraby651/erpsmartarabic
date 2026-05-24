@@ -22,7 +22,8 @@ export interface ArabicCssResult {
 
 /** Resolve + inline the Arabic font as a self-contained CSS block. */
 export async function buildArabicCss(opts: ArabicCssOptions = {}): Promise<ArabicCssResult> {
-  const font = await resolveFont(opts.fontKey ?? 'amiri');
+  // `resolveFont(undefined)` consults the user preference (default: Cairo).
+  const font = await resolveFont(opts.fontKey);
   const family = font.config.name || font.key;
   const size = opts.baseFontSizePx ?? 12;
   // Stripping a potential data-URI prefix keeps the @font-face src clean.
