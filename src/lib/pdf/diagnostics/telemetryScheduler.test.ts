@@ -37,7 +37,8 @@ describe('telemetryScheduler', () => {
   it('flushes on interval when metrics exist', async () => {
     installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
     vi.advanceTimersByTime(5_000);
-    await vi.runAllTimersAsync();
+    uninstallPdfTelemetryAutoFlush();
+    await Promise.resolve();
     expect(flushMock).toHaveBeenCalledTimes(1);
   });
 
@@ -45,7 +46,8 @@ describe('telemetryScheduler', () => {
     snapshotMock.mockReturnValue([]);
     installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
     vi.advanceTimersByTime(5_000);
-    await vi.runAllTimersAsync();
+    uninstallPdfTelemetryAutoFlush();
+    await Promise.resolve();
     expect(flushMock).not.toHaveBeenCalled();
   });
 
@@ -60,14 +62,13 @@ describe('telemetryScheduler', () => {
     expect(flushMock).toHaveBeenCalled();
   });
 
-  it('is idempotent — second install is a no-op', () => {
+  it('is idempotent — second install is a no-op', async () => {
     installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
     installPdfTelemetryAutoFlush({ intervalMs: 5_000 });
     vi.advanceTimersByTime(5_000);
-    // Only one timer registered, so one flush per tick max.
-    return vi.runAllTimersAsync().then(() => {
-      expect(flushMock).toHaveBeenCalledTimes(1);
-    });
+    uninstallPdfTelemetryAutoFlush();
+    await Promise.resolve();
+    expect(flushMock).toHaveBeenCalledTimes(1);
   });
 
   it('uninstall stops the interval', async () => {
