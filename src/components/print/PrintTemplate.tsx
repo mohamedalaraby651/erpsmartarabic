@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { settingsRepository } from "@/lib/repositories/settingsRepository";
 import { AVAILABLE_FONTS } from "@/lib/arabicFont";
 import type { PdfFontKey } from "@/lib/arabicFont";
 
@@ -56,14 +56,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
   // Fetch the selected font from settings
   const { data: settings } = useQuery({
     queryKey: ['company-settings-font'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('company_settings')
-        .select('*')
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
+    queryFn: () => settingsRepository.getCompany(),
     staleTime: 60000,
   });
 
