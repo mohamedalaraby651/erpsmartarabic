@@ -28,7 +28,8 @@ type Html2PdfFn = (el: HTMLElement, opts: unknown) => {
 /** Dynamically loads html2pdf.js. Isolated for testability. */
 export async function loadHtml2Pdf(): Promise<Html2PdfFn> {
   try {
-    const mod = (await import(/* @vite-ignore */ 'html2pdf.js')) as {
+    const specifier = 'html2pdf.js';
+    const mod = (await import(/* @vite-ignore */ specifier)) as {
       default?: Html2PdfFn;
     } & Html2PdfFn;
     const fn = (mod.default ?? mod) as unknown as Html2PdfFn;
