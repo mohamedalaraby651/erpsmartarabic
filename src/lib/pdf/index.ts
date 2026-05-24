@@ -14,6 +14,7 @@ export * from './utils/formatters';
 export * from './featureFlags';
 export * from './fonts/fontRegistry';
 export * from './arabic/bidi';
+export * from './arabic/arabicCss';
 export * from './templates/BaseTemplate';
 export * from './templates/templateRegistry';
 export { jsPdfEngine, JsPdfEngine, type JsPdfDocumentPayload } from './engine/JsPdfEngine';
