@@ -65,10 +65,13 @@ async function loadOne(key: PdfFontKey): Promise<LoadedFont> {
 
 /**
  * Resolve a font with automatic fallback.
+ * When `preferred` is omitted, the user preference (from Settings UI /
+ * localStorage / env) is used. Defaults to Cairo.
  * Order: requested → FALLBACK_ORDER → throw PdfFontLoadError.
  */
-export async function resolveFont(preferred: PdfFontKey = 'amiri'): Promise<LoadedFont> {
-  const chain = [preferred, ...FALLBACK_ORDER.filter((k) => k !== preferred)];
+export async function resolveFont(preferred?: PdfFontKey): Promise<LoadedFont> {
+  const initial = preferred ?? getPdfFontPreference() ?? DEFAULT_PDF_FONT;
+  const chain = [initial, ...FALLBACK_ORDER.filter((k) => k !== initial)];
   let lastError: unknown = null;
   for (const key of chain) {
     try {
@@ -79,7 +82,7 @@ export async function resolveFont(preferred: PdfFontKey = 'amiri'): Promise<Load
     }
   }
   throw new PdfFontLoadError(
-    preferred,
+    initial,
     `no font available after trying ${chain.join(', ')}: ${(lastError as Error)?.message ?? 'unknown'}`,
   );
 }
