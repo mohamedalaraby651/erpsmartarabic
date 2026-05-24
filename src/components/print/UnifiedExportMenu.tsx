@@ -19,6 +19,11 @@ import {
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
 import { generateDocumentPDF, generatePDF } from "@/lib/pdfGeneratorLazy";
+import {
+  inspectDocument,
+  toArabicErrorMessage,
+  withPdfTelemetry,
+} from "@/lib/pdf";
 
 /**
  * Unified Export & Print Menu
@@ -98,14 +103,27 @@ export function UnifiedExportMenu({
     setBusy("pdf");
     try {
       if (isDocumentMode) {
-        await generateDocumentPDF(documentType!, documentData as any);
+        // Pre-flight validation — cheap, runs BEFORE the heavy jsPDF
+        // chunk is loaded so the user gets a precise Arabic message.
+        const issues = inspectDocument(documentData);
+        if (issues.length > 0) {
+          toast.error(
+            `بيانات غير صالحة للتصدير: ${issues.slice(0, 2).join("، ")}`,
+          );
+          return;
+        }
+        await withPdfTelemetry(documentType!, "jspdf", () =>
+          generateDocumentPDF(documentType!, documentData as any),
+        );
       } else if (isReportMode) {
-        await generatePDF({
-          title: reportTitle!,
-          data: rows!,
-          columns: columns!,
-          orientation,
-        });
+        await withPdfTelemetry(reportTitle!, "jspdf", () =>
+          generatePDF({
+            title: reportTitle!,
+            data: rows!,
+            columns: columns!,
+            orientation,
+          }),
+        );
       } else {
         toast.error("لا توجد بيانات للتصدير");
         return;
@@ -113,7 +131,7 @@ export function UnifiedExportMenu({
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (e) {
       logErrorSafely("UnifiedExportMenu.pdf", e);
-      toast.error("فشل في إنشاء ملف PDF");
+      toast.error(toArabicErrorMessage(e));
     } finally {
       setBusy(null);
     }
