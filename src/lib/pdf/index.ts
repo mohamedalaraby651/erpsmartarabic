@@ -13,6 +13,7 @@ export * from './utils/filename';
 export * from './utils/formatters';
 export * from './featureFlags';
 export * from './fonts/fontRegistry';
+export * from './fonts/fontPreference';
 export * from './arabic/bidi';
 export * from './arabic/arabicCss';
 export * from './templates/BaseTemplate';
