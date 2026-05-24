@@ -17,4 +17,5 @@ export * from './arabic/bidi';
 export * from './templates/BaseTemplate';
 export * from './templates/templateRegistry';
 export { jsPdfEngine, JsPdfEngine, type JsPdfDocumentPayload } from './engine/JsPdfEngine';
+export { htmlPdfEngine, HtmlPdfEngine, loadHtml2Pdf, type HtmlPdfPayload } from './engine/HtmlPdfEngine';
 export type { IPdfEngine, PdfRenderContext, PdfRenderResult } from './engine/IPdfEngine';
