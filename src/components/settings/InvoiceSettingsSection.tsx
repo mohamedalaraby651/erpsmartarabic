@@ -10,6 +10,7 @@ import { Receipt, Save, Loader2, Info, Type } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AVAILABLE_FONTS } from '@/lib/arabicFont';
 import type { PdfFontKey } from '@/lib/arabicFont';
+import { setPdfFontPreference } from '@/lib/pdf/fonts/fontPreference';
 
 interface InvoiceSettingsSectionProps {
   onDataChange?: () => void;
