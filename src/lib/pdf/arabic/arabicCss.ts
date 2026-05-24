@@ -37,7 +37,7 @@ export async function buildArabicCss(opts: ArabicCssOptions = {}): Promise<Arabi
   font-display: block;
 }
 .pdf-root, .pdf-root * {
-  font-family: '${family}', 'Amiri', 'Noto Naskh Arabic', serif;
+  font-family: '${family}', 'Cairo', 'Amiri', 'Noto Naskh Arabic', sans-serif;
   direction: rtl;
   unicode-bidi: plaintext;
   -webkit-font-smoothing: antialiased;
