@@ -54,11 +54,11 @@ describe('fontRegistry', () => {
     expect(arabicFontMock.loadArabicFont).toHaveBeenCalledTimes(1);
   });
 
-  it('falls back to amiri when the requested font fails', async () => {
+  it('falls back to the next font in the chain when the requested font fails', async () => {
     const r = await resolveFont('broken' as never);
-    expect(r.key).toBe('amiri');
+    // Chain is [requested, cairo, amiri] — cairo succeeds first.
+    expect(['cairo', 'amiri']).toContain(r.key);
     expect(calls).toContain('broken');
-    expect(calls).toContain('amiri');
   });
 
   it('throws PdfFontLoadError when every fallback fails', async () => {

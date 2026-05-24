@@ -10,6 +10,7 @@ import { Receipt, Save, Loader2, Info, Type } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AVAILABLE_FONTS } from '@/lib/arabicFont';
 import type { PdfFontKey } from '@/lib/arabicFont';
+import { setPdfFontPreference } from '@/lib/pdf/fonts/fontPreference';
 
 interface InvoiceSettingsSectionProps {
   onDataChange?: () => void;
@@ -42,6 +43,9 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
     }
     if (settings?.pdf_font) {
       setPdfFont(settings.pdf_font as PdfFontKey);
+      // Mirror into localStorage so v2 PDF engines pick it up instantly,
+      // without an extra DB round-trip on every export.
+      setPdfFontPreference(settings.pdf_font as PdfFontKey);
     }
   }, [settings]);
 
@@ -63,6 +67,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-settings'] });
+      setPdfFontPreference(pdfFont);
       toast({ title: 'تم حفظ إعدادات الفواتير بنجاح' });
     },
     onError: () => {
