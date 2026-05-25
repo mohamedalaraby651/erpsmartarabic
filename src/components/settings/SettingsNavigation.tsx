@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Smartphone,
   Gauge,
+  FileText,
 } from 'lucide-react';
 
 export interface SettingsTab {
@@ -42,6 +43,7 @@ export const personalTabs: SettingsTab[] = [
   { id: 'notifications', label: 'الإشعارات', icon: Bell, adminOnly: false, description: 'إعدادات التنبيهات', color: 'bg-orange-500' },
   { id: 'documents', label: 'مستنداتي', icon: Paperclip, adminOnly: false, description: 'المرفقات الشخصية', color: 'bg-pink-500' },
   { id: 'performance', label: 'الأداء والشبكة', icon: Gauge, adminOnly: false, description: 'تكييف timeout والمزامنة حسب سرعة الشبكة', color: 'bg-sky-500' },
+  { id: 'pdf-engine', label: 'محرك PDF', icon: FileText, adminOnly: false, description: 'تفعيل أو تعطيل محرك v2 الجديد', color: 'bg-rose-500' },
 ];
 
 export const systemTabs: SettingsTab[] = [
