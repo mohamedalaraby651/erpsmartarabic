@@ -8,6 +8,8 @@ import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRule
 import {
   renderStatementHtml,
   STATEMENT_HTML_CSS,
+  buildWatermarkImageCss,
+  withWatermarkImage,
   type StatementHtmlData,
 } from './templates/StatementHtmlTemplate';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
