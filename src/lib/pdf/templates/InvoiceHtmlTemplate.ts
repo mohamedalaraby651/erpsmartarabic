@@ -155,12 +155,12 @@ export function renderInvoiceHtml(data: InvoiceHtmlData): string {
 
 /** Style overlay layered on top of the engine's Arabic base CSS. */
 export const INVOICE_HTML_CSS = `
-.invoice { padding: 4px; }
+.invoice { padding: 4px; position: relative; }
 .invoice-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 16px; }
 .invoice-head .company h1 { margin: 0 0 4px; font-size: 18px; }
 .invoice-head .meta { text-align: left; }
 .invoice-head .meta h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: 1px; }
-.invoice-head .logo { max-height: 56px; margin-bottom: 6px; }
+.invoice-head .logo { max-height: 56px; max-width: 180px; object-fit: contain; margin-bottom: 6px; }
 .customer { margin: 8px 0 16px; padding: 10px 12px; background: #f7f7f8; border-right: 4px solid #111; }
 .customer h3 { margin: 0 0 6px; font-size: 13px; }
 table.items th { background: #111; color: #fff; font-weight: 600; }
@@ -170,4 +170,53 @@ table.totals th { background: #f1f1f2; text-align: right; }
 table.totals tr.grand th, table.totals tr.grand td { background: #111; color: #fff; font-weight: 700; }
 .notes { margin-top: 18px; padding: 10px; border: 1px dashed #bbb; }
 .notes h4 { margin: 0 0 6px; font-size: 13px; }
+/* Watermark image overlay — injected dynamically based on PdfWatermark config */
+.pdf-watermark-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+.pdf-watermark-bg.tiled { background-repeat: repeat; background-size: auto; }
+.invoice > * { position: relative; z-index: 1; }
 `;
+
+/**
+ * يبني CSS مخصّص للعلامة المائية الصورية (background-image) مع تطبيق
+ * scale/rotation/opacity من PdfWatermark. يُحقن قبل INVOICE_HTML_CSS.
+ */
+export function buildWatermarkImageCss(opts: {
+  imageUrl?: string;
+  opacity?: number;
+  rotation?: number;
+  scale?: number;
+  tiled?: boolean;
+}): string {
+  if (!opts.imageUrl) return '';
+  const opacity = Math.max(0, Math.min(1, opts.opacity ?? 0.08));
+  const rotation = opts.rotation ?? 0;
+  const scale = Math.max(0.1, Math.min(3, opts.scale ?? 1));
+  const tiledSize = opts.tiled ? `${Math.round(20 * scale)}%` : `${Math.round(50 * scale)}%`;
+  return `
+.pdf-watermark-bg {
+  background-image: url("${opts.imageUrl.replace(/"/g, '&quot;')}");
+  opacity: ${opacity};
+  transform: rotate(${rotation}deg);
+  background-size: ${tiledSize};
+}
+`;
+}
+
+/**
+ * يحقن div العلامة المائية الصورية في بداية المستند.
+ * يُستخدم من قبل الطابعات بعد renderInvoiceHtml.
+ */
+export function withWatermarkImage(html: string, imageUrl: string | undefined, tiled: boolean): string {
+  if (!imageUrl) return html;
+  const cls = tiled ? 'pdf-watermark-bg tiled' : 'pdf-watermark-bg';
+  return `<div class="${cls}" aria-hidden="true"></div>${html}`;
+}
+

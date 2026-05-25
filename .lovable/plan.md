@@ -60,3 +60,15 @@
 ## غير مشمول
 - أي تعديل على `src/**` أو migrations
 - تنفيذ خطوات v2 (تُذكر كتوصيات فقط)
+
+## Wave A — Asset Functionality (completed 2026-05-25)
+- ✅ `pdfAssetsRepository` (insert/findById/incrementRef)
+- ✅ `usePdfAssetUrl(assetId)` hook resolving asset → signed URL
+- ✅ `AssetUploader.tsx` (drag-drop, magic-byte check, dim validation, upload to pdf-branding, insert row, bind assetId)
+- ✅ Wired into `RenderProfileSection` (logo in Branding tab, image in Watermark tab with type=text|image)
+- ✅ `LivePreviewPanel` renders real logo + watermark image with scale/rotation/opacity
+- ✅ `profileToPdfConfigInputAsync(profile, resolver)` — resolves logoAssetId & watermark.imageAssetId
+- ✅ `PdfRenderService` uses async mapper with default Supabase resolver; `setAssetUrlResolver` for tests
+- ✅ `InvoiceHtmlTemplate` — `buildWatermarkImageCss` + `withWatermarkImage` helpers; printer injects branding logo + watermark image
+- ⏳ Apply same printer wiring to Quotation/PO/Statement (next pass)
+- ⏳ ref_count decrement on profile delete / asset replace (trigger or service)

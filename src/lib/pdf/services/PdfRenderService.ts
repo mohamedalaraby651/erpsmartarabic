@@ -15,8 +15,13 @@ import type {
   ProfileScope,
 } from '@/domain/pdf/entities/DocumentRenderProfile';
 import { mergeProfiles } from '@/domain/pdf/services/ProfileMerger';
-import { profileToPdfConfigInput } from '@/domain/pdf/rendering/RenderProfileMapper';
+import {
+  profileToPdfConfigInputAsync,
+  type AssetUrlResolver,
+} from '@/domain/pdf/rendering/RenderProfileMapper';
 import { pdfProfilesRepository } from '@/lib/repositories/pdfProfilesRepository';
+import { pdfAssetsRepository } from '@/lib/repositories/pdfAssetsRepository';
+import { getStorageUrl } from '@/lib/storageUrl';
 import type { RoutableDocType } from '@/lib/pdf/routing/routePdfRequest';
 
 const DOCTYPE_TO_SCOPE: Partial<Record<RoutableDocType, ProfileScope>> = {
@@ -42,9 +47,27 @@ const cache = new Map<string, CacheEntry>();
 let loader: ProfileLoader = async (tenantId, scope) =>
   pdfProfilesRepository.findActive(tenantId, scope, null);
 
+/**
+ * Default resolver: يقرأ الـ asset ثم يوقّع المسار من bucket pdf-branding.
+ * قابل للحقن في الاختبارات عبر setAssetUrlResolver.
+ */
+let assetResolver: AssetUrlResolver = async (assetId) => {
+  const row = await pdfAssetsRepository.findById(assetId);
+  if (!row) return null;
+  return getStorageUrl('pdf-branding', row.file_path, 60 * 60);
+};
+
 /** للاختبارات والـ overrides الإدارية. */
 export function setProfileLoader(fn: ProfileLoader | null): void {
   loader = fn ?? (async (t, s) => pdfProfilesRepository.findActive(t, s, null));
+}
+
+export function setAssetUrlResolver(fn: AssetUrlResolver | null): void {
+  assetResolver = fn ?? (async (assetId) => {
+    const row = await pdfAssetsRepository.findById(assetId);
+    if (!row) return null;
+    return getStorageUrl('pdf-branding', row.file_path, 60 * 60);
+  });
 }
 
 /** إبطال الكاش — يُستدعى بعد حفظ أي profile. */
@@ -99,7 +122,7 @@ export async function resolvePdfConfig(
     ? mergeProfiles(global, scoped)
     : (scoped ?? global)!;
 
-  const config = profileToPdfConfigInput(merged);
+  const config = await profileToPdfConfigInputAsync(merged, assetResolver);
   cache.set(key, { config, expiresAt: Date.now() + CACHE_TTL_MS });
   return config;
 }

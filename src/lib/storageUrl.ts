@@ -16,7 +16,8 @@ export type StorageBucket =
   | 'supplier-images'
   | 'employee-images'
   | 'documents'
-  | 'restore-snapshots';
+  | 'restore-snapshots'
+  | 'pdf-branding';
 
 const DEFAULT_TTL_SECONDS = 60 * 60; // 1 hour
 

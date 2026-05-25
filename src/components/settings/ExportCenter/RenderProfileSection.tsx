@@ -22,10 +22,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { usePdfProfile } from '@/hooks/usePdfProfile';
 import { LivePreviewPanel } from './LivePreviewPanel';
+import { AssetUploader } from './AssetUploader';
 import { validateProfile, createDefaultProfile } from '@/domain/pdf/entities/DocumentRenderProfile';
 import type { DocumentRenderProfile } from '@/domain/pdf/entities/DocumentRenderProfile';
 import type { PaperSize, PageOrientation } from '@/domain/pdf/value-objects/PdfLayout';
 import type { PdfFontKey } from '@/domain/pdf/value-objects/PdfTypography';
+import type { WatermarkType } from '@/domain/pdf/value-objects/PdfWatermark';
+import {
+  RadioGroup, RadioGroupItem,
+} from '@/components/ui/radio-group';
 
 const PAPER_SIZES: PaperSize[] = ['A4', 'A5', 'A3', 'Letter', 'Legal'];
 const FONTS: { key: PdfFontKey; label: string }[] = [
@@ -243,11 +248,25 @@ export function RenderProfileSection() {
                     />
                   </div>
                 </div>
+
+                <AssetUploader
+                  kind="logo"
+                  label="شعار الشركة"
+                  description="يظهر في رأس كل مستند PDF."
+                  value={draft.branding.logoAssetId ?? null}
+                  onChange={(assetId) =>
+                    update({ branding: { ...draft.branding, logoAssetId: assetId } })
+                  }
+                />
               </TabsContent>
 
               {/* Watermark + Footer */}
               <TabsContent value="watermark" className="space-y-4 pt-4">
                 <div className="flex items-center justify-between border rounded p-3">
+                  <div>
+                    <Label className="text-base">تفعيل العلامة المائية</Label>
+                    <p className="text-xs text-muted-foreground">تظهر خلف محتوى الصفحة.</p>
+                  </div>
                   <div>
                     <Label className="text-base">تفعيل العلامة المائية</Label>
                     <p className="text-xs text-muted-foreground">تظهر خلف محتوى الصفحة.</p>
@@ -260,13 +279,46 @@ export function RenderProfileSection() {
                 {draft.watermark.enabled && (
                   <>
                     <div>
-                      <Label>نص العلامة</Label>
-                      <Input
-                        value={draft.watermark.text ?? ''}
-                        onChange={(e) => update({ watermark: { ...draft.watermark, text: e.target.value } })}
-                        placeholder="مسودة / سري / DRAFT"
-                      />
+                      <Label>نوع العلامة</Label>
+                      <RadioGroup
+                        className="flex gap-4 mt-1"
+                        value={draft.watermark.type}
+                        onValueChange={(v) =>
+                          update({ watermark: { ...draft.watermark, type: v as WatermarkType } })
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="text" id="wm-text" />
+                          <Label htmlFor="wm-text" className="cursor-pointer">نص</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="image" id="wm-image" />
+                          <Label htmlFor="wm-image" className="cursor-pointer">صورة</Label>
+                        </div>
+                      </RadioGroup>
                     </div>
+
+                    {draft.watermark.type === 'text' ? (
+                      <div>
+                        <Label>نص العلامة</Label>
+                        <Input
+                          value={draft.watermark.text ?? ''}
+                          onChange={(e) => update({ watermark: { ...draft.watermark, text: e.target.value } })}
+                          placeholder="مسودة / سري / DRAFT"
+                        />
+                      </div>
+                    ) : (
+                      <AssetUploader
+                        kind="watermark"
+                        label="صورة العلامة المائية"
+                        description="ستظهر مكبَّرة وبشفافية خلف المحتوى."
+                        value={draft.watermark.imageAssetId ?? null}
+                        onChange={(assetId) =>
+                          update({ watermark: { ...draft.watermark, imageAssetId: assetId } })
+                        }
+                      />
+                    )}
+
                     <div>
                       <Label className="flex justify-between">
                         <span>الشفافية</span>
@@ -287,6 +339,17 @@ export function RenderProfileSection() {
                         min={-90} max={90} step={5}
                         value={[draft.watermark.rotation]}
                         onValueChange={([v]) => update({ watermark: { ...draft.watermark, rotation: v } })}
+                      />
+                    </div>
+                    <div>
+                      <Label className="flex justify-between">
+                        <span>الحجم</span>
+                        <span className="text-xs text-muted-foreground">{draft.watermark.scale.toFixed(2)}×</span>
+                      </Label>
+                      <Slider
+                        min={0.3} max={3} step={0.1}
+                        value={[draft.watermark.scale]}
+                        onValueChange={([v]) => update({ watermark: { ...draft.watermark, scale: v } })}
                       />
                     </div>
                   </>
