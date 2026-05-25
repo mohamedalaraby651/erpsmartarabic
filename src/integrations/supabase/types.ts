@@ -6793,6 +6793,10 @@ export type Database = {
         Args: { _credit_note_id: string }
         Returns: Json
       }
+      save_invoice_with_items: {
+        Args: { p_header: Json; p_id: string; p_items: Json }
+        Returns: string
+      }
       storage_tenant_from_path: { Args: { _name: string }; Returns: string }
       switch_user_tenant: {
         Args: { _tenant_id: string; _user_id: string }

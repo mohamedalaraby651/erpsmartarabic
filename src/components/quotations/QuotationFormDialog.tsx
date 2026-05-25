@@ -39,7 +39,6 @@ interface QuotationFormDialogProps {
 
 interface FormData {
   customer_id: string; valid_until: string; notes: string;
-  discount_amount: number; tax_amount: number;
 }
 
 const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDialogProps) => {
@@ -64,28 +63,30 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     },
   });
 
-  const { items, subtotal, addItem, updateItem, removeItem, loadItems, resetItems } = useQuotationItems({ products });
+  const {
+    items, subtotal, totalAfterDiscount, taxAmount, grandTotal,
+    vatEnabled, setVatEnabled, discountAmount, setDiscountAmount,
+    addItem, updateItem, removeItem, loadItems, resetItems, validate,
+  } = useQuotationItems({ products });
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({
-    defaultValues: { customer_id: '', valid_until: '', notes: '', discount_amount: 0, tax_amount: 0 },
+    defaultValues: { customer_id: '', valid_until: '', notes: '' },
   });
 
   const wizard = useFormWizard({ totalSteps: 3 });
 
   useEffect(() => {
     if (quotation) {
-      reset({ customer_id: quotation.customer_id, valid_until: quotation.valid_until || '', notes: quotation.notes || '', discount_amount: Number(quotation.discount_amount) || 0, tax_amount: Number(quotation.tax_amount) || 0 });
+      reset({ customer_id: quotation.customer_id, valid_until: quotation.valid_until || '', notes: quotation.notes || '' });
+      setDiscountAmount(Number(quotation.discount_amount) || 0);
+      setVatEnabled(Number(quotation.tax_amount) > 0);
       loadItems(quotation.id);
     } else {
-      reset({ customer_id: '', valid_until: '', notes: '', discount_amount: 0, tax_amount: 0 });
+      reset({ customer_id: '', valid_until: '', notes: '' });
       resetItems();
     }
     wizard.reset();
-  }, [quotation, reset, loadItems, resetItems]);
-
-  const discountAmount = watch('discount_amount') || 0;
-  const taxAmount = watch('tax_amount') || 0;
-  const total = subtotal - discountAmount + taxAmount;
+  }, [quotation, reset, loadItems, resetItems, setDiscountAmount, setVatEnabled]);
 
   const generateQuotationNumber = () => {
     const d = new Date();
@@ -97,8 +98,9 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       if (items.length === 0) throw new Error('يجب إضافة منتج واحد على الأقل');
       const quotationData = {
         customer_id: data.customer_id, quotation_number: quotation?.quotation_number || generateQuotationNumber(),
-        valid_until: data.valid_until || null, notes: data.notes || null, subtotal, discount_amount: discountAmount,
-        tax_amount: taxAmount, total_amount: total, status: 'draft' as const, created_by: user?.id || null,
+        valid_until: data.valid_until || null, notes: data.notes || null,
+        subtotal, discount_amount: discountAmount, tax_amount: taxAmount, total_amount: grandTotal,
+        status: 'draft' as const, created_by: user?.id || null,
       };
       let quotationId: string;
       if (isEditing) {
@@ -118,6 +120,11 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   });
 
   const onSubmit = async (data: FormData) => {
+    const errors = validate();
+    if (errors.length > 0) {
+      toast({ title: "بيانات غير صحيحة", description: errors[0].message, variant: "destructive" });
+      return;
+    }
     const action = isEditing ? 'edit' : 'create';
     const hasPermission = await verifyPermissionOnServer('quotations', action);
     if (!hasPermission) { toast({ title: "غير مصرح", description: `ليس لديك صلاحية ${isEditing ? 'تعديل' : 'إنشاء'} عروض الأسعار`, variant: "destructive" }); return; }
@@ -125,6 +132,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     if (maxDiscount > 0) { const ok = await verifyFinancialLimit('discount', maxDiscount); if (!ok) { toast({ title: "تجاوز الحد المسموح", description: `نسبة الخصم (${maxDiscount}%) تتجاوز الحد المسموح لك`, variant: "destructive" }); return; } }
     mutation.mutate(data);
   };
+
 
   const Step1 = (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,12 +162,23 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       <div><Label htmlFor="notes">ملاحظات</Label><Textarea id="notes" {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} /></div>
       <div className="space-y-3 bg-muted p-4 rounded-lg">
         <div className="flex justify-between"><span>المجموع الفرعي:</span><span className="font-bold">{subtotal.toLocaleString()} ج.م</span></div>
-        <div className="flex items-center justify-between gap-2"><span>الخصم:</span><Input type="number" step="0.01" className="w-32" {...register('discount_amount', { valueAsNumber: true })} /></div>
-        <div className="flex items-center justify-between gap-2"><span>الضريبة:</span><Input type="number" step="0.01" className="w-32" {...register('tax_amount', { valueAsNumber: true })} /></div>
-        <div className="flex justify-between text-lg border-t pt-3"><span className="font-bold">الإجمالي:</span><span className="font-bold text-primary">{total.toLocaleString()} ج.م</span></div>
+        <div className="flex items-center justify-between gap-2">
+          <span>الخصم:</span>
+          <Input type="number" step="0.01" className="w-32" value={discountAmount}
+            onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)} />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span>ضريبة القيمة المضافة (14%):</span>
+          <label className="inline-flex items-center cursor-pointer gap-2">
+            <input type="checkbox" checked={vatEnabled} onChange={(e) => setVatEnabled(e.target.checked)} className="h-4 w-4" />
+            <span className="text-sm text-muted-foreground">{vatEnabled ? `مفعّل (${taxAmount.toLocaleString()} ج.م)` : 'معطّل'}</span>
+          </label>
+        </div>
+        <div className="flex justify-between text-lg border-t pt-3"><span className="font-bold">الإجمالي:</span><span className="font-bold text-primary">{grandTotal.toLocaleString()} ج.م</span></div>
       </div>
     </div>
   );
+
 
   const wizardSteps = [
     { title: 'بيانات العميل', content: Step1 },

@@ -5,7 +5,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
-import { invoiceRepository } from "@/lib/repositories/invoiceRepository";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -13,7 +12,7 @@ type InvoiceInsert = Database['public']['Tables']['invoices']['Insert'];
 type InvoiceItemInsert = Database['public']['Tables']['invoice_items']['Insert'];
 
 // ============================================
-// Save (atomic-ish: header + items)
+// Save (single atomic RPC: header + items)
 // ============================================
 
 export interface SaveInvoiceInput {
@@ -23,25 +22,25 @@ export interface SaveInvoiceInput {
 }
 
 /**
- * Persists an invoice header + items.
- * For edits, replaces all items (legacy behavior preserved).
- * Note: not transactional client-side. The DB triggers reverse stats on delete,
- * and Phase 4 will move this to an RPC for true atomicity.
+ * Persists an invoice header + its items inside ONE PostgreSQL transaction
+ * via the `save_invoice_with_items` RPC. Permission is enforced DB-side
+ * (`check_section_permission('invoices', 'create' | 'edit')`), so we no
+ * longer round-trip through `verifyPermissionOnServer` here.
+ *
+ * If any step (header upsert, item wipe, item insert) fails, the entire
+ * change rolls back atomically — no partial writes possible.
  */
 export async function saveInvoiceWithItems(input: SaveInvoiceInput): Promise<string> {
-  let invoiceId: string;
-  if (input.id) {
-    await invoiceRepository.update(input.id, input.header);
-    await invoiceRepository.deleteItemsByInvoice(input.id);
-    invoiceId = input.id;
-  } else {
-    const created = await invoiceRepository.create(input.header);
-    invoiceId = created.id;
-  }
-  await invoiceRepository.bulkInsertItems(
-    input.items.map((it) => ({ ...it, invoice_id: invoiceId }))
-  );
-  return invoiceId;
+  const { data, error } = await supabase.rpc('save_invoice_with_items', {
+    p_id: input.id ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    p_header: input.header as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    p_items: input.items as any,
+  });
+  if (error) throw error;
+  if (!data) throw new Error('save_invoice_with_items returned no id');
+  return data as unknown as string;
 }
 
 

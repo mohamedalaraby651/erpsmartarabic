@@ -13,13 +13,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Save } from "lucide-react";
-import LogisticsItemsTable, { ItemRow } from "@/components/logistics/LogisticsItemsTable";
+import { ArrowRight, Save, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useCreateQuote } from "@/hooks/sales-cycle/useQuotes";
 import { customerRepository } from "@/lib/repositories/customerRepository";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+import { useQuotationItems } from "@/components/quotations/useQuotationItems";
+import { QuotationItemsTable } from "@/components/quotations/QuotationItemsTable";
+
+type Product = Database["public"]["Tables"]["products"]["Row"];
 
 export default function QuoteNewPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const create = useCreateQuote();
 
   const [customerId, setCustomerId] = useState("");
@@ -28,33 +35,66 @@ export default function QuoteNewPage() {
     new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
   );
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<ItemRow[]>([]);
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers", "select"],
     queryFn: () => customerRepository.listForSelect(500),
   });
 
-  const total = items.reduce(
-    (s, it) =>
-      s +
-      Number(it.quantity || 0) *
-        Number(it.unit_price || 0) *
-        (1 - Number(it.discount_percentage || 0) / 100),
-    0
-  );
+  const { data: products = [] } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data as Product[];
+    },
+  });
+
+  const {
+    items,
+    addItem,
+    updateItem,
+    removeItem,
+    subtotal,
+    totalAfterDiscount,
+    taxAmount,
+    grandTotal,
+    vatEnabled,
+    setVatEnabled,
+    discountAmount,
+    setDiscountAmount,
+    validate,
+  } = useQuotationItems({ products });
 
   const submit = async () => {
-    if (!customerId) return;
-    const valid = items.filter((it) => it.product_id && Number(it.quantity) > 0);
-    if (valid.length === 0) return;
+    if (!customerId) {
+      toast({ title: "العميل مطلوب", variant: "destructive" });
+      return;
+    }
+    if (items.length === 0) {
+      toast({ title: "أضف بنداً واحداً على الأقل", variant: "destructive" });
+      return;
+    }
+    const errors = validate();
+    if (errors.length > 0) {
+      toast({ title: "بيانات غير صحيحة", description: errors[0].message, variant: "destructive" });
+      return;
+    }
 
     await create.mutateAsync({
       customer_id: customerId,
       quote_date: quoteDate,
       valid_until: validUntil,
       notes: notes || null,
-      items: valid.map((it) => ({
+      subtotal,
+      discount_amount: discountAmount,
+      tax_amount: taxAmount,
+      total_amount: grandTotal,
+      items: items.map((it) => ({
         product_id: it.product_id,
         quantity: Number(it.quantity),
         unit_price: Number(it.unit_price),
@@ -106,24 +146,68 @@ export default function QuoteNewPage() {
         </div>
       </Card>
 
-      <Card className="p-4">
-        <h2 className="font-semibold mb-3">البنود</h2>
-        <LogisticsItemsTable
-          value={items}
-          onChange={setItems}
-          columns={[
-            { key: "quantity", label: "الكمية", type: "number", step: "0.01", min: 0, default: 1 },
-            { key: "unit_price", label: "سعر الوحدة", type: "number", step: "0.01", min: 0, default: 0 },
-            { key: "discount_percentage", label: "الخصم %", type: "number", step: "0.01", min: 0, default: 0 },
-          ]}
-          newRow={() => ({ product_id: "", quantity: 1, unit_price: 0, discount_percentage: 0 })}
+      <Card className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">البنود</h2>
+          <Button type="button" variant="outline" size="sm" onClick={addItem}>
+            <Plus className="h-4 w-4 ml-2" /> إضافة منتج
+          </Button>
+        </div>
+
+        <QuotationItemsTable
+          items={items}
+          products={products}
+          onAddItem={addItem}
+          onUpdateItem={updateItem}
+          onRemoveItem={removeItem}
         />
 
-        <div className="mt-4 flex justify-between items-center">
-          <div className="text-sm text-muted-foreground">
-            الإجمالي: <span className="font-bold text-lg text-primary">{total.toFixed(2)}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div className="space-y-3 bg-muted p-4 rounded-lg md:col-start-2">
+            <div className="flex justify-between">
+              <span>المجموع الفرعي:</span>
+              <span className="font-bold">{subtotal.toLocaleString()} ج.م</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span>الخصم:</span>
+              <Input
+                type="number"
+                step="0.01"
+                className="w-32"
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span>بعد الخصم:</span>
+              <span>{totalAfterDiscount.toLocaleString()} ج.م</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span>ضريبة القيمة المضافة (14%):</span>
+              <label className="inline-flex items-center cursor-pointer gap-2">
+                <input
+                  type="checkbox"
+                  checked={vatEnabled}
+                  onChange={(e) => setVatEnabled(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {vatEnabled ? `مفعّل (${taxAmount.toLocaleString()} ج.م)` : "معطّل"}
+                </span>
+              </label>
+            </div>
+            <div className="flex justify-between text-lg border-t pt-3">
+              <span className="font-bold">الإجمالي:</span>
+              <span className="font-bold text-primary">{grandTotal.toLocaleString()} ج.م</span>
+            </div>
           </div>
-          <Button onClick={submit} disabled={create.isPending || !customerId || items.length === 0}>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            onClick={submit}
+            disabled={create.isPending || !customerId || items.length === 0}
+          >
             <Save className="h-4 w-4 ml-1" /> حفظ عرض السعر
           </Button>
         </div>

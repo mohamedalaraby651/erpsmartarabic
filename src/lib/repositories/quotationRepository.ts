@@ -45,6 +45,11 @@ export interface QuotationDraft {
   valid_until: string;
   notes?: string | null;
   items: QuotationItemInput[];
+  /** Optional pre-computed totals. If omitted, derived from items. */
+  subtotal?: number;
+  discount_amount?: number;
+  tax_amount?: number;
+  total_amount?: number;
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -118,7 +123,13 @@ export const quotationRepository = {
     );
     if (!tenant_id) throw new Error("لم يتم تحديد المنشأة الحالية.");
 
-    const subtotal = round2(draft.items.reduce((s, it) => s + lineTotal(it), 0));
+    const computedSubtotal = round2(draft.items.reduce((s, it) => s + lineTotal(it), 0));
+    const subtotal = round2(draft.subtotal ?? computedSubtotal);
+    const discount_amount = round2(draft.discount_amount ?? 0);
+    const tax_amount = round2(draft.tax_amount ?? 0);
+    const total_amount = round2(
+      draft.total_amount ?? Math.max(0, subtotal - discount_amount) + tax_amount,
+    );
 
     const headerPayload = {
       tenant_id,
@@ -127,7 +138,9 @@ export const quotationRepository = {
       valid_until: draft.valid_until,
       notes: draft.notes ?? null,
       subtotal,
-      total_amount: subtotal,
+      discount_amount,
+      tax_amount,
+      total_amount,
     };
     const { data: header, error: hErr } = await supabase
       .from("quotes")
