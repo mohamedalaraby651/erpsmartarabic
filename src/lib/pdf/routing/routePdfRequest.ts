@@ -15,6 +15,8 @@ import { printQuotationHtmlPdf } from '../printQuotationHtmlPdf';
 import { printPurchaseOrderHtmlPdf } from '../printPurchaseOrderHtmlPdf';
 import { printStatementHtmlPdf } from '../printStatementHtmlPdf';
 import type { SupportedDocType } from '../templates/templateRegistry';
+import type { PdfConfigInput } from '../config/pdfConfigSchema';
+import { resolvePdfConfig } from '../services/PdfRenderService';
 
 /** Extended doc-type set for routing — includes statements (v2-only). */
 export type RoutableDocType = SupportedDocType | 'statement';
@@ -25,12 +27,16 @@ export interface RoutePdfRequestOptions {
   tenantId?: string | null;
   /** Force a specific engine — used by tests and admin overrides. */
   forceEngine?: 'v1' | 'v2';
+  /** Override resolved profile config (tests / admin previews). */
+  configOverride?: PdfConfigInput;
 }
 
 export interface RoutePdfRequestResult {
   engine: 'v1' | 'v2';
   fellBack: boolean;
   durationMs: number;
+  /** true لو طُبِّق profile (إعدادات تصيير مخصصة) من قاعدة البيانات. */
+  appliedProfile: boolean;
 }
 
 /** Indirection so tests can stub the legacy import without touching disk. */
@@ -55,32 +61,32 @@ const V2_SUPPORTED: ReadonlySet<RoutableDocType> = new Set<RoutableDocType>([
   'statement',
 ]);
 
-/** Doc types where the legacy v1 fallback is NOT available. */
-
 async function tryV2(
   docType: RoutableDocType,
   data: Record<string, unknown> & { items?: unknown[] },
+  config?: PdfConfigInput,
 ): Promise<void> {
   if (!V2_SUPPORTED.has(docType)) {
     throw new Error(`v2 template not yet available for "${docType}"`);
   }
+  const opts = config ? { config } : undefined;
   if (docType === 'invoice') {
-    const res = await printInvoiceHtmlPdf(data as never);
+    const res = await printInvoiceHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
   if (docType === 'quotation') {
-    const res = await printQuotationHtmlPdf(data as never);
+    const res = await printQuotationHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
   if (docType === 'purchase_order') {
-    const res = await printPurchaseOrderHtmlPdf(data as never);
+    const res = await printPurchaseOrderHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
   if (docType === 'statement') {
-    const res = await printStatementHtmlPdf(data as never);
+    const res = await printStatementHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
