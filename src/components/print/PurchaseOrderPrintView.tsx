@@ -49,7 +49,7 @@ export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: Purchase
     if (!order || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('purchase_order', { ...order, items });
+      await routePdfRequest({ docType: 'purchase_order', data: { ...order, items } });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       logErrorSafely('PurchaseOrderPrintView', error);
