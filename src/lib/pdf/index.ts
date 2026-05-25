@@ -32,3 +32,4 @@ export * from './layout/tablePagination';
 export * from './fonts/fontCache';
 export * from './printInvoiceHtmlPdf';
 export * from './routing/canaryRollout';
+export * from './routing/routePdfRequest';
