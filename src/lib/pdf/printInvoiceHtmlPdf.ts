@@ -78,8 +78,8 @@ export async function printInvoiceHtmlPdf(
   const html = renderInvoiceHtml(data);
 
   // 4+5. Render under boundary
-  const filename = opts.filename ?? buildInvoiceFilename(data.invoiceNumber, 'pdf');
-  const result: PdfBoundaryResult<Blob> = await safeRender(
+  const filename = opts.filename ?? buildDocFilename('invoice', data.invoiceNumber);
+  const result = await safeRender<Blob>(
     async () => {
       const out = await htmlPdfEngine.render(
         { page: pageCfg, theme: { fontKey: config.typography.fontKey } as never },
@@ -98,7 +98,7 @@ export async function printInvoiceHtmlPdf(
     { timeoutMs: opts.timeoutMs ?? 60_000 },
   );
 
-  if (!result.ok) {
+  if (result.ok === false) {
     return {
       ok: false,
       errorCode: result.error.code,
