@@ -261,6 +261,27 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
               تأكد من الضغط على "حفظ" لتطبيق التغييرات.
             </AlertDescription>
           </Alert>
+
+          <div className="flex items-center justify-between gap-3 p-3 border rounded-lg bg-muted/20">
+            <div className="text-sm">
+              <p className="font-medium">ذاكرة الخطوط المؤقتة</p>
+              <p className="text-xs text-muted-foreground">
+                مسح نسخ الخطوط المخزنة محلياً لإعادة تحميلها من المصدر.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                clearFontMemCache();
+                await clearFontDiskCache();
+                toast({ title: 'تم مسح ذاكرة الخطوط' });
+              }}
+            >
+              <Trash2 className="h-4 w-4 ml-2" />
+              مسح
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
