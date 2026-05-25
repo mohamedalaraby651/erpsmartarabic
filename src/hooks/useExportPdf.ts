@@ -69,7 +69,7 @@ async function exportPdf({ data, options }: UseExportPdfVariables): Promise<Prin
 
   // 2. Render under safeRender boundary.
   const result = await printInvoiceHtmlPdf(pf.sanitized, options);
-  if (result.ok) return result;
+  if (result.ok === true) return result;
 
   throw new ExportPdfError({
     kind: 'render',
