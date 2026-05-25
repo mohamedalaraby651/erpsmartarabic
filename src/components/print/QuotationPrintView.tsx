@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
 import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import { toast } from "sonner";
+import { useTenant } from "@/hooks/useTenant";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ interface QuotationPrintViewProps {
 
 export function QuotationPrintView({ quotationId, open, onOpenChange }: QuotationPrintViewProps) {
   const [downloading, setDownloading] = useState(false);
+  const { tenantId } = useTenant();
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
@@ -48,7 +50,11 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
     if (!quotation || !items) return;
     setDownloading(true);
     try {
-      await routePdfRequest({ docType: 'quotation', data: { ...quotation, items } });
+      await routePdfRequest({
+        docType: 'quotation',
+        data: { ...quotation, items },
+        tenantId: tenantId ?? (quotation as { tenant_id?: string }).tenant_id ?? null,
+      });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       console.error('PDF generation error:', error);
