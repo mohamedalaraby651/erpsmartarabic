@@ -49,6 +49,7 @@ export function usePdfProfile(
     },
     onSuccess: (saved) => {
       qc.setQueryData([PDF_PROFILE_QUERY_KEY, tenantId, scopeType, scopeId], saved);
+      invalidatePdfRenderCache(saved.tenantId);
       try {
         window.dispatchEvent(new CustomEvent(EXPORT_SETTINGS_EVENT, { detail: 'profile-saved' }));
       } catch { /* noop */ }
