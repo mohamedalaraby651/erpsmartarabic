@@ -23,7 +23,7 @@ beforeAll(() => {
 describe('LivePreviewPanel', () => {
   it('renders header badge with page size, orientation and mm dimensions (A4 portrait)', () => {
     const profile = createDefaultProfile('global');
-    render(<LivePreviewPanel profile={profile} height={400} />);
+    render(withQueryClient(<LivePreviewPanel profile={profile} height={400} />));
     expect(screen.getByText(/A4/)).toBeInTheDocument();
     expect(screen.getByText(/طولي/)).toBeInTheDocument();
     expect(screen.getByText(/210×297mm/)).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('LivePreviewPanel', () => {
     const profile = createDefaultProfile('global');
     profile.layout.orientation = 'landscape';
     profile.layout.pageSize = 'A3';
-    render(<LivePreviewPanel profile={profile} height={400} />);
+    render(withQueryClient(<LivePreviewPanel profile={profile} height={400} />));
     expect(screen.getByText(/A3/)).toBeInTheDocument();
     expect(screen.getByText(/عرضي/)).toBeInTheDocument();
     // A3 landscape: 420×297
@@ -44,7 +44,7 @@ describe('LivePreviewPanel', () => {
     const profile = createDefaultProfile('global');
     // Force invalid margin
     profile.layout.margins.top = -10;
-    render(<LivePreviewPanel profile={profile} height={400} />);
+    render(withQueryClient(<LivePreviewPanel profile={profile} height={400} />));
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByText(/تعذّر عرض المعاينة/)).toBeInTheDocument();
   });
