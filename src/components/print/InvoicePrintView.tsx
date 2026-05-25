@@ -104,9 +104,9 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
     if (!invoice || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('invoice', {
-        ...invoice,
-        items,
+      await routePdfRequest({
+        docType: 'invoice',
+        data: { ...invoice, items },
       });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
