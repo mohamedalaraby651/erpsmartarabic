@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, FileText, FileSpreadsheet, Database, ListChecks, RotateCcw, ExternalLink } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Database, ListChecks, RotateCcw, ExternalLink, Palette } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { PdfEngineSettings } from '@/components/settings/PdfEngineSettings';
 import { BackupTab } from '@/components/settings/BackupTab';
 import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { FormatPreferencesSection } from './FormatPreferencesSection';
+import { RenderProfileSection } from './RenderProfileSection';
 import { useExportSettings } from '@/hooks/useExportSettings';
 
 interface JobRow {
@@ -122,8 +123,11 @@ export function ExportCenterPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="pdf" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+      <Tabs defaultValue="profile" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
+          <TabsTrigger value="profile" className="gap-2 py-2.5">
+            <Palette className="h-4 w-4" /> هوية المستندات
+          </TabsTrigger>
           <TabsTrigger value="pdf" className="gap-2 py-2.5">
             <FileText className="h-4 w-4" /> محرك PDF
           </TabsTrigger>
@@ -139,6 +143,10 @@ export function ExportCenterPage() {
             <ListChecks className="h-4 w-4" /> المهام
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="profile" className="space-y-6">
+          <RenderProfileSection />
+        </TabsContent>
 
         <TabsContent value="pdf" className="space-y-6">
           <PdfEngineSettings />

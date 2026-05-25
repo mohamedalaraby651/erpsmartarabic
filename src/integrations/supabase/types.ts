@@ -5345,6 +5345,152 @@ export type Database = {
           },
         ]
       }
+      tenant_pdf_assets: {
+        Row: {
+          checksum: string | null
+          created_at: string
+          deleted_at: string | null
+          file_path: string
+          file_size: number
+          height: number | null
+          id: string
+          kind: Database["public"]["Enums"]["pdf_asset_kind"]
+          mime_type: string
+          ref_count: number
+          tenant_id: string
+          updated_at: string
+          uploaded_by: string | null
+          width: number | null
+        }
+        Insert: {
+          checksum?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          file_path: string
+          file_size: number
+          height?: number | null
+          id?: string
+          kind: Database["public"]["Enums"]["pdf_asset_kind"]
+          mime_type: string
+          ref_count?: number
+          tenant_id: string
+          updated_at?: string
+          uploaded_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          checksum?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          file_path?: string
+          file_size?: number
+          height?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["pdf_asset_kind"]
+          mime_type?: string
+          ref_count?: number
+          tenant_id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          width?: number | null
+        }
+        Relationships: []
+      }
+      tenant_pdf_profile_audit: {
+        Row: {
+          action: string
+          diff: Json
+          id: string
+          performed_at: string
+          performed_by: string | null
+          profile_id: string
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          diff?: Json
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          profile_id: string
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          diff?: Json
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          profile_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_pdf_profile_audit_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_pdf_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_pdf_profiles: {
+        Row: {
+          branding: Json
+          created_at: string
+          created_by: string | null
+          footer: Json
+          header: Json
+          id: string
+          is_active: boolean
+          layout: Json
+          scope_id: string | null
+          scope_type: Database["public"]["Enums"]["pdf_profile_scope"]
+          tenant_id: string
+          typography: Json
+          updated_at: string
+          updated_by: string | null
+          version: number
+          watermark: Json
+        }
+        Insert: {
+          branding?: Json
+          created_at?: string
+          created_by?: string | null
+          footer?: Json
+          header?: Json
+          id?: string
+          is_active?: boolean
+          layout?: Json
+          scope_id?: string | null
+          scope_type?: Database["public"]["Enums"]["pdf_profile_scope"]
+          tenant_id: string
+          typography?: Json
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          watermark?: Json
+        }
+        Update: {
+          branding?: Json
+          created_at?: string
+          created_by?: string | null
+          footer?: Json
+          header?: Json
+          id?: string
+          is_active?: boolean
+          layout?: Json
+          scope_id?: string | null
+          scope_type?: Database["public"]["Enums"]["pdf_profile_scope"]
+          tenant_id?: string
+          typography?: Json
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          watermark?: Json
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string
@@ -6704,6 +6850,19 @@ export type Database = {
         | "installment"
         | "advance_payment"
       payment_status: "pending" | "partial" | "paid" | "overdue"
+      pdf_asset_kind:
+        | "logo"
+        | "watermark"
+        | "signature"
+        | "header_image"
+        | "footer_image"
+      pdf_profile_scope:
+        | "global"
+        | "invoice"
+        | "quotation"
+        | "purchase_order"
+        | "delivery_note"
+        | "statement"
       purchase_invoice_payment_status: "pending" | "partial" | "paid"
       purchase_invoice_status: "draft" | "posted" | "paid" | "cancelled"
       quote_status:
@@ -6870,6 +7029,21 @@ export const Constants = {
         "advance_payment",
       ],
       payment_status: ["pending", "partial", "paid", "overdue"],
+      pdf_asset_kind: [
+        "logo",
+        "watermark",
+        "signature",
+        "header_image",
+        "footer_image",
+      ],
+      pdf_profile_scope: [
+        "global",
+        "invoice",
+        "quotation",
+        "purchase_order",
+        "delivery_note",
+        "statement",
+      ],
       purchase_invoice_payment_status: ["pending", "partial", "paid"],
       purchase_invoice_status: ["draft", "posted", "paid", "cancelled"],
       quote_status: [
