@@ -6,11 +6,21 @@ vi.mock('@/lib/pdfGeneratorLazy', () => ({
   getCompanySettings: vi.fn(async () => ({})),
 }));
 
+vi.mock('@/lib/statementPdfGenerator', () => ({
+  generateStatementPdf: vi.fn(async () => undefined),
+}));
+
 vi.mock('../printInvoiceHtmlPdf', () => ({
   printInvoiceHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'i.pdf', config: {}, durationMs: 1, warnings: [] })),
 }));
 vi.mock('../printQuotationHtmlPdf', () => ({
   printQuotationHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'q.pdf', config: {}, durationMs: 1, warnings: [] })),
+}));
+vi.mock('../printPurchaseOrderHtmlPdf', () => ({
+  printPurchaseOrderHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'po.pdf', config: {}, durationMs: 1, warnings: [] })),
+}));
+vi.mock('../printStatementHtmlPdf', () => ({
+  printStatementHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'st.pdf', config: {}, durationMs: 1, warnings: [] })),
 }));
 
 import { routePdfRequest } from './routePdfRequest';
