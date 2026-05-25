@@ -19,9 +19,9 @@ import {
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
 import { generatePDF } from "@/lib/pdfGeneratorLazy";
+import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import {
   inspectDocument,
-  routePdfRequest,
   toArabicErrorMessage,
   withPdfTelemetry,
 } from "@/lib/pdf";
