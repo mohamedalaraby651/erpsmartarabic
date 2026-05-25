@@ -153,7 +153,7 @@ const ERROR_PATTERN_MAP: Array<{ pattern: RegExp; error: ContextualError }> = [
 
 // Default safe error
 const DEFAULT_ERROR: ContextualError = {
-  userMessage: 'حدث خطأ',
+  userMessage: 'حدث خطأ، يرجى المحاولة مرة أخرى',
   action: 'يرجى المحاولة مرة أخرى',
 };
 
