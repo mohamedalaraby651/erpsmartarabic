@@ -6,7 +6,7 @@ import { purchaseOrderRepository } from "@/lib/repositories/purchaseOrderReposit
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
-import { generateDocumentPDF } from "@/lib/pdfGeneratorLazy";
+import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
 import {
@@ -49,7 +49,7 @@ export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: Purchase
     if (!order || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('purchase_order', { ...order, items });
+      await routePdfRequest({ docType: 'purchase_order', data: { ...order, items } });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       logErrorSafely('PurchaseOrderPrintView', error);

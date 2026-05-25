@@ -6,7 +6,7 @@ import { salesOrderRepository } from "@/lib/repositories/salesOrderRepository";
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
-import { generateDocumentPDF } from "@/lib/pdfGeneratorLazy";
+import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
 import {
@@ -49,7 +49,7 @@ export function SalesOrderPrintView({ orderId, open, onOpenChange }: SalesOrderP
     if (!order || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('sales_order', { ...order, items });
+      await routePdfRequest({ docType: 'sales_order', data: { ...order, items } });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       logErrorSafely('SalesOrderPrintView', error);

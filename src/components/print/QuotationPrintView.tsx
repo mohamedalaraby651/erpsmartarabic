@@ -6,7 +6,7 @@ import { legacyQuotationsRepository } from "@/lib/repositories/legacyQuotationsR
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
-import { generateDocumentPDF } from "@/lib/pdfGeneratorLazy";
+import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -48,7 +48,7 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
     if (!quotation || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('quotation', { ...quotation, items });
+      await routePdfRequest({ docType: 'quotation', data: { ...quotation, items } });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       console.error('PDF generation error:', error);

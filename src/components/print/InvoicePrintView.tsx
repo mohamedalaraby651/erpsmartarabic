@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
 import { Printer, Download, Loader2 } from "lucide-react";
-import { generateDocumentPDF } from "@/lib/pdfGeneratorLazy";
+import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
 import { printHtmlDocument } from "@/lib/printDocument";
@@ -104,9 +104,9 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
     if (!invoice || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('invoice', {
-        ...invoice,
-        items,
+      await routePdfRequest({
+        docType: 'invoice',
+        data: { ...invoice, items },
       });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
