@@ -58,7 +58,16 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'detail'>('list');
 
   const isAdmin = userRole === 'admin';
-  const activeTab = searchParams.get('tab') || 'profile';
+  const rawTab = searchParams.get('tab') || 'profile';
+  // Back-compat: redirect old tab ids to the new unified Export Center
+  const activeTab =
+    rawTab === 'pdf-engine' || rawTab === 'backup' || rawTab === 'export'
+      ? 'export-center'
+      : rawTab;
+  useEffect(() => {
+    if (rawTab !== activeTab) setSearchParams({ tab: activeTab }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawTab]);
 
   // Fetch profile data
   const { data: profile, isLoading: loadingProfile } = useQuery({
