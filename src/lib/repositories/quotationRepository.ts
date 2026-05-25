@@ -45,6 +45,11 @@ export interface QuotationDraft {
   valid_until: string;
   notes?: string | null;
   items: QuotationItemInput[];
+  /** Optional pre-computed totals. If omitted, derived from items. */
+  subtotal?: number;
+  discount_amount?: number;
+  tax_amount?: number;
+  total_amount?: number;
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
