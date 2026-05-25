@@ -123,7 +123,7 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('@tanstack/react-query')) return 'vendor-query';
             if (id.includes('@supabase/supabase-js')) return 'vendor-supabase';
             if (id.includes('recharts')) return 'vendor-charts';
-            if (id.includes('jspdf')) return 'vendor-pdf';
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html2pdf')) return 'vendor-pdf';
             if (id.includes('xlsx')) return 'vendor-excel';
             if (id.includes('date-fns')) return 'vendor-dates';
             if (id.includes('@dnd-kit')) return 'vendor-dnd';
