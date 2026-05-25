@@ -85,6 +85,7 @@ const sampleDocumentData = {
     { products: { name: 'قلم رصاص' }, quantity: 2, unit_price: 5, total_price: 10 },
     { products: { name: 'دفتر ملاحظات' }, quantity: 5, unit_price: 25, total_price: 125 },
   ],
+  issue_date: '2024-12-01',
 };
 
 const setViewport = (width: number, height: number) => {
