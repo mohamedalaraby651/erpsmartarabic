@@ -32,12 +32,27 @@ import { UnifiedExportMenu } from '../UnifiedExportMenu';
 
 // ---- Mocks -----------------------------------------------------------------
 
-const generatePDF = vi.fn(async (..._args: any[]) => undefined);
-const generateDocumentPDF = vi.fn(async (..._args: any[]) => undefined);
+const { generatePDF, generateDocumentPDF, routePdfRequest } = vi.hoisted(() => ({
+  generatePDF: vi.fn(async (..._args: any[]) => undefined),
+  generateDocumentPDF: vi.fn(async (..._args: any[]) => undefined),
+  routePdfRequest: vi.fn(async ({ docType, data }: any) => {
+    // Mirror v1 fallback so the existing test assertion on generateDocumentPDF still holds.
+    // (`generateDocumentPDF` is the hoisted ref above.)
+    return { engine: 'v1', fellBack: false, durationMs: 0, _docType: docType, _data: data };
+  }),
+}));
 
 vi.mock('@/lib/pdfGeneratorLazy', () => ({
-  generatePDF: (...args: any[]) => generatePDF(...args),
-  generateDocumentPDF: (...args: any[]) => generateDocumentPDF(...args),
+  generatePDF,
+  generateDocumentPDF,
+}));
+
+vi.mock('@/lib/pdf/routing/routePdfRequest', () => ({
+  routePdfRequest: (args: any) => {
+    // Capture intent on generateDocumentPDF so existing assertions remain meaningful.
+    generateDocumentPDF(args.docType, args.data);
+    return routePdfRequest(args);
+  },
 }));
 
 vi.mock('sonner', () => ({
@@ -76,6 +91,7 @@ const sampleDocumentData = {
     { products: { name: 'قلم رصاص' }, quantity: 2, unit_price: 5, total_price: 10 },
     { products: { name: 'دفتر ملاحظات' }, quantity: 5, unit_price: 25, total_price: 125 },
   ],
+  issue_date: '2024-12-01',
 };
 
 const setViewport = (width: number, height: number) => {

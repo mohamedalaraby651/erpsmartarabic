@@ -18,15 +18,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
-import { generateDocumentPDF, generatePDF } from "@/lib/pdfGeneratorLazy";
+import { generatePDF } from "@/lib/pdfGeneratorLazy";
+import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import {
   inspectDocument,
-  isPdfEngineV2Enabled,
-  renderDocument,
   toArabicErrorMessage,
   withPdfTelemetry,
-  withRetry,
-  withTimeout,
 } from "@/lib/pdf";
 
 /**
@@ -116,27 +113,13 @@ export function UnifiedExportMenu({
           );
           return;
         }
-        if (isPdfEngineV2Enabled()) {
-          // v2 path: registry → engine, with timeout + one retry on
-          // transient font/timeout errors. Falls back to legacy on hard fail.
-          try {
-            await withTimeout(
-              withRetry(() =>
-                renderDocument(documentType! as never, documentData as never),
-              ),
-              30_000,
-            );
-          } catch (v2Err) {
-            console.warn('[pdf] v2 failed, falling back to legacy', v2Err);
-            await withPdfTelemetry(documentType!, "jspdf", () =>
-              generateDocumentPDF(documentType!, documentData as any),
-            );
-          }
-        } else {
-          await withPdfTelemetry(documentType!, "jspdf", () =>
-            generateDocumentPDF(documentType!, documentData as any),
-          );
-        }
+        // Phase 2: canary-aware router with deterministic v1 fallback +
+        // unified telemetry (engine, latency, error code) per attempt.
+        await routePdfRequest({
+          docType: documentType! as never,
+          data: documentData as never,
+          tenantId: (documentData as { tenant_id?: string }).tenant_id ?? null,
+        });
       } else if (isReportMode) {
         await withPdfTelemetry(reportTitle!, "jspdf", () =>
           generatePDF({
