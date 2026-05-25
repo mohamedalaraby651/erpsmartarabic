@@ -162,12 +162,23 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       <div><Label htmlFor="notes">ملاحظات</Label><Textarea id="notes" {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} /></div>
       <div className="space-y-3 bg-muted p-4 rounded-lg">
         <div className="flex justify-between"><span>المجموع الفرعي:</span><span className="font-bold">{subtotal.toLocaleString()} ج.م</span></div>
-        <div className="flex items-center justify-between gap-2"><span>الخصم:</span><Input type="number" step="0.01" className="w-32" {...register('discount_amount', { valueAsNumber: true })} /></div>
-        <div className="flex items-center justify-between gap-2"><span>الضريبة:</span><Input type="number" step="0.01" className="w-32" {...register('tax_amount', { valueAsNumber: true })} /></div>
-        <div className="flex justify-between text-lg border-t pt-3"><span className="font-bold">الإجمالي:</span><span className="font-bold text-primary">{total.toLocaleString()} ج.م</span></div>
+        <div className="flex items-center justify-between gap-2">
+          <span>الخصم:</span>
+          <Input type="number" step="0.01" className="w-32" value={discountAmount}
+            onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)} />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span>ضريبة القيمة المضافة (14%):</span>
+          <label className="inline-flex items-center cursor-pointer gap-2">
+            <input type="checkbox" checked={vatEnabled} onChange={(e) => setVatEnabled(e.target.checked)} className="h-4 w-4" />
+            <span className="text-sm text-muted-foreground">{vatEnabled ? `مفعّل (${taxAmount.toLocaleString()} ج.م)` : 'معطّل'}</span>
+          </label>
+        </div>
+        <div className="flex justify-between text-lg border-t pt-3"><span className="font-bold">الإجمالي:</span><span className="font-bold text-primary">{grandTotal.toLocaleString()} ج.م</span></div>
       </div>
     </div>
   );
+
 
   const wizardSteps = [
     { title: 'بيانات العميل', content: Step1 },
