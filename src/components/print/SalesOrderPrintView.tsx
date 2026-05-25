@@ -49,7 +49,7 @@ export function SalesOrderPrintView({ orderId, open, onOpenChange }: SalesOrderP
     if (!order || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('sales_order', { ...order, items });
+      await routePdfRequest({ docType: 'sales_order', data: { ...order, items } });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       logErrorSafely('SalesOrderPrintView', error);
