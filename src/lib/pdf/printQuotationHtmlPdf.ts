@@ -78,22 +78,12 @@ export async function printQuotationHtmlPdf(
       ...enriched.items.map((i) => i.description),
     ].join(' '),
   );
-  const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const wm = config.watermark;
-  const wmCss = wm.enabled && wm.imageUrl
-    ? buildWatermarkImageCss({
-        imageUrl: wm.imageUrl,
-        opacity: wm.opacity,
-        rotation: wm.rotation,
-        tiled: wm.tiled,
-      })
-    : '';
-  const css = `${typoCss}\n${QUOTATION_HTML_CSS}\n${wmCss}`;
-  const html = withWatermarkImage(
-    renderQuotationHtml(enriched),
-    wm.enabled ? wm.imageUrl : undefined,
-    !!wm.tiled,
-  );
+  const { html, css } = composeRenderPayload({
+    html: renderQuotationHtml(enriched),
+    bodyCss: QUOTATION_HTML_CSS,
+    config,
+    hasTashkeel: tashkeel,
+  });
 
   const filename = opts.filename ?? buildDocFilename('quotation', data.quotationNumber);
   const result = await safeRender<Blob>(
