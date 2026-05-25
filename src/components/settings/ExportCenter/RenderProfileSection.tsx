@@ -248,11 +248,25 @@ export function RenderProfileSection() {
                     />
                   </div>
                 </div>
+
+                <AssetUploader
+                  kind="logo"
+                  label="شعار الشركة"
+                  description="يظهر في رأس كل مستند PDF."
+                  value={draft.branding.logoAssetId ?? null}
+                  onChange={(assetId) =>
+                    update({ branding: { ...draft.branding, logoAssetId: assetId } })
+                  }
+                />
               </TabsContent>
 
               {/* Watermark + Footer */}
               <TabsContent value="watermark" className="space-y-4 pt-4">
                 <div className="flex items-center justify-between border rounded p-3">
+                  <div>
+                    <Label className="text-base">تفعيل العلامة المائية</Label>
+                    <p className="text-xs text-muted-foreground">تظهر خلف محتوى الصفحة.</p>
+                  </div>
                   <div>
                     <Label className="text-base">تفعيل العلامة المائية</Label>
                     <p className="text-xs text-muted-foreground">تظهر خلف محتوى الصفحة.</p>
