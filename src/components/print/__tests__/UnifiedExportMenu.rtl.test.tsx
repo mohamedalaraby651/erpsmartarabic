@@ -32,21 +32,27 @@ import { UnifiedExportMenu } from '../UnifiedExportMenu';
 
 // ---- Mocks -----------------------------------------------------------------
 
-const generatePDF = vi.fn(async (..._args: any[]) => undefined);
-const generateDocumentPDF = vi.fn(async (..._args: any[]) => undefined);
-
-vi.mock('@/lib/pdfGeneratorLazy', () => ({
-  generatePDF: (...args: any[]) => generatePDF(...args),
-  generateDocumentPDF: (...args: any[]) => generateDocumentPDF(...args),
+const { generatePDF, generateDocumentPDF, routePdfRequest } = vi.hoisted(() => ({
+  generatePDF: vi.fn(async (..._args: any[]) => undefined),
+  generateDocumentPDF: vi.fn(async (..._args: any[]) => undefined),
+  routePdfRequest: vi.fn(async ({ docType, data }: any) => {
+    // Mirror v1 fallback so the existing test assertion on generateDocumentPDF still holds.
+    // (`generateDocumentPDF` is the hoisted ref above.)
+    return { engine: 'v1', fellBack: false, durationMs: 0, _docType: docType, _data: data };
+  }),
 }));
 
-// Phase 2 router — stub so the test asserts the wiring without pulling
-// in the heavy html2canvas/jsPDF chain. Mirrors the v1 fallback path.
+vi.mock('@/lib/pdfGeneratorLazy', () => ({
+  generatePDF,
+  generateDocumentPDF,
+}));
+
 vi.mock('@/lib/pdf/routing/routePdfRequest', () => ({
-  routePdfRequest: vi.fn(async ({ docType, data }: any) => {
-    await generateDocumentPDF(docType, data);
-    return { engine: 'v1', fellBack: false, durationMs: 0 };
-  }),
+  routePdfRequest: (args: any) => {
+    // Capture intent on generateDocumentPDF so existing assertions remain meaningful.
+    generateDocumentPDF(args.docType, args.data);
+    return routePdfRequest(args);
+  },
 }));
 
 vi.mock('sonner', () => ({
