@@ -31,3 +31,4 @@ export * from './layout/overflowGuard';
 export * from './layout/tablePagination';
 export * from './fonts/fontCache';
 export * from './printInvoiceHtmlPdf';
+export * from './routing/canaryRollout';
