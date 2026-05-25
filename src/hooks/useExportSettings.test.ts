@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   readExportSettings,
   writeExportSettings,
@@ -6,8 +6,25 @@ import {
   EXPORT_DEFAULTS,
 } from './useExportSettings';
 
+// Global setup mocks localStorage with vi.fn() — install an in-memory store here.
+function installMemoryStorage() {
+  const store = new Map<string, string>();
+  const ls = window.localStorage as unknown as {
+    getItem: ReturnType<typeof vi.fn>;
+    setItem: ReturnType<typeof vi.fn>;
+    removeItem: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
+  };
+  ls.getItem.mockImplementation((k: string) => (store.has(k) ? store.get(k)! : null));
+  ls.setItem.mockImplementation((k: string, v: string) => { store.set(k, String(v)); });
+  ls.removeItem.mockImplementation((k: string) => { store.delete(k); });
+  ls.clear.mockImplementation(() => { store.clear(); });
+  return store;
+}
+
 describe('useExportSettings', () => {
   beforeEach(() => {
+    installMemoryStorage();
     window.localStorage.clear();
   });
 
