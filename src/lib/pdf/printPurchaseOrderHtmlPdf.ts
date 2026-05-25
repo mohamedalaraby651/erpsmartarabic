@@ -4,14 +4,13 @@
 import { buildPdfConfig, toPageConfig, type PdfConfigInput, type PdfConfig } from './config/pdfConfigSchema';
 import { preflightPurchaseOrder } from './diagnostics/preflightPurchaseOrder';
 import { safeRender } from './diagnostics/PdfErrorBoundary';
-import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRules';
+import { detectTashkeel } from './arabic/typographyRules';
 import {
   renderPurchaseOrderHtml,
   PURCHASE_ORDER_HTML_CSS,
-  buildWatermarkImageCss,
-  withWatermarkImage,
   type PurchaseOrderHtmlData,
 } from './templates/PurchaseOrderHtmlTemplate';
+import { composeRenderPayload } from './templates/TemplateComposer';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
 import { buildDocFilename } from './utils/filename';
 
