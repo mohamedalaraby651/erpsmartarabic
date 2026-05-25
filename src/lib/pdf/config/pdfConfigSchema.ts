@@ -84,7 +84,7 @@ export const pdfConfigSchema = z.object({
     size: paperSizeSchema.default('A4'),
     orientation: z.enum(['portrait', 'landscape']).default('portrait'),
     margins: marginsSchema.default({ top: 15, right: 12, bottom: 15, left: 12 }),
-  }),
+  }).default({}),
   typography: typographySchema.default({
     fontKey: 'cairo' as PdfFontKey,
     baseFontSizePx: 12,
