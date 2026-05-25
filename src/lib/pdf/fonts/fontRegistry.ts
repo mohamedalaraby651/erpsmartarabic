@@ -6,18 +6,17 @@ import {
 } from '@/lib/arabicFont';
 import { PdfFontLoadError } from '../diagnostics/errors';
 import { getPdfFontPreference, DEFAULT_PDF_FONT } from './fontPreference';
+import { getCachedFont, putCachedFont } from './fontCache';
 
 /**
  * Dynamic font registry on top of the legacy loadArabicFont().
  *
- * Adds:
- *   - In-memory cache so repeated exports reuse the same base64 buffer.
- *   - Ordered fallback chain: requested → Amiri (default) → throw.
- *   - Strong typing of the resolved descriptor (key + base64 + family name).
+ * Three-tier cache (Wave 19):
+ *   1. In-memory Map  → same-session reuse, zero cost.
+ *   2. IndexedDB      → cross-session persistence (~400KB per font).
+ *   3. Network        → loadArabicFont() with multi-CDN fallback.
  *
- * IndexedDB persistence is intentionally out of scope here — the browser
- * already caches the underlying /fonts/*.ttf via HTTP, and a second-tier
- * IDB cache would add complexity without measurable wins for our payloads.
+ * Ordered fallback chain: requested → Cairo → Amiri → throw PdfFontLoadError.
  */
 export interface LoadedFont {
   key: PdfFontKey;
@@ -46,7 +45,21 @@ async function loadOne(key: PdfFontKey): Promise<LoadedFont> {
 
   const config = AVAILABLE_FONTS.find((f) => f.key === key) ?? AVAILABLE_FONTS[0];
   const p = (async () => {
-    const base64 = await loadArabicFont(key);
+    // Tier 2: persistent IndexedDB cache.
+    let base64: string | null = null;
+    try {
+      base64 = await getCachedFont(key);
+    } catch {
+      base64 = null;
+    }
+    // Tier 3: network.
+    if (!base64) {
+      base64 = await loadArabicFont(key);
+      if (base64) {
+        // Best-effort persist; failures must never break exports.
+        void putCachedFont(key, base64).catch(() => {});
+      }
+    }
     if (!base64) {
       throw new PdfFontLoadError(key, `font "${config.name}" failed to load`);
     }

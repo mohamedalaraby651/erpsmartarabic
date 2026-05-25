@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Receipt, Save, Loader2, Info, Type } from 'lucide-react';
+import { Receipt, Save, Loader2, Info, Type, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AVAILABLE_FONTS } from '@/lib/arabicFont';
 import type { PdfFontKey } from '@/lib/arabicFont';
 import { setPdfFontPreference } from '@/lib/pdf/fonts/fontPreference';
+import { clearFontDiskCache } from '@/lib/pdf/fonts/fontCache';
+import { clearFontCache as clearFontMemCache } from '@/lib/pdf/fonts/fontRegistry';
 
 interface InvoiceSettingsSectionProps {
   onDataChange?: () => void;
@@ -259,6 +261,27 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
               تأكد من الضغط على "حفظ" لتطبيق التغييرات.
             </AlertDescription>
           </Alert>
+
+          <div className="flex items-center justify-between gap-3 p-3 border rounded-lg bg-muted/20">
+            <div className="text-sm">
+              <p className="font-medium">ذاكرة الخطوط المؤقتة</p>
+              <p className="text-xs text-muted-foreground">
+                مسح نسخ الخطوط المخزنة محلياً لإعادة تحميلها من المصدر.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                clearFontMemCache();
+                await clearFontDiskCache();
+                toast({ title: 'تم مسح ذاكرة الخطوط' });
+              }}
+            >
+              <Trash2 className="h-4 w-4 ml-2" />
+              مسح
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
