@@ -174,8 +174,11 @@ export default function QuoteNewPage() {
           onRemoveItem={removeItem}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <div className="space-y-3 bg-muted p-4 rounded-lg md:col-start-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
+          <div className="hidden lg:block">
+            <LivePreviewPanel profile={pdfProfile} height={420} />
+          </div>
+          <div className="space-y-3 bg-muted p-4 rounded-lg">
             <div className="flex justify-between">
               <span>المجموع الفرعي:</span>
               <span className="font-bold">{subtotal.toLocaleString()} ج.م</span>
@@ -215,15 +218,28 @@ export default function QuoteNewPage() {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {lastSavedId && (
+            <Button type="button" variant="outline" onClick={() => setPrintOpen(true)}>
+              <Printer className="h-4 w-4 ml-1" /> طباعة PDF
+            </Button>
+          )}
           <Button
             onClick={submit}
-            disabled={create.isPending || !customerId || items.length === 0}
+            disabled={create.isPending || !customerId || items.length === 0 || !!lastSavedId}
           >
             <Save className="h-4 w-4 ml-1" /> حفظ عرض السعر
           </Button>
         </div>
       </Card>
+
+      {lastSavedId && (
+        <QuotationPrintView
+          quotationId={lastSavedId}
+          open={printOpen}
+          onOpenChange={setPrintOpen}
+        />
+      )}
     </div>
   );
 }
