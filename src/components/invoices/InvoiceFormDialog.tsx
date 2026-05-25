@@ -227,7 +227,13 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
           {Step1Header}
           {Step2Items}
           <InvoiceTotalsSection subtotal={subtotal} total={total} register={register} />
-          <InvoiceValidation isValidating={isValidating} isPending={mutation.isPending} isEditing={isEditing} onCancel={() => onOpenChange(false)} />
+          <div className="hidden lg:block">
+            <LivePreviewPanel profile={pdfProfile} height={420} />
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            {printButton}
+            <InvoiceValidation isValidating={isValidating} isPending={mutation.isPending} isEditing={isEditing} onCancel={() => onOpenChange(false)} />
+          </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -245,7 +251,18 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
     />
   );
 
-  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
+  return (
+    <>
+      <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />
+      {lastSavedId && (
+        <InvoicePrintView
+          invoiceId={lastSavedId}
+          open={printOpen}
+          onOpenChange={setPrintOpen}
+        />
+      )}
+    </>
+  );
 };
 
 export default InvoiceFormDialog;
