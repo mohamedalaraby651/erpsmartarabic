@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Receipt, Save, Loader2, Info, Type } from 'lucide-react';
+import { Receipt, Save, Loader2, Info, Type, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AVAILABLE_FONTS } from '@/lib/arabicFont';
 import type { PdfFontKey } from '@/lib/arabicFont';
 import { setPdfFontPreference } from '@/lib/pdf/fonts/fontPreference';
+import { clearFontDiskCache } from '@/lib/pdf/fonts/fontCache';
+import { clearFontCache as clearFontMemCache } from '@/lib/pdf/fonts/fontRegistry';
 
 interface InvoiceSettingsSectionProps {
   onDataChange?: () => void;
