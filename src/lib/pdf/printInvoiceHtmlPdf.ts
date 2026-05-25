@@ -14,14 +14,13 @@
 import { buildPdfConfig, toPageConfig, type PdfConfigInput, type PdfConfig } from './config/pdfConfigSchema';
 import { preflightInvoice } from './diagnostics/preflightValidator';
 import { safeRender } from './diagnostics/PdfErrorBoundary';
-import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRules';
+import { detectTashkeel } from './arabic/typographyRules';
 import {
   renderInvoiceHtml,
   INVOICE_HTML_CSS,
-  buildWatermarkImageCss,
-  withWatermarkImage,
   type InvoiceHtmlData,
 } from './templates/InvoiceHtmlTemplate';
+import { composeRenderPayload } from './templates/TemplateComposer';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
 import { buildDocFilename } from './utils/filename';
 
