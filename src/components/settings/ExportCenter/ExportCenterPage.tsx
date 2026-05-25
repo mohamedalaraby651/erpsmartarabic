@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, FileText, FileSpreadsheet, Database, ListChecks, RotateCcw, ExternalLink, Palette } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Database, ListChecks, RotateCcw, ExternalLink, Palette, History } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { BackupTab } from '@/components/settings/BackupTab';
 import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { FormatPreferencesSection } from './FormatPreferencesSection';
 import { RenderProfileSection } from './RenderProfileSection';
+import { AuditTimelinePanel } from './AuditTimelinePanel';
 import { useExportSettings } from '@/hooks/useExportSettings';
 
 interface JobRow {
@@ -124,7 +125,7 @@ export function ExportCenterPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto">
           <TabsTrigger value="profile" className="gap-2 py-2.5">
             <Palette className="h-4 w-4" /> هوية المستندات
           </TabsTrigger>
@@ -133,6 +134,9 @@ export function ExportCenterPage() {
           </TabsTrigger>
           <TabsTrigger value="format" className="gap-2 py-2.5">
             <FileSpreadsheet className="h-4 w-4" /> التنسيقات
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-2 py-2.5">
+            <History className="h-4 w-4" /> سجل التغييرات
           </TabsTrigger>
           {isAdmin && (
             <TabsTrigger value="backup" className="gap-2 py-2.5">
@@ -154,6 +158,10 @@ export function ExportCenterPage() {
 
         <TabsContent value="format" className="space-y-6">
           <FormatPreferencesSection />
+        </TabsContent>
+
+        <TabsContent value="audit" className="space-y-6">
+          <AuditTimelinePanel />
         </TabsContent>
 
         {isAdmin && (
