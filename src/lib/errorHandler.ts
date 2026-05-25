@@ -21,11 +21,11 @@ const POSTGRES_ERROR_MAP: Record<string, ContextualError> = {
     action: 'تحقق من البيانات المدخلة أو عدّل السجل الموجود',
   },
   '23503': {
-    userMessage: 'لا يمكن حذف هذا السجل',
+    userMessage: 'لا يمكن حذف هذا السجل لأنه مرتبط بسجلات أخرى',
     action: 'يجب حذف السجلات المرتبطة به أولاً',
   },
   '23502': {
-    userMessage: 'يوجد حقل مطلوب فارغ',
+    userMessage: 'يوجد حقل من الحقول المطلوبة فارغ',
     action: 'يرجى ملء جميع الحقول المطلوبة (*)',
   },
   '23514': {
@@ -153,7 +153,7 @@ const ERROR_PATTERN_MAP: Array<{ pattern: RegExp; error: ContextualError }> = [
 
 // Default safe error
 const DEFAULT_ERROR: ContextualError = {
-  userMessage: 'حدث خطأ',
+  userMessage: 'حدث خطأ، يرجى المحاولة مرة أخرى',
   action: 'يرجى المحاولة مرة أخرى',
 };
 
