@@ -234,15 +234,28 @@ function LivePreviewPanelInner({ profile, height = 560 }: Props) {
                   alignItems: 'flex-end',
                 }}
               >
-                <div>
-                  <div style={{ fontWeight: 700, color: deferred.branding.primaryColor, fontSize: `${14 * scale}px` }}>
-                    {deferred.branding.companyName || 'اسم الشركة'}
-                  </div>
-                  {deferred.branding.taxNumber && (
-                    <div style={{ fontSize: `${8 * scale}px`, opacity: 0.7 }}>
-                      ر.ض: {deferred.branding.taxNumber}
-                    </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * scale}px` }}>
+                  {logoUrl && (
+                    <img
+                      src={logoUrl}
+                      alt=""
+                      style={{
+                        height: `${24 * scale}px`,
+                        width: 'auto',
+                        objectFit: 'contain',
+                      }}
+                    />
                   )}
+                  <div>
+                    <div style={{ fontWeight: 700, color: deferred.branding.primaryColor, fontSize: `${14 * scale}px` }}>
+                      {deferred.branding.companyName || 'اسم الشركة'}
+                    </div>
+                    {deferred.branding.taxNumber && (
+                      <div style={{ fontSize: `${8 * scale}px`, opacity: 0.7 }}>
+                        ر.ض: {deferred.branding.taxNumber}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div
                   style={{
