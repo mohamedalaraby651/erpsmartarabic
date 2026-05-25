@@ -28,6 +28,7 @@ import { BackupTab } from '@/components/settings/BackupTab';
 import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { OfflineSettings } from '@/components/settings/OfflineSettings';
 import { AdaptivePerformanceSettings } from '@/components/settings/AdaptivePerformanceSettings';
+import { PdfEngineSettings } from '@/components/settings/PdfEngineSettings';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import { TenantSettings } from '@/components/tenant/TenantSettings';
 import { AboutSystemCard } from '@/components/system/AboutSystemCard';
