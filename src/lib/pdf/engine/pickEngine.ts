@@ -8,8 +8,7 @@
  *   import.meta.env.VITE_PDF_ENGINE_HTML = 'true'→ build-time opt-in
  */
 import type { IPdfEngine } from './IPdfEngine';
-import { jsPdfEngine } from './JsPdfEngine';
-import { htmlPdfEngine } from './HtmlPdfEngine';
+import { engineRegistry } from './EngineStrategyRegistry';
 
 export interface PickEngineOptions {
   docType: string;
@@ -48,7 +47,9 @@ export function isHtmlEngineEnabledFor(docType: string): boolean {
 }
 
 export function pickEngine(opts: PickEngineOptions): IPdfEngine {
-  if (opts.prefer === 'html2pdf') return htmlPdfEngine;
-  if (opts.prefer === 'jspdf') return jsPdfEngine;
-  return isHtmlEngineEnabledFor(opts.docType) ? htmlPdfEngine : jsPdfEngine;
+  if (opts.prefer === 'html2pdf') return engineRegistry.get('html2pdf');
+  if (opts.prefer === 'jspdf') return engineRegistry.get('jspdf');
+  return isHtmlEngineEnabledFor(opts.docType)
+    ? engineRegistry.get('html2pdf')
+    : engineRegistry.get('jspdf');
 }
