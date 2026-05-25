@@ -122,7 +122,7 @@ export async function resolvePdfConfig(
     ? mergeProfiles(global, scoped)
     : (scoped ?? global)!;
 
-  const config = profileToPdfConfigInput(merged);
+  const config = await profileToPdfConfigInputAsync(merged, assetResolver);
   cache.set(key, { config, expiresAt: Date.now() + CACHE_TTL_MS });
   return config;
 }
