@@ -17,7 +17,7 @@ import { safeRender, type PdfBoundaryResult } from './diagnostics/PdfErrorBounda
 import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRules';
 import { renderInvoiceHtml, INVOICE_HTML_CSS, type InvoiceHtmlData } from './templates/InvoiceHtmlTemplate';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
-import { buildInvoiceFilename } from './utils/filename';
+import { buildDocFilename } from './utils/filename';
 
 export type PrintOutput = 'save' | 'blob';
 
