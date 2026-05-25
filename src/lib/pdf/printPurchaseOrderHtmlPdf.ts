@@ -8,6 +8,8 @@ import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRule
 import {
   renderPurchaseOrderHtml,
   PURCHASE_ORDER_HTML_CSS,
+  buildWatermarkImageCss,
+  withWatermarkImage,
   type PurchaseOrderHtmlData,
 } from './templates/PurchaseOrderHtmlTemplate';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
