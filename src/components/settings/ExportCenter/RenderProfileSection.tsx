@@ -22,10 +22,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { usePdfProfile } from '@/hooks/usePdfProfile';
 import { LivePreviewPanel } from './LivePreviewPanel';
+import { AssetUploader } from './AssetUploader';
 import { validateProfile, createDefaultProfile } from '@/domain/pdf/entities/DocumentRenderProfile';
 import type { DocumentRenderProfile } from '@/domain/pdf/entities/DocumentRenderProfile';
 import type { PaperSize, PageOrientation } from '@/domain/pdf/value-objects/PdfLayout';
 import type { PdfFontKey } from '@/domain/pdf/value-objects/PdfTypography';
+import type { WatermarkType } from '@/domain/pdf/value-objects/PdfWatermark';
+import {
+  RadioGroup, RadioGroupItem,
+} from '@/components/ui/radio-group';
 
 const PAPER_SIZES: PaperSize[] = ['A4', 'A5', 'A3', 'Letter', 'Legal'];
 const FONTS: { key: PdfFontKey; label: string }[] = [
