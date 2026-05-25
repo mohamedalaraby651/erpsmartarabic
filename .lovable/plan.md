@@ -1,254 +1,165 @@
-# المخطط المعماري الشامل: محرك التصدير و PDF العربي على مستوى المؤسسات
 
-> ملاحظة: المشروع يحتوي بالفعل على بنية تحتية متقدمة (`src/lib/pdf/`) تشمل: `HtmlPdfEngine`, `pickEngine`, `arabicCss`, `fontRegistry`, `fontPreference`, `InvoiceHtmlTemplate`, `telemetryScheduler` مع 120 اختباراً ناجحاً. هذا المخطط يبني فوق ما هو موجود ولا يعيد اختراعه.
+# خطة الهجرة الشاملة لمحرك PDF v2 — أربع مراحل
+
+> **الأساس الموجود**: 169/169 اختبار ناجح، `src/lib/pdf/` يحتوي على `engine/`, `templates/`, `arabic/`, `config/`, `diagnostics/`, `fonts/`, `layout/`. المحرك القديم `src/lib/pdfGenerator.ts` (626 سطر) لا يزال يخدم 100% من الإنتاج عبر `pdfGeneratorLazy.ts` ومستهلَك في 13+ ملف UI. الخطة تبني فوق هذا الأساس ولا تكرّره.
 
 ---
 
-## المرحلة 1: المعمارية والفصل الهيكلي (Separation of Concerns)
+## المرحلة 1 — التحقق المسبق وصندوق رمل العزل
 
-### 1.1 طبقات النظام
+### 1.1 صفحة `PdfSandboxPage` (مسار `/dev/pdf-sandbox`)
+- صفحة React محمية بـ `import.meta.env.DEV` فقط، تُستثنى من البناء الإنتاجي.
+- تستورد `bidi`, `typographyRules`, `arabicCss`, `printInvoiceHtmlPdf`.
+- بطاقات اختبار جاهزة لـ:
+  - نص عربي خالص بالتشكيل: «بِسْمِ اللهِ الرَّحْمنِ الرَّحِيمِ».
+  - مختلط EN/AR: «Invoice #INV-2026-001 — فاتورة لشركة ABC International Ltd.».
+  - عملات وأرقام: `1,500.50 ر.س`, `EGP 12,345.67`, `-450.00 د.ك`.
+  - أسماء مؤسسية طويلة (>80 حرفاً) + سطر عنوان طويل.
+  - حالات حدّية: حروف نازلة (ج/ح/ع)، لام-ألف، URL طويل، إيموجي.
+- لكل بطاقة: عرض النص بعد `sanitizeBidiText` + `reshapeArabicText`، زر «صدّر PDF» يستدعي `printInvoiceHtmlPdf` مع `output:'blob'` ويعرضه في `<iframe>` للمعاينة الفورية.
 
+### 1.2 ربط `preflightValidator` + `DataValidator` بـ React Query
+- إنشاء hook موحّد `useExportPdf({ docType, data })` يلتف حول `useMutation`.
+- داخل `mutationFn`:
+  1. `preflightInvoice(data)` → في حال `valid:false` يرمي `PreflightError` يحمل `errors[]`.
+  2. التحقق من `tenant_id`, `tax_registration_number`, `customer.name`.
+  3. عند النجاح يستدعي `printInvoiceHtmlPdf` تحت `safeRender`.
+- `onError` يعرض `Alert` ديناميكي (مكوّن `PdfPreflightAlert`) يسرد الحقول الناقصة بالعربية بدلاً من توليد ملف معطوب.
+- يُستهلك في `UnifiedExportMenu`, `InvoiceQuickActions`, `BulkPrintConfirmDialog`.
+
+---
+
+## المرحلة 2 — الإطلاق التجريبي (Canary) والقياس عن بُعد
+
+### 2.1 توسيع `featureFlags.ts` بـ Canary 10%
+- إضافة `getPdfV2Rollout(): { enabled, percentage }` يقرأ:
+  1. `localStorage.pdf_engine_v2 === '1'` → 100% للمستخدم.
+  2. `VITE_PDF_ENGINE_V2_PERCENT` (0-100) → بناء على `hash(tenant_id + docType) % 100`.
+  3. افتراضي 0% (آمن).
+- إنشاء `routePdfRequest(docType, data, opts)`:
+  ```text
+  ┌─ shouldUseV2(docType, tenantId) ──► printInvoiceHtmlPdf
+  │     ├─ success → telemetry.record({ engine:'v2', ok:true })
+  │     └─ catch   → telemetry.record({ engine:'v2', ok:false, error })
+  │                  └─► fallback: pdfGeneratorLazy.generatePDF(...)
+  └─ else ──► pdfGeneratorLazy.generatePDF(...)
+  ```
+- التحديث في `UnifiedExportMenu.tsx` فقط — سطر واحد بدل استدعاء `generatePDF` المباشر.
+
+### 2.2 مغسلة القياس (`telemetrySink` + `telemetryScheduler`)
+- توسيع البنية الحالية بحقول:
+  - `latencyMs` (هدف <1800ms لـ 1-3 صفحات).
+  - `engine: 'v1' | 'v2'`, `docType`, `ok`, `errorCode`.
+  - `memDeltaMb` من `performance.memory`.
+  - `fontCacheHit: 'memory' | 'disk' | 'network'` (يضاف داخل `fontRegistry`).
+- `telemetryScheduler` يجمع كل 60 ثانية ويُرسل عبر edge function `log-event` (موجود).
+- لوحة `/dev/pdf-telemetry` (DEV-only) تعرض p50/p95/p99، نسبة النجاح لكل محرك، أبطأ القوالب.
+
+---
+
+## المرحلة 3 — هجرة القوالب الكاملة وحذف القديم
+
+### 3.1 قوالب جديدة ترث `BaseTemplate`
+- إنشاء `templates/QuotationHtmlTemplate.ts`, `PurchaseOrderHtmlTemplate.ts`, `LedgerHtmlTemplate.ts`, `StatementHtmlTemplate.ts`.
+- كل قالب: `render(data, config): { html, css }` + ملف اختبار `.test.ts`.
+- تسجيلها في `templateRegistry` عبر `overrideTemplate(docType, { engine: htmlPdfEngine, ... })`.
+- الالتزام بـ ≤500 سطر/قالب — استخراج الترويسة/التذييل إلى `templates/partials/`.
+
+### 3.2 خوارزمية ترقيم الصفحات بدون تصادم
 ```text
-┌─────────────────────────────────────────────────────────┐
-│ Layer 5: Delivery     │ download / preview / print      │
-├─────────────────────────────────────────────────────────┤
-│ Layer 4: Rendering    │ HtmlPdfEngine (html2canvas+jsPDF)│
-│                       │ + pickEngine (fallback strategy) │
-├─────────────────────────────────────────────────────────┤
-│ Layer 3: Composition  │ Templates (Invoice/Quote/Report) │
-│                       │ + arabicCss + fontRegistry       │
-├─────────────────────────────────────────────────────────┤
-│ Layer 2: Configuration│ PdfConfigSchema (Zod-validated)  │
-│                       │ + fontPreference + companySettings│
-├─────────────────────────────────────────────────────────┤
-│ Layer 1: Data         │ DataAdapter (DB → Normalized DTO)│
-│                       │ + preflightValidator             │
-└─────────────────────────────────────────────────────────┘
+الإدخال: rows[], pageHeight, headerH, footerH
+1) قياس ارتفاع كل صف عبر offscreen render (overflowGuard.measureRow)
+2) availableH = pageHeight - headerH - footerH - safetyPadding(8mm)
+3) paginateRows(rows, availableH) → chunks[]
+4) لكل chunk: renderPaginatedTable مع:
+     - <thead> مكرر تلقائياً (display:table-header-group)
+     - tr { page-break-inside: avoid }
+     - tfoot للمجاميع
+5) overflowGuard.shrinkFont على الخلايا التي scrollWidth>clientWidth
+     سلم: 12→11→10→9 ثم word-break كملاذ أخير
+6) إدراج <div class="page-break"></div> بين chunks
 ```
+الناتج: لا تداخل مع الترويسة/التذييل، رأس الجدول يظهر في كل صفحة.
 
-### 1.2 اختيار المحرك ومبرراته
-
-| المحرك | الموقع | السبب |
-|--------|--------|--------|
-| **html2canvas + jsPDF** (الحالي) | عميل/متصفح | يعمل بدون خادم، يحافظ على CSS، يدعم RTL أصلياً عبر `direction:rtl` |
-| **Puppeteer** (مقترح كـ Edge Function اختياري) | خادم Deno | لتقارير ضخمة (>50 صفحة) أو عند الحاجة لـ `@page` CSS الكامل |
-| **pdfmake** (مرفوض) | — | لا يدعم تشكيل الحروف العربية المتصلة بشكل موثوق |
-
-**حل تشوه الحروف العربية:** المحرك الحالي يعتمد على المتصفح نفسه لتشكيل النص (HarfBuzz داخل Chromium)، ثم يلتقط الناتج عبر `html2canvas`. هذا يضمن اتصال الحروف الصحيح بشرط تضمين خط يحوي جداول `GSUB/GPOS` (Cairo و Amiri يحققان ذلك).
-
-### 1.3 مخطط التهيئة الموحد (`PdfConfigSchema`)
-
-ملف جديد: `src/lib/pdf/config/pdfConfigSchema.ts`
-
-```ts
-{
-  page: {
-    size: 'A4' | 'A3' | 'A5' | 'Letter' | { width:number; height:number; unit:'mm'|'pt' },
-    orientation: 'portrait' | 'landscape',
-    margins: { top, right, bottom, left }  // بالـ mm
-  },
-  typography: {
-    fontKey: PdfFontKey,           // ربط مع fontRegistry الموجود
-    baseFontSizePx: number,         // افتراضي 12
-    lineHeight: number,             // افتراضي 1.6 لاستيعاب التشكيل
-    letterSpacing: number
-  },
-  header: { enabled, height, html?, logoUrl?, showOnFirstPage },
-  footer: { enabled, height, html?, pageNumbers: { format:'page x of y'|'x/y', position } },
-  watermark: { enabled, text?, imageUrl?, opacity, rotation, tiled },
-  branding: { primaryColor, secondaryColor, companyName, taxNumber },
-  behavior: { embedFonts:true, compressImages, jpegQuality:0.92 }
-}
-```
+### 3.3 خطة الحذف الآمنة لـ `pdfGenerator.ts`
+| الخطوة | الإجراء | معيار التحقق |
+|--------|---------|--------------|
+| 1 | كل استدعاءات `generatePDF` تمرّ عبر `routePdfRequest` | grep لا يجد استدعاءات مباشرة خارج `pdfGeneratorLazy` |
+| 2 | رفع Canary إلى 100% لمدة 7 أيام مع `error_rate < 0.5%` | تقرير `telemetry` |
+| 3 | تحويل `pdfGeneratorLazy` إلى shim يستدعي v2 مباشرة | الاختبارات تمر |
+| 4 | حذف `pdfGenerator.ts` + `bulkInvoicePdfGenerator.ts` + `statementPdfGenerator.ts` | بناء يمر، 0 imports |
+| 5 | حذف `pdfGeneratorLazy.ts` وتحديث المستوردين | شجرة الحزمة أصغر بـ ~800KB |
 
 ---
 
-## المرحلة 2: الطباعة العربية المتقدمة
+## المرحلة 4 — الأداء وتقسيم الكود والـ Edge
 
-### 2.1 خط أنابيب تضمين الخطوط
+### 4.1 التحميل الكسول لمكتبات العرض
+- `htmlPdfEngine` يستخدم `loadHtml2Pdf()` (موجود) — التأكد من `import()` ديناميكي فقط.
+- إضافة `loadJsPdf()` في `engine/JsPdfEngine.ts` بنفس النمط:
+  ```ts
+  let _jsPdf: Promise<typeof import('jspdf')> | null = null;
+  export const loadJsPdf = () => (_jsPdf ??= import('jspdf'));
+  ```
+- التحقق عبر `vite build --report` أن `jspdf` و `html2canvas` لا يدخلان `index.js` الرئيسي.
+- ضبط `vite.config.ts` بـ `manualChunks: { pdf: ['jspdf','html2canvas','jspdf-autotable'] }`.
 
-تم تنفيذه جزئياً في `fontRegistry.ts` و `arabicCss.ts`. الإضافات المطلوبة:
-
-1. **توسيع `AVAILABLE_FONTS`** ليشمل: Cairo (موجود)، Tajawal، Amiri (موجود)، Noto Naskh Arabic، Almarai.
-2. **تحميل كسول (Lazy)**: تحميل الخط فقط عند أول استدعاء عبر `fetch` ثم `base64` ثم `@font-face`.
-3. **ذاكرة تخزين مؤقت** (`fontCache.ts`): تخزين base64 في `IndexedDB` لتفادي إعادة التحميل (الخط الواحد ~400KB).
-4. **التحقق من `unicode-range`** لضمان أن المتصفح يستخدم الخط العربي للحروف العربية فقط.
-
-### 2.2 منع قص التشكيل والحروف النازلة
-
-ملف جديد: `src/lib/pdf/arabic/typographyRules.ts`
-
-```css
-.pdf-root {
-  line-height: 1.8;              /* أكبر من العادي لاستيعاب الفتحة/الكسرة */
-  padding-block: 0.15em;          /* يمنع قص الحروف النازلة كـ ج، ح، ع */
-  text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "mark" 1, "mkmk" 1;
-  font-variant-numeric: tabular-nums;
-}
-.pdf-root .with-tashkeel { line-height: 2.0; }
-.pdf-root td, .pdf-root th { padding-block: 6px; vertical-align: middle; }
-```
-
-### 2.3 توريث الإعدادات
-
-`PdfConfigContext` (React Context) يضخ `typography` في كل قالب، ويُترجم إلى متغيرات CSS:
-```css
-:root { --pdf-base-fs: 12px; --pdf-lh: 1.8; --pdf-tracking: 0; }
-```
+### 4.2 Edge Function للتصدير الثقيل
+- دالة `supabase/functions/render-pdf/index.ts`:
+  - تستقبل `{ docType, data, deliver: 'download' | 'email', recipientEmail? }`.
+  - تتحقق من JWT + `tenant_id` + الصلاحيات (`has_role`).
+  - تستخدم Puppeteer عبر `npm:@sparticuz/chromium` لتقارير >50 صفحة.
+  - تخزن الملف في Supabase Storage (`pdf-exports/{tenant}/{uuid}.pdf`) وتُرجع URL موقّع.
+  - عند `deliver:'email'` تستدعي Resend (يحتاج `RESEND_API_KEY` — سيُطلب).
+- جدولة ليلية عبر `pg_cron` لتقارير الأرصدة الكبيرة:
+  ```sql
+  select cron.schedule('nightly-balance-sheets', '0 2 * * *', $$
+    select net.http_post(url:='.../functions/v1/render-pdf', ...)
+  $$);
+  ```
+- جدول `pdf_export_jobs` (status, doc_type, file_url, created_by, tenant_id) مع RLS بحسب `tenant_id`.
 
 ---
 
-## المرحلة 3: التشخيص والكشف التلقائي
+## التفاصيل التقنية والملفات المنشأة/المعدّلة
 
-### 3.1 حدود الأخطاء المعزولة
+**ملفات جديدة (24):**
+- `src/pages/dev/PdfSandboxPage.tsx` + `PdfSandboxPage.test.tsx`
+- `src/pages/dev/PdfTelemetryPage.tsx`
+- `src/hooks/useExportPdf.ts` + اختبار
+- `src/components/print/PdfPreflightAlert.tsx`
+- `src/lib/pdf/routing/routePdfRequest.ts` + اختبار
+- `src/lib/pdf/routing/canaryRollout.ts` + اختبار
+- `src/lib/pdf/templates/QuotationHtmlTemplate.ts` + اختبار
+- `src/lib/pdf/templates/PurchaseOrderHtmlTemplate.ts` + اختبار
+- `src/lib/pdf/templates/LedgerHtmlTemplate.ts` + اختبار
+- `src/lib/pdf/templates/StatementHtmlTemplate.ts` + اختبار
+- `src/lib/pdf/templates/partials/Header.ts`, `Footer.ts`, `LineItems.ts`
+- `supabase/functions/render-pdf/index.ts` + `index_test.ts`
+- migration: جدول `pdf_export_jobs` + RLS
 
-ملف جديد: `src/lib/pdf/diagnostics/PdfErrorBoundary.ts`
+**ملفات معدّلة:**
+- `src/lib/pdf/featureFlags.ts` (إضافة Canary)
+- `src/lib/pdf/engine/JsPdfEngine.ts` (تحميل كسول)
+- `src/lib/pdf/fonts/fontRegistry.ts` (تسجيل `fontCacheHit`)
+- `src/lib/pdf/diagnostics/telemetrySink.ts` (حقول جديدة)
+- `vite.config.ts` (`manualChunks`)
+- `src/components/print/UnifiedExportMenu.tsx` + 12 موقع استدعاء آخر
+- حذف نهائي: `pdfGenerator.ts`, `pdfGeneratorLazy.ts`, `bulkInvoicePdfGenerator.ts`, `statementPdfGenerator.ts`
 
-```ts
-async function safeRender(fn): Promise<Result<Blob, PdfError>> {
-  const startMem = performance.memory?.usedJSHeapSize;
-  const t0 = performance.now();
-  try {
-    const blob = await Promise.race([fn(), timeout(60_000)]);
-    telemetry.record({ ok:true, durationMs: performance.now()-t0,
-                       memDeltaMb: (perf.memory?.usedJSHeapSize - startMem)/1e6 });
-    return { ok:true, value: blob };
-  } catch (e) {
-    telemetry.record({ ok:false, error: classify(e) });
-    return { ok:false, error: classify(e) };
-  }
-}
-```
+**معايير القبول:**
+- جميع الاختبارات ≥ 200/200 ناجحة.
+- p95 لتوليد فاتورة 1-3 صفحات < 1800ms.
+- نسبة الفشل في v2 < 0.5% على عيّنة 7 أيام Canary.
+- لا استيراد متبقٍ لـ `pdfGenerator` (grep فارغ).
+- حجم `index.js` الرئيسي ينخفض ≥ 600KB بعد إخراج jsPDF/html2canvas.
+- جميع القوالب RTL متوافقة (اختبار Playwright `e2e/export-rtl.spec.ts` يمر).
 
-### 3.2 طبقة التحقق المسبق (Preflight)
+**ترتيب التنفيذ المقترح (موجات):**
+1. **الموجة 20**: المرحلة 1 كاملة (Sandbox + useExportPdf + Alert).
+2. **الموجة 21**: المرحلة 2 (Canary + Telemetry).
+3. **الموجات 22-24**: المرحلة 3 (قالب لكل موجة).
+4. **الموجة 25**: حذف القديم + `manualChunks`.
+5. **الموجة 26**: المرحلة 4 (Edge Function + Cron).
 
-ملف جديد: `src/lib/pdf/diagnostics/preflightValidator.ts`
-
-تستخدم Zod للتحقق من:
-- **بنية البيانات**: حقول مطلوبة، أنواع، حدود قيم.
-- **حدود الطول**: `invoiceNumber.length ≤ 32`، `description.length ≤ 500`، `notes ≤ 2000`.
-- **الأرقام المالية**: لا قيم سالبة لـ `quantity`، `unitPrice ≥ 0`، `taxRate ∈ [0,100]`.
-- **توفر الأصول**: HEAD request على `logoUrl` و `fontUrl` مع timeout 3 ثوانٍ.
-- **تنظيف Bidi**: إزالة `\u200E-\u202E` و `\u2066-\u2069` (موجود في `esc()`).
-
-النتيجة: `{ valid, errors[], warnings[], sanitizedData }`.
-
-### 3.3 نظام القياس عن بُعد
-
-توسيع `telemetryScheduler.ts` الموجود لإرسال:
-- متوسط وقت العرض، p95، p99
-- استهلاك الذاكرة لكل قالب
-- معدل الفشل لكل نوع مستند
-- الخطوط الأبطأ تحميلاً
-
----
-
-## المرحلة 4: الإصلاح التلقائي والحالات الحدية
-
-### 4.1 جداول متعددة الصفحات
-
-ملف جديد: `src/lib/pdf/layout/tablePagination.ts`
-
-```ts
-// قبل الالتقاط، احسب ارتفاع كل صف وقسّم لصفحات منطقية
-function paginateTable(rows, pageHeight, headerHeight, footerHeight) {
-  const pages = [];
-  let current = []; let height = 0;
-  for (const row of rows) {
-    if (height + row.h > pageHeight - headerHeight - footerHeight) {
-      pages.push(current); current = []; height = 0;
-    }
-    current.push(row); height += row.h;
-  }
-  return pages.map(p => renderPageWithRepeatedHeader(p));
-}
-```
-
-CSS مكمل:
-```css
-thead { display: table-header-group; }   /* تكرار الرأس تلقائياً */
-tr    { page-break-inside: avoid; }
-tfoot { display: table-footer-group; }
-```
-
-### 4.2 احتواء الفائض
-
-`src/lib/pdf/layout/overflowGuard.ts`:
-- قياس `scrollWidth > clientWidth` لكل خلية.
-- تطبيق سلم: `font-size: 12px → 11px → 10px → 9px` حتى يختفي الفائض.
-- إن استمر، تفعيل `word-break: break-word` كملاذ أخير.
-
-### 4.3 محرك الاحتياط (Fallback Engine)
-
-موجود جزئياً في `pickEngine.ts`. التوسعة:
-```text
-Cairo (preferred) ──fail──► Amiri ──fail──► Noto Naskh ──fail──►
-   System Arabic (Segoe UI/Tahoma) ──fail──► Render warning watermark
-```
-كل فشل يُسجَّل في `telemetry` ولا يكسر الإخراج.
-
----
-
-## المرحلة 5: الاختبار والتحقق الشامل
-
-### 5.1 بروتوكول QA
-
-| الفئة | السيناريو | الأداة |
-|------|-----------|--------|
-| اختبار وحدة | حساب المجاميع، تنظيف Bidi، اختيار الخط | Vitest (موجود) |
-| تكامل | قالب كامل ← Blob ← فك PDF والتحقق من النص | Vitest + pdf-parse |
-| ضغط | 5000 صف فاتورة، 100 PDF متوازي | Vitest + benchmark |
-| حدية | نصوص مختلطة EN/AR، روابط طويلة، إيموجي | Vitest |
-| انحدار بصري | مقارنة بكسلية لصور PNG لكل قالب | Playwright + pixelmatch |
-
-### 5.2 الانحدار البصري
-
-ملف جديد: `tests/visual/pdf.spec.ts` (Playwright):
-1. توليد PDF لكل قالب ببيانات ثابتة (`fixtures/`).
-2. تحويل لـ PNG عبر `pdf-to-png-converter`.
-3. مقارنة مع لقطة مرجعية (`__snapshots__/`) بعتبة 0.1% اختلاف بكسلي.
-4. عند الفشل، حفظ صورة الفرق في CI artifacts.
-
-### 5.3 مصفوفة التغطية المستهدفة
-
-- وحدات: ≥90% (حالياً 120 اختبار)
-- قوالب: 100% (Invoice، Quote، Receipt، Statement، Report)
-- لغات: AR، EN، AR+EN مختلط
-- متصفحات: Chromium، WebKit (Safari)، Firefox
-
----
-
-## ملفات سيتم إنشاؤها (الموجة 15+)
-
-| الملف | الغرض |
-|-------|-------|
-| `src/lib/pdf/config/pdfConfigSchema.ts` | Zod schema للتهيئة الكاملة |
-| `src/lib/pdf/config/PdfConfigContext.tsx` | React Context للتوريث |
-| `src/lib/pdf/fonts/fontCache.ts` | تخزين IndexedDB للخطوط |
-| `src/lib/pdf/arabic/typographyRules.ts` | قواعد CSS متقدمة للتشكيل |
-| `src/lib/pdf/diagnostics/preflightValidator.ts` | التحقق المسبق |
-| `src/lib/pdf/diagnostics/PdfErrorBoundary.ts` | عزل الأخطاء + قياس |
-| `src/lib/pdf/layout/tablePagination.ts` | تقسيم الجداول الذكي |
-| `src/lib/pdf/layout/overflowGuard.ts` | منع الفائض |
-| `src/lib/pdf/printInvoiceHtmlPdf.ts` | الواجهة الموحدة `print(data, config)` |
-| `src/components/settings/PdfAdvancedSettings.tsx` | UI لتعديل كل خيارات التهيئة |
-| `tests/visual/pdf.spec.ts` | Playwright visual regression |
-| ملفات اختبار `.test.ts` لكل ما سبق | تغطية ≥90% |
-
----
-
-## خارطة طريق التنفيذ (موجات مقترحة)
-
-1. **الموجة 15**: `pdfConfigSchema` + `PdfConfigContext` + `printInvoiceHtmlPdf` (الواجهة الموحدة).
-2. **الموجة 16**: `preflightValidator` + `PdfErrorBoundary` المتكاملان.
-3. **الموجة 17**: `tablePagination` + `overflowGuard` + قالب تقرير متعدد الصفحات.
-4. **الموجة 18**: `fontCache` (IndexedDB) + توسيع `AVAILABLE_FONTS` (Tajawal, Noto Naskh, Almarai).
-5. **الموجة 19**: `PdfAdvancedSettings` UI متكامل مع `company_settings`.
-6. **الموجة 20**: Playwright visual regression + benchmark suite.
-
-كل موجة: تنفيذ + اختبارات + توثيق + التحقق من تشغيل المجموعة الكاملة (يجب أن يبقى عدد الاختبارات في تزايد دون فشل).
-
----
-
-اعتمد الخطة لأبدأ من الموجة 15 فوراً.
+اعتمد الخطة لأبدأ الموجة 20 فوراً.
