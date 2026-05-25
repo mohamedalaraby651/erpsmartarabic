@@ -31,5 +31,8 @@ export * from './layout/overflowGuard';
 export * from './layout/tablePagination';
 export * from './fonts/fontCache';
 export * from './printInvoiceHtmlPdf';
+export * from './printQuotationHtmlPdf';
+export * from './templates/QuotationHtmlTemplate';
+export * from './diagnostics/preflightQuotation';
 export * from './routing/canaryRollout';
 export * from './routing/routePdfRequest';

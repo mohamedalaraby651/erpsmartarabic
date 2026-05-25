@@ -11,6 +11,7 @@
 import { decideCanary } from './canaryRollout';
 import { startTimer, logPdfSuccess, logPdfFailure } from '../diagnostics/PdfLogger';
 import { printInvoiceHtmlPdf } from '../printInvoiceHtmlPdf';
+import { printQuotationHtmlPdf } from '../printQuotationHtmlPdf';
 import type { SupportedDocType } from '../templates/templateRegistry';
 
 export interface RoutePdfRequestOptions {
@@ -36,16 +37,29 @@ async function callLegacy(
   await mod.generateDocumentPDF(docType as never, data as never);
 }
 
+/** Doc types that have a v2 (HTML) implementation available. */
+const V2_SUPPORTED: ReadonlySet<SupportedDocType> = new Set([
+  'invoice',
+  'quotation',
+]);
+
 async function tryV2(
   docType: SupportedDocType,
   data: Record<string, unknown> & { items?: unknown[] },
 ): Promise<void> {
-  // v2 currently ships an invoice-grade HTML pipeline. Other doc types
-  // remain v1-only until their templates land in Phase 3.
-  if (docType !== 'invoice') {
+  if (!V2_SUPPORTED.has(docType)) {
     throw new Error(`v2 template not yet available for "${docType}"`);
   }
-  await printInvoiceHtmlPdf(data as never);
+  if (docType === 'invoice') {
+    const res = await printInvoiceHtmlPdf(data as never);
+    if (res.ok === false) throw new Error(res.message);
+    return;
+  }
+  if (docType === 'quotation') {
+    const res = await printQuotationHtmlPdf(data as never);
+    if (res.ok === false) throw new Error(res.message);
+    return;
+  }
 }
 
 export async function routePdfRequest(
