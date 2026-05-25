@@ -15,8 +15,8 @@ export interface PdfTypography {
 }
 
 export const DEFAULT_TYPOGRAPHY: PdfTypography = Object.freeze({
-  fontKey: 'cairo',
-  fallbackChain: ['cairo', 'tajawal', 'amiri', 'system'],
+  fontKey: 'cairo' as PdfFontKey,
+  fallbackChain: ['cairo', 'tajawal', 'amiri', 'system'] as PdfFontKey[],
   baseFontSizePx: 12,
   lineHeight: 1.7,
   letterSpacing: 0,
