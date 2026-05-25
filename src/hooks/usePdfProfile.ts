@@ -16,6 +16,7 @@ import {
 } from '@/domain/pdf/entities/DocumentRenderProfile';
 import { EXPORT_SETTINGS_EVENT } from './useExportSettings';
 import { invalidatePdfRenderCache } from '@/lib/pdf/services/PdfRenderService';
+import { usePdfProfileRealtime } from './usePdfProfileRealtime';
 import { toast } from 'sonner';
 
 export const PDF_PROFILE_QUERY_KEY = 'pdf-render-profile';
@@ -26,6 +27,8 @@ export function usePdfProfile(
 ) {
   const { tenantId } = useTenant();
   const qc = useQueryClient();
+  // اشتراك Realtime: ينعكس أي تغيير من تبويب آخر فوراً.
+  usePdfProfileRealtime();
 
   const query = useQuery({
     queryKey: [PDF_PROFILE_QUERY_KEY, tenantId, scopeType, scopeId],
