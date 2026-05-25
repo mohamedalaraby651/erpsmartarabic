@@ -1,181 +1,254 @@
-# خطة إعادة هيكلة نظام التصدير وتوليد PDF (دعم عربي كامل)
+# المخطط المعماري الشامل: محرك التصدير و PDF العربي على مستوى المؤسسات
 
-هدف الخطة: تحويل طبقة التصدير الحالية (`pdfGenerator`, `printDocument`, `UnifiedExportMenu`, `arabicFont`) إلى محرّك إنتاجي صلب، قابل للتخصيص بالكامل، خالٍ من مشاكل تقطيع الحروف العربية وعكس الاتجاه، مع إطار تشخيص وأخطاء متكامل.
-
----
-
-## المرحلة 1: التدقيق والاكتشاف (Audit & Discovery)
-
-### 1.1 جرد نقاط الإنتاج الحالية
-- مسح كل استدعاءات `jsPDF` و `html2pdf` و `pdfGenerator.ts` و `bulkInvoicePdfGenerator.ts` و `statementPdfGenerator.ts`.
-- توثيق كل صفحة طباعة (`InvoicePrintView`, `QuotationPrintView`, `SalesOrderPrintView`, `PurchaseOrderPrintView`, `PrintTemplate`) ومصدر بياناتها.
-- بناء جدول `export-matrix.md` يربط: نوع المستند ↔ مولّد PDF ↔ قالب الطباعة ↔ Repository.
-
-### 1.2 كشف الأخطاء الحالية
-- تشغيل سكربت تشخيص `scripts/pdf-audit.ts` يولّد PDF لكل نوع مستند ببيانات وهمية (قصيرة/طويلة/مختلطة عربي-لاتيني-أرقام) ويحفظ المخرجات في `/mnt/documents/pdf-audit/`.
-- فحص بصري إلزامي (`pdftoppm -r 150`) للكشف عن: تقطيع الحروف، عكس الأرقام، تداخل الأعمدة، قص النصوص عند حواف الصفحة، فقدان الخط الاحتياطي.
-- تشغيل اختبارات `arabicFont.test.ts` و `exportRtl.test.ts` و `e2e/export-rtl.spec.ts` وتسجيل أي إخفاقات.
-- تحليل ذاكرة: قياس حجم الـ bundle عند تحميل `jsPDF + Amiri base64` (متوقع >800KB) ووضعه في `docs/baseline-metrics.md`.
-
-### 1.3 مخرجات المرحلة
-- تقرير `docs/pdf-audit-2026.md` يحوي: قائمة الأعطال المؤكّدة، لقطات قبل/بعد، تصنيف الخطورة (Critical/Major/Minor).
+> ملاحظة: المشروع يحتوي بالفعل على بنية تحتية متقدمة (`src/lib/pdf/`) تشمل: `HtmlPdfEngine`, `pickEngine`, `arabicCss`, `fontRegistry`, `fontPreference`, `InvoiceHtmlTemplate`, `telemetryScheduler` مع 120 اختباراً ناجحاً. هذا المخطط يبني فوق ما هو موجود ولا يعيد اختراعه.
 
 ---
 
-## المرحلة 2: العمارة الأساسية واختيار التقنيات
+## المرحلة 1: المعمارية والفصل الهيكلي (Separation of Concerns)
 
-### 2.1 الاستراتيجية المختارة: محرّك مزدوج (Dual-Engine)
-| المحرّك | الاستخدام | السبب |
-|---|---|---|
-| **jsPDF + Amiri (مدمج حاليًا)** | المستندات الجدولية البسيطة (تقارير، كشوف، فواتير قياسية) | خفيف، يعمل client-side، لا يحتاج شبكة |
-| **html2pdf (puppeteer-lite عبر CDN)** | المستندات ذات التنسيق الغني (قوالب مخصصة، توقيعات، شعارات معقدة) | يستفيد من محرّك المتصفح في RTL والـ ligatures طبيعيًا |
-| **Edge Function `generate-pdf` (puppeteer headless)** اختياري Phase 5 | التصدير المجمّع الكبير (>50 صفحة) والإرسال بالبريد | يخرج العبء من المتصفح |
+### 1.1 طبقات النظام
 
-### 2.2 طبقة التجريد `PdfEngine`
-إنشاء `src/lib/pdf/engine/` بهيكل:
 ```text
-src/lib/pdf/
-├── engine/
-│   ├── IPdfEngine.ts        # واجهة موحّدة (render, addPage, drawText, drawTable)
-│   ├── JsPdfEngine.ts       # تطبيق jsPDF
-│   ├── HtmlPdfEngine.ts     # تطبيق html2pdf
-│   └── index.ts             # factory: pickEngine(docType, options)
-├── templates/
-│   ├── BaseTemplate.ts      # header/footer/watermark/pageNumber
-│   ├── InvoiceTemplate.ts
-│   ├── QuotationTemplate.ts
-│   ├── StatementTemplate.ts
-│   └── ReportTemplate.ts
-├── fonts/
-│   ├── fontRegistry.ts      # تحميل ديناميكي للخطوط
-│   └── assets/              # Amiri, Cairo, Tajawal (woff2 + base64)
-├── arabic/
-│   ├── reshaper.ts          # الموجود حاليًا منقول
-│   ├── bidi.ts              # خوارزمية UAX#9 مبسّطة
-│   └── shaper.test.ts
-├── diagnostics/
-│   ├── PdfLogger.ts
-│   ├── DataValidator.ts     # Zod schemas لكل نوع مستند
-│   └── ErrorBoundary.ts
-└── config/
-    ├── PageConfig.ts        # A4/A3/A5/Letter/Legal + portrait/landscape
-    └── ThemeConfig.ts       # ألوان/خطوط/هوامش
+┌─────────────────────────────────────────────────────────┐
+│ Layer 5: Delivery     │ download / preview / print      │
+├─────────────────────────────────────────────────────────┤
+│ Layer 4: Rendering    │ HtmlPdfEngine (html2canvas+jsPDF)│
+│                       │ + pickEngine (fallback strategy) │
+├─────────────────────────────────────────────────────────┤
+│ Layer 3: Composition  │ Templates (Invoice/Quote/Report) │
+│                       │ + arabicCss + fontRegistry       │
+├─────────────────────────────────────────────────────────┤
+│ Layer 2: Configuration│ PdfConfigSchema (Zod-validated)  │
+│                       │ + fontPreference + companySettings│
+├─────────────────────────────────────────────────────────┤
+│ Layer 1: Data         │ DataAdapter (DB → Normalized DTO)│
+│                       │ + preflightValidator             │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### 2.3 مبادئ تصميم ثابتة
-- **مصدر بيانات واحد**: كل مستند يُغذّى عبر Zod schema قبل التوليد.
-- **لا تسريب Supabase**: المولّد يستقبل بيانات جاهزة، يستدعي `settingsRepository` فقط لإعدادات الشركة.
-- **Lazy loading إلزامي**: الخطوط والمحرّكات تُحمّل عند الطلب عبر `pdfGeneratorLazy`.
+### 1.2 اختيار المحرك ومبرراته
+
+| المحرك | الموقع | السبب |
+|--------|--------|--------|
+| **html2canvas + jsPDF** (الحالي) | عميل/متصفح | يعمل بدون خادم، يحافظ على CSS، يدعم RTL أصلياً عبر `direction:rtl` |
+| **Puppeteer** (مقترح كـ Edge Function اختياري) | خادم Deno | لتقارير ضخمة (>50 صفحة) أو عند الحاجة لـ `@page` CSS الكامل |
+| **pdfmake** (مرفوض) | — | لا يدعم تشكيل الحروف العربية المتصلة بشكل موثوق |
+
+**حل تشوه الحروف العربية:** المحرك الحالي يعتمد على المتصفح نفسه لتشكيل النص (HarfBuzz داخل Chromium)، ثم يلتقط الناتج عبر `html2canvas`. هذا يضمن اتصال الحروف الصحيح بشرط تضمين خط يحوي جداول `GSUB/GPOS` (Cairo و Amiri يحققان ذلك).
+
+### 1.3 مخطط التهيئة الموحد (`PdfConfigSchema`)
+
+ملف جديد: `src/lib/pdf/config/pdfConfigSchema.ts`
+
+```ts
+{
+  page: {
+    size: 'A4' | 'A3' | 'A5' | 'Letter' | { width:number; height:number; unit:'mm'|'pt' },
+    orientation: 'portrait' | 'landscape',
+    margins: { top, right, bottom, left }  // بالـ mm
+  },
+  typography: {
+    fontKey: PdfFontKey,           // ربط مع fontRegistry الموجود
+    baseFontSizePx: number,         // افتراضي 12
+    lineHeight: number,             // افتراضي 1.6 لاستيعاب التشكيل
+    letterSpacing: number
+  },
+  header: { enabled, height, html?, logoUrl?, showOnFirstPage },
+  footer: { enabled, height, html?, pageNumbers: { format:'page x of y'|'x/y', position } },
+  watermark: { enabled, text?, imageUrl?, opacity, rotation, tiled },
+  branding: { primaryColor, secondaryColor, companyName, taxNumber },
+  behavior: { embedFonts:true, compressImages, jpegQuality:0.92 }
+}
+```
 
 ---
 
-## المرحلة 3: محرّك العربية والتخصيص
+## المرحلة 2: الطباعة العربية المتقدمة
 
-### 3.1 طبقة الخطوط الديناميكية (`fontRegistry`)
-- تسجيل خطوط متعددة: Amiri (افتراضي)، Cairo، Tajawal، Noto Sans Arabic.
-- API: `registerFont(name, source)`، `loadFont(name): Promise<ArrayBuffer>`.
-- مصادر مدعومة بالترتيب: ملف محلي `/fonts/*.ttf` ← IndexedDB cache ← Google Fonts ← Base64 مضمّن (احتياط نهائي).
-- إعداد المستخدم: `companySettings.pdf_font` يحدّد الخط الافتراضي على مستوى المستأجر.
+### 2.1 خط أنابيب تضمين الخطوط
 
-### 3.2 معالجة RTL والـ Shaping
-- استبدال خوارزمية `toVisualOrder` الحالية بـ **bidi.js** (مكتبة UAX#9 مرخّصة MIT) لمعالجة دقيقة للنصوص المختلطة.
-- الحفاظ على `reshapeArabicText` (يعتمد على `arabic-persian-reshaper`) مع اختبارات ligature إضافية للام-ألف ولام-ألف-همزة.
-- منع عكس: الأرقام، رموز العملة، البريد الإلكتروني، أرقام الهواتف، رموز المنتجات (SKU).
-- تنقية إلزامية لرموز Bidi غير المرئية (U+200E…U+202E، U+2066…U+2069) في كل نص قبل الرسم.
+تم تنفيذه جزئياً في `fontRegistry.ts` و `arabicCss.ts`. الإضافات المطلوبة:
 
-### 3.3 محرّك القوالب القابل للتخصيص
-- **رأس وتذييل**: لكل قالب `header(ctx)` و `footer(ctx)` ترسم الشعار، اسم الشركة، رقم الصفحة (`صفحة X من Y`)، التاريخ.
-- **علامة مائية**: نص قطري نصف شفاف (مثال: "مسودة"، "مدفوع") قابلة للتفعيل من `ThemeConfig.watermark`.
-- **هوامش وحجم وتوجه**: يُمرّر `PageConfig { size: 'A4'|'A3'|'A5'|'Letter'|'Legal', orientation, margins: {t,r,b,l} }`.
-- **حقن البيانات**: قوالب تعتمد على JSON Schema، مع `templateRegistry.render(templateId, data)` يُرجع PDF Blob.
-- **تخصيص الشركة**: جدول `pdf_templates` (موجود) يحفظ ألوان وشعار وخط ومحتوى الترويسة لكل مستأجر.
+1. **توسيع `AVAILABLE_FONTS`** ليشمل: Cairo (موجود)، Tajawal، Amiri (موجود)، Noto Naskh Arabic، Almarai.
+2. **تحميل كسول (Lazy)**: تحميل الخط فقط عند أول استدعاء عبر `fetch` ثم `base64` ثم `@font-face`.
+3. **ذاكرة تخزين مؤقت** (`fontCache.ts`): تخزين base64 في `IndexedDB` لتفادي إعادة التحميل (الخط الواحد ~400KB).
+4. **التحقق من `unicode-range`** لضمان أن المتصفح يستخدم الخط العربي للحروف العربية فقط.
 
-### 3.4 جداول متعددة الصفحات
-- استخدام `jspdf-autotable` مع: `didDrawPage` لرسم الرأس/التذييل، `rowPageBreak: 'avoid'` للصفوف الحساسة، `showHead: 'everyPage'`.
-- لـ HtmlPdfEngine: استخدام CSS `break-inside: avoid` و `thead { display: table-header-group }`.
+### 2.2 منع قص التشكيل والحروف النازلة
 
----
+ملف جديد: `src/lib/pdf/arabic/typographyRules.ts`
 
-## المرحلة 4: التشخيص ومعالجة الأخطاء
+```css
+.pdf-root {
+  line-height: 1.8;              /* أكبر من العادي لاستيعاب الفتحة/الكسرة */
+  padding-block: 0.15em;          /* يمنع قص الحروف النازلة كـ ج، ح، ع */
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "mark" 1, "mkmk" 1;
+  font-variant-numeric: tabular-nums;
+}
+.pdf-root .with-tashkeel { line-height: 2.0; }
+.pdf-root td, .pdf-root th { padding-block: 6px; vertical-align: middle; }
+```
 
-### 4.1 التحقق من البيانات (Pre-flight)
-- لكل نوع مستند Zod schema في `pdf/diagnostics/schemas/`:
-  - تحقق من وجود الحقول الإلزامية (رقم المستند، التاريخ، الإجمالي).
-  - تحقق من تطابق المجاميع (subtotal + tax − discount = total) ضمن دقة `±0.01`.
-  - رفض المصفوفات الفارغة (`items.length >= 1`).
-- في حال الفشل: throw `PdfValidationError` مع تفاصيل كل خطأ، يُعرض للمستخدم بـ toast عربي مفهوم.
+### 2.3 توريث الإعدادات
 
-### 4.2 سياج الأخطاء (Error Boundary)
-- لف كل عملية توليد بـ `try/catch/finally` مع:
-  - Timeout قابل للضبط (افتراضي 30s، 90s للتصدير المجمّع).
-  - Cleanup للذاكرة (`doc = null`، إلغاء URLs المؤقتة عبر `URL.revokeObjectURL`).
-  - Retry تلقائي مرة واحدة عند فشل تحميل الخط أو الشعار.
-- Fallback مرتّب:
-  1. فشل الخط المخصص → الرجوع لـ Amiri المضمّن.
-  2. فشل Amiri → الرجوع لخط النظام مع تنبيه.
-  3. فشل المحرّك الرئيسي → التبديل التلقائي للمحرّك الثاني.
-  4. فشل كامل → فتح نافذة الطباعة الأصلية كحل أخير.
-
-### 4.3 السجلات والمراقبة
-- `PdfLogger` يكتب في `activity_logs` (action=`pdf.export`): نوع المستند، المدّة، حجم الناتج، المحرّك المستخدم، الأخطاء.
-- قياسات أداء عبر `performance.mark`/`measure` تُرسل لـ `performanceMonitor`.
-- تنبيه `Sentry/observability` عند: مدّة >10s، فشل متكرر، حجم ناتج >10MB.
-
-### 4.4 رسائل مستخدم موحّدة (عربية)
-- "جاري تحضير الملف…" (loading)
-- "فشل تحميل الخط، تم استخدام الخط الاحتياطي" (warning)
-- "تعذّر إنشاء الملف. تحقّق من البيانات وحاول مجددًا." (error)
-- "الملف كبير جدًا، سيتم تقسيمه إلى عدة ملفات" (info)
+`PdfConfigContext` (React Context) يضخ `typography` في كل قالب، ويُترجم إلى متغيرات CSS:
+```css
+:root { --pdf-base-fs: 12px; --pdf-lh: 1.8; --pdf-tracking: 0; }
+```
 
 ---
 
-## المرحلة 5: الاختبار والتحقق والحالات الحدّية
+## المرحلة 3: التشخيص والكشف التلقائي
 
-### 5.1 اختبارات وحدة (Vitest)
-- توسعة `arabicFont.test.ts` بحالات: لام-ألف، أحرف فارسية، رموز عملات، نصوص مختلطة طويلة (>500 حرف).
-- اختبار `DataValidator` لكل schema بحالات صحيحة وفاشلة.
-- اختبار `fontRegistry` مع mock للشبكة (نجاح/فشل/timeout).
+### 3.1 حدود الأخطاء المعزولة
 
-### 5.2 اختبارات تكامل
-- `__tests__/integration/export-print.test.tsx` (موجود) يُوسَّع ليغطي كل قالب جديد.
-- اختبار التبديل بين المحرّكين عند الفشل المتعمّد.
+ملف جديد: `src/lib/pdf/diagnostics/PdfErrorBoundary.ts`
 
-### 5.3 اختبارات E2E (Playwright)
-- `e2e/export-rtl.spec.ts` (موجود) يضاف له:
-  - تصدير فاتورة بـ 200 بندًا (page breaks).
-  - تصدير بأحجام ورق وتوجّهات مختلفة.
-  - التحقق من `assertPdfArabic` و `assertCsvArabic` و `assertXlsxRtl` لكل قالب.
+```ts
+async function safeRender(fn): Promise<Result<Blob, PdfError>> {
+  const startMem = performance.memory?.usedJSHeapSize;
+  const t0 = performance.now();
+  try {
+    const blob = await Promise.race([fn(), timeout(60_000)]);
+    telemetry.record({ ok:true, durationMs: performance.now()-t0,
+                       memDeltaMb: (perf.memory?.usedJSHeapSize - startMem)/1e6 });
+    return { ok:true, value: blob };
+  } catch (e) {
+    telemetry.record({ ok:false, error: classify(e) });
+    return { ok:false, error: classify(e) };
+  }
+}
+```
 
-### 5.4 فحص بصري تلقائي (Visual QA)
-- سكربت `scripts/pdf-visual-qa.ts` يولّد كل قوالب PDF، يحوّلها لصور عبر `pdftoppm`، ويقارنها مع لقطات مرجعية في `tests/__snapshots__/pdf/` (تسامح بكسل 2%).
-- يُشغَّل في CI ويفشل البناء عند الانحراف.
+### 3.2 طبقة التحقق المسبق (Preflight)
 
-### 5.5 الحالات الحدّية المُغطّاة
-- جداول تمتدّ على 10+ صفحات مع تكرار الرأس.
-- بنود بأسماء طويلة جدًا (>200 حرف) → wrapping تلقائي.
-- خصومات سالبة، ضرائب صفرية، عملات متعددة.
-- شعار شركة مفقود/تالف → استخدام placeholder.
-- اتصال إنترنت منقطع → الاعتماد على الأصول المحلية/المخزّنة.
-- مستندات بدون أصناف (`items=[]`) → رفض مبكر برسالة واضحة.
-- نصوص مختلطة عربي/إنجليزي/أرقام/رموز (IBAN, email, URL).
+ملف جديد: `src/lib/pdf/diagnostics/preflightValidator.ts`
 
-### 5.6 مقاييس النجاح
-- زمن توليد فاتورة قياسية <1.5s على جهاز متوسط.
-- صفر تقطيع حروف في 100% من قوالب QA.
-- معدّل فشل التصدير <0.5% في الإنتاج (يُقاس عبر `activity_logs`).
-- تغطية اختبارات ≥85% لطبقة `src/lib/pdf/`.
+تستخدم Zod للتحقق من:
+- **بنية البيانات**: حقول مطلوبة، أنواع، حدود قيم.
+- **حدود الطول**: `invoiceNumber.length ≤ 32`، `description.length ≤ 500`، `notes ≤ 2000`.
+- **الأرقام المالية**: لا قيم سالبة لـ `quantity`، `unitPrice ≥ 0`، `taxRate ∈ [0,100]`.
+- **توفر الأصول**: HEAD request على `logoUrl` و `fontUrl` مع timeout 3 ثوانٍ.
+- **تنظيف Bidi**: إزالة `\u200E-\u202E` و `\u2066-\u2069` (موجود في `esc()`).
+
+النتيجة: `{ valid, errors[], warnings[], sanitizedData }`.
+
+### 3.3 نظام القياس عن بُعد
+
+توسيع `telemetryScheduler.ts` الموجود لإرسال:
+- متوسط وقت العرض، p95، p99
+- استهلاك الذاكرة لكل قالب
+- معدل الفشل لكل نوع مستند
+- الخطوط الأبطأ تحميلاً
 
 ---
 
-## ملحق تقني — ترتيب التنفيذ المقترح
+## المرحلة 4: الإصلاح التلقائي والحالات الحدية
 
-1. **أسبوع 1**: المرحلة 1 (تدقيق) + إعداد هيكل `src/lib/pdf/`.
-2. **أسبوع 2**: المرحلة 2 + 3.1-3.2 (المحرّك المزدوج + الخطوط + Bidi).
-3. **أسبوع 3**: المرحلة 3.3-3.4 (القوالب + الجداول متعدّدة الصفحات).
-4. **أسبوع 4**: المرحلة 4 (التشخيص والأخطاء).
-5. **أسبوع 5**: المرحلة 5 (الاختبارات + Visual QA + إطلاق تدريجي خلف feature flag `pdf_engine_v2`).
+### 4.1 جداول متعددة الصفحات
 
-### المخاطر والتخفيف
-- **حجم الـ bundle**: يُعالَج بـ dynamic import للخطوط والمحرّكات.
-- **اختلاف عرض المتصفحات للـ html2pdf**: تثبيت إصدار وتوحيد CSS reset.
-- **توافق مع قوالب قديمة**: المحرّك الجديد خلف flag، الرجوع للقديم لحظيًا عند الحاجة.
+ملف جديد: `src/lib/pdf/layout/tablePagination.ts`
+
+```ts
+// قبل الالتقاط، احسب ارتفاع كل صف وقسّم لصفحات منطقية
+function paginateTable(rows, pageHeight, headerHeight, footerHeight) {
+  const pages = [];
+  let current = []; let height = 0;
+  for (const row of rows) {
+    if (height + row.h > pageHeight - headerHeight - footerHeight) {
+      pages.push(current); current = []; height = 0;
+    }
+    current.push(row); height += row.h;
+  }
+  return pages.map(p => renderPageWithRepeatedHeader(p));
+}
+```
+
+CSS مكمل:
+```css
+thead { display: table-header-group; }   /* تكرار الرأس تلقائياً */
+tr    { page-break-inside: avoid; }
+tfoot { display: table-footer-group; }
+```
+
+### 4.2 احتواء الفائض
+
+`src/lib/pdf/layout/overflowGuard.ts`:
+- قياس `scrollWidth > clientWidth` لكل خلية.
+- تطبيق سلم: `font-size: 12px → 11px → 10px → 9px` حتى يختفي الفائض.
+- إن استمر، تفعيل `word-break: break-word` كملاذ أخير.
+
+### 4.3 محرك الاحتياط (Fallback Engine)
+
+موجود جزئياً في `pickEngine.ts`. التوسعة:
+```text
+Cairo (preferred) ──fail──► Amiri ──fail──► Noto Naskh ──fail──►
+   System Arabic (Segoe UI/Tahoma) ──fail──► Render warning watermark
+```
+كل فشل يُسجَّل في `telemetry` ولا يكسر الإخراج.
+
+---
+
+## المرحلة 5: الاختبار والتحقق الشامل
+
+### 5.1 بروتوكول QA
+
+| الفئة | السيناريو | الأداة |
+|------|-----------|--------|
+| اختبار وحدة | حساب المجاميع، تنظيف Bidi، اختيار الخط | Vitest (موجود) |
+| تكامل | قالب كامل ← Blob ← فك PDF والتحقق من النص | Vitest + pdf-parse |
+| ضغط | 5000 صف فاتورة، 100 PDF متوازي | Vitest + benchmark |
+| حدية | نصوص مختلطة EN/AR، روابط طويلة، إيموجي | Vitest |
+| انحدار بصري | مقارنة بكسلية لصور PNG لكل قالب | Playwright + pixelmatch |
+
+### 5.2 الانحدار البصري
+
+ملف جديد: `tests/visual/pdf.spec.ts` (Playwright):
+1. توليد PDF لكل قالب ببيانات ثابتة (`fixtures/`).
+2. تحويل لـ PNG عبر `pdf-to-png-converter`.
+3. مقارنة مع لقطة مرجعية (`__snapshots__/`) بعتبة 0.1% اختلاف بكسلي.
+4. عند الفشل، حفظ صورة الفرق في CI artifacts.
+
+### 5.3 مصفوفة التغطية المستهدفة
+
+- وحدات: ≥90% (حالياً 120 اختبار)
+- قوالب: 100% (Invoice، Quote، Receipt، Statement، Report)
+- لغات: AR، EN، AR+EN مختلط
+- متصفحات: Chromium، WebKit (Safari)، Firefox
+
+---
+
+## ملفات سيتم إنشاؤها (الموجة 15+)
+
+| الملف | الغرض |
+|-------|-------|
+| `src/lib/pdf/config/pdfConfigSchema.ts` | Zod schema للتهيئة الكاملة |
+| `src/lib/pdf/config/PdfConfigContext.tsx` | React Context للتوريث |
+| `src/lib/pdf/fonts/fontCache.ts` | تخزين IndexedDB للخطوط |
+| `src/lib/pdf/arabic/typographyRules.ts` | قواعد CSS متقدمة للتشكيل |
+| `src/lib/pdf/diagnostics/preflightValidator.ts` | التحقق المسبق |
+| `src/lib/pdf/diagnostics/PdfErrorBoundary.ts` | عزل الأخطاء + قياس |
+| `src/lib/pdf/layout/tablePagination.ts` | تقسيم الجداول الذكي |
+| `src/lib/pdf/layout/overflowGuard.ts` | منع الفائض |
+| `src/lib/pdf/printInvoiceHtmlPdf.ts` | الواجهة الموحدة `print(data, config)` |
+| `src/components/settings/PdfAdvancedSettings.tsx` | UI لتعديل كل خيارات التهيئة |
+| `tests/visual/pdf.spec.ts` | Playwright visual regression |
+| ملفات اختبار `.test.ts` لكل ما سبق | تغطية ≥90% |
+
+---
+
+## خارطة طريق التنفيذ (موجات مقترحة)
+
+1. **الموجة 15**: `pdfConfigSchema` + `PdfConfigContext` + `printInvoiceHtmlPdf` (الواجهة الموحدة).
+2. **الموجة 16**: `preflightValidator` + `PdfErrorBoundary` المتكاملان.
+3. **الموجة 17**: `tablePagination` + `overflowGuard` + قالب تقرير متعدد الصفحات.
+4. **الموجة 18**: `fontCache` (IndexedDB) + توسيع `AVAILABLE_FONTS` (Tajawal, Noto Naskh, Almarai).
+5. **الموجة 19**: `PdfAdvancedSettings` UI متكامل مع `company_settings`.
+6. **الموجة 20**: Playwright visual regression + benchmark suite.
+
+كل موجة: تنفيذ + اختبارات + توثيق + التحقق من تشغيل المجموعة الكاملة (يجب أن يبقى عدد الاختبارات في تزايد دون فشل).
+
+---
+
+اعتمد الخطة لأبدأ من الموجة 15 فوراً.
