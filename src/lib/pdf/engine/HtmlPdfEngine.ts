@@ -111,6 +111,26 @@ export class HtmlPdfEngine implements IPdfEngine {
       const container = buildContainer(p, arabicCss);
       document.body.appendChild(container);
       try {
+        // ── Chunked path ───────────────────────────────────────────────
+        // For large tabular documents render page-by-page to keep peak
+        // memory low. The legacy html2pdf.js path stays the default for
+        // smaller documents to preserve existing behaviour & tests.
+        if (shouldChunk(container, p.chunked)) {
+          const blob = await renderChunkedHtmlPdf({
+            container,
+            page: ctx.page,
+            options: p.chunked,
+            loaders: p.chunkedLoaders,
+          });
+          return {
+            blob,
+            filename,
+            pages: 0,
+            engine: 'html2pdf' as const,
+            durationMs: performance.now() - start,
+          };
+        }
+
         const html2pdf = await this._loader();
         const opts = {
           margin: [
