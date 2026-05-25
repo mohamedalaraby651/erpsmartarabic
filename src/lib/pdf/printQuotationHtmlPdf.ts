@@ -9,6 +9,8 @@ import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRule
 import {
   renderQuotationHtml,
   QUOTATION_HTML_CSS,
+  buildWatermarkImageCss,
+  withWatermarkImage,
   type QuotationHtmlData,
 } from './templates/QuotationHtmlTemplate';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
