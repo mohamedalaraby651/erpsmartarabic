@@ -98,12 +98,14 @@ describe('renderChunkedHtmlPdf', () => {
 
     const addImage = vi.fn();
     const addPage = vi.fn();
-    const FakeJsPDF = vi.fn().mockImplementation(() => ({
-      addPage,
-      addImage,
-      internal: { pageSize: { getWidth: () => 210, getHeight: () => 297 } },
-      output: () => new Blob(['%PDF-1.4 fake'], { type: 'application/pdf' }),
-    }));
+    class FakeJsPDF {
+      addPage = addPage;
+      addImage = addImage;
+      internal = { pageSize: { getWidth: () => 210, getHeight: () => 297 } };
+      output() {
+        return new Blob(['%PDF-1.4 fake'], { type: 'application/pdf' });
+      }
+    }
 
     const blob = await renderChunkedHtmlPdf({
       container,
