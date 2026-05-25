@@ -9,6 +9,8 @@ import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRule
 import {
   renderQuotationHtml,
   QUOTATION_HTML_CSS,
+  buildWatermarkImageCss,
+  withWatermarkImage,
   type QuotationHtmlData,
 } from './templates/QuotationHtmlTemplate';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
@@ -60,16 +62,39 @@ export async function printQuotationHtmlPdf(
   const config = buildPdfConfig(opts.config);
   const pageCfg = toPageConfig(config);
 
+  // Merge profile-driven branding (logo, tax) into template data.
+  const enriched: QuotationHtmlData = {
+    ...data,
+    company: {
+      ...data.company,
+      logoUrl: data.company.logoUrl ?? config.header?.logoUrl,
+      taxNumber: data.company.taxNumber ?? config.branding.taxNumber,
+    },
+  };
+
   const tashkeel = detectTashkeel(
     [
-      data.notes ?? '',
-      data.paymentTerms ?? '',
-      ...data.items.map((i) => i.description),
+      enriched.notes ?? '',
+      enriched.paymentTerms ?? '',
+      ...enriched.items.map((i) => i.description),
     ].join(' '),
   );
   const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const css = `${typoCss}\n${QUOTATION_HTML_CSS}`;
-  const html = renderQuotationHtml(data);
+  const wm = config.watermark;
+  const wmCss = wm.enabled && wm.imageUrl
+    ? buildWatermarkImageCss({
+        imageUrl: wm.imageUrl,
+        opacity: wm.opacity,
+        rotation: wm.rotation,
+        tiled: wm.tiled,
+      })
+    : '';
+  const css = `${typoCss}\n${QUOTATION_HTML_CSS}\n${wmCss}`;
+  const html = withWatermarkImage(
+    renderQuotationHtml(enriched),
+    wm.enabled ? wm.imageUrl : undefined,
+    !!wm.tiled,
+  );
 
   const filename = opts.filename ?? buildDocFilename('quotation', data.quotationNumber);
   const result = await safeRender<Blob>(

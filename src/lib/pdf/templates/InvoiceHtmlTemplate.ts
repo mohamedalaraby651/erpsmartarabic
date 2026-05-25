@@ -153,6 +153,8 @@ export function renderInvoiceHtml(data: InvoiceHtmlData): string {
 </section>`;
 }
 
+import { WATERMARK_IMAGE_BASE_CSS } from './watermarkImage';
+
 /** Style overlay layered on top of the engine's Arabic base CSS. */
 export const INVOICE_HTML_CSS = `
 .invoice { padding: 4px; position: relative; }
@@ -170,53 +172,10 @@ table.totals th { background: #f1f1f2; text-align: right; }
 table.totals tr.grand th, table.totals tr.grand td { background: #111; color: #fff; font-weight: 700; }
 .notes { margin-top: 18px; padding: 10px; border: 1px dashed #bbb; }
 .notes h4 { margin: 0 0 6px; font-size: 13px; }
-/* Watermark image overlay — injected dynamically based on PdfWatermark config */
-.pdf-watermark-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-}
-.pdf-watermark-bg.tiled { background-repeat: repeat; background-size: auto; }
+${WATERMARK_IMAGE_BASE_CSS}
 .invoice > * { position: relative; z-index: 1; }
 `;
 
-/**
- * يبني CSS مخصّص للعلامة المائية الصورية (background-image) مع تطبيق
- * scale/rotation/opacity من PdfWatermark. يُحقن قبل INVOICE_HTML_CSS.
- */
-export function buildWatermarkImageCss(opts: {
-  imageUrl?: string;
-  opacity?: number;
-  rotation?: number;
-  scale?: number;
-  tiled?: boolean;
-}): string {
-  if (!opts.imageUrl) return '';
-  const opacity = Math.max(0, Math.min(1, opts.opacity ?? 0.08));
-  const rotation = opts.rotation ?? 0;
-  const scale = Math.max(0.1, Math.min(3, opts.scale ?? 1));
-  const tiledSize = opts.tiled ? `${Math.round(20 * scale)}%` : `${Math.round(50 * scale)}%`;
-  return `
-.pdf-watermark-bg {
-  background-image: url("${opts.imageUrl.replace(/"/g, '&quot;')}");
-  opacity: ${opacity};
-  transform: rotate(${rotation}deg);
-  background-size: ${tiledSize};
-}
-`;
-}
-
-/**
- * يحقن div العلامة المائية الصورية في بداية المستند.
- * يُستخدم من قبل الطابعات بعد renderInvoiceHtml.
- */
-export function withWatermarkImage(html: string, imageUrl: string | undefined, tiled: boolean): string {
-  if (!imageUrl) return html;
-  const cls = tiled ? 'pdf-watermark-bg tiled' : 'pdf-watermark-bg';
-  return `<div class="${cls}" aria-hidden="true"></div>${html}`;
-}
+// Re-exported from shared module for backwards compatibility with existing imports.
+export { buildWatermarkImageCss, withWatermarkImage } from './watermarkImage';
 

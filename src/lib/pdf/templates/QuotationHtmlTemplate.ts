@@ -154,13 +154,15 @@ export function renderQuotationHtml(data: QuotationHtmlData): string {
 </section>`;
 }
 
+import { WATERMARK_IMAGE_BASE_CSS } from './watermarkImage';
+
 export const QUOTATION_HTML_CSS = `
-.quotation { padding: 4px; }
+.quotation { padding: 4px; position: relative; }
 .quote-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0d4f8b; padding-bottom: 12px; margin-bottom: 16px; }
 .quote-head .company h1 { margin: 0 0 4px; font-size: 18px; }
 .quote-head .meta { text-align: left; }
 .quote-head .meta h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: 1px; color: #0d4f8b; }
-.quote-head .logo { max-height: 56px; margin-bottom: 6px; }
+.quote-head .logo { max-height: 56px; max-width: 180px; object-fit: contain; margin-bottom: 6px; }
 .customer { margin: 8px 0 16px; padding: 10px 12px; background: #f3f7fb; border-right: 4px solid #0d4f8b; }
 .customer h3 { margin: 0 0 6px; font-size: 13px; }
 table.items th { background: #0d4f8b; color: #fff; font-weight: 600; }
@@ -171,4 +173,8 @@ table.totals tr.grand th, table.totals tr.grand td { background: #0d4f8b; color:
 .terms, .notes { margin-top: 14px; padding: 10px; border: 1px dashed #99b6d1; }
 .terms h4, .notes h4 { margin: 0 0 6px; font-size: 13px; }
 .stamp { margin-top: 18px; text-align: center; font-size: 11px; color: #555; border-top: 1px solid #ddd; padding-top: 8px; }
+${WATERMARK_IMAGE_BASE_CSS}
+.quotation > * { position: relative; z-index: 1; }
 `;
+
+export { buildWatermarkImageCss, withWatermarkImage } from './watermarkImage';

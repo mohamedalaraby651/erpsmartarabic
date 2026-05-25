@@ -216,13 +216,15 @@ export function renderStatementHtml(data: StatementHtmlData): string {
 </section>`;
 }
 
+import { WATERMARK_IMAGE_BASE_CSS } from './watermarkImage';
+
 export const STATEMENT_HTML_CSS = `
-.statement { padding: 4px; }
+.statement { padding: 4px; position: relative; }
 .st-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5a2a82; padding-bottom: 12px; margin-bottom: 16px; }
 .st-head .company h1 { margin: 0 0 4px; font-size: 18px; }
 .st-head .meta { text-align: left; }
 .st-head .meta h2 { margin: 0 0 6px; font-size: 18px; color: #5a2a82; }
-.st-head .logo { max-height: 56px; margin-bottom: 6px; }
+.st-head .logo { max-height: 56px; max-width: 180px; object-fit: contain; margin-bottom: 6px; }
 .party { margin: 8px 0 16px; padding: 10px 12px; background: #f6f1fa; border-right: 4px solid #5a2a82; }
 .party h3 { margin: 0 0 6px; font-size: 13px; }
 .party .code { color: #666; font-size: 11px; }
@@ -236,4 +238,8 @@ table.aging th { background: #efe5f8; color: #5a2a82; font-weight: 600; }
 .notes { margin-top: 14px; padding: 10px; border: 1px dashed #c0a3d8; }
 .notes h4 { margin: 0 0 6px; font-size: 13px; }
 .closing { margin-top: 18px; text-align: left; font-size: 13px; padding: 10px; background: #f0e6f7; border-right: 4px solid #5a2a82; }
+${WATERMARK_IMAGE_BASE_CSS}
+.statement > * { position: relative; z-index: 1; }
 `;
+
+export { buildWatermarkImageCss, withWatermarkImage } from './watermarkImage';
