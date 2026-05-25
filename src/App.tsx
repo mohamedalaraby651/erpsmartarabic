@@ -348,6 +348,7 @@ const App = () => (
                   <>
                     <Route path="/dev/pdf-sandbox" element={<PdfSandboxPage />} />
                     <Route path="/dev/pdf-telemetry" element={<PdfTelemetryPage />} />
+                    <Route path="/dev/pdf-jobs" element={<PdfJobsPage />} />
                   </>
                 ) : null}
                 <Route path="*" element={<NotFound />} />
