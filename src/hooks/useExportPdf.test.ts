@@ -38,16 +38,13 @@ describe('useExportPdf', () => {
     const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const { result } = renderHook(() => useExportPdf(), { wrapper: wrapper(client) });
 
+    let caught: unknown;
     await act(async () => {
-      try {
-        await result.current.mutateAsync({ data: { invoiceNumber: '' } as never });
-      } catch {
-        /* expected */
-      }
+      caught = await result.current.mutateAsync({ data: { invoiceNumber: '' } as never }).catch((e) => e);
     });
 
-    expect(result.current.error).toBeInstanceOf(ExportPdfError);
-    expect(result.current.error?.kind).toBe('preflight');
+    expect(caught).toBeInstanceOf(ExportPdfError);
+    expect((caught as ExportPdfError).kind).toBe('preflight');
     expect(printInvoiceHtmlPdf).not.toHaveBeenCalled();
   });
 
@@ -79,14 +76,12 @@ describe('useExportPdf', () => {
     const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const { result } = renderHook(() => useExportPdf(), { wrapper: wrapper(client) });
 
+    let caught: unknown;
     await act(async () => {
-      try {
-        await result.current.mutateAsync({ data: validData });
-      } catch {
-        /* expected */
-      }
+      caught = await result.current.mutateAsync({ data: validData }).catch((e) => e);
     });
-    expect(result.current.error?.kind).toBe('render');
-    expect(result.current.error?.code).toBe('timeout');
+    expect(caught).toBeInstanceOf(ExportPdfError);
+    expect((caught as ExportPdfError).kind).toBe('render');
+    expect((caught as ExportPdfError).code).toBe('timeout');
   });
 });
