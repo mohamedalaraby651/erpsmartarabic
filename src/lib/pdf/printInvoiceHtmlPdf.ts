@@ -83,29 +83,19 @@ export async function printInvoiceHtmlPdf(
     },
   };
 
-  // 3. Compose HTML + CSS
+  // 3. Compose HTML + CSS via the shared TemplateComposer.
   const tashkeel = detectTashkeel(
     [
       enriched.notes ?? '',
       ...enriched.items.map((i) => i.description),
     ].join(' '),
   );
-  const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const wm = config.watermark;
-  const wmCss = wm.enabled && wm.imageUrl
-    ? buildWatermarkImageCss({
-        imageUrl: wm.imageUrl,
-        opacity: wm.opacity,
-        rotation: wm.rotation,
-        tiled: wm.tiled,
-      })
-    : '';
-  const css = `${typoCss}\n${INVOICE_HTML_CSS}\n${wmCss}`;
-  const html = withWatermarkImage(
-    renderInvoiceHtml(enriched),
-    wm.enabled ? wm.imageUrl : undefined,
-    !!wm.tiled,
-  );
+  const { html, css } = composeRenderPayload({
+    html: renderInvoiceHtml(enriched),
+    bodyCss: INVOICE_HTML_CSS,
+    config,
+    hasTashkeel: tashkeel,
+  });
 
   // 4+5. Render under boundary
   const filename = opts.filename ?? buildDocFilename('invoice', data.invoiceNumber);
