@@ -40,7 +40,7 @@ async function callLegacy(
 ): Promise<void> {
   if (docType === 'statement') {
     const mod = await import('@/lib/statementPdfGenerator');
-    await (mod as { generateStatementPDF: (d: unknown) => Promise<void> }).generateStatementPDF(data);
+    await mod.generateStatementPdf(data as never);
     return;
   }
   const mod = await import('@/lib/pdfGeneratorLazy');
