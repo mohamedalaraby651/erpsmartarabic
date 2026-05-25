@@ -15,6 +15,7 @@ import type { DocumentRenderProfile } from '@/domain/pdf/entities/DocumentRender
 import { validateProfile } from '@/domain/pdf/entities/DocumentRenderProfile';
 import { PAPER_DIMENSIONS_MM } from '@/lib/pdf/config/PageConfig';
 import type { WatermarkPosition } from '@/domain/pdf/value-objects/PdfWatermark';
+import { usePdfAssetUrl } from '@/hooks/usePdfAssetUrl';
 
 const FONT_STACK: Record<string, string> = {
   cairo: '"Cairo", "Tajawal", system-ui, sans-serif',
