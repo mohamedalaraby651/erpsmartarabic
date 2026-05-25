@@ -48,7 +48,7 @@ export function QuotationPrintView({ quotationId, open, onOpenChange }: Quotatio
     if (!quotation || !items) return;
     setDownloading(true);
     try {
-      await generateDocumentPDF('quotation', { ...quotation, items });
+      await routePdfRequest({ docType: 'quotation', data: { ...quotation, items } });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       console.error('PDF generation error:', error);
