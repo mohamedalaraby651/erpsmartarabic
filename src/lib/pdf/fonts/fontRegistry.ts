@@ -6,18 +6,17 @@ import {
 } from '@/lib/arabicFont';
 import { PdfFontLoadError } from '../diagnostics/errors';
 import { getPdfFontPreference, DEFAULT_PDF_FONT } from './fontPreference';
+import { getCachedFont, putCachedFont } from './fontCache';
 
 /**
  * Dynamic font registry on top of the legacy loadArabicFont().
  *
- * Adds:
- *   - In-memory cache so repeated exports reuse the same base64 buffer.
- *   - Ordered fallback chain: requested → Amiri (default) → throw.
- *   - Strong typing of the resolved descriptor (key + base64 + family name).
+ * Three-tier cache (Wave 19):
+ *   1. In-memory Map  → same-session reuse, zero cost.
+ *   2. IndexedDB      → cross-session persistence (~400KB per font).
+ *   3. Network        → loadArabicFont() with multi-CDN fallback.
  *
- * IndexedDB persistence is intentionally out of scope here — the browser
- * already caches the underlying /fonts/*.ttf via HTTP, and a second-tier
- * IDB cache would add complexity without measurable wins for our payloads.
+ * Ordered fallback chain: requested → Cairo → Amiri → throw PdfFontLoadError.
  */
 export interface LoadedFont {
   key: PdfFontKey;
