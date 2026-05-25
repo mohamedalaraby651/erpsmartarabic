@@ -23,3 +23,9 @@ export { jsPdfEngine, JsPdfEngine, type JsPdfDocumentPayload } from './engine/Js
 export { htmlPdfEngine, HtmlPdfEngine, loadHtml2Pdf, type HtmlPdfPayload } from './engine/HtmlPdfEngine';
 export { pickEngine, isHtmlEngineEnabledFor, type PickEngineOptions } from './engine/pickEngine';
 export type { IPdfEngine, PdfRenderContext, PdfRenderResult } from './engine/IPdfEngine';
+export * from './config/pdfConfigSchema';
+export * from './diagnostics/preflightValidator';
+export * from './diagnostics/PdfErrorBoundary';
+export * from './arabic/typographyRules';
+export * from './layout/overflowGuard';
+export * from './printInvoiceHtmlPdf';
