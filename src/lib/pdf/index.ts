@@ -28,4 +28,6 @@ export * from './diagnostics/preflightValidator';
 export * from './diagnostics/PdfErrorBoundary';
 export * from './arabic/typographyRules';
 export * from './layout/overflowGuard';
+export * from './layout/tablePagination';
+export * from './fonts/fontCache';
 export * from './printInvoiceHtmlPdf';
