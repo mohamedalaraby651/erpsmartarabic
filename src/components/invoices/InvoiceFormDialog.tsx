@@ -50,6 +50,9 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const queryClient = useQueryClient();
   const isEditing = !!invoice;
   const [isValidating, setIsValidating] = useState(false);
+  const [lastSavedId, setLastSavedId] = useState<string | null>(invoice?.id ?? null);
+  const [printOpen, setPrintOpen] = useState(false);
+  const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
     queryKey: queryKeys.customers.list({ active: true, safe: true }),
