@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, FileText, FileSpreadsheet, Database, ListChecks, RotateCcw, ExternalLink } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Database, ListChecks, RotateCcw, ExternalLink, Palette } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { PdfEngineSettings } from '@/components/settings/PdfEngineSettings';
 import { BackupTab } from '@/components/settings/BackupTab';
 import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { FormatPreferencesSection } from './FormatPreferencesSection';
+import { RenderProfileSection } from './RenderProfileSection';
 import { useExportSettings } from '@/hooks/useExportSettings';
 
 interface JobRow {
