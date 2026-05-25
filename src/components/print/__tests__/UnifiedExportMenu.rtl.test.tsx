@@ -40,6 +40,15 @@ vi.mock('@/lib/pdfGeneratorLazy', () => ({
   generateDocumentPDF: (...args: any[]) => generateDocumentPDF(...args),
 }));
 
+// Phase 2 router — stub so the test asserts the wiring without pulling
+// in the heavy html2canvas/jsPDF chain. Mirrors the v1 fallback path.
+vi.mock('@/lib/pdf/routing/routePdfRequest', () => ({
+  routePdfRequest: vi.fn(async ({ docType, data }: any) => {
+    await generateDocumentPDF(docType, data);
+    return { engine: 'v1', fellBack: false, durationMs: 0 };
+  }),
+}));
+
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
