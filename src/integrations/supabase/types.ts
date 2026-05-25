@@ -2893,6 +2893,54 @@ export type Database = {
           },
         ]
       }
+      pdf_export_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          delivered_to_email: string | null
+          doc_type: string
+          error_message: string | null
+          file_url: string | null
+          id: string
+          payload: Json | null
+          requested_by: string
+          started_at: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          delivered_to_email?: string | null
+          doc_type: string
+          error_message?: string | null
+          file_url?: string | null
+          id?: string
+          payload?: Json | null
+          requested_by: string
+          started_at?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          delivered_to_email?: string | null
+          doc_type?: string
+          error_message?: string | null
+          file_url?: string | null
+          id?: string
+          payload?: Json | null
+          requested_by?: string
+          started_at?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       permission_matrix_cache: {
         Row: {
           computed_at: string
