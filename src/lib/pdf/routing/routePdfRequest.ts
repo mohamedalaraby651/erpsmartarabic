@@ -56,9 +56,6 @@ const V2_SUPPORTED: ReadonlySet<RoutableDocType> = new Set<RoutableDocType>([
 ]);
 
 /** Doc types where the legacy v1 fallback is NOT available. */
-const V1_UNSUPPORTED: ReadonlySet<RoutableDocType> = new Set<RoutableDocType>([
-  // Statements have a dedicated legacy generator; treat as fallback-OK.
-]);
 
 async function tryV2(
   docType: RoutableDocType,
