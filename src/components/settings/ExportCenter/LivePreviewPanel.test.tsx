@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import { LivePreviewPanel } from './LivePreviewPanel';
 import { createDefaultProfile } from '@/domain/pdf/entities/DocumentRenderProfile';
+
+function withQueryClient(ui: ReactNode) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return <QueryClientProvider client={qc}>{ui}</QueryClientProvider>;
+}
 
 // Polyfill ResizeObserver for jsdom
 beforeAll(() => {
