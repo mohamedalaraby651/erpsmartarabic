@@ -43,7 +43,7 @@ export const personalTabs: SettingsTab[] = [
   { id: 'notifications', label: 'الإشعارات', icon: Bell, adminOnly: false, description: 'إعدادات التنبيهات', color: 'bg-orange-500' },
   { id: 'documents', label: 'مستنداتي', icon: Paperclip, adminOnly: false, description: 'المرفقات الشخصية', color: 'bg-pink-500' },
   { id: 'performance', label: 'الأداء والشبكة', icon: Gauge, adminOnly: false, description: 'تكييف timeout والمزامنة حسب سرعة الشبكة', color: 'bg-sky-500' },
-  { id: 'pdf-engine', label: 'محرك PDF', icon: FileText, adminOnly: false, description: 'تفعيل أو تعطيل محرك v2 الجديد', color: 'bg-rose-500' },
+  { id: 'export-center', label: 'مركز التصدير', icon: Download, adminOnly: false, description: 'PDF و Excel والنسخ الاحتياطي ومهام التصدير', color: 'bg-emerald-500' },
 ];
 
 export const systemTabs: SettingsTab[] = [
@@ -51,8 +51,6 @@ export const systemTabs: SettingsTab[] = [
   { id: 'tenant', label: 'إعدادات المستأجر', icon: Building2, adminOnly: true, description: 'اسم الشركة والنطاق والباقة', color: 'bg-violet-500' },
   { id: 'invoices', label: 'الفواتير', icon: Receipt, adminOnly: true, description: 'العملة وإعدادات الفواتير', color: 'bg-teal-500' },
   { id: 'templates', label: 'القوالب', icon: FileBox, adminOnly: true, description: 'قوالب التقارير والطباعة', color: 'bg-cyan-500' },
-  { id: 'backup', label: 'النسخ الاحتياطي', icon: Database, adminOnly: true, description: 'تصدير واستيراد البيانات', color: 'bg-amber-500' },
-  { id: 'export', label: 'تصدير الإعدادات', icon: Download, adminOnly: true, description: 'تصدير واستيراد إعدادات النظام', color: 'bg-emerald-500' },
   { id: 'offline', label: 'Offline', icon: WifiOff, adminOnly: true, description: 'العمل بدون اتصال', color: 'bg-slate-500' },
 ];
 
