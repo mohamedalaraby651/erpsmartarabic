@@ -15,8 +15,13 @@ import type {
   ProfileScope,
 } from '@/domain/pdf/entities/DocumentRenderProfile';
 import { mergeProfiles } from '@/domain/pdf/services/ProfileMerger';
-import { profileToPdfConfigInput } from '@/domain/pdf/rendering/RenderProfileMapper';
+import {
+  profileToPdfConfigInputAsync,
+  type AssetUrlResolver,
+} from '@/domain/pdf/rendering/RenderProfileMapper';
 import { pdfProfilesRepository } from '@/lib/repositories/pdfProfilesRepository';
+import { pdfAssetsRepository } from '@/lib/repositories/pdfAssetsRepository';
+import { getStorageUrl } from '@/lib/storageUrl';
 import type { RoutableDocType } from '@/lib/pdf/routing/routePdfRequest';
 
 const DOCTYPE_TO_SCOPE: Partial<Record<RoutableDocType, ProfileScope>> = {
