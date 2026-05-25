@@ -55,6 +55,11 @@ function LivePreviewPanelInner({ profile, height = 560 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [box, setBox] = useState({ w: 0, h: height });
 
+  const { url: logoUrl } = usePdfAssetUrl(deferred.branding.logoAssetId);
+  const { url: watermarkImageUrl } = usePdfAssetUrl(
+    deferred.watermark.type === 'image' ? deferred.watermark.imageAssetId : null,
+  );
+
   useEffect(() => {
     if (!containerRef.current) return;
     const el = containerRef.current;
