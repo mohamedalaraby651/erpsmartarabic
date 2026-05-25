@@ -6,11 +6,21 @@ vi.mock('@/lib/pdfGeneratorLazy', () => ({
   getCompanySettings: vi.fn(async () => ({})),
 }));
 
+vi.mock('@/lib/statementPdfGenerator', () => ({
+  generateStatementPdf: vi.fn(async () => undefined),
+}));
+
 vi.mock('../printInvoiceHtmlPdf', () => ({
   printInvoiceHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'i.pdf', config: {}, durationMs: 1, warnings: [] })),
 }));
 vi.mock('../printQuotationHtmlPdf', () => ({
   printQuotationHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'q.pdf', config: {}, durationMs: 1, warnings: [] })),
+}));
+vi.mock('../printPurchaseOrderHtmlPdf', () => ({
+  printPurchaseOrderHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'po.pdf', config: {}, durationMs: 1, warnings: [] })),
+}));
+vi.mock('../printStatementHtmlPdf', () => ({
+  printStatementHtmlPdf: vi.fn(async () => ({ ok: true, blob: new Blob(), filename: 'st.pdf', config: {}, durationMs: 1, warnings: [] })),
 }));
 
 import { routePdfRequest } from './routePdfRequest';
@@ -88,7 +98,7 @@ describe('routePdfRequest', () => {
 
   it('routes unsupported v2 doc types through fallback', async () => {
     const res = await routePdfRequest({
-      docType: 'purchase_order',
+      docType: 'sales_order',
       data: {},
       forceEngine: 'v2',
     });
@@ -106,5 +116,43 @@ describe('routePdfRequest', () => {
     expect(res.fellBack).toBe(false);
     const m = getMetricsFor('quotation');
     expect(m?.v2Successes).toBe(1);
+  });
+
+  it('uses v2 purchase_order pipeline when forced', async () => {
+    const res = await routePdfRequest({
+      docType: 'purchase_order',
+      data: { order_number: 'PO-1' },
+      forceEngine: 'v2',
+    });
+    expect(res.engine).toBe('v2');
+    expect(res.fellBack).toBe(false);
+    const m = getMetricsFor('purchase_order');
+    expect(m?.v2Successes).toBe(1);
+  });
+
+  it('uses v2 statement pipeline when forced', async () => {
+    const res = await routePdfRequest({
+      docType: 'statement',
+      data: { statement_number: 'ST-1' },
+      forceEngine: 'v2',
+    });
+    expect(res.engine).toBe('v2');
+    expect(res.fellBack).toBe(false);
+  });
+
+  it('falls back to legacy statement generator on v2 failure', async () => {
+    const { printStatementHtmlPdf } = await import('../printStatementHtmlPdf');
+    (printStatementHtmlPdf as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('boom'),
+    );
+    const legacy = await import('@/lib/statementPdfGenerator');
+    const res = await routePdfRequest({
+      docType: 'statement',
+      data: {},
+      forceEngine: 'v2',
+    });
+    expect(res.fellBack).toBe(true);
+    expect(res.engine).toBe('v1');
+    expect(legacy.generateStatementPdf).toHaveBeenCalledTimes(1);
   });
 });

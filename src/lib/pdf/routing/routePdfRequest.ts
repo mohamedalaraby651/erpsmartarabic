@@ -12,10 +12,15 @@ import { decideCanary } from './canaryRollout';
 import { startTimer, logPdfSuccess, logPdfFailure } from '../diagnostics/PdfLogger';
 import { printInvoiceHtmlPdf } from '../printInvoiceHtmlPdf';
 import { printQuotationHtmlPdf } from '../printQuotationHtmlPdf';
+import { printPurchaseOrderHtmlPdf } from '../printPurchaseOrderHtmlPdf';
+import { printStatementHtmlPdf } from '../printStatementHtmlPdf';
 import type { SupportedDocType } from '../templates/templateRegistry';
 
+/** Extended doc-type set for routing — includes statements (v2-only). */
+export type RoutableDocType = SupportedDocType | 'statement';
+
 export interface RoutePdfRequestOptions {
-  docType: SupportedDocType;
+  docType: RoutableDocType;
   data: Record<string, unknown> & { items?: unknown[] };
   tenantId?: string | null;
   /** Force a specific engine — used by tests and admin overrides. */
@@ -30,21 +35,30 @@ export interface RoutePdfRequestResult {
 
 /** Indirection so tests can stub the legacy import without touching disk. */
 async function callLegacy(
-  docType: SupportedDocType,
+  docType: RoutableDocType,
   data: Record<string, unknown> & { items?: unknown[] },
 ): Promise<void> {
+  if (docType === 'statement') {
+    const mod = await import('@/lib/statementPdfGenerator');
+    await mod.generateStatementPdf(data as never);
+    return;
+  }
   const mod = await import('@/lib/pdfGeneratorLazy');
   await mod.generateDocumentPDF(docType as never, data as never);
 }
 
 /** Doc types that have a v2 (HTML) implementation available. */
-const V2_SUPPORTED: ReadonlySet<SupportedDocType> = new Set([
+const V2_SUPPORTED: ReadonlySet<RoutableDocType> = new Set<RoutableDocType>([
   'invoice',
   'quotation',
+  'purchase_order',
+  'statement',
 ]);
 
+/** Doc types where the legacy v1 fallback is NOT available. */
+
 async function tryV2(
-  docType: SupportedDocType,
+  docType: RoutableDocType,
   data: Record<string, unknown> & { items?: unknown[] },
 ): Promise<void> {
   if (!V2_SUPPORTED.has(docType)) {
@@ -57,6 +71,16 @@ async function tryV2(
   }
   if (docType === 'quotation') {
     const res = await printQuotationHtmlPdf(data as never);
+    if (res.ok === false) throw new Error(res.message);
+    return;
+  }
+  if (docType === 'purchase_order') {
+    const res = await printPurchaseOrderHtmlPdf(data as never);
+    if (res.ok === false) throw new Error(res.message);
+    return;
+  }
+  if (docType === 'statement') {
+    const res = await printStatementHtmlPdf(data as never);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
