@@ -24,11 +24,9 @@ import { DocumentsSection } from '@/components/settings/DocumentsSection';
 import { CompanyInfoSection } from '@/components/settings/CompanyInfoSection';
 import { InvoiceSettingsSection } from '@/components/settings/InvoiceSettingsSection';
 import { ReportTemplateEditor } from '@/components/reports/ReportTemplateEditor';
-import { BackupTab } from '@/components/settings/BackupTab';
-import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
 import { OfflineSettings } from '@/components/settings/OfflineSettings';
 import { AdaptivePerformanceSettings } from '@/components/settings/AdaptivePerformanceSettings';
-import { PdfEngineSettings } from '@/components/settings/PdfEngineSettings';
+import { ExportCenterPage } from '@/components/settings/ExportCenter/ExportCenterPage';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import { TenantSettings } from '@/components/tenant/TenantSettings';
 import { AboutSystemCard } from '@/components/system/AboutSystemCard';
@@ -60,7 +58,16 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
   const [mobileViewMode, setMobileViewMode] = useState<'list' | 'detail'>('list');
 
   const isAdmin = userRole === 'admin';
-  const activeTab = searchParams.get('tab') || 'profile';
+  const rawTab = searchParams.get('tab') || 'profile';
+  // Back-compat: redirect old tab ids to the new unified Export Center
+  const activeTab =
+    rawTab === 'pdf-engine' || rawTab === 'backup' || rawTab === 'export'
+      ? 'export-center'
+      : rawTab;
+  useEffect(() => {
+    if (rawTab !== activeTab) setSearchParams({ tab: activeTab }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawTab]);
 
   // Fetch profile data
   const { data: profile, isLoading: loadingProfile } = useQuery({
@@ -154,8 +161,8 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         return <DocumentsSection userId={user?.id || ''} />;
       case 'performance':
         return <AdaptivePerformanceSettings />;
-      case 'pdf-engine':
-        return <PdfEngineSettings />;
+      case 'export-center':
+        return <ExportCenterPage />;
       case 'company':
         return isAdmin ? <CompanyInfoSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
       case 'tenant':
@@ -164,10 +171,6 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         return isAdmin ? <InvoiceSettingsSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
       case 'templates':
         return isAdmin ? <ReportTemplateEditor /> : null;
-      case 'backup':
-        return isAdmin ? <BackupTab /> : null;
-      case 'export':
-        return isAdmin ? <SettingsExportImport /> : null;
       case 'offline':
         return isAdmin ? <OfflineSettings /> : null;
       default:
