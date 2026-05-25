@@ -5,14 +5,13 @@
 import { buildPdfConfig, toPageConfig, type PdfConfigInput, type PdfConfig } from './config/pdfConfigSchema';
 import { preflightQuotation } from './diagnostics/preflightQuotation';
 import { safeRender } from './diagnostics/PdfErrorBoundary';
-import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRules';
+import { detectTashkeel } from './arabic/typographyRules';
 import {
   renderQuotationHtml,
   QUOTATION_HTML_CSS,
-  buildWatermarkImageCss,
-  withWatermarkImage,
   type QuotationHtmlData,
 } from './templates/QuotationHtmlTemplate';
+import { composeRenderPayload } from './templates/TemplateComposer';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
 import { buildDocFilename } from './utils/filename';
 
