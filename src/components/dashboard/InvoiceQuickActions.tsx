@@ -90,8 +90,12 @@ export const InvoiceQuickActions = memo(function InvoiceQuickActions(props: Prop
           .eq('invoice_id', invoiceId),
       ]);
       if (!invoice) throw new Error('فاتورة غير موجودة');
-      const { generateDocumentPDF } = await import('@/lib/pdfGeneratorLazy');
-      await generateDocumentPDF('invoice', { ...invoice, items: items || [] });
+      const { routePdfRequest } = await import('@/lib/pdf/routing/routePdfRequest');
+      await routePdfRequest({
+        docType: 'invoice',
+        data: { ...invoice, items: items || [] },
+        tenantId: (invoice as { tenant_id?: string }).tenant_id ?? null,
+      });
       toast({ title: 'تم إنشاء ملف PDF' });
     } catch (err: any) {
       toast({ title: 'تعذرت الطباعة', description: err?.message, variant: 'destructive' });
