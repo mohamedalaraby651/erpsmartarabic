@@ -45,7 +45,21 @@ async function loadOne(key: PdfFontKey): Promise<LoadedFont> {
 
   const config = AVAILABLE_FONTS.find((f) => f.key === key) ?? AVAILABLE_FONTS[0];
   const p = (async () => {
-    const base64 = await loadArabicFont(key);
+    // Tier 2: persistent IndexedDB cache.
+    let base64: string | null = null;
+    try {
+      base64 = await getCachedFont(key);
+    } catch {
+      base64 = null;
+    }
+    // Tier 3: network.
+    if (!base64) {
+      base64 = await loadArabicFont(key);
+      if (base64) {
+        // Best-effort persist; failures must never break exports.
+        void putCachedFont(key, base64).catch(() => {});
+      }
+    }
     if (!base64) {
       throw new PdfFontLoadError(key, `font "${config.name}" failed to load`);
     }
