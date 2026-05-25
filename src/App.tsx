@@ -37,6 +37,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 const PdfSandboxPage = lazy(() => import("./pages/dev/PdfSandboxPage"));
 const PdfTelemetryPage = lazy(() => import("./pages/dev/PdfTelemetryPage"));
+const PdfJobsPage = lazy(() => import("./pages/dev/PdfJobsPage"));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LAZY imports — split into route-group chunks by `vite.config.ts > manualChunks`.
@@ -347,6 +348,7 @@ const App = () => (
                   <>
                     <Route path="/dev/pdf-sandbox" element={<PdfSandboxPage />} />
                     <Route path="/dev/pdf-telemetry" element={<PdfTelemetryPage />} />
+                    <Route path="/dev/pdf-jobs" element={<PdfJobsPage />} />
                   </>
                 ) : null}
                 <Route path="*" element={<NotFound />} />
