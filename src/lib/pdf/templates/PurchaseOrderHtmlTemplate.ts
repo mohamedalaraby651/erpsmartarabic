@@ -165,13 +165,15 @@ export function renderPurchaseOrderHtml(data: PurchaseOrderHtmlData): string {
 </section>`;
 }
 
+import { WATERMARK_IMAGE_BASE_CSS } from './watermarkImage';
+
 export const PURCHASE_ORDER_HTML_CSS = `
-.purchase-order { padding: 4px; }
+.purchase-order { padding: 4px; position: relative; }
 .po-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1f5e3a; padding-bottom: 12px; margin-bottom: 16px; }
 .po-head .buyer h1 { margin: 0 0 4px; font-size: 18px; }
 .po-head .meta { text-align: left; }
 .po-head .meta h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: 1px; color: #1f5e3a; }
-.po-head .logo { max-height: 56px; margin-bottom: 6px; }
+.po-head .logo { max-height: 56px; max-width: 180px; object-fit: contain; margin-bottom: 6px; }
 .parties { display: flex; gap: 12px; margin: 8px 0 16px; }
 .parties .party { flex: 1; padding: 10px 12px; background: #f2f8f3; border-right: 4px solid #1f5e3a; }
 .parties .party h3 { margin: 0 0 6px; font-size: 13px; }
@@ -186,4 +188,8 @@ table.totals tr.grand th, table.totals tr.grand td { background: #1f5e3a; color:
 .signatures { display: flex; justify-content: space-around; margin-top: 32px; gap: 16px; }
 .signatures .sig { text-align: center; flex: 1; font-size: 11px; color: #444; }
 .signatures .sig .line { border-top: 1px solid #888; margin-bottom: 6px; height: 40px; }
+${WATERMARK_IMAGE_BASE_CSS}
+.purchase-order > * { position: relative; z-index: 1; }
 `;
+
+export { buildWatermarkImageCss, withWatermarkImage } from './watermarkImage';
