@@ -15,6 +15,7 @@ import {
   validateProfile,
 } from '@/domain/pdf/entities/DocumentRenderProfile';
 import { EXPORT_SETTINGS_EVENT } from './useExportSettings';
+import { invalidatePdfRenderCache } from '@/lib/pdf/services/PdfRenderService';
 import { toast } from 'sonner';
 
 export const PDF_PROFILE_QUERY_KEY = 'pdf-render-profile';
