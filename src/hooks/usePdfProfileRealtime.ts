@@ -35,7 +35,6 @@ export function usePdfProfileRealtime(
     const channel = supabase
       .channel(`pdf-profiles:${tenantId}`)
       .on(
-        // @ts-expect-error — postgres_changes types depend on generated DB types
         'postgres_changes',
         {
           event: '*',
