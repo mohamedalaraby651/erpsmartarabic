@@ -10,6 +10,9 @@
 
 import type { PdfFailureEvent, PdfSuccessEvent } from './PdfLogger';
 
+export type PdfEngineTag = 'v1' | 'v2' | 'jspdf' | 'html2pdf' | 'edge';
+export type FontCacheHit = 'memory' | 'disk' | 'network' | 'unknown';
+
 export interface PdfDocTypeMetrics {
   docType: string;
   successes: number;
@@ -17,7 +20,15 @@ export interface PdfDocTypeMetrics {
   totalDurationMs: number;
   lastDurationMs: number;
   lastErrorMessage?: string;
+  lastErrorCode?: string;
   lastErrorAt?: number;
+  lastEngine?: PdfEngineTag;
+  lastFontCacheHit?: FontCacheHit;
+  lastMemDeltaMb?: number;
+  v1Successes: number;
+  v2Successes: number;
+  v1Failures: number;
+  v2Failures: number;
 }
 
 const _metrics = new Map<string, PdfDocTypeMetrics>();
