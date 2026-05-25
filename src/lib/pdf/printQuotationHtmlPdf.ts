@@ -5,14 +5,13 @@
 import { buildPdfConfig, toPageConfig, type PdfConfigInput, type PdfConfig } from './config/pdfConfigSchema';
 import { preflightQuotation } from './diagnostics/preflightQuotation';
 import { safeRender } from './diagnostics/PdfErrorBoundary';
-import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRules';
+import { detectTashkeel } from './arabic/typographyRules';
 import {
   renderQuotationHtml,
   QUOTATION_HTML_CSS,
-  buildWatermarkImageCss,
-  withWatermarkImage,
   type QuotationHtmlData,
 } from './templates/QuotationHtmlTemplate';
+import { composeRenderPayload } from './templates/TemplateComposer';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
 import { buildDocFilename } from './utils/filename';
 
@@ -79,22 +78,12 @@ export async function printQuotationHtmlPdf(
       ...enriched.items.map((i) => i.description),
     ].join(' '),
   );
-  const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const wm = config.watermark;
-  const wmCss = wm.enabled && wm.imageUrl
-    ? buildWatermarkImageCss({
-        imageUrl: wm.imageUrl,
-        opacity: wm.opacity,
-        rotation: wm.rotation,
-        tiled: wm.tiled,
-      })
-    : '';
-  const css = `${typoCss}\n${QUOTATION_HTML_CSS}\n${wmCss}`;
-  const html = withWatermarkImage(
-    renderQuotationHtml(enriched),
-    wm.enabled ? wm.imageUrl : undefined,
-    !!wm.tiled,
-  );
+  const { html, css } = composeRenderPayload({
+    html: renderQuotationHtml(enriched),
+    bodyCss: QUOTATION_HTML_CSS,
+    config,
+    hasTashkeel: tashkeel,
+  });
 
   const filename = opts.filename ?? buildDocFilename('quotation', data.quotationNumber);
   const result = await safeRender<Blob>(

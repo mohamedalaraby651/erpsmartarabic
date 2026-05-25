@@ -4,14 +4,13 @@
 import { buildPdfConfig, toPageConfig, type PdfConfigInput, type PdfConfig } from './config/pdfConfigSchema';
 import { preflightStatement } from './diagnostics/preflightStatement';
 import { safeRender } from './diagnostics/PdfErrorBoundary';
-import { buildTypographyRulesCss, detectTashkeel } from './arabic/typographyRules';
+import { detectTashkeel } from './arabic/typographyRules';
 import {
   renderStatementHtml,
   STATEMENT_HTML_CSS,
-  buildWatermarkImageCss,
-  withWatermarkImage,
   type StatementHtmlData,
 } from './templates/StatementHtmlTemplate';
+import { composeRenderPayload } from './templates/TemplateComposer';
 import { htmlPdfEngine } from './engine/HtmlPdfEngine';
 import { buildDocFilename } from './utils/filename';
 
@@ -74,22 +73,12 @@ export async function printStatementHtmlPdf(
   const tashkeel = detectTashkeel(
     [enriched.notes ?? '', ...enriched.transactions.map((t) => t.description ?? '')].join(' '),
   );
-  const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const wm = config.watermark;
-  const wmCss = wm.enabled && wm.imageUrl
-    ? buildWatermarkImageCss({
-        imageUrl: wm.imageUrl,
-        opacity: wm.opacity,
-        rotation: wm.rotation,
-        tiled: wm.tiled,
-      })
-    : '';
-  const css = `${typoCss}\n${STATEMENT_HTML_CSS}\n${wmCss}`;
-  const html = withWatermarkImage(
-    renderStatementHtml(enriched),
-    wm.enabled ? wm.imageUrl : undefined,
-    !!wm.tiled,
-  );
+  const { html, css } = composeRenderPayload({
+    html: renderStatementHtml(enriched),
+    bodyCss: STATEMENT_HTML_CSS,
+    config,
+    hasTashkeel: tashkeel,
+  });
 
   const filename = opts.filename ?? buildDocFilename('statement', data.statementNumber);
   const result = await safeRender<Blob>(
