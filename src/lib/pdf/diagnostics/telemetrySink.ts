@@ -37,7 +37,10 @@ const _listeners = new Set<(snapshot: PdfDocTypeMetrics[]) => void>();
 function bucket(docType: string): PdfDocTypeMetrics {
   let m = _metrics.get(docType);
   if (!m) {
-    m = { docType, successes: 0, failures: 0, totalDurationMs: 0, lastDurationMs: 0 };
+    m = {
+      docType, successes: 0, failures: 0, totalDurationMs: 0, lastDurationMs: 0,
+      v1Successes: 0, v2Successes: 0, v1Failures: 0, v2Failures: 0,
+    };
     _metrics.set(docType, m);
   }
   return m;
@@ -51,11 +54,25 @@ function emit(): void {
   });
 }
 
+function applyExtras(m: PdfDocTypeMetrics, ev: PdfSuccessEvent | PdfFailureEvent): void {
+  const extras = ev as Partial<{
+    engine: PdfEngineTag;
+    fontCacheHit: FontCacheHit;
+    memDeltaMb: number;
+  }>;
+  if (extras.engine) m.lastEngine = extras.engine as PdfEngineTag;
+  if (extras.fontCacheHit) m.lastFontCacheHit = extras.fontCacheHit;
+  if (typeof extras.memDeltaMb === 'number') m.lastMemDeltaMb = extras.memDeltaMb;
+}
+
 export function recordPdfSuccess(ev: PdfSuccessEvent): void {
   const m = bucket(ev.docType);
   m.successes += 1;
   m.totalDurationMs += ev.durationMs;
   m.lastDurationMs = ev.durationMs;
+  applyExtras(m, ev);
+  if (m.lastEngine === 'v2') m.v2Successes += 1;
+  else if (m.lastEngine === 'v1') m.v1Successes += 1;
   emit();
 }
 
@@ -64,8 +81,13 @@ export function recordPdfFailure(ev: PdfFailureEvent): void {
   m.failures += 1;
   m.totalDurationMs += ev.durationMs;
   m.lastDurationMs = ev.durationMs;
-  m.lastErrorMessage = String((ev.error as { message?: string } | null)?.message ?? ev.error);
+  const err = ev.error as { message?: string; code?: string } | null;
+  m.lastErrorMessage = String(err?.message ?? ev.error);
+  m.lastErrorCode = err?.code;
   m.lastErrorAt = Date.now();
+  applyExtras(m, ev);
+  if (m.lastEngine === 'v2') m.v2Failures += 1;
+  else if (m.lastEngine === 'v1') m.v1Failures += 1;
   emit();
 }
 
