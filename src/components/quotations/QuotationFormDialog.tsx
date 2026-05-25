@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +25,9 @@ import { useQuotationItems } from "./useQuotationItems";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { LivePreviewPanel } from "@/components/settings/ExportCenter/LivePreviewPanel";
+import { useLivePreviewProfile } from "@/components/settings/ExportCenter/useLivePreviewProfile";
+import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -46,6 +49,9 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isEditing = !!quotation;
+  const [lastSavedId, setLastSavedId] = useState<string | null>(quotation?.id ?? null);
+  const [printOpen, setPrintOpen] = useState(false);
+  const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -69,7 +75,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     addItem, updateItem, removeItem, loadItems, resetItems, validate,
   } = useQuotationItems({ products });
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { isDirty } } = useForm<FormData>({
     defaultValues: { customer_id: '', valid_until: '', notes: '' },
   });
 
