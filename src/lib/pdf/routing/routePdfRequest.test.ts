@@ -155,4 +155,39 @@ describe('routePdfRequest', () => {
     expect(res.engine).toBe('v1');
     expect(legacy.generateStatementPdf).toHaveBeenCalledTimes(1);
   });
+
+  it('resolves tenant profile and passes config to v2 printer (appliedProfile=true)', async () => {
+    const { setProfileLoader, _clearAllCachesForTest } = await import('../services/PdfRenderService');
+    const { createDefaultProfile } = await import('@/domain/pdf/entities/DocumentRenderProfile');
+    _clearAllCachesForTest();
+    const g = createDefaultProfile('global');
+    g.branding.companyName = 'ACME';
+    g.layout.pageSize = 'A5';
+    setProfileLoader(async () => g);
+
+    const res = await routePdfRequest({
+      docType: 'invoice',
+      data: { invoice_number: 'X' },
+      tenantId: 't-1',
+      forceEngine: 'v2',
+    });
+
+    expect(res.appliedProfile).toBe(true);
+    const mock = printInvoiceHtmlPdf as unknown as ReturnType<typeof vi.fn>;
+    const lastCall = mock.mock.calls.at(-1);
+    const passedOpts = lastCall?.[1];
+    expect(passedOpts?.config?.branding?.companyName).toBe('ACME');
+    expect(passedOpts?.config?.page?.size).toBe('A5');
+
+    setProfileLoader(null);
+  });
+
+  it('skips profile resolution when no tenantId (appliedProfile=false)', async () => {
+    const res = await routePdfRequest({
+      docType: 'invoice',
+      data: { invoice_number: 'X' },
+      forceEngine: 'v2',
+    });
+    expect(res.appliedProfile).toBe(false);
+  });
 });
