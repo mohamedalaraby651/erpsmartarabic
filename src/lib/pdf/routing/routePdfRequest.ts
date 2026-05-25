@@ -15,6 +15,8 @@ import { printQuotationHtmlPdf } from '../printQuotationHtmlPdf';
 import { printPurchaseOrderHtmlPdf } from '../printPurchaseOrderHtmlPdf';
 import { printStatementHtmlPdf } from '../printStatementHtmlPdf';
 import type { SupportedDocType } from '../templates/templateRegistry';
+import type { PdfConfigInput } from '../config/pdfConfigSchema';
+import { resolvePdfConfig } from '../services/PdfRenderService';
 
 /** Extended doc-type set for routing — includes statements (v2-only). */
 export type RoutableDocType = SupportedDocType | 'statement';
@@ -25,12 +27,16 @@ export interface RoutePdfRequestOptions {
   tenantId?: string | null;
   /** Force a specific engine — used by tests and admin overrides. */
   forceEngine?: 'v1' | 'v2';
+  /** Override resolved profile config (tests / admin previews). */
+  configOverride?: PdfConfigInput;
 }
 
 export interface RoutePdfRequestResult {
   engine: 'v1' | 'v2';
   fellBack: boolean;
   durationMs: number;
+  /** true لو طُبِّق profile (إعدادات تصيير مخصصة) من قاعدة البيانات. */
+  appliedProfile: boolean;
 }
 
 /** Indirection so tests can stub the legacy import without touching disk. */
@@ -55,32 +61,32 @@ const V2_SUPPORTED: ReadonlySet<RoutableDocType> = new Set<RoutableDocType>([
   'statement',
 ]);
 
-/** Doc types where the legacy v1 fallback is NOT available. */
-
 async function tryV2(
   docType: RoutableDocType,
   data: Record<string, unknown> & { items?: unknown[] },
+  config?: PdfConfigInput,
 ): Promise<void> {
   if (!V2_SUPPORTED.has(docType)) {
     throw new Error(`v2 template not yet available for "${docType}"`);
   }
+  const opts = config ? { config } : undefined;
   if (docType === 'invoice') {
-    const res = await printInvoiceHtmlPdf(data as never);
+    const res = await printInvoiceHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
   if (docType === 'quotation') {
-    const res = await printQuotationHtmlPdf(data as never);
+    const res = await printQuotationHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
   if (docType === 'purchase_order') {
-    const res = await printPurchaseOrderHtmlPdf(data as never);
+    const res = await printPurchaseOrderHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
   if (docType === 'statement') {
-    const res = await printStatementHtmlPdf(data as never);
+    const res = await printStatementHtmlPdf(data as never, opts);
     if (res.ok === false) throw new Error(res.message);
     return;
   }
@@ -89,29 +95,40 @@ async function tryV2(
 export async function routePdfRequest(
   opts: RoutePdfRequestOptions,
 ): Promise<RoutePdfRequestResult> {
-  const { docType, data, tenantId, forceEngine } = opts;
+  const { docType, data, tenantId, forceEngine, configOverride } = opts;
   const decision = forceEngine
     ? { useV2: forceEngine === 'v2' }
     : decideCanary({ tenantId, docType });
+
+  // Resolve render profile from DB (when tenant available + no override given).
+  let resolvedConfig: PdfConfigInput | undefined = configOverride;
+  if (!resolvedConfig && tenantId) {
+    try {
+      resolvedConfig = await resolvePdfConfig(tenantId, docType);
+    } catch {
+      // ignore — fallback to defaults
+    }
+  }
+  const appliedProfile = Boolean(resolvedConfig);
 
   const stop = startTimer(docType);
 
   if (decision.useV2) {
     try {
-      await tryV2(docType, data);
+      await tryV2(docType, data, resolvedConfig);
       const durationMs = stop();
       logPdfSuccess({ docType, engine: 'html2pdf', durationMs, ...{ engine: 'v2' as never } });
-      return { engine: 'v2', fellBack: false, durationMs };
+      return { engine: 'v2', fellBack: false, durationMs, appliedProfile };
     } catch (error) {
       const v2Duration = stop();
       logPdfFailure({ docType, engine: 'html2pdf', durationMs: v2Duration, error, ...{ engine: 'v2' as never } });
-      // Safe fallback to legacy.
+      // Safe fallback to legacy (does not consume profile yet).
       const stopV1 = startTimer(docType);
       try {
         await callLegacy(docType, data);
         const durationMs = stopV1();
         logPdfSuccess({ docType, engine: 'jspdf', durationMs, ...{ engine: 'v1' as never } });
-        return { engine: 'v1', fellBack: true, durationMs };
+        return { engine: 'v1', fellBack: true, durationMs, appliedProfile: false };
       } catch (fallbackError) {
         const durationMs = stopV1();
         logPdfFailure({ docType, engine: 'jspdf', durationMs, error: fallbackError, ...{ engine: 'v1' as never } });
@@ -125,7 +142,7 @@ export async function routePdfRequest(
     await callLegacy(docType, data);
     const durationMs = stop();
     logPdfSuccess({ docType, engine: 'jspdf', durationMs, ...{ engine: 'v1' as never } });
-    return { engine: 'v1', fellBack: false, durationMs };
+    return { engine: 'v1', fellBack: false, durationMs, appliedProfile: false };
   } catch (error) {
     const durationMs = stop();
     logPdfFailure({ docType, engine: 'jspdf', durationMs, error, ...{ engine: 'v1' as never } });
