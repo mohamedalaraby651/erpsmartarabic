@@ -19,13 +19,11 @@ import { profileToPdfConfigInput } from '@/domain/pdf/rendering/RenderProfileMap
 import { pdfProfilesRepository } from '@/lib/repositories/pdfProfilesRepository';
 import type { RoutableDocType } from '@/lib/pdf/routing/routePdfRequest';
 
-const DOCTYPE_TO_SCOPE: Record<RoutableDocType, ProfileScope> = {
+const DOCTYPE_TO_SCOPE: Partial<Record<RoutableDocType, ProfileScope>> = {
   invoice: 'invoice',
   quotation: 'quotation',
   purchase_order: 'purchase_order',
   statement: 'statement',
-  // Fallbacks for future doc types
-  delivery_note: 'delivery_note' as ProfileScope,
 };
 
 export interface ProfileLoader {
