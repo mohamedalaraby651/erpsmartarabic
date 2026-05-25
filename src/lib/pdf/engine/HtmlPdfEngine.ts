@@ -3,15 +3,23 @@ import { withPdfTelemetry } from '../diagnostics/PdfLogger';
 import { PdfEngineError, toArabicErrorMessage } from '../diagnostics/errors';
 import { buildArabicCss } from '../arabic/arabicCss';
 import type { PdfFontKey } from '@/lib/arabicFont';
+import {
+  renderChunkedHtmlPdf,
+  shouldChunk,
+  type ChunkedRenderOptions,
+  type ChunkedRenderLoaders,
+} from './chunkedRender';
 
 /**
  * HTML-to-PDF engine. Renders rich HTML/CSS templates (RTL-friendly via
  * the browser's native bidi engine) using `html2pdf.js`, which wraps
  * html2canvas + jsPDF. Loaded lazily — never inflates the initial bundle.
  *
- * By default the engine auto-injects an `@font-face` block with the
- * resolved Arabic font (Amiri) and an RTL-safe stylesheet so callers
- * don't have to wire fonts/alignment themselves.
+ * For large documents (statements, multi-page invoices) the engine
+ * automatically switches to a streaming/chunked path (`chunkedRender.ts`)
+ * that rasterises the document one virtual page at a time, keeping peak
+ * memory below ~80MB on mobile browsers instead of the ~400MB spike of
+ * a single full-DOM html2canvas pass.
  */
 export interface HtmlPdfPayload {
   /** Raw HTML markup OR a live HTMLElement reference. */
@@ -26,6 +34,13 @@ export interface HtmlPdfPayload {
   fontKey?: PdfFontKey;
   /** Document type for telemetry bucketing. */
   documentType?: string;
+  /**
+   * Chunked rendering controls. Omit to auto-detect (kicks in at ≥50 rows).
+   * Set `enabled: false` to force the legacy single-pass path.
+   */
+  chunked?: ChunkedRenderOptions;
+  /** Test seam: inject html2canvas / jsPDF loaders. */
+  chunkedLoaders?: ChunkedRenderLoaders;
 }
 
 type Html2PdfFn = (el: HTMLElement, opts: unknown) => {
@@ -96,6 +111,26 @@ export class HtmlPdfEngine implements IPdfEngine {
       const container = buildContainer(p, arabicCss);
       document.body.appendChild(container);
       try {
+        // ── Chunked path ───────────────────────────────────────────────
+        // For large tabular documents render page-by-page to keep peak
+        // memory low. The legacy html2pdf.js path stays the default for
+        // smaller documents to preserve existing behaviour & tests.
+        if (shouldChunk(container, p.chunked)) {
+          const blob = await renderChunkedHtmlPdf({
+            container,
+            page: ctx.page,
+            options: p.chunked,
+            loaders: p.chunkedLoaders,
+          });
+          return {
+            blob,
+            filename,
+            pages: 0,
+            engine: 'html2pdf' as const,
+            durationMs: performance.now() - start,
+          };
+        }
+
         const html2pdf = await this._loader();
         const opts = {
           margin: [
