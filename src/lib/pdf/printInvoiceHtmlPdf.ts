@@ -72,16 +72,41 @@ export async function printInvoiceHtmlPdf(
   const config = buildPdfConfig(opts.config);
   const pageCfg = toPageConfig(config);
 
+  // 2.5 Merge profile-driven assets into template data
+  //  - Logo: prefer caller-supplied; fallback to config.header.logoUrl
+  //  - Company name/tax: enrich from branding when missing
+  const enriched: InvoiceHtmlData = {
+    ...data,
+    company: {
+      ...data.company,
+      logoUrl: data.company.logoUrl ?? config.header?.logoUrl,
+      taxNumber: data.company.taxNumber ?? config.branding.taxNumber,
+    },
+  };
+
   // 3. Compose HTML + CSS
   const tashkeel = detectTashkeel(
     [
-      data.notes ?? '',
-      ...data.items.map((i) => i.description),
+      enriched.notes ?? '',
+      ...enriched.items.map((i) => i.description),
     ].join(' '),
   );
   const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const css = `${typoCss}\n${INVOICE_HTML_CSS}`;
-  const html = renderInvoiceHtml(data);
+  const wm = config.watermark;
+  const wmCss = wm.enabled && wm.imageUrl
+    ? buildWatermarkImageCss({
+        imageUrl: wm.imageUrl,
+        opacity: wm.opacity,
+        rotation: wm.rotation,
+        tiled: wm.tiled,
+      })
+    : '';
+  const css = `${typoCss}\n${INVOICE_HTML_CSS}\n${wmCss}`;
+  const html = withWatermarkImage(
+    renderInvoiceHtml(enriched),
+    wm.enabled ? wm.imageUrl : undefined,
+    !!wm.tiled,
+  );
 
   // 4+5. Render under boundary
   const filename = opts.filename ?? buildDocFilename('invoice', data.invoiceNumber);
