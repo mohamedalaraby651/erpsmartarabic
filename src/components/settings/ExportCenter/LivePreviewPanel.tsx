@@ -119,62 +119,72 @@ function LivePreviewPanelInner({ profile, height = 560 }: Props) {
   const renderWatermark = () => {
     const w = deferred.watermark;
     if (!w.enabled) return null;
-    const txt = w.type === 'text' ? (w.text ?? '') : '';
-    if (w.type === 'text' && !txt) return null;
+    const isImage = w.type === 'image';
+    const txt = !isImage ? (w.text ?? '') : '';
+    if (!isImage && !txt) return null;
+    if (isImage && !watermarkImageUrl) return null;
 
-    const size = Math.min(pxW, pxH) * 0.18 * (w.scale ?? 1);
+    const size = Math.min(pxW, pxH) * 0.35 * (w.scale ?? 1);
+
+    const renderSingle = (key: string | number, style: React.CSSProperties) =>
+      isImage ? (
+        <img
+          key={key}
+          src={watermarkImageUrl!}
+          alt=""
+          style={{
+            ...style,
+            width: `${size}px`,
+            height: 'auto',
+            objectFit: 'contain',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        />
+      ) : (
+        <div
+          key={key}
+          style={{
+            ...style,
+            fontSize: `${size * (1 / 0.35) * 0.18}px`,
+            fontWeight: 800,
+            color: deferred.branding.primaryColor,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {txt}
+        </div>
+      );
 
     if (w.position === 'tiled' || w.repeat) {
-      const cells = 12;
+      const cells = 9;
       return (
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           {Array.from({ length: cells }).map((_, i) => {
             const row = Math.floor(i / 3);
             const col = i % 3;
-            return (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  top: `${(row + 0.5) * 25}%`,
-                  left: `${(col + 0.5) * 33}%`,
-                  transform: `translate(-50%,-50%) rotate(${w.rotation}deg)`,
-                  opacity: w.opacity,
-                  fontSize: `${size * 0.5}px`,
-                  fontWeight: 800,
-                  color: deferred.branding.primaryColor,
-                  whiteSpace: 'nowrap',
-                  userSelect: 'none',
-                }}
-              >
-                {txt}
-              </div>
-            );
+            return renderSingle(i, {
+              position: 'absolute',
+              top: `${(row + 0.5) * 33}%`,
+              left: `${(col + 0.5) * 33}%`,
+              transform: `translate(-50%,-50%) rotate(${w.rotation}deg) scale(0.6)`,
+              opacity: w.opacity,
+            });
           })}
         </div>
       );
     }
 
     const pos = watermarkOffsets(w.position);
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          top: pos.top,
-          left: pos.left,
-          transform: `${pos.translate} rotate(${w.rotation}deg)`,
-          opacity: w.opacity,
-          fontSize: `${size}px`,
-          fontWeight: 800,
-          color: deferred.branding.primaryColor,
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
-      >
-        {txt}
-      </div>
-    );
+    return renderSingle('single', {
+      position: 'absolute',
+      top: pos.top,
+      left: pos.left,
+      transform: `${pos.translate} rotate(${w.rotation}deg)`,
+      opacity: w.opacity,
+    });
   };
 
   const hasFatal = !validation.valid;
