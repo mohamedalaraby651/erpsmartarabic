@@ -161,8 +161,8 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         return <DocumentsSection userId={user?.id || ''} />;
       case 'performance':
         return <AdaptivePerformanceSettings />;
-      case 'pdf-engine':
-        return <PdfEngineSettings />;
+      case 'export-center':
+        return <ExportCenterPage />;
       case 'company':
         return isAdmin ? <CompanyInfoSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
       case 'tenant':
@@ -171,10 +171,6 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         return isAdmin ? <InvoiceSettingsSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
       case 'templates':
         return isAdmin ? <ReportTemplateEditor /> : null;
-      case 'backup':
-        return isAdmin ? <BackupTab /> : null;
-      case 'export':
-        return isAdmin ? <SettingsExportImport /> : null;
       case 'offline':
         return isAdmin ? <OfflineSettings /> : null;
       default:
