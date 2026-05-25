@@ -61,12 +61,35 @@ export async function printStatementHtmlPdf(
   const config = buildPdfConfig(opts.config);
   const pageCfg = toPageConfig(config);
 
+  // Merge profile-driven branding into company block.
+  const enriched: StatementHtmlData = {
+    ...data,
+    company: {
+      ...data.company,
+      logoUrl: data.company.logoUrl ?? config.header?.logoUrl,
+      taxNumber: data.company.taxNumber ?? config.branding.taxNumber,
+    },
+  };
+
   const tashkeel = detectTashkeel(
-    [data.notes ?? '', ...data.transactions.map((t) => t.description ?? '')].join(' '),
+    [enriched.notes ?? '', ...enriched.transactions.map((t) => t.description ?? '')].join(' '),
   );
   const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const css = `${typoCss}\n${STATEMENT_HTML_CSS}`;
-  const html = renderStatementHtml(data);
+  const wm = config.watermark;
+  const wmCss = wm.enabled && wm.imageUrl
+    ? buildWatermarkImageCss({
+        imageUrl: wm.imageUrl,
+        opacity: wm.opacity,
+        rotation: wm.rotation,
+        tiled: wm.tiled,
+      })
+    : '';
+  const css = `${typoCss}\n${STATEMENT_HTML_CSS}\n${wmCss}`;
+  const html = withWatermarkImage(
+    renderStatementHtml(enriched),
+    wm.enabled ? wm.imageUrl : undefined,
+    !!wm.tiled,
+  );
 
   const filename = opts.filename ?? buildDocFilename('statement', data.statementNumber);
   const result = await safeRender<Blob>(
