@@ -61,16 +61,39 @@ export async function printPurchaseOrderHtmlPdf(
   const config = buildPdfConfig(opts.config);
   const pageCfg = toPageConfig(config);
 
+  // Merge profile-driven branding (logo, tax) into buyer block.
+  const enriched: PurchaseOrderHtmlData = {
+    ...data,
+    buyer: {
+      ...data.buyer,
+      logoUrl: data.buyer.logoUrl ?? config.header?.logoUrl,
+      taxNumber: data.buyer.taxNumber ?? config.branding.taxNumber,
+    },
+  };
+
   const tashkeel = detectTashkeel(
     [
-      data.notes ?? '',
-      data.paymentTerms ?? '',
-      ...data.items.map((i) => i.description),
+      enriched.notes ?? '',
+      enriched.paymentTerms ?? '',
+      ...enriched.items.map((i) => i.description),
     ].join(' '),
   );
   const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const css = `${typoCss}\n${PURCHASE_ORDER_HTML_CSS}`;
-  const html = renderPurchaseOrderHtml(data);
+  const wm = config.watermark;
+  const wmCss = wm.enabled && wm.imageUrl
+    ? buildWatermarkImageCss({
+        imageUrl: wm.imageUrl,
+        opacity: wm.opacity,
+        rotation: wm.rotation,
+        tiled: wm.tiled,
+      })
+    : '';
+  const css = `${typoCss}\n${PURCHASE_ORDER_HTML_CSS}\n${wmCss}`;
+  const html = withWatermarkImage(
+    renderPurchaseOrderHtml(enriched),
+    wm.enabled ? wm.imageUrl : undefined,
+    !!wm.tiled,
+  );
 
   const filename = opts.filename ?? buildDocFilename('purchase_order', data.orderNumber);
   const result = await safeRender<Blob>(
