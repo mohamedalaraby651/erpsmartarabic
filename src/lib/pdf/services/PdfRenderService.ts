@@ -47,9 +47,27 @@ const cache = new Map<string, CacheEntry>();
 let loader: ProfileLoader = async (tenantId, scope) =>
   pdfProfilesRepository.findActive(tenantId, scope, null);
 
+/**
+ * Default resolver: يقرأ الـ asset ثم يوقّع المسار من bucket pdf-branding.
+ * قابل للحقن في الاختبارات عبر setAssetUrlResolver.
+ */
+let assetResolver: AssetUrlResolver = async (assetId) => {
+  const row = await pdfAssetsRepository.findById(assetId);
+  if (!row) return null;
+  return getStorageUrl('pdf-branding', row.file_path, 60 * 60);
+};
+
 /** للاختبارات والـ overrides الإدارية. */
 export function setProfileLoader(fn: ProfileLoader | null): void {
   loader = fn ?? (async (t, s) => pdfProfilesRepository.findActive(t, s, null));
+}
+
+export function setAssetUrlResolver(fn: AssetUrlResolver | null): void {
+  assetResolver = fn ?? (async (assetId) => {
+    const row = await pdfAssetsRepository.findById(assetId);
+    if (!row) return null;
+    return getStorageUrl('pdf-branding', row.file_path, 60 * 60);
+  });
 }
 
 /** إبطال الكاش — يُستدعى بعد حفظ أي profile. */
