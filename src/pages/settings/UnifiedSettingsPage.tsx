@@ -154,6 +154,8 @@ const UnifiedSettingsPage = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         return <DocumentsSection userId={user?.id || ''} />;
       case 'performance':
         return <AdaptivePerformanceSettings />;
+      case 'pdf-engine':
+        return <PdfEngineSettings />;
       case 'company':
         return isAdmin ? <CompanyInfoSection onDataChange={() => setHasUnsavedChanges(true)} /> : null;
       case 'tenant':
