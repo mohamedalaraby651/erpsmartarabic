@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Save, Plus } from "lucide-react";
+import { ArrowRight, Save, Plus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateQuote } from "@/hooks/sales-cycle/useQuotes";
 import { customerRepository } from "@/lib/repositories/customerRepository";
@@ -21,6 +21,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useQuotationItems } from "@/components/quotations/useQuotationItems";
 import { QuotationItemsTable } from "@/components/quotations/QuotationItemsTable";
+import { LivePreviewPanel } from "@/components/settings/ExportCenter/LivePreviewPanel";
+import { useLivePreviewProfile } from "@/components/settings/ExportCenter/useLivePreviewProfile";
+import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
@@ -28,6 +31,7 @@ export default function QuoteNewPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const create = useCreateQuote();
+  const { profile: pdfProfile } = useLivePreviewProfile();
 
   const [customerId, setCustomerId] = useState("");
   const [quoteDate, setQuoteDate] = useState(new Date().toISOString().slice(0, 10));
@@ -35,6 +39,8 @@ export default function QuoteNewPage() {
     new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
   );
   const [notes, setNotes] = useState("");
+  const [lastSavedId, setLastSavedId] = useState<string | null>(null);
+  const [printOpen, setPrintOpen] = useState(false);
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers", "select"],
@@ -85,7 +91,7 @@ export default function QuoteNewPage() {
       return;
     }
 
-    await create.mutateAsync({
+    const created = await create.mutateAsync({
       customer_id: customerId,
       quote_date: quoteDate,
       valid_until: validUntil,
@@ -101,7 +107,13 @@ export default function QuoteNewPage() {
         discount_percentage: Number(it.discount_percentage || 0),
       })),
     });
-    navigate("/quotes");
+    const newId = (created as { id?: string } | null)?.id ?? null;
+    if (newId) {
+      setLastSavedId(newId);
+      toast({ title: "تم الحفظ", description: "يمكنك الآن طباعة PDF" });
+    } else {
+      navigate("/quotes");
+    }
   };
 
   return (
@@ -162,8 +174,11 @@ export default function QuoteNewPage() {
           onRemoveItem={removeItem}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <div className="space-y-3 bg-muted p-4 rounded-lg md:col-start-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
+          <div className="hidden lg:block">
+            <LivePreviewPanel profile={pdfProfile} height={420} />
+          </div>
+          <div className="space-y-3 bg-muted p-4 rounded-lg">
             <div className="flex justify-between">
               <span>المجموع الفرعي:</span>
               <span className="font-bold">{subtotal.toLocaleString()} ج.م</span>
@@ -203,15 +218,28 @@ export default function QuoteNewPage() {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {lastSavedId && (
+            <Button type="button" variant="outline" onClick={() => setPrintOpen(true)}>
+              <Printer className="h-4 w-4 ml-1" /> طباعة PDF
+            </Button>
+          )}
           <Button
             onClick={submit}
-            disabled={create.isPending || !customerId || items.length === 0}
+            disabled={create.isPending || !customerId || items.length === 0 || !!lastSavedId}
           >
             <Save className="h-4 w-4 ml-1" /> حفظ عرض السعر
           </Button>
         </div>
       </Card>
+
+      {lastSavedId && (
+        <QuotationPrintView
+          quotationId={lastSavedId}
+          open={printOpen}
+          onOpenChange={setPrintOpen}
+        />
+      )}
     </div>
   );
 }

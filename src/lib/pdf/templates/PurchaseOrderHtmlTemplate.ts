@@ -131,7 +131,7 @@ export function renderPurchaseOrderHtml(data: PurchaseOrderHtmlData): string {
     ${data.shippingAddress ? `<div class="party shipping"><h3>عنوان التسليم</h3><div>${esc(data.shippingAddress)}</div></div>` : ''}
   </section>
 
-  <table class="items">
+  <table class="items" data-pdf-chunk>
     <thead>
       <tr>
         <th>#</th>

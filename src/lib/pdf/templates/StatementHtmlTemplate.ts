@@ -174,7 +174,7 @@ export function renderStatementHtml(data: StatementHtmlData): string {
     ${data.party.taxNumber ? `<div>الرقم الضريبي: <span class="num">${esc(data.party.taxNumber)}</span></div>` : ''}
   </section>
 
-  <table class="txns">
+  <table class="txns" data-pdf-chunk>
     <thead>
       <tr>
         <th>التاريخ</th>

@@ -1,159 +1,120 @@
-## Architectural Hotfix — Sales & Procurement (Phases 1–3)
+## Wire Sales & Procurement into the v2 PDF Engine
 
-### Phase 1 — RLS Hardening on `quotes`, `quote_items`, `credit_notes`, `credit_note_items`
+### Findings (current state)
 
-Create a migration that drops the existing tenant‑only write policies and recreates them with section‑permission gates on top of tenant isolation. Reads stay tenant‑only.
+- `InvoicePrintView` and `QuotationPrintView` already call `routePdfRequest`, but **omit** `tenantId` → `resolvePdfConfig` is skipped and the active `DocumentRenderProfile` (logo, watermark, margins) never reaches the renderer.
+- The form dialogs (`InvoiceFormDialog`, `QuotationFormDialog`, `QuoteNewPage`) have **no Print/PDF button at all** today.
+- `HtmlPdfEngine` already auto-switches to `renderChunkedHtmlPdf` at ≥ 50 rows — but **only when the primary** `<table>` **carries** `data-pdf-chunk` **or** `class="pdf-table"`. None of the v2 templates (`InvoiceHtmlTemplate`, `QuotationHtmlTemplate`, `StatementHtmlTemplate`, `PurchaseOrderHtmlTemplate`) currently do, so chunking never fires in production.
+- `LivePreviewPanel` already binds to `usePdfProfile` (which itself subscribes via `usePdfProfileRealtime`); reusing it inside the form wizards immediately delivers cross-tab live refresh.
 
-```text
-quotes / quote_items        → section='sales'    actions: create | edit | delete
-credit_notes / cn_items     → section='invoices' actions: create | edit | delete
-```
+---
 
-Pattern (per table):
+### Phase 1 — Wire Print/Export buttons through `routePdfRequest`
 
-```sql
-DROP POLICY ... ON public.quotes;
+**1a. Pass** `tenantId` **from the print views** so the profile resolver runs.
 
-CREATE POLICY "tenant_quotes_insert" ON public.quotes
-  FOR INSERT TO authenticated
-  WITH CHECK (
-    tenant_id = get_current_tenant()
-    AND check_section_permission(auth.uid(), 'sales', 'create')
-  );
+- `src/components/print/InvoicePrintView.tsx`: read `tenantId` from `useTenant()` and pass it in the `routePdfRequest({ tenantId, … })` call. Same for `QuotationPrintView.tsx`.
+- This single change activates branding/watermark/margins from `DocumentRenderProfile` for every existing Print dialog.
 
-CREATE POLICY "tenant_quotes_update" ON public.quotes
-  FOR UPDATE TO authenticated
-  USING (tenant_id = get_current_tenant())
-  WITH CHECK (
-    tenant_id = get_current_tenant()
-    AND check_section_permission(auth.uid(), 'sales', 'edit')
-  );
+**1b. Add a "Print PDF" action to the form dialogs** (after a successful save).
 
-CREATE POLICY "tenant_quotes_delete" ON public.quotes
-  FOR DELETE TO authenticated
-  USING (
-    tenant_id = get_current_tenant()
-    AND status = 'draft'                                  -- preserve current safety rule
-    AND check_section_permission(auth.uid(), 'sales', 'delete')
-  );
-```
+- `InvoiceFormDialog.tsx`: when `mutation.onSuccess` returns the new `invoiceId`, surface a secondary `Button` ("طباعة PDF") in the footer that opens `InvoicePrintView` for that id. Skip when the dialog is still dirty/unsaved to guarantee we only ever print the validated DB record.
+- `QuotationFormDialog.tsx` + `QuoteNewPage.tsx`: same pattern, opening `QuotationPrintView`.
+- Rationale: keeps the heavy fetch + template path in one place (`*PrintView`) and guarantees the printed payload comes from the DB row with the rounded `subtotal / discount_amount / tax_amount / total_amount` (Phase 3 of the previous hotfix) — not the in-memory form state.
 
-Repeat for `quote_items` (split the current `tenant_qitems_all` into 4 commands), `credit_notes`, and `credit_note_items` (use `'invoices'` section).
+### Phase 2 — Activate chunked rendering on real documents
 
-Harden conversion RPCs (`convert_quote_to_order`, `convert_order_to_invoice`, `convert_invoice_to_delivery`):
+**2a. Tag the primary items table in each v2 template with** `data-pdf-chunk` so `pickPrimaryTable` finds it:
 
-- Replace each function body with `CREATE OR REPLACE FUNCTION ... SECURITY DEFINER` that first calls `check_section_permission(auth.uid(), 'sales', 'create')` (and `'edit'` on the source row's status flip) and `RAISE EXCEPTION 'PERMISSION_DENIED'` if false. Preserve existing logic verbatim below the guard.
+- `InvoiceHtmlTemplate.ts` → `<table class="items" data-pdf-chunk>`
+- `QuotationHtmlTemplate.ts` → `<table class="items" data-pdf-chunk>`
+- `PurchaseOrderHtmlTemplate.ts` → same
+- `StatementHtmlTemplate.ts` → tag `<table class="txns" data-pdf-chunk>` (the transactions table — the aging summary stays single-pass)
 
-### Phase 2 — Atomic `save_invoice_with_items` RPC
+That alone makes `HtmlPdfEngine` auto-switch to `renderChunkedHtmlPdf` at the existing ≥ 50-row threshold; the header/footer/watermark are preserved on every page because the chunked path clones the whole container shell (`chunkedRender.ts` lines 201–225).
 
-New migration adding a single PL/pgSQL RPC that wraps header upsert + item replace inside one transaction:
+**2b. Update template tests** (`InvoiceHtmlTemplate.test.ts`, etc.) so the attribute presence is asserted — guards against regression.
 
-```sql
-CREATE OR REPLACE FUNCTION public.save_invoice_with_items(
-  p_id uuid,                 -- null = create
-  p_header jsonb,
-  p_items  jsonb             -- array of {product_id, quantity, unit_price, discount_percentage, total_price, ...}
-) RETURNS uuid
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_id uuid; v_tenant uuid := get_current_tenant();
-BEGIN
-  IF NOT check_section_permission(auth.uid(),'invoices', CASE WHEN p_id IS NULL THEN 'create' ELSE 'edit' END) THEN
-    RAISE EXCEPTION 'PERMISSION_DENIED';
-  END IF;
+**2c. No code path change in** `HtmlPdfEngine` — chunked rendering is already integrated and tested (`chunkedRender.test.ts`).
 
-  IF p_id IS NULL THEN
-    INSERT INTO invoices SELECT * FROM jsonb_populate_record(NULL::invoices, p_header || jsonb_build_object('tenant_id',v_tenant))
-    RETURNING id INTO v_id;
-  ELSE
-    UPDATE invoices SET ... FROM jsonb_populate_record(NULL::invoices, p_header) src
-      WHERE invoices.id = p_id AND invoices.tenant_id = v_tenant
-    RETURNING id INTO v_id;
-    DELETE FROM invoice_items WHERE invoice_id = v_id;
-  END IF;
+### Phase 3 — Live preview inside the creation wizards
 
-  INSERT INTO invoice_items (invoice_id, product_id, quantity, unit_price, discount_percentage, total_price, tenant_id)
-  SELECT v_id, (it->>'product_id')::uuid, (it->>'quantity')::numeric,
-         (it->>'unit_price')::numeric, COALESCE((it->>'discount_percentage')::numeric,0),
-         (it->>'total_price')::numeric, v_tenant
-  FROM jsonb_array_elements(p_items) it;
+**3a. New light wrapper hook** `src/components/settings/ExportCenter/useLivePreviewProfile.ts` — re-exports `usePdfProfile()` (which already mounts `usePdfProfileRealtime`) so wizard consumers don't need to know about the realtime detail.
 
-  RETURN v_id;
-END $$;
-```
+**3b. Mount** `<LivePreviewPanel profile={profile} />` **inside:**
 
-Refactor `src/lib/services/invoiceService.ts → saveInvoiceWithItems` to call `supabase.rpc('save_invoice_with_items', { p_id, p_header, p_items })` and return `data as string`. Remove the 3‑step repository sequence. Keep existing exports/signatures so callers (`InvoiceFormDialog`, etc.) don't change. Delete the obsolete `verifyPermissionOnServer` call there — permission is now enforced DB‑side.
+- `QuotationFormDialog` Step 3 (the totals step) — desktop only (`hidden lg:block`), height 420, behind an existing `AdaptiveContainer` guard so mobile stays uncluttered.
+- `QuoteNewPage` — beside the totals card in the right column on `lg:` breakpoints.
+- `InvoiceFormDialog` Step 3 — same pattern as the quotation dialog.
 
-### Phase 3 — Unify Quotation Calculation Surface
+Because `usePdfProfile` already invokes `usePdfProfileRealtime`, a margin/branding tweak made by an admin in another tab will refresh the preview without manual reload — no extra subscription needed here.
 
-Two legitimate persistence tables remain (`quotations` legacy + `quotes` sales‑cycle); we don't merge the tables here, we merge the **calculation contract**.
+### Phase 4 — Verification
 
-1. **Upgrade** `useQuotationItems` (`src/components/quotations/useQuotationItems.ts`):
-  - Add `vatEnabled: boolean` + `vatRate = 0.14` inputs.
-  - Apply strict rounding helper `r2(n) = Math.round(n*100)/100` to `total_price`, `subtotal`, `discount`, `tax`, `total`.
-  - Expose computed `taxAmount`, `totalAfterDiscount`, `grandTotal`.
-  - Add `validate()` that returns errors for missing product, qty≤0, negative discount, discount%>100.
-2. **Refactor** `QuotationFormDialog` to consume the new fields (replace local `subtotal - discountAmount + taxAmount`, drop the free‑form `tax_amount` input, replace with a VAT 14% switch bound to the hook). Block `mutation.mutate` when `validate()` returns errors.
-3. **Refactor** `QuoteNewPage` to:
-  - Drop the inline `total = items.reduce(...)`.
-  - Reuse `useQuotationItems` (passing a products list it already needs to fetch) and the same VAT toggle + validator.
-  - Submit with `subtotal`, `discount_amount`, `tax_amount`, `total_amount` filled — extend `QuotationDraft` / `useCreateQuote` payload to carry them; map to `quotes` columns inside `quotationRepository.create`.
-4. **Guardrail**: add a server‑side `BEFORE INSERT/UPDATE` trigger on both `quotations` and `quotes` that rejects rows where `ABS(total_amount - (subtotal - discount_amount + tax_amount)) > 0.01` → prevents inconsistent header metrics regardless of which form was used.
+- `bunx vitest run` — must remain at the 1150-passing baseline.
+- Update affected template tests to assert `data-pdf-chunk` is present.
+- Add one targeted test in `routePdfRequest.test.ts`-adjacent or `InvoicePrintView` integration: when a 60-item invoice is rendered, `shouldChunk` returns `true` for the produced container. (Pure DOM assertion, no real PDF render.)
+- Manual preview smoke: open `/invoices`, hit "طباعة" on a 60-line invoice, confirm download + watermark.
 
-### Verification
+### Out of scope (call out, do not build)
 
-- Run targeted suites: `bunx vitest run src/lib/services src/components/quotations src/hooks/sales-cycle src/lib/repositories`.
-- Then full run: `bunx vitest run`. Target: all green (current baseline 307).
-- Manual smoke (Lovable preview): create quote from both entry points, edit invoice, attempt delete as a no‑permission user → expect `PERMISSION_DENIED`.
+- A separate "Print" entry directly inside the unsaved form (we explicitly route through the saved-DB-row path to guarantee Phase-3 financial integrity from the previous hotfix).
+- Migrating `*PrintView` away from `PrintTemplate` to the v2 templates entirely — that's a Wave D rewrite.
 
-### Out of scope (called out, not done here)
-
-- Adding a real `tax_rate` column to `invoices`/`quotes` (audit Item 8) — separate migration.
-- Stock reservation on invoice approval (audit Item 9).
-- Merging `quotations` and `quotes` tables — requires data migration plan.
-- Act as a Principal Software Architect and Database Administrator. We need to implement a critical Architectural Hotfix across Phases 1, 2, and 3 for our Sales & Procurement modules. Follow these specifications exactly while maintaining our passing test baseline (307 tests):
-
-### Phase 1 — RLS Hardening & Conversion Guards
-
-1. Database Migration: Drop existing tenant-only write policies for `quotes`, `quote_items`, `credit_notes`, and `credit_note_items`. Recreate them with combined tenant isolation AND section-permission gates (`check_section_permission(auth.uid(), section, action)`).
-
-   - `quotes` / `quote_items` -> section='sales', actions: INSERT ('create'), UPDATE ('edit'), DELETE ('delete' + preserve `status = 'draft'`).
-
-   - `credit_notes` / `credit_note_items` -> section='invoices', actions: create | edit | delete.
-
-   - Read policies remain broadly tenant-isolated.
-
-2. Harden RPC Functions: Update `convert_quote_to_order`, `convert_order_to_invoice`, and `convert_invoice_to_delivery` to be `SECURITY DEFINER`. Inject a permission check at the very top using `check_section_permission(auth.uid(), 'sales', 'create')` (and check 'edit' for source row status transitions). RAISE EXCEPTION 'PERMISSION_DENIED' if unauthorized.
+Act as a Principal Full-Stack Engineer and UI/UX Architect. We need to execute the integration phase to wire our Sales & Procurement modules into our premium v2 PDF Generation Engine based on our architectural findings. 
 
 &nbsp;
 
-### Phase 2 — Atomic save_invoice_with_items RPC
-
-1. Database Migration: Create the `public.save_invoice_with_items(p_id uuid, p_header jsonb, p_items jsonb)` PL/pgSQL function as specified. It must perform permission checks, upsert the invoice header, wipe old items (on edit), bulk insert item rows, inject `tenant_id`, and run as a single atomic transaction.
-
-2. Refactor Service: Update `src/lib/services/invoiceService.ts` -> `saveInvoiceWithItems` to exclusively call `supabase.rpc('save_invoice_with_items', ...)`. Remove the obsolete 3-step repository round-trips and delete the redundant `verifyPermissionOnServer` call (now secured database-side). Maintain backward-compatible signatures.
+Please safely implement the following updates without breaking our 1150-passing test baseline:
 
 &nbsp;
 
-### Phase 3 — Unify Quotation Calculation Surface
+Phase 1 — Wire Print/Export Buttons through routePdfRequest
 
-1. Upgrade `useQuotationItems` (`src/components/quotations/useQuotationItems.ts`):
+1. Resolve Profile Skipping: In `src/components/print/InvoicePrintView.tsx` and `src/components/print/QuotationPrintView.tsx`, read the `tenantId` from our `useTenant()` hook and pass it directly inside the `routePdfRequest({ tenantId, ... })` invocation. This ensures `resolvePdfConfig` triggers and loads the custom branding, logo, margins, and watermarks correctly.
 
-   - Add `vatEnabled: boolean` and `vatRate = 0.14` inputs.
+2. Post-Save Printing Actions: 
 
-   - Apply a strict rounding helper `r2(n) = Math.round(n * 100) / 100` to `total_price`, `subtotal`, `discount`, `tax`, and `total`.
+   - In `InvoiceFormDialog.tsx`, upon a successful save mutation (returning the new `invoiceId`), surface a secondary "طباعة PDF" (Print PDF) button in the footer that safely triggers the `InvoicePrintView` for that validated ID. Disable or hide this button if the form is dirty/unsaved.
 
-   - Expose computed reactive values: `taxAmount`, `totalAfterDiscount`, `grandTotal`, and a `validate()` function (flags product missing, qty <= 0, negative discount, discount% > 100).
-
-2. Refactor UI Surfaces:
-
-   - Update `QuotationFormDialog.tsx`: Consume the upgraded hook, swap the free-form `tax_amount` input with a premium 14% VAT switch bound to `vatEnabled`. Block mutation if `validate()` yields errors.
-
-   - Update `QuoteNewPage.tsx`: Drop inline calculation loops. Reuse the upgraded `useQuotationItems` hook with the same VAT toggle and validator. Ensure the `useCreateQuote` mutation payloads now fully carry `subtotal`, `discount_amount`, `tax_amount`, and `total_amount` mapped to quotes columns via `quotationRepository.create`.
-
-3. Database Invariant Guardrail: Add a server-side `BEFORE INSERT/UPDATE` trigger on both `quotations` and `quotes` tables that mathematically rejects any row where `ABS(total_amount - (subtotal - discount_amount + tax_amount)) > 0.01` to guarantee absolute data health regardless of the entry point.
+   - Apply the exact same safe post-save pattern inside `QuotationFormDialog.tsx` and `QuoteNewPage.tsx` to ensure we only print verified database rows with rounded financial figures.
 
 &nbsp;
 
-Run targeted and full test suites to verify that our 307 test baseline remains brilliantly green.
+Phase 2 — Activate Chunked Rendering on Real Documents
+
+1. Tag Primary Tables: Update our v2 HTML templates to ensure the primary tabular components carry the `data-pdf-chunk` attribute so `pickPrimaryTable` can catch them:
+
+   - `InvoiceHtmlTemplate.ts` -> Add `data-pdf-chunk` to `<table class="items" ...>`
+
+   - `QuotationHtmlTemplate.ts` -> Add `data-pdf-chunk` to `<table class="items" ...>`
+
+   - `PurchaseOrderHtmlTemplate.ts` -> Add `data-pdf-chunk` to `<table class="items" ...>`
+
+   - `StatementHtmlTemplate.ts` -> Add `data-pdf-chunk` to the main transactions table `<table class="txns" ...>` (leaving aging summary single-pass).
+
+2. Regression Guard: Update the template test suites (`InvoiceHtmlTemplate.test.ts`, etc.) to assert the presence of the `data-pdf-chunk` attribute.
 
 &nbsp;
+
+Phase 3 — Live Preview Inside Creation Wizards
+
+1. Lightweight Preview Hook: Create a wrapper hook `src/components/settings/ExportCenter/useLivePreviewProfile.ts` that safely re-exports `usePdfProfile()` (which already triggers the realtime synchronization hook `usePdfProfileRealtime`).
+
+2. Embed LivePreviewPanel: Mount `<LivePreviewPanel profile={profile} />` inside:
+
+   - `QuotationFormDialog` Step 3 (Totals Step) -> Restricted to desktop screens (`hidden lg:block`), height 420, wrapped inside our `AdaptiveContainer` guard.
+
+   - `InvoiceFormDialog` Step 3 -> Use the same pattern as the quotation dialog.
+
+   - `QuoteNewPage.tsx` -> Place it adjacent to the totals card in the right column on `lg` breakpoints.
+
+&nbsp;
+
+Phase 4 — Testing & Verification
+
+- Run our targeted template and route tests via Vitest: Ensure all 1150 tests pass successfully.
+
+- Add a DOM-level assertion test in `routePdfRequest.test.ts` (or adjacent) confirming that when a 60-line simulated document is processed, `shouldChunk` evaluates to true based on the 
+
+container's layout markers.

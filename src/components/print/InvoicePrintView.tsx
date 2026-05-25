@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
 import { printHtmlDocument } from "@/lib/printDocument";
 import { AVAILABLE_FONTS, type PdfFontKey } from "@/lib/arabicFont";
+import { useTenant } from "@/hooks/useTenant";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ const paymentStatusLabels: Record<string, string> = {
 export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrintViewProps) {
   const [downloading, setDownloading] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const { tenantId } = useTenant();
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
@@ -107,6 +109,7 @@ export function InvoicePrintView({ invoiceId, open, onOpenChange }: InvoicePrint
       await routePdfRequest({
         docType: 'invoice',
         data: { ...invoice, items },
+        tenantId: tenantId ?? (invoice as { tenant_id?: string }).tenant_id ?? null,
       });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {

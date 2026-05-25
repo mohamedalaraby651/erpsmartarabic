@@ -8,6 +8,8 @@ import {
   ResponsiveDialogHeader as DialogHeader,
   ResponsiveDialogTitle as DialogTitle,
 } from "@/components/ui/responsive-dialog";
+import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +28,9 @@ import InvoiceValidation from "./InvoiceValidation";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { LivePreviewPanel } from "@/components/settings/ExportCenter/LivePreviewPanel";
+import { useLivePreviewProfile } from "@/components/settings/ExportCenter/useLivePreviewProfile";
+import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -45,6 +50,9 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const queryClient = useQueryClient();
   const isEditing = !!invoice;
   const [isValidating, setIsValidating] = useState(false);
+  const [lastSavedId, setLastSavedId] = useState<string | null>(invoice?.id ?? null);
+  const [printOpen, setPrintOpen] = useState(false);
+  const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
     queryKey: queryKeys.customers.list({ active: true, safe: true }),
@@ -58,7 +66,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
 
   const { items, subtotal, addItem, updateItem, removeItem, loadItems, resetItems } = useInvoiceItems(products);
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<InvoiceFormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors, isDirty } } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
       customer_id: prefillCustomerId || '', payment_method: 'cash', due_date: '', notes: '', internal_notes: '',
@@ -146,17 +154,19 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
         unit_price: item.unit_price, discount_percentage: item.discount_percentage, total_price: item.total_price,
       }));
 
-      await saveInvoiceWithItems({
+      const savedId = await saveInvoiceWithItems({
         id: isEditing ? invoice!.id : undefined,
         header: headerData,
         items: itemsPayload,
       });
+      return savedId;
     },
-    onSuccess: () => {
+    onSuccess: (savedId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
       clearDraft();
-      toast({ title: isEditing ? "تم تحديث الفاتورة بنجاح" : "تم إنشاء الفاتورة بنجاح", description: "تم التحقق من الصلاحيات والحدود المالية" });
-      onOpenChange(false);
+      setLastSavedId(savedId ?? invoice?.id ?? null);
+      reset(undefined, { keepValues: true }); // mark form as pristine again
+      toast({ title: isEditing ? "تم تحديث الفاتورة بنجاح" : "تم إنشاء الفاتورة بنجاح", description: "يمكنك الآن طباعة PDF" });
     },
     onError: (error) => {
       logErrorSafely('InvoiceFormDialog', error);
@@ -173,10 +183,31 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const Step2Items = (
     <InvoiceItemsTable items={items} products={products} onAddItem={addItem} onUpdateItem={updateItem} onRemoveItem={removeItem} />
   );
+  const canPrint = Boolean(lastSavedId) && !isDirty && !mutation.isPending;
+  const printButton = (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={!canPrint}
+      onClick={() => setPrintOpen(true)}
+      title={canPrint ? 'طباعة PDF بعد الحفظ' : 'احفظ الفاتورة أولاً'}
+    >
+      <Printer className="h-4 w-4 ml-2" />
+      طباعة PDF
+    </Button>
+  );
+
   const Step3Totals = (
     <div className="space-y-6">
       <InvoiceTotalsSection subtotal={subtotal} total={total} register={register} />
-      <InvoiceValidation isValidating={isValidating} isPending={mutation.isPending} isEditing={isEditing} onCancel={() => onOpenChange(false)} />
+      <div className="hidden lg:block">
+        <LivePreviewPanel profile={pdfProfile} height={420} />
+      </div>
+      <div className="flex justify-between items-center gap-2">
+        {printButton}
+        <InvoiceValidation isValidating={isValidating} isPending={mutation.isPending} isEditing={isEditing} onCancel={() => onOpenChange(false)} />
+      </div>
     </div>
   );
 
@@ -196,7 +227,13 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
           {Step1Header}
           {Step2Items}
           <InvoiceTotalsSection subtotal={subtotal} total={total} register={register} />
-          <InvoiceValidation isValidating={isValidating} isPending={mutation.isPending} isEditing={isEditing} onCancel={() => onOpenChange(false)} />
+          <div className="hidden lg:block">
+            <LivePreviewPanel profile={pdfProfile} height={420} />
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            {printButton}
+            <InvoiceValidation isValidating={isValidating} isPending={mutation.isPending} isEditing={isEditing} onCancel={() => onOpenChange(false)} />
+          </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -214,7 +251,18 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
     />
   );
 
-  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
+  return (
+    <>
+      <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />
+      {lastSavedId && (
+        <InvoicePrintView
+          invoiceId={lastSavedId}
+          open={printOpen}
+          onOpenChange={setPrintOpen}
+        />
+      )}
+    </>
+  );
 };
 
 export default InvoiceFormDialog;

@@ -122,7 +122,7 @@ export function renderQuotationHtml(data: QuotationHtmlData): string {
     ${data.customer.taxNumber ? `<div>الرقم الضريبي: <span class="num">${esc(data.customer.taxNumber)}</span></div>` : ''}
   </section>
 
-  <table class="items">
+  <table class="items" data-pdf-chunk>
     <thead>
       <tr>
         <th>#</th>

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +25,9 @@ import { useQuotationItems } from "./useQuotationItems";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { LivePreviewPanel } from "@/components/settings/ExportCenter/LivePreviewPanel";
+import { useLivePreviewProfile } from "@/components/settings/ExportCenter/useLivePreviewProfile";
+import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -46,6 +49,9 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isEditing = !!quotation;
+  const [lastSavedId, setLastSavedId] = useState<string | null>(quotation?.id ?? null);
+  const [printOpen, setPrintOpen] = useState(false);
+  const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -69,7 +75,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     addItem, updateItem, removeItem, loadItems, resetItems, validate,
   } = useQuotationItems({ products });
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { isDirty } } = useForm<FormData>({
     defaultValues: { customer_id: '', valid_until: '', notes: '' },
   });
 
@@ -114,8 +120,14 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       const itemsData = items.map(item => ({ quotation_id: quotationId, product_id: item.product_id, quantity: item.quantity, unit_price: item.unit_price, discount_percentage: item.discount_percentage, total_price: item.total_price }));
       const { error: itemsError } = await supabase.from('quotation_items').insert(itemsData);
       if (itemsError) throw itemsError;
+      return quotationId;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['quotations'] }); toast({ title: isEditing ? "تم تحديث عرض السعر بنجاح" : "تم إنشاء عرض السعر بنجاح" }); onOpenChange(false); },
+    onSuccess: (savedId) => {
+      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      setLastSavedId(savedId ?? quotation?.id ?? null);
+      reset(undefined, { keepValues: true });
+      toast({ title: isEditing ? "تم تحديث عرض السعر بنجاح" : "تم إنشاء عرض السعر بنجاح", description: "يمكنك الآن طباعة PDF" });
+    },
     onError: (error) => { logErrorSafely('QuotationFormDialog', error); toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" }); },
   });
 
@@ -157,25 +169,46 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     </div>
   );
 
+  const canPrint = Boolean(lastSavedId) && !isDirty && !mutation.isPending;
+  const printButton = (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={!canPrint}
+      onClick={() => setPrintOpen(true)}
+      title={canPrint ? 'طباعة PDF بعد الحفظ' : 'احفظ عرض السعر أولاً'}
+    >
+      <Printer className="h-4 w-4 ml-2" />
+      طباعة PDF
+    </Button>
+  );
+
   const Step3 = (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div><Label htmlFor="notes">ملاحظات</Label><Textarea id="notes" {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} /></div>
-      <div className="space-y-3 bg-muted p-4 rounded-lg">
-        <div className="flex justify-between"><span>المجموع الفرعي:</span><span className="font-bold">{subtotal.toLocaleString()} ج.م</span></div>
-        <div className="flex items-center justify-between gap-2">
-          <span>الخصم:</span>
-          <Input type="number" step="0.01" className="w-32" value={discountAmount}
-            onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><Label htmlFor="notes">ملاحظات</Label><Textarea id="notes" {...register('notes')} placeholder="ملاحظات إضافية..." rows={3} /></div>
+        <div className="space-y-3 bg-muted p-4 rounded-lg">
+          <div className="flex justify-between"><span>المجموع الفرعي:</span><span className="font-bold">{subtotal.toLocaleString()} ج.م</span></div>
+          <div className="flex items-center justify-between gap-2">
+            <span>الخصم:</span>
+            <Input type="number" step="0.01" className="w-32" value={discountAmount}
+              onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)} />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span>ضريبة القيمة المضافة (14%):</span>
+            <label className="inline-flex items-center cursor-pointer gap-2">
+              <input type="checkbox" checked={vatEnabled} onChange={(e) => setVatEnabled(e.target.checked)} className="h-4 w-4" />
+              <span className="text-sm text-muted-foreground">{vatEnabled ? `مفعّل (${taxAmount.toLocaleString()} ج.م)` : 'معطّل'}</span>
+            </label>
+          </div>
+          <div className="flex justify-between text-lg border-t pt-3"><span className="font-bold">الإجمالي:</span><span className="font-bold text-primary">{grandTotal.toLocaleString()} ج.م</span></div>
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <span>ضريبة القيمة المضافة (14%):</span>
-          <label className="inline-flex items-center cursor-pointer gap-2">
-            <input type="checkbox" checked={vatEnabled} onChange={(e) => setVatEnabled(e.target.checked)} className="h-4 w-4" />
-            <span className="text-sm text-muted-foreground">{vatEnabled ? `مفعّل (${taxAmount.toLocaleString()} ج.م)` : 'معطّل'}</span>
-          </label>
-        </div>
-        <div className="flex justify-between text-lg border-t pt-3"><span className="font-bold">الإجمالي:</span><span className="font-bold text-primary">{grandTotal.toLocaleString()} ج.م</span></div>
       </div>
+      <div className="hidden lg:block">
+        <LivePreviewPanel profile={pdfProfile} height={420} />
+      </div>
+      <div className="flex justify-start">{printButton}</div>
     </div>
   );
 
@@ -207,7 +240,18 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       onSubmit={handleSubmit(onSubmit)} progress={wizard.progress} isSubmitting={mutation.isPending} submitLabel={isEditing ? 'تحديث' : 'إنشاء'} />
   );
 
-  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
+  return (
+    <>
+      <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />
+      {lastSavedId && (
+        <QuotationPrintView
+          quotationId={lastSavedId}
+          open={printOpen}
+          onOpenChange={setPrintOpen}
+        />
+      )}
+    </>
+  );
 };
 
 export default QuotationFormDialog;
