@@ -73,22 +73,12 @@ export async function printStatementHtmlPdf(
   const tashkeel = detectTashkeel(
     [enriched.notes ?? '', ...enriched.transactions.map((t) => t.description ?? '')].join(' '),
   );
-  const typoCss = buildTypographyRulesCss(config, { hasTashkeel: tashkeel, descenderSafe: true });
-  const wm = config.watermark;
-  const wmCss = wm.enabled && wm.imageUrl
-    ? buildWatermarkImageCss({
-        imageUrl: wm.imageUrl,
-        opacity: wm.opacity,
-        rotation: wm.rotation,
-        tiled: wm.tiled,
-      })
-    : '';
-  const css = `${typoCss}\n${STATEMENT_HTML_CSS}\n${wmCss}`;
-  const html = withWatermarkImage(
-    renderStatementHtml(enriched),
-    wm.enabled ? wm.imageUrl : undefined,
-    !!wm.tiled,
-  );
+  const { html, css } = composeRenderPayload({
+    html: renderStatementHtml(enriched),
+    bodyCss: STATEMENT_HTML_CSS,
+    config,
+    hasTashkeel: tashkeel,
+  });
 
   const filename = opts.filename ?? buildDocFilename('statement', data.statementNumber);
   const result = await safeRender<Blob>(
