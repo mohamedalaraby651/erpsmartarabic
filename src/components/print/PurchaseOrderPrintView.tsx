@@ -9,6 +9,7 @@ import { Printer, Download, Loader2 } from "lucide-react";
 import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
+import { useTenant } from "@/hooks/useTenant";
 import {
   Dialog,
   DialogContent,
