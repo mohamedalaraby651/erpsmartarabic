@@ -1,120 +1,76 @@
-## Wire Sales & Procurement into the v2 PDF Engine
+# Fix Final 2 Legacy Test Failures
 
-### Findings (current state)
+Both failures are **stale test assertions** that didn't keep up with recent production code changes. Production code is correct; the tests need updating.
 
-- `InvoicePrintView` and `QuotationPrintView` already call `routePdfRequest`, but **omit** `tenantId` → `resolvePdfConfig` is skipped and the active `DocumentRenderProfile` (logo, watermark, margins) never reaches the renderer.
-- The form dialogs (`InvoiceFormDialog`, `QuotationFormDialog`, `QuoteNewPage`) have **no Print/PDF button at all** today.
-- `HtmlPdfEngine` already auto-switches to `renderChunkedHtmlPdf` at ≥ 50 rows — but **only when the primary** `<table>` **carries** `data-pdf-chunk` **or** `class="pdf-table"`. None of the v2 templates (`InvoiceHtmlTemplate`, `QuotationHtmlTemplate`, `StatementHtmlTemplate`, `PurchaseOrderHtmlTemplate`) currently do, so chunking never fires in production.
-- `LivePreviewPanel` already binds to `usePdfProfile` (which itself subscribes via `usePdfProfileRealtime`); reusing it inside the form wizards immediately delivers cross-tab live refresh.
+## Failure 1 — `edge-function-security.test.ts` › processPayment
 
----
+**Cause:** `processPayment` now adds tracing headers (`Idempotency-Key`, `x-correlation-id` via `buildRequestHeaders`) to the `supabase.functions.invoke` call. The test still asserts the exact old shape (`{ body: {...} }` only) and fails because `headers` is now present.
 
-### Phase 1 — Wire Print/Export buttons through `routePdfRequest`
+**Fix:** Use `expect.objectContaining` for the second argument and assert only the `body` shape. Add a separate assertion that `headers` contains a UUID-shaped `x-correlation-id` and `Idempotency-Key` so the tracing contract stays covered.
 
-**1a. Pass** `tenantId` **from the print views** so the profile resolver runs.
+```ts
+expect(mockInvoke).toHaveBeenCalledWith(
+  'process-payment',
+  expect.objectContaining({
+    body: { payment_data: { /* unchanged */ } },
+    headers: expect.objectContaining({
+      'x-correlation-id': expect.any(String),
+      'Idempotency-Key': expect.any(String),
+    }),
+  }),
+);
+```
 
-- `src/components/print/InvoicePrintView.tsx`: read `tenantId` from `useTenant()` and pass it in the `routePdfRequest({ tenantId, … })` call. Same for `QuotationPrintView.tsx`.
-- This single change activates branding/watermark/margins from `DocumentRenderProfile` for every existing Print dialog.
+## Failure 2 — `useSidebarCounts.test.tsx` › should fetch counts when user is authenticated
 
-**1b. Add a "Print PDF" action to the form dialogs** (after a successful save).
+**Cause:** `useSidebarCounts` was refactored to call a single RPC `supabase.rpc('get_sidebar_counts')` instead of 7 `supabase.from(...)` queries. The test still asserts `expect(supabase.from).toHaveBeenCalled()` and also doesn't mock `supabase.rpc`, so the hook errors out silently and returns zero counts.
 
-- `InvoiceFormDialog.tsx`: when `mutation.onSuccess` returns the new `invoiceId`, surface a secondary `Button` ("طباعة PDF") in the footer that opens `InvoicePrintView` for that id. Skip when the dialog is still dirty/unsaved to guarantee we only ever print the validated DB record.
-- `QuotationFormDialog.tsx` + `QuoteNewPage.tsx`: same pattern, opening `QuotationPrintView`.
-- Rationale: keeps the heavy fetch + template path in one place (`*PrintView`) and guarantees the printed payload comes from the DB row with the rounded `subtotal / discount_amount / tax_amount / total_amount` (Phase 3 of the previous hotfix) — not the in-memory form state.
+**Fix in** `src/__tests__/unit/hooks/useSidebarCounts.test.tsx`**:**
 
-### Phase 2 — Activate chunked rendering on real documents
+1. Extend the top-level `vi.mock('@/integrations/supabase/client')` to expose `rpc: vi.fn(() => Promise.resolve({ data: {...zeros}, error: null }))`.
+2. Update the "should fetch counts when user is authenticated" test to assert `expect(supabase.rpc).toHaveBeenCalledWith('get_sidebar_counts')`.
+3. Update the "should return SidebarCounts interface shape" test to mock `supabase.rpc` returning the snake_case RPC payload (`pending_invoices`, `pending_sales_orders`, …) instead of the per-table `from().select()` chain.
+4. Update the "should handle fetch errors gracefully" test to mock `supabase.rpc` returning `{ data: null, error: { message: 'Error' } }` and assert the hook still resolves with zeroed counts (the existing fallback in the hook).
+5. Leave the "not fetch when user is not authenticated" and "refetch periodically" tests as-is (they don't touch `from`).
 
-**2a. Tag the primary items table in each v2 template with** `data-pdf-chunk` so `pickPrimaryTable` finds it:
+No production code changes. Only the two test files are edited.
 
-- `InvoiceHtmlTemplate.ts` → `<table class="items" data-pdf-chunk>`
-- `QuotationHtmlTemplate.ts` → `<table class="items" data-pdf-chunk>`
-- `PurchaseOrderHtmlTemplate.ts` → same
-- `StatementHtmlTemplate.ts` → tag `<table class="txns" data-pdf-chunk>` (the transactions table — the aging summary stays single-pass)
+## Verification
 
-That alone makes `HtmlPdfEngine` auto-switch to `renderChunkedHtmlPdf` at the existing ≥ 50-row threshold; the header/footer/watermark are preserved on every page because the chunked path clones the whole container shell (`chunkedRender.ts` lines 201–225).
+Run `bunx vitest run` and confirm **1152/1152 green**, with the previously failing two tests now passing and no regressions in the surrounding suites (`edge-function-security`, `useSidebarCounts`).
 
-**2b. Update template tests** (`InvoiceHtmlTemplate.test.ts`, etc.) so the attribute presence is asserted — guards against regression.
-
-**2c. No code path change in** `HtmlPdfEngine` — chunked rendering is already integrated and tested (`chunkedRender.test.ts`).
-
-### Phase 3 — Live preview inside the creation wizards
-
-**3a. New light wrapper hook** `src/components/settings/ExportCenter/useLivePreviewProfile.ts` — re-exports `usePdfProfile()` (which already mounts `usePdfProfileRealtime`) so wizard consumers don't need to know about the realtime detail.
-
-**3b. Mount** `<LivePreviewPanel profile={profile} />` **inside:**
-
-- `QuotationFormDialog` Step 3 (the totals step) — desktop only (`hidden lg:block`), height 420, behind an existing `AdaptiveContainer` guard so mobile stays uncluttered.
-- `QuoteNewPage` — beside the totals card in the right column on `lg:` breakpoints.
-- `InvoiceFormDialog` Step 3 — same pattern as the quotation dialog.
-
-Because `usePdfProfile` already invokes `usePdfProfileRealtime`, a margin/branding tweak made by an admin in another tab will refresh the preview without manual reload — no extra subscription needed here.
-
-### Phase 4 — Verification
-
-- `bunx vitest run` — must remain at the 1150-passing baseline.
-- Update affected template tests to assert `data-pdf-chunk` is present.
-- Add one targeted test in `routePdfRequest.test.ts`-adjacent or `InvoicePrintView` integration: when a 60-item invoice is rendered, `shouldChunk` returns `true` for the produced container. (Pure DOM assertion, no real PDF render.)
-- Manual preview smoke: open `/invoices`, hit "طباعة" on a 60-line invoice, confirm download + watermark.
-
-### Out of scope (call out, do not build)
-
-- A separate "Print" entry directly inside the unsaved form (we explicitly route through the saved-DB-row path to guarantee Phase-3 financial integrity from the previous hotfix).
-- Migrating `*PrintView` away from `PrintTemplate` to the v2 templates entirely — that's a Wave D rewrite.
-
-Act as a Principal Full-Stack Engineer and UI/UX Architect. We need to execute the integration phase to wire our Sales & Procurement modules into our premium v2 PDF Generation Engine based on our architectural findings. 
+Act as a Principal QA & Automation Engineer. We need to update two legacy, stale test files to realign them with our correct production code updates, bringing our suite to a 100% perfect green baseline (1152/1152 passing tests). 
 
 &nbsp;
 
-Please safely implement the following updates without breaking our 1150-passing test baseline:
+Please safely apply the following test fixes:
 
 &nbsp;
 
-Phase 1 — Wire Print/Export Buttons through routePdfRequest
+1. Fix `edge-function-security.test.ts` (processPayment suite):
 
-1. Resolve Profile Skipping: In `src/components/print/InvoicePrintView.tsx` and `src/components/print/QuotationPrintView.tsx`, read the `tenantId` from our `useTenant()` hook and pass it directly inside the `routePdfRequest({ tenantId, ... })` invocation. This ensures `resolvePdfConfig` triggers and loads the custom branding, logo, margins, and watermarks correctly.
+- Production code now correctly injects tracing headers (`Idempotency-Key` and `x-correlation-id`) via `buildRequestHeaders` inside the `supabase.functions.invoke` call.
 
-2. Post-Save Printing Actions: 
+- Update the test assertion to use `expect.objectContaining` for the invocation parameters.
 
-   - In `InvoiceFormDialog.tsx`, upon a successful save mutation (returning the new `invoiceId`), surface a secondary "طباعة PDF" (Print PDF) button in the footer that safely triggers the `InvoicePrintView` for that validated ID. Disable or hide this button if the form is dirty/unsaved.
-
-   - Apply the exact same safe post-save pattern inside `QuotationFormDialog.tsx` and `QuoteNewPage.tsx` to ensure we only print verified database rows with rounded financial figures.
+- Verify that the body shape matches the required payment contract, and explicitly assert that `headers` contains `x-correlation-id: expect.any(String)` and `Idempotency-Key: expect.any(String)`.
 
 &nbsp;
 
-Phase 2 — Activate Chunked Rendering on Real Documents
+2. Fix `src/__tests__/unit/hooks/useSidebarCounts.test.tsx`:
 
-1. Tag Primary Tables: Update our v2 HTML templates to ensure the primary tabular components carry the `data-pdf-chunk` attribute so `pickPrimaryTable` can catch them:
+- Production code has optimized count fetching into a single unified RPC call (`get_sidebar_counts`) instead of 7 split table queries.
 
-   - `InvoiceHtmlTemplate.ts` -> Add `data-pdf-chunk` to `<table class="items" ...>`
+- Extend the top-level `vi.mock('@/integrations/supabase/client')` mock payload to cleanly expose and mock the `rpc` function: `vi.fn(() => Promise.resolve({ data: {}, error: null }))`.
 
-   - `QuotationHtmlTemplate.ts` -> Add `data-pdf-chunk` to `<table class="items" ...>`
+- In the "should fetch counts when user is authenticated" test, change the assertion to expect `supabase.rpc` to have been called with `'get_sidebar_counts'`.
 
-   - `PurchaseOrderHtmlTemplate.ts` -> Add `data-pdf-chunk` to `<table class="items" ...>`
+- In the "should return SidebarCounts interface shape" test, configure `supabase.rpc` to return a successful snake_case mock payload matching the RPC output format (`pending_invoices`, `pending_sales_orders`, etc.).
 
-   - `StatementHtmlTemplate.ts` -> Add `data-pdf-chunk` to the main transactions table `<table class="txns" ...>` (leaving aging summary single-pass).
-
-2. Regression Guard: Update the template test suites (`InvoiceHtmlTemplate.test.ts`, etc.) to assert the presence of the `data-pdf-chunk` attribute.
+- In the "should handle fetch errors gracefully" test, mock `supabase.rpc` returning `{ data: null, error: { message: 'Error' } }` and verify the hook smoothly falls back to zeroed counts as intended.
 
 &nbsp;
 
-Phase 3 — Live Preview Inside Creation Wizards
+Run the absolute full test suite (`bunx vitest run`) afterwards to confirm that we have successfully achieved a flawless 1152/1152
 
-1. Lightweight Preview Hook: Create a wrapper hook `src/components/settings/ExportCenter/useLivePreviewProfile.ts` that safely re-exports `usePdfProfile()` (which already triggers the realtime synchronization hook `usePdfProfileRealtime`).
-
-2. Embed LivePreviewPanel: Mount `<LivePreviewPanel profile={profile} />` inside:
-
-   - `QuotationFormDialog` Step 3 (Totals Step) -> Restricted to desktop screens (`hidden lg:block`), height 420, wrapped inside our `AdaptiveContainer` guard.
-
-   - `InvoiceFormDialog` Step 3 -> Use the same pattern as the quotation dialog.
-
-   - `QuoteNewPage.tsx` -> Place it adjacent to the totals card in the right column on `lg` breakpoints.
-
-&nbsp;
-
-Phase 4 — Testing & Verification
-
-- Run our targeted template and route tests via Vitest: Ensure all 1150 tests pass successfully.
-
-- Add a DOM-level assertion test in `routePdfRequest.test.ts` (or adjacent) confirming that when a 60-line simulated document is processed, `shouldChunk` evaluates to true based on the 
-
-container's layout markers.
+ green test run!
