@@ -266,6 +266,23 @@ serve(async (req) => {
       }
     }
 
+    // 7. Auto-post to GL (idempotent at DB level).
+    try {
+      const { postDocument } = await import('../_shared/posting.ts');
+      const event = paymentData.payment_method === 'cash' ? 'payment.received.cash' : 'payment.received';
+      const journalId = await postDocument(supabaseAdmin, {
+        event,
+        sourceType: 'payment',
+        sourceId: payment.id,
+        tenantId,
+        ctx: { amount: Number(paymentData.amount) || 0 },
+        description: `سداد رقم ${payment.payment_number}`,
+      });
+      console.log(`[process-payment] Auto-posted journal ${journalId} for payment ${payment.id}`);
+    } catch (postErr) {
+      console.error('[process-payment] Auto-posting failed (non-fatal):', postErr);
+    }
+
     console.log('[process-payment] Payment processed successfully:', payment.id);
     const result: PaymentResult = {
       success: true,
