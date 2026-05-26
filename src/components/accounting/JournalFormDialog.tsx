@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useActiveAccounts, useCreateManualJournal } from "@/hooks/accounting";
+import {
+  useActiveAccounts,
+  useCreateManualJournal,
+  useCostCenters,
+  useProjects,
+} from "@/hooks/accounting";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -38,6 +42,8 @@ interface JournalEntry {
   debit_amount: number;
   credit_amount: number;
   memo: string;
+  cost_center_id?: string | null;
+  project_id?: string | null;
 }
 
 interface JournalFormData {
@@ -50,12 +56,15 @@ interface JournalFormDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const NONE = "__none__";
+
 const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
   const { toast } = useToast();
   const [entries, setEntries] = useState<JournalEntry[]>([
-    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
-    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
+    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
   ]);
+
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<JournalFormData>({
     defaultValues: {
@@ -65,12 +74,14 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
   });
 
   const { data: accounts = [] } = useActiveAccounts();
+  const { data: costCenters = [] } = useCostCenters();
+  const { data: projects = [] } = useProjects();
 
   const createJournal = useCreateManualJournal();
 
 
   const addEntry = () => {
-    setEntries([...entries, { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" }]);
+    setEntries([...entries, { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null }]);
   };
 
   const removeEntry = (index: number) => {
@@ -79,7 +90,7 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
     }
   };
 
-  const updateEntry = (index: number, field: keyof JournalEntry, value: string | number) => {
+  const updateEntry = (index: number, field: keyof JournalEntry, value: string | number | null) => {
     const newEntries = [...entries];
     newEntries[index] = { ...newEntries[index], [field]: value };
 
@@ -116,20 +127,30 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
     createJournal.mutate(
       {
         header: { journal_date: data.journal_date, description: data.description },
-        lines: entries.filter((e) => e.account_id),
+        lines: entries
+          .filter((e) => e.account_id)
+          .map((e) => ({
+            account_id: e.account_id,
+            debit_amount: e.debit_amount,
+            credit_amount: e.credit_amount,
+            memo: e.memo,
+            cost_center_id: e.cost_center_id ?? null,
+            project_id: e.project_id ?? null,
+          })),
       },
       {
         onSuccess: () => {
           onOpenChange(false);
           reset();
           setEntries([
-            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
-            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
           ]);
         },
       },
     );
   };
+
 
 
   return (
@@ -173,10 +194,12 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/3">الحساب</TableHead>
+                    <TableHead className="w-1/4">الحساب</TableHead>
                     <TableHead>مدين</TableHead>
                     <TableHead>دائن</TableHead>
                     <TableHead>البيان</TableHead>
+                    <TableHead>مركز التكلفة</TableHead>
+                    <TableHead>المشروع</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -233,6 +256,47 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
                           placeholder="ملاحظة..."
                         />
                       </TableCell>
+                      <TableCell>
+                        <Select
+                          value={entry.cost_center_id ?? NONE}
+                          onValueChange={(val) =>
+                            updateEntry(index, "cost_center_id", val === NONE ? null : val)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NONE}>— بدون —</SelectItem>
+                            {costCenters.map((cc) => (
+                              <SelectItem key={cc.id} value={cc.id}>
+                                {cc.code} - {cc.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={entry.project_id ?? NONE}
+                          onValueChange={(val) =>
+                            updateEntry(index, "project_id", val === NONE ? null : val)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NONE}>— بدون —</SelectItem>
+                            {projects.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.code} - {p.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
                       <TableCell>
                         <Button
                           type="button"

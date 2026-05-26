@@ -36,7 +36,11 @@ export interface JournalLineInput {
   debit_amount: number;
   credit_amount: number;
   memo?: string | null;
+  cost_center_id?: string | null;
+  project_id?: string | null;
+  department_id?: string | null;
 }
+
 
 export interface JournalHeaderInput {
   journal_date: string;
@@ -116,7 +120,11 @@ export const journalRepository = {
       debit_amount: round2(Number(l.debit_amount) || 0),
       credit_amount: round2(Number(l.credit_amount) || 0),
       memo: l.memo ?? null,
+      cost_center_id: l.cost_center_id ?? null,
+      project_id: l.project_id ?? null,
+      department_id: l.department_id ?? null,
     }));
+
 
     const totalDebit = cleanLines.reduce((s, l) => s + l.debit_amount, 0);
     const totalCredit = cleanLines.reduce((s, l) => s + l.credit_amount, 0);

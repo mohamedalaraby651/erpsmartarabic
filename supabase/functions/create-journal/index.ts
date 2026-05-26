@@ -12,7 +12,11 @@ interface JournalEntry {
   debit_amount: number;
   credit_amount: number;
   memo?: string;
+  cost_center_id?: string | null;
+  project_id?: string | null;
+  department_id?: string | null;
 }
+
 
 interface CreateJournalRequest {
   journal_date: string;
@@ -236,8 +240,12 @@ Deno.serve(async (req) => {
       line_number: index + 1,
       debit_amount: Number(entry.debit_amount) || 0,
       credit_amount: Number(entry.credit_amount) || 0,
-      memo: entry.memo || null
+      memo: entry.memo || null,
+      cost_center_id: entry.cost_center_id || null,
+      project_id: entry.project_id || null,
+      department_id: entry.department_id || null,
     }));
+
 
     const { error: entriesError } = await supabaseAdmin
       .from('journal_entries')
