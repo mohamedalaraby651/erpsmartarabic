@@ -9,7 +9,13 @@ import { POSTING_RULES } from './posting.rules';
 
 const round2 = (n: number): number => Math.round(Number(n) * 100) / 100;
 
-export interface PostingLinePayload {
+export interface PostingDimensions {
+  cost_center_id?: string | null;
+  project_id?: string | null;
+  department_id?: string | null;
+}
+
+export interface PostingLinePayload extends PostingDimensions {
   account_code: string;
   side: 'debit' | 'credit';
   amount: number;
@@ -30,10 +36,14 @@ export interface ResolvedPosting {
   balanced: boolean;
 }
 
-/** Pure: builds the rounded, balanced lines for a given event + numeric context. */
+/**
+ * Pure: builds the rounded, balanced lines for a given event + numeric context.
+ * Optional `dimensions` are propagated onto every effective line (Phase 4).
+ */
 export function resolvePostingPayload(
   event: string,
-  ctx: Record<string, number>
+  ctx: Record<string, number>,
+  dimensions?: PostingDimensions,
 ): ResolvedPosting {
   const rule = POSTING_RULES[event];
   if (!rule) {
@@ -46,6 +56,9 @@ export function resolvePostingPayload(
       side: l.side,
       amount: round2(l.amount(ctx) ?? 0),
       memo: l.memo,
+      cost_center_id: dimensions?.cost_center_id ?? null,
+      project_id: dimensions?.project_id ?? null,
+      department_id: dimensions?.department_id ?? null,
     }))
     .filter((l) => l.amount > 0);
 
@@ -62,9 +75,14 @@ export async function postDocument(
   sourceType: string,
   sourceId: string,
   ctx: Record<string, number>,
-  extra?: { journal_date?: string; description?: string; tenant_id?: string }
+  extra?: {
+    journal_date?: string;
+    description?: string;
+    tenant_id?: string;
+    dimensions?: PostingDimensions;
+  },
 ): Promise<string> {
-  const resolved = resolvePostingPayload(event, ctx);
+  const resolved = resolvePostingPayload(event, ctx, extra?.dimensions);
   if (!resolved.balanced) {
     throw new Error(`Posting payload is unbalanced for ${event}: debit=${resolved.totalDebit} credit=${resolved.totalCredit}`);
   }
@@ -83,10 +101,10 @@ export async function postDocument(
     p_event: event,
     p_source_type: sourceType,
     p_source_id: sourceId,
-    // RPC signature requires Json; payload is a plain object/array tree.
     p_context: payload as never,
   });
 
   if (error) throw error;
   return data as unknown as string;
 }
+
