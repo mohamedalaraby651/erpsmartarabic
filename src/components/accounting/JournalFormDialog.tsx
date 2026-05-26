@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+import { getSafeErrorMessage } from "@/lib/errorHandler";
 import { Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 
 interface JournalEntry {
@@ -292,7 +292,7 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={mutation.isPending || !isBalanced || !hasAmount}>
+            <Button type="submit" disabled={createJournal.isPending || !isBalanced || !hasAmount}>
               حفظ القيد
             </Button>
           </DialogFooter>
