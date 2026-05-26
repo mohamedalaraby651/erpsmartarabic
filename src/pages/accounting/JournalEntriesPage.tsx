@@ -32,20 +32,7 @@ import {
 import JournalFormDialog from "@/components/accounting/JournalFormDialog";
 import JournalDetailDialog from "@/components/accounting/JournalDetailDialog";
 
-type Journal = {
-  id: string;
-  journal_number: string;
-  journal_date: string;
-  description: string;
-  is_posted: boolean;
-  posted_at: string | null;
-  source_type: string | null;
-  source_id: string | null;
-  total_debit: number;
-  total_credit: number;
-  created_at: string;
-  fiscal_periods?: { name: string } | null;
-};
+type Journal = JournalRow;
 
 const sourceTypeLabels: Record<string, string> = {
   manual: "قيد يدوي",
@@ -53,6 +40,7 @@ const sourceTypeLabels: Record<string, string> = {
   payment: "دفعة",
   expense: "مصروف",
   stock_movement: "حركة مخزون",
+  reversal: "قيد عكسي",
 };
 
 const JournalEntriesPage = () => {
@@ -64,18 +52,8 @@ const JournalEntriesPage = () => {
 
   const canCreate = userRole === "admin" || userRole === "accountant";
 
-  const { data: journals = [], isLoading } = useQuery({
-    queryKey: ["journals"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("journals")
-        .select("*, fiscal_periods(name)")
-        .order("journal_date", { ascending: false })
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Journal[];
-    },
-  });
+  const { data: journals = [], isLoading } = useJournalsList();
+
 
   const filteredJournals = journals.filter((j) => {
     if (statusFilter === "all") return true;
