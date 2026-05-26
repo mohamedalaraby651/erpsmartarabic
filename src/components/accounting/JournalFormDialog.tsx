@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useActiveAccounts, useCreateManualJournal } from "@/hooks/accounting";
+import {
+  useActiveAccounts,
+  useCreateManualJournal,
+  useCostCenters,
+  useProjects,
+} from "@/hooks/accounting";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -38,6 +42,8 @@ interface JournalEntry {
   debit_amount: number;
   credit_amount: number;
   memo: string;
+  cost_center_id?: string | null;
+  project_id?: string | null;
 }
 
 interface JournalFormData {
@@ -50,12 +56,15 @@ interface JournalFormDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const NONE = "__none__";
+
 const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
   const { toast } = useToast();
   const [entries, setEntries] = useState<JournalEntry[]>([
-    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
-    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
+    { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
   ]);
+
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<JournalFormData>({
     defaultValues: {
