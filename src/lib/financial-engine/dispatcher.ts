@@ -83,7 +83,8 @@ export async function postDocument(
     p_event: event,
     p_source_type: sourceType,
     p_source_id: sourceId,
-    p_context: payload as unknown as Record<string, unknown>,
+    // RPC signature requires Json; payload is a plain object/array tree.
+    p_context: payload as never,
   });
 
   if (error) throw error;
