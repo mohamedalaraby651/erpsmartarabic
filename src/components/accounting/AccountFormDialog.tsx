@@ -107,50 +107,23 @@ const AccountFormDialog = ({
     }
   }, [accountType, setValue]);
 
-  const mutation = useMutation({
-    mutationFn: async (data: Account) => {
-      const payload = {
-        code: data.code.trim(),
-        name: data.name.trim(),
-        name_en: data.name_en?.trim() || null,
-        account_type: data.account_type as "asset" | "liability" | "equity" | "revenue" | "expense",
-        parent_id: data.parent_id || null,
-        is_active: data.is_active,
-        normal_balance: data.normal_balance as "debit" | "credit",
-        description: data.description?.trim() || null,
-      };
-
-      if (isEditing) {
-        const { error } = await supabase
-          .from("chart_of_accounts")
-          .update(payload)
-          .eq("id", account.id!);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("chart_of_accounts")
-          .insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chart-of-accounts"] });
-      toast({ title: isEditing ? "تم تحديث الحساب" : "تم إنشاء الحساب" });
-      onOpenChange(false);
-    },
-    onError: (error: unknown) => {
-      logErrorSafely('AccountFormDialog.mutation', error);
-      toast({ 
-        title: "خطأ في حفظ الحساب", 
-        description: getSafeErrorMessage(error), 
-        variant: "destructive" 
-      });
-    },
-  });
-
   const onSubmit = (data: Account) => {
-    mutation.mutate(data);
+    const payload = {
+      id: account?.id,
+      code: data.code.trim(),
+      name: data.name.trim(),
+      name_en: data.name_en?.trim() || null,
+      account_type: data.account_type as "asset" | "liability" | "equity" | "revenue" | "expense",
+      parent_id: data.parent_id || null,
+      is_active: data.is_active,
+      normal_balance: data.normal_balance as "debit" | "credit",
+      description: data.description?.trim() || null,
+    };
+    upsert.mutate(payload, {
+      onSuccess: () => onOpenChange(false),
+    });
   };
+
 
   // Filter parent accounts (exclude self and children)
   const parentOptions = accounts.filter(
