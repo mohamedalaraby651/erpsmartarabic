@@ -6,6 +6,7 @@ import React from 'react';
 // Mock supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
+    rpc: vi.fn(() => Promise.resolve({ data: {}, error: null })),
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         in: vi.fn(() => Promise.resolve({ data: [], count: 0, error: null })),
@@ -35,8 +36,13 @@ const createWrapper = () => {
 };
 
 describe('useSidebarCounts', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    const { useAuth } = await import('@/hooks/useAuth');
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 'test-user-id' },
+      loading: false,
+    } as any);
   });
 
   it('should be defined', async () => {
@@ -58,11 +64,11 @@ describe('useSidebarCounts', () => {
   it('should fetch counts when user is authenticated', async () => {
     const { supabase } = await import('@/integrations/supabase/client');
     const { useSidebarCounts } = await import('@/hooks/useSidebarCounts');
-    
+
     renderHook(() => useSidebarCounts(), { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(supabase.from).toHaveBeenCalled();
+      expect(supabase.rpc).toHaveBeenCalledWith('get_sidebar_counts');
     });
   });
 
@@ -74,20 +80,40 @@ describe('useSidebarCounts', () => {
     } as any);
 
     const { supabase } = await import('@/integrations/supabase/client');
-    vi.mocked(supabase.from).mockClear();
+    vi.mocked(supabase.rpc).mockClear();
 
     const { useSidebarCounts } = await import('@/hooks/useSidebarCounts');
     renderHook(() => useSidebarCounts(), { wrapper: createWrapper() });
 
-    // Give it time to potentially make calls
     await new Promise(resolve => setTimeout(resolve, 100));
-
-    // It should not have made calls because user is null
-    // The query is disabled when !user?.id
+    // Query disabled when !user?.id — rpc should not be invoked
   });
 
   it('should return SidebarCounts interface shape', async () => {
-    const mockCounts = {
+    const { supabase } = await import('@/integrations/supabase/client');
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({
+      data: {
+        pending_invoices: 5,
+        pending_sales_orders: 3,
+        unread_notifications: 10,
+        low_stock_alerts: 2,
+        open_tasks: 7,
+        pending_quotations: 4,
+        pending_purchase_orders: 1,
+      },
+      error: null,
+    } as any);
+
+    const { useSidebarCounts } = await import('@/hooks/useSidebarCounts');
+    const { result } = renderHook(() => useSidebarCounts(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.data).toEqual({
       pendingInvoices: 5,
       pendingSalesOrders: 3,
       unreadNotifications: 10,
@@ -95,49 +121,15 @@ describe('useSidebarCounts', () => {
       openTasks: 7,
       pendingQuotations: 4,
       pendingPurchaseOrders: 1,
-    };
-
-    const { supabase } = await import('@/integrations/supabase/client');
-    vi.mocked(supabase.from).mockImplementation((table: string) => {
-      const baseQuery = {
-        select: vi.fn().mockReturnValue({
-          in: vi.fn().mockResolvedValue({ data: [], count: mockCounts.pendingInvoices, error: null }),
-          eq: vi.fn().mockResolvedValue({ data: [], count: 0, error: null }),
-          not: vi.fn().mockResolvedValue({ data: [], count: 0, error: null }),
-        }),
-      };
-      return baseQuery as any;
     });
-
-    const { useSidebarCounts } = await import('@/hooks/useSidebarCounts');
-    const { result } = renderHook(() => useSidebarCounts(), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    if (result.current.data) {
-      expect(result.current.data).toHaveProperty('pendingInvoices');
-      expect(result.current.data).toHaveProperty('pendingSalesOrders');
-      expect(result.current.data).toHaveProperty('unreadNotifications');
-      expect(result.current.data).toHaveProperty('lowStockAlerts');
-      expect(result.current.data).toHaveProperty('openTasks');
-      expect(result.current.data).toHaveProperty('pendingQuotations');
-      expect(result.current.data).toHaveProperty('pendingPurchaseOrders');
-    }
   });
 
   it('should handle fetch errors gracefully', async () => {
     const { supabase } = await import('@/integrations/supabase/client');
-    vi.mocked(supabase.from).mockImplementation(() => ({
-      select: vi.fn().mockReturnValue({
-        in: vi.fn().mockResolvedValue({ data: null, count: null, error: { message: 'Error' } }),
-        eq: vi.fn().mockResolvedValue({ data: null, count: null, error: { message: 'Error' } }),
-        not: vi.fn().mockResolvedValue({ data: null, count: null, error: { message: 'Error' } }),
-      }),
-    } as any));
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Error' },
+    } as any);
 
     const { useSidebarCounts } = await import('@/hooks/useSidebarCounts');
     const { result } = renderHook(() => useSidebarCounts(), {
@@ -148,7 +140,15 @@ describe('useSidebarCounts', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Should still return data with 0 counts when errors occur
+    expect(result.current.data).toEqual({
+      pendingInvoices: 0,
+      pendingSalesOrders: 0,
+      unreadNotifications: 0,
+      lowStockAlerts: 0,
+      openTasks: 0,
+      pendingQuotations: 0,
+      pendingPurchaseOrders: 0,
+    });
   });
 
   it('should refetch periodically', async () => {
@@ -156,15 +156,12 @@ describe('useSidebarCounts', () => {
     const { result } = renderHook(() => useSidebarCounts(), {
       wrapper: createWrapper(),
     });
-
-    // The hook has refetchInterval: 30000, which we can verify exists
     expect(result.current).toBeDefined();
   });
 });
 
 describe('SidebarCounts interface', () => {
   it('should have correct property types', () => {
-    // Type checking at compile time, runtime check for values
     const mockCounts = {
       pendingInvoices: 0,
       pendingSalesOrders: 0,

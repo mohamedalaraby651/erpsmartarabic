@@ -131,16 +131,23 @@ describe('Edge Function Security', () => {
         payment_number: 'PAY-001'
       });
 
-      expect(mockInvoke).toHaveBeenCalledWith('process-payment', {
-        body: {
-          payment_data: {
-            customer_id: 'customer-123',
-            amount: 1000,
-            payment_method: 'cash',
-            payment_number: 'PAY-001'
-          }
-        }
-      });
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'process-payment',
+        expect.objectContaining({
+          body: {
+            payment_data: {
+              customer_id: 'customer-123',
+              amount: 1000,
+              payment_method: 'cash',
+              payment_number: 'PAY-001'
+            }
+          },
+          headers: expect.objectContaining({
+            'x-correlation-id': expect.any(String),
+            'Idempotency-Key': expect.any(String),
+          }),
+        })
+      );
       expect(result.success).toBe(true);
       expect(result.data?.payment_id).toBe('pay-123');
     });
