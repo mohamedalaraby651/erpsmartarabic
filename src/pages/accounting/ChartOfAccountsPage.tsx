@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useChartOfAccounts } from "@/hooks/accounting";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+
 import { useAuth } from "@/hooks/useAuth";
 import {
   ChevronDown,
@@ -72,9 +71,7 @@ const accountTypeIcons: Record<string, React.ReactNode> = {
 };
 
 const ChartOfAccountsPage = () => {
-  const { toast } = useToast();
   const { userRole } = useAuth();
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
@@ -82,27 +79,10 @@ const ChartOfAccountsPage = () => {
 
   const canManage = userRole === "admin" || userRole === "accountant";
 
-  const { data: accounts = [], isLoading } = useQuery({
-    queryKey: ["chart-of-accounts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("chart_of_accounts")
-        .select("*")
-        .order("code");
-      if (error) throw error;
-      return data as Account[];
-    },
-  });
+  const { data: accountsRaw = [], isLoading } = useChartOfAccounts();
+  const accounts = accountsRaw as unknown as Account[];
 
-  // Build tree structure
-  const buildTree = (items: Account[], parentId: string | null = null): Account[] => {
-    return items
-      .filter((item) => item.parent_id === parentId)
-      .map((item) => ({
-        ...item,
-        children: buildTree(items, item.id),
-      }));
-  };
+
 
   const filteredAccounts = accounts.filter(
     (a) =>

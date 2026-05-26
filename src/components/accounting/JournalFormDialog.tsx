@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useActiveAccounts, useCreateManualJournal } from "@/hooks/accounting";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+
 import { Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 
 interface JournalEntry {
@@ -53,7 +52,6 @@ interface JournalFormDialogProps {
 
 const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [entries, setEntries] = useState<JournalEntry[]>([
     { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
     { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
@@ -66,54 +64,10 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
     },
   });
 
-  const { data: accounts = [] } = useQuery({
-    queryKey: ["chart-of-accounts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("chart_of_accounts")
-        .select("*")
-        .eq("is_active", true)
-        .order("code");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: accounts = [] } = useActiveAccounts();
 
-  const mutation = useMutation({
-    mutationFn: async (data: JournalFormData) => {
-      const { buildRequestHeaders, newIdempotencyKey } = await import("@/lib/requestHeaders");
-      const { data: result, error } = await supabase.functions.invoke("create-journal", {
-        body: {
-          journal_date: data.journal_date,
-          description: data.description,
-          entries: entries.filter((e) => e.account_id),
-        },
-        headers: buildRequestHeaders({ idempotencyKey: newIdempotencyKey() }),
-      });
+  const createJournal = useCreateManualJournal();
 
-      if (error) throw error;
-      if (!result.success) throw new Error(result.error);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["journals"] });
-      toast({ title: "تم إنشاء القيد بنجاح" });
-      onOpenChange(false);
-      reset();
-      setEntries([
-        { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
-        { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
-      ]);
-    },
-    onError: (error: unknown) => {
-      logErrorSafely('JournalFormDialog.mutation', error);
-      toast({
-        title: "خطأ في إنشاء القيد",
-        description: getSafeErrorMessage(error),
-        variant: "destructive",
-      });
-    },
-  });
 
   const addEntry = () => {
     setEntries([...entries, { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" }]);
@@ -159,8 +113,24 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
       toast({ title: "يجب إدخال مبالغ", variant: "destructive" });
       return;
     }
-    mutation.mutate(data);
+    createJournal.mutate(
+      {
+        header: { journal_date: data.journal_date, description: data.description },
+        lines: entries.filter((e) => e.account_id),
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          reset();
+          setEntries([
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+          ]);
+        },
+      },
+    );
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -322,7 +292,7 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={mutation.isPending || !isBalanced || !hasAmount}>
+            <Button type="submit" disabled={createJournal.isPending || !isBalanced || !hasAmount}>
               حفظ القيد
             </Button>
           </DialogFooter>

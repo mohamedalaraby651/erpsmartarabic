@@ -1,5 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useJournalEntries, usePostJournal } from "@/hooks/accounting";
 import {
   Dialog,
   DialogContent,
@@ -17,9 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { CheckCircle, Clock, FileText, Send } from "lucide-react";
 
 interface JournalDetailDialogProps {
@@ -41,57 +38,20 @@ const JournalDetailDialog = ({
   onOpenChange,
   journal,
 }: JournalDetailDialogProps) => {
-  const { toast } = useToast();
   const { userRole } = useAuth();
-  const queryClient = useQueryClient();
   const canPost = userRole === "admin" || userRole === "accountant";
 
-  interface JournalEntryRow {
-    id: string;
-    line_number: number;
-    debit_amount: number | null;
-    credit_amount: number | null;
-    memo: string | null;
-    chart_of_accounts: { code: string; name: string } | null;
-  }
+  const { data: entries = [] } = useJournalEntries(journal?.id);
 
-  const { data: entries = [] } = useQuery({
-    queryKey: ["journal-entries", journal?.id],
-    queryFn: async (): Promise<JournalEntryRow[]> => {
-      if (!journal?.id) return [];
-      const { data, error } = await supabase
-        .from("journal_entries")
-        .select("*, chart_of_accounts(code, name)")
-        .eq("journal_id", journal.id)
-        .order("line_number");
-      if (error) throw error;
-      return data as JournalEntryRow[];
-    },
-    enabled: !!journal?.id,
-  });
+  const postMutation = usePostJournal();
 
-  const postMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("journals")
-        .update({ is_posted: true, posted_at: new Date().toISOString() })
-        .eq("id", journal!.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["journals"] });
-      toast({ title: "تم ترحيل القيد بنجاح" });
-      onOpenChange(false);
-    },
-    onError: (error: unknown) => {
-      logErrorSafely('JournalDetailDialog.postMutation', error);
-      toast({
-        title: "خطأ في ترحيل القيد",
-        description: getSafeErrorMessage(error),
-        variant: "destructive",
-      });
-    },
-  });
+  const handlePost = () => {
+    if (!journal) return;
+    postMutation.mutate(journal.id, {
+      onSuccess: () => onOpenChange(false),
+    });
+  };
+
 
   if (!journal) return null;
 
@@ -203,7 +163,7 @@ const JournalDetailDialog = ({
             إغلاق
           </Button>
           {canPost && !journal.is_posted && (
-            <Button onClick={() => postMutation.mutate()} disabled={postMutation.isPending}>
+            <Button onClick={handlePost} disabled={postMutation.isPending}>
               <Send className="h-4 w-4 ml-2" />
               ترحيل القيد
             </Button>
