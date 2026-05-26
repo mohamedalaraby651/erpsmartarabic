@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getSafeErrorMessage } from "@/lib/errorHandler";
+
 import { Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 
 interface JournalEntry {
