@@ -9,6 +9,7 @@ import { Printer, Download, Loader2 } from "lucide-react";
 import { routePdfRequest } from "@/lib/pdf/routing/routePdfRequest";
 import { toast } from "sonner";
 import { logErrorSafely } from "@/lib/errorHandler";
+import { useTenant } from "@/hooks/useTenant";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ interface PurchaseOrderPrintViewProps {
 
 export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: PurchaseOrderPrintViewProps) {
   const [downloading, setDownloading] = useState(false);
+  const { tenantId } = useTenant();
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
@@ -49,7 +51,11 @@ export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: Purchase
     if (!order || !items) return;
     setDownloading(true);
     try {
-      await routePdfRequest({ docType: 'purchase_order', data: { ...order, items } });
+      await routePdfRequest({
+        docType: 'purchase_order',
+        data: { ...order, items },
+        tenantId: tenantId ?? (order as { tenant_id?: string }).tenant_id ?? null,
+      });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       logErrorSafely('PurchaseOrderPrintView', error);
