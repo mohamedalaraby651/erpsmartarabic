@@ -1,178 +1,141 @@
+# Phase 3 — Automated Posting Pipeline
 
-# خطة تنفيذ شاملة — تطوير منظومة المحاسبة والـ GL إلى المستوى الاحترافي
+Connect Sales / Procurement / Logistics documents to the verified GL through a single atomic DB engine and a thin Edge-Function dispatcher. No breaking changes — current code paths keep working until the new RPC is invoked.
 
-> مبنية على التقرير في `accounting-architecture-audit.md` — مقسّمة إلى 8 مراحل قابلة للتنفيذ بشكل منفصل ومُختبر.
-> كل مرحلة تنتهي باختبارات (Vitest + RLS + Integration) ومراجعة Linter قبل الانتقال للتالية.
+## 1. Database — `post_document_atomic` RPC (migration)
 
----
+`public.post_document_atomic(p_event text, p_source_type text, p_source_id uuid, p_context jsonb) returns uuid`
 
-## المرحلة 1 — تحصين الأمان الحرج (Security Hardening) [أولوية قصوى]
+- `SECURITY DEFINER`, `SET search_path=public`, `EXECUTE` revoked from `PUBLIC`/`anon`, granted to `authenticated` + `service_role`.
+- Resolves `tenant_id` from `get_current_tenant()` (or `p_context->>'tenant_id'` when called from service-role Edge Functions).
+- Enforces `check_section_permission(auth.uid(),'accounting','create')` when invoked by an end-user.
 
-**الهدف:** سدّ ثغرات الـ INSERT المفتوحة وفرض إغلاق الفترات المالية.
+Transaction body (single BEGIN/EXCEPTION block):
 
-1. Migration: إضافة `WITH CHECK` لجميع سياسات INSERT على:
-   - `chart_of_accounts` → `check_section_permission(auth.uid(),'accounting','create')`
-   - `journals` → نفس الشيء
-   - `journal_entries` → نفس الشيء
-   - `fiscal_periods` → نفس الشيء
-2. إعادة كتابة سياسة INSERT على `document_posting_log` → السماح فقط للـ `service_role` و RPCs المُعرّفة بـ `SECURITY DEFINER` (REVOKE من `authenticated`).
-3. Trigger جديد `enforce_fiscal_period_open()` على `journals` BEFORE INSERT/UPDATE → يرفض القيد إذا كانت `fiscal_period_id` مغلقة أو إذا `journal_date` خارج النطاق.
-4. دمج Triggers المكررة: حذف `protect_posted_journal` / `protect_posted_journal_lines` والاكتفاء بـ `prevent_posted_*`.
-5. اختبارات RLS سلبية جديدة في `src/__tests__/security/accounting-rls.test.ts`.
+1. **Idempotency** — `SELECT journal_id FROM document_posting_log WHERE tenant_id=? AND document_type=p_source_type AND document_id=p_source_id AND reason=p_event AND status='posted'`. If found, return it (no-op).
+2. **Rule lookup** — read declarative rules from a new seed table `posting_rules_registry(event, side, account_key, amount_path, memo)` *or* (lighter) accept the lines array inside `p_context->'lines'` produced by `posting.rules.ts`. Plan choice: pass `lines` from app to keep one source of truth.
+3. **Account resolution** — for each line:
+  - `SELECT account_id FROM posting_account_map WHERE tenant_id=? AND posting_key=line.account_code`.
+  - Fallback: `SELECT id FROM chart_of_accounts WHERE tenant_id=? AND code=line.account_code`.
+  - Raise `check_violation` with Arabic message if neither resolves.
+4. **Rounding & balance** — `round(amount::numeric, 2)`; assert `sum(debits)=sum(credits)` to 0.01, else raise.
+5. **Insert** `journals` header (status='posted', source_type, source_id, event, journal_date from context, fiscal_period auto-resolved by existing trigger) → returns `journal_id`.
+6. **Insert** `journal_entries` rows (debit/credit, memo, line_no).
+7. **Audit success** — insert `document_posting_log(status='posted', reason=p_event, journal_id, total_amount)`.
+8. **EXCEPTION WHEN OTHERS** — `ROLLBACK` implicit, then in a fresh autonomous insert (via `pg_background` not available → use `INSERT … ON CONFLICT DO NOTHING` after re-raising? — actual choice: log failure via SECURITY DEFINER helper `log_posting_failure(...)` declared `volatile` and called from the EXCEPTION block, which uses a SAVEPOINT pattern so the failure row survives). Re-raise so the caller sees the error.
 
-**معايير القبول:** Linter أخضر، 0 INSERT مفتوح، اختبار يمنع الترحيل في فترة مغلقة.
+Companion helpers:
 
----
+- `log_posting_failure(tenant uuid, doc_type text, doc_id uuid, event text, reason text)` — minimal insert, used inside EXCEPTION block.
+- Reuse existing `enforce_fiscal_period_open` trigger from Phase 1.
 
-## المرحلة 2 — طبقة Repositories & Hooks للمحاسبة
+## 2. Application layer
 
-**الهدف:** الالتزام بنمط المشروع (Repository-first).
+### `src/lib/financial-engine/posting.rules.ts`
 
-1. `src/lib/repositories/journalRepository.ts` — list, get, create, post, reverse.
-2. `src/lib/repositories/coaRepository.ts` — tree, flat, byCode, upsert.
-3. `src/lib/repositories/fiscalPeriodRepository.ts` — list, open, close.
-4. Hooks: `src/hooks/accounting/{useJournals,useChartOfAccounts,useFiscalPeriods,usePostingLog}.ts` مع React Query.
-5. إعادة توصيل صفحات `JournalEntriesPage` / `ChartOfAccountsPage` / `PostingLogPage` لاستخدام الـ hooks بدلاً من استدعاءات `supabase` المباشرة.
-6. اختبارات Unit لكل repository.
+Add three new declarative rules (no logic change to existing ones):
 
----
+- `goods_receipt.posted` — DR `INVENTORY` / CR `GR_IR_CLEARING` (new constant `'1250'`).
+- `purchase_invoice.posted` — DR `GR_IR_CLEARING` + DR `TAX_INPUT` (new `'1290'`) / CR `ACCOUNTS_PAYABLE`.
+- `inventory.adjustment` — DR/CR `INVENTORY` ↔ `INVENTORY_ADJUSTMENT` (`'5100'`).
 
-## المرحلة 3 — Auto-Posting Pipeline (تفعيل الترحيل التلقائي)
+Migration also seeds the new COA codes per tenant (idempotent `INSERT … ON CONFLICT DO NOTHING`).
 
-**الهدف:** ربط الـ Sales/Procurement بـ `createJournalFromEvent` فعلياً.
+### New helper `src/lib/financial-engine/dispatcher.ts`
 
-1. RPC جديد `post_document_atomic(p_event, p_source_type, p_source_id, p_context jsonb)` في PostgreSQL:
-   - يحل `account_id` من `posting_account_map` (للفئة الخاصة بالـ tenant) ثم fallback إلى `chart_of_accounts.code`.
-   - ينشئ `journals` + `journal_entries` داخل transaction واحدة.
-   - يكتب صفّاً في `document_posting_log` بـ `status='posted'`.
-   - يفرض idempotency: `UNIQUE(source_type, source_id, event)` على `document_posting_log`.
-2. تعديل Edge Functions الحالية لتستدعي الـ RPC:
-   - `approve-invoice` → بعد تغيير الحالة إلى `approved` → posting event `invoice.approved`.
-   - `process-payment` → `payment.received`.
-   - `approve-expense` → `expense.approved`.
-   - Credit-notes Edge Function → `credit_note.approved` (موجود نظرياً، التحقق من التفعيل).
-   - Supplier payments RPC → `supplier_payment.made`.
-3. توسيع `posting.rules.ts` بـ:
-   - `goods_receipt.posted` (DR Inventory / CR GR-IR Clearing).
-   - `purchase_invoice.posted` (DR GR-IR Clearing / CR AP + Tax).
-   - `inventory.adjustment` (DR/CR Inventory vs Adjustment a/c).
-4. اختبارات Integration: فاتورة → دفعة → كريديت نوت → التأكد من توازن GL.
+`postDocument(event, sourceType, sourceId, ctx)` — resolves rule → builds `lines[]` with rounded amounts → calls `supabase.rpc('post_document_atomic', {...})` → returns `journal_id`. Centralises error mapping to Arabic toasts via `mapRepoError`.
 
----
+### Edge-function wiring (idempotent, additive)
 
-## المرحلة 4 — أبعاد التحليل (Cost Centers / Projects / Departments)
+- `supabase/functions/approve-invoice/index.ts` — after status flips to `approved`, call `post_document_atomic` with `event='invoice.approved'` and `lines` built server-side (subtotal/tax/total). Existing direct `journals` insert (if any) gated by `if (!alreadyPostedViaRpc)` to avoid double posting during rollout.
+- `supabase/functions/process-payment/index.ts` — on successful capture, fire `payment.received` with `amount`, debit account = `BANK` if `payment_method='bank'` else `CASH`.
+- `supabase/functions/approve-expense/index.ts` — fire `expense.approved`.
+- `_shared/posting.ts` — thin Deno helper that mirrors `dispatcher.ts` so both browser and edge use the same payload shape.
 
-1. Migration: جداول جديدة
-   - `cost_centers (id, code, name, tenant_id, is_active, parent_id)`.
-   - `projects (id, code, name, tenant_id, start_date, end_date, status)`.
-   - `departments (id, code, name, tenant_id)`.
-2. إضافة أعمدة nullable على `journal_entries`:
-   - `cost_center_id`, `project_id`, `department_id`.
-3. Indexes: `(tenant_id, cost_center_id)` ، `(tenant_id, project_id)`.
-4. تحديث `JournalFormDialog` بحقول اختيارية للأبعاد.
-5. تحديث `posting.rules.ts` لتمرير الأبعاد من context الـ source document.
-6. تقرير: P&L by Cost Center / Project.
+No existing function signatures change; only an extra RPC call is appended.
 
----
+## 3. Tests
 
-## المرحلة 5 — Multi-Currency (متعدد العملات)
+- `src/__tests__/unit/financial-engine/dispatcher.test.ts` — pure unit: rule lookup, rounding, balance assertion, unknown event throws.
+- `src/__tests__/unit/financial-engine/posting.rules.test.ts` — adds cases for the 3 new rules (balance equality).
+- `src/__tests__/integration/automated-posting.test.ts` — full lifecycle against the test Supabase project:
+  1. seed COA + posting_account_map for a test tenant
+  2. create invoice → call `approve-invoice` → assert `journals` + 3 `journal_entries` + 1 `document_posting_log(status=posted)`
+  3. re-invoke same event → assert idempotency (no duplicate journal)
+  4. create payment → call `process-payment` → assert DR Bank / CR AR balanced
+  5. attempt posting in a **closed** fiscal period → expect `check_violation` and `document_posting_log(status=failed)`
+  6. RLS negative: anon role cannot insert into `document_posting_log` directly.
 
-1. جداول جديدة:
-   - `currencies (code PK, name, name_ar, symbol, decimals)`.
-   - `exchange_rates (id, base_code, quote_code, rate, rate_date, tenant_id, source)`.
-2. أعمدة جديدة على `journals` و `journal_entries`:
-   - `currency_code` (default tenant functional currency).
-   - `fx_rate`, `functional_debit`, `functional_credit`.
-3. Trigger يحسب `functional_*` تلقائياً عند INSERT.
-4. `currency_settings` على مستوى الـ tenant (Functional currency).
-5. واجهة لإدارة أسعار الصرف يدوياً + Edge Function لاحقاً لجلبها من API خارجي.
-6. تحديث Posting rules لتمرير العملة من المستند المصدر.
+Target: **1170 → ~1185 green**. Run `bunx vitest run` at the end.
 
----
+## 4. Rollout safety
 
-## المرحلة 6 — Tax & Bank Reconciliation
+- All migrations are additive (new function, new COA rows, no column drops).
+- Old code paths remain; new RPC is opt-in per edge function and protected by idempotency key.
+- Failure path always writes a `document_posting_log` row, so observability is preserved.
+- Linter expected to stay flat (no new RLS surface beyond the existing `document_posting_log` service-role policy from Phase 1).
 
-**Tax Detail:**
-1. جدول `tax_rates (id, code, name, rate, jurisdiction, is_active, tenant_id)`.
-2. جدول `tax_transactions (id, journal_entry_id, tax_rate_id, taxable_amount, tax_amount, direction)`.
-3. تحديث Posting rules لكتابة سطر/سطور TAX_PAYABLE تفصيلية.
-4. تقرير VAT Return جاهز للطباعة.
+## Execution order
 
-**Bank Reconciliation:**
-5. ربط `bank_accounts.gl_account_id` → `chart_of_accounts(id)` FK.
-6. جداول: `bank_statements`, `bank_statement_lines`, `bank_reconciliation_matches`.
-7. شاشة مطابقة (drag-drop matching) في `src/pages/accounting/BankReconciliationPage.tsx`.
-8. Trigger لتحديث `bank_accounts.current_balance` من journal_entries المرتبطة.
+1. Migration: `post_document_atomic` + `log_posting_failure` + seed new COA codes.
+2. Update `posting.rules.ts` + new `dispatcher.ts` + shared Deno helper.
+3. Wire `approve-invoice`, `process-payment`, `approve-expense`.
+4. Add unit + integration tests.
+5. `bunx vitest run` → confirm green, then hand back for Phase 4 signal.
+6. Act as a Principal Database Architect and Senior Edge-Functions Developer. Phase 2 (Repositories & Hooks) is fully complete with 1170/1170 passing tests. We are now executing "Phase 3: Automated Posting Pipeline" to connect Sales, Procurement, and Logistics documents to our General Ledger atomically.
 
----
+Please safely implement the following updates:
 
-## المرحلة 7 — التقارير وإغلاق الفترات
+&nbsp;
 
-1. Views/Materialized Views:
-   - `v_trial_balance(tenant_id, period_id, account_id, opening, debit, credit, closing)`.
-   - `v_profit_loss(tenant_id, period_id, account_type, amount)`.
-   - `v_balance_sheet(tenant_id, as_of_date, account_type, balance)`.
-   - `v_general_ledger(tenant_id, account_id, journal_id, date, debit, credit, running_balance)`.
-2. `pg_cron` لإعادة بناء MVs يومياً + fallback مباشر للجدول (وفق memory: MV Resilience).
-3. صفحات جديدة:
-   - `src/pages/accounting/TrialBalancePage.tsx`
-   - `src/pages/accounting/ProfitLossPage.tsx`
-   - `src/pages/accounting/BalanceSheetPage.tsx`
-   - `src/pages/accounting/GeneralLedgerPage.tsx`
-4. تصدير PDF/Excel (إعادة استخدام Edge Function `export-*`).
-5. RPC `close_fiscal_period(p_period_id)`:
-   - يتأكد من توازن كل الـ journals.
-   - ينشئ Closing Entry لترحيل P&L → Retained Earnings.
-   - يقفل الفترة (`is_closed=true`).
-6. RPC `seed_opening_balances(p_period_id, p_lines jsonb)` للـ onboarding.
-7. واجهة `JournalReversalDialog` لاستخدام `journal_reversals` من الـ UI.
+1. Database Layer (PostgreSQL Migration):
 
----
+- Create a SECURITY DEFINER function `public.post_document_atomic(p_event text, p_source_type text, p_source_id uuid, p_context jsonb)` returning `uuid`. Revoke EXECUTE from PUBLIC/anon; grant to authenticated + service_role.
 
-## المرحلة 8 — تحسينات UX وميزات متقدمة
+- Inside a single atomic transaction block:
 
-1. `JournalFormDialog`:
-   - مؤشر توازن live (Debit/Credit/Δ) كـ chip ملوّن.
-   - زر "Balance Line" يضيف سطر مكمل تلقائياً.
-   - Keyboard shortcuts (`Ctrl+B` للترحيل، `Ctrl+R` لإضافة سطر).
-   - عرض الـ source document deep-link.
-2. `ChartOfAccountsPage`:
-   - Tree view مع روول-أب للأرصدة.
-   - Drill-down من حساب → general ledger.
-3. `PostingLogPage`:
-   - فلاتر (نوع المستند، الحالة، النطاق الزمني).
-   - Re-post action للمستندات الفاشلة.
-4. **Journal Templates / Recurring**:
-   - جدول `journal_templates` + `recurring_journals` + cron job يولّد القيود الدورية (إهلاك، استحقاقات).
-5. **Numbering Policy**: خيار `gapless_numbering` على مستوى الـ tenant — يستخدم `advisory_lock` بدلاً من sequence لضمان عدم وجود فجوات.
-6. Toast Mapping للـ Postgres `check_violation` ERRCODE لرسائل عربية مفهومة.
-7. **اختبار E2E** كامل لدورة: بيع → فاتورة → ترحيل → دفع → كريديت → عكس → إقفال فترة.
+  a. Idempotency: Return existing journal_id if a matching `posted` trail exists in `document_posting_log` for this document, event, and tenant.
 
----
+  b. Resolve `account_id` from `posting_account_map` based on `line.account_code`, fallback to `chart_of_accounts.code`, or raise a descriptive Arabic check_violation.
 
-## معايير الإنجاز العامة بعد كل مرحلة
+  c. Assert total debits strictly equal total credits to 0.01 precision after rounding amounts via `round(amount::numeric, 2)`.
 
-- ✅ Vitest: جميع الاختبارات خضراء.
-- ✅ Supabase Linter: لا تحذيرات جديدة.
-- ✅ RLS: اختبارات سلبية تتحقق من العزل.
-- ✅ TypeScript: 0 errors.
-- ✅ تحديث `mem://` (memory) بالقرارات المعمارية الجديدة.
-- ✅ تحديث `.lovable/plan.md` بحالة التقدم.
+  d. Insert into `journals` header and bulk insert `journal_entries` lines. Write a success row to `document_posting_log` with status='posted'.
 
----
+- In the EXCEPTION block, use a SAVEPOINT pattern to roll back the broken ledger mutations while safely preserving a failure audit row via a dedicated helper `log_posting_failure(...)` into `document_posting_log` with status='failed'. Then, re-raise the exception.
 
-## الترتيب المُوصى به للتنفيذ
+- Idempotently seed the new COA rows ('1250' GR/IR, '1290' Tax Input, '5100' Inventory Adjustment) via `INSERT ... ON CONFLICT DO NOTHING`.
 
-```text
-[1] Security ──► [2] Repos/Hooks ──► [3] Auto-Posting ──┐
-                                                         ├─► [7] Reports + Closing ──► [8] UX
-[4] Dimensions ─► [5] Multi-Currency ─► [6] Tax + Bank ─┘
-```
+&nbsp;
 
-المرحلتان (1) و (3) هما الأكثر إلحاحاً (أمان + ربط فعلي للترحيل التلقائي). المراحل 4–6 مستقلة ويمكن العمل عليها بالتوازي بعد الانتهاء من 1+2.
+2. Application Layer & Rules Expansion:
 
----
+- Extend `src/lib/financial-engine/posting.rules.ts` to include the three new declarative rules: `goods_receipt.posted`, `purchase_invoice.posted`, and `inventory.adjustment` with balanced debit/credit constants.
 
-## نطاق هذه الموافقة
+- Create helper `src/lib/financial-engine/dispatcher.ts` exposing `postDocument(...)` to build payloads, invoke the RPC, and route errors cleanly via `mapRepoError` into Arabic toasts.
 
-عند الموافقة سأبدأ بـ **المرحلة 1 فقط** (Security Hardening) لأنها الأخطر والأقصر، ثم أعرض حالتها قبل البدء في المرحلة 2. هذا يضمن عدم تضخّم التغييرات في PR واحد ويحافظ على استقرار الـ test suite (1156/1156 حالياً).
+- Create a mirrored thin Deno helper in `supabase/functions/_shared/posting.ts`.
+
+&nbsp;
+
+3. Edge Functions Integration:
+
+- Update `supabase/functions/approve-invoice/index.ts` to call `post_document_atomic` upon moving to approved. Gate legacy inline journals insert behind an `if (!alreadyPostedViaRpc)` conditional to ensure zero double-posting.
+
+- Update `supabase/functions/process-payment/index.ts` to fire `payment.received` assigning debit to Bank/Cash based on payment method.
+
+- Update `supabase/functions/approve-expense/index.ts` to fire `expense.approved`.
+
+&nbsp;
+
+4. Test Suite Implementation:
+
+- Add unit tests in `src/__tests__/unit/financial-engine/dispatcher.test.ts` and `posting.rules.test.ts`.
+
+- Create a complete lifecycle integration test `src/__tests__/integration/automated-posting.test.ts` to simulate: Invoice creation -> approve-invoice execution -> verifying balanced GL states -> verifying idempotency -> asserting fiscal closure rejection -> testing RLS negative boundaries.
+
+&nbsp;
+
+Execute `bunx vitest run` at the end to confirm our test baseline scales flawlessly to green (~1185/1185)!
+
+&nbsp;

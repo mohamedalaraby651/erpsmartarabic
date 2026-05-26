@@ -119,29 +119,29 @@ serve(async (req) => {
       );
     }
 
+    // Resolve tenant once (used for idempotency + auto-posting).
+    const { data: tenantRow } = await supabaseAdmin
+      .from('user_tenants')
+      .select('tenant_id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id ?? '';
+
     // 1.5 Idempotency guard — prevent duplicate payment posting on retry/replay
-    if (idempotencyKey) {
-      const { data: tenantRow } = await supabaseAdmin
-        .from('user_tenants')
-        .select('tenant_id')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-      const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
-      if (tenantId) {
-        const guard = await checkIdempotency(supabaseAdmin, {
-          tenantId,
-          userId,
-          operation: 'process-payment',
-          key: idempotencyKey,
-        });
-        if (guard.duplicate) {
-          console.log('[process-payment] Replay detected, rejecting', { correlationId, idempotencyKey });
-          return new Response(
-            JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
-            { status: 409, headers: respHeaders }
-          );
-        }
+    if (idempotencyKey && tenantId) {
+      const guard = await checkIdempotency(supabaseAdmin, {
+        tenantId,
+        userId,
+        operation: 'process-payment',
+        key: idempotencyKey,
+      });
+      if (guard.duplicate) {
+        console.log('[process-payment] Replay detected, rejecting', { correlationId, idempotencyKey });
+        return new Response(
+          JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
+          { status: 409, headers: respHeaders }
+        );
       }
     }
 
@@ -264,6 +264,23 @@ serve(async (req) => {
         console.error('[process-payment] Error updating invoice:', invoiceUpdateError);
         // Don't fail - payment was created
       }
+    }
+
+    // 7. Auto-post to GL (idempotent at DB level).
+    try {
+      const { postDocument } = await import('../_shared/posting.ts');
+      const event = paymentData.payment_method === 'cash' ? 'payment.received.cash' : 'payment.received';
+      const journalId = await postDocument(supabaseAdmin, {
+        event,
+        sourceType: 'payment',
+        sourceId: payment.id,
+        tenantId,
+        ctx: { amount: Number(paymentData.amount) || 0 },
+        description: `سداد رقم ${payment.payment_number}`,
+      });
+      console.log(`[process-payment] Auto-posted journal ${journalId} for payment ${payment.id}`);
+    } catch (postErr) {
+      console.error('[process-payment] Auto-posting failed (non-fatal):', postErr);
     }
 
     console.log('[process-payment] Payment processed successfully:', payment.id);

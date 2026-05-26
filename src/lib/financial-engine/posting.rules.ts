@@ -29,9 +29,12 @@ export const ACCOUNTS = {
   BANK: '1020',
   ACCOUNTS_RECEIVABLE: '1100',
   INVENTORY: '1200',
+  GR_IR_CLEARING: '1250',
+  TAX_INPUT: '1290',
   ACCOUNTS_PAYABLE: '2100',
   SALES_REVENUE: '4000',
   COST_OF_GOODS_SOLD: '5000',
+  INVENTORY_ADJUSTMENT: '5100',
   OPERATING_EXPENSES: '6000',
   TAX_PAYABLE: '2200',
   SALES_RETURNS: '4100',
@@ -139,6 +142,34 @@ export const POSTING_RULES: Record<string, PostingRule> = {
         amount: (ctx) => ctx.amount,
         memo: 'Cash out to supplier',
       },
+    ],
+  },
+
+  'goods_receipt.posted': {
+    event: 'goods_receipt.posted',
+    description: 'Goods received from supplier — increase inventory, accrue GR/IR',
+    lines: [
+      { account_code: ACCOUNTS.INVENTORY, side: 'debit', amount: (ctx) => ctx.amount, memo: 'Inventory received' },
+      { account_code: ACCOUNTS.GR_IR_CLEARING, side: 'credit', amount: (ctx) => ctx.amount, memo: 'GR/IR clearing' },
+    ],
+  },
+
+  'purchase_invoice.posted': {
+    event: 'purchase_invoice.posted',
+    description: 'Supplier invoice booked — clear GR/IR, recognize input tax & AP',
+    lines: [
+      { account_code: ACCOUNTS.GR_IR_CLEARING, side: 'debit', amount: (ctx) => ctx.subtotal, memo: 'GR/IR cleared' },
+      { account_code: ACCOUNTS.TAX_INPUT, side: 'debit', amount: (ctx) => ctx.tax_amount || 0, memo: 'Input VAT' },
+      { account_code: ACCOUNTS.ACCOUNTS_PAYABLE, side: 'credit', amount: (ctx) => ctx.total_amount, memo: 'AP — supplier invoice' },
+    ],
+  },
+
+  'inventory.adjustment': {
+    event: 'inventory.adjustment',
+    description: 'Inventory adjustment (write-up or write-down)',
+    lines: [
+      { account_code: ACCOUNTS.INVENTORY, side: 'debit', amount: (ctx) => Math.max(ctx.amount, 0), memo: 'Inventory write-up' },
+      { account_code: ACCOUNTS.INVENTORY_ADJUSTMENT, side: 'credit', amount: (ctx) => Math.max(ctx.amount, 0), memo: 'Adjustment gain' },
     ],
   },
 };

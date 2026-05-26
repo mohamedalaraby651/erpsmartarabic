@@ -6719,6 +6719,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_posting_failure: {
+        Args: {
+          p_doc_id: string
+          p_doc_type: string
+          p_event: string
+          p_reason: string
+          p_tenant: string
+        }
+        Returns: undefined
+      }
       log_slow_query: {
         Args: {
           _duration_ms: number
@@ -6741,6 +6751,15 @@ export type Database = {
         Returns: boolean
       }
       post_delivery_note: { Args: { p_id: string }; Returns: Json }
+      post_document_atomic: {
+        Args: {
+          p_context: Json
+          p_event: string
+          p_source_id: string
+          p_source_type: string
+        }
+        Returns: string
+      }
       post_goods_receipt: { Args: { p_id: string }; Returns: Json }
       post_purchase_invoice: { Args: { p_id: string }; Returns: Json }
       prune_expired_idempotency: { Args: never; Returns: number }

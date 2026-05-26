@@ -239,99 +239,32 @@ Deno.serve(async (req) => {
         throw updateError;
       }
 
-      // Create accounting journal entry (auto-posting)
+      // Auto-post to GL via atomic engine (idempotent at DB level).
       try {
-        // Get current fiscal period
-        const { data: period } = await supabase
-          .from('fiscal_periods')
-          .select('id')
-          .eq('is_closed', false)
-          .gte('end_date', new Date().toISOString().split('T')[0])
-          .lte('start_date', new Date().toISOString().split('T')[0])
-          .single();
-
-        if (period) {
-          // Get accounts
-          const { data: arAccount } = await supabase
-            .from('chart_of_accounts')
-            .select('id')
-            .eq('code', '1130')
-            .single();
-
-          const { data: revenueAccount } = await supabase
-            .from('chart_of_accounts')
-            .select('id')
-            .eq('code', '4100')
-            .single();
-
-          const { data: vatAccount } = await supabase
-            .from('chart_of_accounts')
-            .select('id')
-            .eq('code', '2120')
-            .single();
-
-          if (arAccount && revenueAccount) {
-            // Create journal
-            const { data: journal, error: journalError } = await supabase
-              .from('journals')
-              .insert({
-                fiscal_period_id: period.id,
-                journal_date: new Date().toISOString().split('T')[0],
-                description: `فاتورة مبيعات رقم ${invoice.invoice_number} - ${invoice.customers?.name || 'عميل'}`,
-                source_type: 'invoice',
-                source_id: invoice_id,
-                created_by: userId,
-                is_posted: true,
-                posted_at: new Date().toISOString()
-              })
-              .select()
-              .single();
-
-            if (!journalError && journal) {
-              const entries = [];
-              let lineNumber = 1;
-
-              // DR: Accounts Receivable
-              entries.push({
-                journal_id: journal.id,
-                account_id: arAccount.id,
-                line_number: lineNumber++,
-                debit_amount: Number(invoice.total_amount),
-                credit_amount: 0,
-                memo: `ذمم ${invoice.customers?.name || 'العميل'}`
-              });
-
-              // CR: Sales Revenue
-              entries.push({
-                journal_id: journal.id,
-                account_id: revenueAccount.id,
-                line_number: lineNumber++,
-                debit_amount: 0,
-                credit_amount: Number(invoice.subtotal || invoice.total_amount),
-                memo: 'إيرادات المبيعات'
-              });
-
-              // CR: VAT (if applicable)
-              if (vatAccount && Number(invoice.tax_amount) > 0) {
-                entries.push({
-                  journal_id: journal.id,
-                  account_id: vatAccount.id,
-                  line_number: lineNumber++,
-                  debit_amount: 0,
-                  credit_amount: Number(invoice.tax_amount),
-                  memo: 'ضريبة القيمة المضافة'
-                });
-              }
-
-              await supabase.from('journal_entries').insert(entries);
-              console.log(`[approve-invoice] Auto-posted journal ${journal.journal_number} for invoice ${invoice_id}`);
-            }
-          }
+        const { postDocument } = await import('../_shared/posting.ts');
+        const tenantId = (invoice as { tenant_id?: string }).tenant_id;
+        if (!tenantId) {
+          console.warn('[approve-invoice] invoice has no tenant_id; skipping auto-posting');
+        } else {
+          const journalId = await postDocument(supabaseAdmin, {
+            event: 'invoice.approved',
+            sourceType: 'invoice',
+            sourceId: invoice_id,
+            tenantId,
+            ctx: {
+              total_amount: Number(invoice.total_amount) || 0,
+              subtotal: Number(invoice.subtotal ?? invoice.total_amount) || 0,
+              tax_amount: Number(invoice.tax_amount) || 0,
+            },
+            description: `فاتورة مبيعات رقم ${invoice.invoice_number} - ${invoice.customers?.name || 'عميل'}`,
+          });
+          console.log(`[approve-invoice] Auto-posted journal ${journalId} for invoice ${invoice_id}`);
         }
       } catch (journalErr) {
-        // Log but don't fail the approval
-        console.error('[approve-invoice] Journal creation error (non-fatal):', journalErr);
+        // Failure already audited inside post_document_atomic's EXCEPTION block.
+        console.error('[approve-invoice] Auto-posting failed (non-fatal):', journalErr);
       }
+
 
       console.log(`[approve-invoice] Invoice ${invoice_id} approved by ${userId}`);
 
