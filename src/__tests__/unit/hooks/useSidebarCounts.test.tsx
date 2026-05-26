@@ -36,8 +36,13 @@ const createWrapper = () => {
 };
 
 describe('useSidebarCounts', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    const { useAuth } = await import('@/hooks/useAuth');
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 'test-user-id' },
+      loading: false,
+    } as any);
   });
 
   it('should be defined', async () => {
