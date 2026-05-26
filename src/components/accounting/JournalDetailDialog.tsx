@@ -165,7 +165,7 @@ const JournalDetailDialog = ({
             إغلاق
           </Button>
           {canPost && !journal.is_posted && (
-            <Button onClick={() => postMutation.mutate()} disabled={postMutation.isPending}>
+            <Button onClick={handlePost} disabled={postMutation.isPending}>
               <Send className="h-4 w-4 ml-2" />
               ترحيل القيد
             </Button>
