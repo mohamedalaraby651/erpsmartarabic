@@ -179,7 +179,7 @@ export const journalRepository = {
         source_type: "reversal",
         source_id: id,
       },
-      entries.map((e) => ({
+      entries.map((e: JournalEntryRow) => ({
         account_id: e.account_id,
         debit_amount: round2(Number(e.credit_amount) || 0),
         credit_amount: round2(Number(e.debit_amount) || 0),
