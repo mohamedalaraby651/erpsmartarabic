@@ -38,40 +38,13 @@ function StatusBadge({ s }: { s: LogRow["status"] }) {
 
 export default function PostingLogPage() {
   const navigate = useNavigate();
-  const qc = useQueryClient();
-  const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["document-posting-log"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("document_posting_log" as any)
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return (data ?? []) as unknown as LogRow[];
-    },
-  });
-
-  const ensureAccounts = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.rpc("ensure_logistics_posting_accounts" as any);
-      if (error) throw error;
-      const res = data as { success: boolean; created?: any[]; linked?: any[]; error?: string };
-      if (!res?.success) throw new Error(res?.error || "فشل");
-      return res;
-    },
-    onSuccess: (res) => {
-      const c = res.created?.length ?? 0;
-      const l = res.linked?.length ?? 0;
-      toast.success(`تم الإعداد — ${c} حساب جديد، ${l} ربط جديد`);
-      qc.invalidateQueries({ queryKey: ["document-posting-log"] });
-    },
-    onError: (e: any) => toast.error(e?.message || "فشل الإعداد"),
-  });
+  const { data: rows = [], isLoading } = usePostingLog();
+  const ensureAccounts = useEnsureLogisticsAccounts();
 
   const failed = rows.filter((r) => r.status === "failed").length;
   const success = rows.filter((r) => r.status === "success").length;
   const skipped = rows.filter((r) => r.status === "skipped").length;
+
 
   return (
     <div className="container mx-auto p-4 space-y-4">
