@@ -237,6 +237,27 @@ serve(async (req) => {
       }
     }
 
+    // 6.5 Auto-post to GL on approval (idempotent at DB level).
+    if (approvalData.action === 'approve') {
+      try {
+        const { postDocument } = await import('../_shared/posting.ts');
+        const expTenant = (expense as { tenant_id?: string }).tenant_id;
+        if (expTenant) {
+          const journalId = await postDocument(supabaseAdmin, {
+            event: 'expense.approved',
+            sourceType: 'expense',
+            sourceId: expense.id,
+            tenantId: expTenant,
+            ctx: { amount: Number(expense.amount) || 0 },
+            description: `مصروف رقم ${expense.expense_number}`,
+          });
+          console.log(`[approve-expense] Auto-posted journal ${journalId} for expense ${expense.id}`);
+        }
+      } catch (postErr) {
+        console.error('[approve-expense] Auto-posting failed (non-fatal):', postErr);
+      }
+    }
+
     console.log('[approve-expense] Expense processed successfully');
     const result: ApprovalResult = {
       success: true,
