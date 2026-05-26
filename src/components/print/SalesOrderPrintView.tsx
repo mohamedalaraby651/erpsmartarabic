@@ -25,6 +25,7 @@ interface SalesOrderPrintViewProps {
 
 export function SalesOrderPrintView({ orderId, open, onOpenChange }: SalesOrderPrintViewProps) {
   const [downloading, setDownloading] = useState(false);
+  const { tenantId } = useTenant();
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
