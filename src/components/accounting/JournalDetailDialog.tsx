@@ -16,9 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { CheckCircle, Clock, FileText, Send } from "lucide-react";
 
 interface JournalDetailDialogProps {
