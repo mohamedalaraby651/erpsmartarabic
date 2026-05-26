@@ -74,12 +74,14 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
   });
 
   const { data: accounts = [] } = useActiveAccounts();
+  const { data: costCenters = [] } = useCostCenters();
+  const { data: projects = [] } = useProjects();
 
   const createJournal = useCreateManualJournal();
 
 
   const addEntry = () => {
-    setEntries([...entries, { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" }]);
+    setEntries([...entries, { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null }]);
   };
 
   const removeEntry = (index: number) => {
@@ -88,7 +90,7 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
     }
   };
 
-  const updateEntry = (index: number, field: keyof JournalEntry, value: string | number) => {
+  const updateEntry = (index: number, field: keyof JournalEntry, value: string | number | null) => {
     const newEntries = [...entries];
     newEntries[index] = { ...newEntries[index], [field]: value };
 
@@ -125,20 +127,30 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
     createJournal.mutate(
       {
         header: { journal_date: data.journal_date, description: data.description },
-        lines: entries.filter((e) => e.account_id),
+        lines: entries
+          .filter((e) => e.account_id)
+          .map((e) => ({
+            account_id: e.account_id,
+            debit_amount: e.debit_amount,
+            credit_amount: e.credit_amount,
+            memo: e.memo,
+            cost_center_id: e.cost_center_id ?? null,
+            project_id: e.project_id ?? null,
+          })),
       },
       {
         onSuccess: () => {
           onOpenChange(false);
           reset();
           setEntries([
-            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
-            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "", cost_center_id: null, project_id: null },
           ]);
         },
       },
     );
   };
+
 
 
   return (
