@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useJournalsList } from "@/hooks/accounting";
 import type { JournalRow } from "@/lib/repositories/journalRepository";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
