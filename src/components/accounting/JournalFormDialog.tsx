@@ -194,10 +194,12 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/3">الحساب</TableHead>
+                    <TableHead className="w-1/4">الحساب</TableHead>
                     <TableHead>مدين</TableHead>
                     <TableHead>دائن</TableHead>
                     <TableHead>البيان</TableHead>
+                    <TableHead>مركز التكلفة</TableHead>
+                    <TableHead>المشروع</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -254,6 +256,47 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
                           placeholder="ملاحظة..."
                         />
                       </TableCell>
+                      <TableCell>
+                        <Select
+                          value={entry.cost_center_id ?? NONE}
+                          onValueChange={(val) =>
+                            updateEntry(index, "cost_center_id", val === NONE ? null : val)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NONE}>— بدون —</SelectItem>
+                            {costCenters.map((cc) => (
+                              <SelectItem key={cc.id} value={cc.id}>
+                                {cc.code} - {cc.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={entry.project_id ?? NONE}
+                          onValueChange={(val) =>
+                            updateEntry(index, "project_id", val === NONE ? null : val)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NONE}>— بدون —</SelectItem>
+                            {projects.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.code} - {p.name_ar}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
                       <TableCell>
                         <Button
                           type="button"
