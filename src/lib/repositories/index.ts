@@ -53,5 +53,14 @@ export { employeeRepository } from './employeeRepository';
 export type { EmployeeRow, EmployeeInsert, EmployeeUpdate, EmployeeFilters } from './employeeRepository';
 export { settingsRepository } from './settingsRepository';
 export type { CompanySettingsRow, CompanySettingsUpdate, CompanySettingsInsert } from './settingsRepository';
+export { coaRepository } from './coaRepository';
+export type { AccountRow, AccountInsert, AccountUpdate, AccountTreeNode } from './coaRepository';
+export { journalRepository } from './journalRepository';
+export type { JournalRow, JournalEntryRow, JournalFilters, JournalLineInput, JournalHeaderInput } from './journalRepository';
+export { fiscalPeriodRepository } from './fiscalPeriodRepository';
+export type { FiscalPeriodRow, FiscalPeriodInsert } from './fiscalPeriodRepository';
+export { postingLogRepository } from './postingLogRepository';
+export type { PostingLogRow, EnsureAccountsResult } from './postingLogRepository';
+
 
 
