@@ -51,7 +51,11 @@ export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: Purchase
     if (!order || !items) return;
     setDownloading(true);
     try {
-      await routePdfRequest({ docType: 'purchase_order', data: { ...order, items } });
+      await routePdfRequest({
+        docType: 'purchase_order',
+        data: { ...order, items },
+        tenantId: tenantId ?? (order as { tenant_id?: string }).tenant_id ?? null,
+      });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       logErrorSafely('PurchaseOrderPrintView', error);
