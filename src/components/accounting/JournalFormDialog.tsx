@@ -113,8 +113,24 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
       toast({ title: "يجب إدخال مبالغ", variant: "destructive" });
       return;
     }
-    mutation.mutate(data);
+    createJournal.mutate(
+      {
+        header: { journal_date: data.journal_date, description: data.description },
+        lines: entries.filter((e) => e.account_id),
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          reset();
+          setEntries([
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+            { account_id: "", debit_amount: 0, credit_amount: 0, memo: "" },
+          ]);
+        },
+      },
+    );
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
