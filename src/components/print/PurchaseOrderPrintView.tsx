@@ -25,6 +25,7 @@ interface PurchaseOrderPrintViewProps {
 
 export function PurchaseOrderPrintView({ orderId, open, onOpenChange }: PurchaseOrderPrintViewProps) {
   const [downloading, setDownloading] = useState(false);
+  const { tenantId } = useTenant();
 
   const { data: settings } = useQuery({
     queryKey: ["company-settings"],
