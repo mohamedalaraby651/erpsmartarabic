@@ -12,7 +12,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { mapRepoError, unwrap, type RepoListResult } from "./_base";
+import { mapRepoError, type RepoListResult } from "./_base";
 import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 type T = Database["public"]["Tables"];
