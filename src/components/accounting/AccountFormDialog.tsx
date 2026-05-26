@@ -19,8 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 
 type Account = {
   id?: string;
@@ -254,7 +252,7 @@ const AccountFormDialog = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button type="submit" disabled={upsert.isPending}>
               {isEditing ? "حفظ التغييرات" : "إنشاء الحساب"}
             </Button>
           </div>
