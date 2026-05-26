@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useActiveAccounts, useCreateManualJournal } from "@/hooks/accounting";
 import {
   Dialog,
   DialogContent,
