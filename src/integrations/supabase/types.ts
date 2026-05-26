@@ -2457,35 +2457,44 @@ export type Database = {
       journal_entries: {
         Row: {
           account_id: string
+          cost_center_id: string | null
           created_at: string | null
           credit_amount: number | null
           debit_amount: number | null
+          department_id: string | null
           id: string
           journal_id: string
           line_number: number
           memo: string | null
+          project_id: string | null
           tenant_id: string
         }
         Insert: {
           account_id: string
+          cost_center_id?: string | null
           created_at?: string | null
           credit_amount?: number | null
           debit_amount?: number | null
+          department_id?: string | null
           id?: string
           journal_id: string
           line_number: number
           memo?: string | null
+          project_id?: string | null
           tenant_id?: string
         }
         Update: {
           account_id?: string
+          cost_center_id?: string | null
           created_at?: string | null
           credit_amount?: number | null
           debit_amount?: number | null
+          department_id?: string | null
           id?: string
           journal_id?: string
           line_number?: number
           memo?: string | null
+          project_id?: string | null
           tenant_id?: string
         }
         Relationships: [
@@ -2497,10 +2506,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "journal_entries_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_departments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "journal_entries_journal_id_fkey"
             columns: ["journal_id"]
             isOneToOne: false
             referencedRelation: "journals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_projects"
             referencedColumns: ["id"]
           },
           {
@@ -5345,6 +5375,86 @@ export type Database = {
           },
         ]
       }
+      tenant_cost_centers: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          parent_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          parent_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          parent_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_cost_centers_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_cost_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_departments: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tenant_pdf_assets: {
         Row: {
           checksum: string | null
@@ -5488,6 +5598,51 @@ export type Database = {
           updated_by?: string | null
           version?: number
           watermark?: Json
+        }
+        Relationships: []
+      }
+      tenant_projects: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          start_date: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          start_date?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          start_date?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
