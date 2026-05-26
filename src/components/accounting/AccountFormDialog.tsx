@@ -55,8 +55,8 @@ const AccountFormDialog = ({
   account,
   accounts,
 }: AccountFormDialogProps) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const upsert = useUpsertAccount();
+
   const isEditing = !!account?.id;
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<Account>({
