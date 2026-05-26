@@ -112,17 +112,6 @@ export const quotationRepository = {
   // ============================================
 
   async create(draft: QuotationDraft): Promise<{ id: string; quote_number: string }> {
-    const tenant_id = await unwrap(
-      // RPC returns the current tenant id (security definer)
-      supabase.rpc("get_current_tenant") as unknown as PromiseLike<{
-        data: string | null;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error: any;
-      }>,
-      "تعذّر تحديد المنشأة الحالية.",
-    );
-    if (!tenant_id) throw new Error("لم يتم تحديد المنشأة الحالية.");
-
     const computedSubtotal = round2(draft.items.reduce((s, it) => s + lineTotal(it), 0));
     const subtotal = round2(draft.subtotal ?? computedSubtotal);
     const discount_amount = round2(draft.discount_amount ?? 0);
@@ -131,8 +120,7 @@ export const quotationRepository = {
       draft.total_amount ?? Math.max(0, subtotal - discount_amount) + tax_amount,
     );
 
-    const headerPayload = {
-      tenant_id,
+    const header = {
       customer_id: draft.customer_id,
       quote_date: draft.quote_date,
       valid_until: draft.valid_until,
@@ -142,31 +130,34 @@ export const quotationRepository = {
       tax_amount,
       total_amount,
     };
-    const { data: header, error: hErr } = await supabase
-      .from("quotes")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .insert(headerPayload as any)
-      .select("id, quote_number")
-      .single();
-    if (hErr) throw mapRepoError(hErr, "تعذّر إنشاء عرض السعر.");
 
-    if (draft.items.length > 0) {
-      const { error: iErr } = await supabase.from("quote_items").insert(
-        draft.items.map((it) => ({
-          tenant_id,
-          quote_id: header.id,
-          product_id: it.product_id,
-          variant_id: it.variant_id ?? null,
-          quantity: round2(Number(it.quantity)),
-          unit_price: round2(Number(it.unit_price)),
-          discount_percentage: round2(Number(it.discount_percentage ?? 0)),
-          total_price: lineTotal(it),
-          notes: it.notes ?? null,
-        })),
-      );
-      if (iErr) throw mapRepoError(iErr, "تعذّر حفظ بنود العرض.");
-    }
-    return header as { id: string; quote_number: string };
+    const items = draft.items.map((it) => ({
+      product_id: it.product_id,
+      variant_id: it.variant_id ?? null,
+      quantity: round2(Number(it.quantity)),
+      unit_price: round2(Number(it.unit_price)),
+      discount_percentage: round2(Number(it.discount_percentage ?? 0)),
+      total_price: lineTotal(it),
+      notes: it.notes ?? null,
+    }));
+
+    // Atomic single-transaction save (Phase 2 RPC).
+    const { data: newId, error } = await supabase.rpc('save_quotation_with_items', {
+      p_id: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      p_header: header as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      p_items: items as any,
+    });
+    if (error) throw mapRepoError(error, 'تعذّر إنشاء عرض السعر.');
+    if (!newId) throw new Error('save_quotation_with_items returned no id');
+
+    const { data: row } = await supabase
+      .from('quotes')
+      .select('id, quote_number')
+      .eq('id', newId as string)
+      .single();
+    return (row ?? { id: newId as string, quote_number: '' }) as { id: string; quote_number: string };
   },
 
   async updateStatus(id: string, status: QuotationStatus): Promise<void> {
