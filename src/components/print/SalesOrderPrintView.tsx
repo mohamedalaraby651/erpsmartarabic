@@ -51,7 +51,11 @@ export function SalesOrderPrintView({ orderId, open, onOpenChange }: SalesOrderP
     if (!order || !items) return;
     setDownloading(true);
     try {
-      await routePdfRequest({ docType: 'sales_order', data: { ...order, items } });
+      await routePdfRequest({
+        docType: 'sales_order',
+        data: { ...order, items },
+        tenantId: tenantId ?? (order as { tenant_id?: string }).tenant_id ?? null,
+      });
       toast.success("تم تحميل ملف PDF بنجاح");
     } catch (error) {
       logErrorSafely('SalesOrderPrintView', error);
