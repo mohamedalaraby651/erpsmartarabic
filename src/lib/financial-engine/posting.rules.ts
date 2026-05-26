@@ -144,6 +144,34 @@ export const POSTING_RULES: Record<string, PostingRule> = {
       },
     ],
   },
+
+  'goods_receipt.posted': {
+    event: 'goods_receipt.posted',
+    description: 'Goods received from supplier — increase inventory, accrue GR/IR',
+    lines: [
+      { account_code: ACCOUNTS.INVENTORY, side: 'debit', amount: (ctx) => ctx.amount, memo: 'Inventory received' },
+      { account_code: ACCOUNTS.GR_IR_CLEARING, side: 'credit', amount: (ctx) => ctx.amount, memo: 'GR/IR clearing' },
+    ],
+  },
+
+  'purchase_invoice.posted': {
+    event: 'purchase_invoice.posted',
+    description: 'Supplier invoice booked — clear GR/IR, recognize input tax & AP',
+    lines: [
+      { account_code: ACCOUNTS.GR_IR_CLEARING, side: 'debit', amount: (ctx) => ctx.subtotal, memo: 'GR/IR cleared' },
+      { account_code: ACCOUNTS.TAX_INPUT, side: 'debit', amount: (ctx) => ctx.tax_amount || 0, memo: 'Input VAT' },
+      { account_code: ACCOUNTS.ACCOUNTS_PAYABLE, side: 'credit', amount: (ctx) => ctx.total_amount, memo: 'AP — supplier invoice' },
+    ],
+  },
+
+  'inventory.adjustment': {
+    event: 'inventory.adjustment',
+    description: 'Inventory adjustment (write-up or write-down)',
+    lines: [
+      { account_code: ACCOUNTS.INVENTORY, side: 'debit', amount: (ctx) => Math.max(ctx.amount, 0), memo: 'Inventory write-up' },
+      { account_code: ACCOUNTS.INVENTORY_ADJUSTMENT, side: 'credit', amount: (ctx) => Math.max(ctx.amount, 0), memo: 'Adjustment gain' },
+    ],
+  },
 };
 
 /**
