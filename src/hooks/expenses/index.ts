@@ -64,3 +64,49 @@ export function useUpdateExpense() {
     onSuccess: () => invalidateExpenseCaches(qc),
   });
 }
+
+// ============================================
+// Expense Category CRUD
+// ============================================
+
+export function useAllExpenseCategories() {
+  return useQuery({
+    queryKey: ["expense-categories-all"],
+    queryFn: () => expenseRepository.listAllCategories(),
+    ...queryPresets.reference,
+  });
+}
+
+function invalidateCategoryCaches(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["expense-categories"] });
+  qc.invalidateQueries({ queryKey: ["expense-categories-all"] });
+}
+
+export function useCreateExpenseCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof expenseRepository.createCategory>[0]) =>
+      expenseRepository.createCategory(input),
+    onSuccess: () => invalidateCategoryCaches(qc),
+  });
+}
+
+export function useUpdateExpenseCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      id: string;
+      input: Parameters<typeof expenseRepository.updateCategory>[1];
+    }) => expenseRepository.updateCategory(params.id, params.input),
+    onSuccess: () => invalidateCategoryCaches(qc),
+  });
+}
+
+export function useDeleteExpenseCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => expenseRepository.deleteCategory(id),
+    onSuccess: () => invalidateCategoryCaches(qc),
+  });
+}
+
