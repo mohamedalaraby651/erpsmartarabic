@@ -55,3 +55,42 @@ export function useCreateSupplierPayment() {
     },
   });
 }
+
+function invalidateRegisters(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["cash-registers"] });
+  qc.invalidateQueries({ queryKey: ["cash-register"] });
+}
+
+export function useCreateCashRegister() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof treasuryRepository.createRegister>[0]) =>
+      treasuryRepository.createRegister(input),
+    onSuccess: () => invalidateRegisters(qc),
+  });
+}
+
+export function useUpdateCashRegister() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      id: string;
+      input: Parameters<typeof treasuryRepository.updateRegister>[1];
+    }) => treasuryRepository.updateRegister(params.id, params.input),
+    onSuccess: () => invalidateRegisters(qc),
+  });
+}
+
+export function useRecordCashTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof treasuryRepository.recordCashTransaction>[0]) =>
+      treasuryRepository.recordCashTransaction(input),
+    onSuccess: () => {
+      invalidateRegisters(qc);
+      qc.invalidateQueries({ queryKey: ["cash-transactions"] });
+      qc.invalidateQueries({ queryKey: ["treasury-today-stats"] });
+    },
+  });
+}
+
