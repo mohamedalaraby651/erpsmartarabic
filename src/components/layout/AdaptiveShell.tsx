@@ -76,10 +76,8 @@ export function AdaptiveShell({
         {/* Main content — padded to sidebar on desktop */}
         <div
           className={cn(
-            'transition-all duration-300',
-            'lg:' + (sidebarCollapsed ? 'mr-[70px]' : 'mr-[260px]'),
-            sidebarCollapsed ? 'lg:mr-[70px]' : 'lg:mr-[260px]',
-            'pb-12 lg:pb-0'
+            'transition-all duration-300 pb-12 lg:pb-0',
+            sidebarCollapsed ? 'lg:mr-[70px]' : 'lg:mr-[260px]'
           )}
         >
           <div className="hidden lg:block">
