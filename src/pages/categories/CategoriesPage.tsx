@@ -120,7 +120,7 @@ const CategoriesPage = () => {
           onEdit={() => handleEdit(category)}
           onDelete={() => {
             if (confirm('هل أنت متأكد من حذف هذا التصنيف؟')) {
-              deleteMutation.mutate(category.id);
+              handleDelete(category.id);
             }
           }}
           rightContent={
@@ -168,7 +168,7 @@ const CategoriesPage = () => {
               size="icon"
               onClick={() => {
                 if (confirm('هل أنت متأكد من حذف هذا التصنيف؟')) {
-                  deleteMutation.mutate(category.id);
+                  handleDelete(category.id);
                 }
               }}
             >
