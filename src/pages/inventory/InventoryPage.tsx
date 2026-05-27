@@ -126,7 +126,7 @@ const InventoryPage = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={() => warehouseToDelete && deleteWarehouseMutation.mutate(warehouseToDelete)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+            <AlertDialogAction onClick={() => warehouseToDelete && handleDeleteWarehouse(warehouseToDelete)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
