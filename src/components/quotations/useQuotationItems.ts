@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { legacyQuotationsRepository } from '@/lib/repositories/legacyQuotationsRepository';
 import type { Database } from '@/integrations/supabase/types';
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -40,12 +40,8 @@ export function useQuotationItems({
   const [discountAmount, setDiscountAmount] = useState<number>(0);
 
   const loadItems = useCallback(async (quotationId: string) => {
-    const { data, error } = await supabase
-      .from('quotation_items')
-      .select('*, products(name)')
-      .eq('quotation_id', quotationId);
-
-    if (!error && data) {
+    try {
+      const data = await legacyQuotationsRepository.listItemsForEditor(quotationId);
       type LoadedItem = {
         product_id: string;
         quantity: number;
@@ -54,7 +50,7 @@ export function useQuotationItems({
         total_price: number;
         products: { name: string } | null;
       };
-      setItems((data as LoadedItem[]).map((item) => ({
+      setItems((data as unknown as LoadedItem[]).map((item) => ({
         product_id: item.product_id,
         product_name: item.products?.name || '',
         quantity: Number(item.quantity),
@@ -62,6 +58,8 @@ export function useQuotationItems({
         discount_percentage: r2(Number(item.discount_percentage) || 0),
         total_price: r2(Number(item.total_price)),
       })));
+    } catch {
+      setItems([]);
     }
   }, []);
 

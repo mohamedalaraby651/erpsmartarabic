@@ -2,10 +2,13 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
+import { mapRepoError } from '@/lib/repositories/_base';
+import {
+  useCreateExpenseCategory,
+  useUpdateExpenseCategory,
+} from '@/hooks/expenses';
 import {
   Dialog,
   DialogContent,
@@ -48,16 +51,14 @@ interface ExpenseCategoryFormDialogProps {
 
 export function ExpenseCategoryFormDialog({ open, onOpenChange, category }: ExpenseCategoryFormDialogProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isEditing = !!category;
+  const createMutation = useCreateExpenseCategory();
+  const updateMutation = useUpdateExpenseCategory();
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      is_active: true,
-    },
+    defaultValues: { name: '', description: '', is_active: true },
   });
 
   useEffect(() => {
@@ -68,53 +69,33 @@ export function ExpenseCategoryFormDialog({ open, onOpenChange, category }: Expe
         is_active: category.is_active,
       });
     } else {
-      form.reset({
-        name: '',
-        description: '',
-        is_active: true,
-      });
+      form.reset({ name: '', description: '', is_active: true });
     }
   }, [category, form]);
 
-  const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      if (isEditing) {
-        const { error } = await supabase
-          .from('expense_categories')
-          .update({
-            name: data.name,
-            description: data.description || null,
-            is_active: data.is_active,
-          })
-          .eq('id', category.id);
-        
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('expense_categories')
-          .insert({
-            name: data.name,
-            description: data.description || null,
-            is_active: data.is_active,
-          });
-        
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expense-categories'] });
+  const onSubmit = (data: FormData) => {
+    const input = {
+      name: data.name,
+      description: data.description || null,
+      is_active: data.is_active,
+    };
+
+    const handleSuccess = () => {
       toast({ title: isEditing ? 'تم تحديث التصنيف' : 'تم إضافة التصنيف' });
       onOpenChange(false);
       form.reset();
-    },
-    onError: (error) => {
+    };
+    const handleError = (error: unknown) => {
       logErrorSafely('ExpenseCategoryFormDialog', error);
-      toast({ title: 'حدث خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
-    },
-  });
+      const description = mapRepoError(error, getSafeErrorMessage(error)).message;
+      toast({ title: 'حدث خطأ', description, variant: 'destructive' });
+    };
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
+    if (isEditing && category) {
+      updateMutation.mutate({ id: category.id, input }, { onSuccess: handleSuccess, onError: handleError });
+    } else {
+      createMutation.mutate(input, { onSuccess: handleSuccess, onError: handleError });
+    }
   };
 
   return (
@@ -167,8 +148,8 @@ export function ExpenseCategoryFormDialog({ open, onOpenChange, category }: Expe
             />
 
             <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-                {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+              <Button type="submit" className="flex-1" disabled={isPending}>
+                {isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 إلغاء

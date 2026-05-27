@@ -1,6 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useCallback } from 'react';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -12,9 +10,14 @@ import { MobileListSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { DataCard } from '@/components/mobile/DataCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
-import { VirtualizedTable, VirtualColumn } from '@/components/table/VirtualizedTable';
 import { Plus, FolderTree, Pencil, Trash2 } from 'lucide-react';
 import { ExpenseCategoryFormDialog } from '@/components/expenses/ExpenseCategoryFormDialog';
+import {
+  useAllExpenseCategories,
+  useDeleteExpenseCategory,
+} from '@/hooks/expenses';
+import { mapRepoError } from '@/lib/repositories/_base';
+import { getSafeErrorMessage } from '@/lib/errorHandler';
 import {
   Table,
   TableBody,
@@ -51,39 +54,14 @@ export default function ExpenseCategoriesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const queryClient = useQueryClient();
 
-  const { data: categories, isLoading, refetch } = useQuery({
-    queryKey: ['expense-categories-all'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expense_categories')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data as ExpenseCategory[];
-    },
-  });
+  const { data: categories, isLoading, refetch } = useAllExpenseCategories() as {
+    data?: ExpenseCategory[];
+    isLoading: boolean;
+    refetch: () => Promise<unknown>;
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('expense_categories')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expense-categories'] });
-      toast({ title: 'تم حذف التصنيف' });
-      setDeleteId(null);
-    },
-    onError: () => {
-      toast({ title: 'لا يمكن حذف التصنيف', description: 'قد يكون مرتبطًا بمصروفات', variant: 'destructive' });
-    },
-  });
+  const deleteMutation = useDeleteExpenseCategory();
 
   const handleEdit = useCallback((category: ExpenseCategory) => {
     setSelectedCategory(category);
@@ -99,20 +77,36 @@ export default function ExpenseCategoriesPage() {
     await refetch();
   }, [refetch]);
 
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteId) return;
+    deleteMutation.mutate(deleteId, {
+      onSuccess: () => {
+        toast({ title: 'تم حذف التصنيف' });
+        setDeleteId(null);
+      },
+      onError: (error) => {
+        const description = mapRepoError(error, getSafeErrorMessage(error)).message;
+        toast({ title: 'حدث خطأ', description, variant: 'destructive' });
+      },
+    });
+  }, [deleteId, deleteMutation, toast]);
+
   const shouldVirtualize = (categories?.length ?? 0) > VIRTUALIZATION_THRESHOLD;
 
-  // Memoized mobile item renderer
-  const renderMobileCategoryItem = useCallback((category: ExpenseCategory) => (
-    <DataCard
-      title={category.name}
-      subtitle={category.description || 'بدون وصف'}
-      badge={{
-        text: category.is_active ? 'نشط' : 'غير نشط',
-        variant: category.is_active ? 'default' : 'secondary',
-      }}
-      onClick={() => handleEdit(category)}
-    />
-  ), [handleEdit]);
+  const renderMobileCategoryItem = useCallback(
+    (category: ExpenseCategory) => (
+      <DataCard
+        title={category.name}
+        subtitle={category.description || 'بدون وصف'}
+        badge={{
+          text: category.is_active ? 'نشط' : 'غير نشط',
+          variant: category.is_active ? 'default' : 'secondary',
+        }}
+        onClick={() => handleEdit(category)}
+      />
+    ),
+    [handleEdit],
+  );
 
   const content = (
     <div className="space-y-6">
@@ -178,15 +172,15 @@ export default function ExpenseCategoriesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button 
-                        size="icon" 
+                      <Button
+                        size="icon"
                         variant="ghost"
                         onClick={() => handleEdit(category)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        size="icon" 
+                      <Button
+                        size="icon"
                         variant="ghost"
                         className="text-destructive"
                         onClick={() => setDeleteId(category.id)}
@@ -220,7 +214,7 @@ export default function ExpenseCategoriesPage() {
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
-              onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+              onClick={handleConfirmDelete}
             >
               حذف
             </AlertDialogAction>
@@ -233,9 +227,7 @@ export default function ExpenseCategoriesPage() {
   if (isMobile) {
     return (
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="p-4">
-          {content}
-        </div>
+        <div className="p-4">{content}</div>
       </PullToRefresh>
     );
   }

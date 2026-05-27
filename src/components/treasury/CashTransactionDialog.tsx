@@ -1,10 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
+import { mapRepoError } from '@/lib/repositories/_base';
+import { useRecordCashTransaction } from '@/hooks/treasury';
+import { expenseRepository } from '@/lib/repositories/expenseRepository';
 import {
   Dialog,
   DialogContent,
@@ -44,88 +45,48 @@ interface CashTransactionDialogProps {
   transactionType: 'income' | 'expense';
 }
 
-export function CashTransactionDialog({ 
-  open, 
-  onOpenChange, 
-  register, 
-  transactionType 
+export function CashTransactionDialog({
+  open,
+  onOpenChange,
+  register,
+  transactionType,
 }: CashTransactionDialogProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isIncome = transactionType === 'income';
+  const recordMutation = useRecordCashTransaction();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      amount: 0,
-      description: '',
-    },
+    defaultValues: { amount: 0, description: '' },
   });
 
-  const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const currentBalance = Number(register.current_balance);
-      const amount = Number(data.amount);
-      const newBalance = isIncome ? currentBalance + amount : currentBalance - amount;
-
-      // Check if withdrawal is possible
-      if (!isIncome && newBalance < 0) {
-        throw new Error('الرصيد غير كافي لإتمام عملية السحب');
-      }
-
-      const user = await supabase.auth.getUser();
-
-      // Generate transaction number
-      const txnNumber = `TXN-${Date.now()}`;
-
-      // Insert transaction
-      const { error: txnError } = await supabase
-        .from('cash_transactions')
-        .insert({
-          transaction_number: txnNumber,
-          register_id: register.id,
-          transaction_type: transactionType,
-          amount: amount,
-          balance_after: newBalance,
-          description: data.description || null,
-          reference_type: 'manual',
-          created_by: user.data.user?.id,
-        });
-
-      if (txnError) throw txnError;
-
-      // Update register balance
-      const { error: regError } = await supabase
-        .from('cash_registers')
-        .update({ current_balance: newBalance })
-        .eq('id', register.id);
-
-      if (regError) throw regError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cash-registers'] });
-      queryClient.invalidateQueries({ queryKey: ['cash-register'] });
-      queryClient.invalidateQueries({ queryKey: ['cash-transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['treasury-today-stats'] });
-      toast({ 
-        title: isIncome ? 'تم الإيداع بنجاح' : 'تم السحب بنجاح',
-        description: `المبلغ: ${form.getValues('amount').toLocaleString()} ج.م`,
-      });
-      onOpenChange(false);
-      form.reset();
-    },
-    onError: (error) => {
-      logErrorSafely('CashTransactionDialog', error);
-      toast({ 
-        title: 'حدث خطأ', 
-        description: getSafeErrorMessage(error), 
-        variant: 'destructive' 
-      });
-    },
-  });
-
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
+  const onSubmit = async (data: FormData) => {
+    const userId = await expenseRepository.getCurrentUserId();
+    recordMutation.mutate(
+      {
+        registerId: register.id,
+        currentBalance: Number(register.current_balance),
+        transactionType,
+        amount: Number(data.amount),
+        description: data.description || null,
+        userId,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: isIncome ? 'تم الإيداع بنجاح' : 'تم السحب بنجاح',
+            description: `المبلغ: ${form.getValues('amount').toLocaleString()} ج.م`,
+          });
+          onOpenChange(false);
+          form.reset();
+        },
+        onError: (error) => {
+          logErrorSafely('CashTransactionDialog', error);
+          const description = mapRepoError(error, getSafeErrorMessage(error)).message;
+          toast({ title: 'حدث خطأ', description, variant: 'destructive' });
+        },
+      },
+    );
   };
 
   return (
@@ -163,12 +124,7 @@ export function CashTransactionDialog({
                 <FormItem>
                   <FormLabel>المبلغ *</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="0" 
-                      {...field}
-                      className="text-lg"
-                    />
+                    <Input type="number" placeholder="0" {...field} className="text-lg" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -182,9 +138,9 @@ export function CashTransactionDialog({
                 <FormItem>
                   <FormLabel>الوصف / السبب</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder={isIncome ? 'مثال: إيراد مبيعات نقدية' : 'مثال: مصروفات يومية'}
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -195,25 +151,31 @@ export function CashTransactionDialog({
             {form.watch('amount') > 0 && (
               <div className="p-3 rounded-lg border">
                 <p className="text-sm text-muted-foreground">الرصيد بعد العملية</p>
-                <p className={`text-xl font-bold ${
-                  isIncome ? 'text-emerald-600 dark:text-emerald-400' : 
-                  (Number(register.current_balance) - form.watch('amount')) < 0 ? 'text-destructive' : ''
-                }`}>
-                  {(isIncome 
+                <p
+                  className={`text-xl font-bold ${
+                    isIncome
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : Number(register.current_balance) - form.watch('amount') < 0
+                        ? 'text-destructive'
+                        : ''
+                  }`}
+                >
+                  {(isIncome
                     ? Number(register.current_balance) + Number(form.watch('amount'))
                     : Number(register.current_balance) - Number(form.watch('amount'))
-                  ).toLocaleString()} ج.م
+                  ).toLocaleString()}{' '}
+                  ج.م
                 </p>
               </div>
             )}
 
             <div className="flex gap-2 pt-4">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className={`flex-1 ${isIncome ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-destructive hover:bg-destructive/90'}`}
-                disabled={mutation.isPending}
+                disabled={recordMutation.isPending}
               >
-                {mutation.isPending ? 'جاري التنفيذ...' : isIncome ? 'تأكيد الإيداع' : 'تأكيد السحب'}
+                {recordMutation.isPending ? 'جاري التنفيذ...' : isIncome ? 'تأكيد الإيداع' : 'تأكيد السحب'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 إلغاء

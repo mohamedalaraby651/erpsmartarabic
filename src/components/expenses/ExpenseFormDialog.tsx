@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { expenseRepository } from '@/lib/repositories/expenseRepository';
 import { listActiveSuppliersForSelect } from '@/lib/repositories/supplierRepository';
+import { useCreateExpense, useUpdateExpense } from '@/hooks/expenses';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -33,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
+import { mapRepoError } from '@/lib/repositories/_base';
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 
@@ -67,8 +68,10 @@ interface ExpenseFormDialogProps {
 
 export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDialogProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isEditing = !!expense;
+  const createMutation = useCreateExpense();
+  const updateMutation = useUpdateExpense();
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -85,19 +88,16 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
 
   const paymentMethod = form.watch('payment_method');
 
-  // Fetch categories
   const { data: categories } = useQuery({
     queryKey: ['expense-categories'],
     queryFn: () => expenseRepository.listCategories(),
   });
 
-  // Fetch cash registers
   const { data: registers } = useQuery({
     queryKey: ['cash-registers-active'],
     queryFn: () => expenseRepository.listActiveCashRegisters(),
   });
 
-  // Fetch suppliers
   const { data: suppliers } = useQuery({
     queryKey: ['suppliers-active'],
     queryFn: () => listActiveSuppliersForSelect(),
@@ -127,42 +127,35 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
     }
   }, [expense, form]);
 
-  const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const user = await supabase.auth.getUser();
+  const onSubmit = async (data: FormData) => {
+    const userId = await expenseRepository.getCurrentUserId();
+    const input = {
+      category_id: data.category_id || null,
+      amount: data.amount,
+      payment_method: data.payment_method,
+      register_id: data.register_id || null,
+      expense_date: data.expense_date,
+      description: data.description || null,
+      supplier_id: data.supplier_id || null,
+      created_by: userId,
+    };
 
-      const input = {
-        category_id: data.category_id || null,
-        amount: data.amount,
-        payment_method: data.payment_method,
-        register_id: data.register_id || null,
-        expense_date: data.expense_date,
-        description: data.description || null,
-        supplier_id: data.supplier_id || null,
-        created_by: user.data.user?.id ?? null,
-      };
-
-      if (isEditing && expense) {
-        await expenseRepository.update(expense.id, input);
-      } else {
-        await expenseRepository.create(input);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['expenses-stats'] });
+    const handleSuccess = () => {
       toast({ title: isEditing ? 'تم تحديث المصروف' : 'تم إضافة المصروف' });
       onOpenChange(false);
       form.reset();
-    },
-    onError: (error) => {
+    };
+    const handleError = (error: unknown) => {
       logErrorSafely('ExpenseFormDialog', error);
-      toast({ title: 'حدث خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
-    },
-  });
+      const description = mapRepoError(error, getSafeErrorMessage(error)).message;
+      toast({ title: 'حدث خطأ', description, variant: 'destructive' });
+    };
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
+    if (isEditing && expense) {
+      updateMutation.mutate({ id: expense.id, input }, { onSuccess: handleSuccess, onError: handleError });
+    } else {
+      createMutation.mutate(input, { onSuccess: handleSuccess, onError: handleError });
+    }
   };
 
   const formContent = (
@@ -181,8 +174,8 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
 
   const formFooter = (
     <div className="flex gap-2">
-      <Button className="flex-1" disabled={mutation.isPending} onClick={form.handleSubmit(onSubmit)}>
-        {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+      <Button className="flex-1" disabled={isPending} onClick={form.handleSubmit(onSubmit)}>
+        {isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
       </Button>
       <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
     </div>
@@ -194,7 +187,7 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
         <DialogHeader><DialogTitle>{isEditing ? 'تعديل المصروف' : 'مصروف جديد'}</DialogTitle></DialogHeader>
         {formContent}
         <div className="flex gap-2 pt-4">
-          <Button className="flex-1" disabled={mutation.isPending} onClick={form.handleSubmit(onSubmit)}>{mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}</Button>
+          <Button className="flex-1" disabled={isPending} onClick={form.handleSubmit(onSubmit)}>{isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}</Button>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
         </div>
       </DialogContent>

@@ -1,34 +1,20 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useCollectionInvoices } from '@/hooks/collections';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { format, differenceInDays, parseISO } from 'date-fns';
-import { AlertTriangle, Clock, DollarSign, Users, TrendingDown, CreditCard, ArrowLeft } from 'lucide-react';
+import { differenceInDays, parseISO } from 'date-fns';
+import { AlertTriangle, Clock, DollarSign, Users, TrendingDown, CreditCard } from 'lucide-react';
 import { DataCard } from '@/components/mobile/DataCard';
 
 const CollectionDashboard = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Fetch unpaid/partial invoices with customer info
-  const { data: unpaidInvoices = [], isLoading } = useQuery({
-    queryKey: ['collection-invoices'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('invoices')
-        .select('id, invoice_number, total_amount, paid_amount, due_date, created_at, payment_status, customers(id, name, phone)')
-        .in('payment_status', ['pending', 'partial'])
-        .neq('status', 'cancelled')
-        .order('due_date', { ascending: true });
-      return data || [];
-    },
-  });
+  const { data: unpaidInvoices = [] } = useCollectionInvoices();
 
   const today = new Date();
 
@@ -51,11 +37,10 @@ const CollectionDashboard = () => {
     return { overdue, overdueAmount, dueSoon, dueSoonAmount, totalUnpaid, total: unpaidInvoices.length };
   }, [unpaidInvoices]);
 
-  // Top 10 debtors
   const topDebtors = useMemo(() => {
     const debtorMap = new Map<string, { name: string; phone: string | null; customerId: string; total: number; count: number }>();
     unpaidInvoices.forEach(inv => {
-      const cust = inv.customers as { id: string; name: string; phone: string | null } | null;
+      const cust = inv.customers;
       if (!cust) return;
       const existing = debtorMap.get(cust.id) || { name: cust.name, phone: cust.phone, customerId: cust.id, total: 0, count: 0 };
       existing.total += Number(inv.total_amount) - Number(inv.paid_amount || 0);
@@ -65,7 +50,6 @@ const CollectionDashboard = () => {
     return Array.from(debtorMap.values()).sort((a, b) => b.total - a.total).slice(0, 10);
   }, [unpaidInvoices]);
 
-  // Aging buckets
   const aging = useMemo(() => {
     const buckets = { current: 0, days30: 0, days60: 0, days90: 0, over90: 0 };
     unpaidInvoices.forEach(inv => {
@@ -101,7 +85,6 @@ const CollectionDashboard = () => {
         </Button>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-destructive/30">
           <CardContent className="p-4">
@@ -153,7 +136,6 @@ const CollectionDashboard = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Top Debtors */}
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><TrendingDown className="h-5 w-5" /> أكبر 10 مدينين</CardTitle></CardHeader>
           <CardContent className="space-y-3">
@@ -174,7 +156,6 @@ const CollectionDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Aging Report */}
         <Card>
           <CardHeader><CardTitle>أعمار الديون</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -199,14 +180,13 @@ const CollectionDashboard = () => {
         </Card>
       </div>
 
-      {/* Overdue invoices list */}
       <Card>
         <CardHeader><CardTitle>الفواتير المستحقة</CardTitle></CardHeader>
         <CardContent className="p-0">
           {isMobile ? (
             <div className="p-4 space-y-3">
               {unpaidInvoices.slice(0, 20).map(inv => {
-                const cust = inv.customers as { name: string } | null;
+                const cust = inv.customers;
                 const remaining = Number(inv.total_amount) - Number(inv.paid_amount || 0);
                 return (
                   <DataCard key={inv.id} title={cust?.name || ''} subtitle={inv.invoice_number}
@@ -233,7 +213,7 @@ const CollectionDashboard = () => {
               </TableHeader>
               <TableBody>
                 {unpaidInvoices.slice(0, 30).map(inv => {
-                  const cust = inv.customers as { name: string } | null;
+                  const cust = inv.customers;
                   const remaining = Number(inv.total_amount) - Number(inv.paid_amount || 0);
                   return (
                     <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${inv.id}`)}>

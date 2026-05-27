@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +7,7 @@ import {
   useConvertOrderToInvoice,
   useConvertInvoiceToDelivery,
 } from "@/hooks/sales-cycle/useQuotes";
+import { usePipelineOrders, usePipelineInvoices } from "@/hooks/quotations";
 import { useNavigate } from "react-router-dom";
 
 export default function SalesPipelinePage() {
@@ -18,33 +17,8 @@ export default function SalesPipelinePage() {
 
   const [tab, setTab] = useState<"orders" | "invoices">("orders");
 
-  const orders = useQuery({
-    queryKey: ["pipeline-orders"],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("sales_orders")
-        .select("id, order_number, total_amount, status, created_at, customers(name)")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: tab === "orders",
-  });
-
-  const invoices = useQuery({
-    queryKey: ["pipeline-invoices"],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("invoices")
-        .select("id, invoice_number, total_amount, status, payment_status, created_at, customers(name)")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: tab === "invoices",
-  });
+  const orders = usePipelineOrders(tab === "orders");
+  const invoices = usePipelineInvoices(tab === "invoices");
 
   return (
     <div className="container mx-auto p-4 space-y-4">
