@@ -9,8 +9,18 @@ export default {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        "2xl": "1600px",
       },
+    },
+    screens: {
+      xs: "420px",
+      sm: "640px",
+      md: "768px",
+      tablet: "900px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+      "3xl": "1600px",
     },
     extend: {
       fontFamily: {
