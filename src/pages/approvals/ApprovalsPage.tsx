@@ -133,8 +133,8 @@ const ApprovalsPage = () => {
               <Button
                 size="sm"
                 className="gap-1"
-                onClick={() => approveMutation.mutate(record.id)}
-                disabled={approveMutation.isPending}
+                onClick={() => handleApprove(record.id)}
+                disabled={executeMutation.isPending}
               >
                 <CheckCircle2 className="h-4 w-4" />
                 موافقة
@@ -172,7 +172,7 @@ const ApprovalsPage = () => {
         )}
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ApprovalStatusFilter)}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="pending" className="gap-1">
             <Clock className="h-4 w-4" />
@@ -229,12 +229,12 @@ const ApprovalsPage = () => {
               variant="destructive"
               onClick={() => {
                 if (rejectingId && rejectionReason.trim()) {
-                  rejectMutation.mutate({ recordId: rejectingId, reason: rejectionReason });
+                  handleReject(rejectingId, rejectionReason.trim());
                 }
               }}
-              disabled={!rejectionReason.trim() || rejectMutation.isPending}
+              disabled={!rejectionReason.trim() || executeMutation.isPending}
             >
-              {rejectMutation.isPending ? 'جاري الرفض...' : 'تأكيد الرفض'}
+              {executeMutation.isPending ? 'جاري الرفض...' : 'تأكيد الرفض'}
             </Button>
           </DialogFooter>
         </DialogContent>
