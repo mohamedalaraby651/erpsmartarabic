@@ -152,7 +152,8 @@ export default function ExpensesPage() {
     },
     onError: (error: unknown) => {
       logErrorSafely('ExpensesPage.approveMutation', error);
-      toast({ title: 'حدث خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
+      const mapped = mapRepoError(error, getSafeErrorMessage(error));
+      toast({ title: 'حدث خطأ', description: mapped.message, variant: 'destructive' });
     },
   });
 
