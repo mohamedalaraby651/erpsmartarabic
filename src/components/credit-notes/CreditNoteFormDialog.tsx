@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  useInvoicesForCreditNote,
+  useInvoiceItemsForCredit,
+  useInvoiceItemReturnsSummary,
+  useCreateCreditNoteDraft,
+} from '@/hooks/credit-notes';
+import { useQuery } from '@tanstack/react-query';
+import { creditNoteRepository } from '@/lib/repositories/creditNoteRepository';
+import { mapRepoError } from '@/lib/repositories/_base';
 import { useAuth } from '@/hooks/useAuth';
 import {
   ResponsiveDialog as Dialog,
@@ -77,64 +84,16 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
   }, [open, prefillCustomerId]);
 
   const { data: customers = [] } = useQuery({
-    queryKey: ['customers-select'],
-    queryFn: async () => {
-      const { data } = await supabase.from('customers_safe').select('id, name').eq('is_active', true).order('name');
-      return data || [];
-    },
+    queryKey: ['credit-customers-select'],
+    queryFn: () => creditNoteRepository.listCustomersForSelect(),
     enabled: open,
   });
 
-  const { data: invoices = [] } = useQuery({
-    queryKey: ['invoices-for-credit', customerId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('invoices')
-        .select('id, invoice_number, total_amount, paid_amount')
-        .eq('customer_id', customerId)
-        .neq('status', 'cancelled')
-        .order('created_at', { ascending: false });
-      return data || [];
-    },
-    enabled: !!customerId && open,
-  });
+  const { data: invoices = [] } = useInvoicesForCreditNote(customerId, open);
 
-  // Load invoice items + already-returned quantities for this invoice
-  const { data: invoiceItems = [], isLoading: loadingItems } = useQuery({
-    queryKey: ['invoice-items-for-credit', invoiceId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('invoice_items')
-        .select('id, product_id, quantity, unit_price, total_price, products:product_id(name, sku)')
-        .eq('invoice_id', invoiceId);
-      if (error) throw error;
-      return (data ?? []) as unknown as InvoiceItemRow[];
-    },
-    enabled: !!invoiceId && open,
-  });
+  const { data: invoiceItems = [], isLoading: loadingItems } = useInvoiceItemsForCredit(invoiceId, open);
 
-  // Use the aggregated view: confirmed + draft return progress per invoice item
-  const { data: returnsMap = {} } = useQuery({
-    queryKey: ['invoice-item-returns-summary', invoiceId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('invoice_item_returns_summary' as any)
-        .select('invoice_item_id, confirmed_returned_qty, draft_returned_qty, remaining_qty')
-        .eq('invoice_id', invoiceId);
-      if (error) throw error;
-      const map: Record<string, { confirmed: number; draft: number; remaining: number }> = {};
-      (data ?? []).forEach((r: any) => {
-        if (!r.invoice_item_id) return;
-        map[r.invoice_item_id] = {
-          confirmed: Number(r.confirmed_returned_qty || 0),
-          draft: Number(r.draft_returned_qty || 0),
-          remaining: Number(r.remaining_qty || 0),
-        };
-      });
-      return map;
-    },
-    enabled: !!invoiceId && open,
-  });
+  const { data: returnsMap = {} } = useInvoiceItemReturnsSummary(invoiceId, open);
 
   // Build return-lines whenever invoice items / returns summary change
   useEffect(() => {
