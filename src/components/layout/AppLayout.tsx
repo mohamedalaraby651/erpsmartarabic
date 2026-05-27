@@ -1,14 +1,11 @@
-import { lazy } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
-import { useEffect } from 'react';
 import { AdaptiveShell } from './AdaptiveShell';
-
-// Lazy chunks are pulled inside AdaptiveShell — no direct lazy import needed here.
 
 export default function AppLayout() {
   const { user, loading, initError, retryInit } = useAuth();
