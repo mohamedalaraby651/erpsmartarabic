@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,19 +15,11 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-
-interface ApprovalRecord {
-  id: string;
-  entity_type: string;
-  entity_id: string;
-  status: string;
-  current_level: number;
-  approved_by: string[] | null;
-  rejection_reason: string | null;
-  escalated_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import {
+  usePendingApprovals,
+  useExecuteApprovalAction,
+} from '@/hooks/approvals';
+import type { ApprovalRecord, ApprovalStatusFilter } from '@/lib/repositories/approvalRepository';
 
 const statusLabels: Record<string, string> = {
   pending: 'معلقة',
@@ -54,71 +44,44 @@ const entityLabels: Record<string, string> = {
 
 const ApprovalsPage = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState<ApprovalStatusFilter>('pending');
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const { data: records = [], isLoading } = useQuery({
-    queryKey: ['approval-records', activeTab],
-    queryFn: async () => {
-      let query = supabase
-        .from('approval_records')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (activeTab !== 'all') {
-        query = query.eq('status', activeTab);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as ApprovalRecord[];
-    },
-    enabled: !!user,
+  const { data: records = [], isLoading } = usePendingApprovals({
+    status: activeTab,
   });
 
-  const approveMutation = useMutation({
-    mutationFn: async (recordId: string) => {
-      const record = records.find((r) => r.id === recordId);
-      if (!record) throw new Error('Record not found');
+  const executeMutation = useExecuteApprovalAction();
 
-      const newApprovedBy = [...(record.approved_by || []), user?.id];
-      const { error } = await supabase
-        .from('approval_records')
-        .update({
-          approved_by: newApprovedBy,
-          status: 'approved',
-          current_level: record.current_level + 1,
-        })
-        .eq('id', recordId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['approval-records'] });
-      toast.success('تمت الموافقة بنجاح');
-    },
-    onError: () => toast.error('حدث خطأ أثناء الموافقة'),
-  });
+  const handleApprove = (recordId: string) => {
+    executeMutation.mutate(
+      { recordId, action: 'approve', userId: user?.id },
+      {
+        onSuccess: () => toast.success('تمت الموافقة بنجاح'),
+        onError: (err: unknown) =>
+          toast.error((err as Error)?.message || 'حدث خطأ أثناء الموافقة'),
+      },
+    );
+  };
 
-  const rejectMutation = useMutation({
-    mutationFn: async ({ recordId, reason }: { recordId: string; reason: string }) => {
-      const { error } = await supabase
-        .from('approval_records')
-        .update({ status: 'rejected', rejection_reason: reason })
-        .eq('id', recordId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['approval-records'] });
-      toast.success('تم رفض الطلب');
-      setRejectDialogOpen(false);
-      setRejectingId(null);
-      setRejectionReason('');
-    },
-    onError: () => toast.error('حدث خطأ أثناء الرفض'),
-  });
+  const handleReject = (recordId: string, reason: string) => {
+    executeMutation.mutate(
+      { recordId, action: 'reject', rejectionReason: reason },
+      {
+        onSuccess: () => {
+          toast.success('تم رفض الطلب');
+          setRejectDialogOpen(false);
+          setRejectingId(null);
+          setRejectionReason('');
+        },
+        onError: (err: unknown) =>
+          toast.error((err as Error)?.message || 'حدث خطأ أثناء الرفض'),
+      },
+    );
+  };
+
 
   const pendingCount = records.filter((r) => r.status === 'pending').length;
 
