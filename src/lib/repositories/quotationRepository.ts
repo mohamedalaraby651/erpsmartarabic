@@ -196,4 +196,28 @@ export const quotationRepository = {
     if (error) throw mapRepoError(error, "فشل إنشاء إذن التسليم.");
     return data as string;
   },
+
+  // ============================================
+  // Pipeline aggregates (sales pipeline page)
+  // ============================================
+
+  async listPipelineOrders(limit = 50) {
+    const { data, error } = await supabase
+      .from("sales_orders")
+      .select("id, order_number, total_amount, status, created_at, customers(name)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw mapRepoError(error, "تعذّر تحميل أوامر البيع.");
+    return data ?? [];
+  },
+
+  async listPipelineInvoices(limit = 50) {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("id, invoice_number, total_amount, status, payment_status, created_at, customers(name)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw mapRepoError(error, "تعذّر تحميل الفواتير.");
+    return data ?? [];
+  },
 };

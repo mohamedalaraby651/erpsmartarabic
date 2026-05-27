@@ -61,6 +61,10 @@ export { fiscalPeriodRepository } from './fiscalPeriodRepository';
 export type { FiscalPeriodRow, FiscalPeriodInsert } from './fiscalPeriodRepository';
 export { postingLogRepository } from './postingLogRepository';
 export type { PostingLogRow, EnsureAccountsResult } from './postingLogRepository';
+export { categoryRepository } from './categoryRepository';
+export type { ProductCategoryRow, CategoryTreeNode } from './categoryRepository';
+export { collectionRepository } from './collectionRepository';
+export type { CollectionInvoiceRow } from './collectionRepository';
 
 
 

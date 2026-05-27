@@ -114,4 +114,49 @@ export const expenseRepository = {
     if (error) throw mapRepoError(error, "تعذّر تحميل الصناديق.");
     return data ?? [];
   },
+
+  // ----- Category CRUD (admin screens) -----
+  async listAllCategories() {
+    const { data, error } = await supabase
+      .from("expense_categories")
+      .select("*")
+      .order("name");
+    if (error) throw mapRepoError(error, "تعذّر تحميل تصنيفات المصروفات.");
+    return data ?? [];
+  },
+
+  async createCategory(input: { name: string; description?: string | null; is_active?: boolean }) {
+    const { error } = await supabase.from("expense_categories").insert({
+      name: input.name,
+      description: input.description ?? null,
+      is_active: input.is_active ?? true,
+    });
+    if (error) throw mapRepoError(error, "تعذّر إضافة التصنيف.");
+  },
+
+  async updateCategory(
+    id: string,
+    input: { name: string; description?: string | null; is_active?: boolean },
+  ) {
+    const { error } = await supabase
+      .from("expense_categories")
+      .update({
+        name: input.name,
+        description: input.description ?? null,
+        is_active: input.is_active ?? true,
+      })
+      .eq("id", id);
+    if (error) throw mapRepoError(error, "تعذّر تحديث التصنيف.");
+  },
+
+  async deleteCategory(id: string) {
+    const { error } = await supabase.from("expense_categories").delete().eq("id", id);
+    if (error) throw mapRepoError(error, "لا يمكن حذف التصنيف. قد يكون مرتبطًا بمصروفات.");
+  },
+
+  /** Helper for ExpenseFormDialog — fetches auth user once. */
+  async getCurrentUserId(): Promise<string | null> {
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id ?? null;
+  },
 };

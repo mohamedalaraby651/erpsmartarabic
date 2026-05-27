@@ -47,4 +47,27 @@ export const referenceRepository = {
     if (error) throw mapRepoError(error, "تعذّر تحميل الموردين.");
     return data ?? [];
   },
+
+  /** Safe view (PII-masked when applicable). */
+  async listCustomersSafe(limit = 1000) {
+    const { data, error } = await supabase
+      .from("customers_safe")
+      .select("*")
+      .eq("is_active", true)
+      .order("name")
+      .limit(limit);
+    if (error) throw mapRepoError(error, "تعذّر تحميل العملاء.");
+    return data ?? [];
+  },
+
+  async listActiveProducts(limit = 1000) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true)
+      .order("name")
+      .limit(limit);
+    if (error) throw mapRepoError(error, "تعذّر تحميل المنتجات.");
+    return data ?? [];
+  },
 };

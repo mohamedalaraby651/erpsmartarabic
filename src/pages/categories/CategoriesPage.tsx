@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,6 +13,7 @@ import {
 import { Plus, Layers, Edit, Trash2, FolderTree, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { logErrorSafely, getSafeErrorMessage } from "@/lib/errorHandler";
+import { mapRepoError } from "@/lib/repositories/_base";
 import CategoryFormDialog from "@/components/categories/CategoryFormDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -23,12 +22,12 @@ import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
+import { useCategories, useDeleteCategory } from "@/hooks/categories";
 
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
 
 const CategoriesPage = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -44,35 +43,23 @@ const CategoriesPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: categories = [], isLoading, refetch } = useQuery({
-    queryKey: ['product-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('product_categories')
-        .select('*')
-        .order('sort_order', { ascending: true });
-      if (error) throw error;
-      return data as ProductCategory[];
-    },
-  });
+  const { data: categories = [], isLoading, refetch } = useCategories();
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('product_categories')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['product-categories'] });
-      toast({ title: "تم حذف التصنيف بنجاح" });
-    },
-    onError: (error) => {
-      logErrorSafely('CategoriesPage', error);
-      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
-    },
-  });
+  const deleteMutation = useDeleteCategory();
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => toast({ title: "تم حذف التصنيف بنجاح" }),
+      onError: (error) => {
+        logErrorSafely('CategoriesPage', error);
+        toast({
+          title: "حدث خطأ",
+          description: mapRepoError(error, getSafeErrorMessage(error)).message,
+          variant: "destructive",
+        });
+      },
+    });
+  };
 
   const handleRefresh = useCallback(async () => {
     await refetch();
@@ -133,7 +120,7 @@ const CategoriesPage = () => {
           onEdit={() => handleEdit(category)}
           onDelete={() => {
             if (confirm('هل أنت متأكد من حذف هذا التصنيف؟')) {
-              deleteMutation.mutate(category.id);
+              handleDelete(category.id);
             }
           }}
           rightContent={
@@ -181,7 +168,7 @@ const CategoriesPage = () => {
               size="icon"
               onClick={() => {
                 if (confirm('هل أنت متأكد من حذف هذا التصنيف؟')) {
-                  deleteMutation.mutate(category.id);
+                  handleDelete(category.id);
                 }
               }}
             >
