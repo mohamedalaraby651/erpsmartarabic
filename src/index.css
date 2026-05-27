@@ -1,9 +1,10 @@
 /* Cairo font loaded via index.html <link> for non-blocking render */
-@import './styles/motion.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import './styles/motion.css';
 
 @layer base {
   :root {
