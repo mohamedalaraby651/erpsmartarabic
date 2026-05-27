@@ -4,7 +4,7 @@
  * no tokens, no layout — just @keyframes + .animate-* utilities.
  * ============================================================ */
 
-@layer utilities {
+/* Note: not wrapped in @layer to keep this file processable standalone. */
   /* Basic fade animation */
   .animate-fade-in { animation: fadeIn 0.3s ease-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
