@@ -61,7 +61,7 @@ export const categoryRepository = {
   async tree(): Promise<CategoryTreeNode[]> {
     const flat = await this.list();
     const byId = new Map<string, CategoryTreeNode>();
-    flat.forEach((c) => byId.set(c.id, { ...c, children: [] }));
+    flat.forEach((c: Row) => byId.set(c.id, { ...c, children: [] }));
     const roots: CategoryTreeNode[] = [];
     byId.forEach((node) => {
       if (node.parent_id && byId.has(node.parent_id)) {

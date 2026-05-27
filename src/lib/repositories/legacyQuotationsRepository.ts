@@ -128,4 +128,47 @@ export const legacyQuotationsRepository = {
     const { error } = await supabase.from("quotations").delete().eq("id", id);
     if (error) throw mapRepoError(error, "تعذّر حذف عرض السعر.");
   },
+
+  async updateWithItems(
+    id: string,
+    header: Omit<QuotationInsert, "id" | "created_at" | "updated_at">,
+    items: Array<Omit<QuotationItemInsert, "id" | "quotation_id" | "created_at">>,
+  ): Promise<string> {
+    const { error: hErr } = await supabase
+      .from("quotations")
+      .update(header)
+      .eq("id", id);
+    if (hErr) throw mapRepoError(hErr, "تعذّر تحديث عرض السعر.");
+
+    const { error: delErr } = await supabase
+      .from("quotation_items")
+      .delete()
+      .eq("quotation_id", id);
+    if (delErr) throw mapRepoError(delErr, "تعذّر تحديث بنود عرض السعر.");
+
+    if (items.length > 0) {
+      const payload = items.map((it) => ({
+        ...it,
+        quotation_id: id,
+      })) as QuotationItemInsert[];
+      const { error: iErr } = await supabase
+        .from("quotation_items")
+        .insert(payload);
+      if (iErr) throw mapRepoError(iErr, "تعذّر حفظ بنود عرض السعر.");
+    }
+    return id;
+  },
+
+  // -------- Form helper reads --------
+  async listItemsForEditor(quotationId: string) {
+    const { data, error } = await supabase
+      .from("quotation_items")
+      .select("*, products(name)")
+      .eq("quotation_id", quotationId);
+    if (error) throw mapRepoError(error, "تعذّر تحميل بنود عرض السعر.");
+    return data ?? [];
+  },
 };
+
+export type LegacyQuotationHeaderPayload = Omit<QuotationInsert, "id" | "created_at" | "updated_at">;
+export type LegacyQuotationItemInputPayload = Omit<QuotationItemInsert, "id" | "quotation_id" | "created_at">;
