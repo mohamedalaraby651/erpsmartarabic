@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+import { mapRepoError } from "@/lib/repositories/_base";
+import { useCreateCategory, useUpdateCategory } from "@/hooks/categories";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -24,7 +24,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
-type ProductCategoryInsert = Database['public']['Tables']['product_categories']['Insert'];
 
 interface CategoryFormDialogProps {
   open: boolean;
@@ -42,30 +41,25 @@ interface FormData {
 
 const CategoryFormDialog = ({ open, onOpenChange, category, categories }: CategoryFormDialogProps) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isEditing = !!category;
+  const createMutation = useCreateCategory();
+  const updateMutation = useUpdateCategory();
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
-  // Filter out current category and its children from parent options
   const availableParents = categories.filter(c => {
     if (!category) return true;
     if (c.id === category.id) return false;
-    // Also exclude children of current category
     let parent = c;
     while (parent.parent_id) {
       if (parent.parent_id === category.id) return false;
       parent = categories.find(p => p.id === parent.parent_id) || parent;
-      if (parent.parent_id === parent.id) break; // Prevent infinite loop
+      if (parent.parent_id === parent.id) break;
     }
     return true;
   });
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
-    defaultValues: {
-      name: '',
-      description: '',
-      parent_id: '',
-      sort_order: 0,
-    },
+    defaultValues: { name: '', description: '', parent_id: '', sort_order: 0 },
   });
 
   useEffect(() => {
@@ -77,50 +71,37 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
         sort_order: category.sort_order || 0,
       });
     } else {
-      reset({
-        name: '',
-        description: '',
-        parent_id: '',
-        sort_order: 0,
-      });
+      reset({ name: '', description: '', parent_id: '', sort_order: 0 });
     }
   }, [category, reset]);
 
-  const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const payload: ProductCategoryInsert = {
-        name: data.name,
-        description: data.description || null,
-        parent_id: data.parent_id || null,
-        sort_order: data.sort_order,
-      };
+  const onSubmit = (data: FormData) => {
+    const payload = {
+      name: data.name,
+      description: data.description || null,
+      parent_id: data.parent_id || null,
+      sort_order: data.sort_order,
+    };
 
-      if (isEditing) {
-        const { error } = await supabase
-          .from('product_categories')
-          .update(payload)
-          .eq('id', category.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('product_categories')
-          .insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['product-categories'] });
+    const handleError = (error: unknown) => {
+      logErrorSafely('CategoryFormDialog', error);
+      const description = mapRepoError(error, getSafeErrorMessage(error)).message;
+      toast({ title: "حدث خطأ", description, variant: "destructive" });
+    };
+
+    const handleSuccess = () => {
       toast({ title: isEditing ? "تم تحديث التصنيف بنجاح" : "تم إضافة التصنيف بنجاح" });
       onOpenChange(false);
-    },
-    onError: (error) => {
-      logErrorSafely('CategoryFormDialog', error);
-      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
-    },
-  });
+    };
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
+    if (isEditing) {
+      updateMutation.mutate(
+        { id: category.id, payload },
+        { onSuccess: handleSuccess, onError: handleError },
+      );
+    } else {
+      createMutation.mutate(payload, { onSuccess: handleSuccess, onError: handleError });
+    }
   };
 
   return (
@@ -131,7 +112,6 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
         </ResponsiveDialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Name */}
           <div>
             <Label htmlFor="name">اسم التصنيف *</Label>
             <Input
@@ -142,7 +122,6 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
             {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
           </div>
 
-          {/* Parent Category */}
           <div>
             <Label>التصنيف الأب (اختياري)</Label>
             <Select
@@ -163,7 +142,6 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
             </Select>
           </div>
 
-          {/* Description */}
           <div>
             <Label htmlFor="description">الوصف</Label>
             <Textarea
@@ -174,7 +152,6 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
             />
           </div>
 
-          {/* Sort Order */}
           <div>
             <Label htmlFor="sort_order">الترتيب</Label>
             <Input
@@ -192,8 +169,8 @@ const CategoryFormDialog = ({ open, onOpenChange, category, categories }: Catego
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
             </Button>
           </div>
         </form>

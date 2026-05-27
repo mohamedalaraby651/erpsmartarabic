@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { generatePDF } from "@/lib/pdfGeneratorLazy";
-import { supabase } from "@/integrations/supabase/client";
+import { supplierRepository } from "@/lib/repositories/supplierRepository";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";
@@ -128,9 +128,7 @@ const SupplierDetailsPage = () => {
     if (!supplier) return;
     setIsPrintingStatement(true);
     try {
-      const { data, error } = await supabase.rpc('get_supplier_statement', { _supplier_id: id! });
-      if (error) throw error;
-      const entries = (data || []) as Array<{ entry_date: string; entry_type: string; reference: string; debit: number; credit: number; running_balance: number; status: string }>;
+      const entries = await supplierRepository.getStatement(id!);
       const formatted = entries.map(e => ({
         date: new Date(e.entry_date).toLocaleDateString('ar-EG'),
         type: e.entry_type, reference: e.reference,
