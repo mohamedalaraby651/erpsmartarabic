@@ -1,5 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,94 +21,21 @@ import {
   CheckCircle,
   Gauge,
 } from 'lucide-react';
+import { useAdminDashboardCounters } from '@/hooks/admin';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { data: counters, isLoading: loadingActivities } = useAdminDashboardCounters();
 
-  // Fetch user stats
-  const { data: userStats } = useQuery({
-    queryKey: ['admin-user-stats'],
-    queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id');
-      if (error) throw error;
-      
-      const { data: roles } = await supabase
-        .from('custom_roles')
-        .select('id')
-        .eq('is_active', true);
-      
-      return {
-        totalUsers: profiles?.length || 0,
-        activeRoles: roles?.length || 0,
-      };
-    },
-  });
-
-  // Fetch activity logs
-  const { data: recentActivities = [], isLoading: loadingActivities } = useQuery({
-    queryKey: ['admin-recent-activities'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Fetch system alerts
-  const { data: alerts = [] } = useQuery({
-    queryKey: ['admin-system-alerts'],
-    queryFn: async () => {
-      const alertsList: { type: string; message: string; count: number }[] = [];
-      
-      // Low stock products
-      const { data: lowStock } = await supabase
-        .from('products')
-        .select('id, name, min_stock')
-        .eq('is_active', true);
-      
-      const { data: stockData } = await supabase
-        .from('product_stock')
-        .select('product_id, quantity');
-      
-      const lowStockCount = lowStock?.filter(product => {
-        const totalStock = stockData
-          ?.filter(s => s.product_id === product.id)
-          .reduce((sum, s) => sum + s.quantity, 0) || 0;
-        return totalStock < (product.min_stock || 0);
-      }).length || 0;
-      
-      if (lowStockCount > 0) {
-        alertsList.push({
-          type: 'warning',
-          message: 'منتجات منخفضة المخزون',
-          count: lowStockCount,
-        });
-      }
-      
-      // Overdue invoices
-      const { data: overdueInvoices } = await supabase
-        .from('invoices')
-        .select('id')
-        .eq('payment_status', 'pending')
-        .lt('due_date', new Date().toISOString().split('T')[0]);
-      
-      if (overdueInvoices && overdueInvoices.length > 0) {
-        alertsList.push({
-          type: 'error',
-          message: 'فواتير متأخرة',
-          count: overdueInvoices.length,
-        });
-      }
-      
-      return alertsList;
-    },
-  });
+  const userStats = counters ? { totalUsers: counters.totalUsers, activeRoles: counters.activeRoles } : undefined;
+  const recentActivities = (counters?.recentActivities ?? []) as Array<{
+    id: string;
+    action: string;
+    entity_type: string;
+    entity_name: string | null;
+    created_at: string;
+  }>;
+  const alerts = counters?.alerts ?? [];
 
   // Quick access sections
   const adminSections = [

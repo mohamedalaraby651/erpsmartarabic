@@ -1,8 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { EventDispatcherCard } from '@/components/admin/EventDispatcherCard';
 import { PdfHealthPanel } from '@/components/admin/PdfHealthPanel';
-import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -23,56 +21,16 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from 'recharts';
+import { useSystemMetrics } from '@/hooks/admin';
 
 const MetricsPage = () => {
   const { user } = useAuth();
+  const { data, isLoading } = useSystemMetrics(!!user);
 
-  // Fetch performance metrics from DB
-  const { data: metrics = [], isLoading: loadingMetrics } = useQuery({
-    queryKey: ['performance-metrics'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('performance_metrics' as never)
-        .select('*')
-        .order('recorded_at', { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      return (data || []) as unknown as Array<{ id: string; metric_name: string; metric_value: number; recorded_at: string; labels: Record<string, string> | null }>;
-    },
-    enabled: !!user,
-  });
-
-  // Fetch rate limit configs
-  const { data: rateLimitConfigs = [], isLoading: loadingRateLimits } = useQuery({
-    queryKey: ['rate-limit-configs'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('rate_limit_config')
-        .select('*')
-        .eq('is_active', true)
-        .order('endpoint');
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  // Fetch current rate limit usage
-  const { data: rateLimitUsage = [] } = useQuery({
-    queryKey: ['rate-limit-usage'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('rate_limits')
-        .select('*')
-        .order('endpoint');
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
+  const metrics = data?.metrics ?? [];
+  const rateLimitConfigs = data?.rateLimitConfigs ?? [];
+  const rateLimitUsage = data?.rateLimitUsage ?? [];
 
   // Process metrics for charts
   const apiMetrics = metrics.filter((m) => m.metric_name === 'api_latency');
