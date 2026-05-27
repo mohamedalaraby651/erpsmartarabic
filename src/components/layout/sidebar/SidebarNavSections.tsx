@@ -204,8 +204,14 @@ function SidebarNavSections({
     return counts[item.countKey as keyof typeof counts];
   };
 
-  const isItemActive = (href: string) => location.pathname === href;
-  const isSectionActive = (items: NavItem[]) => items.some(item => isItemActive(item.href));
+  // Declarative match: handles `/accounting/journals/123` activating `/accounting/journals`.
+  const isItemActive = (href: string) => {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (path === href) return true;
+    if (href !== '/' && path.startsWith(href + '/')) return true;
+    return false;
+  };
+  const isSectionActive = (items: NavItem[]) => items.some((item) => isItemActive(item.href));
 
   return (
     <DndContext

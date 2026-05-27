@@ -186,7 +186,11 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
     });
   };
 
-  const isActive = (href: string) => location.pathname === href;
+  const isActive = (href: string) => {
+    if (location.pathname === href) return true;
+    if (href !== '/' && location.pathname.startsWith(href + '/')) return true;
+    return false;
+  };
 
   const getCount = (item: NavItem) => {
     if (!item.countKey || !counts) return undefined;

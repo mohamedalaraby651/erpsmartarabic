@@ -1,141 +1,133 @@
-# Phase 3 — Automated Posting Pipeline
+# Frontend Modernization — Track A + Track C
 
-Connect Sales / Procurement / Logistics documents to the verified GL through a single atomic DB engine and a thin Edge-Function dispatcher. No breaking changes — current code paths keep working until the new RPC is invoked.
+Non-breaking structural refactor of the shell + design tokens. Zero business-logic changes; targets keeping 1187/1187 tests green.
 
-## 1. Database — `post_document_atomic` RPC (migration)
+## Track C — Design System v3 & Token Cleanup
 
-`public.post_document_atomic(p_event text, p_source_type text, p_source_id uuid, p_context jsonb) returns uuid`
+1. **Delete** `src/App.css` (dead Vite boilerplate; not imported by `main.tsx`, verified). Removes a 42-line noise file.
+2. **Extract motion →** `src/styles/motion.css`: move every `@keyframes` block + the `.animate-*` utility classes currently embedded in `src/index.css` (~lines 190–550 region: fadeIn, slideIn/Out, shimmer, ripple, pulseGlow, scaleBounce, bounceIn, progress, pingSlow, shimmerMove, pulseSubtle, slideUp/Down, scaleIn, pulseRing, skeletonShimmer, staggerFadeIn, flashSuccess/Error, voicePulse, sheetUp). Keep them inside `@layer utilities`. Import via `@import './styles/motion.css';` at the top of `src/index.css`. **Untouched**: HSL tokens, `:root`/`.dark`, surface/elevation system, `data-density` rules, RTL/Cairo, sheet primitives — kept inline in `index.css`.
+3. **Tablet breakpoint in** `tailwind.config.ts`: add `screens: { xs: '420px', tablet: '900px' }` so we get a real tablet tier between `sm (640)` and `md (768)` / `lg (1024)`. Also add `'3xl': '1600px'` for wide dashboards.
+4. **Container upgrade**: bump the `theme.container.screens['2xl']` from `1400px` → `1600px`, and introduce a reusable `.container-wide` utility (`max-w-[1600px] mx-auto px-4 tablet:px-6 lg:px-8`) in `index.css @layer components`. Apply it to the `<main>` wrapper inside the new shell only (no per-page rewrites in this phase).
 
-- `SECURITY DEFINER`, `SET search_path=public`, `EXECUTE` revoked from `PUBLIC`/`anon`, granted to `authenticated` + `service_role`.
-- Resolves `tenant_id` from `get_current_tenant()` (or `p_context->>'tenant_id'` when called from service-role Edge Functions).
-- Enforces `check_section_permission(auth.uid(),'accounting','create')` when invoked by an end-user.
+## Track A — Unified Adaptive Shell & Navigation
 
-Transaction body (single BEGIN/EXCEPTION block):
+5. `AdaptiveShell` **(new) replaces the dual branch in** `AppLayout.tsx`: single render tree using CSS media queries instead of branching on `useIsMobile()`. Strategy:
+  - One DOM tree always renders Sidebar + MobileHeader + MobileBottomNav.
+  - Visibility controlled via Tailwind responsive utilities: sidebar → `hidden lg:block`, mobile header → `lg:hidden`, bottom nav → `lg:hidden`, main padding shifts via `lg:mr-[260px]` (or `lg:mr-[70px]` when collapsed).
+  - `useIsMobile()` is kept only for things that genuinely need JS state (e.g., FABMenu prefetch gating), no longer for rendering switches.
+  - `AdaptiveContainer` (already exists) is retained for components that need different DOM trees per platform; the shell itself stops using it.
+6. **Declarative** `NavLink` **matching in** `SidebarNavSections.tsx` + `MobileDrawer`:
+  - Replace `location.pathname === item.href` and the `isItemActive`/`isSectionActive` helpers with `<NavLink end={false}>` + `useMatch(item.href + '/*')`, so `/accounting/journals/123` correctly illuminates `/accounting/journals`.
+  - Section "hasActiveItem" derived from the same matchers.
+  - `NavItemWithBadge` already wraps an anchor — convert its inner `<a>` to the existing `src/components/NavLink.tsx` compat wrapper to inherit nested matching.
+7. **Shared layout primitives** under `src/components/layout/shared/`:
+  - `UserMenu.tsx` (profile dropdown — extracted from `AppHeader`).
+  - `NotificationsBell.tsx` (extracted from `AppHeader` + `MobileHeader`).
+  - `GlobalSearchTrigger.tsx` (unified search button — desktop renders inline input, mobile renders icon → `/search`).
+  - `AppHeader` and `MobileHeader` are slimmed to layout shells composing these primitives; both behaviors preserved 1:1.
+8. **Mobile TenantSelector gap**:
+  - Add `TenantSelector` to the top of `MobileHeader` (compact variant: icon + truncated tenant name → tap opens the existing dropdown). Already exists inside `MobileDrawer` — keep both, since the header gives one-tap access without opening the drawer.
+  - Ensure `TenantSelector` hides itself when user has only one tenant (existing behavior preserved).
 
-1. **Idempotency** — `SELECT journal_id FROM document_posting_log WHERE tenant_id=? AND document_type=p_source_type AND document_id=p_source_id AND reason=p_event AND status='posted'`. If found, return it (no-op).
-2. **Rule lookup** — read declarative rules from a new seed table `posting_rules_registry(event, side, account_key, amount_path, memo)` *or* (lighter) accept the lines array inside `p_context->'lines'` produced by `posting.rules.ts`. Plan choice: pass `lines` from app to keep one source of truth.
-3. **Account resolution** — for each line:
-  - `SELECT account_id FROM posting_account_map WHERE tenant_id=? AND posting_key=line.account_code`.
-  - Fallback: `SELECT id FROM chart_of_accounts WHERE tenant_id=? AND code=line.account_code`.
-  - Raise `check_violation` with Arabic message if neither resolves.
-4. **Rounding & balance** — `round(amount::numeric, 2)`; assert `sum(debits)=sum(credits)` to 0.01, else raise.
-5. **Insert** `journals` header (status='posted', source_type, source_id, event, journal_date from context, fiscal_period auto-resolved by existing trigger) → returns `journal_id`.
-6. **Insert** `journal_entries` rows (debit/credit, memo, line_no).
-7. **Audit success** — insert `document_posting_log(status='posted', reason=p_event, journal_id, total_amount)`.
-8. **EXCEPTION WHEN OTHERS** — `ROLLBACK` implicit, then in a fresh autonomous insert (via `pg_background` not available → use `INSERT … ON CONFLICT DO NOTHING` after re-raising? — actual choice: log failure via SECURITY DEFINER helper `log_posting_failure(...)` declared `volatile` and called from the EXCEPTION block, which uses a SAVEPOINT pattern so the failure row survives). Re-raise so the caller sees the error.
+## Track Stability — Tokens & Tests
 
-Companion helpers:
+9. **Preserve all tokens**: no edits to HSL variables, `data-density` blocks, `--surface-*`, `--shadow-*`, `--ease-*`, `--sidebar-*`. Motion file is purely utility-class movement.
+10. **Test suite**: run `bunx vitest run` after the refactor. Layout tests reference roles/labels, not the dual-branch structure, so the unified shell should remain green. If any snapshot/DOM-position test fails (likely MobileHeader composition), update assertions minimally to the new primitive structure — no logic shifts.
 
-- `log_posting_failure(tenant uuid, doc_type text, doc_id uuid, event text, reason text)` — minimal insert, used inside EXCEPTION block.
-- Reuse existing `enforce_fiscal_period_open` trigger from Phase 1.
+## Technical Details
 
-## 2. Application layer
+**Files created**
 
-### `src/lib/financial-engine/posting.rules.ts`
+- `src/styles/motion.css`
+- `src/components/layout/AdaptiveShell.tsx`
+- `src/components/layout/shared/UserMenu.tsx`
+- `src/components/layout/shared/NotificationsBell.tsx`
+- `src/components/layout/shared/GlobalSearchTrigger.tsx`
 
-Add three new declarative rules (no logic change to existing ones):
+**Files edited**
 
-- `goods_receipt.posted` — DR `INVENTORY` / CR `GR_IR_CLEARING` (new constant `'1250'`).
-- `purchase_invoice.posted` — DR `GR_IR_CLEARING` + DR `TAX_INPUT` (new `'1290'`) / CR `ACCOUNTS_PAYABLE`.
-- `inventory.adjustment` — DR/CR `INVENTORY` ↔ `INVENTORY_ADJUSTMENT` (`'5100'`).
+- `src/index.css` (remove motion blocks, add `@import './styles/motion.css'`, add `.container-wide` component class)
+- `tailwind.config.ts` (add `screens`, raise container `2xl`)
+- `src/components/layout/AppLayout.tsx` (replace dual branch with `<AdaptiveShell>`)
+- `src/components/layout/AppHeader.tsx` (compose shared primitives)
+- `src/components/layout/MobileHeader.tsx` (add TenantSelector + shared primitives)
+- `src/components/layout/MobileDrawer.tsx` (NavLink matching)
+- `src/components/layout/sidebar/SidebarNavSections.tsx` (NavLink matching + nested route detection)
+- `src/components/sidebar/NavItemWithBadge.tsx` (use NavLink wrapper)
 
-Migration also seeds the new COA codes per tenant (idempotent `INSERT … ON CONFLICT DO NOTHING`).
+**Files deleted**
 
-### New helper `src/lib/financial-engine/dispatcher.ts`
+- `src/App.css`
 
-`postDocument(event, sourceType, sourceId, ctx)` — resolves rule → builds `lines[]` with rounded amounts → calls `supabase.rpc('post_document_atomic', {...})` → returns `journal_id`. Centralises error mapping to Arabic toasts via `mapRepoError`.
+## Out of Scope
 
-### Edge-function wiring (idempotent, additive)
+- No business-logic changes, no repository/hook edits, no schema/RPC work.
+- Per-page container width rewrites (only the shell main wrapper changes). A follow-up Track C2 can sweep individual page wrappers.
+- shadcn `Sidebar` migration (kept custom sidebar; only matching logic + primitive extraction).
+- Act as a Principal Frontend Architect and Premium UI/UX Expert specialized in RTL Tailwind applications. We are executing "Frontend Modernization: Track A (Unified Adaptive Shell) and Track C (Design System v3 & Token Cleanup)". This is a strict structural refactor to eliminate layout duplication and modernize tokens without introducing any business logic modifications. 
 
-- `supabase/functions/approve-invoice/index.ts` — after status flips to `approved`, call `post_document_atomic` with `event='invoice.approved'` and `lines` built server-side (subtotal/tax/total). Existing direct `journals` insert (if any) gated by `if (!alreadyPostedViaRpc)` to avoid double posting during rollout.
-- `supabase/functions/process-payment/index.ts` — on successful capture, fire `payment.received` with `amount`, debit account = `BANK` if `payment_method='bank'` else `CASH`.
-- `supabase/functions/approve-expense/index.ts` — fire `expense.approved`.
-- `_shared/posting.ts` — thin Deno helper that mirrors `dispatcher.ts` so both browser and edge use the same payload shape.
-
-No existing function signatures change; only an extra RPC call is appended.
-
-## 3. Tests
-
-- `src/__tests__/unit/financial-engine/dispatcher.test.ts` — pure unit: rule lookup, rounding, balance assertion, unknown event throws.
-- `src/__tests__/unit/financial-engine/posting.rules.test.ts` — adds cases for the 3 new rules (balance equality).
-- `src/__tests__/integration/automated-posting.test.ts` — full lifecycle against the test Supabase project:
-  1. seed COA + posting_account_map for a test tenant
-  2. create invoice → call `approve-invoice` → assert `journals` + 3 `journal_entries` + 1 `document_posting_log(status=posted)`
-  3. re-invoke same event → assert idempotency (no duplicate journal)
-  4. create payment → call `process-payment` → assert DR Bank / CR AR balanced
-  5. attempt posting in a **closed** fiscal period → expect `check_violation` and `document_posting_log(status=failed)`
-  6. RLS negative: anon role cannot insert into `document_posting_log` directly.
-
-Target: **1170 → ~1185 green**. Run `bunx vitest run` at the end.
-
-## 4. Rollout safety
-
-- All migrations are additive (new function, new COA rows, no column drops).
-- Old code paths remain; new RPC is opt-in per edge function and protected by idempotency key.
-- Failure path always writes a `document_posting_log` row, so observability is preserved.
-- Linter expected to stay flat (no new RLS surface beyond the existing `document_posting_log` service-role policy from Phase 1).
-
-## Execution order
-
-1. Migration: `post_document_atomic` + `log_posting_failure` + seed new COA codes.
-2. Update `posting.rules.ts` + new `dispatcher.ts` + shared Deno helper.
-3. Wire `approve-invoice`, `process-payment`, `approve-expense`.
-4. Add unit + integration tests.
-5. `bunx vitest run` → confirm green, then hand back for Phase 4 signal.
-6. Act as a Principal Database Architect and Senior Edge-Functions Developer. Phase 2 (Repositories & Hooks) is fully complete with 1170/1170 passing tests. We are now executing "Phase 3: Automated Posting Pipeline" to connect Sales, Procurement, and Logistics documents to our General Ledger atomically.
-
-Please safely implement the following updates:
+Please systematically implement the following adjustments while keeping our 1187/1187 test suite flawlessly green:
 
 &nbsp;
 
-1. Database Layer (PostgreSQL Migration):
+1. Track C — Design System v3 & Token Cleanup:
 
-- Create a SECURITY DEFINER function `public.post_document_atomic(p_event text, p_source_type text, p_source_id uuid, p_context jsonb)` returning `uuid`. Revoke EXECUTE from PUBLIC/anon; grant to authenticated + service_role.
+- Delete the dead file `src/App.css` (the unimported Vite boilerplate noise).
 
-- Inside a single atomic transaction block:
+- Create a clean file `src/styles/motion.css`. Move all `@keyframes` blocks and their matching `.animate-*` utility classes from `src/index.css` (including fadeIn, slideIn/Out, shimmer, ripple, pulseGlow, scaleBounce, bounceIn, progress, pingSlow, shimmerMove, pulseSubtle, slideUp/Down, scaleIn, pulseRing, skeletonShimmer, staggerFadeIn, flashSuccess/Error, voicePulse, sheetUp) into this new file wrapped inside `@layer utilities`.
 
-  a. Idempotency: Return existing journal_id if a matching `posted` trail exists in `document_posting_log` for this document, event, and tenant.
+- In `src/index.css`: Add `@import './styles/motion.css';` at the absolute top. Keep all HSL variables, `:root/.dark`, surface/elevation systems, data-density compact rules, and RTL Cairo typography untouched. Add a new reusable component class under `@layer components`:
 
-  b. Resolve `account_id` from `posting_account_map` based on `line.account_code`, fallback to `chart_of_accounts.code`, or raise a descriptive Arabic check_violation.
+  `.container-wide { max-width: 1600px; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; } @media (min-width: 900px) { .container-wide { padding-left: 1.5rem; padding-right: 1.5rem; } } @media (min-width: 1024px) { .container-wide { padding-left: 2rem; padding-right: 2rem; } }`
 
-  c. Assert total debits strictly equal total credits to 0.01 precision after rounding amounts via `round(amount::numeric, 2)`.
-
-  d. Insert into `journals` header and bulk insert `journal_entries` lines. Write a success row to `document_posting_log` with status='posted'.
-
-- In the EXCEPTION block, use a SAVEPOINT pattern to roll back the broken ledger mutations while safely preserving a failure audit row via a dedicated helper `log_posting_failure(...)` into `document_posting_log` with status='failed'. Then, re-raise the exception.
-
-- Idempotently seed the new COA rows ('1250' GR/IR, '1290' Tax Input, '5100' Inventory Adjustment) via `INSERT ... ON CONFLICT DO NOTHING`.
+- Update `tailwind.config.ts` to add custom screens: `xs: '420px'`, `tablet: '900px'`, and `'3xl': '1600px'`. Bump `theme.container.screens['2xl']` from 1400px to 1600px.
 
 &nbsp;
 
-2. Application Layer & Rules Expansion:
+2. Track A — Shared Layout Primitives:
 
-- Extend `src/lib/financial-engine/posting.rules.ts` to include the three new declarative rules: `goods_receipt.posted`, `purchase_invoice.posted`, and `inventory.adjustment` with balanced debit/credit constants.
+Create the following lightweight, presentation-only components under `src/components/layout/shared/`:
 
-- Create helper `src/lib/financial-engine/dispatcher.ts` exposing `postDocument(...)` to build payloads, invoke the RPC, and route errors cleanly via `mapRepoError` into Arabic toasts.
+- `UserMenu.tsx`: Extract the user profile dropdown from `AppHeader`.
 
-- Create a mirrored thin Deno helper in `supabase/functions/_shared/posting.ts`.
+- `NotificationsBell.tsx`: Extract the notifications button/badge markup shared between desktop/mobile headers.
 
-&nbsp;
+- `GlobalSearchTrigger.tsx`: Extract unified search button trigger (inline input text grid for desktop, icon trigger routing to `/search` for mobile devices).
 
-3. Edge Functions Integration:
-
-- Update `supabase/functions/approve-invoice/index.ts` to call `post_document_atomic` upon moving to approved. Gate legacy inline journals insert behind an `if (!alreadyPostedViaRpc)` conditional to ensure zero double-posting.
-
-- Update `supabase/functions/process-payment/index.ts` to fire `payment.received` assigning debit to Bank/Cash based on payment method.
-
-- Update `supabase/functions/approve-expense/index.ts` to fire `expense.approved`.
+- Slim down `src/components/layout/AppHeader.tsx` and `src/components/layout/MobileHeader.tsx` to compose these shared primitives 1:1.
 
 &nbsp;
 
-4. Test Suite Implementation:
+3. Track A — Mobile Header Tenant Upgrade & NavLink Matching:
 
-- Add unit tests in `src/__tests__/unit/financial-engine/dispatcher.test.ts` and `posting.rules.test.ts`.
+- In `src/components/layout/MobileHeader.tsx`: Inject the existing `TenantSelector` at the top bar in a compact state (Icon + truncated active company name, tapping opens the current tenant dropdown). Ensure it hides gracefully when the user owns only 1 tenant (matching existing desktop behavior).
 
-- Create a complete lifecycle integration test `src/__tests__/integration/automated-posting.test.ts` to simulate: Invoice creation -> approve-invoice execution -> verifying balanced GL states -> verifying idempotency -> asserting fiscal closure rejection -> testing RLS negative boundaries.
+- In `src/components/layout/sidebar/SidebarNavSections.tsx` & `src/components/layout/MobileDrawer.tsx`: Eliminate `location.pathname === item.href` and imperative `isItemActive` checks. Replace them with standard React Router `<NavLink end={false}>` paired with `useMatch(item.href + '/*')` so that a sub-route like `/accounting/journals/123` correctly illuminates the parent navigation link `/accounting/journals`. Derive the section's `hasActiveItem` state using the same matching rule.
+
+- In `src/components/sidebar/NavItemWithBadge.tsx`: Convert the inner layout anchor `<a>` to use the application's native `src/components/NavLink.tsx` wrapper to clean up nested matching.
 
 &nbsp;
 
-Execute `bunx vitest run` at the end to confirm our test baseline scales flawlessly to green (~1185/1185)!
+4. Track A — Unified Adaptive Shell:
+
+- Create `src/components/layout/AdaptiveShell.tsx` to completely replace the imperative dual-rendering branches inside `AppLayout.tsx`. 
+
+- Construct a single, semantic DOM render tree controlled cleanly by Tailwind CSS responsive utility classes instead of JS window resize listeners:
+
+  - Sidebar: Hardwired to `hidden lg:block` (with appropriate `lg:mr-[260px]` or collapsed `lg:mr-[70px]` body padding constraints applied dynamically).
+
+  - MobileHeader & MobileBottomNav: Hardwired to `lg:hidden`.
+
+  - Wrap the main inner component viewport render block `<main>` with our new `.container-wide` class.
+
+- Update `src/components/layout/AppLayout.tsx` to remove its dual JS code branch and return this new `<AdaptiveShell>` primitive cleanly.
+
+&nbsp;
+
+5. Verification and Verification Testing:
+
+- Maintain all existing HSL coloring, elevation tokens, and layout widths. 
+
+- Execute `bunx vitest run` at the end to ensure the global 1187 green test suite remains flawless. If any DOM positioning or MobileHeader assertion breaks due to the primitive extraction, perform the minimum required updates to the test files to align with the new structure while maintaining identical logical expectations.
 
 &nbsp;

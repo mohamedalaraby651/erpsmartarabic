@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useMatch } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,8 +41,10 @@ function NavItemWithBadge({
   onToggleFavorite,
 }: NavItemWithBadgeProps) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isActive = location.pathname === href;
+  // Declarative nested-route matching: `/accounting/journals/123` activates `/accounting/journals`.
+  const exactMatch = useMatch(href);
+  const nestedMatch = useMatch(`${href}/*`);
+  const isActive = Boolean(exactMatch || (href !== '/' && nestedMatch));
 
   // Build a single hover-prefetch handler keyed to this href. `useMemo`
   // ensures we don't churn a new closure (and a new "first hover") on

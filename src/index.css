@@ -4,6 +4,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './styles/motion.css';
+
 @layer base {
   :root {
     direction: rtl;
@@ -189,83 +191,10 @@
   /* Hide decorative-only elements when marked. */
   [data-density="compact"] [data-density-hide] { display: none !important; }
 
-  /* Basic fade animation */
-  .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  
-  /* Slide animations */
-  .animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
-  @keyframes slideInRight { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-  
-  .animate-slide-out-right { animation: slideOutRight 0.3s ease-out; }
-  @keyframes slideOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-20px); } }
-  
-  .animate-slide-in-left { animation: slideInLeft 0.3s ease-out; }
-  @keyframes slideInLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-  
-  /* Shimmer animation for skeletons */
-  .animate-shimmer { animation: shimmer 1.5s infinite linear; }
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-  
-  /* Enhanced Ripple effect animation */
-  .animate-ripple { animation: ripple 0.6s ease-out forwards; }
-  @keyframes ripple {
-    0% { transform: scale(0); opacity: 0.5; }
-    100% { transform: scale(4); opacity: 0; }
-  }
-  
-  /* Fast Ripple effect animation - for compact UI */
-  .animate-ripple-fast { animation: rippleFast 0.35s ease-out forwards; }
-  @keyframes rippleFast {
-    0% { transform: scale(0); opacity: 0.4; }
-    100% { transform: scale(3); opacity: 0; }
-  }
-  
-  /* Pulse glow effect for FAB */
-  .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-  @keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
-    50% { box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
-  }
-  
-  /* Smaller pulse glow for compact FAB */
-  .animate-pulse-glow-sm { animation: pulseGlowSm 2.5s ease-in-out infinite; }
-  @keyframes pulseGlowSm {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3); }
-    50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
-  }
-  
-  /* Scale bounce */
-  .animate-scale-bounce { animation: scaleBounce 0.3s ease-out; }
-  @keyframes scaleBounce {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
-  }
-  
-  /* Bounce in animation */
-  .animate-bounce-in { animation: bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
-  @keyframes bounceIn {
-    0% { transform: scale(0.8); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  
-  /* Progress bar animation */
-  .animate-progress { animation: progress 2s ease-in-out infinite; }
-  @keyframes progress {
-    0% { transform: translateX(-100%); }
-    50% { transform: translateX(0%); }
-    100% { transform: translateX(100%); }
-  }
-  
-  /* Notification ping */
-  .animate-ping-slow { animation: pingSlow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
-  @keyframes pingSlow {
-    75%, 100% { transform: scale(2); opacity: 0; }
-  }
+  /* Motion utilities (fadeIn / slide* / shimmer / ripple* / pulseGlow* /
+     scaleBounce / bounceIn / progress / pingSlow) moved to ./styles/motion.css.
+     This @layer block intentionally kept empty so subsequent rules remain
+     inside @layer utilities. */
   
   .glass { @apply bg-card/80 backdrop-blur-lg border border-border/50; }
   
@@ -697,3 +626,29 @@
     box-shadow: inset 0 -1px 0 hsl(var(--border) / 0.7);
   }
 }
+
+@layer components {
+  /* Spacious dashboard / accounting wrapper — bumps from 1400px to 1600px
+     and provides tablet-aware horizontal padding. */
+  .container-wide {
+    width: 100%;
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 900px) {
+    .container-wide {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-wide {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+}
+
