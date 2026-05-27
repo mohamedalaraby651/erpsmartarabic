@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,10 +8,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { DataCard } from '@/components/mobile/DataCard';
-import { 
-  ArrowLeft, 
-  ArrowUpCircle, 
-  ArrowDownCircle, 
+import {
+  ArrowLeft,
+  ArrowUpCircle,
+  ArrowDownCircle,
   Edit,
   Wallet
 } from 'lucide-react';
@@ -29,27 +27,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  useCashRegister,
+  useCashTransactions,
+} from '@/hooks/treasury';
+import type {
+  CashRegisterRow,
+  CashTransactionRow,
+} from '@/lib/repositories/treasuryRepository';
 
-interface CashRegister {
-  id: string;
-  name: string;
-  location: string | null;
-  current_balance: number;
-  is_active: boolean;
-  assigned_to: string | null;
-  created_at: string;
-}
-
-interface CashTransaction {
-  id: string;
-  transaction_number: string;
-  transaction_type: string;
-  amount: number;
-  balance_after: number;
-  description: string | null;
-  reference_type: string | null;
-  created_at: string;
-}
+type CashRegister = CashRegisterRow;
+type CashTransaction = CashTransactionRow;
 
 const transactionTypeLabels: Record<string, string> = {
   income: 'إيداع',
@@ -75,35 +63,10 @@ export default function CashRegisterDetailsPage() {
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('income');
 
-  const { data: register, isLoading: isLoadingRegister } = useQuery({
-    queryKey: ['cash-register', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cash_registers')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      return data as CashRegister;
-    },
-    enabled: !!id,
-  });
-
-  const { data: transactions, isLoading: isLoadingTransactions, refetch } = useQuery({
-    queryKey: ['cash-transactions', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cash_transactions')
-        .select('*')
-        .eq('register_id', id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      
-      if (error) throw error;
-      return data as CashTransaction[];
-    },
-    enabled: !!id,
+  const { data: register, isLoading: isLoadingRegister } = useCashRegister(id);
+  const { data: transactions, isLoading: isLoadingTransactions, refetch } = useCashTransactions({
+    registerId: id,
+    limit: 50,
   });
 
   const handleAddTransaction = (type: 'income' | 'expense') => {

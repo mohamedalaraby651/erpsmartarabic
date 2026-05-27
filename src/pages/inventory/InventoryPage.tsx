@@ -1,7 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +15,15 @@ import { InventoryStockTab } from "@/components/inventory/InventoryStockTab";
 import { InventoryWarehousesTab } from "@/components/inventory/InventoryWarehousesTab";
 import { InventoryMovementsTab } from "@/components/inventory/InventoryMovementsTab";
 import { InventoryAlertsTab } from "@/components/inventory/InventoryAlertsTab";
-import type { Database } from "@/integrations/supabase/types";
-
-type WarehouseRow = Database['public']['Tables']['warehouses']['Row'];
+import {
+  useWarehouses,
+  useInventoryLevels,
+  useRecentStockMovements,
+  useDeleteWarehouse,
+} from "@/hooks/inventory";
+import type { WarehouseRow } from "@/lib/repositories/inventoryRepository";
 
 const InventoryPage = () => {
-  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,56 +41,35 @@ const InventoryPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: warehouses = [], isLoading: loadingWarehouses, refetch: refetchWarehouses } = useQuery({
-    queryKey: ["warehouses"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("warehouses").select("*").order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: warehouses = [], isLoading: loadingWarehouses, refetch: refetchWarehouses } = useWarehouses();
+  const { data: productStock = [], isLoading: loadingStock, refetch: refetchStock } = useInventoryLevels();
+  const { data: recentMovements = [], refetch: refetchMovements } = useRecentStockMovements(10);
 
-  const { data: productStock = [], isLoading: loadingStock, refetch: refetchStock } = useQuery({
-    queryKey: ["product_stock"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("product_stock")
-        .select("*, product:products(id, name, sku, min_stock, image_url), warehouse:warehouses(id, name), variant:product_variants(id, name)")
-        .order("updated_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const deleteWarehouseMutation = useDeleteWarehouse();
 
-  const { data: recentMovements = [], refetch: refetchMovements } = useQuery({
-    queryKey: ["stock_movements_recent"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select("*, product:products(id, name), from_warehouse:warehouses!stock_movements_from_warehouse_id_fkey(id, name), to_warehouse:warehouses!stock_movements_to_warehouse_id_fkey(id, name)")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const deleteWarehouseMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("warehouses").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["warehouses"] }); toast({ title: "تم حذف المستودع بنجاح" }); setDeleteDialogOpen(false); },
-    onError: () => { toast({ title: "خطأ في حذف المستودع", variant: "destructive" }); },
-  });
+  const handleDeleteWarehouse = (id: string) => {
+    deleteWarehouseMutation.mutate(id, {
+      onSuccess: () => {
+        toast({ title: "تم حذف المستودع بنجاح" });
+        setDeleteDialogOpen(false);
+      },
+      onError: (err: unknown) => {
+        toast({
+          title: (err as Error)?.message || "خطأ في حذف المستودع",
+          variant: "destructive",
+        });
+      },
+    });
+  };
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refetchWarehouses(), refetchStock(), refetchMovements()]);
   }, [refetchWarehouses, refetchStock, refetchMovements]);
 
-  const lowStockItems = productStock.filter((item: any) => item.product?.min_stock && item.quantity <= item.product.min_stock);
-  const totalProducts = new Set(productStock.map((item: any) => item.product_id)).size;
-  const totalQuantity = productStock.reduce((sum: number, item: any) => sum + item.quantity, 0);
+  const lowStockItems = (productStock as Array<{ product?: { min_stock?: number | null } | null; quantity: number; product_id: string }>)
+    .filter((item) => item.product?.min_stock != null && item.quantity <= (item.product.min_stock as number));
+  const totalProducts = new Set((productStock as Array<{ product_id: string }>).map((item) => item.product_id)).size;
+  const totalQuantity = (productStock as Array<{ quantity: number }>).reduce((sum, item) => sum + item.quantity, 0);
 
   const pageContent = (
     <div className="space-y-6">
