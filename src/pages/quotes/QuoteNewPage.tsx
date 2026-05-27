@@ -17,7 +17,7 @@ import { ArrowRight, Save, Plus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateQuote } from "@/hooks/sales-cycle/useQuotes";
 import { customerRepository } from "@/lib/repositories/customerRepository";
-import { supabase } from "@/integrations/supabase/client";
+import { referenceRepository } from "@/lib/repositories/referenceRepository";
 import type { Database } from "@/integrations/supabase/types";
 import { useQuotationItems } from "@/components/quotations/useQuotationItems";
 import { QuotationItemsTable } from "@/components/quotations/QuotationItemsTable";
@@ -48,16 +48,8 @@ export default function QuoteNewPage() {
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("name");
-      if (error) throw error;
-      return data as Product[];
-    },
+    queryKey: ["products", "active"],
+    queryFn: () => referenceRepository.listActiveProducts() as Promise<Product[]>,
   });
 
   const {

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { legacyQuotationsRepository } from "@/lib/repositories/legacyQuotationsRepository";
+import { creditNoteRepository } from "@/lib/repositories/creditNoteRepository";
+import { referenceRepository } from "@/lib/repositories/referenceRepository";
+import { mapRepoError } from "@/lib/repositories/_base";
 import {
   ResponsiveDialog as Dialog,
   ResponsiveDialogContent as DialogContent,
@@ -31,7 +34,6 @@ import { QuotationPrintView } from "@/components/print/QuotationPrintView";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
-type Customer = Database['public']['Tables']['customers']['Row'];
 type Product = Database['public']['Tables']['products']['Row'];
 
 interface QuotationFormDialogProps {
@@ -54,19 +56,13 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('customers_safe').select('*').eq('is_active', true).order('name');
-      if (error) throw error; return data as unknown as Customer[];
-    },
+    queryKey: ['customers-safe-active'],
+    queryFn: () => creditNoteRepository.listCustomersForSelect(),
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ['products'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('products').select('*').eq('is_active', true).order('name');
-      if (error) throw error; return data as Product[];
-    },
+    queryKey: ['products', 'active'],
+    queryFn: () => referenceRepository.listActiveProducts() as Promise<Product[]>,
   });
 
   const {
@@ -102,25 +98,30 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       if (items.length === 0) throw new Error('يجب إضافة منتج واحد على الأقل');
-      const quotationData = {
-        customer_id: data.customer_id, quotation_number: quotation?.quotation_number || generateQuotationNumber(),
-        valid_until: data.valid_until || null, notes: data.notes || null,
-        subtotal, discount_amount: discountAmount, tax_amount: taxAmount, total_amount: grandTotal,
-        status: 'draft' as const, created_by: user?.id || null,
+      const header = {
+        customer_id: data.customer_id,
+        quotation_number: quotation?.quotation_number || generateQuotationNumber(),
+        valid_until: data.valid_until || null,
+        notes: data.notes || null,
+        subtotal,
+        discount_amount: discountAmount,
+        tax_amount: taxAmount,
+        total_amount: grandTotal,
+        status: 'draft' as const,
+        created_by: user?.id || null,
       };
-      let quotationId: string;
+      const itemsPayload = items.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        discount_percentage: item.discount_percentage,
+        total_price: item.total_price,
+      }));
       if (isEditing) {
-        const { error } = await supabase.from('quotations').update(quotationData).eq('id', quotation.id);
-        if (error) throw error; quotationId = quotation.id;
-        await supabase.from('quotation_items').delete().eq('quotation_id', quotation.id);
-      } else {
-        const { data: newQ, error } = await supabase.from('quotations').insert(quotationData).select().single();
-        if (error) throw error; quotationId = newQ.id;
+        return await legacyQuotationsRepository.updateWithItems(quotation.id, header, itemsPayload);
       }
-      const itemsData = items.map(item => ({ quotation_id: quotationId, product_id: item.product_id, quantity: item.quantity, unit_price: item.unit_price, discount_percentage: item.discount_percentage, total_price: item.total_price }));
-      const { error: itemsError } = await supabase.from('quotation_items').insert(itemsData);
-      if (itemsError) throw itemsError;
-      return quotationId;
+      const created = await legacyQuotationsRepository.create(header, itemsPayload);
+      return created.id;
     },
     onSuccess: (savedId) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
@@ -128,7 +129,11 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       reset(undefined, { keepValues: true });
       toast({ title: isEditing ? "تم تحديث عرض السعر بنجاح" : "تم إنشاء عرض السعر بنجاح", description: "يمكنك الآن طباعة PDF" });
     },
-    onError: (error) => { logErrorSafely('QuotationFormDialog', error); toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" }); },
+    onError: (error) => {
+      logErrorSafely('QuotationFormDialog', error);
+      const description = mapRepoError(error, getSafeErrorMessage(error)).message;
+      toast({ title: "حدث خطأ", description, variant: "destructive" });
+    },
   });
 
   const onSubmit = async (data: FormData) => {
@@ -152,7 +157,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         <Label>العميل *</Label>
         <Select value={watch('customer_id')} onValueChange={(v) => setValue('customer_id', v)}>
           <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
-          <SelectContent>{customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+          <SelectContent>{customers.map((c: { id: string; name: string }) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div><Label htmlFor="valid_until">صالح حتى</Label><Input id="valid_until" type="date" {...register('valid_until')} /></div>
