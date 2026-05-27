@@ -90,7 +90,8 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
       });
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ أثناء تسجيل الدفعة", variant: "destructive" });
+      const mapped = mapRepoError(error, "حدث خطأ أثناء تسجيل الدفعة");
+      toast({ title: mapped.message, variant: "destructive" });
       logErrorSafely('SupplierPaymentDialog', error);
     },
   });
