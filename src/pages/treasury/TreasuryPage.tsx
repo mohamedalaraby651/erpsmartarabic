@@ -1,29 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Plus, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCw, Building2 } from 'lucide-react';
 import { CashRegisterFormDialog } from '@/components/treasury/CashRegisterFormDialog';
 import { CashTransactionDialog } from '@/components/treasury/CashTransactionDialog';
 import { useNavigate } from 'react-router-dom';
+import {
+  useCashRegisters,
+  useTreasuryBalances,
+} from '@/hooks/treasury';
+import type { CashRegisterRow } from '@/lib/repositories/treasuryRepository';
 
-interface CashRegister {
-  id: string;
-  name: string;
-  location: string | null;
-  current_balance: number;
-  is_active: boolean;
-  assigned_to: string | null;
-  created_at: string;
-}
+type CashRegister = CashRegisterRow;
 
 export default function TreasuryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,10 +25,8 @@ export default function TreasuryPage() {
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [selectedRegister, setSelectedRegister] = useState<CashRegister | null>(null);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('income');
-  const { toast } = useToast();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   // Handle action parameter from URL (FAB/QuickActions)
   useEffect(() => {
@@ -45,36 +37,8 @@ export default function TreasuryPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: registers, isLoading, refetch } = useQuery({
-    queryKey: ['cash-registers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cash_registers')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as CashRegister[];
-    },
-  });
-
-  const { data: todayStats } = useQuery({
-    queryKey: ['treasury-today-stats'],
-    queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('cash_transactions')
-        .select('transaction_type, amount')
-        .gte('created_at', today);
-      
-      if (error) throw error;
-      
-      const income = data?.filter(t => t.transaction_type === 'income').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const expense = data?.filter(t => t.transaction_type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      
-      return { income, expense, net: income - expense };
-    },
-  });
+  const { data: registers, isLoading, refetch } = useCashRegisters();
+  const { data: todayStats } = useTreasuryBalances();
 
   const totalBalance = registers?.reduce((sum, r) => sum + Number(r.current_balance), 0) || 0;
 

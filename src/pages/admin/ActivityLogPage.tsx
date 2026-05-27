@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +29,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ExportButton } from '@/components/reports/ExportButton';
 import { Activity, Search, Eye, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useActivityLog } from '@/hooks/admin';
+import type { ActivityLogEntry } from '@/lib/repositories/adminMetricsRepository';
 
 const ActivityLogPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,50 +38,16 @@ const ActivityLogPage = () => {
   const [entityFilter, setEntityFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-interface ActivityLog {
-    id: string;
-    action: string;
-    entity_type: string;
-    entity_name: string | null;
-    entity_id: string | null;
-    user_id: string;
-    created_at: string;
-    ip_address: string | null;
-    old_values: Record<string, unknown> | null;
-    new_values: Record<string, unknown> | null;
-  }
+  type ActivityLog = ActivityLogEntry;
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const { data: logs = [], isLoading } = useQuery({
-    queryKey: ['activity-logs', searchQuery, actionFilter, entityFilter, dateFrom, dateTo],
-    queryFn: async () => {
-      let query = supabase
-        .from('activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
-
-      if (searchQuery) {
-        query = query.or(`entity_name.ilike.%${searchQuery}%`);
-      }
-      if (actionFilter !== 'all') {
-        query = query.eq('action', actionFilter);
-      }
-      if (entityFilter !== 'all') {
-        query = query.eq('entity_type', entityFilter);
-      }
-      if (dateFrom) {
-        query = query.gte('created_at', dateFrom);
-      }
-      if (dateTo) {
-        query = query.lte('created_at', dateTo + 'T23:59:59');
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
+  const { data: logs = [], isLoading } = useActivityLog({
+    search: searchQuery || undefined,
+    action: actionFilter,
+    entityType: entityFilter,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
   });
 
   const actionLabels: Record<string, string> = {

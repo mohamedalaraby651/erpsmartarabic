@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,19 +9,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Eye, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuditTrail } from '@/hooks/admin';
+import type { AuditTrailEntry } from '@/lib/repositories/adminMetricsRepository';
 
-interface AuditEntry {
-  id: string;
-  table_name: string;
-  record_id: string;
-  operation: 'INSERT' | 'UPDATE' | 'DELETE';
-  before_value: Record<string, unknown> | null;
-  after_value: Record<string, unknown> | null;
-  changed_fields: string[] | null;
-  user_id: string | null;
-  ip_address: string | null;
-  created_at: string;
-}
+type AuditEntry = AuditTrailEntry;
 
 const TABLES = [
   'invoices', 'payments', 'credit_notes', 'journals', 'journal_entries',
@@ -37,22 +26,9 @@ const AuditTrailPage = () => {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<AuditEntry | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['audit-trail', tableFilter, opFilter],
-    queryFn: async () => {
-      let q = supabase
-        .from('audit_trail' as never)
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (tableFilter !== 'all') q = q.eq('table_name', tableFilter);
-      if (opFilter !== 'all') q = q.eq('operation', opFilter);
-
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data || []) as unknown as AuditEntry[];
-    },
+  const { data, isLoading } = useAuditTrail({
+    tableName: tableFilter !== 'all' ? tableFilter : undefined,
+    operation: opFilter !== 'all' ? (opFilter as 'INSERT' | 'UPDATE' | 'DELETE') : undefined,
   });
 
   const filtered = (data || []).filter((row) => {
