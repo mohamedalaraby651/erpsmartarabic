@@ -85,15 +85,15 @@ export const treasuryRepository = {
       this.listCashTransactions({ fromDate: today }),
     ]);
     const totalBalance = registers.reduce(
-      (s, r) => s + Number(r.current_balance ?? 0),
+      (s: number, r: CashRegisterRow) => s + Number(r.current_balance ?? 0),
       0,
     );
     const income = todayTx
-      .filter((t) => t.transaction_type === "income")
-      .reduce((s, t) => s + Number(t.amount), 0);
+      .filter((t: CashTransactionRow) => t.transaction_type === "income")
+      .reduce((s: number, t: CashTransactionRow) => s + Number(t.amount), 0);
     const expense = todayTx
-      .filter((t) => t.transaction_type === "expense")
-      .reduce((s, t) => s + Number(t.amount), 0);
+      .filter((t: CashTransactionRow) => t.transaction_type === "expense")
+      .reduce((s: number, t: CashTransactionRow) => s + Number(t.amount), 0);
     return {
       totalBalance: Math.round(totalBalance * 100) / 100,
       income: Math.round(income * 100) / 100,

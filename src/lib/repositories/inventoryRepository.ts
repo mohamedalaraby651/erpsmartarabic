@@ -66,7 +66,7 @@ export const inventoryRepository = {
       );
     }
     if (filters.productId) q = q.eq("product_id", filters.productId);
-    if (filters.movementType) q = q.eq("movement_type", filters.movementType);
+    if (filters.movementType) q = q.eq("movement_type", filters.movementType as "adjustment" | "in" | "out" | "transfer");
     if (filters.fromDate) q = q.gte("created_at", filters.fromDate);
     if (filters.toDate) q = q.lte("created_at", filters.toDate);
     q = q.limit(filters.limit ?? 50);
