@@ -163,73 +163,72 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
       return merged;
     }));
 
-  const createMutation = useMutation({
-    mutationFn: async () => {
-      const selected = lines.filter(l => l.selected && l.return_qty > 0 && !l.error);
-      if (linesWithErrors.length > 0) {
-        const first = linesWithErrors[0];
-        throw new Error(`${first.product_name}: ${first.error}`);
-      }
-      if (selected.length === 0) throw new Error('اختر بنداً واحداً على الأقل بكمية صالحة');
+  const createDraftMutation = useCreateCreditNoteDraft();
 
-      const { data: tenantData, error: tenantErr } = await supabase.rpc('get_current_tenant');
-      if (tenantErr) throw tenantErr;
-
-      const { data: cn, error: cnErr } = await supabase
-        .from('credit_notes')
-        .insert({
-          invoice_id: invoiceId,
-          customer_id: customerId,
-          amount: totalAmount,
-          reason: reason || null,
-          credit_note_number: '',
-          created_by: user?.id,
-          tenant_id: tenantData,
-          status: 'draft',
-        })
-        .select('id')
-        .single();
-      if (cnErr) throw cnErr;
-
-      const itemsPayload = selected.map(l => ({
-        credit_note_id: cn.id,
-        invoice_item_id: l.invoice_item_id,
-        product_id: l.product_id,
-        quantity: l.return_qty,
-        unit_price: l.unit_price,
-        unit_price_original: l.unit_price,
-        total_price: round2(l.unit_price * l.return_qty),
-        tenant_id: tenantData,
-      }));
-
-      const { error: itemsErr } = await supabase.from('credit_note_items').insert(itemsPayload);
-      if (itemsErr) {
-        // Rollback the header so we don't leave an orphan
-        await supabase.from('credit_notes').delete().eq('id', cn.id);
-        throw itemsErr;
-      }
-    },
-    onSuccess: () => {
-      toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
-      resetForm();
-      onOpenChange(false);
-      onSuccess();
-    },
-    onError: (err: any) => {
-      const raw: string = err?.message ?? 'حدث خطأ غير متوقع';
-      const description = parseDbOverdraw(raw, {
-        resolveProduct: (itemId) => {
-          const l = lines.find(x => x.invoice_item_id === itemId);
-          return l ? { name: l.product_name, sku: l.product_sku } : undefined;
-        },
-      }) ?? raw;
+  const submitDraft = () => {
+    const selected = lines.filter(l => l.selected && l.return_qty > 0 && !l.error);
+    if (linesWithErrors.length > 0) {
+      const first = linesWithErrors[0];
       toast({
         title: 'خطأ في إنشاء إشعار الإرجاع',
-        description,
+        description: `${first.product_name}: ${first.error}`,
         variant: 'destructive',
       });
-    },
-  });
+      return;
+    }
+    if (selected.length === 0) {
+      toast({
+        title: 'خطأ في إنشاء إشعار الإرجاع',
+        description: 'اختر بنداً واحداً على الأقل بكمية صالحة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    createDraftMutation.mutate(
+      {
+        invoiceId,
+        customerId,
+        reason: reason || null,
+        totalAmount,
+        userId: user?.id ?? null,
+        items: selected.map(l => ({
+          invoice_item_id: l.invoice_item_id,
+          product_id: l.product_id,
+          quantity: l.return_qty,
+          unit_price: l.unit_price,
+        })),
+      },
+      {
+        onSuccess: () => {
+          toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
+          resetForm();
+          onOpenChange(false);
+          onSuccess();
+        },
+        onError: (err: unknown) => {
+          const mapped = mapRepoError(err, 'حدث خطأ غير متوقع');
+          const raw: string = (mapped as Error)?.message ?? 'حدث خطأ غير متوقع';
+          const description = parseDbOverdraw(raw, {
+            resolveProduct: (itemId) => {
+              const l = lines.find(x => x.invoice_item_id === itemId);
+              return l ? { name: l.product_name, sku: l.product_sku } : undefined;
+            },
+          }) ?? raw;
+          toast({
+            title: 'خطأ في إنشاء إشعار الإرجاع',
+            description,
+            variant: 'destructive',
+          });
+        },
+      },
+    );
+  };
+
+  const createMutation = {
+    mutate: submitDraft,
+    isPending: createDraftMutation.isPending,
+  };
 
   const resetForm = () => {
     setCustomerId('');
