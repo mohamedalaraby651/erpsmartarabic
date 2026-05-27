@@ -52,6 +52,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { approveExpense, getErrorMessage } from '@/lib/api/secureOperations';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
+import { mapRepoError } from '@/lib/repositories/_base';
 
 interface Expense {
   id: string;
@@ -151,7 +152,8 @@ export default function ExpensesPage() {
     },
     onError: (error: unknown) => {
       logErrorSafely('ExpensesPage.approveMutation', error);
-      toast({ title: 'حدث خطأ', description: getSafeErrorMessage(error), variant: 'destructive' });
+      const mapped = mapRepoError(error, getSafeErrorMessage(error));
+      toast({ title: 'حدث خطأ', description: mapped.message, variant: 'destructive' });
     },
   });
 

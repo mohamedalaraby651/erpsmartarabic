@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { logErrorSafely } from "@/lib/errorHandler";
+import { mapRepoError } from "@/lib/repositories/_base";
 import type { Database } from "@/integrations/supabase/types";
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -89,7 +90,8 @@ const SupplierPaymentDialog = ({ open, onOpenChange, supplier }: SupplierPayment
       });
     },
     onError: (error) => {
-      toast({ title: "حدث خطأ أثناء تسجيل الدفعة", variant: "destructive" });
+      const mapped = mapRepoError(error, "حدث خطأ أثناء تسجيل الدفعة");
+      toast({ title: mapped.message, variant: "destructive" });
       logErrorSafely('SupplierPaymentDialog', error);
     },
   });

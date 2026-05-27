@@ -79,7 +79,7 @@ const MetricsPage = () => {
     'verify-totp': 'التحقق الثنائي',
   };
 
-  const isLoading = loadingMetrics || loadingRateLimits;
+  
 
   return (
     <div className="space-y-6 animate-fade-in">
