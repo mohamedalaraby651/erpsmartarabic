@@ -201,6 +201,25 @@ export const supplierRepository = {
     const { error } = await supabase.from('supplier_notes').delete().eq('id', id);
     if (error) throw error;
   },
+
+  // ============================================
+  // Statement / activity (RPC-backed)
+  // ============================================
+  async getStatement(supplierId: string) {
+    const { data, error } = await supabase.rpc('get_supplier_statement', {
+      _supplier_id: supplierId,
+    });
+    if (error) throw error;
+    return (data ?? []) as Array<{
+      entry_date: string;
+      entry_type: string;
+      reference: string;
+      debit: number;
+      credit: number;
+      running_balance: number;
+      status: string;
+    }>;
+  },
 };
 
 // ============================================

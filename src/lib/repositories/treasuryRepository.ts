@@ -106,4 +106,77 @@ export const treasuryRepository = {
   async createSupplierPayment(input: RecordSupplierPaymentData): Promise<void> {
     return recordSupplierPayment(input);
   },
+
+  // ============================================
+  // Register CRUD
+  // ============================================
+
+  async createRegister(input: {
+    name: string;
+    location?: string | null;
+    current_balance?: number;
+    is_active?: boolean;
+  }): Promise<void> {
+    const { error } = await supabase.from("cash_registers").insert({
+      name: input.name,
+      location: input.location ?? null,
+      current_balance: input.current_balance ?? 0,
+      is_active: input.is_active ?? true,
+    });
+    if (error) throw mapRepoError(error, "تعذّر إضافة الصندوق.");
+  },
+
+  async updateRegister(
+    id: string,
+    input: { name: string; location?: string | null; is_active?: boolean },
+  ): Promise<void> {
+    const { error } = await supabase
+      .from("cash_registers")
+      .update({
+        name: input.name,
+        location: input.location ?? null,
+        is_active: input.is_active ?? true,
+      })
+      .eq("id", id);
+    if (error) throw mapRepoError(error, "تعذّر تحديث الصندوق.");
+  },
+
+  // ============================================
+  // Manual income / expense transaction
+  // ============================================
+
+  async recordCashTransaction(input: {
+    registerId: string;
+    currentBalance: number;
+    transactionType: "income" | "expense";
+    amount: number;
+    description?: string | null;
+    userId?: string | null;
+  }): Promise<void> {
+    const amt = Number(input.amount);
+    const newBalance =
+      input.transactionType === "income"
+        ? Number(input.currentBalance) + amt
+        : Number(input.currentBalance) - amt;
+    if (input.transactionType === "expense" && newBalance < 0) {
+      throw new Error("الرصيد غير كافي لإتمام عملية السحب");
+    }
+    const txnNumber = `TXN-${Date.now()}`;
+    const { error: txnErr } = await supabase.from("cash_transactions").insert({
+      transaction_number: txnNumber,
+      register_id: input.registerId,
+      transaction_type: input.transactionType,
+      amount: amt,
+      balance_after: newBalance,
+      description: input.description ?? null,
+      reference_type: "manual",
+      created_by: input.userId ?? null,
+    });
+    if (txnErr) throw mapRepoError(txnErr, "تعذّر تسجيل الحركة.");
+    const { error: regErr } = await supabase
+      .from("cash_registers")
+      .update({ current_balance: newBalance })
+      .eq("id", input.registerId);
+    if (regErr) throw mapRepoError(regErr, "تعذّر تحديث رصيد الصندوق.");
+  },
 };
