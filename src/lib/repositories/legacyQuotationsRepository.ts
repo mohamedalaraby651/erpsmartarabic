@@ -13,6 +13,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { mapRepoError } from "./_base";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 type Tables = Database["public"]["Tables"];
 type QuotationRow = Tables["quotations"]["Row"];
@@ -36,7 +37,7 @@ export const legacyQuotationsRepository = {
     let q = supabase
       .from("quotations")
       .select("*", { count: "exact", head: true });
-    if (search) q = q.or(`quotation_number.ilike.%${search}%`);
+    if (search) q = q.or(`quotation_number.ilike.%${sanitizeSearch(search)}%`);
     const { count, error } = await q;
     if (error) throw mapRepoError(error, "تعذّر عدّ عروض الأسعار.");
     return count ?? 0;
@@ -53,7 +54,7 @@ export const legacyQuotationsRepository = {
       .order("created_at", { ascending: false })
       .range(params.from, params.to);
     if (params.search)
-      q = q.or(`quotation_number.ilike.%${params.search}%`);
+      q = q.or(`quotation_number.ilike.%${sanitizeSearch(params.search)}%`);
     const { data, error } = await q;
     if (error) throw mapRepoError(error, "تعذّر تحميل عروض الأسعار.");
     return (data ?? []) as LegacyQuotationWithCustomer[];

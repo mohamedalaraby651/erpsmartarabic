@@ -6,6 +6,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { mapRepoError } from "./_base";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 export interface AuditTrailEntry {
   id: string;
@@ -82,7 +83,7 @@ export const adminMetricsRepository = {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(filters.limit ?? 500);
-    if (filters.search) q = q.or(`entity_name.ilike.%${filters.search}%`);
+    if (filters.search) q = q.or(`entity_name.ilike.%${sanitizeSearch(filters.search)}%`);
     if (filters.action && filters.action !== "all")
       q = q.eq("action", filters.action);
     if (filters.entityType && filters.entityType !== "all")

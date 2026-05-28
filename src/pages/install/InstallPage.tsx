@@ -37,7 +37,7 @@ export default function InstallPage() {
   const handleInstall = async () => {
     const success = await promptInstall();
     if (success) {
-      console.log('[PWA 2.0] تم تثبيت التطبيق بنجاح!');
+      if (import.meta.env.DEV) console.log('[PWA 2.0] تم تثبيت التطبيق بنجاح!');
     }
   };
 

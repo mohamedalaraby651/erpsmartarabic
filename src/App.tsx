@@ -191,6 +191,16 @@ const mutationCache = new MutationCache({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Production SLO — React Query retry policy (DO NOT REGRESS)
+// ---------------------------------------------------------------------------
+// • Queries: max 2 retries, exponential backoff (1s → 2s → 4s, cap 8s).
+// • Skip retry for permission/auth errors (401/403/42501/PGRST301) — they
+//   will never succeed and would just burn the user's quota.
+// • Mutations: never retried — they are non-idempotent by default; any
+//   retry must be explicit and idempotency-keyed at the call site.
+// Changing these caps requires a security review; see docs/engineering-standards.md.
+// ---------------------------------------------------------------------------
 const queryClient = new QueryClient({
   queryCache,
   mutationCache,
