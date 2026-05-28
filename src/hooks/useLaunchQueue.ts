@@ -44,7 +44,7 @@ export function useLaunchQueue() {
 
   useEffect(() => {
     if (!isSupported) {
-      console.log('[Launch Queue] Not supported in this browser');
+      if (import.meta.env.DEV) console.log('[Launch Queue] Not supported in this browser');
       return;
     }
 
@@ -57,7 +57,7 @@ export function useLaunchQueue() {
     
     launchQueue.setConsumer(async (params: LaunchQueueParams) => {
       setIsProcessing(true);
-      console.log('[Launch Queue] Received launch params:', params);
+      if (import.meta.env.DEV) console.log('[Launch Queue] Received launch params:', params);
       
       try {
         const files = params.files?.length 
@@ -87,7 +87,7 @@ export function useLaunchQueue() {
       }
     });
 
-    console.log('[Launch Queue] Consumer registered');
+    if (import.meta.env.DEV) console.log('[Launch Queue] Consumer registered');
   }, [isSupported, navigate, processLaunchFiles]);
 
   const clearLaunchParams = useCallback(() => {

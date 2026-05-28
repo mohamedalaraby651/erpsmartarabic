@@ -71,14 +71,48 @@ const ARABIC_ERRORS: Record<string, string> = {
 };
 
 /**
+ * Isolated logger for the repository layer. In development it surfaces
+ * a clean, namespaced `[repo]` console.error so engineers see the raw
+ * Postgres payload (code/hint/details) while debugging. In production it
+ * forwards the structured payload to `logErrorSafely` so the original
+ * stack/details are captured for telemetry **without** ever leaking
+ * into the Arabic toast shown to end-users.
+ */
+function repoLogger(rawError: unknown, friendlyMessage: string, fallback: string): void {
+  const pg = rawError as Partial<PostgrestError> & { message?: string; code?: string; hint?: string; details?: string };
+  const payload = {
+    code: pg?.code,
+    hint: pg?.hint,
+    details: pg?.details,
+    message: pg?.message,
+    fallback,
+    friendly: friendlyMessage,
+  };
+  try {
+    if (import.meta.env?.DEV) {
+      // eslint-disable-next-line no-console
+      console.error("[repo]", payload, rawError);
+      return;
+    }
+    // Production: route through the safe error sink (no PII / no stack to user).
+    void import("@/lib/errorHandler").then(({ logErrorSafely }) => {
+      try { logErrorSafely("[repo]", rawError); } catch { /* never throw from logger */ }
+    }).catch(() => { /* swallow */ });
+  } catch { /* never throw from logger */ }
+}
+
+/**
  * يحوّل خطأ Supabase/Postgres إلى Error برسالة عربية موحّدة،
  * مع الحفاظ على الأصل في `.cause` لأغراض التتبع.
+ * يُسجّل التفاصيل الأصلية عبر `repoLogger` المعزول قبل التغليف،
+ * لإبقاء الـ stack بعيداً عن واجهة المستخدم.
  */
 export function mapRepoError(err: unknown, fallback = "تعذّر إتمام العملية."): Error {
   if (!err) return new Error(fallback);
   const pgErr = err as Partial<PostgrestError> & { message?: string; code?: string };
   const arabic = pgErr.code ? ARABIC_ERRORS[pgErr.code] : undefined;
   const message = arabic ?? pgErr.message ?? fallback;
+  repoLogger(err, message, fallback);
   const wrapped = new Error(message);
   (wrapped as Error & { cause?: unknown }).cause = err;
   return wrapped;
