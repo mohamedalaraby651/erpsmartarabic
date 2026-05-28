@@ -58,21 +58,21 @@ export function useInstallPrompt(): UseInstallPromptReturn {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      console.log('[PWA 2.0] Install prompt available');
+      if (import.meta.env.DEV) console.log('[PWA 2.0] Install prompt available');
     };
 
     // Listen for successful installation
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
-      console.log('[PWA 2.0] App installed successfully');
+      if (import.meta.env.DEV) console.log('[PWA 2.0] App installed successfully');
     };
 
     // PWA 2025: Listen for display mode changes
     const handleDisplayModeChange = (e: MediaQueryListEvent) => {
       if (e.matches) {
         setIsInstalled(true);
-        console.log('[PWA 2.0] Display mode changed to standalone');
+        if (import.meta.env.DEV) console.log('[PWA 2.0] Display mode changed to standalone');
       }
     };
 
