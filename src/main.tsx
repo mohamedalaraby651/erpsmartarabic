@@ -11,6 +11,39 @@ import {
 } from "./lib/runtimeTelemetry";
 import { markPhase } from "./lib/bootMarks";
 
+// ---------------------------------------------------------------------------
+// Pre-mount environment hardening (DevSecOps gate)
+// ---------------------------------------------------------------------------
+// Fail-fast if Supabase env tokens are missing/empty. Prevents the
+// auto-generated client.ts from silently calling createClient(undefined,
+// undefined) and producing confusing 401/CORS errors downstream. No `||`
+// or `??` fallback literals are permitted for these tokens anywhere in the
+// bootstrap lifecycle.
+// ---------------------------------------------------------------------------
+(function assertSupabaseEnv() {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const missing: string[] = [];
+  if (!url || typeof url !== "string" || url.trim() === "") missing.push("VITE_SUPABASE_URL");
+  if (!key || typeof key !== "string" || key.trim() === "") missing.push("VITE_SUPABASE_PUBLISHABLE_KEY");
+  if (missing.length > 0) {
+    const msg =
+      `[boot] Missing required environment variables: ${missing.join(", ")}. ` +
+      `Reconnect Lovable Cloud or restore the .env file before continuing.`;
+    if (typeof document !== "undefined") {
+      const root = document.getElementById("root");
+      if (root) {
+        root.innerHTML =
+          '<div style="font-family:system-ui;padding:24px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin:24px;direction:rtl;text-align:right">' +
+          '<strong>تعذّر إقلاع التطبيق</strong><br/>متغيّرات البيئة المطلوبة غير متوفّرة: ' +
+          missing.join(", ") +
+          "</div>";
+      }
+    }
+    throw new Error(msg);
+  }
+})();
+
 markPhase('js_executed');
 
 // Install global error capture as early as possible — before React mounts —
