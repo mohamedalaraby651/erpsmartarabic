@@ -112,7 +112,7 @@ function disableJsPdfInternalArabicProcessing(): void {
   }
 
   _jspdfPatched = true;
-  console.log(`[PDF] ✅ Disabled jsPDF internal Arabic/Bidi processing (removed ${originalLength - api.events.length} handlers)`);
+  if (import.meta.env.DEV) console.log(`[PDF] ✅ Disabled jsPDF internal Arabic/Bidi processing (removed ${originalLength - api.events.length} handlers)`);
 }
 
 // Call this at module load time
@@ -131,7 +131,7 @@ async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promi
     }
 
     if (!cachedFont) {
-      console.log(`[PDF] Setting up font: "${fontKey}"`);
+      if (import.meta.env.DEV) console.log(`[PDF] Setting up font: "${fontKey}"`);
       cachedFont = await loadArabicFont(fontKey);
       if (cachedFont) cachedFontKey = fontKey;
     }
@@ -146,7 +146,7 @@ async function setupArabicFont(doc: jsPDF, fontKey: PdfFontKey = 'cairo'): Promi
       doc.addFont(vfsName, ARABIC_FONT_NAME, 'italic');
       doc.addFont(vfsName, ARABIC_FONT_NAME, 'bolditalic');
       doc.setFont(ARABIC_FONT_NAME);
-      console.log(`[PDF] ✅ Font "${ARABIC_FONT_NAME}" registered for all styles`);
+      if (import.meta.env.DEV) console.log(`[PDF] ✅ Font "${ARABIC_FONT_NAME}" registered for all styles`);
       return true;
     }
     console.error('[PDF] ❌ Font loading returned null');
