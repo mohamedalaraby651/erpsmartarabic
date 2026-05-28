@@ -96,7 +96,7 @@ function repoLogger(rawError: unknown, friendlyMessage: string, fallback: string
     }
     // Production: route through the safe error sink (no PII / no stack to user).
     void import("@/lib/errorHandler").then(({ logErrorSafely }) => {
-      try { logErrorSafely(rawError, "[repo]"); } catch { /* never throw from logger */ }
+      try { logErrorSafely("[repo]", rawError); } catch { /* never throw from logger */ }
     }).catch(() => { /* swallow */ });
   } catch { /* never throw from logger */ }
 }
