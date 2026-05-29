@@ -119,8 +119,16 @@ export default defineConfig(({ mode }) => ({
         manualChunks(id) {
           // ── Vendors (shared libraries) ─────────────────────────────────
           if (id.includes('node_modules')) {
-            if (/[\\/]react(?:-dom|-router-dom)?[\\/]/.test(id)) return 'vendor-react';
-            if (id.includes('@tanstack/react-query')) return 'vendor-query';
+            const normalizedId = id.replace(/\\/g, '/');
+
+            // Keep ONLY the canonical React packages in the React chunk.
+            // A broader `/react/` match accidentally pulled packages such as
+            // `@floating-ui/react` into `vendor-react`; those packages import
+            // other UI vendors, creating a production circular dependency where
+            // Radix read `React.forwardRef` before React was initialized.
+            if (/\/node_modules\/(react|react-dom|scheduler)\//.test(normalizedId)) return 'vendor-react';
+            if (normalizedId.includes('/node_modules/react-router-dom/')) return 'vendor-router';
+            if (normalizedId.includes('/node_modules/@tanstack/')) return 'vendor-query';
             if (id.includes('@supabase/supabase-js')) return 'vendor-supabase';
             if (id.includes('recharts')) return 'vendor-charts';
             if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html2pdf')) return 'vendor-pdf';
@@ -128,13 +136,20 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('date-fns')) return 'vendor-dates';
             if (id.includes('@dnd-kit')) return 'vendor-dnd';
             if (id.includes('idb')) return 'vendor-idb';
-            if (id.includes('@radix-ui')) {
-              // Split radix into core (used everywhere) vs extended
-              if (/(dialog|dropdown-menu|select|popover|tooltip)/.test(id)) {
-                return 'vendor-ui-core';
-              }
-              return 'vendor-ui-extended';
-            }
+            if (
+              normalizedId.includes('/node_modules/@radix-ui/') ||
+              normalizedId.includes('/node_modules/@floating-ui/') ||
+              normalizedId.includes('/node_modules/cmdk/') ||
+              normalizedId.includes('/node_modules/vaul/') ||
+              normalizedId.includes('/node_modules/sonner/') ||
+              normalizedId.includes('/node_modules/react-day-picker/') ||
+              normalizedId.includes('/node_modules/react-resizable-panels/') ||
+              normalizedId.includes('/node_modules/embla-carousel-react/') ||
+              normalizedId.includes('/node_modules/input-otp/') ||
+              normalizedId.includes('/node_modules/lucide-react/') ||
+              normalizedId.includes('/node_modules/next-themes/')
+            ) return 'vendor-ui';
+            if (normalizedId.includes('/node_modules/react-hook-form/') || normalizedId.includes('/node_modules/@hookform/')) return 'vendor-forms';
             // All other 3rd-party deps → single vendor bundle
             return 'vendor-misc';
           }
