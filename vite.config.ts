@@ -126,7 +126,8 @@ export default defineConfig(({ mode }) => ({
             // `@floating-ui/react` into `vendor-react`; those packages import
             // other UI vendors, creating a production circular dependency where
             // Radix read `React.forwardRef` before React was initialized.
-            if (/\/node_modules\/(react|react-dom|react-router-dom)\//.test(normalizedId)) return 'vendor-react';
+            if (/\/node_modules\/(react|react-dom)\//.test(normalizedId)) return 'vendor-react';
+            if (normalizedId.includes('/node_modules/react-router-dom/')) return 'vendor-router';
             if (normalizedId.includes('/node_modules/@tanstack/')) return 'vendor-query';
             if (id.includes('@supabase/supabase-js')) return 'vendor-supabase';
             if (id.includes('recharts')) return 'vendor-charts';
