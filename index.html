@@ -169,7 +169,7 @@
           bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#fef3c7;color:#92400e;border-bottom:1px solid #f59e0b;padding:6px 12px;font-family:Cairo,sans-serif;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px';
           bar.innerHTML =
             '<span>⚠️ هذا رابط معاينة محمي. للوصول الفعلي للنظام:</span>' +
-            '<a href="https://erpsmartarabic.lovable.app" style="background:#f59e0b;color:#fff;text-decoration:none;border-radius:6px;padding:3px 10px;font-weight:600">افتح النسخة الرسمية</a>';
+            '<a href="https://erpsmartarabic1.lovable.app" style="background:#f59e0b;color:#fff;text-decoration:none;border-radius:6px;padding:3px 10px;font-weight:600">افتح النسخة الرسمية</a>';
           document.body.insertBefore(bar, document.body.firstChild);
         } catch (e) { /* ignore */ }
       })();
@@ -218,22 +218,26 @@
           } catch (e) { /* ignore */ }
         }
 
-        function shipBeacon(type, message) {
-          try {
-            var url = 'https://npwofemokwddtutugmas.supabase.co/functions/v1/log-event';
-            var apikey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wd29mZW1va3dkZHR1dHVnbWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1NjgyMTAsImV4cCI6MjA4MjE0NDIxMH0.dFuXXlbKjNUQ-phhFWxsbOtTIdIZROYN21SNlC_21UQ';
-            var payload = JSON.stringify({
-              level: 'error',
-              message: '[runtime] ' + type + ': ' + message,
-              endpoint: window.location.pathname,
-              metadata: { type: type, userAgent: navigator.userAgent, source: 'index.html-shield' }
-            });
-            var blob = new Blob([payload], { type: 'application/json' });
-            if ('sendBeacon' in navigator) {
-              navigator.sendBeacon(url + '?apikey=' + apikey, blob);
-            }
-          } catch (e) { /* ignore */ }
+        function shipBeacon() { /* local-only before React mounts; runtimeTelemetry drains after mount */ }
+
+        function safeReason(reason) {
+          if (!reason) return 'unknown runtime error';
+          if (typeof reason === 'string') return reason;
+          return reason.message || reason.name || String(reason);
         }
+
+        window.addEventListener('error', function (event) {
+          bufferEvent('boot_error', event.message || 'unknown boot error', {
+            filename: event.filename || null,
+            lineno: event.lineno || null,
+            colno: event.colno || null,
+            source: 'index.html-preboot'
+          });
+        });
+
+        window.addEventListener('unhandledrejection', function (event) {
+          bufferEvent('boot_error', safeReason(event.reason), { source: 'index.html-preboot-rejection' });
+        });
 
         // Read the most recent captured runtime error (if any) so we can show
         // the user/support a real cause instead of a cryptic code.
