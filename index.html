@@ -183,16 +183,14 @@
     -->
     <script>
       (function () {
-        // Bumped from 10s → 25s. On mobile 3G/4G the initial bundle (vendor +
-        // route chunks) plus the 8s Supabase getSession() timeout can legitimately
-        // take 12-18s before React paints. Firing the shield at 10s was hiding
-        // the real (working) app behind a fake "تعذّر تحميل" screen.
-        var SHIELD_MS = 25000;
-        var BOOT_KEY = 'lvbl:runtime-events:v1';
-        var MAX_BUF = 20;
+        // Shield fires at 15s. A 5s pre-warning countdown overlays from 10s so
+        // the user sees progress instead of a frozen white screen. If React
+        // mounts at any time, the shield (and the countdown) stand down.
+        var SHIELD_MS = 15000;
+        var WARN_MS   = 10000;
+        var BOOT_KEY  = 'lvbl:runtime-events:v1';
+        var MAX_BUF   = 20;
 
-        // Tiny localStorage ring-buffer that mirrors runtimeTelemetry's format
-        // so the React layer can later drain & ship these events.
         function bufferEvent(type, message, extra) {
           try {
             var raw = localStorage.getItem(BOOT_KEY);
@@ -208,7 +206,6 @@
             if (arr.length > MAX_BUF) arr = arr.slice(-MAX_BUF);
             localStorage.setItem(BOOT_KEY, JSON.stringify(arr));
           } catch (e) { /* ignore */ }
-          // Also expose for drainBootstrapEvents() in case storage is blocked
           try {
             window.__LVBL_BOOT_EVENTS__ = window.__LVBL_BOOT_EVENTS__ || [];
             window.__LVBL_BOOT_EVENTS__.push({
@@ -221,8 +218,6 @@
           } catch (e) { /* ignore */ }
         }
 
-        // Best-effort beacon while we still have a network — sendBeacon survives
-        // the user immediately closing the tab.
         function shipBeacon(type, message) {
           try {
             var url = 'https://npwofemokwddtutugmas.supabase.co/functions/v1/log-event';
@@ -240,53 +235,110 @@
           } catch (e) { /* ignore */ }
         }
 
-        // Mark when React has mounted so the shield can stand down.
-        // We poll cheaply because there's no global mount event we can rely on
-        // before main.tsx has even parsed.
+        // Read the most recent captured runtime error (if any) so we can show
+        // the user/support a real cause instead of a cryptic code.
+        function lastCapturedError() {
+          try {
+            var raw = localStorage.getItem(BOOT_KEY);
+            if (!raw) return null;
+            var arr = JSON.parse(raw);
+            if (!Array.isArray(arr) || arr.length === 0) return null;
+            for (var i = arr.length - 1; i >= 0; i--) {
+              var ev = arr[i];
+              if (ev && (ev.type === 'error' || ev.type === 'unhandledrejection' || ev.type === 'boot_error')) {
+                return ev;
+              }
+            }
+            return arr[arr.length - 1];
+          } catch (e) { return null; }
+        }
+
         window.__LVBL_REACT_MOUNTED__ = false;
         var mountObserver = setInterval(function () {
           var r = document.getElementById('root');
           if (r && r.children.length > 0) {
             window.__LVBL_REACT_MOUNTED__ = true;
             clearInterval(mountObserver);
+            // Tear down any countdown overlay we may have shown.
+            var pre = document.getElementById('lvbl-prewarn');
+            if (pre && pre.parentNode) pre.parentNode.removeChild(pre);
           }
         }, 200);
 
+        // Pre-warning countdown overlay — shows during the last 5 seconds
+        // before the shield kicks in. Non-blocking, dismisses itself when
+        // React mounts.
+        var warnTimer = setTimeout(function () {
+          if (window.__LVBL_REACT_MOUNTED__) return;
+          var pre = document.createElement('div');
+          pre.id = 'lvbl-prewarn';
+          pre.setAttribute('dir', 'rtl');
+          pre.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:99998;background:#1f2937;color:#fff;border-radius:9999px;padding:8px 16px;font-family:Cairo,sans-serif;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,0.25);display:flex;align-items:center;gap:8px';
+          pre.innerHTML = '<span>جارٍ تحميل التطبيق…</span><span id="lvbl-cd" style="font-weight:700;min-width:14px;text-align:center">5</span>';
+          document.body.appendChild(pre);
+          var n = 5;
+          var cdInt = setInterval(function () {
+            n -= 1;
+            if (window.__LVBL_REACT_MOUNTED__ || n <= 0) {
+              clearInterval(cdInt);
+              return;
+            }
+            var el = document.getElementById('lvbl-cd');
+            if (el) el.textContent = String(n);
+          }, 1000);
+        }, WARN_MS);
+
         setTimeout(function () {
-          // If React already painted SOMETHING (loader, login, error UI), the
-          // shield must NOT replace it — that would be the actual bug the user
-          // reported (a working app being hidden behind a fake error screen).
           if (window.__LVBL_REACT_MOUNTED__) return;
           clearInterval(mountObserver);
+          clearTimeout(warnTimer);
+          var pre = document.getElementById('lvbl-prewarn');
+          if (pre && pre.parentNode) pre.parentNode.removeChild(pre);
+
           var root = document.getElementById('root');
           if (root && root.children.length === 0) {
-            // Persist + ship a diagnostic event so we can see WHY users hit
-            // a white screen (browser, network, route, etc.).
+            var captured = lastCapturedError();
+            var causeText = captured && captured.message
+              ? captured.message
+              : 'لم يبدأ التطبيق خلال ' + (SHIELD_MS / 1000) + ' ثوانٍ.';
+            var causeType = captured && captured.type ? captured.type : 'white_screen';
+
             bufferEvent('white_screen', 'root empty after ' + SHIELD_MS + 'ms', {
               shieldMs: SHIELD_MS,
               referrer: document.referrer || null,
-              connection: (navigator.connection && navigator.connection.effectiveType) || null
+              connection: (navigator.connection && navigator.connection.effectiveType) || null,
+              lastCapturedType: causeType,
+              lastCapturedMessage: causeText
             });
-            shipBeacon('white_screen', 'root empty after ' + SHIELD_MS + 'ms');
+            shipBeacon('white_screen', 'root empty after ' + SHIELD_MS + 'ms — ' + causeText);
+
+            // Escape HTML for the cause text we render below.
+            function esc(s) {
+              return String(s || '').replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+              });
+            }
 
             root.innerHTML =
               '<div dir="rtl" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Cairo,sans-serif;background:hsl(0 0% 100%)">' +
-                '<div style="max-width:420px;width:100%;text-align:center;border:1px solid #e5e7eb;border-radius:12px;padding:2rem;box-shadow:0 10px 25px rgba(0,0,0,0.06)">' +
+                '<div style="max-width:460px;width:100%;text-align:center;border:1px solid #e5e7eb;border-radius:12px;padding:2rem;box-shadow:0 10px 25px rgba(0,0,0,0.06)">' +
                   '<div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px">⚠️</div>' +
                   '<h1 style="font-size:1.25rem;margin:0 0 .5rem;color:#111827">تعذّر تحميل التطبيق</h1>' +
-                  '<p style="color:#6b7280;font-size:.9rem;margin:0 0 1.25rem;line-height:1.6">' +
+                  '<p style="color:#6b7280;font-size:.9rem;margin:0 0 1rem;line-height:1.6">' +
                     'تأكد من اتصالك بالإنترنت ثم اضغط إعادة المحاولة. سيتم مسح الذاكرة المؤقتة تلقائياً.' +
                   '</p>' +
+                  '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.6rem .75rem;margin:0 0 1rem;text-align:right;font-size:.75rem;color:#374151;line-height:1.5;direction:rtl">' +
+                    '<strong style="color:#111827">السبب المُكتشف:</strong> ' + esc(causeText) +
+                  '</div>' +
                   '<button id="lvbl-retry" style="background:#2563eb;color:#fff;border:0;border-radius:8px;padding:.6rem 1.25rem;font-size:.95rem;font-family:inherit;cursor:pointer;font-weight:600">إعادة المحاولة</button>' +
                   '<p id="lvbl-diag" style="margin:1rem 0 0;font-size:.7rem;color:#9ca3af"></p>' +
                 '</div>' +
               '</div>';
 
-            // Show a tiny diagnostic line so support can see at a glance.
             try {
               var diag = document.getElementById('lvbl-diag');
               if (diag) {
-                diag.textContent = 'رمز التشخيص: WS-' + Date.now().toString(36).toUpperCase();
+                diag.textContent = 'رمز التشخيص: WS-' + Date.now().toString(36).toUpperCase() + ' · ' + esc(causeType);
               }
             } catch (e) { /* ignore */ }
 
@@ -310,5 +362,6 @@
         }, SHIELD_MS);
       })();
     </script>
+
   </body>
 </html>

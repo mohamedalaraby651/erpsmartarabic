@@ -1,129 +1,121 @@
-# Production Readiness & Security Audit — Plan
+## تشخيص مشاكل العرض والتحميل
 
-## Current state (from quick audit)
+### المشاكل المكتشفة
 
-- `src/integrations/supabase/client.ts`: uses `import.meta.env.VITE_SUPABASE_*` with **no fallbacks** ✅ — but no runtime guard if env vars are missing.
-- `src/App.tsx` QueryClient: already `retry: failureCount < 2` + exponential backoff (1s→8s cap) + skips 401/403/42501/PGRST301 ✅. Mutations `retry: false` ✅.
-- `src/lib/repositories/_base.ts` `mapRepoError`: returns Arabic message, attaches original to `.cause`, but **does NOT log** the original error anywhere → silent failures in prod.
-- `console.log` calls present in ~8 production files (syncManager, observability, pdf, performanceMonitor, etc.).
-- Repositories use Supabase query builder (`.from().select()`, `.eq()`, `.ilike()`) — no raw SQL template strings expected, but need a verification pass.
+**1. خطأ ترتيب CSS (السبب الجذري المرجّح للشاشة البيضاء)**
 
----
+- في `src/index.css`: `@import './styles/motion.css'` موضوع **بعد** `@tailwind` directives.
+- خطأ Vite صريح في سجل dev-server:
+  ```
+  [vite:css] @import must precede all other statements (besides @charset or empty @layer)
+  ```
+- النتيجة: قد يفشل بناء stylesheet → في بعض الحالات يمنع HMR ويُبطئ الإقلاع، وعند الإنتاج قد يُسقط القاعدة كاملةً.
 
-## Step 1 — Client & Env Hardening
+**2. الشاشة البيضاء + رمز التشخيص WS-... (Shield في** `index.html`**)**
 
-- Add a startup assertion in `src/integrations/supabase/client.ts` that throws a clear error if `VITE_SUPABASE_URL` or `VITE_SUPABASE_PUBLISHABLE_KEY` are empty/undefined, so prod builds fail fast instead of silently calling `undefined`.
-- Confirm no `||`/`??` fallback literals exist anywhere in client bootstrap.
+- session_replay يُظهر تفعيل shield بعد ~24.5 ثانية = React لم يُركَّب إطلاقاً.
+- shield في `index.html` يُطلق عند 25s إذا بقي `#root` فارغاً.
+- الأسباب المحتملة (مرتّبة احتمالاً):
+  - أ) فشل وحدة مبكرة في `main.tsx` (assertSupabaseEnv, themeManager, runtimeTelemetry, أو الـ`installPdfTelemetryAutoFlush` الديناميكي) يرمي قبل `createRoot`.
+  - ب) خطأ في تحميل chunk بسبب CSS التالف أعلاه.
+  - ج) شبكة المعاينة تستغرق > 25s لجلب vendor chunk على الأجهزة البطيئة.
 
-## Step 2 — Repository SQL-Injection Sweep
+**3. ضوضاء auth.unauthorized كل 60 ثانية**
 
-- Grep every file under `src/lib/repositories/` for:
-  - Raw `.rpc(` calls passing unsanitized user input.
-  - Template literals inside `.or(`, `.filter(`, `.ilike(`, `.textSearch(` (the only PostgREST surfaces that accept expression strings).
-  - Any usage missing the existing `sanitizeSearch()` helper.
-- Patch any offender to route through `sanitizeSearch` (already standardized in `src/lib/utils/sanitize.ts`).
+- `event-dispatcher` edge function يُستدعى بشكل دوري دون توكن صالح، يُسجّل `warn` متكرر يلوّث السجلات.
 
-## Step 3 — `mapRepoError` Isolated Logger
+**4. غياب أي طبقة تشخيص حقيقية للمستخدم**
 
-- Extend `src/lib/repositories/_base.ts`:
-  - Introduce a single `repoLogger` token (namespaced `[repo]` prefix, dev-only `console.error`, prod → forwards to `logErrorSafely` from `src/lib/errorHandler.ts`).
-  - `mapRepoError` invokes `repoLogger` with the original Postgres error (code, hint, details) **before** wrapping it — so stack traces stay server/console-side while the Arabic toast only sees the friendly message.
-- No public API change → zero ripple to call sites.
-
-## Step 4 — React Query Tuning Verification
-
-- Re-confirm `App.tsx` retry/backoff config matches spec (already does; document as-is).
-- Add an explicit comment block referencing the production SLO so future edits don't regress it.
-
-## Step 5 — Dead-Code & Console Purge
-
-- Sweep production paths (`src/lib`, `src/components`, `src/pages`, `src/hooks`) for stray `console.log`/`console.debug`.
-- Replace operational logs with `logErrorSafely` / `emitTelemetry`.
-- Preserve intentional dev-only logs guarded by `import.meta.env.DEV`.
-- Leave `console.error`/`console.warn` in error boundaries untouched (they're correct).
-
-## Step 6 — Final Verification
-
-- `bunx tsc --noEmit` (smoke).
-- `bunx vitest run` → confirm **1187/1187 green** baseline preserved.
-- Report any drift; no business-logic changes are introduced by this audit.
+- شاشة "تعذّر التحميل" تعرض `WS-<timestamp>` فقط بدون سبب → المستخدم/الدعم لا يعرفان ما العطل.
 
 ---
 
-## Files expected to change
+### الحلول المقترحة
 
-- `src/integrations/supabase/client.ts` — **NOTE**: this file is marked auto-generated. If the env-guard cannot be added here, we'll add the assertion in `src/main.tsx` instead (pre-mount check).
-- `src/lib/repositories/_base.ts` — add `repoLogger` + wire into `mapRepoError`.
-- 0–N repositories under `src/lib/repositories/` — only if injection-vector grep finds an offender.
-- 4–8 files under `src/lib`, `src/components`, `src/pages` — replace stray `console.log` calls.
+**خطوة 1 — إصلاح ترتيب** `@import` **في CSS** (إصلاح فوري)
 
-## Out of scope
+- نقل `@import './styles/motion.css';` ليكون **أول** سطر في `src/index.css` قبل أي `@tailwind`.
 
-- No schema/RLS changes.
-- No edge-function changes.
-- No UI/visual changes.
-- No new dependencies.
+**خطوة 2 — تحصين بدء** `main.tsx` **ضد فشل الوحدات المبكرة**
 
-Act as a Principal DevSecOps Engineer and Senior Database Administrator. We are executing the "Production Readiness & Security Audit — Plan" to bulletproof SmartERP before live traffic. Our baseline is 1187/1187 green tests. 
+- إحاطة `initializeTheme()`, `measureWebVitals()`, و `installGlobalErrorHandlers()` بـ `try/catch` فردية حتى لا يمنع أيٌّ منها استدعاء `createRoot`.
+- نقل `import('./lib/pdf/diagnostics/telemetryScheduler')` و `prefetchCommonRoutes()` إلى **بعد** `markPhase('react_mounted')` (موجودة بالفعل، لكن نضمن أنها داخل `requestIdleCallback`).
 
-&nbsp;
+**خطوة 3 — رفع جودة شاشة الـ shield التشخيصية**
 
-Please systematically implement the following 6 audit steps without altering business logic or breaking tests:
+- في `index.html` shield: إضافة سطر يعرض آخر خطأ تم التقاطه من `installGlobalErrorHandlers` (مخزّن في `localStorage` تحت `lvbl:runtime-events:v1`) بدلاً من رمز توقيت غامض.
+- تقصير زمن shield من 25s → 15s + إضافة عدّاد عكسي مرئي خلال الـ5 ثوانٍ الأخيرة (UX أفضل، نفس أمان "لا تخفي تطبيقاً يعمل" عبر فحص `__LVBL_REACT_MOUNTED__`).
 
-&nbsp;
+**خطوة 4 — كتم سجلّ** `event-dispatcher` **غير المصرّح**
 
-1. Step 1 — Pre-mount Env Hardening (Safe Location):
+- في hook الفرونت اند الذي يُحدِث الاستدعاء كل 60s: تخطّي الاستدعاء عندما `!session?.access_token` بدلاً من إرسال طلب يفشل بـ 401. (تتبّع المصدر أولاً ثم تطبيق الحارس.)
 
-- Do NOT edit the auto-generated `src/integrations/supabase/client.ts`. Instead, open `src/main.tsx`.
+**خطوة 5 — تحقق نهائي**
 
-- Inject a strict runtime startup assertion at the absolute top of `src/main.tsx` (before rendering `<App />`). It must immediately throw a crystal-clear descriptive error if `import.meta.env.VITE_SUPABASE_URL` or `import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY` are empty/undefined, forcing production builds to fail-fast rather than calling undefined.
+- إعادة تحميل المعاينة والتأكد من اختفاء تحذير Vite الخاص بـ `@import`.
+- لقطة شاشة تأكيدية من المتصفح بعد الإصلاح.
+- تشغيل `bunx vitest run` للحفاظ على 1187/1187 ✅.
 
-- Confirm no fallback literals (`||` or `??`) exist for these environment tokens anywhere in the bootstrap lifecycle.
+---
 
-&nbsp;
+### الملفات المتأثرة
 
-2. Step 2 — Repository SQL-Injection Sweep:
+- `src/index.css` (نقل سطر @import واحد).
+- `src/main.tsx` (إضافة try/catch حول 3 استدعاءات تهيئة).
+- `index.html` (تحسين شاشة shield + قراءة آخر خطأ من localStorage).
+- ملف الـ hook المسؤول عن استدعاء `event-dispatcher` الدوري (سيُحدَّد أثناء التنفيذ).
 
-- Scan every repository file under `src/lib/repositories/`. 
+### خارج النطاق
 
-- Inspect all PostgREST query expressions using template literals or raw strings inside `.or()`, `.filter()`, `.ilike()`, `.textSearch()`, or `.rpc()`.
+- بدون تعديلات قاعدة بيانات، RLS، أو edge functions.
+- بدون تغيير UI/تصميم خارج شاشة shield.
 
-- If any dynamic unsanitized user-input expressions are found, refactor them immediately to route through our standardized `sanitizeSearch` helper (from `src/lib/utils/sanitize.ts`).
-
-&nbsp;
-
-3. Step 3 — mapRepoError Isolated Logger Integration:
-
-- Refactor `src/lib/repositories/_base.ts` to solve silent failures in production.
-
-- Introduce an isolated `repoLogger` token. In development (`import.meta.env.DEV`), it outputs a clean namespaced `[repo]` console.error. In production, it securely forwards the telemetry payload to `logErrorSafely` from `src/lib/errorHandler.ts`.
-
-- Update `mapRepoError`: Ensure it invokes `repoLogger` with the original Postgres exception metadata (code, hint, structural details) BEFORE returning the friendly Arabic message. This keeps internal stack traces hidden from the user toast but fully visible to telemetry. Maintain exact call signatures to prevent ripple effects.
+Act as a Principal Frontend DevSecOps Architect and Vite Bundling Expert. We are executing a critical production boot-hardening sweep to resolve the intermittent white screen issues, CSS import order compilation errors, and periodic unauthorized auth logging noise, while keeping our 1187/1187 test suite perfectly green.
 
 &nbsp;
 
-4. Step 4 — React Query SLO Documentation:
-
-- Inspect `src/App.tsx`. Re-verify that the global `QueryClient` retries are strictly capped at < 2 with exponential backoff, skipping auth/permission error boundaries (401/403/42501). 
-
-- Add a clear, structural code comment block referencing the Production Service Level Objective (SLO) directly above the config declaration to lock it against future regression.
+Please systematically implement the following 4 engineering steps precisely:
 
 &nbsp;
 
-5. Step 5 — Production Dead-Code & Console Purge:
+1. Step 1 — Instant CSS @import Order Correction:
 
-- Sweep operational paths (`src/lib`, `src/components`, `src/pages`, `src/hooks`). 
+- Open `src/index.css`. Move the line `@import './styles/motion.css';` to the absolute top of the file, BEFORE any `@tailwind base;`, `@tailwind components;`, or `@tailwind utilities;` directives.
 
-- Locate stray operational `console.log` and `console.debug` statements (especially in syncManager, observability, pdf, and performanceMonitor).
-
-- Replace them with safe telemetry equivalents using `logErrorSafely` or `emitTelemetry`. Guard any remaining dev logs with an explicit `if (import.meta.env.DEV)` clause. Leave error-boundary `console.error` logs untouched.
+- Verify that the Vite development server compilation warning "[vite:css] @import must precede all other statements" is completely eliminated.
 
 &nbsp;
 
-6. Step 6 — Compilation & Final Smoke Test:
+2. Step 2 — Hardening `src/main.tsx` Startup Lifecycle:
 
-- Ensure compilation stability with `bunx tsc --noEmit`.
+- Wrap the early initialization function calls (including `initializeTheme()`, `measureWebVitals()`, and `installGlobalErrorHandlers()`) in individual, isolated `try/catch` blocks. If any of these early infrastructure setups fail or throw an exception, catch it safely, log it to our secure telemetry, and ensure it does NOT block or prevent the crucial `createRoot` execution.
 
-- Run the full suite using `bunx vitest run` to ensure that our 1187 test baseline remains 100% green, sta
+- Locate dynamic imports like `import('./lib/pdf/diagnostics/telemetryScheduler')` and `prefetchCommonRoutes()`. Ensure they are moved entirely below the `markPhase('react_mounted')` checkpoint, wrapped inside a safe browser `requestIdleCallback` wrapper.
 
-ble, and completely untouched!
+&nbsp;
+
+3. Step 3 — Upgrading the `index.html` Diagnostic Shield UI:
+
+- Refactor the fallback shield timer script directly inside `index.html`.
+
+- Reduce the activation threshold timeout from 25 seconds down to 15 seconds. If `__LVBL_REACT_MOUNTED__` is not true by the 15s mark, trigger the shield display.
+
+- Add an elegant, localized visual countdown timer that displays for the final 5 seconds before the shield appears, boosting production UX.
+
+- Upgrade the diagnostic text: Instead of rendering a cryptic `WS-<timestamp>` string, write code to read the last runtime exception from `localStorage` under the key `lvbl:runtime-events:v1` (saved by our error handlers) and display a user-friendly, localized summary of the error to assist support teams.
+
+&nbsp;
+
+4. Step 4 — Suppressing the `auth.unauthorized` Periodic 60s Edge Logging Noise:
+
+- Locate the recurring frontend telemetry loop/hook responsible for dispatching events to the `event-dispatcher` edge function every 60 seconds.
+
+- Inject a strict auth token guard inside this hook: If `!session?.access_token` is true, gracefully skip the network fetch request entirely instead of sending an unauthenticated payload that pollutes the server logs with recurring 401 Unauthorized exceptions.
+
+&nbsp;
+
+5. Step 5 — Verification:
+
+- Ensure that `bunx tsc --noEmit` and our full unit testing framework baseline `bunx vitest run` register exactly 1187/1187 green, stable, and co
+
+mpletely uncompromised!
