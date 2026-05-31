@@ -1,121 +1,96 @@
-## تشخيص مشاكل العرض والتحميل
 
-### المشاكل المكتشفة
+# خطة الفحص الشامل والإصلاح — SmartERP
 
-**1. خطأ ترتيب CSS (السبب الجذري المرجّح للشاشة البيضاء)**
-
-- في `src/index.css`: `@import './styles/motion.css'` موضوع **بعد** `@tailwind` directives.
-- خطأ Vite صريح في سجل dev-server:
-  ```
-  [vite:css] @import must precede all other statements (besides @charset or empty @layer)
-  ```
-- النتيجة: قد يفشل بناء stylesheet → في بعض الحالات يمنع HMR ويُبطئ الإقلاع، وعند الإنتاج قد يُسقط القاعدة كاملةً.
-
-**2. الشاشة البيضاء + رمز التشخيص WS-... (Shield في** `index.html`**)**
-
-- session_replay يُظهر تفعيل shield بعد ~24.5 ثانية = React لم يُركَّب إطلاقاً.
-- shield في `index.html` يُطلق عند 25s إذا بقي `#root` فارغاً.
-- الأسباب المحتملة (مرتّبة احتمالاً):
-  - أ) فشل وحدة مبكرة في `main.tsx` (assertSupabaseEnv, themeManager, runtimeTelemetry, أو الـ`installPdfTelemetryAutoFlush` الديناميكي) يرمي قبل `createRoot`.
-  - ب) خطأ في تحميل chunk بسبب CSS التالف أعلاه.
-  - ج) شبكة المعاينة تستغرق > 25s لجلب vendor chunk على الأجهزة البطيئة.
-
-**3. ضوضاء auth.unauthorized كل 60 ثانية**
-
-- `event-dispatcher` edge function يُستدعى بشكل دوري دون توكن صالح، يُسجّل `warn` متكرر يلوّث السجلات.
-
-**4. غياب أي طبقة تشخيص حقيقية للمستخدم**
-
-- شاشة "تعذّر التحميل" تعرض `WS-<timestamp>` فقط بدون سبب → المستخدم/الدعم لا يعرفان ما العطل.
+## الهدف
+نشر وكلاء فرعيين متوازيين لاكتشاف (1) المشاكل (2) الثغرات (3) الوظائف الناقصة (4) مشاكل الجودة، ثم إصلاح الثغرات الحرجة الظاهرة الآن، وأخيراً تجميع تقرير موحّد.
 
 ---
 
-### الحلول المقترحة
+## المرحلة 1 — إصلاح فوري للثغرات الحرجة الظاهرة (قبل أي فحص)
+لأن security scan كشف 3 ثغرات حرجة، نعالجها أولاً لمنع تفاقم المخاطر:
 
-**خطوة 1 — إصلاح ترتيب** `@import` **في CSS** (إصلاح فوري)
+### 1.1 ثغرة TOTP Secrets قابلة للقراءة عبر PostgREST
+- **Migration**:
+  - `REVOKE SELECT (secret_key, secret_encrypted, backup_codes) ON public.user_2fa_settings FROM authenticated, anon;`
+  - إنشاء view آمن `user_2fa_status` يكشف فقط: `id, user_id, is_enabled, enabled_at, last_used_at, created_at`.
+  - `GRANT SELECT ON public.user_2fa_status TO authenticated;`
+- **Frontend**: تعديل `TwoFactorSetup.tsx` ومكونات 2FA الأخرى لتستخدم الـ view الجديد.
 
-- نقل `@import './styles/motion.css';` ليكون **أول** سطر في `src/index.css` قبل أي `@tailwind`.
+### 1.2 عزل Tenants في Edge Functions (4 دوال)
+- إضافة `.eq('tenant_id', tenantId)` في كل استعلام service-role في:
+  - `approve-expense/index.ts` → استعلام `expenses`
+  - `validate-invoice/index.ts` → استعلام `customers` + `products`
+  - `process-payment/index.ts` → استعلام `customers` + `invoices`
+  - `stock-movement/index.ts` → استعلام `products` + `product_stock`
+- استبدال `supabaseAdmin.rpc('has_role')` بـ `supabaseAuth.rpc('has_role')` ليحمل سياق المستخدم.
 
-**خطوة 2 — تحصين بدء** `main.tsx` **ضد فشل الوحدات المبكرة**
-
-- إحاطة `initializeTheme()`, `measureWebVitals()`, و `installGlobalErrorHandlers()` بـ `try/catch` فردية حتى لا يمنع أيٌّ منها استدعاء `createRoot`.
-- نقل `import('./lib/pdf/diagnostics/telemetryScheduler')` و `prefetchCommonRoutes()` إلى **بعد** `markPhase('react_mounted')` (موجودة بالفعل، لكن نضمن أنها داخل `requestIdleCallback`).
-
-**خطوة 3 — رفع جودة شاشة الـ shield التشخيصية**
-
-- في `index.html` shield: إضافة سطر يعرض آخر خطأ تم التقاطه من `installGlobalErrorHandlers` (مخزّن في `localStorage` تحت `lvbl:runtime-events:v1`) بدلاً من رمز توقيت غامض.
-- تقصير زمن shield من 25s → 15s + إضافة عدّاد عكسي مرئي خلال الـ5 ثوانٍ الأخيرة (UX أفضل، نفس أمان "لا تخفي تطبيقاً يعمل" عبر فحص `__LVBL_REACT_MOUNTED__`).
-
-**خطوة 4 — كتم سجلّ** `event-dispatcher` **غير المصرّح**
-
-- في hook الفرونت اند الذي يُحدِث الاستدعاء كل 60s: تخطّي الاستدعاء عندما `!session?.access_token` بدلاً من إرسال طلب يفشل بـ 401. (تتبّع المصدر أولاً ثم تطبيق الحارس.)
-
-**خطوة 5 — تحقق نهائي**
-
-- إعادة تحميل المعاينة والتأكد من اختفاء تحذير Vite الخاص بـ `@import`.
-- لقطة شاشة تأكيدية من المتصفح بعد الإصلاح.
-- تشغيل `bunx vitest run` للحفاظ على 1187/1187 ✅.
+### 1.3 تحديث Security Findings
+- استدعاء `security--manage_security_finding` بـ `mark_as_fixed` للـ 3 findings.
+- تحديث `@security-memory` بالتوجيهات الجديدة.
 
 ---
 
-### الملفات المتأثرة
+## المرحلة 2 — نشر الوكلاء الفرعيين (دفعتان متوازيتان × 5 وكلاء)
 
-- `src/index.css` (نقل سطر @import واحد).
-- `src/main.tsx` (إضافة try/catch حول 3 استدعاءات تهيئة).
-- `index.html` (تحسين شاشة shield + قراءة آخر خطأ من localStorage).
-- ملف الـ hook المسؤول عن استدعاء `event-dispatcher` الدوري (سيُحدَّد أثناء التنفيذ).
+### الدفعة A — الأمان والمشاكل الحرجة (`capable`)
+1. **RLS & GRANT Auditor**: فحص كل جدول في `public` للتأكد من اكتمال (GRANT + RLS + Policy) لكل عملية.
+2. **Edge Function Security Auditor**: فحص كل `supabase/functions/**` للتأكد من: tenant filter، JWT validation، CORS، Zod validation، idempotency.
+3. **SECURITY DEFINER Auditor**: فحص كل دوال DB للتأكد من `SET search_path = public`.
+4. **Runtime Error Hunter**: تحليل edge function logs (مثل `auth.unauthorized` كل 60s في `event-dispatcher`) واكتشاف الجذر.
+5. **Tenant Isolation Tester**: تتبع كل استعلامات `supabase.from()` في الـ frontend وتأكيد وجود `tenant_id` filter أو RLS كافٍ.
 
-### خارج النطاق
+### الدفعة B — الاكتمال والجودة (`fast`)
+6. **TODO/FIXME/Stub Scout**: فحص شامل للملاحظات والـ stubs وغير المُنفّذ.
+7. **Dead Buttons & Routes Scout**: التأكد أن كل `onClick`/`<Link>` متصل بمنطق فعلي.
+8. **i18n & RTL Completeness Scout**: اكتشاف نصوص hardcoded بالإنجليزية وكسر RTL.
+9. **Empty/Loading/Error States Scout**: تدقيق الصفحات لضمان وجود الحالات الثلاث.
+10. **Edge Function Coverage Scout**: مقارنة دوال `config.toml` بالاستدعاءات الفعلية لاكتشاف اليتيمة.
 
-- بدون تعديلات قاعدة بيانات، RLS، أو edge functions.
-- بدون تغيير UI/تصميم خارج شاشة shield.
+---
 
-Act as a Principal Frontend DevSecOps Architect and Vite Bundling Expert. We are executing a critical production boot-hardening sweep to resolve the intermittent white screen issues, CSS import order compilation errors, and periodic unauthorized auth logging noise, while keeping our 1187/1187 test suite perfectly green.
+## المرحلة 3 — تجميع التقارير
+حفظ النتائج في:
+```
+docs/audit-reports/
+├── 01-security-audit.md        (من الوكلاء 1-3)
+├── 02-bugs-and-runtime.md      (من الوكلاء 4-5)
+├── 03-completeness.md          (من الوكلاء 6-10)
+└── 04-action-plan.md           (خطة الإصلاح المُرتّبة بالأولوية)
+```
 
-&nbsp;
+---
 
-Please systematically implement the following 4 engineering steps precisely:
+## المرحلة 4 — إصلاح النتائج (بعد مراجعتك)
+بعد عرض التقارير عليك، نتفق على:
+- **الإصلاحات الفورية** (Critical/High security)
+- **الإصلاحات المؤجلة** لإصدارات لاحقة
+- **العناصر المُتجاهلة** (مع توثيق السبب في security-memory)
 
-&nbsp;
+---
 
-1. Step 1 — Instant CSS @import Order Correction:
+## التفاصيل التقنية
 
-- Open `src/index.css`. Move the line `@import './styles/motion.css';` to the absolute top of the file, BEFORE any `@tailwind base;`, `@tailwind components;`, or `@tailwind utilities;` directives.
+| البند | الأداة | الملاحظات |
+|---|---|---|
+| Migration للـ 2FA | `supabase--migration` | يستلزم موافقتك قبل التنفيذ |
+| تعديل Edge Functions | `code--write` / `code--line_replace` | 4 ملفات |
+| الوكلاء الفرعيين | `acp_subagent--spawn_agent` | متوازي بالكامل |
+| النموذج | `capable` للأمان، `fast` للباقي | لتوازن التكلفة/الدقة |
+| الاختبارات | `bunx vitest run` بعد كل دفعة إصلاح | للحفاظ على 1187/1187 |
 
-- Verify that the Vite development server compilation warning "[vite:css] @import must precede all other statements" is completely eliminated.
+---
 
-&nbsp;
+## نقاط قرار قبل التنفيذ
 
-2. Step 2 — Hardening `src/main.tsx` Startup Lifecycle:
+1. **هل أبدأ بالمرحلة 1 (الإصلاح الفوري) مباشرة بعد موافقتك على هذه الخطة؟**
+2. **هل تريد كل الـ 10 وكلاء، أم نختصر على الدفعة A الأمنية فقط (5 وكلاء)؟**
+3. **هل تريد أن أتعامل مع `auth.unauthorized` المتكرر في `event-dispatcher` كل 60 ثانية ضمن نفس الجولة؟** (يبدو من cron job يستدعي edge function بدون JWT صحيح).
 
-- Wrap the early initialization function calls (including `initializeTheme()`, `measureWebVitals()`, and `installGlobalErrorHandlers()`) in individual, isolated `try/catch` blocks. If any of these early infrastructure setups fail or throw an exception, catch it safely, log it to our secure telemetry, and ensure it does NOT block or prevent the crucial `createRoot` execution.
+---
 
-- Locate dynamic imports like `import('./lib/pdf/diagnostics/telemetryScheduler')` and `prefetchCommonRoutes()`. Ensure they are moved entirely below the `markPhase('react_mounted')` checkpoint, wrapped inside a safe browser `requestIdleCallback` wrapper.
-
-&nbsp;
-
-3. Step 3 — Upgrading the `index.html` Diagnostic Shield UI:
-
-- Refactor the fallback shield timer script directly inside `index.html`.
-
-- Reduce the activation threshold timeout from 25 seconds down to 15 seconds. If `__LVBL_REACT_MOUNTED__` is not true by the 15s mark, trigger the shield display.
-
-- Add an elegant, localized visual countdown timer that displays for the final 5 seconds before the shield appears, boosting production UX.
-
-- Upgrade the diagnostic text: Instead of rendering a cryptic `WS-<timestamp>` string, write code to read the last runtime exception from `localStorage` under the key `lvbl:runtime-events:v1` (saved by our error handlers) and display a user-friendly, localized summary of the error to assist support teams.
-
-&nbsp;
-
-4. Step 4 — Suppressing the `auth.unauthorized` Periodic 60s Edge Logging Noise:
-
-- Locate the recurring frontend telemetry loop/hook responsible for dispatching events to the `event-dispatcher` edge function every 60 seconds.
-
-- Inject a strict auth token guard inside this hook: If `!session?.access_token` is true, gracefully skip the network fetch request entirely instead of sending an unauthenticated payload that pollutes the server logs with recurring 401 Unauthorized exceptions.
-
-&nbsp;
-
-5. Step 5 — Verification:
-
-- Ensure that `bunx tsc --noEmit` and our full unit testing framework baseline `bunx vitest run` register exactly 1187/1187 green, stable, and co
-
-mpletely uncompromised!
+## مخرجات نهائية متوقعة
+- 3 ثغرات أمنية حرجة مُغلقة ✅
+- 4 تقارير شاملة في `docs/audit-reports/`
+- security-memory محدّث
+- 1187/1187 tests خضراء
+- قائمة أولويات إصلاح للإصدار القادم
