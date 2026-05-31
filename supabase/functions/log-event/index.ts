@@ -26,6 +26,29 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Required auth — no anonymous writes
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const userId = userData.user.id;
+
     const body: LogPayload = await req.json();
 
     if (!body.level || !body.message) {
@@ -35,29 +58,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    // Get user from auth header (best-effort)
-    let userId: string | null = null;
-    let tenantId: string | null = null;
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      if (user) {
-        userId = user.id;
-        const { data: ut } = await supabase
-          .from('user_tenants')
-          .select('tenant_id')
-          .eq('user_id', user.id)
-          .eq('is_default', true)
-          .maybeSingle();
-        tenantId = ut?.tenant_id ?? null;
-      }
+    // Input limits to prevent log flooding
+    if (typeof body.message !== 'string' || body.message.length > 500) {
+      return new Response(
+        JSON.stringify({ error: 'message must be a string ≤ 500 chars' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+    if (body.metadata && JSON.stringify(body.metadata).length > 2048) {
+      return new Response(
+        JSON.stringify({ error: 'metadata must be ≤ 2 KB' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    let tenantId: string | null = null;
+    const { data: ut } = await supabase
+      .from('user_tenants')
+      .select('tenant_id')
+      .eq('user_id', userId)
+      .eq('is_default', true)
+      .maybeSingle();
+    tenantId = ut?.tenant_id ?? null;
 
     // Persist slow queries to dedicated table
     if (body.endpoint && body.duration_ms && body.duration_ms >= 500) {
