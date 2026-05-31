@@ -78,6 +78,23 @@ Deno.serve(async (req) => {
 
     console.log('Using tenant:', tenantId)
 
+    // Authorization: verify user has 'customers.view' permission (admin always allowed)
+    const { data: isAdmin } = await adminClient.rpc('has_role', { _user_id: user.id, _role: 'admin' })
+    let allowed = isAdmin === true
+    if (!allowed) {
+      const { data: hasPerm } = await adminClient.rpc('check_section_permission', {
+        _user_id: user.id,
+        _section: 'customers',
+        _action: 'view',
+      })
+      allowed = hasPerm === true
+    }
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     // Fetch all customers for this tenant
     const { data: customers, error: fetchError } = await adminClient
       .from('customers')
