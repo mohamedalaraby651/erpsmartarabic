@@ -125,8 +125,8 @@ Deno.serve(async (req: Request) => {
       },
     );
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return new Response(JSON.stringify({ error: msg }), {
+    console.error('[render-pdf] Error:', err);
+    return new Response(JSON.stringify({ error: 'Internal server error', code: 'INTERNAL_ERROR' }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
