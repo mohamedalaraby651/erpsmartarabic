@@ -53,9 +53,14 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
 
-      // Generate unique filename
+      // Generate unique filename under tenant folder (required by storage RLS)
+      const { getCurrentTenantId } = await import('@/lib/tenantContext');
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        throw new Error('No active tenant');
+      }
       const fileExt = file.name.split('.').pop();
-      const fileName = `company-logo-${Date.now()}.${fileExt}`;
+      const fileName = `${tenantId}/company-logo-${Date.now()}.${fileExt}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
