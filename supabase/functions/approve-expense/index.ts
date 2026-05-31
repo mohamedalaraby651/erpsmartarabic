@@ -118,38 +118,45 @@ serve(async (req) => {
       );
     }
 
+    // Resolve user's tenant (REQUIRED for tenant-scoped service-role queries)
+    const { data: tenantRow } = await supabaseAdmin
+      .from('user_tenants')
+      .select('tenant_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const tenantId = tenantRow?.tenant_id;
+    if (!tenantId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'No tenant context', code: 'NO_TENANT' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Idempotency guard
     const idemKey = getIdempotencyKey(req);
     const correlationId = getCorrelationId(req);
     if (idemKey) {
-      const { data: tenantRow } = await supabaseAdmin
-        .from('user_tenants')
-        .select('tenant_id')
-        .eq('user_id', userId)
-        .maybeSingle();
-      const tenantId = tenantRow?.tenant_id;
-      if (tenantId) {
-        const guard = await checkIdempotency(supabaseAdmin, {
-          tenantId, userId,
-          operation: `approve-expense:${approvalData.action}`,
-          key: idemKey,
-        });
-        if (guard.duplicate) {
-          console.log(`[approve-expense] [${correlationId}] Idempotent replay rejected`);
-          return new Response(
-            JSON.stringify({ success: false, error: 'Duplicate request', code: 'IDEMPOTENT_REPLAY' }),
-            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+      const guard = await checkIdempotency(supabaseAdmin, {
+        tenantId, userId,
+        operation: `approve-expense:${approvalData.action}`,
+        key: idemKey,
+      });
+      if (guard.duplicate) {
+        console.log(`[approve-expense] [${correlationId}] Idempotent replay rejected`);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Duplicate request', code: 'IDEMPOTENT_REPLAY' }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     }
 
-    // 2. Get expense details
+    // 2. Get expense details — TENANT-SCOPED
     console.log('[approve-expense] Fetching expense...');
     const { data: expense, error: expenseError } = await supabaseAdmin
       .from('expenses')
       .select('*, expense_categories(name)')
       .eq('id', approvalData.expense_id)
+      .eq('tenant_id', tenantId)
       .single();
 
     if (expenseError || !expense) {
@@ -211,6 +218,7 @@ serve(async (req) => {
         .from('cash_registers')
         .select('current_balance')
         .eq('id', expense.register_id)
+        .eq('tenant_id', tenantId)
         .single();
 
       if (register) {
@@ -218,7 +226,8 @@ serve(async (req) => {
         await supabaseAdmin
           .from('cash_registers')
           .update({ current_balance: newBalance })
-          .eq('id', expense.register_id);
+          .eq('id', expense.register_id)
+          .eq('tenant_id', tenantId);
 
         // Create cash transaction record
         await supabaseAdmin
