@@ -119,7 +119,7 @@ serve(async (req) => {
       );
     }
 
-    // Resolve tenant once (used for idempotency + auto-posting).
+    // Resolve tenant once (REQUIRED for tenant-scoped service-role queries).
     const { data: tenantRow } = await supabaseAdmin
       .from('user_tenants')
       .select('tenant_id')
@@ -127,9 +127,15 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
     const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id ?? '';
+    if (!tenantId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'No tenant context', code: 'NO_TENANT' }),
+        { status: 403, headers: respHeaders }
+      );
+    }
 
     // 1.5 Idempotency guard — prevent duplicate payment posting on retry/replay
-    if (idempotencyKey && tenantId) {
+    if (idempotencyKey) {
       const guard = await checkIdempotency(supabaseAdmin, {
         tenantId,
         userId,
@@ -145,12 +151,13 @@ serve(async (req) => {
       }
     }
 
-    // 2. Validate customer exists
+    // 2. Validate customer exists — TENANT-SCOPED
     console.log('[process-payment] Validating customer...');
     const { data: customer, error: customerError } = await supabaseAdmin
       .from('customers')
       .select('id, name, current_balance')
       .eq('id', paymentData.customer_id)
+      .eq('tenant_id', tenantId)
       .single();
 
     if (customerError || !customer) {
@@ -160,7 +167,7 @@ serve(async (req) => {
       );
     }
 
-    // 3. If invoice_id provided, validate invoice
+    // 3. If invoice_id provided, validate invoice — TENANT-SCOPED
     let invoice = null;
     if (paymentData.invoice_id) {
       console.log('[process-payment] Validating invoice...');
@@ -168,6 +175,7 @@ serve(async (req) => {
         .from('invoices')
         .select('id, invoice_number, total_amount, paid_amount, payment_status')
         .eq('id', paymentData.invoice_id)
+        .eq('tenant_id', tenantId)
         .single();
 
       if (invoiceError || !invoiceData) {
@@ -258,7 +266,8 @@ serve(async (req) => {
           paid_amount: newPaidAmount,
           payment_status: newPaymentStatus
         })
-        .eq('id', invoice.id);
+        .eq('id', invoice.id)
+        .eq('tenant_id', tenantId);
 
       if (invoiceUpdateError) {
         console.error('[process-payment] Error updating invoice:', invoiceUpdateError);

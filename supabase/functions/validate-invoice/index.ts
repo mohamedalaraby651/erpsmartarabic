@@ -157,13 +157,28 @@ serve(async (req) => {
       );
     }
 
-    // 3. Validate customer credit limit
+    // Resolve user's tenant for tenant-scoped queries
+    const { data: vTenantRow } = await supabaseAdmin
+      .from('user_tenants')
+      .select('tenant_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const tenantId = vTenantRow?.tenant_id;
+    if (!tenantId) {
+      return new Response(
+        JSON.stringify({ valid: false, error: 'No tenant context', code: 'NO_TENANT' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 3. Validate customer credit limit — TENANT-SCOPED
     if (invoiceData.customer_id) {
       console.log('[validate-invoice] Checking customer credit limit...');
       const { data: customer, error: customerError } = await supabaseAdmin
         .from('customers')
         .select('credit_limit, current_balance, name')
         .eq('id', invoiceData.customer_id)
+        .eq('tenant_id', tenantId)
         .single();
 
       if (customerError) {
@@ -215,7 +230,8 @@ serve(async (req) => {
       const { data: products, error: productsError } = await supabaseAdmin
         .from('products')
         .select('id, name, is_active')
-        .in('id', productIds);
+        .in('id', productIds)
+        .eq('tenant_id', tenantId);
 
       if (productsError) {
         console.error('[validate-invoice] Products lookup error:', productsError);

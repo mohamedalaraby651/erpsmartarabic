@@ -148,27 +148,33 @@ serve(async (req) => {
       );
     }
 
+    // Resolve user's tenant (REQUIRED for tenant-scoped service-role queries)
+    const { data: tenantRow } = await supabaseAdmin
+      .from('user_tenants')
+      .select('tenant_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const tenantId = tenantRow?.tenant_id;
+    if (!tenantId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'No tenant context', code: 'NO_TENANT' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Idempotency guard (prevents duplicate stock movement on retry)
     const idemKey = getIdempotencyKey(req);
     const correlationId = getCorrelationId(req);
     if (idemKey) {
-      const { data: tenantRow } = await supabaseAdmin
-        .from('user_tenants')
-        .select('tenant_id')
-        .eq('user_id', userId)
-        .maybeSingle();
-      const tenantId = tenantRow?.tenant_id;
-      if (tenantId) {
-        const guard = await checkIdempotency(supabaseAdmin, {
-          tenantId, userId, operation: 'stock-movement', key: idemKey,
-        });
-        if (guard.duplicate) {
-          console.log(`[stock-movement] [${correlationId}] Idempotent replay rejected`);
-          return new Response(
-            JSON.stringify({ success: false, error: 'Duplicate request', code: 'IDEMPOTENT_REPLAY' }),
-            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+      const guard = await checkIdempotency(supabaseAdmin, {
+        tenantId, userId, operation: 'stock-movement', key: idemKey,
+      });
+      if (guard.duplicate) {
+        console.log(`[stock-movement] [${correlationId}] Idempotent replay rejected`);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Duplicate request', code: 'IDEMPOTENT_REPLAY' }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     }
 
@@ -177,6 +183,7 @@ serve(async (req) => {
       .from('products')
       .select('id, name, is_active')
       .eq('id', movementData.product_id)
+      .eq('tenant_id', tenantId)
       .single();
 
     if (productError || !product) {
@@ -186,7 +193,7 @@ serve(async (req) => {
       );
     }
 
-    // 3. For outgoing movements, check stock availability
+    // 3. For outgoing movements, check stock availability — TENANT-SCOPED
     if (movementData.movement_type === 'out' || movementData.movement_type === 'transfer') {
       console.log('[stock-movement] Checking stock availability...');
       const { data: currentStock } = await supabaseAdmin
@@ -194,6 +201,7 @@ serve(async (req) => {
         .select('quantity')
         .eq('product_id', movementData.product_id)
         .eq('warehouse_id', movementData.from_warehouse_id!)
+        .eq('tenant_id', tenantId)
         .maybeSingle();
 
       const availableQuantity = currentStock?.quantity || 0;
@@ -244,42 +252,47 @@ serve(async (req) => {
     // 5. Update product_stock table
     console.log('[stock-movement] Updating stock levels...');
 
-    // For outgoing stock (from warehouse)
+    // For outgoing stock (from warehouse) — TENANT-SCOPED
     if (movementData.from_warehouse_id) {
       const { data: fromStock } = await supabaseAdmin
         .from('product_stock')
         .select('id, quantity')
         .eq('product_id', movementData.product_id)
         .eq('warehouse_id', movementData.from_warehouse_id)
+        .eq('tenant_id', tenantId)
         .maybeSingle();
 
       if (fromStock) {
         await supabaseAdmin
           .from('product_stock')
           .update({ quantity: fromStock.quantity - movementData.quantity })
-          .eq('id', fromStock.id);
+          .eq('id', fromStock.id)
+          .eq('tenant_id', tenantId);
       }
     }
 
-    // For incoming stock (to warehouse)
+    // For incoming stock (to warehouse) — TENANT-SCOPED
     if (movementData.to_warehouse_id) {
       const { data: toStock } = await supabaseAdmin
         .from('product_stock')
         .select('id, quantity')
         .eq('product_id', movementData.product_id)
         .eq('warehouse_id', movementData.to_warehouse_id)
+        .eq('tenant_id', tenantId)
         .maybeSingle();
 
       if (toStock) {
         await supabaseAdmin
           .from('product_stock')
           .update({ quantity: toStock.quantity + movementData.quantity })
-          .eq('id', toStock.id);
+          .eq('id', toStock.id)
+          .eq('tenant_id', tenantId);
       } else {
-        // Create new stock record
+        // Create new stock record (tenant_id required for new rows)
         await supabaseAdmin
           .from('product_stock')
           .insert({
+            tenant_id: tenantId,
             product_id: movementData.product_id,
             variant_id: movementData.variant_id || null,
             warehouse_id: movementData.to_warehouse_id,
