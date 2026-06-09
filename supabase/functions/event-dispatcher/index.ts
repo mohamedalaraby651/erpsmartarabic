@@ -395,7 +395,8 @@ async function handleEvent(
       const { data: admins } = await supabase
         .from('user_roles')
         .select('user_id')
-        .eq('role', 'admin');
+        .eq('role', 'admin')
+        .eq('tenant_id', tenant_id);
       if (admins && admins.length > 0) {
         const rows = admins.map((a: { user_id: string }) => ({
           tenant_id,
@@ -414,7 +415,8 @@ async function handleEvent(
       const { data: admins } = await supabase
         .from('user_roles')
         .select('user_id')
-        .in('role', ['admin', 'manager']);
+        .in('role', ['admin', 'manager'])
+        .eq('tenant_id', tenant_id);
       if (admins && admins.length > 0) {
         const rows = admins.map((a: { user_id: string }) => ({
           tenant_id,

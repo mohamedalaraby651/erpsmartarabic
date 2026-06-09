@@ -86,28 +86,34 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Resolve tenantId once — required for idempotency AND every tenant-scoped query
+    const { data: tenantRow } = await supabaseAdmin
+      .from('user_tenants')
+      .select('tenant_id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
+    if (!tenantId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'لا يوجد مستأجر مرتبط بالمستخدم', code: 'NO_TENANT' }),
+        { status: 403, headers: respHeaders }
+      );
+    }
+
     // Idempotency guard — prevent duplicate journal posting on retry
     if (idempotencyKey) {
-      const { data: tenantRow } = await supabaseAdmin
-        .from('user_tenants')
-        .select('tenant_id')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-      const tenantId = (tenantRow as { tenant_id?: string } | null)?.tenant_id;
-      if (tenantId) {
-        const guard = await checkIdempotency(supabaseAdmin, {
-          tenantId,
-          userId,
-          operation: 'create-journal',
-          key: idempotencyKey,
-        });
-        if (guard.duplicate) {
-          return new Response(
-            JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
-            { status: 409, headers: respHeaders }
-          );
-        }
+      const guard = await checkIdempotency(supabaseAdmin, {
+        tenantId,
+        userId,
+        operation: 'create-journal',
+        key: idempotencyKey,
+      });
+      if (guard.duplicate) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Duplicate request (idempotency replay)', code: 'IDEMPOTENT_REPLAY' }),
+          { status: 409, headers: respHeaders }
+        );
       }
     }
 
@@ -166,6 +172,7 @@ Deno.serve(async (req) => {
     const { data: period, error: periodError } = await supabaseAdmin
       .from('fiscal_periods')
       .select('id, name')
+      .eq('tenant_id', tenantId)
       .eq('is_closed', false)
       .gte('end_date', journal_date)
       .lte('start_date', journal_date)
@@ -187,6 +194,7 @@ Deno.serve(async (req) => {
     const { data: accounts, error: accountsError } = await supabaseAdmin
       .from('chart_of_accounts')
       .select('id, code, name, is_active')
+      .eq('tenant_id', tenantId)
       .in('id', accountIds);
 
     if (accountsError) {
@@ -217,6 +225,7 @@ Deno.serve(async (req) => {
     const { data: journal, error: journalError } = await supabaseAdmin
       .from('journals')
       .insert({
+        tenant_id: tenantId,
         fiscal_period_id: period.id,
         journal_date,
         description,
