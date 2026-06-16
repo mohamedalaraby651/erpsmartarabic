@@ -246,7 +246,7 @@ const SuppliersPage = () => {
           isMobile={isMobile}
           canEdit={canEdit}
           onAdd={() => setQuickAddOpen(true)}
-          onImport={() => {}}
+          onImport={() => setImportOpen(true)}
           onExport={() => setExportOpen(true)}
           totalCount={totalCount}
           searchQuery={isMobile ? searchQuery : undefined}
