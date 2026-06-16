@@ -18,6 +18,7 @@ import { SupplierFiltersBar } from "@/components/suppliers/filters/SupplierFilte
 import { SupplierFilterDrawer } from "@/components/suppliers/filters/SupplierFilterDrawer";
 import { SupplierQuickAddDialog } from "@/components/suppliers/dialogs/SupplierQuickAddDialog";
 import { SupplierExportDialog } from "@/components/suppliers/dialogs/SupplierExportDialog";
+import SupplierImportDialog from "@/components/suppliers/SupplierImportDialog";
 import { SupplierAlertsBannerList } from "@/components/suppliers/alerts/SupplierAlertsBannerList";
 
 import { useSupplierList, useSupplierFilters, useSupplierMutations, useSupplierAlerts, storeSupplierNavIds } from "@/hooks/suppliers";
