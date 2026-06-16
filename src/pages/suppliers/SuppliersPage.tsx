@@ -18,6 +18,7 @@ import { SupplierFiltersBar } from "@/components/suppliers/filters/SupplierFilte
 import { SupplierFilterDrawer } from "@/components/suppliers/filters/SupplierFilterDrawer";
 import { SupplierQuickAddDialog } from "@/components/suppliers/dialogs/SupplierQuickAddDialog";
 import { SupplierExportDialog } from "@/components/suppliers/dialogs/SupplierExportDialog";
+import SupplierImportDialog from "@/components/suppliers/SupplierImportDialog";
 import { SupplierAlertsBannerList } from "@/components/suppliers/alerts/SupplierAlertsBannerList";
 
 import { useSupplierList, useSupplierFilters, useSupplierMutations, useSupplierAlerts, storeSupplierNavIds } from "@/hooks/suppliers";
@@ -56,6 +57,7 @@ const SuppliersPage = () => {
   const [statsChipFilter, setStatsChipFilter] = useState<string | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';
@@ -244,7 +246,7 @@ const SuppliersPage = () => {
           isMobile={isMobile}
           canEdit={canEdit}
           onAdd={() => setQuickAddOpen(true)}
-          onImport={() => {}}
+          onImport={() => setImportOpen(true)}
           onExport={() => setExportOpen(true)}
           totalCount={totalCount}
           searchQuery={isMobile ? searchQuery : undefined}
@@ -404,6 +406,8 @@ const SuppliersPage = () => {
           totalCount={totalCount}
           filteredCount={suppliers.length}
         />
+
+        <SupplierImportDialog open={importOpen} onOpenChange={setImportOpen} />
       </div>
     </PageWrapper>
   );
