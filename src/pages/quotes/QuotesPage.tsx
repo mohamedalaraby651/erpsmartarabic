@@ -94,7 +94,7 @@ export default function QuotesPage() {
                   <tr
                     key={r.id}
                     className="border-b hover:bg-muted/30 cursor-pointer"
-                    onClick={() => navigate(`/quotes/${r.id}`)}
+                    onClick={() => navigate(`/quotations/${r.id}`)}
                   >
                     <td className="p-2 font-mono">{r.quote_number}</td>
                     <td className="p-2">{r.customers?.name ?? "—"}</td>
