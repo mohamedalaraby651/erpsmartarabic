@@ -57,6 +57,7 @@ const SuppliersPage = () => {
   const [statsChipFilter, setStatsChipFilter] = useState<string | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const canEdit = userRole === 'admin' || userRole === 'warehouse';
   const canDelete = userRole === 'admin';
