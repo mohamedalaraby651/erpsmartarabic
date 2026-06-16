@@ -406,6 +406,8 @@ const SuppliersPage = () => {
           totalCount={totalCount}
           filteredCount={suppliers.length}
         />
+
+        <SupplierImportDialog open={importOpen} onOpenChange={setImportOpen} />
       </div>
     </PageWrapper>
   );
