@@ -9,6 +9,7 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { MobileListSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { DataCard } from '@/components/mobile/DataCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
 import { Plus, FolderTree, Pencil, Trash2 } from 'lucide-react';
 import { ExpenseCategoryFormDialog } from '@/components/expenses/ExpenseCategoryFormDialog';
@@ -55,9 +56,10 @@ export default function ExpenseCategoriesPage() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  const { data: categories, isLoading, refetch } = useAllExpenseCategories() as {
+  const { data: categories, isLoading, error, refetch } = useAllExpenseCategories() as {
     data?: ExpenseCategory[];
     isLoading: boolean;
+    error: unknown;
     refetch: () => Promise<unknown>;
   };
 
@@ -123,6 +125,8 @@ export default function ExpenseCategoriesPage() {
 
       {isLoading ? (
         <MobileListSkeleton count={5} />
+      ) : error ? (
+        <ListErrorState onRetry={() => refetch()} />
       ) : categories?.length === 0 ? (
         <EmptyState
           icon={FolderTree}

@@ -31,6 +31,7 @@ import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 
 type Task = TaskRow;
 
@@ -58,7 +59,7 @@ const TasksPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: tasks, isLoading, refetch } = useQuery({
+  const { data: tasks, isLoading, error, refetch } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => tasksRepository.list(),
   });
@@ -310,6 +311,8 @@ const TasksPage = () => {
             </CardContent>
           </Card>
         )
+      ) : error ? (
+        <ListErrorState onRetry={() => refetch()} />
       ) : filteredTasks.length === 0 ? (
         <EmptyState
           icon={CheckSquare}

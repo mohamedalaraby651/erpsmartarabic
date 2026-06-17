@@ -20,6 +20,7 @@ import {
   useExecuteApprovalAction,
 } from '@/hooks/approvals';
 import type { ApprovalRecord, ApprovalStatusFilter } from '@/lib/repositories/approvalRepository';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 
 const statusLabels: Record<string, string> = {
   pending: 'معلقة',
@@ -49,7 +50,7 @@ const ApprovalsPage = () => {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const { data: records = [], isLoading } = usePendingApprovals({
+  const { data: records = [], isLoading, error, refetch } = usePendingApprovals({
     status: activeTab,
   });
 
@@ -194,6 +195,8 @@ const ApprovalsPage = () => {
             <div className="space-y-3">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
             </div>
+          ) : error ? (
+            <ListErrorState onRetry={() => refetch()} />
           ) : records.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
