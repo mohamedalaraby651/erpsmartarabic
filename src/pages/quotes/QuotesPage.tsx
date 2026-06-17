@@ -73,10 +73,25 @@ export default function QuotesPage() {
 
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">جارٍ التحميل…</div>
+        ) : error ? (
+          <ListErrorState error={error} onRetry={() => refetch()} />
         ) : rows.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            لا توجد عروض أسعار. ابدأ بإنشاء أول عرض.
-          </div>
+          search ? (
+            <EmptyState
+              icon={Search}
+              title="لا توجد نتائج مطابقة"
+              description="جرب تعديل أو مسح البحث."
+              action={{ label: 'مسح البحث', onClick: () => setSearch(''), variant: 'outline' }}
+              compact
+            />
+          ) : (
+            <EmptyState
+              icon={FileText}
+              title="لا توجد عروض أسعار بعد"
+              description="ابدأ بإنشاء أول عرض سعر لعميل."
+              action={{ label: 'عرض سعر جديد', onClick: () => navigate('/quotes/new'), icon: Plus }}
+            />
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
