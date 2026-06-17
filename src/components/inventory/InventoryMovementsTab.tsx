@@ -3,10 +3,13 @@ import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DataCard } from "@/components/mobile/DataCard";
+import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { useListState } from "@/hooks/useListState";
 
 interface StockMovement {
   id: string;
@@ -25,14 +28,43 @@ const typeBadge: Record<string, 'default' | 'destructive' | 'secondary' | 'outli
 interface InventoryMovementsTabProps {
   movements: StockMovement[];
   onAddMovement: () => void;
+  isLoading?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
 }
 
-export function InventoryMovementsTab({ movements, onAddMovement }: InventoryMovementsTabProps) {
+export function InventoryMovementsTab({
+  movements,
+  onAddMovement,
+  isLoading = false,
+  error,
+  onRetry,
+}: InventoryMovementsTabProps) {
   const isMobile = useIsMobile();
+  const state = useListState({ data: movements, isLoading, error });
 
-  if (movements.length === 0) return (
-    <EmptyState icon={ArrowRightLeft} title="لا توجد حركات مخزون" description="سجل حركة مخزون جديدة" action={{ label: "حركة مخزون", onClick: onAddMovement }} />
-  );
+  if (state === 'loading') {
+    return isMobile ? <MobileListSkeleton count={3} /> : (
+      <Card className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </Card>
+    );
+  }
+
+  if (state === 'error') {
+    return <ListErrorState error={error} onRetry={onRetry} />;
+  }
+
+  if (state === 'empty') {
+    return (
+      <EmptyState
+        icon={ArrowRightLeft}
+        title="لا توجد حركات مخزون"
+        description="سجل حركة مخزون جديدة"
+        action={{ label: "حركة مخزون", onClick: onAddMovement, icon: Plus }}
+      />
+    );
+  }
 
   if (isMobile) return (
     <div className="space-y-3">
