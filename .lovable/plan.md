@@ -2,32 +2,37 @@
 
 ## ✅ Phase 1A — UI States Pattern (مكتمل)
 
-- `useListState` hook + `ListStateRenderer` + `ListErrorState` + `EmptyState` معتمدة كنمط رسمي.
-- صفحات مغطاة: Categories, ExpenseCategories, Approvals, Tasks, Inventory (Warehouses/Movements tabs)، إضافة إلى الصفحات السابقة (Quotes, SalesOrders, CreditNotes, Expenses, Products, PurchaseOrders, SupplierPayments, CashRegisterDetails…).
-- توثيق: `docs/architecture/useListState.md` — متى يُستخدم، الاستثناءات، Definition of Done، Regression checklist.
-- الاستثناءات الموثقة: قسم التذكيرات داخل `CustomerDetailsPage`، widgets لوحة التحكم (`WidgetErrorBoundary`)، خلاصة الإشعارات (realtime stream).
+- `useListState` + `ListStateRenderer` + `ListErrorState` + `EmptyState` معتمدة كنمط رسمي.
+- توثيق: `docs/architecture/useListState.md`.
+
+## 🟡 Phase 1B — Forms Pattern (Foundation + Tier 1 POC منجز)
+
+**Foundation منجز:**
+- `src/hooks/useFormDialog.ts` — Dialog-bound، constrained، callback-driven (state + lifecycle فقط، لا UI side-effects).
+- `src/components/shared/FormDialogFooter.tsx` — footer موحّد بـ 44px touch targets.
+- `src/components/shared/FormFieldError.tsx` — عرض موحّد لرسائل zod.
+- توثيق: `docs/architecture/useFormDialog.md`.
+- ذاكرة: `mem://patterns/use-form-dialog` + تحديث `mem://index.md`.
+
+**Tier 1 POC منجز (Gate-pass):**
+- `CategoryFormDialog`, `WarehouseFormDialog`, `ExpenseCategoryFormDialog` — مهاجَرة كاملة.
+- صفر `useEffect(reset)`، صفر manual toast، صفر duplicate try/catch في الملفات المهاجَرة.
 - ESLint نظيف على ملفات النمط، Vitest 1187/1187 ✅.
 
-## ⏭ Phase 1B — Forms Pattern (التالي)
+**Tier 1 المتبقي (يتطلب طبقة wizard منفصلة لاحقاً):**
+- `CustomerFormDialog`, `ProductFormDialog`, `SupplierFormDialog` — لها flows خاصة (wizard + draft + permission + duplicate check + dual desktop/mobile). تبقى على نمطها الحالي حتى Phase 1B.2.
 
-توحيد إدارة النماذج بنفس مستوى التوحيد الذي تحقق في القوائم:
+## ⏭ Phase 1B.1 — Tier 2 (Financial Layer)
 
-- `useFormState` موحّد لإدارة: قيم، أخطاء، حالة إرسال، حالة نجاح/فشل، dirty/touched.
-- توحيد عرض أخطاء التحقق (zod) ورسائل الإرسال (toasts vs inline).
-- تطبيق على: CustomerForm, SupplierForm, ProductForm, InvoiceForm, QuoteForm, ExpenseForm, JournalEntryForm, EmployeeForm.
-- توثيق: `docs/architecture/useFormState.md`.
+`ExpenseFormDialog`, `PaymentFormDialog`, `InvoiceFormDialog`, `QuotationFormDialog`, `PurchaseOrderFormDialog`, `SalesOrderFormDialog`.
 
-## Phase 2 — Security & DB Hardening
+## ⏭ Phase 1B.2 — Tier 3 + Wizard Layer
 
-- `security--run_security_scan` + `supabase--linter` + معالجة الاكتشافات.
-- مراجعة RLS و GRANT لجداول logistics/accounting/credit-notes-reverse.
-- `supabase--slow_queries` وإضافة فهارس عند الحاجة.
+`JournalFormDialog`, `AccountFormDialog`, `EmployeeFormDialog`, `StockMovementDialog`, `CashRegisterFormDialog`, `CashTransactionDialog`, `ProductVariantDialog`, `CustomerAddressDialog` + استخراج طبقة Wizard موحّدة لـ Customer/Product/Supplier.
 
-## Phase 3 — Performance Audit
+## ⏭ Phase 1C — Unified Data Mutation Layer
 
-- مراجعة `useMemo` / `useCallback` على صفحات القوائم الكبيرة.
-- التحقق من استقرار المراجع (stable refs) داخل JSX.
-- قياس re-renders عبر React Profiler.
+توحيد Repository + Query orchestration (الطبقة الثالثة بعد List + Form).
 
 ## معايير الإنجاز للمراحل القادمة
 
