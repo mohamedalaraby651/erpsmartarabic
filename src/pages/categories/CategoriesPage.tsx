@@ -44,7 +44,7 @@ const CategoriesPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: categories = [], isLoading, refetch } = useCategories();
+  const { data: categories = [], isLoading, error, refetch } = useCategories();
 
   const deleteMutation = useDeleteCategory();
 
