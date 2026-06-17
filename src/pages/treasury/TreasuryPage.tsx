@@ -15,6 +15,7 @@ import {
   useCashRegisters,
   useTreasuryBalances,
 } from '@/hooks/treasury';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 import type { CashRegisterRow } from '@/lib/repositories/treasuryRepository';
 
 type CashRegister = CashRegisterRow;
