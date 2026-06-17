@@ -43,7 +43,7 @@ export default function CreditNotesPage() {
   const { data: totalCount = 0 } = useCreditNotesCount(filters);
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  const { data: listResult, isLoading, refetch } = useCreditNotesList(
+  const { data: listResult, isLoading, error, refetch } = useCreditNotesList(
     filters,
     pagination.currentPage,
     PAGE_SIZE,
