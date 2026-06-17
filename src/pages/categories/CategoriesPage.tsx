@@ -46,6 +46,7 @@ const CategoriesPage = () => {
   }, [searchParams, setSearchParams]);
 
   const { data: categories = [], isLoading, error, refetch } = useCategories();
+  const listState = useListState({ data: categories, isLoading, error });
 
   const deleteMutation = useDeleteCategory();
 
