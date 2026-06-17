@@ -56,9 +56,10 @@ export default function ExpenseCategoriesPage() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  const { data: categories, isLoading, refetch } = useAllExpenseCategories() as {
+  const { data: categories, isLoading, error, refetch } = useAllExpenseCategories() as {
     data?: ExpenseCategory[];
     isLoading: boolean;
+    error: unknown;
     refetch: () => Promise<unknown>;
   };
 
