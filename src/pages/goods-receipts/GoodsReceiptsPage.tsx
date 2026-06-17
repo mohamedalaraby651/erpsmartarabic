@@ -12,12 +12,14 @@ import {
 } from "@/hooks/logistics/useGoodsReceipts";
 import { GoodsReceiptStatusBadge } from "@/components/logistics/StatusBadges";
 import { GoodsReceiptDialog } from "@/components/logistics/LogisticsDialogs";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function GoodsReceiptsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const { data: rows = [], isLoading } = useGoodsReceiptsList(search);
+  const { data: rows = [], isLoading, error, refetch } = useGoodsReceiptsList(search);
   const create = useCreateGoodsReceipt();
   const post = usePostGoodsReceipt();
   const cancel = useCancelGoodsReceipt();
