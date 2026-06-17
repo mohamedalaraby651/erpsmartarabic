@@ -75,8 +75,10 @@ export default function SalesPipelinePage() {
             <h2 className="font-semibold mb-3">أوامر بيع جاهزة للتحويل لفاتورة</h2>
             {orders.isLoading ? (
               <div className="text-center py-6 text-muted-foreground">جارٍ التحميل…</div>
+            ) : orders.error ? (
+              <ListErrorState error={orders.error} onRetry={() => orders.refetch()} />
             ) : (orders.data ?? []).length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">لا توجد أوامر بيع.</div>
+              <EmptyState icon={ShoppingCart} title="لا توجد أوامر بيع جاهزة" description="ستظهر هنا أوامر البيع القابلة للتحويل لفاتورة." compact />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
