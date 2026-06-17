@@ -90,13 +90,23 @@ export default function CashRegisterDetailsPage() {
     );
   }
 
+  if (registerError) {
+    return (
+      <div className="p-6">
+        <ListErrorState error={registerError} onRetry={() => refetchRegister()} />
+      </div>
+    );
+  }
+
   if (!register) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-muted-foreground">الصندوق غير موجود</p>
-        <Button variant="link" onClick={() => navigate('/treasury')}>
-          العودة للخزينة
-        </Button>
+      <div className="p-6">
+        <EmptyState
+          icon={Wallet}
+          title="الصندوق غير موجود"
+          description="لم يتم العثور على هذا الصندوق"
+          action={{ label: 'العودة للخزينة', onClick: () => navigate('/treasury') }}
+        />
       </div>
     );
   }
