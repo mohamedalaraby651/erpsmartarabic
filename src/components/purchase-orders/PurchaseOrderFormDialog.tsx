@@ -117,7 +117,8 @@ const PurchaseOrderFormDialog = ({
 
   const { form, isEditing, isSubmitting, submit } = useFormDialog<
     FormValues,
-    PurchaseOrder
+    PurchaseOrder,
+    FormValues
   >({
     schema,
     entity: order ?? null,
