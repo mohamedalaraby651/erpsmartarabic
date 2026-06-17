@@ -38,7 +38,7 @@ export default function TreasuryPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: registers, isLoading, refetch } = useCashRegisters();
+  const { data: registers, isLoading, error, refetch } = useCashRegisters();
   const { data: todayStats } = useTreasuryBalances();
 
   const totalBalance = registers?.reduce((sum, r) => sum + Number(r.current_balance), 0) || 0;
