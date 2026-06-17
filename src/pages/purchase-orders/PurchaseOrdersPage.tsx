@@ -27,6 +27,7 @@ import type { PurchaseOrderRow } from "@/lib/repositories/purchaseOrderRepositor
 import { PurchaseOrderStats } from "./components/PurchaseOrderStats";
 import { PurchaseOrderTable } from "./components/PurchaseOrderTable";
 import { PurchaseOrderMobileList } from "./components/PurchaseOrderMobileList";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 
 const PAGE_SIZE = 25;
 
@@ -93,6 +94,7 @@ const PurchaseOrdersPage = () => {
   const {
     data: orders = [],
     isLoading,
+    error,
     refetch,
   } = usePurchaseOrdersList(filters, pagination.range);
 
@@ -167,8 +169,10 @@ const PurchaseOrdersPage = () => {
         </div>
       </div>
 
-      {/* Mobile View */}
-      {isMobile ? (
+      {/* Error state takes over when no cached data is available */}
+      {error && orders.length === 0 ? (
+        <ListErrorState error={error} onRetry={() => refetch()} />
+      ) : isMobile ? (
         isLoading ? (
           <div className="space-y-4">
             <MobileStatSkeleton count={4} />

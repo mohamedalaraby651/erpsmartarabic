@@ -15,6 +15,7 @@ import {
   useCashRegisters,
   useTreasuryBalances,
 } from '@/hooks/treasury';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 import type { CashRegisterRow } from '@/lib/repositories/treasuryRepository';
 
 type CashRegister = CashRegisterRow;
@@ -37,7 +38,7 @@ export default function TreasuryPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: registers, isLoading, refetch } = useCashRegisters();
+  const { data: registers, isLoading, error, refetch } = useCashRegisters();
   const { data: todayStats } = useTreasuryBalances();
 
   const totalBalance = registers?.reduce((sum, r) => sum + Number(r.current_balance), 0) || 0;
@@ -142,6 +143,8 @@ export default function TreasuryPage() {
               </Card>
             ))}
           </div>
+        ) : error ? (
+          <ListErrorState error={error} onRetry={() => refetch()} />
         ) : registers?.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">

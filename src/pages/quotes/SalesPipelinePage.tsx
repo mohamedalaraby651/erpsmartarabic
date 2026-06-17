@@ -9,6 +9,8 @@ import {
 } from "@/hooks/sales-cycle/useQuotes";
 import { usePipelineOrders, usePipelineInvoices } from "@/hooks/quotations";
 import { useNavigate } from "react-router-dom";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function SalesPipelinePage() {
   const navigate = useNavigate();
@@ -73,8 +75,10 @@ export default function SalesPipelinePage() {
             <h2 className="font-semibold mb-3">أوامر بيع جاهزة للتحويل لفاتورة</h2>
             {orders.isLoading ? (
               <div className="text-center py-6 text-muted-foreground">جارٍ التحميل…</div>
+            ) : orders.error ? (
+              <ListErrorState error={orders.error} onRetry={() => orders.refetch()} />
             ) : (orders.data ?? []).length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">لا توجد أوامر بيع.</div>
+              <EmptyState icon={ShoppingCart} title="لا توجد أوامر بيع جاهزة" description="ستظهر هنا أوامر البيع القابلة للتحويل لفاتورة." compact />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -119,8 +123,10 @@ export default function SalesPipelinePage() {
             <h2 className="font-semibold mb-3">فواتير جاهزة لإصدار إذن تسليم</h2>
             {invoices.isLoading ? (
               <div className="text-center py-6 text-muted-foreground">جارٍ التحميل…</div>
+            ) : invoices.error ? (
+              <ListErrorState error={invoices.error} onRetry={() => invoices.refetch()} />
             ) : (invoices.data ?? []).length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">لا توجد فواتير.</div>
+              <EmptyState icon={Receipt} title="لا توجد فواتير جاهزة" description="ستظهر هنا الفواتير القابلة لإصدار إذن تسليم." compact />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
