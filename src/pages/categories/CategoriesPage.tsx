@@ -240,58 +240,63 @@ const CategoriesPage = () => {
         )}
       </div>
 
-      {isLoading ? (
-        isMobile ? (
-          <MobileListSkeleton count={5} />
+      {(() => {
+        const state = useListState({ data: categories, isLoading, error });
+        if (state === 'loading') {
+          return isMobile ? (
+            <MobileListSkeleton count={5} />
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </CardContent>
+            </Card>
+          );
+        }
+        if (state === 'error') {
+          return <ListErrorState error={error} onRetry={() => refetch()} />;
+        }
+        if (state === 'empty') {
+          return (
+            <EmptyState
+              icon={Layers}
+              title="لا توجد تصنيفات"
+              description="أضف تصنيفًا جديدًا للبدء في تنظيم المنتجات"
+              action={{ label: "إضافة تصنيف", onClick: handleAdd }}
+            />
+          );
+        }
+        return isMobile ? (
+          <div className="space-y-3">
+            {rootCategories.flatMap(category => renderCategoryCard(category, 0))}
+          </div>
         ) : (
           <Card>
-            <CardContent className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <CardHeader>
+              <CardTitle>قائمة التصنيفات</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>الاسم</TableHead>
+                      <TableHead>التصنيف الأب</TableHead>
+                      <TableHead>الوصف</TableHead>
+                      <TableHead>الفرعية</TableHead>
+                      <TableHead>الترتيب</TableHead>
+                      <TableHead className="text-left">إجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rootCategories.flatMap(category => renderCategoryRow(category, 0))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
-        )
-      ) : error ? (
-        <ListErrorState onRetry={() => refetch()} />
-      ) : categories.length === 0 ? (
-        <EmptyState
-          icon={Layers}
-          title="لا توجد تصنيفات"
-          description="أضف تصنيفًا جديدًا للبدء في تنظيم المنتجات"
-          action={{
-            label: "إضافة تصنيف",
-            onClick: handleAdd
-          }}
-        />
-      ) : isMobile ? (
-        <div className="space-y-3">
-          {rootCategories.flatMap(category => renderCategoryCard(category, 0))}
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>قائمة التصنيفات</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>الاسم</TableHead>
-                    <TableHead>التصنيف الأب</TableHead>
-                    <TableHead>الوصف</TableHead>
-                    <TableHead>الفرعية</TableHead>
-                    <TableHead>الترتيب</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rootCategories.flatMap(category => renderCategoryRow(category, 0))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        );
+      })()}
 
       <CategoryFormDialog
         open={dialogOpen}
