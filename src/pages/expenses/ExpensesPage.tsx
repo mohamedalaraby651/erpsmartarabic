@@ -108,7 +108,7 @@ export default function ExpensesPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: expenses, isLoading, refetch } = useQuery({
+  const { data: expenses, isLoading, error, refetch } = useQuery({
     queryKey: ['expenses', statusFilter],
     queryFn: async () =>
       (await expenseRepository.list({
