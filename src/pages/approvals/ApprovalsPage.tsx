@@ -55,6 +55,13 @@ const ApprovalsPage = () => {
   const { data: records = [], isLoading, error, refetch } = usePendingApprovals({
     status: activeTab,
   });
+  // Tab acts as a filter — distinguish "no records in this tab" from "no records at all".
+  const listState = useListState({
+    data: records,
+    isLoading,
+    error,
+    hasFilters: activeTab !== 'all',
+  });
 
   const executeMutation = useExecuteApprovalAction();
 
