@@ -9,6 +9,8 @@ import {
 } from "@/hooks/sales-cycle/useQuotes";
 import { usePipelineOrders, usePipelineInvoices } from "@/hooks/quotations";
 import { useNavigate } from "react-router-dom";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function SalesPipelinePage() {
   const navigate = useNavigate();
