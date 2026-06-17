@@ -44,7 +44,7 @@ const InventoryPage = () => {
 
   const { data: warehouses = [], isLoading: loadingWarehouses, error: warehousesError, refetch: refetchWarehouses } = useWarehouses();
   const { data: productStock = [], isLoading: loadingStock, error: stockError, refetch: refetchStock } = useInventoryLevels();
-  const { data: recentMovements = [], error: movementsError, refetch: refetchMovements } = useRecentStockMovements(10);
+  const { data: recentMovements = [], isLoading: loadingMovements, error: movementsError, refetch: refetchMovements } = useRecentStockMovements(10);
 
   const anyError = warehousesError || stockError || movementsError;
 
@@ -118,7 +118,7 @@ const InventoryPage = () => {
 
         <TabsContent value="stock"><InventoryStockTab stock={productStock as any} isLoading={loadingStock} searchTerm={searchTerm} onSearchChange={setSearchTerm} /></TabsContent>
         <TabsContent value="warehouses"><InventoryWarehousesTab warehouses={warehouses} isLoading={loadingWarehouses} error={warehousesError} onRetry={() => refetchWarehouses()} onEdit={(w) => { setSelectedWarehouse(w); setWarehouseDialogOpen(true); }} onDelete={(id) => { setWarehouseToDelete(id); setDeleteDialogOpen(true); }} onAdd={() => { setSelectedWarehouse(null); setWarehouseDialogOpen(true); }} /></TabsContent>
-        <TabsContent value="movements"><InventoryMovementsTab movements={recentMovements as any} onAddMovement={() => setMovementDialogOpen(true)} /></TabsContent>
+        <TabsContent value="movements"><InventoryMovementsTab movements={recentMovements as any} isLoading={loadingMovements} error={movementsError} onRetry={() => refetchMovements()} onAddMovement={() => setMovementDialogOpen(true)} /></TabsContent>
         <TabsContent value="alerts"><InventoryAlertsTab items={lowStockItems as any} /></TabsContent>
       </Tabs>
 

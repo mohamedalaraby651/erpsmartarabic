@@ -32,6 +32,7 @@ import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ListErrorState } from "@/components/shared/ListErrorState";
+import { useListState } from "@/hooks/useListState";
 
 type Task = TaskRow;
 
@@ -106,6 +107,13 @@ const TasksPage = () => {
 
   const pendingCount = tasks?.filter(t => !t.is_completed).length || 0;
   const completedCount = tasks?.filter(t => t.is_completed).length || 0;
+
+  const listState = useListState({
+    data: filteredTasks,
+    isLoading,
+    error,
+    hasFilters: filter !== 'all',
+  });
 
   const getPriorityBadge = (priority: string | null) => {
     switch (priority) {
@@ -301,7 +309,7 @@ const TasksPage = () => {
         </Button>
       </div>
 
-      {isLoading ? (
+      {listState === 'loading' ? (
         isMobile ? (
           <MobileListSkeleton count={5} />
         ) : (
@@ -311,17 +319,22 @@ const TasksPage = () => {
             </CardContent>
           </Card>
         )
-      ) : error ? (
-        <ListErrorState onRetry={() => refetch()} />
-      ) : filteredTasks.length === 0 ? (
+      ) : listState === 'error' ? (
+        <ListErrorState error={error} onRetry={() => refetch()} />
+      ) : listState === 'empty-filtered' ? (
+        <EmptyState
+          icon={CheckSquare}
+          title="لا توجد مهام مطابقة"
+          description={filter === 'pending' ? "لا توجد مهام معلقة حاليًا" : "لا توجد مهام مكتملة بعد"}
+          action={{ label: "عرض كل المهام", onClick: () => setFilter('all'), variant: 'outline' }}
+          compact
+        />
+      ) : listState === 'empty' ? (
         <EmptyState
           icon={CheckSquare}
           title="لا توجد مهام"
-          description={filter === 'all' ? "أضف مهمة جديدة للبدء" : filter === 'pending' ? "لا توجد مهام معلقة" : "لا توجد مهام مكتملة"}
-          action={filter === 'all' ? {
-            label: "إضافة مهمة",
-            onClick: () => setIsDialogOpen(true)
-          } : undefined}
+          description="أضف مهمة جديدة للبدء"
+          action={{ label: "إضافة مهمة", onClick: () => setIsDialogOpen(true) }}
         />
       ) : isMobile ? (
         <div className="space-y-3">

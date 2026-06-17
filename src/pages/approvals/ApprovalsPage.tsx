@@ -21,6 +21,8 @@ import {
 } from '@/hooks/approvals';
 import type { ApprovalRecord, ApprovalStatusFilter } from '@/lib/repositories/approvalRepository';
 import { ListErrorState } from '@/components/shared/ListErrorState';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { useListState } from '@/hooks/useListState';
 
 const statusLabels: Record<string, string> = {
   pending: 'معلقة',
@@ -52,6 +54,13 @@ const ApprovalsPage = () => {
 
   const { data: records = [], isLoading, error, refetch } = usePendingApprovals({
     status: activeTab,
+  });
+  // Tab acts as a filter — distinguish "no records in this tab" from "no records at all".
+  const listState = useListState({
+    data: records,
+    isLoading,
+    error,
+    hasFilters: activeTab !== 'all',
   });
 
   const executeMutation = useExecuteApprovalAction();
@@ -191,21 +200,27 @@ const ApprovalsPage = () => {
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-4">
-          {isLoading ? (
+          {listState === 'loading' ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
             </div>
-          ) : error ? (
-            <ListErrorState onRetry={() => refetch()} />
-          ) : records.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <AlertCircle className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">
-                  لا توجد طلبات {statusLabels[activeTab] || ''}
-                </p>
-              </CardContent>
-            </Card>
+          ) : listState === 'error' ? (
+            <ListErrorState error={error} onRetry={() => refetch()} />
+          ) : listState === 'empty-filtered' ? (
+            <EmptyState
+              icon={AlertCircle}
+              title={`لا توجد طلبات ${statusLabels[activeTab] || ''}`}
+              description="جرّب تبويبًا آخر لعرض الطلبات في حالات مختلفة."
+              action={{ label: 'عرض الكل', onClick: () => setActiveTab('all'), variant: 'outline' }}
+              compact
+            />
+          ) : listState === 'empty' ? (
+            <EmptyState
+              icon={AlertCircle}
+              title="لا توجد طلبات موافقة"
+              description="ستظهر هنا الطلبات التي تحتاج إلى مراجعتك."
+              compact
+            />
           ) : (
             <div className="space-y-3">
               {records.map(renderRecordCard)}
