@@ -138,6 +138,10 @@ const SalesOrdersPage = () => {
       );
     }
 
+    if (error) {
+      return <ListErrorState error={error} onRetry={() => refetch()} />;
+    }
+
     return (
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="space-y-5">
