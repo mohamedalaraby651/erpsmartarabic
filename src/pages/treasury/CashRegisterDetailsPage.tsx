@@ -65,8 +65,8 @@ export default function CashRegisterDetailsPage() {
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('income');
 
-  const { data: register, isLoading: isLoadingRegister } = useCashRegister(id);
-  const { data: transactions, isLoading: isLoadingTransactions, refetch } = useCashTransactions({
+  const { data: register, isLoading: isLoadingRegister, error: registerError, refetch: refetchRegister } = useCashRegister(id);
+  const { data: transactions, isLoading: isLoadingTransactions, error: txError, refetch } = useCashTransactions({
     registerId: id,
     limit: 50,
   });
