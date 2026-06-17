@@ -59,7 +59,7 @@ const TasksPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: tasks, isLoading, refetch } = useQuery({
+  const { data: tasks, isLoading, error, refetch } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => tasksRepository.list(),
   });
