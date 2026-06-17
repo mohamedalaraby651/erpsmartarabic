@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import SupplierPaymentDialog from '@/components/suppliers/SupplierPaymentDialog';
+import { ListErrorState } from '@/components/shared/ListErrorState';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Search, Wallet, Calendar, Building2 } from 'lucide-react';
 
 const paymentMethodLabels: Record<string, string> = {
