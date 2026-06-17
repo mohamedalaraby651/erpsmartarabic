@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ListErrorState } from "@/components/shared/ListErrorState";
 import { Badge } from "@/components/ui/badge";
 import { useCategories, useDeleteCategory } from "@/hooks/categories";
+import { useListState } from "@/hooks/useListState";
 
 type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
 
