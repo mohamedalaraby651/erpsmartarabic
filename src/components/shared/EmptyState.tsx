@@ -46,7 +46,7 @@ export function EmptyState({
   tips,
   className,
   compact = false,
-  illustration = 'default',
+  illustration: _illustration = 'default',
 }: EmptyStateProps) {
   return (
     <div className={cn(

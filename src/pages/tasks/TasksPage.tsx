@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { tasksRepository, type TaskRow } from "@/lib/repositories";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckSquare, Plus, Calendar, Clock, User, ListTodo, CheckCircle } from "lucide-react";
+import { CheckSquare, Plus, Calendar, Clock, ListTodo, CheckCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
