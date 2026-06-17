@@ -9,6 +9,7 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { MobileListSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { DataCard } from '@/components/mobile/DataCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
 import { Plus, FolderTree, Pencil, Trash2 } from 'lucide-react';
 import { ExpenseCategoryFormDialog } from '@/components/expenses/ExpenseCategoryFormDialog';
