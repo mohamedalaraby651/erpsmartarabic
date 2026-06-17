@@ -143,6 +143,8 @@ export default function TreasuryPage() {
               </Card>
             ))}
           </div>
+        ) : error ? (
+          <ListErrorState error={error} onRetry={() => refetch()} />
         ) : registers?.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
