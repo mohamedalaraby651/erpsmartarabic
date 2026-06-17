@@ -12,12 +12,14 @@ import {
 } from "@/hooks/logistics/useDeliveryNotes";
 import { DeliveryNoteStatusBadge } from "@/components/logistics/StatusBadges";
 import { DeliveryNoteDialog } from "@/components/logistics/LogisticsDialogs";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function DeliveryNotesPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const { data: rows = [], isLoading } = useDeliveryNotesList(search);
+  const { data: rows = [], isLoading, error, refetch } = useDeliveryNotesList(search);
   const create = useCreateDeliveryNote();
   const post = usePostDeliveryNote();
   const cancel = useCancelDeliveryNote();
