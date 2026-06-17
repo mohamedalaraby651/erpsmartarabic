@@ -55,8 +55,25 @@ export default function PurchaseInvoicesPage() {
         </div>
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">جارٍ التحميل…</div>
+        ) : error ? (
+          <ListErrorState error={error} onRetry={() => refetch()} />
         ) : rows.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">لا توجد فواتير مشتريات بعد.</div>
+          search ? (
+            <EmptyState
+              icon={Search}
+              title="لا توجد نتائج مطابقة"
+              description="جرب تعديل أو مسح البحث."
+              action={{ label: 'مسح البحث', onClick: () => setSearch(''), variant: 'outline' }}
+              compact
+            />
+          ) : (
+            <EmptyState
+              icon={FileText}
+              title="لا توجد فواتير مشتريات بعد"
+              description="ابدأ بإنشاء أول فاتورة شراء من المورد."
+              action={{ label: 'فاتورة جديدة', onClick: () => setOpen(true), icon: Plus }}
+            />
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
