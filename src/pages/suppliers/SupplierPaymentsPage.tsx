@@ -53,7 +53,7 @@ export default function SupplierPaymentsPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
+  const { data: payments, isLoading: paymentsLoading, error: paymentsError, refetch: refetchPayments } = useQuery({
     queryKey: ['supplier-payments'],
     queryFn: () => supplierPaymentRepository.list(),
   });
