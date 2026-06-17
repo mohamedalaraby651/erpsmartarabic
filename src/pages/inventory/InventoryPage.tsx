@@ -42,9 +42,11 @@ const InventoryPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: warehouses = [], isLoading: loadingWarehouses, refetch: refetchWarehouses } = useWarehouses();
-  const { data: productStock = [], isLoading: loadingStock, refetch: refetchStock } = useInventoryLevels();
-  const { data: recentMovements = [], refetch: refetchMovements } = useRecentStockMovements(10);
+  const { data: warehouses = [], isLoading: loadingWarehouses, error: warehousesError, refetch: refetchWarehouses } = useWarehouses();
+  const { data: productStock = [], isLoading: loadingStock, error: stockError, refetch: refetchStock } = useInventoryLevels();
+  const { data: recentMovements = [], error: movementsError, refetch: refetchMovements } = useRecentStockMovements(10);
+
+  const anyError = warehousesError || stockError || movementsError;
 
   const deleteWarehouseMutation = useDeleteWarehouse();
 
