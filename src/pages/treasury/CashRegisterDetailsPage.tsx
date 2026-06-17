@@ -179,10 +179,14 @@ export default function CashRegisterDetailsPage() {
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
+          ) : txError ? (
+            <ListErrorState error={txError} onRetry={() => refetch()} />
           ) : transactions?.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              لا توجد حركات بعد
-            </p>
+            <EmptyState
+              icon={Wallet}
+              title="لا توجد حركات بعد"
+              description="ابدأ بتسجيل أول حركة إيداع أو سحب"
+            />
           ) : isMobile ? (
             <div className="space-y-3">
               {transactions?.map((txn) => (
