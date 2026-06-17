@@ -242,7 +242,7 @@ const CategoriesPage = () => {
       </div>
 
       {(() => {
-        const state = useListState({ data: categories, isLoading, error });
+        const state = listState;
         if (state === 'loading') {
           return isMobile ? (
             <MobileListSkeleton count={5} />
