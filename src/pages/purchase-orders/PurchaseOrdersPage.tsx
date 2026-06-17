@@ -169,13 +169,10 @@ const PurchaseOrdersPage = () => {
         </div>
       </div>
 
-      {/* Error state (shared between mobile & desktop, only when no cached data) */}
-      {error && orders.length === 0 && (
+      {/* Error state takes over when no cached data is available */}
+      {error && orders.length === 0 ? (
         <ListErrorState error={error} onRetry={() => refetch()} />
-      )}
-
-      {/* Mobile View */}
-      {!error && isMobile ? (
+      ) : isMobile ? (
         isLoading ? (
           <div className="space-y-4">
             <MobileStatSkeleton count={4} />
