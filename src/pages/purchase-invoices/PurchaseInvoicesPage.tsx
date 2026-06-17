@@ -11,12 +11,14 @@ import {
 } from "@/hooks/logistics/usePurchaseInvoices";
 import { PurchaseInvoiceStatusBadge, MatchingStatusBadge } from "@/components/logistics/StatusBadges";
 import { PurchaseInvoiceDialog } from "@/components/logistics/LogisticsDialogs";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function PurchaseInvoicesPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const { data: rows = [], isLoading } = usePurchaseInvoicesList(search);
+  const { data: rows = [], isLoading, error, refetch } = usePurchaseInvoicesList(search);
   const create = useCreatePurchaseInvoice();
   const post = usePostPurchaseInvoice();
 
