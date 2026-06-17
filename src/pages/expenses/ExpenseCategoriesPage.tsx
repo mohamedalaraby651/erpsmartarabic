@@ -64,6 +64,8 @@ export default function ExpenseCategoriesPage() {
     refetch: () => Promise<unknown>;
   };
 
+  const listState = useListState({ data: categories, isLoading, error });
+
   const deleteMutation = useDeleteExpenseCategory();
 
   const handleEdit = useCallback((category: ExpenseCategory) => {
