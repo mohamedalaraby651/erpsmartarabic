@@ -53,8 +53,25 @@ export default function DeliveryNotesPage() {
         </div>
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">جارٍ التحميل…</div>
+        ) : error ? (
+          <ListErrorState error={error} onRetry={() => refetch()} />
         ) : rows.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">لا توجد إذونات تسليم بعد.</div>
+          search ? (
+            <EmptyState
+              icon={Search}
+              title="لا توجد نتائج مطابقة"
+              description="جرب تعديل أو مسح البحث."
+              action={{ label: 'مسح البحث', onClick: () => setSearch(''), variant: 'outline' }}
+              compact
+            />
+          ) : (
+            <EmptyState
+              icon={Truck}
+              title="لا توجد إذونات تسليم بعد"
+              description="ابدأ بإنشاء أول إذن تسليم لعملائك."
+              action={{ label: 'إذن جديد', onClick: () => setOpen(true), icon: Plus }}
+            />
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
