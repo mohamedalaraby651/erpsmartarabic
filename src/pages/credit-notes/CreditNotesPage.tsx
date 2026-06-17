@@ -110,12 +110,20 @@ export default function CreditNotesPage() {
 
       {isLoading ? (
         isMobile ? <MobileListSkeleton /> : <TableSkeleton columns={5} rows={5} />
+      ) : error ? (
+        <ListErrorState error={error} onRetry={() => refetch()} />
       ) : creditNotes.length === 0 ? (
         <EmptyState
           icon={RotateCcw}
-          title="لا توجد مرتجعات"
-          description="لم يتم إنشاء أي إشعارات إرجاع بعد"
-          action={canCreate ? { label: 'إشعار إرجاع جديد', onClick: () => setDialogOpen(true) } : undefined}
+          title={debouncedSearch ? 'لا توجد نتائج' : 'لا توجد مرتجعات'}
+          description={debouncedSearch ? 'جرّب تعديل البحث' : 'لم يتم إنشاء أي إشعارات إرجاع بعد'}
+          action={
+            debouncedSearch
+              ? { label: 'مسح البحث', onClick: () => setSearchQuery('') }
+              : canCreate
+              ? { label: 'إشعار إرجاع جديد', onClick: () => setDialogOpen(true) }
+              : undefined
+          }
         />
       ) : isMobile ? (
         <PullToRefresh onRefresh={handleRefresh}>
