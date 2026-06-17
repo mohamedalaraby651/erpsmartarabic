@@ -108,6 +108,13 @@ const TasksPage = () => {
   const pendingCount = tasks?.filter(t => !t.is_completed).length || 0;
   const completedCount = tasks?.filter(t => t.is_completed).length || 0;
 
+  const listState = useListState({
+    data: filteredTasks,
+    isLoading,
+    error,
+    hasFilters: filter !== 'all',
+  });
+
   const getPriorityBadge = (priority: string | null) => {
     switch (priority) {
       case 'high':
