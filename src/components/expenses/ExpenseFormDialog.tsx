@@ -1,12 +1,8 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { expenseRepository } from '@/lib/repositories/expenseRepository';
 import { listActiveSuppliersForSelect } from '@/lib/repositories/supplierRepository';
 import { useCreateExpense, useUpdateExpense } from '@/hooks/expenses';
-import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +32,8 @@ import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
 import { mapRepoError } from '@/lib/repositories/_base';
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
+import { useFormDialog } from '@/hooks/useFormDialog';
+import { useMutationToast } from '@/hooks/useMutationToast';
 
 const formSchema = z.object({
   category_id: z.string().optional(),
@@ -66,27 +64,19 @@ interface ExpenseFormDialogProps {
   expense?: Expense | null;
 }
 
+const defaultValues = (): FormData => ({
+  category_id: '',
+  amount: 0,
+  payment_method: 'cash',
+  register_id: '',
+  expense_date: format(new Date(), 'yyyy-MM-dd'),
+  description: '',
+  supplier_id: '',
+});
+
 export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDialogProps) {
-  const { toast } = useToast();
-  const isEditing = !!expense;
   const createMutation = useCreateExpense();
   const updateMutation = useUpdateExpense();
-  const isPending = createMutation.isPending || updateMutation.isPending;
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      category_id: '',
-      amount: 0,
-      payment_method: 'cash',
-      register_id: '',
-      expense_date: format(new Date(), 'yyyy-MM-dd'),
-      description: '',
-      supplier_id: '',
-    },
-  });
-
-  const paymentMethod = form.watch('payment_method');
 
   const { data: categories } = useQuery({
     queryKey: ['expense-categories'],
@@ -103,64 +93,64 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
     queryFn: () => listActiveSuppliersForSelect(),
   });
 
-  useEffect(() => {
-    if (expense) {
-      form.reset({
-        category_id: expense.category_id || '',
-        amount: expense.amount,
-        payment_method: expense.payment_method as 'cash' | 'bank' | 'card',
-        register_id: expense.register_id || '',
-        expense_date: expense.expense_date,
-        description: expense.description || '',
-        supplier_id: expense.supplier_id || '',
-      });
-    } else {
-      form.reset({
-        category_id: '',
-        amount: 0,
-        payment_method: 'cash',
-        register_id: '',
-        expense_date: format(new Date(), 'yyyy-MM-dd'),
-        description: '',
-        supplier_id: '',
-      });
-    }
-  }, [expense, form]);
+  const toast = useMutationToast({
+    successTitle: expense ? 'تم تحديث المصروف' : 'تم إضافة المصروف',
+    errorTitle: 'حدث خطأ',
+  });
 
-  const onSubmit = async (data: FormData) => {
-    const userId = await expenseRepository.getCurrentUserId();
-    const input = {
-      category_id: data.category_id || null,
-      amount: data.amount,
-      payment_method: data.payment_method,
-      register_id: data.register_id || null,
-      expense_date: data.expense_date,
-      description: data.description || null,
-      supplier_id: data.supplier_id || null,
-      created_by: userId,
-    };
-
-    const handleSuccess = () => {
-      toast({ title: isEditing ? 'تم تحديث المصروف' : 'تم إضافة المصروف' });
-      onOpenChange(false);
-      form.reset();
-    };
-    const handleError = (error: unknown) => {
-      logErrorSafely('ExpenseFormDialog', error);
-      const description = mapRepoError(error, getSafeErrorMessage(error)).message;
-      toast({ title: 'حدث خطأ', description, variant: 'destructive' });
-    };
-
-    if (isEditing && expense) {
-      updateMutation.mutate({ id: expense.id, input }, { onSuccess: handleSuccess, onError: handleError });
-    } else {
-      createMutation.mutate(input, { onSuccess: handleSuccess, onError: handleError });
-    }
+  const handleError = (error: unknown) => {
+    logErrorSafely('ExpenseFormDialog', error);
+    const description = mapRepoError(error, getSafeErrorMessage(error)).message;
+    toast.onError({ message: description });
   };
+
+  const { form, isEditing, isSubmitting, submit } = useFormDialog<FormData, Expense>({
+    schema: formSchema,
+    entity: expense,
+    toValues: (e) =>
+      e
+        ? {
+            category_id: e.category_id || '',
+            amount: e.amount,
+            payment_method: e.payment_method as 'cash' | 'bank' | 'card',
+            register_id: e.register_id || '',
+            expense_date: e.expense_date,
+            description: e.description || '',
+            supplier_id: e.supplier_id || '',
+          }
+        : defaultValues(),
+    toPayload: (v) => v,
+    mutationFn: async (values, { isEditing }) => {
+      const data = values as FormData;
+      const userId = await expenseRepository.getCurrentUserId();
+      const input = {
+        category_id: data.category_id || null,
+        amount: data.amount,
+        payment_method: data.payment_method,
+        register_id: data.register_id || null,
+        expense_date: data.expense_date,
+        description: data.description || null,
+        supplier_id: data.supplier_id || null,
+        created_by: userId,
+      };
+      if (isEditing && expense) {
+        await updateMutation.mutateAsync({ id: expense.id, input });
+      } else {
+        await createMutation.mutateAsync(input);
+      }
+    },
+    onSuccess: () => {
+      toast.onSuccess();
+      onOpenChange(false);
+    },
+    onError: handleError,
+  });
+
+  const paymentMethod = form.watch('payment_method');
 
   const formContent = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={submit} className="space-y-4">
         <FormField control={form.control} name="category_id" render={({ field }) => (<FormItem><FormLabel>التصنيف</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر التصنيف" /></SelectTrigger></FormControl><SelectContent>{categories?.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />
         <FormField control={form.control} name="amount" render={({ field }) => (<FormItem><FormLabel>المبلغ *</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>)} />
         <FormField control={form.control} name="payment_method" render={({ field }) => (<FormItem><FormLabel>طريقة الدفع *</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="cash">نقدي</SelectItem><SelectItem value="bank">تحويل بنكي</SelectItem><SelectItem value="card">بطاقة</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
@@ -172,12 +162,12 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
     </Form>
   );
 
-  const formFooter = (
+  const mobileFooter = (
     <div className="flex gap-2">
-      <Button className="flex-1" disabled={isPending} onClick={form.handleSubmit(onSubmit)}>
-        {isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+      <Button className="flex-1 min-h-11" disabled={isSubmitting} onClick={() => submit()}>
+        {isSubmitting ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
       </Button>
-      <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+      <Button type="button" variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>إلغاء</Button>
     </div>
   );
 
@@ -187,15 +177,17 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
         <DialogHeader><DialogTitle>{isEditing ? 'تعديل المصروف' : 'مصروف جديد'}</DialogTitle></DialogHeader>
         {formContent}
         <div className="flex gap-2 pt-4">
-          <Button className="flex-1" disabled={isPending} onClick={form.handleSubmit(onSubmit)}>{isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}</Button>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button className="flex-1 min-h-11" disabled={isSubmitting} onClick={() => submit()}>
+            {isSubmitting ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
+          </Button>
+          <Button type="button" variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>إلغاء</Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 
   const mobileForm = (
-    <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل المصروف' : 'مصروف جديد'} footer={formFooter}>
+    <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل المصروف' : 'مصروف جديد'} footer={mobileFooter}>
       {formContent}
     </FullScreenForm>
   );
