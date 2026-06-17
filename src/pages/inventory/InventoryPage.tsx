@@ -99,6 +99,10 @@ const InventoryPage = () => {
         )}
       </div>
 
+      {anyError && (
+        <ListErrorState error={anyError} onRetry={handleRefresh} />
+      )}
+
       <Tabs defaultValue="stock" className="space-y-4">
         <TabsList className={isMobile ? "grid grid-cols-4 w-full" : ""}>
           <TabsTrigger value="stock">المخزون</TabsTrigger>
