@@ -12,12 +12,14 @@ import {
 } from "@/hooks/logistics/useGoodsReceipts";
 import { GoodsReceiptStatusBadge } from "@/components/logistics/StatusBadges";
 import { GoodsReceiptDialog } from "@/components/logistics/LogisticsDialogs";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function GoodsReceiptsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const { data: rows = [], isLoading } = useGoodsReceiptsList(search);
+  const { data: rows = [], isLoading, error, refetch } = useGoodsReceiptsList(search);
   const create = useCreateGoodsReceipt();
   const post = usePostGoodsReceipt();
   const cancel = useCancelGoodsReceipt();
@@ -55,8 +57,25 @@ export default function GoodsReceiptsPage() {
 
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">جارٍ التحميل…</div>
+        ) : error ? (
+          <ListErrorState error={error} onRetry={() => refetch()} />
         ) : rows.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">لا توجد إيصالات. ابدأ بإنشاء أول إيصال.</div>
+          search ? (
+            <EmptyState
+              icon={Search}
+              title="لا توجد نتائج مطابقة"
+              description="جرب تعديل أو مسح البحث."
+              action={{ label: 'مسح البحث', onClick: () => setSearch(''), variant: 'outline' }}
+              compact
+            />
+          ) : (
+            <EmptyState
+              icon={PackageCheck}
+              title="لا توجد إيصالات بعد"
+              description="ابدأ بإنشاء أول إيصال استلام من الموردين."
+              action={{ label: 'إيصال جديد', onClick: () => setOpen(true), icon: Plus }}
+            />
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
