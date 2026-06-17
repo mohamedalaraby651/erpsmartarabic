@@ -1,23 +1,55 @@
+/**
+ * PurchaseOrderFormDialog — Phase 1B Tier 2 (Batch 2).
+ *
+ * Migrated to the `useFormDialog` contract:
+ *  - Hook owns header state + lifecycle (zod schema).
+ *  - Line items remain in external `useState` (per Batch 2 rule: hook never owns nested arrays).
+ *  - `mutationFn` is the single submit pipeline: pre-mutate guards
+ *    (permission + items presence) → header/payload build → repository write.
+ *  - Toasts + cache invalidation handled by `useCreatePurchaseOrder` /
+ *    `useUpdatePurchaseOrder` hooks (no manual toast in submit).
+ *  - Component layer only closes the dialog in `onSuccess`.
+ */
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { z } from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { useFormDialog } from "@/hooks/useFormDialog";
+import FormDialogFooter from "@/components/shared/FormDialogFooter";
+import FormFieldError from "@/components/shared/FormFieldError";
 import { listActiveSuppliersForSelect } from "@/lib/repositories/supplierRepository";
 import { listActiveProductsForSelect } from "@/lib/repositories/productRepository";
+import { purchaseOrderRepository } from "@/lib/repositories/purchaseOrderRepository";
 import {
   useCreatePurchaseOrder,
   useUpdatePurchaseOrder,
@@ -32,6 +64,7 @@ interface PurchaseOrderFormDialogProps {
   order?: PurchaseOrder | null;
   prefillSupplierId?: string;
 }
+
 interface OrderItem {
   product_id: string;
   product_name: string;
@@ -39,19 +72,34 @@ interface OrderItem {
   unit_price: number;
   total_price: number;
 }
-interface FormData {
-  supplier_id: string;
-  expected_date: string;
-  notes: string;
-  tax_amount: number;
-}
+
+const schema = z.object({
+  supplier_id: z.string().min(1, "المورد مطلوب"),
+  expected_date: z.string().optional().default(""),
+  notes: z.string().optional().default(""),
+  tax_amount: z.coerce.number().min(0, "الضريبة لا يمكن أن تكون سالبة").default(0),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId }: PurchaseOrderFormDialogProps) => {
-  const { toast } = useToast();
+const generateOrderNumber = () => {
+  const d = new Date();
+  return `PO-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}-${Math.floor(
+    Math.random() * 1000,
+  )
+    .toString()
+    .padStart(3, "0")}`;
+};
+
+const PurchaseOrderFormDialog = ({
+  open,
+  onOpenChange,
+  order,
+  prefillSupplierId,
+}: PurchaseOrderFormDialogProps) => {
   const { user } = useAuth();
-  const isEditing = !!order;
   const [items, setItems] = useState<OrderItem[]>([]);
 
   const { data: suppliers = [] } = useQuery({
@@ -63,49 +111,109 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
     queryFn: () => listActiveProductsForSelect(),
   });
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<FormData>({
-    defaultValues: { supplier_id: prefillSupplierId || "", expected_date: "", notes: "", tax_amount: 0 },
-  });
   const wizard = useFormWizard({ totalSteps: 3 });
-
   const createMut = useCreatePurchaseOrder();
   const updateMut = useUpdatePurchaseOrder();
-  const isPending = createMut.isPending || updateMut.isPending;
 
+  const { form, isEditing, isSubmitting, submit } = useFormDialog<
+    FormValues,
+    PurchaseOrder
+  >({
+    schema,
+    entity: order ?? null,
+    toValues: (e) =>
+      e
+        ? {
+            supplier_id: e.supplier_id,
+            expected_date: e.expected_date || "",
+            notes: e.notes || "",
+            tax_amount: Number(e.tax_amount) || 0,
+          }
+        : {
+            supplier_id: prefillSupplierId || "",
+            expected_date: "",
+            notes: "",
+            tax_amount: 0,
+          },
+    toPayload: (v) => v,
+    mutationFn: async (values, { isEditing }) => {
+      // Pre-MUTATE guards (no branching in component layer).
+      if (items.length === 0) {
+        throw new Error("يجب إضافة منتج واحد على الأقل");
+      }
+      const ok = await verifyPermissionOnServer(
+        "purchase_orders",
+        isEditing ? "edit" : "create",
+      );
+      if (!ok) throw new Error("غير مصرح بهذه العملية");
+
+      const subtotal = round2(items.reduce((s, i) => s + i.total_price, 0));
+      const taxAmount = Number(values.tax_amount) || 0;
+      const total = round2(subtotal + taxAmount);
+
+      const header = {
+        supplier_id: values.supplier_id,
+        order_number: order?.order_number || generateOrderNumber(),
+        expected_date: values.expected_date || null,
+        notes: values.notes || null,
+        subtotal,
+        tax_amount: taxAmount,
+        total_amount: total,
+        status: "pending" as const,
+        created_by: user?.id || null,
+      };
+      const itemsPayload = items.map((i) => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+      }));
+
+      if (isEditing && order) {
+        await updateMut.mutateAsync({ id: order.id, header, items: itemsPayload });
+      } else {
+        await createMut.mutateAsync({ header, items: itemsPayload });
+      }
+    },
+    // Toasts + cache invalidations are handled inside the create/update hooks.
+    onSuccess: () => onOpenChange(false),
+  });
+
+  // Sync line items when entity changes (external state — outside the hook contract).
   useEffect(() => {
+    let cancelled = false;
     if (order) {
-      reset({
-        supplier_id: order.supplier_id,
-        expected_date: order.expected_date || "",
-        notes: order.notes || "",
-        tax_amount: Number(order.tax_amount) || 0,
-      });
-      loadOrderItems(order.id);
+      purchaseOrderRepository
+        .listItems(order.id)
+        .then((rows) => {
+          if (cancelled) return;
+          setItems(
+            rows.map((i) => ({
+              product_id: i.product_id,
+              product_name: i.products?.name || "",
+              quantity: Number(i.quantity),
+              unit_price: Number(i.unit_price),
+              total_price: Number(i.total_price),
+            })),
+          );
+        })
+        .catch(() => {
+          /* swallow — items remain empty */
+        });
     } else {
-      reset({ supplier_id: prefillSupplierId || "", expected_date: "", notes: "", tax_amount: 0 });
       setItems([]);
     }
     wizard.reset();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order, reset]);
-
-  const loadOrderItems = async (orderId: string) => {
-    // Lazy import to avoid pulling repository into critical path
-    const { purchaseOrderRepository } = await import("@/lib/repositories/purchaseOrderRepository");
-    const rows = await purchaseOrderRepository.listItems(orderId);
-    setItems(
-      rows.map((i) => ({
-        product_id: i.product_id,
-        product_name: i.products?.name || "",
-        quantity: Number(i.quantity),
-        unit_price: Number(i.unit_price),
-        total_price: Number(i.total_price),
-      })),
-    );
-  };
+  }, [order]);
 
   const addItem = () =>
-    setItems([...items, { product_id: "", product_name: "", quantity: 1, unit_price: 0, total_price: 0 }]);
+    setItems([
+      ...items,
+      { product_id: "", product_name: "", quantity: 1, unit_price: 0, total_price: 0 },
+    ]);
 
   const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
     const n = [...items];
@@ -123,62 +231,16 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   const subtotal = round2(items.reduce((s, i) => s + i.total_price, 0));
-  const taxAmount = Number(watch("tax_amount")) || 0;
+  const taxAmount = Number(form.watch("tax_amount")) || 0;
   const total = round2(subtotal + taxAmount);
-
-  const generateOrderNumber = () => {
-    const d = new Date();
-    return `PO-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}-${Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0")}`;
-  };
-
-  const onSubmit = async (data: FormData) => {
-    if (items.length === 0) {
-      toast({ title: "يجب إضافة منتج واحد على الأقل", variant: "destructive" });
-      return;
-    }
-    const action = isEditing ? "edit" : "create";
-    const ok = await verifyPermissionOnServer("purchase_orders", action);
-    if (!ok) {
-      toast({ title: "غير مصرح", variant: "destructive" });
-      return;
-    }
-    const header = {
-      supplier_id: data.supplier_id,
-      order_number: order?.order_number || generateOrderNumber(),
-      expected_date: data.expected_date || null,
-      notes: data.notes || null,
-      subtotal,
-      tax_amount: taxAmount,
-      total_amount: total,
-      status: "pending" as const,
-      created_by: user?.id || null,
-    };
-    const itemsPayload = items.map((i) => ({
-      product_id: i.product_id,
-      quantity: i.quantity,
-      unit_price: i.unit_price,
-    }));
-    try {
-      if (isEditing && order) {
-        await updateMut.mutateAsync({ id: order.id, header, items: itemsPayload });
-      } else {
-        await createMut.mutateAsync({ header, items: itemsPayload });
-      }
-      onOpenChange(false);
-    } catch (err) {
-      logErrorSafely("PurchaseOrderFormDialog", err);
-      toast({ title: "حدث خطأ", description: getSafeErrorMessage(err), variant: "destructive" });
-    }
-  };
 
   const ItemsTable = (
     <div>
       <div className="flex items-center justify-between mb-3">
         <Label>المنتجات</Label>
         <Button type="button" variant="outline" size="sm" onClick={addItem}>
-          <Plus className="h-4 w-4 ml-2" />إضافة منتج
+          <Plus className="h-4 w-4 ml-2" />
+          إضافة منتج
         </Button>
       </div>
       <div className="border rounded-lg overflow-hidden">
@@ -203,7 +265,10 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
               items.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                    <Select value={item.product_id} onValueChange={(v) => updateItem(index, "product_id", v)}>
+                    <Select
+                      value={item.product_id}
+                      onValueChange={(v) => updateItem(index, "product_id", v)}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="اختر المنتج" />
                       </SelectTrigger>
@@ -221,7 +286,9 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
                       type="number"
                       min="1"
                       value={item.quantity}
-                      onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
+                      onChange={(e) =>
+                        updateItem(index, "quantity", parseInt(e.target.value) || 1)
+                      }
                     />
                   </TableCell>
                   <TableCell>
@@ -229,14 +296,21 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
                       type="number"
                       step="0.01"
                       value={item.unit_price}
-                      onChange={(e) => updateItem(index, "unit_price", parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        updateItem(index, "unit_price", parseFloat(e.target.value) || 0)
+                      }
                     />
                   </TableCell>
                   <TableCell>
                     <span className="font-bold">{item.total_price.toLocaleString()}</span>
                   </TableCell>
                   <TableCell>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItem(index)}
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </TableCell>
@@ -253,7 +327,12 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <Label>المورد *</Label>
-        <Select value={watch("supplier_id")} onValueChange={(v) => setValue("supplier_id", v)}>
+        <Select
+          value={form.watch("supplier_id")}
+          onValueChange={(v) =>
+            form.setValue("supplier_id", v, { shouldValidate: true })
+          }
+        >
           <SelectTrigger>
             <SelectValue placeholder="اختر المورد" />
           </SelectTrigger>
@@ -265,10 +344,11 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
             ))}
           </SelectContent>
         </Select>
+        <FormFieldError error={form.formState.errors.supplier_id} />
       </div>
       <div>
         <Label htmlFor="expected_date">تاريخ التوريد المتوقع</Label>
-        <Input id="expected_date" type="date" {...register("expected_date")} />
+        <Input id="expected_date" type="date" {...form.register("expected_date")} />
       </div>
     </div>
   );
@@ -277,7 +357,12 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <Label htmlFor="notes">ملاحظات</Label>
-        <Textarea id="notes" {...register("notes")} placeholder="ملاحظات إضافية..." rows={3} />
+        <Textarea
+          id="notes"
+          {...form.register("notes")}
+          placeholder="ملاحظات إضافية..."
+          rows={3}
+        />
       </div>
       <div className="space-y-3 bg-muted p-4 rounded-lg">
         <div className="flex justify-between">
@@ -286,8 +371,14 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
         </div>
         <div className="flex items-center justify-between gap-2">
           <span>الضريبة:</span>
-          <Input type="number" step="0.01" className="w-32" {...register("tax_amount", { valueAsNumber: true })} />
+          <Input
+            type="number"
+            step="0.01"
+            className="w-32"
+            {...form.register("tax_amount", { valueAsNumber: true })}
+          />
         </div>
+        <FormFieldError error={form.formState.errors.tax_amount} />
         <div className="flex justify-between text-lg border-t pt-3">
           <span className="font-bold">الإجمالي:</span>
           <span className="font-bold text-primary">{total.toLocaleString()} ج.م</span>
@@ -306,20 +397,20 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "تعديل أمر الشراء" : "أمر شراء جديد"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "تعديل أمر الشراء" : "أمر شراء جديد"}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6">
           {Step1}
           {ItemsTable}
           {Step3}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              إلغاء
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "جاري الحفظ..." : isEditing ? "تحديث" : "إنشاء"}
-            </Button>
-          </div>
+          <FormDialogFooter
+            isEditing={isEditing}
+            isSubmitting={isSubmitting}
+            onCancel={() => onOpenChange(false)}
+            submitLabel={isEditing ? "تحديث" : "إنشاء"}
+          />
         </form>
       </DialogContent>
     </Dialog>
@@ -334,9 +425,9 @@ const PurchaseOrderFormDialog = ({ open, onOpenChange, order, prefillSupplierId 
       activeStep={wizard.currentStep}
       onNext={wizard.nextStep}
       onPrev={wizard.prevStep}
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={submit}
       progress={wizard.progress}
-      isSubmitting={isPending}
+      isSubmitting={isSubmitting}
       submitLabel={isEditing ? "تحديث" : "إنشاء"}
     />
   );
