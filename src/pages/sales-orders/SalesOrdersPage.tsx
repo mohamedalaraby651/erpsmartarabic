@@ -223,6 +223,10 @@ const SalesOrdersPage = () => {
       return <TableSkeleton rows={5} columns={7} />;
     }
 
+    if (error) {
+      return <ListErrorState error={error} onRetry={() => refetch()} />;
+    }
+
     if (sortedData.length === 0) {
       return (
         <EmptyState
