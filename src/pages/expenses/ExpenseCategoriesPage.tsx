@@ -126,11 +126,11 @@ export default function ExpenseCategoriesPage() {
         }
       />
 
-      {isLoading ? (
+      {listState === 'loading' ? (
         <MobileListSkeleton count={5} />
-      ) : error ? (
-        <ListErrorState onRetry={() => refetch()} />
-      ) : categories?.length === 0 ? (
+      ) : listState === 'error' ? (
+        <ListErrorState error={error} onRetry={() => refetch()} />
+      ) : listState === 'empty' ? (
         <EmptyState
           icon={FolderTree}
           title="لا توجد تصنيفات"
