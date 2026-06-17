@@ -4,11 +4,13 @@ import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Warehouse, Edit, Trash2 } from "lucide-react";
+import { Warehouse, Edit, Trash2, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DataCard } from "@/components/mobile/DataCard";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { useListState } from "@/hooks/useListState";
 import type { Database } from "@/integrations/supabase/types";
 
 type WarehouseRow = Database['public']['Tables']['warehouses']['Row'];
@@ -16,21 +18,48 @@ type WarehouseRow = Database['public']['Tables']['warehouses']['Row'];
 interface InventoryWarehousesTabProps {
   warehouses: WarehouseRow[];
   isLoading: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   onEdit: (warehouse: WarehouseRow) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
 }
 
-export function InventoryWarehousesTab({ warehouses, isLoading, onEdit, onDelete, onAdd }: InventoryWarehousesTabProps) {
+export function InventoryWarehousesTab({
+  warehouses,
+  isLoading,
+  error,
+  onRetry,
+  onEdit,
+  onDelete,
+  onAdd,
+}: InventoryWarehousesTabProps) {
   const isMobile = useIsMobile();
 
-  if (isLoading) return isMobile ? <MobileListSkeleton count={3} /> : (
-    <Card className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></Card>
-  );
+  const state = useListState({ data: warehouses, isLoading, error });
 
-  if (warehouses.length === 0) return (
-    <EmptyState icon={Warehouse} title="لا توجد مستودعات" description="أضف مستودعًا جديدًا للبدء" action={{ label: "إضافة مستودع", onClick: onAdd }} />
-  );
+  if (state === 'loading') {
+    return isMobile ? <MobileListSkeleton count={3} /> : (
+      <Card className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </Card>
+    );
+  }
+
+  if (state === 'error') {
+    return <ListErrorState error={error} onRetry={onRetry} />;
+  }
+
+  if (state === 'empty') {
+    return (
+      <EmptyState
+        icon={Warehouse}
+        title="لا توجد مستودعات"
+        description="أضف مستودعًا جديدًا للبدء"
+        action={{ label: "إضافة مستودع", onClick: onAdd, icon: Plus }}
+      />
+    );
+  }
 
   if (isMobile) return (
     <div className="space-y-3">
