@@ -1,96 +1,77 @@
+# خارطة الطريق - المرحلة القادمة
 
-# خطة الفحص الشامل والإصلاح — SmartERP
+## المرحلة 1: إكمال حالات الخطأ/الفراغ (ListErrorState + EmptyState)
 
-## الهدف
-نشر وكلاء فرعيين متوازيين لاكتشاف (1) المشاكل (2) الثغرات (3) الوظائف الناقصة (4) مشاكل الجودة، ثم إصلاح الثغرات الحرجة الظاهرة الآن، وأخيراً تجميع تقرير موحّد.
+استمراراً للنمط المطبّق على الصفحات السابقة (Quotes, SalesOrders, CreditNotes, Expenses, Inventory, Products...):
 
----
+**الجولة A — المخازن والمنتجات:**
+- `WarehousesPage` - عرض/إنشاء/تعديل المستودعات
+- `CategoriesPage` - تصنيفات المنتجات
+- `ExpenseCategoriesPage` - تصنيفات المصروفات
+- `StockMovementsPage` - حركات المخزون
 
-## المرحلة 1 — إصلاح فوري للثغرات الحرجة الظاهرة (قبل أي فحص)
-لأن security scan كشف 3 ثغرات حرجة، نعالجها أولاً لمنع تفاقم المخاطر:
+**الجولة B — العمليات والموافقات:**
+- `ApprovalsPage` - قائمة طلبات الموافقة
+- `TasksPage` - المهام
+- `RemindersPage` - التذكيرات
+- `ActivityLogsPage` - سجل النشاط
 
-### 1.1 ثغرة TOTP Secrets قابلة للقراءة عبر PostgREST
-- **Migration**:
-  - `REVOKE SELECT (secret_key, secret_encrypted, backup_codes) ON public.user_2fa_settings FROM authenticated, anon;`
-  - إنشاء view آمن `user_2fa_status` يكشف فقط: `id, user_id, is_enabled, enabled_at, last_used_at, created_at`.
-  - `GRANT SELECT ON public.user_2fa_status TO authenticated;`
-- **Frontend**: تعديل `TwoFactorSetup.tsx` ومكونات 2FA الأخرى لتستخدم الـ view الجديد.
+**الجولة C — الموردين والعملاء:**
+- `SuppliersPage` (إن لم تكتمل)
+- `CustomersPage` (إن لم تكتمل)
+- `CustomerStatementPage`
+- `SupplierStatementPage`
 
-### 1.2 عزل Tenants في Edge Functions (4 دوال)
-- إضافة `.eq('tenant_id', tenantId)` في كل استعلام service-role في:
-  - `approve-expense/index.ts` → استعلام `expenses`
-  - `validate-invoice/index.ts` → استعلام `customers` + `products`
-  - `process-payment/index.ts` → استعلام `customers` + `invoices`
-  - `stock-movement/index.ts` → استعلام `products` + `product_stock`
-- استبدال `supabaseAdmin.rpc('has_role')` بـ `supabaseAuth.rpc('has_role')` ليحمل سياق المستخدم.
+**الجولة D — المحاسبة والتقارير:**
+- `JournalEntriesPage`
+- `ChartOfAccountsPage`
+- `FiscalPeriodsPage`
+- `ReportsOverviewPage`
 
-### 1.3 تحديث Security Findings
-- استدعاء `security--manage_security_finding` بـ `mark_as_fixed` للـ 3 findings.
-- تحديث `@security-memory` بالتوجيهات الجديدة.
+لكل صفحة:
+1. كشف `error`/`refetch` من الـ hooks.
+2. إضافة `<ListErrorState onRetry={refetch} />` قبل فروع mobile/desktop.
+3. تمييز "لا نتائج بحث" عن "لا بيانات" عبر `EmptyState` ذكي مع أزرار: مسح الفلاتر / إنشاء جديد.
 
----
+## المرحلة 2: مراجعة وتدقيق الأمان
 
-## المرحلة 2 — نشر الوكلاء الفرعيين (دفعتان متوازيتان × 5 وكلاء)
+- تشغيل `security--run_security_scan` ومعالجة أي اكتشافات جديدة.
+- مراجعة الـ RLS على الجداول المضافة حديثاً (logistics, accounting posting, credit notes reverse).
+- التأكد من وجود `GRANT` لكل جدول عام جديد.
+- التحقق من عدم تسرّب أعمدة حساسة في الـ views.
 
-### الدفعة A — الأمان والمشاكل الحرجة (`capable`)
-1. **RLS & GRANT Auditor**: فحص كل جدول في `public` للتأكد من اكتمال (GRANT + RLS + Policy) لكل عملية.
-2. **Edge Function Security Auditor**: فحص كل `supabase/functions/**` للتأكد من: tenant filter، JWT validation، CORS، Zod validation، idempotency.
-3. **SECURITY DEFINER Auditor**: فحص كل دوال DB للتأكد من `SET search_path = public`.
-4. **Runtime Error Hunter**: تحليل edge function logs (مثل `auth.unauthorized` كل 60s في `event-dispatcher`) واكتشاف الجذر.
-5. **Tenant Isolation Tester**: تتبع كل استعلامات `supabase.from()` في الـ frontend وتأكيد وجود `tenant_id` filter أو RLS كافٍ.
+## المرحلة 3: جودة وأداء قاعدة البيانات
 
-### الدفعة B — الاكتمال والجودة (`fast`)
-6. **TODO/FIXME/Stub Scout**: فحص شامل للملاحظات والـ stubs وغير المُنفّذ.
-7. **Dead Buttons & Routes Scout**: التأكد أن كل `onClick`/`<Link>` متصل بمنطق فعلي.
-8. **i18n & RTL Completeness Scout**: اكتشاف نصوص hardcoded بالإنجليزية وكسر RTL.
-9. **Empty/Loading/Error States Scout**: تدقيق الصفحات لضمان وجود الحالات الثلاث.
-10. **Edge Function Coverage Scout**: مقارنة دوال `config.toml` بالاستدعاءات الفعلية لاكتشاف اليتيمة.
+- `supabase--linter` ومعالجة التحذيرات.
+- `supabase--slow_queries` وإضافة فهارس عند الحاجة.
+- مراجعة الـ Materialized Views والتأكد من جدولة `pg_cron` للتحديث.
+- التحقق من سلامة triggers الحذف المالي (reversal).
 
----
+## المرحلة 4: اختبارات شاملة
 
-## المرحلة 3 — تجميع التقارير
-حفظ النتائج في:
-```
-docs/audit-reports/
-├── 01-security-audit.md        (من الوكلاء 1-3)
-├── 02-bugs-and-runtime.md      (من الوكلاء 4-5)
-├── 03-completeness.md          (من الوكلاء 6-10)
-└── 04-action-plan.md           (خطة الإصلاح المُرتّبة بالأولوية)
-```
+- تشغيل `bunx vitest run` بعد كل جولة.
+- إضافة اختبارات للحالات الجديدة: error state, empty-with-filter, empty-no-data.
+- اختبار تفاعلي عبر `browser--view_preview` للصفحات الحرجة (RTL + Mobile 393px).
 
----
+## المرحلة 5: تحسينات UX إضافية
 
-## المرحلة 4 — إصلاح النتائج (بعد مراجعتك)
-بعد عرض التقارير عليك، نتفق على:
-- **الإصلاحات الفورية** (Critical/High security)
-- **الإصلاحات المؤجلة** لإصدارات لاحقة
-- **العناصر المُتجاهلة** (مع توثيق السبب في security-memory)
-
----
+- توحيد `ListErrorState`/`EmptyState` كنمط رسمي عبر توثيق قصير في `mem://`.
+- مراجعة 44px touch targets على الصفحات المحدّثة.
+- التأكد من سلوك RTL والـ bidi sanitization في حقول البحث الجديدة.
 
 ## التفاصيل التقنية
 
-| البند | الأداة | الملاحظات |
-|---|---|---|
-| Migration للـ 2FA | `supabase--migration` | يستلزم موافقتك قبل التنفيذ |
-| تعديل Edge Functions | `code--write` / `code--line_replace` | 4 ملفات |
-| الوكلاء الفرعيين | `acp_subagent--spawn_agent` | متوازي بالكامل |
-| النموذج | `capable` للأمان، `fast` للباقي | لتوازن التكلفة/الدقة |
-| الاختبارات | `bunx vitest run` بعد كل دفعة إصلاح | للحفاظ على 1187/1187 |
+- النمط الموحد: `const { data, isLoading, error, refetch } = useQuery(...)`.
+- شرط العرض: `if (error) return <ListErrorState onRetry={refetch} />;`
+- `EmptyState` يفرّق عبر `searchQuery.trim().length > 0 ? "no-results" : "no-data"`.
+- لا تغييرات على منطق الأعمال - فقط طبقة العرض.
 
----
+## معايير الإنجاز
 
-## نقاط قرار قبل التنفيذ
+- ✅ جميع صفحات القوائم تعرض حالة خطأ قابلة لإعادة المحاولة.
+- ✅ تمييز واضح بين فراغ البحث وفراغ البيانات.
+- ✅ 1187/1187 اختبار يمر.
+- ✅ صفر اكتشافات أمنية بمستوى error.
+- ✅ صفر تحذيرات linter حرجة.
 
-1. **هل أبدأ بالمرحلة 1 (الإصلاح الفوري) مباشرة بعد موافقتك على هذه الخطة؟**
-2. **هل تريد كل الـ 10 وكلاء، أم نختصر على الدفعة A الأمنية فقط (5 وكلاء)؟**
-3. **هل تريد أن أتعامل مع `auth.unauthorized` المتكرر في `event-dispatcher` كل 60 ثانية ضمن نفس الجولة؟** (يبدو من cron job يستدعي edge function بدون JWT صحيح).
-
----
-
-## مخرجات نهائية متوقعة
-- 3 ثغرات أمنية حرجة مُغلقة ✅
-- 4 تقارير شاملة في `docs/audit-reports/`
-- security-memory محدّث
-- 1187/1187 tests خضراء
-- قائمة أولويات إصلاح للإصدار القادم
+هل أبدأ بالجولة A (المخازن والمنتجات) فور الموافقة؟
