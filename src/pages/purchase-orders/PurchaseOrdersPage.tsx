@@ -27,6 +27,7 @@ import type { PurchaseOrderRow } from "@/lib/repositories/purchaseOrderRepositor
 import { PurchaseOrderStats } from "./components/PurchaseOrderStats";
 import { PurchaseOrderTable } from "./components/PurchaseOrderTable";
 import { PurchaseOrderMobileList } from "./components/PurchaseOrderMobileList";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 
 const PAGE_SIZE = 25;
 
