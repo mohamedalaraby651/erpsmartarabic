@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -8,16 +7,27 @@ import {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
+import { useFormDialog } from "@/hooks/useFormDialog";
+import { useMutationToast } from "@/hooks/useMutationToast";
+import FormDialogFooter from "@/components/shared/FormDialogFooter";
+import FormFieldError from "@/components/shared/FormFieldError";
+import { logErrorSafely } from "@/lib/errorHandler";
 import type { Database } from "@/integrations/supabase/types";
 
-type Warehouse = Database['public']['Tables']['warehouses']['Row'];
+type Warehouse = Database["public"]["Tables"]["warehouses"]["Row"];
+
+const warehouseFormSchema = z.object({
+  name: z.string().trim().min(1, "اسم المستودع مطلوب").max(200),
+  location: z.string().max(500).optional().default(""),
+  description: z.string().max(2000).optional().default(""),
+  is_active: z.boolean().default(true),
+});
+
+type WarehouseFormValues = z.infer<typeof warehouseFormSchema>;
 
 interface WarehouseFormDialogProps {
   open: boolean;
@@ -25,114 +35,111 @@ interface WarehouseFormDialogProps {
   warehouse?: Warehouse | null;
 }
 
-interface FormData {
-  name: string;
-  location: string;
-  description: string;
-  is_active: boolean;
-}
+const DEFAULT_VALUES: WarehouseFormValues = {
+  name: "",
+  location: "",
+  description: "",
+  is_active: true,
+};
 
 const WarehouseFormDialog = ({ open, onOpenChange, warehouse }: WarehouseFormDialogProps) => {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isEditing = !!warehouse;
-
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
-    defaultValues: {
-      name: '',
-      location: '',
-      description: '',
-      is_active: true,
-    },
-  });
-
-  useEffect(() => {
-    if (warehouse) {
-      reset({
-        name: warehouse.name,
-        location: warehouse.location || '',
-        description: warehouse.description || '',
-        is_active: warehouse.is_active ?? true,
-      });
-    } else {
-      reset({
-        name: '',
-        location: '',
-        description: '',
-        is_active: true,
-      });
-    }
-  }, [warehouse, reset]);
 
   const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const payload = {
-        name: data.name,
-        location: data.location || null,
-        description: data.description || null,
-        is_active: data.is_active,
-      };
-
-      if (isEditing) {
+    mutationFn: async (params: { payload: Record<string, unknown>; isEditing: boolean }) => {
+      if (params.isEditing && warehouse) {
         const { error } = await supabase
-          .from('warehouses')
-          .update(payload)
-          .eq('id', warehouse.id);
+          .from("warehouses")
+          .update(params.payload)
+          .eq("id", warehouse.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('warehouses')
-          .insert(payload);
+          .from("warehouses")
+          .insert(params.payload as never);
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
-      toast({ title: isEditing ? "تم تحديث المستودع بنجاح" : "تم إضافة المستودع بنجاح" });
-      onOpenChange(false);
-    },
-    onError: (error) => {
-      logErrorSafely('WarehouseFormDialog', error);
-      toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
+      queryClient.invalidateQueries({ queryKey: ["warehouses"] });
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
-  };
+  const toast = useMutationToast({
+    successTitle: warehouse ? "تم تحديث المستودع بنجاح" : "تم إضافة المستودع بنجاح",
+    errorTitle: "حدث خطأ",
+  });
+
+  const { form, isEditing, isSubmitting, submit } = useFormDialog<
+    WarehouseFormValues,
+    Warehouse
+  >({
+    schema: warehouseFormSchema,
+    entity: warehouse,
+    toValues: (e) =>
+      e
+        ? {
+            name: e.name,
+            location: e.location ?? "",
+            description: e.description ?? "",
+            is_active: e.is_active ?? true,
+          }
+        : DEFAULT_VALUES,
+    toPayload: (v) => ({
+      name: v.name,
+      location: v.location || null,
+      description: v.description || null,
+      is_active: v.is_active,
+    }),
+    mutationFn: (payload, ctx) =>
+      mutation.mutateAsync({ payload: payload as Record<string, unknown>, isEditing: ctx.isEditing }),
+    onSuccess: () => {
+      toast.onSuccess();
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      logErrorSafely("WarehouseFormDialog", error);
+      toast.onError(error);
+    },
+  });
+
+  const {
+    register,
+    setValue,
+    watch,
+    formState: { errors },
+  } = form;
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="max-w-lg">
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>{isEditing ? 'تعديل المستودع' : 'إضافة مستودع جديد'}</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>
+            {isEditing ? "تعديل المستودع" : "إضافة مستودع جديد"}
+          </ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={submit} className="space-y-4">
           <div>
             <Label htmlFor="name">اسم المستودع *</Label>
             <Input
               id="name"
-              {...register('name', { required: 'اسم المستودع مطلوب' })}
+              {...register("name")}
               placeholder="مثال: المستودع الرئيسي"
             />
-            {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+            <FormFieldError error={errors.name} />
           </div>
 
           <div>
             <Label htmlFor="location">الموقع</Label>
-            <Input
-              id="location"
-              {...register('location')}
-              placeholder="العنوان أو الموقع"
-            />
+            <Input id="location" {...register("location")} placeholder="العنوان أو الموقع" />
           </div>
 
           <div>
             <Label htmlFor="description">الوصف</Label>
             <Textarea
               id="description"
-              {...register('description')}
+              {...register("description")}
               placeholder="وصف المستودع..."
               rows={3}
             />
@@ -141,20 +148,17 @@ const WarehouseFormDialog = ({ open, onOpenChange, warehouse }: WarehouseFormDia
           <div className="flex items-center gap-3">
             <Switch
               id="is_active"
-              checked={watch('is_active')}
-              onCheckedChange={(checked) => setValue('is_active', checked)}
+              checked={watch("is_active")}
+              onCheckedChange={(checked) => setValue("is_active", checked, { shouldDirty: true })}
             />
             <Label htmlFor="is_active">مستودع نشط</Label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              إلغاء
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
-            </Button>
-          </div>
+          <FormDialogFooter
+            isEditing={isEditing}
+            isSubmitting={isSubmitting}
+            onCancel={() => onOpenChange(false)}
+          />
         </form>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
