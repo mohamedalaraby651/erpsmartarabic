@@ -21,6 +21,8 @@ import {
 } from '@/hooks/approvals';
 import type { ApprovalRecord, ApprovalStatusFilter } from '@/lib/repositories/approvalRepository';
 import { ListErrorState } from '@/components/shared/ListErrorState';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { useListState } from '@/hooks/useListState';
 
 const statusLabels: Record<string, string> = {
   pending: 'معلقة',
