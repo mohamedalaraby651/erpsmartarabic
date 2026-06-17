@@ -117,7 +117,7 @@ const InventoryPage = () => {
         </TabsList>
 
         <TabsContent value="stock"><InventoryStockTab stock={productStock as any} isLoading={loadingStock} searchTerm={searchTerm} onSearchChange={setSearchTerm} /></TabsContent>
-        <TabsContent value="warehouses"><InventoryWarehousesTab warehouses={warehouses} isLoading={loadingWarehouses} onEdit={(w) => { setSelectedWarehouse(w); setWarehouseDialogOpen(true); }} onDelete={(id) => { setWarehouseToDelete(id); setDeleteDialogOpen(true); }} onAdd={() => { setSelectedWarehouse(null); setWarehouseDialogOpen(true); }} /></TabsContent>
+        <TabsContent value="warehouses"><InventoryWarehousesTab warehouses={warehouses} isLoading={loadingWarehouses} error={warehousesError} onRetry={() => refetchWarehouses()} onEdit={(w) => { setSelectedWarehouse(w); setWarehouseDialogOpen(true); }} onDelete={(id) => { setWarehouseToDelete(id); setDeleteDialogOpen(true); }} onAdd={() => { setSelectedWarehouse(null); setWarehouseDialogOpen(true); }} /></TabsContent>
         <TabsContent value="movements"><InventoryMovementsTab movements={recentMovements as any} onAddMovement={() => setMovementDialogOpen(true)} /></TabsContent>
         <TabsContent value="alerts"><InventoryAlertsTab items={lowStockItems as any} /></TabsContent>
       </Tabs>

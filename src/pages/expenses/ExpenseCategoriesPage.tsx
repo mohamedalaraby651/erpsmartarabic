@@ -11,6 +11,7 @@ import { DataCard } from '@/components/mobile/DataCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ListErrorState } from '@/components/shared/ListErrorState';
 import { VirtualizedMobileList } from '@/components/table/VirtualizedMobileList';
+import { useListState } from '@/hooks/useListState';
 import { Plus, FolderTree, Pencil, Trash2 } from 'lucide-react';
 import { ExpenseCategoryFormDialog } from '@/components/expenses/ExpenseCategoryFormDialog';
 import {
@@ -62,6 +63,8 @@ export default function ExpenseCategoriesPage() {
     error: unknown;
     refetch: () => Promise<unknown>;
   };
+
+  const listState = useListState({ data: categories, isLoading, error });
 
   const deleteMutation = useDeleteExpenseCategory();
 
@@ -123,11 +126,11 @@ export default function ExpenseCategoriesPage() {
         }
       />
 
-      {isLoading ? (
+      {listState === 'loading' ? (
         <MobileListSkeleton count={5} />
-      ) : error ? (
-        <ListErrorState onRetry={() => refetch()} />
-      ) : categories?.length === 0 ? (
+      ) : listState === 'error' ? (
+        <ListErrorState error={error} onRetry={() => refetch()} />
+      ) : listState === 'empty' ? (
         <EmptyState
           icon={FolderTree}
           title="لا توجد تصنيفات"
