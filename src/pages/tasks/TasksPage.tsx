@@ -31,6 +31,7 @@ import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 
 type Task = TaskRow;
 
