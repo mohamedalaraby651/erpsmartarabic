@@ -10,11 +10,13 @@ import {
   useConvertQuoteToOrder,
 } from "@/hooks/sales-cycle/useQuotes";
 import { QuoteStatusBadge } from "@/components/sales-cycle/QuoteStatusBadge";
+import { ListErrorState } from "@/components/shared/ListErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function QuotesPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const { data: rows = [], isLoading } = useQuotesList(search);
+  const { data: rows = [], isLoading, error, refetch } = useQuotesList(search);
   const updateStatus = useUpdateQuoteStatus();
   const convert = useConvertQuoteToOrder();
 
