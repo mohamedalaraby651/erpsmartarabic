@@ -15,6 +15,7 @@ import { InventoryStockTab } from "@/components/inventory/InventoryStockTab";
 import { InventoryWarehousesTab } from "@/components/inventory/InventoryWarehousesTab";
 import { InventoryMovementsTab } from "@/components/inventory/InventoryMovementsTab";
 import { InventoryAlertsTab } from "@/components/inventory/InventoryAlertsTab";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 import {
   useWarehouses,
   useInventoryLevels,
