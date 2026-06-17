@@ -249,6 +249,8 @@ const CategoriesPage = () => {
             </CardContent>
           </Card>
         )
+      ) : error ? (
+        <ListErrorState onRetry={() => refetch()} />
       ) : categories.length === 0 ? (
         <EmptyState
           icon={Layers}
