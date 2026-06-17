@@ -76,7 +76,7 @@ const SalesOrdersPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: orders = [], isLoading, refetch } = useSalesOrdersList({}, 1000);
+  const { data: orders = [], isLoading, error, refetch } = useSalesOrdersList({}, 1000);
 
   const deleteSO = useDeleteSalesOrder();
   const handleDelete = async (id: string) => {
