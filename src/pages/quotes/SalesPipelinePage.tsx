@@ -123,8 +123,10 @@ export default function SalesPipelinePage() {
             <h2 className="font-semibold mb-3">فواتير جاهزة لإصدار إذن تسليم</h2>
             {invoices.isLoading ? (
               <div className="text-center py-6 text-muted-foreground">جارٍ التحميل…</div>
+            ) : invoices.error ? (
+              <ListErrorState error={invoices.error} onRetry={() => invoices.refetch()} />
             ) : (invoices.data ?? []).length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">لا توجد فواتير.</div>
+              <EmptyState icon={Receipt} title="لا توجد فواتير جاهزة" description="ستظهر هنا الفواتير القابلة لإصدار إذن تسليم." compact />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
