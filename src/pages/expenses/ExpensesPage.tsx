@@ -12,6 +12,7 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { MobileListSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { DataCard } from '@/components/mobile/DataCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 import { 
   Plus, 
   Receipt, 
