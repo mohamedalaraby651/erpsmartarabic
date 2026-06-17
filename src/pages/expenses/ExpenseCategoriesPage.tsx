@@ -125,6 +125,8 @@ export default function ExpenseCategoriesPage() {
 
       {isLoading ? (
         <MobileListSkeleton count={5} />
+      ) : error ? (
+        <ListErrorState onRetry={() => refetch()} />
       ) : categories?.length === 0 ? (
         <EmptyState
           icon={FolderTree}
