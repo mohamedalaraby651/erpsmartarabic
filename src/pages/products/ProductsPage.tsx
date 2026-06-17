@@ -18,6 +18,7 @@ import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 import { ListStateRenderer } from "@/components/shared/ListStateRenderer";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
@@ -85,6 +86,7 @@ const ProductsPage = () => {
 
   const renderTableView = () => {
     if (list.isLoading) return <TableSkeleton rows={5} columns={7} />;
+    if (list.error) return <ListErrorState error={list.error} onRetry={() => list.refetch()} />;
     if (list.sortedData.length === 0) return <EmptyState icon={Package} title="لا توجد منتجات" description="ابدأ بإضافة منتجك الأول" action={list.canEdit ? { label: 'إضافة منتج جديد', onClick: list.handleAdd, icon: Plus } : undefined} />;
     return (
       <div className="overflow-x-auto">

@@ -15,6 +15,7 @@ import { InventoryStockTab } from "@/components/inventory/InventoryStockTab";
 import { InventoryWarehousesTab } from "@/components/inventory/InventoryWarehousesTab";
 import { InventoryMovementsTab } from "@/components/inventory/InventoryMovementsTab";
 import { InventoryAlertsTab } from "@/components/inventory/InventoryAlertsTab";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 import {
   useWarehouses,
   useInventoryLevels,
@@ -41,9 +42,11 @@ const InventoryPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: warehouses = [], isLoading: loadingWarehouses, refetch: refetchWarehouses } = useWarehouses();
-  const { data: productStock = [], isLoading: loadingStock, refetch: refetchStock } = useInventoryLevels();
-  const { data: recentMovements = [], refetch: refetchMovements } = useRecentStockMovements(10);
+  const { data: warehouses = [], isLoading: loadingWarehouses, error: warehousesError, refetch: refetchWarehouses } = useWarehouses();
+  const { data: productStock = [], isLoading: loadingStock, error: stockError, refetch: refetchStock } = useInventoryLevels();
+  const { data: recentMovements = [], error: movementsError, refetch: refetchMovements } = useRecentStockMovements(10);
+
+  const anyError = warehousesError || stockError || movementsError;
 
   const deleteWarehouseMutation = useDeleteWarehouse();
 
@@ -95,6 +98,10 @@ const InventoryPage = () => {
           </>
         )}
       </div>
+
+      {anyError && (
+        <ListErrorState error={anyError} onRetry={handleRefresh} />
+      )}
 
       <Tabs defaultValue="stock" className="space-y-4">
         <TabsList className={isMobile ? "grid grid-cols-4 w-full" : ""}>

@@ -12,6 +12,7 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { MobileListSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { DataCard } from '@/components/mobile/DataCard';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 import { 
   Plus, 
   Receipt, 
@@ -107,7 +108,7 @@ export default function ExpensesPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: expenses, isLoading, refetch } = useQuery({
+  const { data: expenses, isLoading, error, refetch } = useQuery({
     queryKey: ['expenses', statusFilter],
     queryFn: async () =>
       (await expenseRepository.list({
@@ -267,16 +268,18 @@ export default function ExpensesPage() {
       {/* Expenses List */}
       {isLoading ? (
         <MobileListSkeleton count={5} />
+      ) : error ? (
+        <ListErrorState error={error} onRetry={() => refetch()} />
       ) : expenses?.length === 0 ? (
         <EmptyState
           icon={Receipt}
-          title="لا توجد مصروفات"
-          description="ابدأ بإضافة مصروف جديد"
-          action={{
-            label: 'إضافة مصروف',
-            onClick: () => setIsDialogOpen(true),
-            icon: Plus,
-          }}
+          title={statusFilter !== 'all' ? 'لا توجد نتائج' : 'لا توجد مصروفات'}
+          description={statusFilter !== 'all' ? 'جرّب تغيير الفلتر' : 'ابدأ بإضافة مصروف جديد'}
+          action={
+            statusFilter !== 'all'
+              ? { label: 'مسح الفلتر', onClick: () => setStatusFilter('all') }
+              : { label: 'إضافة مصروف', onClick: () => setIsDialogOpen(true), icon: Plus }
+          }
         />
       ) : isMobile ? (
         <div className="space-y-3">
