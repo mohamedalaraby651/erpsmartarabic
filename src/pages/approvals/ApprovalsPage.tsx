@@ -50,7 +50,7 @@ const ApprovalsPage = () => {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const { data: records = [], isLoading } = usePendingApprovals({
+  const { data: records = [], isLoading, error, refetch } = usePendingApprovals({
     status: activeTab,
   });
 
