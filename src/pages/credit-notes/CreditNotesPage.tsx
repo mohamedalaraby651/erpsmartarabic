@@ -11,6 +11,7 @@ import { ServerPagination } from '@/components/shared/ServerPagination';
 import { DataCard } from '@/components/mobile/DataCard';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ListErrorState } from '@/components/shared/ListErrorState';
 import { MobileListSkeleton } from '@/components/mobile/MobileListSkeleton';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import CreditNoteFormDialog from '@/components/credit-notes/CreditNoteFormDialog';
@@ -42,7 +43,7 @@ export default function CreditNotesPage() {
   const { data: totalCount = 0 } = useCreditNotesCount(filters);
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  const { data: listResult, isLoading, refetch } = useCreditNotesList(
+  const { data: listResult, isLoading, error, refetch } = useCreditNotesList(
     filters,
     pagination.currentPage,
     PAGE_SIZE,
@@ -109,12 +110,20 @@ export default function CreditNotesPage() {
 
       {isLoading ? (
         isMobile ? <MobileListSkeleton /> : <TableSkeleton columns={5} rows={5} />
+      ) : error ? (
+        <ListErrorState error={error} onRetry={() => refetch()} />
       ) : creditNotes.length === 0 ? (
         <EmptyState
           icon={RotateCcw}
-          title="لا توجد مرتجعات"
-          description="لم يتم إنشاء أي إشعارات إرجاع بعد"
-          action={canCreate ? { label: 'إشعار إرجاع جديد', onClick: () => setDialogOpen(true) } : undefined}
+          title={debouncedSearch ? 'لا توجد نتائج' : 'لا توجد مرتجعات'}
+          description={debouncedSearch ? 'جرّب تعديل البحث' : 'لم يتم إنشاء أي إشعارات إرجاع بعد'}
+          action={
+            debouncedSearch
+              ? { label: 'مسح البحث', onClick: () => setSearchQuery('') }
+              : canCreate
+              ? { label: 'إشعار إرجاع جديد', onClick: () => setDialogOpen(true) }
+              : undefined
+          }
         />
       ) : isMobile ? (
         <PullToRefresh onRefresh={handleRefresh}>

@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { DataCard } from '@/components/mobile/DataCard';
+import { ListErrorState } from '@/components/shared/ListErrorState';
+import { EmptyState } from '@/components/shared/EmptyState';
 import {
   ArrowLeft,
   ArrowUpCircle,
@@ -63,8 +65,8 @@ export default function CashRegisterDetailsPage() {
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('income');
 
-  const { data: register, isLoading: isLoadingRegister } = useCashRegister(id);
-  const { data: transactions, isLoading: isLoadingTransactions, refetch } = useCashTransactions({
+  const { data: register, isLoading: isLoadingRegister, error: registerError, refetch: refetchRegister } = useCashRegister(id);
+  const { data: transactions, isLoading: isLoadingTransactions, error: txError, refetch } = useCashTransactions({
     registerId: id,
     limit: 50,
   });
@@ -88,13 +90,23 @@ export default function CashRegisterDetailsPage() {
     );
   }
 
+  if (registerError) {
+    return (
+      <div className="p-6">
+        <ListErrorState error={registerError} onRetry={() => refetchRegister()} />
+      </div>
+    );
+  }
+
   if (!register) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-muted-foreground">الصندوق غير موجود</p>
-        <Button variant="link" onClick={() => navigate('/treasury')}>
-          العودة للخزينة
-        </Button>
+      <div className="p-6">
+        <EmptyState
+          icon={Wallet}
+          title="الصندوق غير موجود"
+          description="لم يتم العثور على هذا الصندوق"
+          action={{ label: 'العودة للخزينة', onClick: () => navigate('/treasury') }}
+        />
       </div>
     );
   }
@@ -167,10 +179,14 @@ export default function CashRegisterDetailsPage() {
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
+          ) : txError ? (
+            <ListErrorState error={txError} onRetry={() => refetch()} />
           ) : transactions?.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              لا توجد حركات بعد
-            </p>
+            <EmptyState
+              icon={Wallet}
+              title="لا توجد حركات بعد"
+              description="ابدأ بتسجيل أول حركة إيداع أو سحب"
+            />
           ) : isMobile ? (
             <div className="space-y-3">
               {transactions?.map((txn) => (

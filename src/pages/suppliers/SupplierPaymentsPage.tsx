@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import SupplierPaymentDialog from '@/components/suppliers/SupplierPaymentDialog';
+import { ListErrorState } from '@/components/shared/ListErrorState';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Search, Wallet, Calendar, Building2 } from 'lucide-react';
 
 const paymentMethodLabels: Record<string, string> = {
@@ -51,7 +53,7 @@ export default function SupplierPaymentsPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
+  const { data: payments, isLoading: paymentsLoading, error: paymentsError, refetch: refetchPayments } = useQuery({
     queryKey: ['supplier-payments'],
     queryFn: () => supplierPaymentRepository.list(),
   });
@@ -173,6 +175,19 @@ export default function SupplierPaymentsPage() {
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
+          ) : paymentsError ? (
+            <ListErrorState error={paymentsError} onRetry={() => refetchPayments()} />
+          ) : filteredPayments?.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              title={searchQuery || selectedSupplier !== 'all' ? 'لا توجد نتائج' : 'لا توجد مدفوعات'}
+              description={searchQuery || selectedSupplier !== 'all' ? 'جرّب تعديل البحث أو الفلتر' : 'ابدأ بتسجيل أول دفعة لمورد'}
+              action={
+                searchQuery || selectedSupplier !== 'all'
+                  ? { label: 'مسح الفلاتر', onClick: () => { setSearchQuery(''); setSelectedSupplier('all'); } }
+                  : { label: 'تسجيل دفعة', onClick: () => setDialogOpen(true), icon: Plus }
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -187,32 +202,24 @@ export default function SupplierPaymentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPayments?.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        لا توجد مدفوعات
+                  {filteredPayments?.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-medium">{payment.payment_number}</TableCell>
+                      <TableCell>{payment.suppliers?.name}</TableCell>
+                      <TableCell className="font-semibold text-success">
+                        {payment.amount.toLocaleString()} ج.م
                       </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {paymentMethodLabels[payment.payment_method] || payment.payment_method}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(payment.payment_date), 'dd MMM yyyy', { locale: ar })}
+                      </TableCell>
+                      <TableCell>{payment.reference_number || '-'}</TableCell>
                     </TableRow>
-                  ) : (
-                    filteredPayments?.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">{payment.payment_number}</TableCell>
-                        <TableCell>{payment.suppliers?.name}</TableCell>
-                        <TableCell className="font-semibold text-success">
-                          {payment.amount.toLocaleString()} ج.م
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {paymentMethodLabels[payment.payment_method] || payment.payment_method}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {format(new Date(payment.payment_date), 'dd MMM yyyy', { locale: ar })}
-                        </TableCell>
-                        <TableCell>{payment.reference_number || '-'}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </div>

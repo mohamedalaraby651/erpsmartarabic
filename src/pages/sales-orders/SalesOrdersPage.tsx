@@ -27,6 +27,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
@@ -75,7 +76,7 @@ const SalesOrdersPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const { data: orders = [], isLoading, refetch } = useSalesOrdersList({}, 1000);
+  const { data: orders = [], isLoading, error, refetch } = useSalesOrdersList({}, 1000);
 
   const deleteSO = useDeleteSalesOrder();
   const handleDelete = async (id: string) => {
@@ -135,6 +136,10 @@ const SalesOrdersPage = () => {
           <MobileListSkeleton count={5} variant="order" />
         </div>
       );
+    }
+
+    if (error) {
+      return <ListErrorState error={error} onRetry={() => refetch()} />;
     }
 
     return (
@@ -216,6 +221,10 @@ const SalesOrdersPage = () => {
   const renderTableView = () => {
     if (isLoading) {
       return <TableSkeleton rows={5} columns={7} />;
+    }
+
+    if (error) {
+      return <ListErrorState error={error} onRetry={() => refetch()} />;
     }
 
     if (sortedData.length === 0) {
