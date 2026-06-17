@@ -27,6 +27,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
