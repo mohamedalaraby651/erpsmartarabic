@@ -94,6 +94,7 @@ const PurchaseOrdersPage = () => {
   const {
     data: orders = [],
     isLoading,
+    error,
     refetch,
   } = usePurchaseOrdersList(filters, pagination.range);
 
