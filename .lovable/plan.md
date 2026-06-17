@@ -1,101 +1,42 @@
-## Phase 1B — Forms Layer Standardization (Controlled Rollout)
+# خارطة الطريق
 
-### تعديلات بعد المراجعة
-- `useFormDialog` يصبح **constrained + callback-driven** (لا toast/close داخلي).
-- تنفيذ **Gate-driven** بثلاث مراحل، توقف إلزامي بعد Tier 1.
+## ✅ Phase 1A — UI States Pattern (مكتمل)
 
----
+- `useListState` + `ListStateRenderer` + `ListErrorState` + `EmptyState` معتمدة كنمط رسمي.
+- توثيق: `docs/architecture/useListState.md`.
 
-### المرحلة 0 — Foundation Layer
+## 🟡 Phase 1B — Forms Pattern (Foundation + Tier 1 POC منجز)
 
-**`src/hooks/useFormDialog.ts`** — Dialog-bound abstraction، state + lifecycle فقط، صفر UI side-effects:
+**Foundation منجز:**
+- `src/hooks/useFormDialog.ts` — Dialog-bound، constrained، callback-driven (state + lifecycle فقط، لا UI side-effects).
+- `src/components/shared/FormDialogFooter.tsx` — footer موحّد بـ 44px touch targets.
+- `src/components/shared/FormFieldError.tsx` — عرض موحّد لرسائل zod.
+- توثيق: `docs/architecture/useFormDialog.md`.
+- ذاكرة: `mem://patterns/use-form-dialog` + تحديث `mem://index.md`.
 
-```ts
-useFormDialog<TValues, TEntity>({
-  schema: ZodSchema<TValues>,
-  entity: TEntity | null,
-  toValues: (e: TEntity | null) => TValues,
-  toPayload: (v: TValues) => unknown,
-  mutationFn: (payload: unknown, ctx: { isEditing: boolean }) => Promise<void>,
-  onSuccess?: (ctx: { isEditing: boolean }) => void,
-  onError?: (error: unknown) => void,
-  onSettled?: () => void,
-})
-// returns: { form, isEditing, isSubmitting, submit, reset }
-```
+**Tier 1 POC منجز (Gate-pass):**
+- `CategoryFormDialog`, `WarehouseFormDialog`, `ExpenseCategoryFormDialog` — مهاجَرة كاملة.
+- صفر `useEffect(reset)`، صفر manual toast، صفر duplicate try/catch في الملفات المهاجَرة.
+- ESLint نظيف على ملفات النمط، Vitest 1187/1187 ✅.
 
-قواعد صارمة داخل الـ hook:
-- لا `toast`، لا `onOpenChange`، لا navigation.
-- يعالج reset التلقائي عند تغيّر `entity` (يستبدل `useEffect(reset)`).
-- يلتزم بـ lifecycle deterministic: `INIT → VALIDATE → SUBMIT → MUTATE → RESULT → RESET/CLOSE` (الـ CLOSE يحدث في callback خارجي).
-- generics كاملة، صفر `any`.
+**Tier 1 المتبقي (يتطلب طبقة wizard منفصلة لاحقاً):**
+- `CustomerFormDialog`, `ProductFormDialog`, `SupplierFormDialog` — لها flows خاصة (wizard + draft + permission + duplicate check + dual desktop/mobile). تبقى على نمطها الحالي حتى Phase 1B.2.
 
-**`src/components/shared/FormDialogFooter.tsx`** — إلغاء + حفظ موحّد (نص ديناميكي، disabled state موحّد، 44px).
+## ⏭ Phase 1B.1 — Tier 2 (Financial Layer)
 
-**`src/components/shared/FormFieldError.tsx`** — عرض موحّد لرسائل zod.
+`ExpenseFormDialog`, `PaymentFormDialog`, `InvoiceFormDialog`, `QuotationFormDialog`, `PurchaseOrderFormDialog`, `SalesOrderFormDialog`.
 
-**نمط الاستهلاك الموحّد في كل form:**
-```ts
-const toast = useMutationToast({ successTitle: '...' });
-const { form, isEditing, isSubmitting, submit } = useFormDialog({
-  schema, entity, toValues, toPayload,
-  mutationFn: (payload, { isEditing }) => isEditing ? update(...) : create(...),
-  onSuccess: () => { toast.onSuccess(); onOpenChange(false); },
-  onError: toast.onError,
-});
-```
+## ⏭ Phase 1B.2 — Tier 3 + Wizard Layer
 
----
+`JournalFormDialog`, `AccountFormDialog`, `EmployeeFormDialog`, `StockMovementDialog`, `CashRegisterFormDialog`, `CashTransactionDialog`, `ProductVariantDialog`, `CustomerAddressDialog` + استخراج طبقة Wizard موحّدة لـ Customer/Product/Supplier.
 
-### المرحلة 1 — POC (Tier 1) — توقف إلزامي بعدها
+## ⏭ Phase 1C — Unified Data Mutation Layer
 
-ترحيل 5 نماذج فقط:
-- `CategoryFormDialog`
-- `WarehouseFormDialog`
-- `CustomerFormDialog`
-- `SupplierFormDialog`
-- `ProductFormDialog`
+توحيد Repository + Query orchestration (الطبقة الثالثة بعد List + Form).
 
-**Gate قبل الانتقال لـ Tier 2:**
-- صفر regressions في submit/dialog lifecycle/validation.
-- صفر `useEffect(reset)` متبقّية في الملفات المعدّلة.
-- صفر manual toast handling أو duplicate `try/catch`.
-- TypeScript نظيف، ESLint نظيف.
-- 1187+/1187+ vitest pass.
-- مراجعة معمارية: العقد فعلاً constrained (لا تسرّب UI داخل الـ hook).
+## معايير الإنجاز للمراحل القادمة
 
----
-
-### المرحلة 2 — Financial Layer (بعد اجتياز Gate 1)
-`ExpenseFormDialog`, `ExpenseCategoryFormDialog`, `PaymentFormDialog`, `InvoiceFormDialog`, `QuotationFormDialog`, `PurchaseOrderFormDialog`, `SalesOrderFormDialog`.
-
-استثناء موثّق: `InvoiceFormDialog`/`QuotationFormDialog` يحتفظان بطبقة `InvoiceValidation` (server-side) **داخل** الـ lifecycle الموحّد (قبل MUTATE)، لا خارجه.
-
----
-
-### المرحلة 3 — Misc Layer (أخيراً)
-`JournalFormDialog`, `AccountFormDialog`, `EmployeeFormDialog`, `StockMovementDialog`, `CashRegisterFormDialog`, `CashTransactionDialog`, `ProductVariantDialog`, `CustomerAddressDialog`.
-
----
-
-### Definition of Done (مع إضافات المراجعة)
-- ≥ 80% (≥17/21) migrated.
-- **A. Architectural Consistency:** صفر `useEffect(reset)`، صفر manual toast، صفر duplicate submit try/catch في الملفات الميغريتد.
-- **B. Lifecycle Determinism:** كل النماذج تتبع `INIT → VALIDATE → SUBMIT → MUTATE → RESULT → RESET/CLOSE` بدون branching غير موثق.
-- Validation centralized في `validations.ts` (zod).
-- Toast عبر `useMutationToast` فقط.
-- صفر TS/ESLint regressions.
-- 1187+/1187+ vitest pass.
-- توثيق: `docs/architecture/useFormDialog.md` + `mem://patterns/use-form-dialog` + تحديث `mem://index.md` و`.lovable/plan.md`.
-
----
-
-### قيود صارمة
-- لا تعديل API contracts / DB schema / business logic.
-- لا dependencies جديدة.
-- كل التغييرات في presentation/state layer فقط.
-
-### الخطوات التنفيذية الفورية بعد الموافقة
-1. إنشاء `useFormDialog` (constrained + callbacks) + `FormDialogFooter` + `FormFieldError` + التوثيق.
-2. ترحيل Tier 1 (5 نماذج).
-3. **توقف** للمراجعة + تشغيل vitest + lint قبل Tier 2.
+- صفر أخطاء TS/ESLint.
+- 1187+/1187+ اختبار يمر.
+- صفر اكتشافات أمنية بمستوى error.
+- توثيق معماري لكل نمط جديد.
