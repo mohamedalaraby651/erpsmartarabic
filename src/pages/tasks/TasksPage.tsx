@@ -311,6 +311,8 @@ const TasksPage = () => {
             </CardContent>
           </Card>
         )
+      ) : error ? (
+        <ListErrorState onRetry={() => refetch()} />
       ) : filteredTasks.length === 0 ? (
         <EmptyState
           icon={CheckSquare}
