@@ -47,11 +47,7 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
   const handlePrint = async () => {
     setIsPrinting(true);
     try {
-      const { data: supplier } = await supabase
-        .from('suppliers')
-        .select('phone, tax_number, address')
-        .eq('id', supplierId)
-        .single();
+      const supplier = await supplierRepository.findById(supplierId);
 
       await generateStatementPdf({
         partyType: 'supplier',
