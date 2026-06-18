@@ -62,7 +62,7 @@ These files will get the `// repo-exception: <category>` marker added in Batch A
 
 | File | Class | Aggregate | Target / Reason | from | rpc | storage |
 |------|-------|-----------|-----------------|-----:|----:|--------:|
-| `src/components/customers/details/CustomerPinnedNote.tsx` | Reuse | customer | customerRepository | 1 | 0 | 0 |
+| `src/components/customers/details/CustomerPinnedNote.tsx` | Extend | customer | customerRepository | 1 | 0 | 0 |
 | `src/components/dashboard/CalendarWidget.tsx` | Reuse | mixed | dashboard widgets → existing repos | 4 | 0 | 0 |
 | `src/components/dashboard/InvoiceQuickActions.tsx` | Reuse | invoice | invoiceRepository | 3 | 0 | 0 |
 | `src/components/dashboard/LowStockWidget.tsx` | Reuse | stock | inventoryRepository | 2 | 0 | 0 |
@@ -75,13 +75,13 @@ These files will get the `// repo-exception: <category>` marker added in Batch A
 | `src/components/payments/PaymentFormDialog.tsx` | Reuse | payment | paymentRepository | 2 | 0 | 0 |
 | `src/components/print/InvoicePrintView.tsx` | Reuse | invoice | invoiceRepository | 3 | 0 | 0 |
 | `src/components/products/ProductVariantDialog.tsx` | Reuse | product | productRepository | 2 | 0 | 0 |
-| `src/components/reports/AgingReport.tsx` | Reuse | report | reportsRepository | 1 | 0 | 0 |
-| `src/components/reports/GeographicReport.tsx` | Reuse | report | reportsRepository | 2 | 0 | 0 |
-| `src/components/reports/InactiveCustomersReport.tsx` | Reuse | customer | customerRepository | 1 | 0 | 0 |
-| `src/components/reports/IncomeStatementReport.tsx` | Reuse | report | reportsRepository | 4 | 0 | 0 |
-| `src/components/reports/InventoryFlowReport.tsx` | Reuse | inventory | inventoryRepository | 3 | 0 | 0 |
-| `src/components/reports/ProfitabilityReport.tsx` | Reuse | report | reportsRepository | 3 | 0 | 0 |
-| `src/components/reports/TrialBalanceReport.tsx` | Reuse | report | reportsRepository | 2 | 0 | 0 |
+| `src/components/reports/AgingReport.tsx` | Extend | report | reportsRepository | 1 | 0 | 0 |
+| `src/components/reports/GeographicReport.tsx` | Extend | report | reportsRepository | 2 | 0 | 0 |
+| `src/components/reports/InactiveCustomersReport.tsx` | Extend | customer | customerRepository | 1 | 0 | 0 |
+| `src/components/reports/IncomeStatementReport.tsx` | Extend | report | reportsRepository | 4 | 0 | 0 |
+| `src/components/reports/InventoryFlowReport.tsx` | Extend | inventory | inventoryRepository | 3 | 0 | 0 |
+| `src/components/reports/ProfitabilityReport.tsx` | Extend | report | reportsRepository | 3 | 0 | 0 |
+| `src/components/reports/TrialBalanceReport.tsx` | Extend | report | reportsRepository | 2 | 0 | 0 |
 | `src/components/settings/BackupTab.tsx` | Reuse | settings | settingsRepository | 6 | 0 | 0 |
 | `src/components/settings/CompanyInfoSection.tsx` | Reuse | settings | settingsRepository | 3 | 0 | 0 |
 | `src/components/settings/ExportCenter/ExportCenterPage.tsx` | Reuse | settings | settingsRepository | 1 | 0 | 0 |
@@ -92,12 +92,12 @@ These files will get the `// repo-exception: <category>` marker added in Batch A
 | `src/components/settings/SettingsExportImport.tsx` | Reuse | settings | settingsRepository | 6 | 0 | 0 |
 | `src/components/shared/AttachmentUploadForm.tsx` | Reuse | attachment | attachmentsRepository | 1 | 0 | 2 |
 | `src/components/shared/AttachmentsList.tsx` | Reuse | attachment | attachmentsRepository | 1 | 0 | 1 |
-| `src/components/suppliers/SupplierActivityTab.tsx` | Reuse | supplier | supplierRepository | 1 | 0 | 0 |
+| `src/components/suppliers/SupplierActivityTab.tsx` | Extend | supplier | supplierRepository | 1 | 0 | 0 |
 | `src/components/suppliers/SupplierFormDialog.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
 | `src/components/suppliers/SupplierImportDialog.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
 | `src/components/suppliers/SupplierPaymentDialog.tsx` | Reuse | supplier | supplierRepository | 1 | 0 | 0 |
-| `src/components/suppliers/SupplierProductsTab.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
-| `src/components/suppliers/SupplierRatingTab.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
+| `src/components/suppliers/SupplierProductsTab.tsx` | Extend | supplier | supplierRepository | 2 | 0 | 0 |
+| `src/components/suppliers/SupplierRatingTab.tsx` | Extend | supplier | supplierRepository | 2 | 0 | 0 |
 | `src/components/suppliers/hero/SupplierPinnedNote.tsx` | Reuse | supplier | supplierRepository | 1 | 0 | 0 |
 | `src/components/tenant/TenantSettings.tsx` | Reuse | tenant | adminRepository | 1 | 0 | 0 |
 | `src/pages/admin/BackupPage.tsx` | Reuse | admin | adminRepository | 2 | 0 | 0 |
@@ -150,20 +150,76 @@ Before any production file is migrated, confirm from this inventory:
 
 If any of the above flips during Batch A1 (e.g. real-world New-Repo Rate > 20%, or a Boundary mismatch wave appears), the Stop Condition triggers and Repository Layer design is re-evaluated before Batch B.
 
-## Batch A1 scope (executed only after this inventory is approved)
+## Cluster Reviews
 
-Single cluster, ~9 files:
-1. `customers/details/CustomerAgingReport.tsx`
-2. `customers/charts/AgingDonutChart.tsx`
-3. `customers/details/CustomerHealthBadge.tsx`
-4. `customers/details/StatementOfAccount.tsx`
-5. `suppliers/tabs/SupplierAgingReport.tsx`
-6. `suppliers/charts/SupplierAgingChart.tsx`
-7. `suppliers/hero/SupplierHealthBadge.tsx`
-8. `suppliers/tabs/SupplierStatementTab.tsx`
-9. Add `// repo-exception:` markers to the 4 exception files above.
+### Batch A1 — Aging / Health / Statement (closed, green)
+- 6 files migrated, 7 call-sites routed.
+- File-level Reuse: 100% (no new repos).
+- Method-level: 1 reused (`findById`) + 6 added under existing aggregates (`getAging`, `getHealthScore`, `getStatement` on customer + supplier repos).
+- Vitest 1187/1187, audit clean, tsc clean.
 
-After Batch A1: run audit + Vitest + ESLint + `tsc --noEmit`, compute real Reuse/New rates, then decide whether to continue with the rest of Batch A or stop.
+### Batch A2 — Read-only Reuse cluster (stopped on Zero-Extend gate)
+
+Per the success criterion **"0 new methods"**, an upfront audit of the 12 targeted files against existing repository surfaces was performed before any migration. Result:
+
+| File | Existing method covers it? | Verdict |
+|------|---|---|
+| `components/reports/AgingReport.tsx` | No — needs unpaid-invoices join with customers | Reclassify → Extend |
+| `components/reports/GeographicReport.tsx` | No — customers + invoices per governorate | Reclassify → Extend |
+| `components/reports/InactiveCustomersReport.tsx` | No — inactive-cutoff filter absent on `customerRepository` | Reclassify → Extend |
+| `components/reports/IncomeStatementReport.tsx` | No — 4 parallel period reads | Reclassify → Extend |
+| `components/reports/InventoryFlowReport.tsx` | Partial — `listStockMovements` exists; missing `products`+`product_stock` shape | Reclassify → Extend |
+| `components/reports/ProfitabilityReport.tsx` | No — three period aggregates | Reclassify → Extend |
+| `components/reports/TrialBalanceReport.tsx` | No — COA + journal_entries posted filter | Reclassify → Extend |
+| `components/customers/details/CustomerPinnedNote.tsx` | No — `customerRepository` only exposes `createNote` | Reclassify → Extend |
+| `components/suppliers/hero/SupplierPinnedNote.tsx` | **Yes** — `supplierRepository.listNotes(id)` already returns rows sorted is_pinned desc; component selects first pinned client-side | **Reuse ✓ (migrated)** |
+| `components/suppliers/SupplierActivityTab.tsx` | No — wider OR with PO/payment subselects; `findActivities` is narrower | Reclassify → Extend |
+| `components/suppliers/SupplierProductsTab.tsx` | No — needs `purchase_order_items` aggregation | Reclassify → Extend |
+| `components/suppliers/SupplierRatingTab.tsx` | No — needs `profiles:created_by(full_name)` join not in `listNotes` | Reclassify → Extend |
+
+**A2 outcome (treated as Inventory-accuracy issue, not design failure):**
+
+| Metric | Value |
+|---|---|
+| Files migrated | 1 / 12 |
+| New methods added | 0 |
+| New repositories | 0 |
+| New exception categories | 0 |
+| Public Repository API changes | 0 |
+| Audit hits removed | 1 |
+| Vitest | green |
+| Reclassifications | 11 (Reuse → Extend) |
+
+**Inventory headline delta** (Reuse + Extend stays at 90.9% — distribution shift only, no boundary shift):
+
+| Class | Before A2 | After A2 |
+|---|---:|---:|
+| Reuse | 53 | 42 |
+| Extend | 17 | 28 |
+| New | 3 | 3 |
+| Exception | 4 | 4 |
+
+**Repository Growth Review (A2)**
+
+| Repository | Methods before | Methods after | Read | Write | Aggregate(s) | Drift? |
+|---|---:|---:|---:|---:|---|---|
+| `supplierRepository` | 19 | 19 | 11 | 8 | supplier | No |
+
+**Extension Distribution (cumulative through A2)**
+
+| Repository | +Methods cumulative |
+|---|---:|
+| `customerRepository` | +3 (A1: `getAging`, `getHealthScore`, `getStatement`) |
+| `supplierRepository` | +3 (A1: `getAging`, `getHealthScore`, `getStatement`) |
+| any (A2) | +0 |
+
+**Repository API Regression Check (A2)**
+
+| Repository | Signature changes | Backward compatible? | Outside-cluster callers needing edits |
+|---|---:|---|---:|
+| `supplierRepository` | 0 | n/a | 0 |
+
+After Batch A2: a follow-up Extend-focused cluster (proposed A3) covers the 11 reclassified files, grouped by aggregate to minimise repo touches.
 
 ## Gate A (unchanged from plan, restated with new wording)
 > **Baseline inventory (77 files / 192 strict method hits) → 0 unjustified direct accesses**, measured by `scripts/audits/check-data-access.sh`. The number is not a fixed constant — it is whatever the audit script reports on `main`. Single-line vs multiline writing styles produce the same answer.

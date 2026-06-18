@@ -1,94 +1,97 @@
-# Phase 1C — Batch A: Close Repository Layer Leaks (Revised — baseline reset)
+# Phase 1C — Batch A2: Read-only Reuse Cluster (revised)
 
-Scope: **Batch A only**. Batches B–E remain deferred until Gate A passes.
-Execution is split into three phases: **(1) Baseline Freeze → (2) Review Gate → (3) Batch A1 only**, then a stop-and-review.
+Builds on a clean Gate A1 (100% file-level reuse, 0 new repos, 1187/1187 green). A2 tests a stronger hypothesis: **existing repository surfaces are sufficient — zero method additions required**.
 
-## Baseline (frozen via `scripts/audits/check-data-access.sh`, multiline-aware)
-- 43 repositories under `src/lib/repositories/`.
-- **77 UI files** (`src/components/**`, `src/pages/**`) hold direct Supabase usage.
-- Strict per-call tally: `from: 159`, `rpc: 22`, `storage: 11`, `channel: 0` → **192 strict method hits**. `createClient(` outside `src/integrations/**` = 0.
-- The earlier figures (26 files / 334 calls) are **discarded**: the 26 came from a single-line regex that missed multiline calls; the 334 over-counted chained methods on aliased clients. From now on the audit script's output is the only source of truth.
-- ESLint already warns on `@/integrations/supabase/client` imports from UI.
-- Full inventory + per-file classification (Reuse / Extend / New / Exception): see `docs/architecture/data-orchestration-batchA.md`.
-- Phase 1 (Baseline Freeze) is **complete**: no production code changed.
+## Scope (single cluster, Reuse-only)
 
-## Goal
-Drive direct Supabase usage in UI from **26 → 0** by routing through existing repositories or thin new ones. **No business logic, schema, or API contract changes.**
+12 files, all classified **Reuse** in the frozen inventory. Zero Extend, zero New, zero exceptions in this cluster.
 
-## Approach
+Reports:
+1. `src/components/reports/AgingReport.tsx` → `reportsRepository`
+2. `src/components/reports/GeographicReport.tsx` → `reportsRepository`
+3. `src/components/reports/InactiveCustomersReport.tsx` → `customerRepository`
+4. `src/components/reports/IncomeStatementReport.tsx` → `reportsRepository`
+5. `src/components/reports/InventoryFlowReport.tsx` → `inventoryRepository`
+6. `src/components/reports/ProfitabilityReport.tsx` → `reportsRepository`
+7. `src/components/reports/TrialBalanceReport.tsx` → `reportsRepository`
 
-### 1. Inventory & classify (read-only first)
-Produce `docs/architecture/data-orchestration-batchA.md` with one row per leak, classified as:
-- **Reuse** — existing repo already covers it; swap the call site only.
-- **Extend** — existing repo gains one small method (move the inline query in; no new logic).
-- **New thin repo** — no repo exists for this aggregate; create a minimal one. Every "New" row must carry one of these justification codes:
-  - `New aggregate` — the entity has no repository yet.
-  - `Boundary mismatch` — an existing repo covers a different aggregate; merging would weaken the boundary.
-  - `Technical specialization` — distinct technical concern (import/export, reporting, telemetry) that doesn't fit any existing repo.
-  - Any other justification is a red flag and triggers a design re-evaluation before continuing.
-- **Documented exception** — falls into the closed exception list below.
+Customer/Supplier read tabs:
+8. `src/components/customers/details/CustomerPinnedNote.tsx` → `customerRepository`
+9. `src/components/suppliers/hero/SupplierPinnedNote.tsx` → `supplierRepository`
+10. `src/components/suppliers/SupplierActivityTab.tsx` → `supplierRepository`
+11. `src/components/suppliers/SupplierProductsTab.tsx` → `supplierRepository`
+12. `src/components/suppliers/SupplierRatingTab.tsx` → `supplierRepository`
 
-### 2. Reports are not automatic aggregates
-Read-only composed queries (joins / RPCs that feed a report view) should attach to the owning aggregate's repository as `getX(...)` methods rather than spawning a new repo per report. Concretely:
-- `SupplierAgingReport`, `SupplierAgingChart`, `SupplierHealthBadge` → methods on `supplierRepository` (or existing `supplierRelationsRepo`), e.g. `getAging`, `getHealthScore`.
-- `CustomerAgingReport`, `CustomerHealthBadge`, `AgingDonutChart` → methods on `customerRepository`.
-- `StatementOfAccount`, `SupplierStatementTab` → `getStatement(...)` on the matching customer/supplier repo.
-- A dedicated reporting repo is allowed **only** if the data crosses aggregates and doesn't belong to any single owner — and only with a `Technical specialization` justification.
+## Execution rules
 
-### 3. Approved exceptions (closed list — no additions mid-flight)
-- Auth / session bootstrap.
-- Realtime channel subscriptions (`supabase.channel`).
-- Storage uploads / streaming (`supabase.storage`).
-- Edge Function streaming responses.
+- Route call sites only. **Do not** move business logic, transform payloads, or change DTOs/contracts.
+- **No new repositories. No new methods.** Even a one-line pass-through (`select * where id=...`) counts as a violation.
+- `// repo-exception:` markers are not added in this cluster (exception files belong to a later one).
 
-Each exception requires a one-line `// repo-exception: <category>` comment + a matching entry in the doc.
+## Success criteria (all must hold — addition 1: Zero-Extend is explicit)
 
-### 4. Migration order (lowest risk first)
-1. Read-only/derived UI: badges, charts, aging tabs, statement views.
-2. Settings / export / import surfaces.
-3. Forms / actions (supplier form, multi-invoice settlement, quick actions).
-4. Admin / platform pages (user mgmt, role limits, sync status, tenants, domain events, platform dashboard/billing, KPI dashboard).
+| Metric | Target |
+|---|---|
+| Existing methods reused | **100%** |
+| New methods added | **0** |
+| New repositories | **0** |
+| New exception categories | **0** |
+| Public Repository API changes | **0** (addition 3) |
+| Reclassified files mid-cluster | **0** |
+| Audit script unjustified hits removed | 12 (the cluster files) |
+| Vitest | 1187/1187 green |
+| ESLint | no new errors |
+| `tsc --noEmit` | clean |
+| Repository Growth Review | no responsibility drift, no God-Repository approach (addition 2) |
 
-After each cluster: Vitest + ESLint + `tsc --noEmit`. Move on only when green.
+## Violation handling
 
-### 5. ESLint policy
-- Existing `no-restricted-imports` for `@/integrations/supabase/client` stays at **`warn`** during the migration (avoids self-blocking).
-- Add **`warn`-level** `no-restricted-syntax` rules covering new client surfaces outside `src/lib/repositories|services|integrations`:
-  - `supabase.storage`
-  - `supabase.channel`
-  - `createClient(`
-- At Batch A closeout (leak count = 0), flip the client-import rule from `warn` → `error`. Promotion of the three new rules is a closeout decision based on what the inventory shows.
+If any file needs a new method to be migrated:
+1. **Stop the cluster immediately** — do not "fix" the classification inline.
+2. Reclassify that file from Reuse → Extend in `docs/architecture/data-orchestration-batchA.md`.
+3. Update the inventory totals.
+4. Re-run A2 **excluding** that file.
+5. Surface the reclassification in the closing report.
 
-### 6. Audit script (the official Gate)
-Add `scripts/audits/check-data-access.sh` that:
-- Counts hits for `supabase.from`, `.rpc(`, `.storage`, `.channel` inside `src/components` and `src/pages`.
-- Counts `createClient(` outside `src/integrations/**`.
-- Treats a hit as justified only if the same/previous line has `// repo-exception:` **and** the file appears in the exceptions table of the doc.
-- Exits non-zero on any unjustified hit.
+A failed classification is **not** a design failure; it is an Inventory accuracy issue and is treated as such.
 
-ESLint protects developers during editing; the audit script is the official Gate.
+## Reporting additions to `docs/architecture/data-orchestration-batchA.md`
 
-## Gate A (all must pass)
-1. Audit script: **0 unjustified hits** for `from`, `rpc`, `storage`, `channel`, `createClient`.
-2. `npx vitest run` → 1187/1187 green.
-3. ESLint clean (warnings allowed, no new errors).
-4. `tsc --noEmit` clean.
-5. `no-restricted-imports` for `@/integrations/supabase/client` flipped from `warn` → `error`.
-6. Closing report in `docs/architecture/data-orchestration-batchA.md` includes **quantitative indicators**:
-   - **Reuse rate** = files routed to an existing repo ÷ total migrated. **Target ≥ 80%**.
-   - **New-repo rate** = files needing a new repo ÷ total migrated. **Target ≤ 20%**.
-   - Number of existing repos extended (with names).
-   - Number of new repos created, **each with one of the three justification codes** above.
-   - Final exception count, broken down by the four approved categories; **0 entries in any new category**.
-   - Audit script output (paste).
+Append a new "Cluster Reviews" section with:
 
-If reuse rate < 80%, new-repo rate > 20%, any new repo carries a non-standard justification, or any exception falls outside the four categories → **stop**, do not start Batch B, and revisit Repository Layer design first.
+**1. Repository Growth Review (per cluster)** — addition 2, expanded columns:
 
-## Out of scope (explicit)
+| Repository | Public methods before | Public methods after | Read methods | Write methods | Aggregate(s) covered | Responsibility drift? |
+|---|---|---|---|---|---|---|
+
+Concern triggers (any one → stop and discuss):
+- A repo's `Aggregate(s) covered` lists more than one distinct aggregate.
+- Responsibility kinds (CRUD + Reports + Search + Analytics + Sync) start mixing in one repo.
+- Public method count crosses ~25 **and** any of the above is true.
+- Count alone (~25) without drift = informational, not a stop.
+
+**2. Extension Distribution (cumulative across Batch A)**:
+
+| Repository | +Methods cumulative (A1 + A2 + …) |
+|---|---|
+
+Early signal for future Read Model / Query Object split; not a stop condition by itself.
+
+**3. Repository API Regression Check (addition 3)** — one line per touched repo:
+
+| Repository | Signature changes | Backward compatible? | Callers outside cluster needing edits |
+|---|---|---|---|
+
+Expected for A2: **all zeros**. Any non-zero entry must be justified inline or it fails the gate.
+
+## Out of scope (unchanged)
+
 - No `createMutation` / `createQuery` factories.
-- No `useFormDialog` changes (frozen).
+- No `useFormDialog` changes.
 - No cache-policy or optimistic-update changes.
 - No business validation, permission, or payload-transformation moves.
+- No Extend / New / Exception work in this cluster.
 
-## Stop condition
-At the end of Batch A, present the closing report with the quantitative indicators. Batch B is proposed in a separate turn only if every Gate A check — including the ≥80% / ≤20% thresholds and the closed exception list — passes.
+## Mandatory stop after A2
+
+On clean pass, present the three review tables + audit/test output and **wait for explicit approval** before starting the next cluster (Extend-class admin/platform pages). No auto-continuation.
