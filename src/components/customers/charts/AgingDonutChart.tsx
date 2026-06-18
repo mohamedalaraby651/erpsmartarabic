@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 const AGING_BUCKETS = [
   { key: 'bucket_0_30', label: '0-30 يوم', color: 'hsl(var(--primary))' },
