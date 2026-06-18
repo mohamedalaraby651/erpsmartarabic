@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierRepository } from '@/lib/repositories';
 import { Pin } from 'lucide-react';
 
 interface SupplierPinnedNoteProps {
@@ -10,16 +10,8 @@ const SupplierPinnedNote = ({ supplierId }: SupplierPinnedNoteProps) => {
   const { data: pinnedNote } = useQuery({
     queryKey: ['supplier-pinned-note', supplierId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('supplier_notes')
-        .select('*')
-        .eq('supplier_id', supplierId)
-        .eq('is_pinned', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      const notes = await supplierRepository.listNotes(supplierId);
+      return notes.find((n) => n.is_pinned) ?? null;
     },
     staleTime: 60000,
   });
