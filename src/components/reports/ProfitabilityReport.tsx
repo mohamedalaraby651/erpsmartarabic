@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportsQueryService } from '@/lib/queries/reportsQueryService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Minus, Percent } from 'lucide-react';
@@ -14,36 +14,10 @@ interface ProfitabilityReportProps {
 export function ProfitabilityReport({ startDate, endDate }: ProfitabilityReportProps) {
   const { data, isLoading } = useQuery({
     queryKey: ['profitability-report', startDate, endDate],
-    queryFn: async () => {
-      const startStr = startDate.toISOString();
-      const endStr = endDate.toISOString();
-
-      const [invoicesRes, purchasesRes, expensesRes] = await Promise.all([
-        supabase
-          .from('invoices')
-          .select('total_amount, created_at, payment_status')
-          .gte('created_at', startStr)
-          .lte('created_at', endStr),
-        supabase
-          .from('purchase_orders')
-          .select('total_amount, created_at, status')
-          .gte('created_at', startStr)
-          .lte('created_at', endStr),
-        supabase
-          .from('expenses')
-          .select('amount, expense_date, status')
-          .gte('expense_date', startStr.split('T')[0])
-          .lte('expense_date', endStr.split('T')[0]),
-      ]);
-
-      return {
-        invoices: invoicesRes.data || [],
-        purchases: purchasesRes.data || [],
-        expenses: expensesRes.data || [],
-      };
-    },
+    queryFn: () => reportsQueryService.getProfitabilityInputs(startDate, endDate),
     staleTime: 60000,
   });
+
 
   const stats = useMemo(() => {
     if (!data) return null;
