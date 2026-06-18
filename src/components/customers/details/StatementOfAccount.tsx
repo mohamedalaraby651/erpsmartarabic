@@ -61,11 +61,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
     setIsPrinting(true);
     try {
       // Fetch customer details for the PDF header
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('phone, tax_number, governorate, city')
-        .eq('id', customerId)
-        .single();
+      const customer = await customerRepository.findById(customerId);
 
       const address = [customer?.governorate, customer?.city].filter(Boolean).join(' - ');
 
