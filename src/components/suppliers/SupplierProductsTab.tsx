@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supplierQueryService } from "@/lib/queries/supplierQueryService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -19,69 +19,9 @@ interface SupplierProductsTabProps {
 const SupplierProductsTab = ({ supplierId }: SupplierProductsTabProps) => {
   const { data: productStats, isLoading } = useQuery({
     queryKey: ['supplier-products', supplierId],
-    queryFn: async () => {
-      // Get all purchase order items for this supplier's orders
-      const { data: orders, error: ordersError } = await supabase
-        .from('purchase_orders')
-        .select('id')
-        .eq('supplier_id', supplierId);
-      
-      if (ordersError) throw ordersError;
-      
-      if (!orders || orders.length === 0) return [];
-      
-      const orderIds = orders.map(o => o.id);
-      
-      const { data: items, error: itemsError } = await supabase
-        .from('purchase_order_items')
-        .select(`
-          product_id,
-          quantity,
-          unit_price,
-          total_price,
-          products (
-            id,
-            name,
-            sku,
-            image_url
-          )
-        `)
-        .in('order_id', orderIds);
-      
-      if (itemsError) throw itemsError;
-      
-      // Aggregate by product
-      const productMap = new Map<string, {
-        product: any;
-        totalQuantity: number;
-        totalValue: number;
-        averagePrice: number;
-        orderCount: number;
-      }>();
-      
-      items?.forEach(item => {
-        const productId = item.product_id;
-        const existing = productMap.get(productId);
-        
-        if (existing) {
-          existing.totalQuantity += item.quantity;
-          existing.totalValue += Number(item.total_price);
-          existing.orderCount += 1;
-          existing.averagePrice = existing.totalValue / existing.totalQuantity;
-        } else {
-          productMap.set(productId, {
-            product: item.products,
-            totalQuantity: item.quantity,
-            totalValue: Number(item.total_price),
-            averagePrice: Number(item.unit_price),
-            orderCount: 1,
-          });
-        }
-      });
-      
-      return Array.from(productMap.values()).sort((a, b) => b.totalValue - a.totalValue);
-    },
+    queryFn: () => supplierQueryService.listAggregatedProducts(supplierId),
   });
+
 
   if (isLoading) {
     return (
