@@ -1,11 +1,16 @@
-# Phase 1C — Batch A: Close Repository Layer Leaks (Revised)
+# Phase 1C — Batch A: Close Repository Layer Leaks (Revised — baseline reset)
 
 Scope: **Batch A only**. Batches B–E remain deferred until Gate A passes.
+Execution is split into three phases: **(1) Baseline Freeze → (2) Review Gate → (3) Batch A1 only**, then a stop-and-review.
 
-## Baseline (measured)
+## Baseline (frozen via `scripts/audits/check-data-access.sh`, multiline-aware)
 - 43 repositories under `src/lib/repositories/`.
-- 26 UI files (`src/components/**`, `src/pages/**`) still call `supabase.from(...)` / `.rpc(...)` directly.
+- **77 UI files** (`src/components/**`, `src/pages/**`) hold direct Supabase usage.
+- Strict per-call tally: `from: 159`, `rpc: 22`, `storage: 11`, `channel: 0` → **192 strict method hits**. `createClient(` outside `src/integrations/**` = 0.
+- The earlier figures (26 files / 334 calls) are **discarded**: the 26 came from a single-line regex that missed multiline calls; the 334 over-counted chained methods on aliased clients. From now on the audit script's output is the only source of truth.
 - ESLint already warns on `@/integrations/supabase/client` imports from UI.
+- Full inventory + per-file classification (Reuse / Extend / New / Exception): see `docs/architecture/data-orchestration-batchA.md`.
+- Phase 1 (Baseline Freeze) is **complete**: no production code changed.
 
 ## Goal
 Drive direct Supabase usage in UI from **26 → 0** by routing through existing repositories or thin new ones. **No business logic, schema, or API contract changes.**
