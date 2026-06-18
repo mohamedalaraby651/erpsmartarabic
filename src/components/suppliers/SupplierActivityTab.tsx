@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supplierQueryService } from "@/lib/queries/supplierQueryService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,18 +33,9 @@ const entityLabels: Record<string, { label: string; icon: any }> = {
 const SupplierActivityTab = ({ supplierId }: SupplierActivityTabProps) => {
   const { data: activities, isLoading } = useQuery({
     queryKey: ['supplier-activity', supplierId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .or(`entity_id.eq.${supplierId},and(entity_type.eq.purchase_order,entity_id.in.(select id from purchase_orders where supplier_id='${supplierId}')),and(entity_type.eq.supplier_payment,entity_id.in.(select id from supplier_payments where supplier_id='${supplierId}'))`)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => supplierQueryService.listActivity(supplierId),
   });
+
 
   if (isLoading) {
     return (
