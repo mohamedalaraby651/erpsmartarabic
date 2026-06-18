@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierRepository } from '@/lib/repositories/supplierRepository';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HeartPulse } from 'lucide-react';
@@ -18,11 +18,7 @@ const gradeConfig: Record<string, { label: string; color: string; bg: string }> 
 const SupplierHealthBadge = ({ supplierId }: SupplierHealthBadgeProps) => {
   const { data: health } = useQuery({
     queryKey: ['supplier-health', supplierId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_supplier_health_score', { _supplier_id: supplierId });
-      if (error) throw error;
-      return data as { score: number; grade: string; recommendations: string[] };
-    },
+    queryFn: () => supplierRepository.getHealthScore(supplierId),
     staleTime: 120000,
   });
 

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 const AGING_BUCKETS = [
   { key: 'bucket_0_30', label: '0-30 يوم', color: 'hsl(var(--primary))' },
@@ -18,11 +18,7 @@ interface AgingDonutChartProps {
 export function AgingDonutChart({ customerId }: AgingDonutChartProps) {
   const { data: agingData } = useQuery({
     queryKey: ['customer-aging', customerId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_customer_aging', { _customer_id: customerId });
-      if (error) throw error;
-      return data as Record<string, { amount: number; count: number }> & { total_outstanding: number };
-    },
+    queryFn: () => customerRepository.getAging(customerId),
     enabled: !!customerId,
     staleTime: 120000,
   });

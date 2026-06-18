@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierRepository } from '@/lib/repositories/supplierRepository';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,14 +33,11 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['supplier-statement', supplierId, dateFrom, dateTo],
-    queryFn: async () => {
-      const params: Record<string, string> = { _supplier_id: supplierId };
-      if (dateFrom) params._date_from = dateFrom;
-      if (dateTo) params._date_to = dateTo;
-      const { data, error } = await supabase.rpc('get_supplier_statement', params as any);
-      if (error) throw error;
-      return (data || []) as StatementEntry[];
-    },
+    queryFn: () =>
+      supplierRepository.getStatement(supplierId, {
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      }) as Promise<StatementEntry[]>,
   });
 
   const totalDebit = entries.reduce((s, e) => s + Number(e.debit), 0);
@@ -50,11 +47,7 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
   const handlePrint = async () => {
     setIsPrinting(true);
     try {
-      const { data: supplier } = await supabase
-        .from('suppliers')
-        .select('phone, tax_number, address')
-        .eq('id', supplierId)
-        .single();
+      const supplier = await supplierRepository.findById(supplierId);
 
       await generateStatementPdf({
         partyType: 'supplier',

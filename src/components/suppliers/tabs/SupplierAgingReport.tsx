@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplierRepository, type SupplierAgingResult } from '@/lib/repositories/supplierRepository';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -34,11 +34,7 @@ const bucketConfig = [
 const SupplierAgingReport = ({ supplierId }: SupplierAgingReportProps) => {
   const { data: aging, isLoading } = useQuery({
     queryKey: ['supplier-aging-report', supplierId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_supplier_aging', { _supplier_id: supplierId });
-      if (error) throw error;
-      return data as unknown as AgingData;
-    },
+    queryFn: () => supplierRepository.getAging(supplierId) as Promise<AgingData>,
   });
 
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;

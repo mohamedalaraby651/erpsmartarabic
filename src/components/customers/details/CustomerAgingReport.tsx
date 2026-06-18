@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { customerRepository } from "@/lib/repositories/customerRepository";
 
 interface AgingBucket {
   label: string;
@@ -22,11 +22,7 @@ interface CustomerAgingReportProps {
 export default function CustomerAgingReport({ customerId }: CustomerAgingReportProps) {
   const { data: agingData, isLoading } = useQuery({
     queryKey: ['customer-aging', customerId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_customer_aging', { _customer_id: customerId });
-      if (error) throw error;
-      return data as Record<string, any>;
-    },
+    queryFn: () => customerRepository.getAging(customerId),
     enabled: !!customerId,
     staleTime: 60000,
   });

@@ -1,22 +1,12 @@
 import { memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { customerRepository, type CustomerHealthResult } from '@/lib/repositories/customerRepository';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Shield, ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface HealthData {
-  score: number;
-  grade: 'excellent' | 'good' | 'warning' | 'critical';
-  recommendations: string[];
-  credit_score: number;
-  dso_score: number;
-  aging_score: number;
-  dso: number | null;
-  total_outstanding: number;
-  overdue_90: number;
-}
+type HealthData = CustomerHealthResult;
 
 const gradeConfig = {
   excellent: {
@@ -44,13 +34,7 @@ const gradeConfig = {
 export function useCustomerHealthScore(customerId: string | undefined) {
   return useQuery({
     queryKey: ['customer-health-score', customerId],
-    queryFn: async (): Promise<HealthData> => {
-      const { data, error } = await supabase.rpc('get_customer_health_score', {
-        _customer_id: customerId!,
-      });
-      if (error) throw error;
-      return data as unknown as HealthData;
-    },
+    queryFn: (): Promise<HealthData> => customerRepository.getHealthScore(customerId!),
     enabled: !!customerId,
     staleTime: 120000,
   });
