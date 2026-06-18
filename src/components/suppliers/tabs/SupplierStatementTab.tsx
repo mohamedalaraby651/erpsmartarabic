@@ -33,14 +33,11 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['supplier-statement', supplierId, dateFrom, dateTo],
-    queryFn: async () => {
-      const params: Record<string, string> = { _supplier_id: supplierId };
-      if (dateFrom) params._date_from = dateFrom;
-      if (dateTo) params._date_to = dateTo;
-      const { data, error } = await supabase.rpc('get_supplier_statement', params as any);
-      if (error) throw error;
-      return (data || []) as StatementEntry[];
-    },
+    queryFn: () =>
+      supplierRepository.getStatement(supplierId, {
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      }) as Promise<StatementEntry[]>,
   });
 
   const totalDebit = entries.reduce((s, e) => s + Number(e.debit), 0);
