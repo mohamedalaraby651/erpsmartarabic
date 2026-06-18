@@ -1,97 +1,156 @@
-# Phase 1C — Batch A2: Read-only Reuse Cluster (revised)
+## Phase A2.5 — Step 1 POC: `supplierQueryService` (Validation Experiment)
 
-Builds on a clean Gate A1 (100% file-level reuse, 0 new repos, 1187/1187 green). A2 tests a stronger hypothesis: **existing repository surfaces are sufficient — zero method additions required**.
+**Framing change (per review):** This is **not** "building a Query Layer." This is a controlled experiment that asks one question:
 
-## Scope (single cluster, Reuse-only)
+> Does the UI actually need a Read Model separation, or was the Repository sufficient?
 
-12 files, all classified **Reuse** in the frozen inventory. Zero Extend, zero New, zero exceptions in this cluster.
+The POC is reversible. The architecture is not committed until Step 1 results pass a measurable validation gate.
 
-Reports:
-1. `src/components/reports/AgingReport.tsx` → `reportsRepository`
-2. `src/components/reports/GeographicReport.tsx` → `reportsRepository`
-3. `src/components/reports/InactiveCustomersReport.tsx` → `customerRepository`
-4. `src/components/reports/IncomeStatementReport.tsx` → `reportsRepository`
-5. `src/components/reports/InventoryFlowReport.tsx` → `inventoryRepository`
-6. `src/components/reports/ProfitabilityReport.tsx` → `reportsRepository`
-7. `src/components/reports/TrialBalanceReport.tsx` → `reportsRepository`
+---
 
-Customer/Supplier read tabs:
-8. `src/components/customers/details/CustomerPinnedNote.tsx` → `customerRepository`
-9. `src/components/suppliers/hero/SupplierPinnedNote.tsx` → `supplierRepository`
-10. `src/components/suppliers/SupplierActivityTab.tsx` → `supplierRepository`
-11. `src/components/suppliers/SupplierProductsTab.tsx` → `supplierRepository`
-12. `src/components/suppliers/SupplierRatingTab.tsx` → `supplierRepository`
+### Hard rules (binding — any violation = immediate stop)
 
-## Execution rules
+1. **Zero Repository public-API changes.** No new methods on `supplierRepository`, no signature changes.
+2. **Zero business logic in `supplierQueryService`.** No validation, permissions, calculations beyond shape/aggregation needed for the view, no defaulting of business values.
+3. **QueryService must not become a Shadow Repository.** Forbidden patterns:
+   - A method that is a thin pass-through to a single table with no join/aggregation → fails the POC (means Repository was sufficient).
+   - Filtering logic that duplicates an existing repo filter.
+   - Re-implementing logic already living in `supplierRepository`.
+4. **Single source of truth per read.** If a read shape already exists on `supplierRepository` (e.g. `listNotes`), the QueryService **must not** offer a parallel version. Compose, don't duplicate.
+5. **No writes, no mutations, no cache invalidation** inside QueryService.
+6. **No new RPCs, no DB changes, no `queryKeys.ts` top-level scope additions.**
 
-- Route call sites only. **Do not** move business logic, transform payloads, or change DTOs/contracts.
-- **No new repositories. No new methods.** Even a one-line pass-through (`select * where id=...`) counts as a violation.
-- `// repo-exception:` markers are not added in this cluster (exception files belong to a later one).
+---
 
-## Success criteria (all must hold — addition 1: Zero-Extend is explicit)
+### Scope (3 supplier-domain files only)
+
+1. `src/components/suppliers/SupplierActivityTab.tsx` → `supplierQueryService.listActivity(supplierId)`
+2. `src/components/suppliers/SupplierProductsTab.tsx` → `supplierQueryService.listAggregatedProducts(supplierId)`
+3. `src/components/suppliers/SupplierRatingTab.tsx` → `supplierQueryService.listNotesWithAuthor(supplierId)` (read path only; the `addNoteMutation` continues to call `supplierRepository.createNote`)
+
+`CustomerPinnedNote.tsx` is **explicitly deferred** to Step 3 (cross-domain test case, not part of POC).
+
+---
+
+### Files added / changed
+
+**New:**
+- `src/lib/queries/supplierQueryService.ts` — 3 methods, 3 exported view interfaces.
+- `docs/architecture/data-orchestration-batchA.md` — new section "Query Layer POC — Step 1 Results" with the measurement tables below.
+
+**Edited:**
+- The 3 UI files above (read path only; mutations untouched).
+
+**Untouched:**
+- `src/lib/repositories/supplierRepository.ts` (zero changes).
+- `src/lib/queryKeys.ts` (reuse existing `suppliers.*` keys).
+- All other repositories, hooks, services.
+
+---
+
+### Measurement criteria (objective, recorded before/after)
+
+Each metric is measured per file and aggregated. Recorded in the POC results doc.
+
+**A. Complexity reduction (must show net improvement in ≥2 of 3 files):**
+
+| Metric | Definition | Target |
+|---|---|---|
+| `supabase.from()` calls in UI file | Direct client refs | → 0 in all 3 |
+| Lines of data-fetch code in UI | `useQuery` body LOC | ↓ in ≥2 files |
+| In-component data shaping LOC | Map/reduce/aggregate in component body | ↓ in ≥2 files |
+| Cognitive load (imports of `supabase`, types, helpers) | Count of data-layer imports | ↓ in ≥2 files |
+
+**B. QueryService quality (all must hold):**
 
 | Metric | Target |
 |---|---|
-| Existing methods reused | **100%** |
-| New methods added | **0** |
+| Methods that are pure pass-throughs to one table with no join/aggregation | **0** |
+| Methods duplicating an existing `supplierRepository` read | **0** |
+| Methods containing business validation / permission / calculation | **0** |
+| Methods >60 LOC | flagged for review (not auto-fail) |
+| Tables joined per method | recorded; >4 flagged |
+
+**C. Duplication audit (must hold):**
+
+| Check | Target |
+|---|---|
+| Two code paths returning the same read shape (repo + query) | **0** |
+| Shared filter logic copy-pasted between repo and query | **0** |
+
+**D. Architectural integrity (must hold):**
+
+| Check | Target |
+|---|---|
+| Repository public API changes | **0** |
 | New repositories | **0** |
+| Business logic moved into query service | **0** |
 | New exception categories | **0** |
-| Public Repository API changes | **0** (addition 3) |
-| Reclassified files mid-cluster | **0** |
-| Audit script unjustified hits removed | 12 (the cluster files) |
-| Vitest | 1187/1187 green |
+| Audit script unjustified hits removed | **3** |
+| `queryKeys.ts` top-level scopes added | **0** |
+
+**E. Quality gates (must hold):**
+
+| Check | Target |
+|---|---|
+| Vitest | green (baseline maintained) |
 | ESLint | no new errors |
 | `tsc --noEmit` | clean |
-| Repository Growth Review | no responsibility drift, no God-Repository approach (addition 2) |
+| `scripts/audits/check-data-access.sh` | exits 0 |
 
-## Violation handling
+---
 
-If any file needs a new method to be migrated:
-1. **Stop the cluster immediately** — do not "fix" the classification inline.
-2. Reclassify that file from Reuse → Extend in `docs/architecture/data-orchestration-batchA.md`.
-3. Update the inventory totals.
-4. Re-run A2 **excluding** that file.
-5. Surface the reclassification in the closing report.
+### Completion criteria (Step 1 is "done" only if ALL hold)
 
-A failed classification is **not** a design failure; it is an Inventory accuracy issue and is treated as such.
+1. All 3 files migrated, read path goes through `supplierQueryService`.
+2. **Measurement A** shows net complexity reduction in ≥2 of 3 files. If 0–1 files improve, POC is **inconclusive** → Step 3 likely outcome = 3C (rollback).
+3. **Measurement B, C, D, E** all pass with zero violations.
+4. POC results section in `docs/architecture/data-orchestration-batchA.md` is filled with actual measured numbers (not estimates).
+5. Three review questions explicitly answered in the doc:
+   - Q1: Did any UI need a shape the query service couldn't express cleanly?
+   - Q2: Did any method drift toward business rules / shadow-repository behaviour?
+   - Q3: Is the added file/method count proportionate to the readability/duplication win?
 
-## Reporting additions to `docs/architecture/data-orchestration-batchA.md`
+---
 
-Append a new "Cluster Reviews" section with:
+### Stop conditions (during execution)
 
-**1. Repository Growth Review (per cluster)** — addition 2, expanded columns:
+Any of the following triggers **immediate halt** and a written reclassification note instead of "fixing it inline":
 
-| Repository | Public methods before | Public methods after | Read methods | Write methods | Aggregate(s) covered | Responsibility drift? |
-|---|---|---|---|---|---|---|
+- A QueryService method needs business logic to work.
+- A QueryService method ends up being a thin wrapper over `supabase.from('x').select('*')`.
+- A read already exists on `supplierRepository` and would need to be duplicated.
+- A UI file's shape can't be expressed without changing the Repository.
+- A migration requires editing `supplierRepository.ts`.
 
-Concern triggers (any one → stop and discuss):
-- A repo's `Aggregate(s) covered` lists more than one distinct aggregate.
-- Responsibility kinds (CRUD + Reports + Search + Analytics + Sync) start mixing in one repo.
-- Public method count crosses ~25 **and** any of the above is true.
-- Count alone (~25) without drift = informational, not a stop.
+On halt: document the trigger, the file, and the smallest possible diagnosis. Do not proceed to file 2 or 3 until the halt is reviewed.
 
-**2. Extension Distribution (cumulative across Batch A)**:
+---
 
-| Repository | +Methods cumulative (A1 + A2 + …) |
+### Decision outcomes after Step 1
+
+Step 1 results map to one of three Step 3 outcomes (no work happens in Step 3 — review only):
+
+| POC result | Step 3 recommendation |
 |---|---|
+| Measurement A passes + B/C/D/E clean | **3A — Proceed to `reportsQueryService` (Step 2).** Query Layer hypothesis validated on supplier domain. |
+| Measurement A inconclusive but B/C/D/E clean | **3B — Pause Query Layer. Re-evaluate A3 as Repository Extends.** Layer is technically correct but doesn't earn its complexity cost. |
+| Any B/C/D/E violation, or halt triggered | **3C — Rollback Step 1. Repository Layer was sufficient; the gap is in Read Modeling at the DB level (views/RPCs), not at the application layer.** |
 
-Early signal for future Read Model / Query Object split; not a stop condition by itself.
+---
 
-**3. Repository API Regression Check (addition 3)** — one line per touched repo:
+### Out of scope (Step 1)
 
-| Repository | Signature changes | Backward compatible? | Callers outside cluster needing edits |
-|---|---|---|---|
+- `reportsQueryService`, `customerQueryService` — not built, not designed in detail.
+- `CustomerPinnedNote.tsx` — deferred.
+- `reportsRepository.cashFlow` — untouched.
+- Any A3 Extend work.
+- `createMutation` / `createQuery` factories, `useFormDialog`, cache topology, optimistic updates.
 
-Expected for A2: **all zeros**. Any non-zero entry must be justified inline or it fails the gate.
+---
 
-## Out of scope (unchanged)
+### Approval requested
 
-- No `createMutation` / `createQuery` factories.
-- No `useFormDialog` changes.
-- No cache-policy or optimistic-update changes.
-- No business validation, permission, or payload-transformation moves.
-- No Extend / New / Exception work in this cluster.
-
-## Mandatory stop after A2
-
-On clean pass, present the three review tables + audit/test output and **wait for explicit approval** before starting the next cluster (Extend-class admin/platform pages). No auto-continuation.
+- Confirm Step 1 POC as scoped (3 supplier files, read paths only).
+- Confirm all hard rules and stop conditions.
+- Confirm: **no auto-continuation to Step 2** regardless of Step 1 outcome — explicit review required.

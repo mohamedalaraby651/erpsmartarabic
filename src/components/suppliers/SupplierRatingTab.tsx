@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supplierRepository } from "@/lib/repositories/supplierRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,34 +30,18 @@ const SupplierRatingTab = ({ supplierId, currentRating, onRatingChange }: Suppli
 
   const { data: notes, isLoading } = useQuery({
     queryKey: ['supplier-notes', supplierId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('supplier_notes')
-        .select(`
-          *,
-          profiles:created_by (full_name)
-        `)
-        .eq('supplier_id', supplierId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => supplierRepository.listNotes(supplierId),
   });
 
   const addNoteMutation = useMutation({
     mutationFn: async (note: string) => {
       if (!tenantId) throw new Error('No tenant');
-      const { error } = await supabase
-        .from('supplier_notes')
-        .insert({
-          supplier_id: supplierId,
-          note,
-          created_by: user?.id,
-          tenant_id: tenantId,
-        });
-      
-      if (error) throw error;
+      await supplierRepository.createNote({
+        supplierId,
+        note,
+        userId: user?.id ?? null,
+        tenantId,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-notes', supplierId] });
@@ -70,6 +54,7 @@ const SupplierRatingTab = ({ supplierId, currentRating, onRatingChange }: Suppli
       toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
+
 
   const handleAddNote = () => {
     if (newNote.trim()) {
