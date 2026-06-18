@@ -38,23 +38,11 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
   // Server-side statement via RPC — no 500 record limit
   const { data: statementData = [], isPending, isFetching } = useQuery({
     queryKey: ['customer-statement', customerId, dateFrom, dateTo],
-    queryFn: async (): Promise<StatementRow[]> => {
-      const params: Record<string, unknown> = { _customer_id: customerId };
-      if (dateFrom) params._date_from = dateFrom;
-      if (dateTo) params._date_to = dateTo;
-
-      const { data, error } = await supabase.rpc('get_customer_statement', params as any);
-      if (error) throw error;
-      return (data || []).map((row: any) => ({
-        entry_date: row.entry_date,
-        entry_type: row.entry_type,
-        reference: row.reference,
-        debit: Number(row.debit || 0),
-        credit: Number(row.credit || 0),
-        running_balance: Number(row.running_balance || 0),
-        status: row.status,
-      }));
-    },
+    queryFn: (): Promise<StatementRow[]> =>
+      customerRepository.getStatement(customerId, {
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      }),
     enabled: !!customerId,
     staleTime: 60000,
     placeholderData: keepPreviousData,
