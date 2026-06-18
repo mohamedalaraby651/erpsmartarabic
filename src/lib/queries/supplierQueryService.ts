@@ -37,9 +37,6 @@ export interface SupplierAggregatedProductView {
   orderCount: number;
 }
 
-export interface SupplierNoteWithAuthorView extends SupplierNote {
-  author: { full_name: string | null } | null;
-}
 
 // ============================================
 // Query Service
