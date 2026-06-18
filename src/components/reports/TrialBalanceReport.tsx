@@ -115,7 +115,7 @@ export function TrialBalanceReport({ asOfDate }: TrialBalanceReportProps) {
 
   const isBalanced = Math.abs(totals.debit - totals.credit) < 0.01;
 
-  const isLoading = loadingAccounts || loadingEntries;
+
 
   if (isLoading) {
     return (
