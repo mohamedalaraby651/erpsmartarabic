@@ -17,7 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type ActivityLog = Database['public']['Tables']['activity_logs']['Row'];
-type SupplierNote = Database['public']['Tables']['supplier_notes']['Row'];
 
 // ============================================
 // View DTOs (exported — UI consumes these shapes)
