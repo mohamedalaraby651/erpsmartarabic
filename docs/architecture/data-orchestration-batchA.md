@@ -62,7 +62,7 @@ These files will get the `// repo-exception: <category>` marker added in Batch A
 
 | File | Class | Aggregate | Target / Reason | from | rpc | storage |
 |------|-------|-----------|-----------------|-----:|----:|--------:|
-| `src/components/customers/details/CustomerPinnedNote.tsx` | Reuse | customer | customerRepository | 1 | 0 | 0 |
+| `src/components/customers/details/CustomerPinnedNote.tsx` | Extend | customer | customerRepository | 1 | 0 | 0 |
 | `src/components/dashboard/CalendarWidget.tsx` | Reuse | mixed | dashboard widgets → existing repos | 4 | 0 | 0 |
 | `src/components/dashboard/InvoiceQuickActions.tsx` | Reuse | invoice | invoiceRepository | 3 | 0 | 0 |
 | `src/components/dashboard/LowStockWidget.tsx` | Reuse | stock | inventoryRepository | 2 | 0 | 0 |
@@ -75,13 +75,13 @@ These files will get the `// repo-exception: <category>` marker added in Batch A
 | `src/components/payments/PaymentFormDialog.tsx` | Reuse | payment | paymentRepository | 2 | 0 | 0 |
 | `src/components/print/InvoicePrintView.tsx` | Reuse | invoice | invoiceRepository | 3 | 0 | 0 |
 | `src/components/products/ProductVariantDialog.tsx` | Reuse | product | productRepository | 2 | 0 | 0 |
-| `src/components/reports/AgingReport.tsx` | Reuse | report | reportsRepository | 1 | 0 | 0 |
-| `src/components/reports/GeographicReport.tsx` | Reuse | report | reportsRepository | 2 | 0 | 0 |
-| `src/components/reports/InactiveCustomersReport.tsx` | Reuse | customer | customerRepository | 1 | 0 | 0 |
-| `src/components/reports/IncomeStatementReport.tsx` | Reuse | report | reportsRepository | 4 | 0 | 0 |
-| `src/components/reports/InventoryFlowReport.tsx` | Reuse | inventory | inventoryRepository | 3 | 0 | 0 |
-| `src/components/reports/ProfitabilityReport.tsx` | Reuse | report | reportsRepository | 3 | 0 | 0 |
-| `src/components/reports/TrialBalanceReport.tsx` | Reuse | report | reportsRepository | 2 | 0 | 0 |
+| `src/components/reports/AgingReport.tsx` | Extend | report | reportsRepository | 1 | 0 | 0 |
+| `src/components/reports/GeographicReport.tsx` | Extend | report | reportsRepository | 2 | 0 | 0 |
+| `src/components/reports/InactiveCustomersReport.tsx` | Extend | customer | customerRepository | 1 | 0 | 0 |
+| `src/components/reports/IncomeStatementReport.tsx` | Extend | report | reportsRepository | 4 | 0 | 0 |
+| `src/components/reports/InventoryFlowReport.tsx` | Extend | inventory | inventoryRepository | 3 | 0 | 0 |
+| `src/components/reports/ProfitabilityReport.tsx` | Extend | report | reportsRepository | 3 | 0 | 0 |
+| `src/components/reports/TrialBalanceReport.tsx` | Extend | report | reportsRepository | 2 | 0 | 0 |
 | `src/components/settings/BackupTab.tsx` | Reuse | settings | settingsRepository | 6 | 0 | 0 |
 | `src/components/settings/CompanyInfoSection.tsx` | Reuse | settings | settingsRepository | 3 | 0 | 0 |
 | `src/components/settings/ExportCenter/ExportCenterPage.tsx` | Reuse | settings | settingsRepository | 1 | 0 | 0 |
@@ -92,12 +92,12 @@ These files will get the `// repo-exception: <category>` marker added in Batch A
 | `src/components/settings/SettingsExportImport.tsx` | Reuse | settings | settingsRepository | 6 | 0 | 0 |
 | `src/components/shared/AttachmentUploadForm.tsx` | Reuse | attachment | attachmentsRepository | 1 | 0 | 2 |
 | `src/components/shared/AttachmentsList.tsx` | Reuse | attachment | attachmentsRepository | 1 | 0 | 1 |
-| `src/components/suppliers/SupplierActivityTab.tsx` | Reuse | supplier | supplierRepository | 1 | 0 | 0 |
+| `src/components/suppliers/SupplierActivityTab.tsx` | Extend | supplier | supplierRepository | 1 | 0 | 0 |
 | `src/components/suppliers/SupplierFormDialog.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
 | `src/components/suppliers/SupplierImportDialog.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
 | `src/components/suppliers/SupplierPaymentDialog.tsx` | Reuse | supplier | supplierRepository | 1 | 0 | 0 |
-| `src/components/suppliers/SupplierProductsTab.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
-| `src/components/suppliers/SupplierRatingTab.tsx` | Reuse | supplier | supplierRepository | 2 | 0 | 0 |
+| `src/components/suppliers/SupplierProductsTab.tsx` | Extend | supplier | supplierRepository | 2 | 0 | 0 |
+| `src/components/suppliers/SupplierRatingTab.tsx` | Extend | supplier | supplierRepository | 2 | 0 | 0 |
 | `src/components/suppliers/hero/SupplierPinnedNote.tsx` | Reuse | supplier | supplierRepository | 1 | 0 | 0 |
 | `src/components/tenant/TenantSettings.tsx` | Reuse | tenant | adminRepository | 1 | 0 | 0 |
 | `src/pages/admin/BackupPage.tsx` | Reuse | admin | adminRepository | 2 | 0 | 0 |
