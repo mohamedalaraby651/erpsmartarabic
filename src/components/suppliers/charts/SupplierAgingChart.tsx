@@ -18,11 +18,7 @@ interface SupplierAgingChartProps {
 export function SupplierAgingChart({ supplierId }: SupplierAgingChartProps) {
   const { data: agingData } = useQuery({
     queryKey: ['supplier-aging-chart', supplierId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_supplier_aging', { _supplier_id: supplierId });
-      if (error) throw error;
-      return data as Record<string, { amount: number; count: number }> & { total_outstanding: number };
-    },
+    queryFn: () => supplierRepository.getAging(supplierId),
     enabled: !!supplierId,
     staleTime: 120000,
   });
