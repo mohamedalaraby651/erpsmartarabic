@@ -132,32 +132,5 @@ export const supplierQueryService = {
     return Array.from(productMap.values()).sort((a, b) => b.totalValue - a.totalValue);
   },
 
-  /**
-   * Composed read: supplier_notes × profiles (author full_name).
-   * `supplierRepository.listNotes` returns the bare note row; this
-   * projection is the view-shaped variant used by the rating tab.
-   */
-  async listNotesWithAuthor(supplierId: string): Promise<SupplierNoteWithAuthorView[]> {
-    const { data, error } = await supabase
-      .from('supplier_notes')
-      .select(`
-        *,
-        author:profiles!supplier_notes_created_by_fkey ( full_name )
-      `)
-      .eq('supplier_id', supplierId)
-      .order('created_at', { ascending: false });
-    if (error) {
-      // Fallback for environments where the FK alias isn't introspected.
-      const retry = await supabase
-        .from('supplier_notes')
-        .select(`*, author:profiles ( full_name )`)
-        .eq('supplier_id', supplierId)
-        .order('created_at', { ascending: false });
-      if (retry.error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (retry.data ?? []) as any as SupplierNoteWithAuthorView[];
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? []) as any as SupplierNoteWithAuthorView[];
-  },
 };
+
