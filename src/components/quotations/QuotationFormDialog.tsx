@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import { legacyQuotationsRepository } from "@/lib/repositories/legacyQuotationsRepository";
 import { creditNoteRepository } from "@/lib/repositories/creditNoteRepository";
 import { referenceRepository } from "@/lib/repositories/referenceRepository";
@@ -19,8 +19,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Plus, Printer } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
 import { QuotationItemsTable } from "./QuotationItemsTable";
@@ -31,6 +29,8 @@ import { useFormWizard } from "@/hooks/useFormWizard";
 import { LivePreviewPanel } from "@/components/settings/ExportCenter/LivePreviewPanel";
 import { useLivePreviewProfile } from "@/components/settings/ExportCenter/useLivePreviewProfile";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
+import { useFormDialog } from "@/hooks/useFormDialog";
+import { useMutationToast } from "@/hooks/useMutationToast";
 import type { Database } from "@/integrations/supabase/types";
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
@@ -42,15 +42,21 @@ interface QuotationFormDialogProps {
   quotation?: Quotation | null;
 }
 
-interface FormData {
-  customer_id: string; valid_until: string; notes: string;
-}
+const quotationFormSchema = z.object({
+  customer_id: z.string().min(1, 'يجب اختيار العميل'),
+  valid_until: z.string().optional().default(''),
+  notes: z.string().optional().default(''),
+});
+type FormData = z.infer<typeof quotationFormSchema>;
+
+const generateQuotationNumber = () => {
+  const d = new Date();
+  return `QT-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+};
 
 const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDialogProps) => {
-  const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const isEditing = !!quotation;
   const [lastSavedId, setLastSavedId] = useState<string | null>(quotation?.id ?? null);
   const [printOpen, setPrintOpen] = useState(false);
   const { profile: pdfProfile } = useLivePreviewProfile();
@@ -66,38 +72,44 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   });
 
   const {
-    items, subtotal, totalAfterDiscount, taxAmount, grandTotal,
+    items, subtotal, totalAfterDiscount: _totalAfterDiscount, taxAmount, grandTotal,
     vatEnabled, setVatEnabled, discountAmount, setDiscountAmount,
     addItem, updateItem, removeItem, loadItems, resetItems, validate,
   } = useQuotationItems({ products });
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { isDirty } } = useForm<FormData>({
-    defaultValues: { customer_id: '', valid_until: '', notes: '' },
+  const isEditingEntity = !!quotation;
+  const toastHandlers = useMutationToast({
+    successTitle: isEditingEntity ? 'تم تحديث عرض السعر بنجاح' : 'تم إنشاء عرض السعر بنجاح',
+    successDescription: 'يمكنك الآن طباعة PDF',
   });
 
-  const wizard = useFormWizard({ totalSteps: 3 });
-
-  useEffect(() => {
-    if (quotation) {
-      reset({ customer_id: quotation.customer_id, valid_until: quotation.valid_until || '', notes: quotation.notes || '' });
-      setDiscountAmount(Number(quotation.discount_amount) || 0);
-      setVatEnabled(Number(quotation.tax_amount) > 0);
-      loadItems(quotation.id);
-    } else {
-      reset({ customer_id: '', valid_until: '', notes: '' });
-      resetItems();
-    }
-    wizard.reset();
-  }, [quotation, reset, loadItems, resetItems, setDiscountAmount, setVatEnabled]);
-
-  const generateQuotationNumber = () => {
-    const d = new Date();
-    return `QT-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-  };
-
-  const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
+  const { form, isEditing, isSubmitting, submit } = useFormDialog<FormData, Quotation, FormData>({
+    schema: quotationFormSchema,
+    entity: quotation,
+    toValues: (e) => e
+      ? { customer_id: e.customer_id, valid_until: e.valid_until || '', notes: e.notes || '' }
+      : { customer_id: '', valid_until: '', notes: '' },
+    toPayload: (v) => v,
+    // Pre-MUTATE discipline: validate items → permissions → financial limits → transform → submit.
+    mutationFn: async (data, { isEditing }) => {
+      // 1. VALIDATE items
       if (items.length === 0) throw new Error('يجب إضافة منتج واحد على الأقل');
+      const errors = validate();
+      if (errors.length > 0) throw new Error(errors[0].message);
+
+      // 2. PERMISSION
+      const action = isEditing ? 'edit' : 'create';
+      const hasPermission = await verifyPermissionOnServer('quotations', action);
+      if (!hasPermission) throw new Error(`ليس لديك صلاحية ${isEditing ? 'تعديل' : 'إنشاء'} عروض الأسعار`);
+
+      // 3. FINANCIAL LIMIT (discount)
+      const maxDiscount = items.length > 0 ? Math.max(...items.map(i => i.discount_percentage || 0)) : 0;
+      if (maxDiscount > 0) {
+        const ok = await verifyFinancialLimit('discount', maxDiscount);
+        if (!ok) throw new Error(`نسبة الخصم (${maxDiscount}%) تتجاوز الحد المسموح لك`);
+      }
+
+      // 4. TRANSFORM
       const header = {
         customer_id: data.customer_id,
         quotation_number: quotation?.quotation_number || generateQuotationNumber(),
@@ -117,39 +129,41 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         discount_percentage: item.discount_percentage,
         total_price: item.total_price,
       }));
-      if (isEditing) {
-        return await legacyQuotationsRepository.updateWithItems(quotation.id, header, itemsPayload);
-      }
-      const created = await legacyQuotationsRepository.create(header, itemsPayload);
-      return created.id;
-    },
-    onSuccess: (savedId) => {
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+
+      // 5. SUBMIT
+      const savedId = isEditing
+        ? await legacyQuotationsRepository.updateWithItems(quotation!.id, header, itemsPayload)
+        : (await legacyQuotationsRepository.create(header, itemsPayload)).id;
       setLastSavedId(savedId ?? quotation?.id ?? null);
-      reset(undefined, { keepValues: true });
-      toast({ title: isEditing ? "تم تحديث عرض السعر بنجاح" : "تم إنشاء عرض السعر بنجاح", description: "يمكنك الآن طباعة PDF" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      form.reset(form.getValues(), { keepValues: true });
+      toastHandlers.onSuccess();
     },
     onError: (error) => {
-      logErrorSafely('QuotationFormDialog', error);
-      const description = mapRepoError(error, getSafeErrorMessage(error)).message;
-      toast({ title: "حدث خطأ", description, variant: "destructive" });
+      const description = mapRepoError(error, '').message || undefined;
+      if (description) toastHandlers.onError(new Error(description));
+      else toastHandlers.onError(error);
     },
   });
 
-  const onSubmit = async (data: FormData) => {
-    const errors = validate();
-    if (errors.length > 0) {
-      toast({ title: "بيانات غير صحيحة", description: errors[0].message, variant: "destructive" });
-      return;
-    }
-    const action = isEditing ? 'edit' : 'create';
-    const hasPermission = await verifyPermissionOnServer('quotations', action);
-    if (!hasPermission) { toast({ title: "غير مصرح", description: `ليس لديك صلاحية ${isEditing ? 'تعديل' : 'إنشاء'} عروض الأسعار`, variant: "destructive" }); return; }
-    const maxDiscount = items.length > 0 ? Math.max(...items.map(i => i.discount_percentage || 0)) : 0;
-    if (maxDiscount > 0) { const ok = await verifyFinancialLimit('discount', maxDiscount); if (!ok) { toast({ title: "تجاوز الحد المسموح", description: `نسبة الخصم (${maxDiscount}%) تتجاوز الحد المسموح لك`, variant: "destructive" }); return; } }
-    mutation.mutate(data);
-  };
+  const { register, setValue, watch, formState: { isDirty } } = form;
 
+  const wizard = useFormWizard({ totalSteps: 3 });
+
+  // External state sync (line items + wizard)
+  useEffect(() => {
+    if (quotation) {
+      setDiscountAmount(Number(quotation.discount_amount) || 0);
+      setVatEnabled(Number(quotation.tax_amount) > 0);
+      loadItems(quotation.id);
+    } else {
+      resetItems();
+    }
+    wizard.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotation]);
 
   const Step1 = (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -174,7 +188,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     </div>
   );
 
-  const canPrint = Boolean(lastSavedId) && !isDirty && !mutation.isPending;
+  const canPrint = Boolean(lastSavedId) && !isDirty && !isSubmitting;
   const printButton = (
     <Button
       type="button"
@@ -217,7 +231,6 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     </div>
   );
 
-
   const wizardSteps = [
     { title: 'بيانات العميل', content: Step1 },
     { title: 'المنتجات', content: Step2 },
@@ -228,11 +241,11 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEditing ? 'تعديل عرض السعر' : 'عرض سعر جديد'}</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6">
           {Step1}{Step2}{Step3}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
-            <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إنشاء'}</Button>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إنشاء'}</Button>
           </div>
         </form>
       </DialogContent>
@@ -242,7 +255,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const mobileForm = (
     <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل عرض السعر' : 'عرض سعر جديد'}
       steps={wizardSteps} activeStep={wizard.currentStep} onNext={wizard.nextStep} onPrev={wizard.prevStep}
-      onSubmit={handleSubmit(onSubmit)} progress={wizard.progress} isSubmitting={mutation.isPending} submitLabel={isEditing ? 'تحديث' : 'إنشاء'} />
+      onSubmit={submit} progress={wizard.progress} isSubmitting={isSubmitting} submitLabel={isEditing ? 'تحديث' : 'إنشاء'} />
   );
 
   return (

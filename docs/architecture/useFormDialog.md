@@ -70,23 +70,40 @@ return (
 - [ ] Zero TS/ESLint regressions.
 - [ ] Vitest still green.
 
-## Migrated forms (Tier 1)
+## Migrated forms
 
-- `CategoryFormDialog`
-- `WarehouseFormDialog`
-- `SupplierFormDialog`
-- `ExpenseCategoryFormDialog`
+### Tier 1 (POC)
+`CategoryFormDialog`, `WarehouseFormDialog`, `SupplierFormDialog`, `ExpenseCategoryFormDialog`.
 
-## Pending (Tier 1 partial — wizard layer)
+### Tier 2 — Financial ✅
+`ExpenseFormDialog`, `PaymentFormDialog`, `JournalFormDialog`, `PurchaseOrderFormDialog`, `SalesOrderFormDialog`, `InvoiceFormDialog`, `QuotationFormDialog`.
 
-- `CustomerFormDialog` — wizard + draft + permission + duplicate check
-- `ProductFormDialog` — wizard + draft
+## Pattern: line items (Batch 2 rule)
 
-Both adopt `FormDialogFooter`/`FormFieldError` patterns where possible without disrupting the wizard.
+For documents with header + line items (`PurchaseOrder`, `SalesOrder`, `Invoice`, `Quotation`, `Journal`):
 
-## Pending (Tier 2 — Financial)
+- **Header** lives in `useFormDialog` (RHF + zod).
+- **Line items** live in a sibling `useState`/reducer hook (`useInvoiceItems`, `useQuotationItems`, …).
+- Items are merged into the payload **inside `mutationFn`**, never via the hook's `toPayload` alone.
+- Item reset on `entity` change happens in a separate `useEffect` driven by the entity id only — kept out of the lifecycle hook on purpose.
 
-`ExpenseFormDialog`, `PaymentFormDialog`, `InvoiceFormDialog`, `QuotationFormDialog`, `PurchaseOrderFormDialog`, `SalesOrderFormDialog`.
+## Pattern: pre-MUTATE discipline (Batch 3)
+
+`InvoiceFormDialog` / `QuotationFormDialog` enforce a deterministic chain inside `mutationFn`:
+
+```
+VALIDATE_ITEMS  →  SERVER_VALIDATE / PERMISSION / FINANCIAL_LIMIT  →  TRANSFORM  →  SUBMIT
+```
+
+Rules:
+- All branching (create vs update, permission, financial limit) happens inside `mutationFn`, never in the component layer.
+- Failures `throw` — `onError` (via `useMutationToast`) handles user feedback.
+- Side state like `lastSavedId` is set inside `mutationFn` after the SUBMIT step, then consumed by `onSuccess` siblings (print button, etc.).
+- The form is marked pristine in `onSuccess` via `form.reset(form.getValues(), { keepValues: true })` to enable post-save actions (e.g. PDF print) without re-opening the dialog.
+
+## Pattern: wizard exception
+
+Wizard-driven dialogs (`InvoiceFormDialog`, `QuotationFormDialog`, `CustomerFormDialog`, `ProductFormDialog`) keep wizard navigation (`useFormWizard`) and draft persistence (`useFormDraft`) external. The lifecycle hook owns submission only.
 
 ## Pending (Tier 3 — Misc)
 
