@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportsQueryService } from '@/lib/queries/reportsQueryService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -15,41 +15,10 @@ interface InventoryFlowReportProps {
 export function InventoryFlowReport({ startDate, endDate }: InventoryFlowReportProps) {
   const { data, isLoading } = useQuery({
     queryKey: ['inventory-flow-report', startDate, endDate],
-    queryFn: async () => {
-      const startStr = startDate.toISOString();
-      const endStr = endDate.toISOString();
-
-      const [movementsRes, productsRes, stockRes] = await Promise.all([
-        supabase
-          .from('stock_movements')
-          .select(`
-            id,
-            product_id,
-            quantity,
-            movement_type,
-            created_at,
-            products(name)
-          `)
-          .gte('created_at', startStr)
-          .lte('created_at', endStr)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('products')
-          .select('id, name, min_stock, is_active')
-          .eq('is_active', true),
-        supabase
-          .from('product_stock')
-          .select('product_id, quantity'),
-      ]);
-
-      return {
-        movements: movementsRes.data || [],
-        products: productsRes.data || [],
-        stock: stockRes.data || [],
-      };
-    },
+    queryFn: () => reportsQueryService.getInventoryFlowInputs(startDate, endDate),
     staleTime: 60000,
   });
+
 
   const stats = useMemo(() => {
     if (!data) return null;
@@ -120,7 +89,7 @@ export function InventoryFlowReport({ startDate, endDate }: InventoryFlowReportP
     const productMovements: Record<string, { name: string; in: number; out: number }> = {};
 
     data.movements.forEach(m => {
-      const productName = (m as { products?: { name: string } | null }).products?.name || 'منتج غير معروف';
+      const productName = m.products?.name || 'منتج غير معروف';
       if (!productMovements[m.product_id]) {
         productMovements[m.product_id] = { name: productName, in: 0, out: 0 };
       }

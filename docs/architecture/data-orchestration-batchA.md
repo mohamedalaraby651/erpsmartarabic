@@ -329,3 +329,137 @@ Per the plan's decision table:
 **Recommended Step 3 outcome: 3A with one explicit caveat.** Proceed to `reportsQueryService` (Step 2) — the Query Layer hypothesis is validated where reads are genuinely composed (joins, aggregation, multi-aggregate id-set composition). **Caveat:** every candidate file for Step 2 must first be audited against existing repo methods exactly the way File 3 was audited here; any file whose "join" disappears under scrutiny belongs in Reuse, not the Query Layer. Inventory accuracy is the binding constraint, not Query Layer scope.
 
 **Step 2 is not auto-started.** Per the hard rules, this requires explicit review and approval before any new file is touched.
+
+## Phase A2.5 — Step 2 Results (`reportsQueryService`)
+
+### Scope executed
+6 reports-domain files. Read paths only.
+
+### File outcomes (all migrated via QueryService)
+
+| File | Query method | Composition |
+|---|---|---|
+| `src/components/reports/AgingReport.tsx` | `listUnpaidInvoicesWithCustomer()` | `invoices` × `customers` join, `payment_status != 'paid'` |
+| `src/components/reports/GeographicReport.tsx` | `getGeographicReportInputs()` | Parallel: `customers` + `invoices` × `customers(governorate)` |
+| `src/components/reports/IncomeStatementReport.tsx` | `getIncomeStatementInputs(start,end)` | 4 parallel period reads: `invoices`, `purchase_orders`, `expenses` × `expense_categories`, `payments` |
+| `src/components/reports/InventoryFlowReport.tsx` | `getInventoryFlowInputs(start,end)` | 3 parallel reads: `stock_movements` × `products` + active `products` + `product_stock` |
+| `src/components/reports/ProfitabilityReport.tsx` | `getProfitabilityInputs(start,end)` | 3 parallel period reads: `invoices`, `purchase_orders`, `expenses` |
+| `src/components/reports/TrialBalanceReport.tsx` | `getTrialBalanceInputs(asOfDate)` | Parallel: `chart_of_accounts` (active) + `journal_entries` × `journals!inner` (posted, on/before date) |
+
+Also consolidated TrialBalance from 2 `useQuery` hooks into 1 (single composed contract instead of two loosely related reads).
+
+### Files added / changed
+
+| Path | Change |
+|---|---|
+| `src/lib/queries/reportsQueryService.ts` | **New** — 6 methods, 6 exported view-input interfaces. |
+| 6 report components above | Edited — query swap, `supabase` import removed. |
+| `src/lib/repositories/reportsRepository.ts` | **Untouched** (zero changes). |
+
+### Measurement vs. Step 2 gate
+
+**A. Complexity reduction (3/3 target was ≥2/3 — passed 6/6)**
+
+| File | `supabase.from()` before → after | Fetch body LOC before → after |
+|---|---:|---:|
+| AgingReport | 1 → 0 | 16 → 1 |
+| GeographicReport | 2 → 0 | 16 → 1 |
+| IncomeStatementReport | 4 → 0 | 42 → 1 |
+| InventoryFlowReport | 3 → 0 | 28 → 1 |
+| ProfitabilityReport | 3 → 0 | 22 → 1 |
+| TrialBalanceReport | 2 → 0 | 27 → 1 (and merged 2 hooks → 1) |
+
+**Total `supabase.from()` removed: 15.**
+
+**B. QueryService quality**
+
+| Metric | Value | Pass |
+|---|---:|:-:|
+| Methods that are pure pass-throughs to one table with no join/aggregation | 0 | ✅ |
+| Methods duplicating an existing `reportsRepository` read | 0 (only existing read is `cashFlow`) | ✅ |
+| Methods containing business validation / permission / calculation | 0 (all KPI math stays in component `useMemo`) | ✅ |
+| Methods >60 LOC | 1 (`getIncomeStatementInputs` = 50 LOC, under threshold) | ✅ |
+| Max tables touched per method | 4 (income statement: invoices/purchase_orders/expenses/expense_categories/payments) | ✅ at threshold — flagged for Read Model Pressure review |
+
+**C. Duplication audit**
+
+| Check | Value | Pass |
+|---|---:|:-:|
+| Two paths returning same shape (repo + query) | 0 | ✅ |
+| Copy-pasted filter logic between repo and query | 0 | ✅ |
+
+**D. Architectural integrity**
+
+| Check | Value | Pass |
+|---|---:|:-:|
+| Repository public API changes | 0 | ✅ |
+| New repositories | 0 | ✅ |
+| Business logic moved into query service | 0 | ✅ |
+| New exception categories | 0 | ✅ |
+| Audit hits removed | 15 | ✅ |
+| `queryKeys.ts` top-level scopes added | 0 | ✅ |
+
+**E. Quality gates**
+
+| Check | Result |
+|---|---|
+| Vitest | 1187 / 1187 ✅ |
+| `tsc --noEmit` | clean ✅ |
+| `scripts/audits/check-data-access.sh` baseline | 176 → 161 unjustified hits (15 removed by this step, no regressions) |
+
+### Read Model Pressure Check
+
+`getIncomeStatementInputs` joins/parallel-reads **5 distinct tables** (`invoices`, `purchase_orders`, `expenses`, `expense_categories`, `payments`). This is at the soft threshold. Recommendation flag: if a future iteration needs to add a 6th table or compose this read with another report, escalate to a DB view or RPC rather than growing the query service method. Not blocking for Step 2.
+
+## Phase A2.5 — Step 3 Decision (customer domain)
+
+### Candidates audited
+
+| File | Existing repo read covers it? | Composition profile | Verdict |
+|---|---|---|---|
+| `src/components/reports/InactiveCustomersReport.tsx` | No — `customerRepository.findAll` doesn't accept the `last_transaction_date IS NULL OR < cutoff` filter | **Single-table** read on `customers`, no join, no aggregation | ⛔ **Does not qualify for Query Layer** (Shadow Repository) |
+| `src/components/customers/details/CustomerPinnedNote.tsx` | No — `customerRepository` has `createNote` but no read methods on `customer_notes` | **Single-table** read on `customer_notes`, no join, no aggregation | ⛔ **Does not qualify for Query Layer** (Shadow Repository) |
+
+### Decision: outcome **3B for the customer domain**
+
+Neither file passes the "no pure pass-throughs" rule. Both are textbook **Extend** cases:
+- `customerRepository.findInactive(cutoffDate)` — natural addition next to `findActiveSafe()` and `findAll`.
+- `customerRepository.listNotes(customerId)` — natural addition next to existing `createNote(...)`; mirrors the `supplierRepository.listNotes` pattern that already exists.
+
+Because A2.5 hard rule #1 forbids repository changes, these files **cannot be migrated in this phase**. They are explicitly deferred to **Phase A3 (Extend cluster)**.
+
+### Why this is the right outcome (not a failure)
+
+The same discipline that halted `SupplierRatingTab.tsx` in Step 1 — *don't build a Query Layer method that's actually a Repository read* — applies here. Step 3 found two more files of the same class. This validates the contract: the Query Layer earns its place where reads are genuinely composed (Steps 1 & 2: 8 / 9 migrated files all join or parallel-fetch); for pure single-table reads, the Repository remains the correct home.
+
+## Phase A2.5 — Closeout summary
+
+| Step | Result | Files | Methods added | Repo changes |
+|---|---|---:|---:|---:|
+| Step 1 — `supplierQueryService` POC | ✅ Passed all gates; 1 file rerouted to Reuse via Stop Condition | 3 (2 via query, 1 via repo) | 2 | 0 |
+| Step 2 — `reportsQueryService` | ✅ Passed all gates | 6 | 6 | 0 |
+| Step 3 — Customer domain decision | 🟡 Outcome 3B — defer 2 files to A3 Extend | 0 | 0 | 0 |
+| **Total A2.5** | **9 files migrated, 8 via Query Layer, 1 via Reuse, 2 deferred** | **9** | **8** | **0** |
+
+| Audit script unjustified hits | Before A2.5 | After A2.5 |
+|---|---:|---:|
+| | 181 (post-A2) | **161** (-20) |
+
+| Vitest | tsc | Repository API changes | New repositories | New exception categories |
+|---|---|---:|---:|---:|
+| 1187 / 1187 | clean | 0 | 0 | 0 |
+
+### Validated architectural claims
+
+1. **Query Layer earns its cost where reads are composed.** Steps 1 & 2 delivered an average ~20 LOC of fetch+shape code removed per file, with 0 business logic leaked into the layer and 0 duplication of repository reads.
+2. **Repository Layer remains the right home for single-table reads.** Two halt-style decisions (`SupplierRatingTab`, customer domain) prevented the Query Layer from turning into a Shadow Repository.
+3. **Light CQRS (Repository=write/atomic, QueryService=composed read) is sustainable** without the cost of full CQRS, factories, or cache topology changes.
+
+### Recommended next phase
+
+**Phase A3 — Extend cluster (Repository-side):**
+- `customerRepository.findInactive(cutoffDate)` → migrate `InactiveCustomersReport.tsx`
+- `customerRepository.listNotes(customerId)` → migrate `CustomerPinnedNote.tsx`
+- Optionally widen `supplierRelationsRepo.findActivities` contract review for parity with the activity composition now living in `supplierQueryService.listActivity`. (Note: this is a *contract widening* discussion; current `findActivities` is narrower than the activity tab needs, which is precisely why the query service exists.)
+
+A3 is **not auto-started**. Awaiting explicit approval.

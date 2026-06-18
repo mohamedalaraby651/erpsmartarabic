@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportsQueryService } from '@/lib/queries/reportsQueryService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -8,27 +8,14 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { MapPin, Users, TrendingUp } from 'lucide-react';
 
 export function GeographicReport() {
-  const { data: customers, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['geographic-report'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('customers')
-        .select('id, name, governorate, current_balance, is_active');
-      return data || [];
-    },
+    queryFn: () => reportsQueryService.getGeographicReportInputs(),
     staleTime: 60000,
   });
 
-  const { data: invoices } = useQuery({
-    queryKey: ['geographic-invoices'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('invoices')
-        .select('total_amount, customer_id, customers(governorate)');
-      return data || [];
-    },
-    staleTime: 60000,
-  });
+  const customers = data?.customers;
+  const invoices = data?.invoices;
 
   const chartData = useMemo(() => {
     if (!customers) return [];
@@ -43,7 +30,7 @@ export function GeographicReport() {
     });
 
     invoices?.forEach(inv => {
-      const gov = (inv as { customers?: { governorate?: string } | null }).customers?.governorate || 'غير محدد';
+      const gov = inv.customers?.governorate || 'غير محدد';
       const entry = govMap.get(gov) || { count: 0, balance: 0, sales: 0 };
       entry.sales += Number(inv.total_amount || 0);
       govMap.set(gov, entry);
@@ -54,6 +41,7 @@ export function GeographicReport() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 15);
   }, [customers, invoices]);
+
 
   if (isLoading) {
     return <div className="space-y-4">

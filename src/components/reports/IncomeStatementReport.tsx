@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportsQueryService } from '@/lib/queries/reportsQueryService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -22,55 +22,10 @@ interface IncomeStatementSection {
 export function IncomeStatementReport({ startDate, endDate }: IncomeStatementReportProps) {
   const { data, isLoading } = useQuery({
     queryKey: ['income-statement', startDate, endDate],
-    queryFn: async () => {
-      const startStr = startDate.toISOString().split('T')[0];
-      const endStr = endDate.toISOString().split('T')[0];
-
-      // Fetch all relevant data in parallel
-      const [invoicesRes, purchasesRes, expensesRes, paymentsRes] = await Promise.all([
-        // Sales Revenue
-        supabase
-          .from('invoices')
-          .select('total_amount, subtotal, tax_amount, discount_amount, status')
-          .gte('created_at', startStr)
-          .lte('created_at', endStr)
-          .neq('status', 'draft')
-          .neq('status', 'cancelled'),
-        // Cost of Goods Sold (from purchase orders)
-        supabase
-          .from('purchase_orders')
-          .select('total_amount, subtotal, tax_amount, status')
-          .gte('created_at', startStr)
-          .lte('created_at', endStr)
-          .eq('status', 'completed'),
-        // Operating Expenses (grouped by category)
-        supabase
-          .from('expenses')
-          .select(`
-            amount,
-            status,
-            expense_categories (name)
-          `)
-          .gte('expense_date', startStr)
-          .lte('expense_date', endStr)
-          .eq('status', 'approved'),
-        // Returns and Refunds (negative payments or credit notes)
-        supabase
-          .from('payments')
-          .select('amount, payment_method')
-          .gte('payment_date', startStr)
-          .lte('payment_date', endStr),
-      ]);
-
-      return {
-        invoices: invoicesRes.data || [],
-        purchases: purchasesRes.data || [],
-        expenses: expensesRes.data || [],
-        payments: paymentsRes.data || [],
-      };
-    },
+    queryFn: () => reportsQueryService.getIncomeStatementInputs(startDate, endDate),
     staleTime: 60000,
   });
+
 
   const incomeStatement = useMemo(() => {
     if (!data) return null;
@@ -91,7 +46,7 @@ export function IncomeStatementReport({ startDate, endDate }: IncomeStatementRep
     // Operating Expenses by Category
     const expensesByCategory = new Map<string, number>();
     data.expenses.forEach((exp) => {
-      const categoryName = (exp.expense_categories as { name: string } | null)?.name || 'مصروفات عامة';
+      const categoryName = exp.expense_categories?.name || 'مصروفات عامة';
       const current = expensesByCategory.get(categoryName) || 0;
       expensesByCategory.set(categoryName, current + (Number(exp.amount) || 0));
     });

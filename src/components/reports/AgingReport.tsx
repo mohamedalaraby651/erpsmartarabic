@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportsQueryService } from '@/lib/queries/reportsQueryService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -26,25 +26,10 @@ const agingBuckets: AgingBucket[] = [
 export function AgingReport() {
   const { data: invoices, isLoading } = useQuery({
     queryKey: ['aging-report'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('invoices')
-        .select(`
-          id,
-          invoice_number,
-          total_amount,
-          paid_amount,
-          created_at,
-          due_date,
-          payment_status,
-          customers(id, name, phone)
-        `)
-        .neq('payment_status', 'paid')
-        .order('created_at', { ascending: true });
-      return data || [];
-    },
+    queryFn: () => reportsQueryService.listUnpaidInvoicesWithCustomer(),
     staleTime: 60000,
   });
+
 
   interface AgingInvoice {
     id: string;
