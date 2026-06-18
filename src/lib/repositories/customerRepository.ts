@@ -321,4 +321,73 @@ export const customerRepository = {
     });
     if (error) throw error;
   },
+
+  // ============================================
+  // Analytical reads (RPC-backed) — Batch A1
+  // ============================================
+  async getAging(customerId: string): Promise<CustomerAgingResult> {
+    const { data, error } = await supabase.rpc('get_customer_aging', { _customer_id: customerId });
+    if (error) throw error;
+    return (data ?? {}) as unknown as CustomerAgingResult;
+  },
+
+  async getHealthScore(customerId: string): Promise<CustomerHealthResult> {
+    const { data, error } = await supabase.rpc('get_customer_health_score', { _customer_id: customerId });
+    if (error) throw error;
+    return (data ?? {}) as unknown as CustomerHealthResult;
+  },
+
+  async getStatement(
+    customerId: string,
+    opts: { dateFrom?: string; dateTo?: string } = {}
+  ): Promise<StatementRow[]> {
+    const params: Record<string, unknown> = { _customer_id: customerId };
+    if (opts.dateFrom) params._date_from = opts.dateFrom;
+    if (opts.dateTo) params._date_to = opts.dateTo;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await supabase.rpc('get_customer_statement', params as any);
+    if (error) throw error;
+    return (data ?? []).map((row: Record<string, unknown>) => ({
+      entry_date: String(row.entry_date ?? ''),
+      entry_type: String(row.entry_type ?? ''),
+      reference: String(row.reference ?? ''),
+      debit: Number(row.debit ?? 0),
+      credit: Number(row.credit ?? 0),
+      running_balance: Number(row.running_balance ?? 0),
+      status: String(row.status ?? ''),
+    }));
+  },
 };
+
+// ============================================
+// Shared result shapes (Batch A1)
+// ============================================
+export interface AgingBucket { amount: number; count: number }
+export interface CustomerAgingResult {
+  bucket_0_30?: AgingBucket;
+  bucket_31_60?: AgingBucket;
+  bucket_61_90?: AgingBucket;
+  bucket_90_plus?: AgingBucket;
+  total_outstanding?: number;
+  total_count?: number;
+}
+export interface CustomerHealthResult {
+  score: number;
+  grade: 'excellent' | 'good' | 'warning' | 'critical';
+  recommendations: string[];
+  credit_score?: number;
+  dso_score?: number;
+  aging_score?: number;
+  dso?: number | null;
+  total_outstanding?: number;
+  overdue_90?: number;
+}
+export interface StatementRow {
+  entry_date: string;
+  entry_type: string;
+  reference: string;
+  debit: number;
+  credit: number;
+  running_balance: number;
+  status: string;
+}
