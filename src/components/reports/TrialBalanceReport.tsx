@@ -1,14 +1,11 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { reportsQueryService } from '@/lib/queries/reportsQueryService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Scale, AlertCircle, CheckCircle2 } from 'lucide-react';
-import type { Database } from '@/integrations/supabase/types';
-
-type ChartOfAccount = Database['public']['Tables']['chart_of_accounts']['Row'];
 
 interface TrialBalanceReportProps {
   asOfDate: Date;
@@ -39,39 +36,14 @@ const accountTypeColors: Record<string, string> = {
 };
 
 export function TrialBalanceReport({ asOfDate }: TrialBalanceReportProps) {
-  const { data: accounts, isLoading: loadingAccounts } = useQuery({
-    queryKey: ['chart-of-accounts-balance'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('chart_of_accounts')
-        .select('*')
-        .eq('is_active', true)
-        .order('code');
-      if (error) throw error;
-      return data as ChartOfAccount[];
-    },
+  const { data, isLoading } = useQuery({
+    queryKey: ['trial-balance', asOfDate],
+    queryFn: () => reportsQueryService.getTrialBalanceInputs(asOfDate),
   });
 
-  const { data: journalEntries, isLoading: loadingEntries } = useQuery({
-    queryKey: ['journal-entries-for-trial', asOfDate],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('journal_entries')
-        .select(`
-          account_id,
-          debit_amount,
-          credit_amount,
-          journals!inner (
-            is_posted,
-            journal_date
-          )
-        `)
-        .eq('journals.is_posted', true)
-        .lte('journals.journal_date', asOfDate.toISOString().split('T')[0]);
-      if (error) throw error;
-      return data;
-    },
-  });
+  const accounts = data?.accounts;
+  const journalEntries = data?.entries;
+
 
   const trialBalanceData = useMemo(() => {
     if (!accounts || !journalEntries) return [];
