@@ -34,11 +34,7 @@ const bucketConfig = [
 const SupplierAgingReport = ({ supplierId }: SupplierAgingReportProps) => {
   const { data: aging, isLoading } = useQuery({
     queryKey: ['supplier-aging-report', supplierId],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_supplier_aging', { _supplier_id: supplierId });
-      if (error) throw error;
-      return data as unknown as AgingData;
-    },
+    queryFn: () => supplierRepository.getAging(supplierId) as Promise<AgingData>,
   });
 
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
