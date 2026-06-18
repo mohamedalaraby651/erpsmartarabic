@@ -46,7 +46,7 @@ export function IncomeStatementReport({ startDate, endDate }: IncomeStatementRep
     // Operating Expenses by Category
     const expensesByCategory = new Map<string, number>();
     data.expenses.forEach((exp) => {
-      const categoryName = (exp.expense_categories as { name: string } | null)?.name || 'مصروفات عامة';
+      const categoryName = exp.expense_categories?.name || 'مصروفات عامة';
       const current = expensesByCategory.get(categoryName) || 0;
       expensesByCategory.set(categoryName, current + (Number(exp.amount) || 0));
     });
