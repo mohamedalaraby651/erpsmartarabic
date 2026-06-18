@@ -203,24 +203,60 @@ export const supplierRepository = {
   },
 
   // ============================================
-  // Statement / activity (RPC-backed)
+  // Analytical reads (RPC-backed) — Batch A1
   // ============================================
-  async getStatement(supplierId: string) {
-    const { data, error } = await supabase.rpc('get_supplier_statement', {
-      _supplier_id: supplierId,
-    });
+  async getAging(supplierId: string): Promise<SupplierAgingResult> {
+    const { data, error } = await supabase.rpc('get_supplier_aging', { _supplier_id: supplierId });
     if (error) throw error;
-    return (data ?? []) as Array<{
-      entry_date: string;
-      entry_type: string;
-      reference: string;
-      debit: number;
-      credit: number;
-      running_balance: number;
-      status: string;
-    }>;
+    return (data ?? {}) as unknown as SupplierAgingResult;
+  },
+
+  async getHealthScore(supplierId: string): Promise<SupplierHealthResult> {
+    const { data, error } = await supabase.rpc('get_supplier_health_score', { _supplier_id: supplierId });
+    if (error) throw error;
+    return (data ?? {}) as unknown as SupplierHealthResult;
+  },
+
+  async getStatement(
+    supplierId: string,
+    opts: { dateFrom?: string; dateTo?: string } = {}
+  ): Promise<SupplierStatementRow[]> {
+    const params: Record<string, unknown> = { _supplier_id: supplierId };
+    if (opts.dateFrom) params._date_from = opts.dateFrom;
+    if (opts.dateTo) params._date_to = opts.dateTo;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await supabase.rpc('get_supplier_statement', params as any);
+    if (error) throw error;
+    return (data ?? []) as SupplierStatementRow[];
   },
 };
+
+// ============================================
+// Shared result shapes (Batch A1)
+// ============================================
+export interface SupplierAgingBucket { amount: number; count: number }
+export interface SupplierAgingResult {
+  bucket_0_30?: SupplierAgingBucket;
+  bucket_31_60?: SupplierAgingBucket;
+  bucket_61_90?: SupplierAgingBucket;
+  bucket_90_plus?: SupplierAgingBucket;
+  total_outstanding?: number;
+  total_count?: number;
+}
+export interface SupplierHealthResult {
+  score: number;
+  grade: 'excellent' | 'good' | 'warning' | 'critical';
+  recommendations: string[];
+}
+export interface SupplierStatementRow {
+  entry_date: string;
+  entry_type: string;
+  reference: string;
+  debit: number;
+  credit: number;
+  running_balance: number;
+  status: string;
+}
 
 // ============================================
 // Lightweight pickers (for Select/Combobox)
