@@ -36,11 +36,12 @@ for f in snapshot-report.json dependency-report.json component-report.json route
   if [ ! -f "$TMP/run1/$f" ] || [ ! -f "$TMP/run2/$f" ]; then
     echo "  MISSING  $f"; FAIL=1; continue
   fi
-  if diff -q "$TMP/run1/$f" "$TMP/run2/$f" >/dev/null; then
+  H1=$(sha256sum "$TMP/run1/$f" | awk '{print $1}')
+  H2=$(sha256sum "$TMP/run2/$f" | awk '{print $1}')
+  if [ "$H1" = "$H2" ]; then
     echo "  OK       $f"
   else
-    echo "  NON-DET  $f"
-    diff "$TMP/run1/$f" "$TMP/run2/$f" | head -40
+    echo "  NON-DET  $f  ($H1 vs $H2)"
     FAIL=1
   fi
 done
