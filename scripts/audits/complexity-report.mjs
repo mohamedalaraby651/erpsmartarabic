@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // scripts/audits/complexity-report.mjs
-// UX-0: Cyclomatic complexity / maintainability via ts-complex.
-import { execFileSync } from "node:child_process";
+// UX-0: Heuristic cyclomatic complexity + maintainability proxy.
+// Counts decision points per file as a deterministic, dependency-free proxy
+// (per-function precision is deferred to a real tool in UX-1).
 import { mkdirSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,28 +25,21 @@ function walk(dir, out = []) {
   return out;
 }
 
+const DECISION = /\b(if|else if|case|for|while|do|catch|\?\?|\?\.|&&|\|\|)\b|\?[^:]+:/g;
+const FN_HEAD = /\b(function\b|=>|\bmethod\b)/g;
+
 const files = walk(SRC);
 const rows = [];
-
 for (const f of files) {
-  try {
-    const raw = execFileSync("bunx", ["ts-complex", "cyclomatic", f], {
-      cwd: ROOT, encoding: "utf8", maxBuffer: 8 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"],
-    });
-    // ts-complex prints lines; parse numbers
-    const nums = [...raw.matchAll(/\b(\d+)\b/g)].map(m => +m[1]);
-    const max = nums.length ? Math.max(...nums) : 0;
-    const sum = nums.reduce((a, b) => a + b, 0);
-    const code = readFileSync(f, "utf8");
-    const loc = code.split("\n").length;
-    rows.push({ file: relative(ROOT, f), loc, maxCyclomatic: max, sumCyclomatic: sum });
-  } catch {
-    // skip files ts-complex cannot parse
-  }
+  const code = readFileSync(f, "utf8");
+  const decisions = (code.match(DECISION) ?? []).length;
+  const fns = Math.max(1, (code.match(FN_HEAD) ?? []).length);
+  const loc = code.split("\n").length;
+  const fileCC = 1 + decisions;             // file-level total CC
+  const perFnCC = Math.max(1, Math.round(decisions / fns) + 1);
+  rows.push({ file: relative(ROOT, f), loc, fileCyclomatic: fileCC, avgFnCyclomatic: perFnCC });
 }
-
 rows.sort((a, b) => a.file.localeCompare(b.file));
-const cycMax = rows.map(r => r.maxCyclomatic).sort((a, b) => a - b);
 function pct(arr, p) { if (!arr.length) return 0; const i = Math.min(arr.length - 1, Math.floor((p / 100) * arr.length)); return arr[i]; }
 
 // crude maintainability index proxy: 171 − 5.2·ln(volume) − 0.23·CC − 16.2·ln(loc)
