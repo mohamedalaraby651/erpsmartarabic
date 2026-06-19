@@ -1,21 +1,15 @@
 /**
- * Canonical Button — UX-1A primitive pilot.
+ * Canonical Button — UX-1C promoted.
  *
- * Purpose
- *   First canonical component built strictly on design tokens. It exercises
- *   every token category (colors, typography, radius, motion, elevation)
- *   so we can validate the token contract before scaling to the full
- *   primitive set in UX-1C.
+ * @canonicalState Canonical
+ * @adr ADR-0003
+ * @since UX-1A
  *
- * Rules
- *   - All visual properties derive from CSS variables (semantic tokens).
- *   - No hardcoded HSL/HEX/RGB or pixel radii.
- *   - API is intentionally a strict superset of `shadcn/ui` Button so the
- *     migration path from `src/components/ui/button` is a drop-in import
- *     swap once the rest of the system catches up.
- *
- * Lifecycle: Candidate → promoted to Canonical at end of UX-1A.
- * See: docs/architecture/CANONICAL_COMPONENT_CRITERIA.md
+ * Notes
+ *   - Token-only styling via semantic Tailwind classes.
+ *   - RTL-correct: uses logical `gap` only; no physical sides.
+ *   - Focus-visible ring inherits `--ring`.
+ *   - Promoted from Candidate after passing scoring rubric ≥ 90.
  */
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
