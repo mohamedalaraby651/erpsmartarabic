@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-19",
+  "baselineVersion": "UX-1",
+  "rubric": [
+    {
+      "key": "a11y",
+      "weight": 20,
+      "pass": 16
+    },
+    {
+      "key": "api",
+      "weight": 15,
+      "pass": 12
+    },
+    {
+      "key": "tests",
+      "weight": 15,
+      "pass": 11
+    },
+    {
+      "key": "bundle",
+      "weight": 10,
+      "pass": 7
+    },
+    {
+      "key": "rtl",
+      "weight": 10,
+      "pass": 8
+    },
+    {
+      "key": "tokens",
+      "weight": 10,
+      "pass": 8
+    },
+    {
+      "key": "keyboard",
+      "weight": 10,
+      "pass": 8
+    },
+    {
+      "key": "docs",
+      "weight": 10,
+      "pass": 7
+    }
+  ],
+  "count": 22,
+  "verified": 6,
+  "readyForPromotion": 0,
+  "blocked": 16,
+  "averageTotal": 88.1,
+  "primitives": [
+    {
+      "file": "src/ui/primitives/Avatar.tsx",
+      "name": "Avatar",
+      "sizeBytes": 1483,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 12,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 84,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Badge.tsx",
+      "name": "Badge",
+      "sizeBytes": 1255,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 12,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 8
+      },
+      "total": 80,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Button.tsx",
+      "name": "Button",
+      "sizeBytes": 2907,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 10
+      },
+      "total": 93,
+      "eligibleForCanonical": true,
+      "promotion": "verified"
+    },
+    {
+      "file": "src/ui/primitives/Card.tsx",
+      "name": "Card",
+      "sizeBytes": 2053,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 12,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 8
+      },
+      "total": 83,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Checkbox.tsx",
+      "name": "Checkbox",
+      "sizeBytes": 1390,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 20,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 92,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Dialog.tsx",
+      "name": "Dialog",
+      "sizeBytes": 3459,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 88,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/FormField.tsx",
+      "name": "FormField",
+      "sizeBytes": 1479,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 9
+      },
+      "total": 88,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/IconButton.tsx",
+      "name": "IconButton",
+      "sizeBytes": 1802,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 20,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 9
+      },
+      "total": 96,
+      "eligibleForCanonical": true,
+      "promotion": "verified"
+    },
+    {
+      "file": "src/ui/primitives/Input.tsx",
+      "name": "Input",
+      "sizeBytes": 1107,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 20,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 95,
+      "eligibleForCanonical": true,
+      "promotion": "verified"
+    },
+    {
+      "file": "src/ui/primitives/Label.tsx",
+      "name": "Label",
+      "sizeBytes": 924,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 15,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 9
+      },
+      "total": 91,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/RadioGroup.tsx",
+      "name": "RadioGroup",
+      "sizeBytes": 1486,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 20,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 92,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Select.tsx",
+      "name": "Select",
+      "sizeBytes": 3101,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 91,
+      "eligibleForCanonical": true,
+      "promotion": "verified"
+    },
+    {
+      "file": "src/ui/primitives/Separator.tsx",
+      "name": "Separator",
+      "sizeBytes": 846,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 12,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 84,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Sheet.tsx",
+      "name": "Sheet",
+      "sizeBytes": 2194,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 9
+      },
+      "total": 92,
+      "eligibleForCanonical": true,
+      "promotion": "verified"
+    },
+    {
+      "file": "src/ui/primitives/Skeleton.tsx",
+      "name": "Skeleton",
+      "sizeBytes": 600,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 9
+      },
+      "total": 88,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Spinner.tsx",
+      "name": "Spinner",
+      "sizeBytes": 1003,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 8
+      },
+      "total": 87,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Switch.tsx",
+      "name": "Switch",
+      "sizeBytes": 1489,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 12,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 9
+      },
+      "total": 92,
+      "eligibleForCanonical": true,
+      "promotion": "verified"
+    },
+    {
+      "file": "src/ui/primitives/Table.tsx",
+      "name": "Table",
+      "sizeBytes": 2896,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 12,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 9
+      },
+      "total": 81,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Tabs.tsx",
+      "name": "Tabs",
+      "sizeBytes": 1983,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 16,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 88,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Textarea.tsx",
+      "name": "Textarea",
+      "sizeBytes": 1104,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 20,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 92,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Toast.tsx",
+      "name": "Toast",
+      "sizeBytes": 1198,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 12,
+        "api": 15,
+        "tests": 6,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 6,
+        "docs": 9
+      },
+      "total": 78,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    },
+    {
+      "file": "src/ui/primitives/Tooltip.tsx",
+      "name": "Tooltip",
+      "sizeBytes": 974,
+      "declaredState": "Canonical",
+      "dimensions": {
+        "a11y": 12,
+        "api": 15,
+        "tests": 9,
+        "bundle": 10,
+        "rtl": 10,
+        "tokens": 10,
+        "keyboard": 10,
+        "docs": 8
+      },
+      "total": 84,
+      "eligibleForCanonical": false,
+      "promotion": "blocked"
+    }
+  ]
+}

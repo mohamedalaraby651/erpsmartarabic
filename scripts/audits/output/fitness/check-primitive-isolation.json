@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-primitive-isolation",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 30,
+  "violations": [],
+  "pass": true
+}

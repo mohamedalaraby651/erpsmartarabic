@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-canonical-lifecycle-tags",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 22,
+  "violations": [],
+  "pass": true
+}

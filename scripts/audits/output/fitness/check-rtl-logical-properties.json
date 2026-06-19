@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-rtl-logical-properties",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 23,
+  "violations": [],
+  "pass": true
+}
