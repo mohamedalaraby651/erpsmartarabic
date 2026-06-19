@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-datagrid-domain-isolation",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 3,
+  "violations": [],
+  "pass": true
+}
