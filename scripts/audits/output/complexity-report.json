@@ -1,14 +1,136 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "filesAnalyzed": 0,
+  "method": "heuristic decision-point count (UX-0 proxy)",
+  "filesAnalyzed": 873,
   "cyclomatic": {
-    "max": 0,
-    "p50": 0,
-    "p90": 0,
-    "p95": 0,
-    "p99": 0
+    "max": 86,
+    "p50": 7,
+    "p90": 23,
+    "p95": 29,
+    "p99": 48
   },
-  "maintainabilityIndexAvg": 0,
-  "top20MostComplex": []
+  "maintainabilityIndexAvg": 90.19,
+  "top20MostComplex": [
+    {
+      "file": "src/lib/pdfGenerator.ts",
+      "loc": 627,
+      "fileCyclomatic": 86,
+      "avgFnCyclomatic": 12
+    },
+    {
+      "file": "src/pages/customers/CustomerDetailsPage.tsx",
+      "loc": 855,
+      "fileCyclomatic": 82,
+      "avgFnCyclomatic": 28
+    },
+    {
+      "file": "src/lib/arabicFont.ts",
+      "loc": 547,
+      "fileCyclomatic": 72,
+      "avgFnCyclomatic": 5
+    },
+    {
+      "file": "src/lib/repositories/logisticsRepository.ts",
+      "loc": 373,
+      "fileCyclomatic": 58,
+      "avgFnCyclomatic": 58
+    },
+    {
+      "file": "src/components/admin/useRestoreBackup.ts",
+      "loc": 437,
+      "fileCyclomatic": 56,
+      "avgFnCyclomatic": 56
+    },
+    {
+      "file": "src/components/customers/list/CustomerListCard.tsx",
+      "loc": 544,
+      "fileCyclomatic": 56,
+      "avgFnCyclomatic": 29
+    },
+    {
+      "file": "src/hooks/usePermissions.ts",
+      "loc": 228,
+      "fileCyclomatic": 52,
+      "avgFnCyclomatic": 27
+    },
+    {
+      "file": "src/components/mobile/FABMenu.tsx",
+      "loc": 340,
+      "fileCyclomatic": 50,
+      "avgFnCyclomatic": 50
+    },
+    {
+      "file": "src/lib/repositories/customerRepository.ts",
+      "loc": 394,
+      "fileCyclomatic": 48,
+      "avgFnCyclomatic": 48
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "loc": 492,
+      "fileCyclomatic": 47,
+      "avgFnCyclomatic": 47
+    },
+    {
+      "file": "src/pages/reports/KPIDashboard.tsx",
+      "loc": 339,
+      "fileCyclomatic": 45,
+      "avgFnCyclomatic": 45
+    },
+    {
+      "file": "src/components/settings/BackupTab.tsx",
+      "loc": 467,
+      "fileCyclomatic": 44,
+      "avgFnCyclomatic": 44
+    },
+    {
+      "file": "src/pages/RouteErrorPage.tsx",
+      "loc": 310,
+      "fileCyclomatic": 42,
+      "avgFnCyclomatic": 22
+    },
+    {
+      "file": "src/pages/settings/UnifiedSettingsPage.tsx",
+      "loc": 236,
+      "fileCyclomatic": 40,
+      "avgFnCyclomatic": 21
+    },
+    {
+      "file": "src/hooks/useCustomerAlerts.ts",
+      "loc": 311,
+      "fileCyclomatic": 39,
+      "avgFnCyclomatic": 39
+    },
+    {
+      "file": "src/lib/statementPdfGenerator.ts",
+      "loc": 344,
+      "fileCyclomatic": 39,
+      "avgFnCyclomatic": 7
+    },
+    {
+      "file": "src/pages/admin/UserManagementPage.tsx",
+      "loc": 409,
+      "fileCyclomatic": 39,
+      "avgFnCyclomatic": 14
+    },
+    {
+      "file": "src/pages/search/SearchPage.tsx",
+      "loc": 423,
+      "fileCyclomatic": 39,
+      "avgFnCyclomatic": 39
+    },
+    {
+      "file": "src/components/settings/SettingsExportImport.tsx",
+      "loc": 406,
+      "fileCyclomatic": 38,
+      "avgFnCyclomatic": 38
+    },
+    {
+      "file": "src/lib/repositories/purchaseOrderRepository.ts",
+      "loc": 222,
+      "fileCyclomatic": 38,
+      "avgFnCyclomatic": 20
+    }
+  ]
 }
