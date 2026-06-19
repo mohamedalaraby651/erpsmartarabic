@@ -169,3 +169,9 @@ export type {
   WorkspaceManifest,
   WorkspaceRegistry,
 } from "./layout/types";
+
+// Composition contracts (UX-1D, compile-time only)
+export type * from "./contracts";
+
+// Composites (UX-1D)
+export * from "./composites";
