@@ -45,10 +45,10 @@
     }
   ],
   "count": 22,
-  "verified": 21,
+  "verified": 22,
   "readyForPromotion": 0,
-  "blocked": 1,
-  "averageTotal": 94,
+  "blocked": 0,
+  "averageTotal": 94.3,
   "primitives": [
     {
       "file": "src/ui/primitives/Avatar.tsx",
@@ -438,16 +438,16 @@
       "dimensions": {
         "a11y": 16,
         "api": 15,
-        "tests": 6,
+        "tests": 11,
         "bundle": 10,
         "rtl": 10,
         "tokens": 10,
         "keyboard": 10,
         "docs": 9
       },
-      "total": 86,
-      "eligibleForCanonical": false,
-      "promotion": "blocked"
+      "total": 91,
+      "eligibleForCanonical": true,
+      "promotion": "verified"
     },
     {
       "file": "src/ui/primitives/Tooltip.tsx",
