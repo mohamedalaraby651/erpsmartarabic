@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-token-export",
+  "baselineVersion": "UX-1",
+  "tokenFiles": [
+    "colors.ts",
+    "elevation.ts",
+    "motion.ts",
+    "radius.ts",
+    "spacing.ts",
+    "typography.ts"
+  ],
+  "missingReExports": [],
+  "deepImports": [],
+  "pass": true
+}

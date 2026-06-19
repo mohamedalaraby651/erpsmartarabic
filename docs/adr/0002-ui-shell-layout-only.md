@@ -48,9 +48,12 @@ Workspaces are registered as **data** through `WorkspaceProvider`. Adding a new 
 - `scripts/fitness/check-shell-isolation.mjs` — fails on forbidden imports.
 - `scripts/fitness/check-shell-token-only.mjs` — fails on hardcoded color / radius / font-family literals.
 - `scripts/fitness/check-shell-a11y.mjs` — flags icon-only buttons without `aria-label`, `<img>` without `alt`, positive `tabIndex`.
+- `scripts/fitness/check-shell-runtime-purity.mjs` — forbids data-fetching libs (`@tanstack/react-query`, `swr`, `axios`, raw `fetch(`, `useQuery`/`useMutation`) inside Shell paths.
 - `scripts/fitness/check-workspace-api-shape.mjs` — verifies `WorkspaceManifest` round-trips through `JSON.stringify`.
+- `src/ui/layout/__tests__/shell-invariants.test.ts` — runtime invariants I2 / I3 / I7 / I8.
 - ESLint `no-restricted-imports` rule on `src/ui/layout/**` and `src/ui/providers/**` (warn in UX-1B, error in UX-2).
 
 ## Notes
 
 - `WorkspaceDefinition` evolves under `@contractVersion v1.1` (additive over the v1 manifest frozen in `docs/architecture/WORKSPACE_API.md`); breaking changes require a new ADR per `docs/contracts/CONTRACT_VERSIONING.md`.
+- Detailed Shell behaviour contracts live in [`docs/architecture/SHELL_INVARIANTS.md`](../architecture/SHELL_INVARIANTS.md) (I1–I8).

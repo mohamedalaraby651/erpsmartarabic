@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-shell-a11y",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 12,
+  "findings": [],
+  "pass": true
+}
