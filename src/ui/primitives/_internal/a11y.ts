@@ -16,7 +16,7 @@ export function assertAccessibleName(
   componentName: string,
   props: { "aria-label"?: string; "aria-labelledby"?: string; title?: string },
 ) {
-  if (process.env.NODE_ENV === "production") return;
+  if (import.meta.env?.PROD) return;
   const hasName =
     !!props["aria-label"] || !!props["aria-labelledby"] || !!props.title;
   if (!hasName) {
