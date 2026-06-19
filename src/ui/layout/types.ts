@@ -187,9 +187,17 @@ export interface LocationAdapter {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Shell events                                                              */
+/*  Shell events (SHELL_INVARIANTS I2 — UI-only bus)                          */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * `ShellEventBus` is a UI lifecycle bus. Payloads MUST be flat and contain
+ * only primitives / identifiers — never entities, query results, React nodes,
+ * or functions. See `docs/architecture/SHELL_INVARIANTS.md` §I2.
+ *
+ * `ShellEventMap` is a closed union; arbitrary `emit("…")` calls do not
+ * type-check, which is the first line of defence against domain leakage.
+ */
 export type ShellEventMap = {
   "workspace:changed": { workspaceId: WorkspaceId | null; previous: WorkspaceId | null };
   "workspace:registered": { workspaceId: WorkspaceId };

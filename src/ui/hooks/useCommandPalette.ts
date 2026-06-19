@@ -49,11 +49,27 @@ export function useCommandPalette(extraCommands: readonly CommandDef[] = []) {
     return [...extraCommands, ...wsCommands];
   }, [active, extraCommands]);
 
+  /**
+   * Deterministic ordering — SHELL_INVARIANTS I3:
+   *   priority asc (default 50) → group asc ("" first) → id asc.
+   * Total order; identical across runs / machines / locales.
+   */
+  const compareDeterministic = useCallback((a: CommandDef, b: CommandDef) => {
+    const pa = a.priority ?? 50;
+    const pb = b.priority ?? 50;
+    if (pa !== pb) return pa - pb;
+    const ga = a.group ?? "";
+    const gb = b.group ?? "";
+    if (ga !== gb) return ga < gb ? -1 : 1;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  }, []);
+
   const visibleCommands = useMemo(() => {
     return allCommands
       .filter((c) => (c.visible ? c.visible(ctx) : true))
-      .sort((a, b) => (a.priority ?? 50) - (b.priority ?? 50));
-  }, [allCommands, ctx]);
+      .slice()
+      .sort(compareDeterministic);
+  }, [allCommands, ctx, compareDeterministic]);
 
   const filtered = useMemo(() => {
     if (!query) return visibleCommands;
@@ -64,9 +80,9 @@ export function useCommandPalette(extraCommands: readonly CommandDef[] = []) {
         return { command: c, score };
       })
       .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => (b.score - a.score) || compareDeterministic(a.command, b.command))
       .map((r) => r.command);
-  }, [visibleCommands, query]);
+  }, [visibleCommands, query, compareDeterministic]);
 
   const run = useCallback(
     async (command: CommandDef) => {
