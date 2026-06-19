@@ -1,175 +1,162 @@
-# Master Engineering Execution Plan — UX-0 (LOCKED FOR EXECUTION)
+# UX-1 — Foundation (LOCKED FOR EXECUTION, v3)
 
-> **القرار:** ✅ LOCKED FOR EXECUTION مع التعديلات الأربعة + بوابة Baseline Sign-off.
-> **المبدأ الثابت:** *No Production Code Changes. No Architectural Decisions. Only Evidence Collection.*
-> **المدة:** 1–2 أيام. **التأثير على `src/**`:** صفر. **التأثير على Repos/Queries/Migrations/Edge Functions:** صفر.
+> **Baseline:** `architecture-baseline-ux0`.
+> **Mandate:** build the **ERP UI Operating System**; Finance = first production Workspace (UX-3); Suppliers = UX-1 technical POC.
+> **Non-negotiables:** Vitest ≥ 1187 · `tsc --noEmit` = 0 · no new direct DB hits in UI · no migrations · no runtime deps without ADR.
+> **v3 additions:** ADR Registry · Token Versioning · Canonical Lifecycle · Workspace Certification · Architecture Fitness Functions · graduated lint enforcement (warn → CI warning → blocking).
 
-## خارطة الطريق (مرجعية فقط — لا تُنفَّذ هذه الجولة)
+## Anchor to UX-0 evidence
 
-```text
-UX-0 Baseline Freeze ← هذه الجولة فقط
-UX-1 Foundation → UX-2 Contracts → UX-3 Workspace → UX-4 Workflow
-UX-4.5 DevEx (Storybook) → UX-5 SmartTable → [Monorepo Gate]
-UX-6 Command → UX-7 Feature Refactor + Permissions → UX-8 Perf + Intelligence
-UX-9 Governance → [Plugin / Extension / Configuration — شرطية]
-```
+| Signal | Baseline | UX-1 action |
+|---|---:|---|
+| UI direct DB | 150 | freeze + ESLint warn + fitness check; structural fix UX-2 |
+| `as any` infra+ui | 63 | warn now; ≤ 30 by end of UX-1 |
+| `console.*` leftover | 32 | remove in UX-1A |
+| Circular deps | 6 | keep ≤ 6 |
+| Bundle | 4.7 MB | ±5% per wave |
+| MI / CC p95 | 90.19 / 29 | no file may worsen its own MI/CC |
 
-## القرارات المعمارية المؤكَّدة (مرجع Q1–Q6)
-
-- **Q1**: Evolutionary Modernization (لا Rewrite).
-- **Q2**: ثلاث طبقات — ERP UI Operating System → Workspace Architecture → Business Screens.
-- **Q3**: البنية الأساسية أولاً (Tokens → Layout → Navigation → Grid → Forms → Dialogs → Command → Shell).
-- **Q4**: أول Workspace = **Finance** (يغطي معظم الأنماط).
-- **Q5**: DoD = استخدام كل المكونات القياسية + tests + a11y + docs + 0 legacy.
-- **Q6**: منع التدهور عبر ERP UI OS مع Contracts + Rules + Governance مفروضة.
-
-> هذه الإجابات تُحفَظ في `docs/architecture/ARCHITECTURE_DECISIONS_Q1_Q6.md` كمرجع ثابت.
+No reorder triggers fired → UX-1 → UX-2 → UX-3 → UX-4.
 
 ---
 
-## Phase UX-0 — Deliverables
+## Wave 0 — Governance Pre-flight *(1–2 days, before UX-1A)*
 
-### A. Evidence Outputs (Markdown + JSON متوازيان)
+All rulebooks land before any `src/ui/**` code.
 
-كل تقرير له **JSON كمصدر حقيقة** + **Markdown بشري**. الـ JSON هو ما يُقارَن آلياً.
+1. `docs/contracts/CONTRACT_VERSIONING.md` — Contract Version `v1`, back-compat rules, breaking-change criteria, deprecation policy.
+2. `docs/architecture/UI_PERFORMANCE_BUDGET.md` — render ≤16ms p95, prop depth ≤4, context fan-out cap, provider nesting ≤6, memoization rules.
+3. `docs/architecture/CANONICAL_COMPONENT_CRITERIA.md` — scoring rubric (a11y, API consistency, test coverage, bundle size, RTL, theming, keyboard) **+ Canonical Lifecycle**:
+   `Experimental → Candidate → Canonical → Deprecated → Removed`. Every primitive carries an explicit lifecycle state.
+4. `docs/architecture/WORKSPACE_API.md` — frozen `WorkspaceDefinition` (`id, name, icon, permissions, navigation, routes, widgets`).
+5. `docs/architecture/WORKSPACE_CERTIFICATION.md` — checklist a Workspace must pass to be `Certified`:
+   Workspace API satisfied · Scorecard ≥ 90 · UX Regression Checklist PASS · Performance Budget PASS · Contracts used · 0 layer violations · 0 direct DB hits in `ui/`.
+6. `docs/architecture/STATE_HIERARCHY.md` — Global → Workspace → Workflow → Screen → Component; state at lowest responsible owner.
+7. `docs/qa/UX_REGRESSION_CHECKLIST.md` — keyboard, RTL, mobile, tablet, loading, empty, error, slow network, permission denied, large dataset.
+8. `docs/adr/TEMPLATE.md` — Context · Problem · Options · Decision · Consequences · Rollback Plan.
+9. `docs/adr/INDEX.md` — **ADR Registry** (sole source of truth):
+   ```
+   | ADR | Status | Supersedes | Area | Date |
+   ```
+   Updated in the same PR as every new/superseded ADR.
+10. `docs/architecture/ENGINEERING_SCORECARD.md` — Architecture 30 · UX 20 · Perf 15 · A11y 10 · Test Stability 15 · Maintainability 10. Wave passes at **≥ 90/100**.
+11. `docs/architecture/TOKEN_CHANGELOG.md` — token version log; **`src/ui/tokens/index.ts` exports `TOKEN_VERSION = "v1"`**. Any token change bumps `v1 → v1.1 → v2` per semver-for-tokens (additive = minor, breaking = major).
 
-```text
-docs/architecture/baseline/
-  01-snapshot.md   02-dependencies.md   03-components.md
-  04-routes.md     05-data-layer.md     06-performance.md
-  07-bundle.md     08-tests.md          09-lint-types.md
-
-scripts/audits/output/
-  snapshot-report.json     dependency-report.json
-  component-report.json    route-report.json
-  data-access-report.json  performance-report.json
-  bundle-report.json       lint-types-report.json
-
-docs/architecture/MANIFEST.json
-docs/architecture/ARCHITECTURE_DECISIONS_Q1_Q6.md
-```
-
-### B. MANIFEST.json — Environment Provenance + Baseline Version
-
-```json
-{
-  "baselineVersion": "UX-0",
-  "generatedAt": "<ISO>",
-  "gitCommit": "<sha>",
-  "gitBranch": "<branch>",
-  "gitTag": "architecture-baseline-ux0",
-  "nodeVersion": "<x.y.z>",
-  "packageManager": "<bun@x.y.z>",
-  "lockfileHash": "<sha256 of bun.lockb>",
-  "toolVersions": { "madge": "", "rollup-plugin-visualizer": "", "ts-complex": "", "depcheck": "" },
-  "reports": { /* paths to 8 JSON reports */ },
-  "health": { /* current numbers */ },
-  "targets": { /* aspirational numbers */ },
-  "determinism": { "verified": true, "runs": 2, "diff": "none" }
-}
-```
-
-> أي مقارنة لاحقة تتحقق أولاً من تطابق `nodeVersion` و`lockfileHash` و`gitTag`. الاختلاف = مقارنة غير صالحة.
-
-### C. حقول التقارير الإلزامية
-
-1. **Snapshot** — شجرة `src/` بعمق 3، LOC لكل مجلد جذري، الفجوة مقابل (`ui/ contracts/ workspaces/ workflows/`).
-2. **Dependencies** (madge) — circular cycles، أعمق مسار، Top 20 importers/imported، **Import Layer Violations** (قياس فقط): `components→repositories`, `pages→repositories`, `hooks→supabase/client`, `components→services`, `domain→ui`.
-3. **Components** — تصنيف: `{render, container, feature, layout, table, dialog, chart, form, primitive}` + ملفات > 300 سطر + جرد primitives المتنافسة (`ui-kit/*` vs `ui/*`) + جرد الجداول.
-4. **Routes** — `{route, workspace, requiresAuth, permission, dataSources[], mainRepository, workflowCandidate}`.
-5. **Data Layer** — تصنيف الـ 161 hit: `{read, readComposite, write, realtime, storage, auth, rpc}` + جرد `lib/repositories/*` و`lib/queries/*` + استمرار سكربت `scripts/audits/check-data-access.sh` كمرجع.
-6. **Performance** — يدوي على 5 مسارات: Web Vitals (LCP/CLS/INP/TTI) + Snapshot (JS Heap, DOM Nodes, Network Requests, أكبر/أبطأ API). Evidence فقط، **لا KPIs**.
-7. **Bundle** — gzipped/chunk، Top 10 deps، **Duplicate packages**، **Unused** (depcheck)، **Tree-shaking opportunities**.
-8. **Tests** — Vitest 1187/1187، Playwright e2e خضراء، coverage إن توفّر.
-9. **Lint & Types** — `tsc --noEmit` نظيف (Hard Stop إن فشل)، ESLint warnings مصنَّفة، **`as any` (111) مصنَّفة**: `{infrastructure, ui, tests, legacy, generated}`، **console (44) مصنَّفة**: `{debug, error-handler, telemetry, leftover}`.
-
-### D. Governance Documents
-
-**`docs/architecture/PRINCIPLES.md`** — 13 مبدأ:
-
-1. UI لا يعرف قاعدة البيانات
-2. Workflow = مصدر الحقيقة للحالة
-3. Workspace يحدد السياق فقط
-4. Repository = الحد الوحيد للوصول إلى البيانات
-5. Contracts تفصل UI عن Domain
-6. كل Pattern يُثبت نجاحه على POC قبل التعميم
-7. لا تُبنى طبقة قبل وجود حاجة فعلية مُقاسة
-8. القرارات المعمارية تُسجَّل كـ ADR قبل التنفيذ
-9. State belongs to the lowest responsible owner
-10. Composition before inheritance
-11. Feature boundaries are stronger than folder boundaries
-12. Everything measurable before refactor
-13. **Backward compatibility before optimization** — *No optimization may break existing business behavior.*
-
-**`docs/architecture/KPIs.md`** — مقسوم صراحةً:
-
-#### Section 1 — Current Health (Baseline UX-0، ليست مشكلة)
-
-Direct DB access: 161 · `as any`: 111 · `console.*`: 44 · Files > 500 LOC: 4 · Circular deps: TBM · Bundle gzipped: TBM · Vitest: 1187 · TS strict errors: TBM · Maintainability Index: TBM · Cyclomatic p95: TBM · Avg Component LOC: TBM · Avg Hook LOC: TBM · Repository Reuse: TBM · Query Reuse: TBM · Avg Props: TBM · Import Layer Violations: TBM.
-
-#### Section 2 — Targets
-
-Direct DB in UI → 0 (UX-2→UX-7) · `as any` (Infra+UI) → 0 (UX-1→UX-2) · `console.*` leftover → 0 (UX-1) · Files > 500 → 0 (UX-5→UX-7) · Circular → 0 (UX-1) · Bundle delta ±5%/Phase · Vitest ≥ 1187 (لا يهبط أبداً) · TS strict errors → 0 (UX-1) · Import Layer Violations → 0 (UX-2).
-
-**`docs/adr/0000-architecture-frozen-before-frontend-rewrite.md`** — قرار تأسيسي.
-**`docs/risk-log/RISK-001-shadow-repository-regression.md`** — مأهول (Source: SupplierRatingTab; Mitigation: audit قبل UX-2).
-**هياكل مفتوحة:** `docs/adr/README.md`, `docs/decision-log/README.md`, `docs/risk-log/README.md`, `docs/lessons-learned/README.md`.
-
-### E. Scripts (dev-only) + Determinism
-
-```text
-scripts/audits/dep-graph.mjs
-scripts/audits/component-inventory.mjs
-scripts/audits/route-inventory.mjs
-scripts/audits/data-access-classify.mjs
-scripts/audits/bundle-report.sh
-scripts/audits/complexity-report.mjs
-scripts/audits/depcheck-report.mjs
-scripts/audits/build-manifest.mjs        ← يجمع كل JSON + env → MANIFEST.json
-scripts/audits/verify-determinism.sh     ← يشغّل كل audit مرتين ويقارن JSON بايت-ببايت
-```
-
-**Determinism:** ترتيب مفاتيح ثابت، فرز نتائج، استبعاد timestamps من ملفات الـ reports (تُحفظ فقط في MANIFEST.json).
-
-**devDependencies المضافة فقط:** `madge`, `rollup-plugin-visualizer`, `ts-complex`, `depcheck`. **0 runtime deps جديدة.**
+**Exit:** all 11 docs merged + linked from `PRINCIPLES.md`; ADR INDEX seeded with ADR-0000.
 
 ---
 
-## Hard Stop Conditions
+## Wave plan
 
-- أي حاجة لتعديل `src/**` لإكمال القياس → halt (تشخيص خاطئ).
-- أي حاجة لـ migration / edge function → halt.
-- `tsc --noEmit` فاشل → halt (يُصلَح أولاً).
-- Vitest يهبط تحت 1187 → halt.
-- ظهور Repository bypass جديد بعد A2.5 → halt + Architecture Regression.
-- **أي audit script ينتج non-deterministic output → halt** (يُصلَح السكربت قبل اعتماد الـ Baseline).
+### UX-1A — Design Foundation *(2–3 days)*
+- `src/ui/tokens/` — color (HSL semantic), typography, spacing, radius, elevation, motion. Exports `TOKEN_VERSION`. Single source re-exported to `index.css` + `tailwind.config.ts`.
+- Remove **32 `console.*` leftovers**.
+- ESLint: warn on hardcoded color utilities in `src/ui/**` and new `as any`.
+- **Scorecard run #1.**
+
+**Exit:** tokens consumed by ≥ 1 canonical primitive; leftover console = 0; Vitest ≥ 1187; scorecard ≥ 90; `TOKEN_VERSION = v1` recorded in `TOKEN_CHANGELOG.md`.
+
+### UX-1B — ERP UI Shell *(3–4 days)*
+- `src/ui/shell/` — `AppShell`, `WorkspaceShell`, `NavigationRegion`, `CommandRegion`, `StatusRegion`, `NotificationRegion`; implements `WorkspaceDefinition`.
+- `WorkspaceProvider` exposes `{ workspaceId, permissions, breadcrumbs }`.
+- `AdaptiveShell` wrapped, not replaced.
+- **Scorecard run #2.**
+
+**Exit:** Suppliers list renders inside `WorkspaceShell` behind flag `ux1.suppliersV2`; legacy default.
+
+### UX-1C — Canonical Components *(4–5 days)*
+- Score each primitive via `CANONICAL_COMPONENT_CRITERIA.md` → assign lifecycle state → pick canonical → `@deprecated` JSDoc on legacy. **No legacy deletion in UX-1.**
+- Each pick = 1 ADR using the template, recorded in **`docs/adr/INDEX.md`**.
+
+| Primitive | Canonical (proposed) | Deprecates |
+|---|---|---|
+| Button, Input, Select, Dialog, Tabs, Card, Badge | `src/components/ui/*` | `ui-kit/*` + ad-hoc |
+| EmptyState / LoadingState / ErrorState | new `src/ui/feedback/` | scattered patterns |
+
+**Scorecard run #3.**
+
+**Exit:** ADRs merged + indexed; lifecycle state set on every canonical and deprecated primitive; UI Perf Budget green on POC route.
+
+### UX-1D — Data Contracts *(3–4 days)*
+- `src/contracts/` — types only (`repository.contract.ts`, `query.contract.ts`, `table.contract.ts`, `form.contract.ts`), tagged `@contractVersion v1`.
+- **Graduated lint enforcement** for `src/ui/**` / `src/workspaces/**` importing `src/lib/repositories/**` or `@supabase/*`:
+  - UX-1: local **warn**
+  - UX-2: **CI warning** (`--max-warnings 0` on changed files only)
+  - UX-3: **blocking error** (repo-wide)
+- Existing `lib/repositories/*` re-typed against `Repository<T>` (types only).
+- **Scorecard run #4.**
+
+**Exit:** contracts published + versioned; repositories satisfy `Repository<T>`; Vitest ≥ 1187.
+
+### UX-1E — Suppliers POC *(4–5 days)*
+- `src/workspaces/suppliers/` — `/suppliers` using `WorkspaceShell` + canonical components + `DataGridContract` bound to `supplierRepository` via `QueryService`. **No new DB hits.**
+- Close RISK-001 (shadow repository) before merge.
+- Flag `ux1.suppliersV2` (off in prod, on in preview).
+- Run full `UX_REGRESSION_CHECKLIST.md`.
+- **Scorecard run #5.**
+
+**Architectural exit criteria (all must pass):**
+1. 0 direct repository imports in `src/workspaces/suppliers/**/ui/*`.
+2. 100% canonical components in POC route.
+3. 0 hardcoded color utilities.
+4. 0 legacy components reachable.
+5. 0 new entries in `import-layer-violations.json` vs UX-0 (202).
+6. Every contract in `src/contracts/` referenced by POC.
+7. UX Regression Checklist signed off.
+8. UI Performance Budget green.
+9. All Fitness Functions PASS.
+10. Scorecard ≥ 90.
 
 ---
 
-## Baseline Sign-off Gate (إغلاق رسمي)
+## Architecture Fitness Functions
 
-UX-0 لا يُعتبر مغلقاً إلا إذا تحققت **جميع** الشروط الأربعة:
+New folder `scripts/fitness/` — measures system-wide properties, not file-level lint rules. Wired into `verify-determinism.sh` and CI.
 
-1. ✅ جميع Audit Scripts نجحت بدون أخطاء.
-2. ✅ `verify-determinism.sh` يمر بنسبة 100% (تشغيلان متتاليان → diff فارغ).
-3. ✅ ملفات Markdown + JSON متطابقة بالكامل مع `MANIFEST.json` (نفس الأرقام، نفس الـ paths).
-4. ✅ Git Tag رسمي: **`architecture-baseline-ux0`** يُنشأ كمرجع ثابت تُقارن به كل المراحل اللاحقة.
+| Script | Asserts |
+|---|---|
+| `check-direct-db.mjs` | UI / workspaces have **0 new** `supabase.*` calls vs baseline 150 |
+| `check-layering.mjs` | `import-layer-violations` count never exceeds UX-0 baseline (202) |
+| `check-workspace-api.mjs` | every workspace exports a valid `WorkspaceDefinition` |
+| `check-canonical-components.mjs` | no `Deprecated` primitive imported by code authored in current wave |
+| `check-token-usage.mjs` | no hardcoded color/font/spacing literals in `src/ui/**` and `src/workspaces/**` |
 
-> هذا إجراء حوكمة فقط — يمنع فقدان مرجع الـ Baseline مستقبلاً.
-
----
-
-## Completion Gate — قرار UX-1
-
-تقرير الإغلاق يُجيب صراحة:
-
-- **Q1**: هل أرقام الـ baseline تكشف مفاجأة (circular عالية، bundle منتفخ، complexity عالٍ) تستدعي تعديل أولوية UX-1؟
-- **Q2**: POC table في UX-1 = `SuppliersTable` أم `CustomersTable`؟
-- **Q3**: هل canonical decisions لـ Buttons/Inputs/Modals (`ui-kit` vs `ui`) واضحة من الجرد بحيث تُوثَّق في UX-1 بدون reimplementation؟
-- **Q4**: ESLint rule على `src/ui/**` تبدأ warn في UX-1 وترتقي error في UX-2 — تثبيت؟
-- **Q5**: هل يوجد Metric يُعيد ترتيب الـ roadmap؟ (`circular ≥ 40` أو `bundle ≥ 9MB` أو `components ≥ 700` → الأولوية تصبح Foundation → Architecture Cleanup Phase → UX-2.)
-- **Q6**: هل أدوات القياس نفسها موثوقة وقابلة لإعادة التشغيل (`verify-determinism.sh` يمر 100%)، أم تحتاج تحسيناً قبل اعتمادها كأساس للمراحل التالية؟
+Each emits deterministic JSON in `scripts/fitness/output/`. Failure of any function = wave does not pass.
 
 ---
 
-> **الحالة: ✅ LOCKED FOR EXECUTION.** بعد الموافقة، تبدأ Phase UX-0 بـ 0 تغييرات في `src/**`، 0 migrations، 0 runtime deps، وتنتهي بـ Git Tag `architecture-baseline-ux0` كمرجع رسمي.
+## UX-1 Completion Gate
+
+1. Vitest ≥ 1187 · `tsc --noEmit` = 0 · ESLint errors = 0 (warnings allowed for new UX-1 rules).
+2. `as any` (infra+ui) ≤ 30 · leftover console = 0 · circular ≤ 6 · bundle ±5%.
+3. All deterministic audits + new `import-layer-violations` PASS.
+4. All 5 fitness functions PASS.
+5. Average scorecard ≥ 92.
+6. ADR-0001…N merged **and indexed in `docs/adr/INDEX.md`**.
+7. `TOKEN_VERSION = v1` frozen; `TOKEN_CHANGELOG.md` initialized.
+8. Suppliers POC = **Certified Workspace** per `WORKSPACE_CERTIFICATION.md`.
+9. **Foundation Freeze declared** — `src/ui/tokens/**`, `src/ui/shell/**`, `src/contracts/**`, canonical primitives in `src/ui/feedback/**` only change via new ADR superseding the relevant UX-1 ADR (with INDEX update).
+10. Git tag `foundation-ux1`; MANIFEST bumped to `baselineVersion: "UX-1"`.
+
+## Hard stops
+- Change to `src/integrations/supabase/client.ts` or auto-generated files.
+- Migration / edge function / new runtime dep without ADR.
+- Vitest < 1187 or `tsc --noEmit` failure.
+- New direct DB hit in `src/ui/**` or `src/workspaces/**`.
+- Non-deterministic audit or fitness output.
+- Wave finishes with scorecard < 90 or any fitness function FAIL.
+
+## Technical notes
+- **New dirs:** `src/ui/{tokens,shell,feedback}`, `src/contracts/`, `src/workspaces/suppliers/`, `scripts/fitness/`.
+- Contracts are types-only → 0 bundle delta.
+- Repository re-typing = generics rename, covered by existing unit tests.
+- Feature flag via existing user prefs / build env — no new infra.
+- New audit `scripts/audits/import-layer-violations.mjs` + fitness functions wired into `verify-determinism.sh`.
+- `scripts/audits/scorecard.mjs` aggregates audit + fitness JSON into weighted score.
+- Lint graduation handled via per-phase ESLint config flag (`UX_PHASE` env), no rule duplication.
+
+## Out of scope (deferred)
+- Legacy primitive removal (UX-2).
+- Eliminating 150 direct DB hits (UX-2 → UX-7).
+- Finance Workspace (UX-3).
+- Monorepo / Plugin SDK / Storybook publication (UX-4.5+).
