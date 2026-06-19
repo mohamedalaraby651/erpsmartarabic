@@ -16,6 +16,7 @@
 | [ADR-0000](./0000-architecture-frozen-before-frontend-rewrite.md) | Accepted | — | Architecture freeze before frontend rewrite | UX-0 | 2026-06-18 |
 | [ADR-0002](./0002-ui-shell-layout-only.md) | Accepted | — | UI Shell as layout-only OS | UX-1B | 2026-06-19 |
 | [ADR-0003](./0003-canonical-primitives-v1.md) | Accepted | — | Canonical Primitive System v1 | UX-1C | 2026-06-19 |
+| [ADR-0004](./0004-composition-contracts-v1.md) | Accepted | — | Composition Contracts v1 | UX-1D | 2026-06-19 |
 
 <!--
 New entries append below this line. Keep the table sorted by ADR id ascending.
