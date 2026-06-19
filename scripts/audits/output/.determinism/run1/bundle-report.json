@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "visualizerAvailable": true,
+  "totalBytes": 4920767,
+  "totalAssets": 91,
+  "topAssets": [
+    {
+      "file": "assets/pages-sales-core-DC3Dald8.js",
+      "bytes": 673262
+    },
+    {
+      "file": "assets/vendor-misc-CTlTk_i_.js",
+      "bytes": 666863
+    },
+    {
+      "file": "assets/vendor-pdf-HgTczRns.js",
+      "bytes": 573822
+    },
+    {
+      "file": "assets/vendor-excel-D_0l8YDs.js",
+      "bytes": 429487
+    },
+    {
+      "file": "assets/vendor-ui-7l5gUCig.js",
+      "bytes": 349202
+    },
+    {
+      "file": "assets/vendor-charts-C0Bab0lH.js",
+      "bytes": 286645
+    },
+    {
+      "file": "assets/pages-inventory-CUvJJTv2.js",
+      "bytes": 221135
+    },
+    {
+      "file": "assets/index-DpmLs-4v.js",
+      "bytes": 185664
+    },
+    {
+      "file": "assets/pages-settings-CTPesDuu.js",
+      "bytes": 183918
+    },
+    {
+      "file": "assets/pages-admin-hbBsLcCn.js",
+      "bytes": 175865
+    },
+    {
+      "file": "assets/pages-finance-17xhhC0F.js",
+      "bytes": 170597
+    },
+    {
+      "file": "assets/index-DQiQ1i-A.css",
+      "bytes": 149208
+    },
+    {
+      "file": "assets/vendor-react-BxsbldMV.js",
+      "bytes": 142353
+    },
+    {
+      "file": "assets/pages-sales-ops-fAn71ov7.js",
+      "bytes": 101242
+    },
+    {
+      "file": "assets/pages-workspace-BrfX75Cp.js",
+      "bytes": 100336
+    },
+    {
+      "file": "assets/vendor-query-DTAH3kXX.js",
+      "bytes": 54345
+    },
+    {
+      "file": "assets/vendor-dnd-nvGht1vG.js",
+      "bytes": 45873
+    },
+    {
+      "file": "assets/vendor-dates-pIvqS4sX.js",
+      "bytes": 35273
+    },
+    {
+      "file": "assets/pages-platform-vQ9rgmod.js",
+      "bytes": 32725
+    },
+    {
+      "file": "assets/vendor-forms-UymKKl2P.js",
+      "bytes": 27267
+    }
+  ],
+  "topDependenciesGzip": [],
+  "duplicatePackages": [],
+  "treeShakingOpportunities": [],
+  "notes": null
+}

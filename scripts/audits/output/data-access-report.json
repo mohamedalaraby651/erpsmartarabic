@@ -1,0 +1,1375 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "totalHits": 625,
+  "uiHits": 150,
+  "byTypeByLayer": {
+    "auth": {
+      "hooks": 7,
+      "integrations": 1,
+      "lib:other": 5,
+      "lib:repositories": 2,
+      "other": 10,
+      "ui:components": 2,
+      "ui:pages": 4
+    },
+    "read": {
+      "hooks": 55,
+      "lib:other": 23,
+      "lib:queries": 20,
+      "lib:repositories": 187,
+      "ui:components": 50,
+      "ui:pages": 45
+    },
+    "realtime": {
+      "hooks": 3
+    },
+    "rpc": {
+      "hooks": 15,
+      "lib:other": 7,
+      "lib:repositories": 24,
+      "ui:components": 2,
+      "ui:pages": 12
+    },
+    "storage": {
+      "lib:other": 1,
+      "ui:components": 11
+    },
+    "write": {
+      "hooks": 5,
+      "lib:other": 7,
+      "lib:repositories": 103,
+      "ui:components": 12,
+      "ui:pages": 12
+    }
+  },
+  "repositoryCount": 44,
+  "queryCount": 2,
+  "repositoryReuseMean": 2.91,
+  "queryReuseMean": 4,
+  "repositories": [
+    {
+      "file": "src/lib/repositories/_base.ts",
+      "consumers": 11
+    },
+    {
+      "file": "src/lib/repositories/activityLogsRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/adminMetricsRepository.ts",
+      "consumers": 3
+    },
+    {
+      "file": "src/lib/repositories/adminRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/approvalRepository.ts",
+      "consumers": 2
+    },
+    {
+      "file": "src/lib/repositories/attachmentsRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/attendanceRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/categoryRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/coaRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/collectionRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/creditNoteRepository.ts",
+      "consumers": 4
+    },
+    {
+      "file": "src/lib/repositories/customerRelationsRepo.ts",
+      "consumers": 3
+    },
+    {
+      "file": "src/lib/repositories/customerRepository.ts",
+      "consumers": 17
+    },
+    {
+      "file": "src/lib/repositories/customerSearchRepo.ts",
+      "consumers": 8
+    },
+    {
+      "file": "src/lib/repositories/dimensionsRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/employeeRepository.ts",
+      "consumers": 2
+    },
+    {
+      "file": "src/lib/repositories/expenseRepository.ts",
+      "consumers": 4
+    },
+    {
+      "file": "src/lib/repositories/fiscalPeriodRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/index.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/inventoryRepository.ts",
+      "consumers": 2
+    },
+    {
+      "file": "src/lib/repositories/invoiceRepository.ts",
+      "consumers": 2
+    },
+    {
+      "file": "src/lib/repositories/journalRepository.ts",
+      "consumers": 2
+    },
+    {
+      "file": "src/lib/repositories/legacyQuotationsRepository.ts",
+      "consumers": 4
+    },
+    {
+      "file": "src/lib/repositories/logisticsRepository.ts",
+      "consumers": 3
+    },
+    {
+      "file": "src/lib/repositories/notificationsRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/paymentRepository.ts",
+      "consumers": 2
+    },
+    {
+      "file": "src/lib/repositories/pdfAssetsRepository.ts",
+      "consumers": 3
+    },
+    {
+      "file": "src/lib/repositories/pdfProfilesRepository.ts",
+      "consumers": 3
+    },
+    {
+      "file": "src/lib/repositories/postingLogRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/priceListRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/productRepository.ts",
+      "consumers": 7
+    },
+    {
+      "file": "src/lib/repositories/purchaseOrderRepository.ts",
+      "consumers": 4
+    },
+    {
+      "file": "src/lib/repositories/quotationRepository.ts",
+      "consumers": 2
+    },
+    {
+      "file": "src/lib/repositories/referenceRepository.ts",
+      "consumers": 3
+    },
+    {
+      "file": "src/lib/repositories/reportsRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/reportTemplateRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/salesOrderRepository.ts",
+      "consumers": 5
+    },
+    {
+      "file": "src/lib/repositories/savedViewsRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/settingsRepository.ts",
+      "consumers": 4
+    },
+    {
+      "file": "src/lib/repositories/supplierPaymentRepository.ts",
+      "consumers": 1
+    },
+    {
+      "file": "src/lib/repositories/supplierRelationsRepo.ts",
+      "consumers": 3
+    },
+    {
+      "file": "src/lib/repositories/supplierRepository.ts",
+      "consumers": 13
+    },
+    {
+      "file": "src/lib/repositories/tasksRepository.ts",
+      "consumers": 0
+    },
+    {
+      "file": "src/lib/repositories/treasuryRepository.ts",
+      "consumers": 3
+    }
+  ],
+  "queries": [
+    {
+      "file": "src/lib/queries/reportsQueryService.ts",
+      "consumers": 6
+    },
+    {
+      "file": "src/lib/queries/supplierQueryService.ts",
+      "consumers": 2
+    }
+  ],
+  "filesWithHits": 151,
+  "byFile": {
+    "src/__tests__/unit/hooks/useAuth.test.tsx": {
+      "layer": "other",
+      "counts": {
+        "auth": 10
+      },
+      "total": 10
+    },
+    "src/components/admin/EventDispatcherCard.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/components/auth/TwoFactorSetup.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/customers/details/CustomerPinnedNote.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/customers/tabs/CustomerTabNotes.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "rpc": 1,
+        "auth": 1,
+        "read": 1
+      },
+      "total": 3
+    },
+    "src/components/dashboard/CalendarWidget.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 4
+      },
+      "total": 4
+    },
+    "src/components/dashboard/InvoiceQuickActions.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "read": 2
+      },
+      "total": 3
+    },
+    "src/components/dashboard/LowStockWidget.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/components/dashboard/TodayPerformanceWidget.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 6
+      },
+      "total": 6
+    },
+    "src/components/export/ExportWithTemplateButton.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "read": 1
+      },
+      "total": 2
+    },
+    "src/components/inventory/StockMovementDialog.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/components/invoices/useInvoiceItems.ts": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/notifications/NotificationBell.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "read": 2
+      },
+      "total": 3
+    },
+    "src/components/payments/MultiInvoiceSettlement.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "rpc": 1,
+        "read": 2
+      },
+      "total": 4
+    },
+    "src/components/payments/PaymentFormDialog.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/components/print/InvoicePrintView.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 3
+      },
+      "total": 3
+    },
+    "src/components/reports/InactiveCustomersReport.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/settings/BackupTab.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 3
+      },
+      "total": 3
+    },
+    "src/components/settings/CompanyInfoSection.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/settings/ExportCenter/AssetUploader.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "storage": 1
+      },
+      "total": 1
+    },
+    "src/components/settings/ExportCenter/ExportCenterPage.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/settings/InvoiceSettingsSection.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/settings/OfflineSettings.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/settings/PersonalInfoSection.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "read": 3
+      },
+      "total": 4
+    },
+    "src/components/settings/SecuritySection.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "auth": 1,
+        "read": 1
+      },
+      "total": 2
+    },
+    "src/components/settings/SettingsExportImport.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "read": 3
+      },
+      "total": 4
+    },
+    "src/components/shared/AttachmentUploadForm.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "storage": 2
+      },
+      "total": 3
+    },
+    "src/components/shared/AttachmentsList.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "storage": 1,
+        "read": 1
+      },
+      "total": 2
+    },
+    "src/components/shared/FileUpload.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "storage": 2
+      },
+      "total": 3
+    },
+    "src/components/shared/ImageUpload.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "storage": 2
+      },
+      "total": 2
+    },
+    "src/components/shared/LogoUpload.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "storage": 3
+      },
+      "total": 3
+    },
+    "src/components/suppliers/SupplierFormDialog.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 2
+      },
+      "total": 2
+    },
+    "src/components/suppliers/SupplierImportDialog.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1,
+        "read": 1
+      },
+      "total": 2
+    },
+    "src/components/suppliers/SupplierPaymentDialog.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/components/tenant/TenantSettings.tsx": {
+      "layer": "ui:components",
+      "counts": {
+        "write": 1
+      },
+      "total": 1
+    },
+    "src/hooks/customers/useCustomerDetail.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 2
+      },
+      "total": 2
+    },
+    "src/hooks/customers/useCustomerLayoutPrefs.ts": {
+      "layer": "hooks",
+      "counts": {
+        "realtime": 1,
+        "read": 2
+      },
+      "total": 3
+    },
+    "src/hooks/customers/useUpcomingReminders.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/hooks/invoices/useInvoiceDetails.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 4
+      },
+      "total": 4
+    },
+    "src/hooks/invoices/useInvoicesList.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 4
+      },
+      "total": 4
+    },
+    "src/hooks/suppliers/useSupplierDetail.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 2
+      },
+      "total": 2
+    },
+    "src/hooks/useApprovalChain.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 1,
+        "read": 4
+      },
+      "total": 5
+    },
+    "src/hooks/useAuth.tsx": {
+      "layer": "hooks",
+      "counts": {
+        "auth": 7,
+        "read": 2
+      },
+      "total": 9
+    },
+    "src/hooks/useBusinessInsights.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 2
+      },
+      "total": 2
+    },
+    "src/hooks/useConvertDocument.ts": {
+      "layer": "hooks",
+      "counts": {
+        "write": 1,
+        "read": 6
+      },
+      "total": 7
+    },
+    "src/hooks/useCustomerAlerts.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 1,
+        "read": 3
+      },
+      "total": 4
+    },
+    "src/hooks/useDashboardData.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 1,
+        "read": 2
+      },
+      "total": 3
+    },
+    "src/hooks/useDashboardRealtime.ts": {
+      "layer": "hooks",
+      "counts": {
+        "realtime": 1
+      },
+      "total": 1
+    },
+    "src/hooks/useDashboardSettings.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/hooks/useFavoritePages.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/hooks/useOfflineData.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/hooks/useOfflineMutation.ts": {
+      "layer": "hooks",
+      "counts": {
+        "write": 3,
+        "read": 2
+      },
+      "total": 5
+    },
+    "src/hooks/usePdfProfileRealtime.ts": {
+      "layer": "hooks",
+      "counts": {
+        "realtime": 1
+      },
+      "total": 1
+    },
+    "src/hooks/usePermissionMatrix.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 1
+      },
+      "total": 1
+    },
+    "src/hooks/usePermissions.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 2,
+        "read": 4
+      },
+      "total": 6
+    },
+    "src/hooks/usePlatformAdmin.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 1
+      },
+      "total": 1
+    },
+    "src/hooks/useRateLimit.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 1
+      },
+      "total": 1
+    },
+    "src/hooks/useReportsData.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 9
+      },
+      "total": 9
+    },
+    "src/hooks/useSectionCustomization.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/hooks/useSidebarCounts.ts": {
+      "layer": "hooks",
+      "counts": {
+        "rpc": 1
+      },
+      "total": 1
+    },
+    "src/hooks/useSidebarOrder.ts": {
+      "layer": "hooks",
+      "counts": {
+        "write": 1,
+        "read": 2
+      },
+      "total": 3
+    },
+    "src/hooks/useSidebarSettings.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/hooks/useUserPreferences.ts": {
+      "layer": "hooks",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/integrations/lovable/index.ts": {
+      "layer": "integrations",
+      "counts": {
+        "auth": 1
+      },
+      "total": 1
+    },
+    "src/lib/api/secureOperations.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "rpc": 2,
+        "auth": 2
+      },
+      "total": 4
+    },
+    "src/lib/bulkInvoicePdfGenerator.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/financial-engine/dispatcher.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "rpc": 1
+      },
+      "total": 1
+    },
+    "src/lib/financial-engine/journal.service.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/financial-engine/ledger.service.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 3
+      },
+      "total": 3
+    },
+    "src/lib/financial-engine/period.service.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 3
+      },
+      "total": 3
+    },
+    "src/lib/financial-engine/reconciliation.service.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 3
+      },
+      "total": 3
+    },
+    "src/lib/pdfGenerator.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/queries/reportsQueryService.ts": {
+      "layer": "lib:queries",
+      "counts": {
+        "read": 15
+      },
+      "total": 15
+    },
+    "src/lib/queries/supplierQueryService.ts": {
+      "layer": "lib:queries",
+      "counts": {
+        "read": 5
+      },
+      "total": 5
+    },
+    "src/lib/repositories/activityLogsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/repositories/adminMetricsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 11
+      },
+      "total": 11
+    },
+    "src/lib/repositories/adminRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 10,
+        "read": 6
+      },
+      "total": 16
+    },
+    "src/lib/repositories/approvalRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/lib/repositories/attachmentsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1
+      },
+      "total": 1
+    },
+    "src/lib/repositories/attendanceRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 2,
+        "read": 4
+      },
+      "total": 6
+    },
+    "src/lib/repositories/categoryRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "read": 2
+      },
+      "total": 3
+    },
+    "src/lib/repositories/coaRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "read": 6
+      },
+      "total": 7
+    },
+    "src/lib/repositories/collectionRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/repositories/creditNoteRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 3,
+        "rpc": 1,
+        "read": 8
+      },
+      "total": 12
+    },
+    "src/lib/repositories/customerRelationsRepo.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 10
+      },
+      "total": 10
+    },
+    "src/lib/repositories/customerRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 8,
+        "rpc": 6,
+        "read": 7
+      },
+      "total": 21
+    },
+    "src/lib/repositories/customerSearchRepo.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "rpc": 2,
+        "read": 9
+      },
+      "total": 12
+    },
+    "src/lib/repositories/dimensionsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 6
+      },
+      "total": 6
+    },
+    "src/lib/repositories/employeeRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 3,
+        "read": 5
+      },
+      "total": 8
+    },
+    "src/lib/repositories/expenseRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 4,
+        "auth": 1,
+        "read": 5
+      },
+      "total": 10
+    },
+    "src/lib/repositories/fiscalPeriodRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 3,
+        "auth": 1,
+        "read": 3
+      },
+      "total": 7
+    },
+    "src/lib/repositories/inventoryRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "read": 4
+      },
+      "total": 5
+    },
+    "src/lib/repositories/invoiceRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 7,
+        "read": 5
+      },
+      "total": 12
+    },
+    "src/lib/repositories/journalRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "read": 3
+      },
+      "total": 4
+    },
+    "src/lib/repositories/legacyQuotationsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 5,
+        "read": 7
+      },
+      "total": 12
+    },
+    "src/lib/repositories/logisticsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 6,
+        "rpc": 6,
+        "read": 9
+      },
+      "total": 21
+    },
+    "src/lib/repositories/notificationsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "read": 1
+      },
+      "total": 2
+    },
+    "src/lib/repositories/paymentRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 2,
+        "read": 4
+      },
+      "total": 6
+    },
+    "src/lib/repositories/pdfAssetsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 2,
+        "read": 2
+      },
+      "total": 4
+    },
+    "src/lib/repositories/pdfProfilesRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 2,
+        "read": 4
+      },
+      "total": 6
+    },
+    "src/lib/repositories/postingLogRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "rpc": 1,
+        "read": 1
+      },
+      "total": 2
+    },
+    "src/lib/repositories/priceListRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 5,
+        "read": 3
+      },
+      "total": 8
+    },
+    "src/lib/repositories/productRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 6,
+        "read": 12
+      },
+      "total": 18
+    },
+    "src/lib/repositories/purchaseOrderRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "read": 7
+      },
+      "total": 8
+    },
+    "src/lib/repositories/quotationRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 1,
+        "rpc": 4,
+        "read": 6
+      },
+      "total": 11
+    },
+    "src/lib/repositories/referenceRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 6
+      },
+      "total": 6
+    },
+    "src/lib/repositories/reportTemplateRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 3,
+        "read": 1
+      },
+      "total": 4
+    },
+    "src/lib/repositories/reportsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 3
+      },
+      "total": 3
+    },
+    "src/lib/repositories/salesOrderRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 6,
+        "read": 6
+      },
+      "total": 12
+    },
+    "src/lib/repositories/savedViewsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 2,
+        "read": 1
+      },
+      "total": 3
+    },
+    "src/lib/repositories/settingsRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/repositories/supplierPaymentRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/repositories/supplierRelationsRepo.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "read": 5
+      },
+      "total": 5
+    },
+    "src/lib/repositories/supplierRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 8,
+        "rpc": 4,
+        "read": 5
+      },
+      "total": 17
+    },
+    "src/lib/repositories/tasksRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 3,
+        "read": 1
+      },
+      "total": 4
+    },
+    "src/lib/repositories/treasuryRepository.ts": {
+      "layer": "lib:repositories",
+      "counts": {
+        "write": 4,
+        "read": 3
+      },
+      "total": 7
+    },
+    "src/lib/services/inventoryService.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/lib/services/invoiceService.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "write": 2,
+        "rpc": 1,
+        "read": 1
+      },
+      "total": 4
+    },
+    "src/lib/services/paymentService.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "write": 1
+      },
+      "total": 1
+    },
+    "src/lib/services/supplierService.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "write": 2
+      },
+      "total": 2
+    },
+    "src/lib/storageUrl.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "storage": 1
+      },
+      "total": 1
+    },
+    "src/lib/syncManager.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 5
+      },
+      "total": 5
+    },
+    "src/lib/tenantContext.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "write": 2,
+        "rpc": 3,
+        "auth": 3,
+        "read": 3
+      },
+      "total": 11
+    },
+    "src/pages/ForgotPasswordPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "auth": 1
+      },
+      "total": 1
+    },
+    "src/pages/ResetPasswordPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "auth": 3
+      },
+      "total": 3
+    },
+    "src/pages/admin/BackupPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/pages/admin/CustomizationsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/pages/admin/DispatcherBatchDetailPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/pages/admin/DispatcherBatchesPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/pages/admin/DomainEventsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "rpc": 1,
+        "read": 1
+      },
+      "total": 2
+    },
+    "src/pages/admin/PermissionsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/pages/admin/RoleLimitsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "rpc": 1,
+        "read": 4
+      },
+      "total": 5
+    },
+    "src/pages/admin/RolesPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "write": 4,
+        "read": 2
+      },
+      "total": 6
+    },
+    "src/pages/admin/UserManagementPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "write": 2,
+        "rpc": 1,
+        "read": 3
+      },
+      "total": 6
+    },
+    "src/pages/admin/UsersPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "write": 2,
+        "read": 2
+      },
+      "total": 4
+    },
+    "src/pages/attachments/AttachmentsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/pages/dev/PdfJobsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/pages/employees/EmployeeDetailsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/pages/notifications/NotificationsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "write": 2,
+        "read": 1
+      },
+      "total": 3
+    },
+    "src/pages/platform/PlatformAdminsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/pages/platform/PlatformBillingPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "rpc": 1
+      },
+      "total": 1
+    },
+    "src/pages/platform/PlatformDashboard.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "rpc": 2
+      },
+      "total": 2
+    },
+    "src/pages/platform/PlatformReportsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/pages/platform/TenantDetailsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "rpc": 3,
+        "read": 1
+      },
+      "total": 4
+    },
+    "src/pages/platform/TenantsManagementPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "write": 1,
+        "rpc": 3
+      },
+      "total": 4
+    },
+    "src/pages/reports/KPIDashboard.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 5
+      },
+      "total": 5
+    },
+    "src/pages/reports/ReturnsReportPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 2
+      },
+      "total": 2
+    },
+    "src/pages/reports/SalesReportsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 3
+      },
+      "total": 3
+    },
+    "src/pages/search/SearchPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 5
+      },
+      "total": 5
+    },
+    "src/pages/settings/UnifiedSettingsPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/pages/sync/SyncStatusPage.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "write": 1,
+        "read": 1
+      },
+      "total": 2
+    }
+  }
+}

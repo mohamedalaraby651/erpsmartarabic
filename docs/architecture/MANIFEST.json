@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "generatedAt": "2026-06-19T01:49:25.026Z",
+  "environment": {
+    "nodeVersion": "v22.22.0",
+    "packageManager": "bun@1.3.3",
+    "gitCommit": "b9c880b089c6da8e90dbb2acfc01d49faf4ceef6",
+    "gitBranch": "edit/edt-36a8e1a5-25bf-49e5-afd5-e50dc6114c5f",
+    "gitTag": "architecture-baseline-ux0",
+    "lockfileHash": "57954bd8ba6493ea7d74faa1381295829ff33ed882e78e1a7bf9166fa2530203",
+    "toolVersions": {
+      "madge": "^8.0.0",
+      "rollup-plugin-visualizer": "^7.0.1",
+      "ts-complex": "^1.0.0",
+      "depcheck": "^1.4.7",
+      "vite": "^5.4.19",
+      "typescript": "^5.8.3",
+      "vitest": "^4.0.16",
+      "eslint": "^9.32.0"
+    }
+  },
+  "reports": {
+    "snapshot": "scripts/audits/output/snapshot-report.json",
+    "dependencies": "scripts/audits/output/dependency-report.json",
+    "components": "scripts/audits/output/component-report.json",
+    "routes": "scripts/audits/output/route-report.json",
+    "dataAccess": "scripts/audits/output/data-access-report.json",
+    "complexity": "scripts/audits/output/complexity-report.json",
+    "depcheck": "scripts/audits/output/depcheck-report.json",
+    "bundle": "scripts/audits/output/bundle-report.json",
+    "lintTypes": "scripts/audits/output/lint-types-report.json",
+    "tests": "scripts/audits/output/tests-report.json"
+  },
+  "health": {
+    "directDbAccessUi": 150,
+    "asAnyTotal": 138,
+    "asAnyByCategory": {
+      "infrastructure": 37,
+      "ui": 26,
+      "tests": 73,
+      "legacy": 2,
+      "generated": 0
+    },
+    "consoleTotal": 120,
+    "consoleByCategory": {
+      "debug": 2,
+      "error-handler": 83,
+      "telemetry": 3,
+      "leftover": 32
+    },
+    "filesOver500": 7,
+    "filesOver300": 93,
+    "circularDeps": 6,
+    "importLayerViolations": 202,
+    "bundleTotalBytes": 4920767,
+    "tscStrictErrors": 0,
+    "eslintErrors": 31,
+    "eslintWarnings": 786,
+    "vitestPassed": 1187,
+    "vitestTotal": 1187,
+    "maintainabilityIndexAvg": 90.19,
+    "cyclomaticP95": 29,
+    "avgComponentLoc": 161.07,
+    "avgHookLoc": 100,
+    "avgProps": 5.13,
+    "repositoryReuseMean": 2.91,
+    "queryReuseMean": 4
+  },
+  "targets": {
+    "directDbAccessUi": {
+      "value": 0,
+      "phase": "UX-2 → UX-7"
+    },
+    "asAnyInfraPlusUi": {
+      "value": 0,
+      "phase": "UX-1 → UX-2"
+    },
+    "consoleLeftover": {
+      "value": 0,
+      "phase": "UX-1"
+    },
+    "filesOver500": {
+      "value": 0,
+      "phase": "UX-5 → UX-7"
+    },
+    "circularDeps": {
+      "value": 0,
+      "phase": "UX-1"
+    },
+    "importLayerViolations": {
+      "value": 0,
+      "phase": "UX-2"
+    },
+    "bundleDeltaPerPhase": {
+      "value": "±5%",
+      "phase": "every phase"
+    },
+    "vitestPassed": {
+      "value": ">=1187",
+      "phase": "every phase (never regress)"
+    },
+    "tscStrictErrors": {
+      "value": 0,
+      "phase": "UX-1"
+    },
+    "cyclomaticP95": {
+      "value": 15,
+      "phase": "UX-7"
+    }
+  },
+  "hardStops": {
+    "tscStrictErrors": false,
+    "vitestRegression": false,
+    "sourceChanged": false
+  },
+  "determinism": {
+    "verified": true,
+    "runs": 2,
+    "diff": "none",
+    "tool": "sha256sum"
+  }
+}

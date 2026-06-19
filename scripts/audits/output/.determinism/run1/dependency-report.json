@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "totalModules": 933,
+  "totalEdges": 4119,
+  "circular": {
+    "count": 6,
+    "cycles": [
+      [
+        "components/customers/details/CustomerKPICards.tsx",
+        "components/customers/details/CustomerTimelineDrawer.tsx"
+      ],
+      [
+        "hooks/usePdfProfile.ts",
+        "hooks/usePdfProfileRealtime.ts"
+      ],
+      [
+        "lib/pdf/diagnostics/PdfLogger.ts",
+        "lib/pdf/diagnostics/telemetrySink.ts"
+      ],
+      [
+        "lib/pdf/routing/routePdfRequest.ts",
+        "lib/pdf/services/PdfRenderService.ts"
+      ],
+      [
+        "lib/prefetch.ts",
+        "pages/Dashboard.tsx",
+        "components/dashboard/FinancialKPIRow.tsx"
+      ],
+      [
+        "lib/prefetch.ts",
+        "pages/Dashboard.tsx",
+        "components/dashboard/FinancialKPIRow.tsx",
+        "components/dashboard/_shared/DashboardChip.tsx"
+      ]
+    ]
+  },
+  "deepestChain": {
+    "length": 16,
+    "path": [
+      "App.tsx",
+      "components/layout/AppLayout.tsx",
+      "components/layout/AdaptiveShell.tsx",
+      "components/layout/AppSidebar.tsx",
+      "components/layout/sidebar/SidebarNavSections.tsx",
+      "components/sidebar/NavItemWithBadge.tsx",
+      "lib/prefetch.ts",
+      "pages/Dashboard.tsx",
+      "components/dashboard/RecentInvoicesWidget.tsx",
+      "components/dashboard/InvoiceQuickActions.tsx",
+      "lib/pdf/routing/routePdfRequest.ts",
+      "lib/pdf/printInvoiceHtmlPdf.ts",
+      "lib/pdf/engine/HtmlPdfEngine.ts",
+      "lib/pdf/arabic/arabicCss.ts",
+      "lib/pdf/fonts/fontRegistry.ts",
+      "lib/pdf/diagnostics/errors.ts"
+    ]
+  },
+  "topImporters": [
+    {
+      "file": "App.tsx",
+      "count": 104
+    },
+    {
+      "file": "pages/customers/CustomerDetailsPage.tsx",
+      "count": 59
+    },
+    {
+      "file": "lib/pdf/index.ts",
+      "count": 42
+    },
+    {
+      "file": "pages/suppliers/SupplierDetailsPage.tsx",
+      "count": 41
+    },
+    {
+      "file": "pages/customers/CustomersPage.tsx",
+      "count": 39
+    },
+    {
+      "file": "lib/repositories/index.ts",
+      "count": 36
+    },
+    {
+      "file": "pages/Dashboard.tsx",
+      "count": 32
+    },
+    {
+      "file": "pages/invoices/InvoiceDetailsPage.tsx",
+      "count": 29
+    },
+    {
+      "file": "pages/quotations/QuotationDetailsPage.tsx",
+      "count": 28
+    },
+    {
+      "file": "lib/prefetch.ts",
+      "count": 27
+    },
+    {
+      "file": "pages/quotations/QuotationsPage.tsx",
+      "count": 27
+    },
+    {
+      "file": "pages/payments/PaymentsPage.tsx",
+      "count": 26
+    },
+    {
+      "file": "pages/invoices/InvoicesPage.tsx",
+      "count": 25
+    },
+    {
+      "file": "pages/sales-orders/SalesOrdersPage.tsx",
+      "count": 25
+    },
+    {
+      "file": "pages/suppliers/SuppliersPage.tsx",
+      "count": 25
+    },
+    {
+      "file": "components/invoices/InvoiceFormDialog.tsx",
+      "count": 24
+    },
+    {
+      "file": "components/quotations/QuotationFormDialog.tsx",
+      "count": 23
+    },
+    {
+      "file": "pages/products/ProductsPage.tsx",
+      "count": 23
+    },
+    {
+      "file": "pages/purchase-orders/PurchaseOrdersPage.tsx",
+      "count": 23
+    },
+    {
+      "file": "pages/sales-orders/SalesOrderDetailsPage.tsx",
+      "count": 23
+    }
+  ],
+  "topImported": [
+    {
+      "file": "components/ui/button.tsx",
+      "count": 275
+    },
+    {
+      "file": "components/ui/card.tsx",
+      "count": 201
+    },
+    {
+      "file": "lib/utils.ts",
+      "count": 190
+    },
+    {
+      "file": "integrations/supabase/client.ts",
+      "count": 168
+    },
+    {
+      "file": "components/ui/badge.tsx",
+      "count": 163
+    },
+    {
+      "file": "components/ui/input.tsx",
+      "count": 120
+    },
+    {
+      "file": "integrations/supabase/types.ts",
+      "count": 96
+    },
+    {
+      "file": "hooks/useAuth.tsx",
+      "count": 89
+    },
+    {
+      "file": "components/ui/label.tsx",
+      "count": 79
+    },
+    {
+      "file": "lib/errorHandler.ts",
+      "count": 75
+    },
+    {
+      "file": "components/ui/select.tsx",
+      "count": 74
+    },
+    {
+      "file": "hooks/use-toast.ts",
+      "count": 65
+    },
+    {
+      "file": "components/ui/skeleton.tsx",
+      "count": 61
+    },
+    {
+      "file": "components/ui/table.tsx",
+      "count": 59
+    },
+    {
+      "file": "components/ui/dialog.tsx",
+      "count": 57
+    },
+    {
+      "file": "hooks/use-mobile.tsx",
+      "count": 57
+    },
+    {
+      "file": "lib/repositories/_base.ts",
+      "count": 45
+    },
+    {
+      "file": "components/ui/scroll-area.tsx",
+      "count": 40
+    },
+    {
+      "file": "components/ui/textarea.tsx",
+      "count": 39
+    },
+    {
+      "file": "components/shared/EmptyState.tsx",
+      "count": 29
+    }
+  ],
+  "importLayerViolations": {
+    "total": 202,
+    "bySummary": {
+      "components→repositories": 69,
+      "components→services": 5,
+      "pages→repositories": 31,
+      "hooks→supabase-client": 31,
+      "components→supabase-client": 38,
+      "pages→supabase-client": 28,
+      "domain→ui": 0
+    },
+    "samples": {
+      "components→repositories": [
+        {
+          "from": "components/attendance/LeaveRequestDialog.tsx",
+          "to": "lib/repositories/index.ts"
+        },
+        {
+          "from": "components/categories/CategoryFormDialog.tsx",
+          "to": "lib/repositories/_base.ts"
+        },
+        {
+          "from": "components/credit-notes/CreditNoteFormDialog.tsx",
+          "to": "lib/repositories/_base.ts"
+        },
+        {
+          "from": "components/credit-notes/CreditNoteFormDialog.tsx",
+          "to": "lib/repositories/creditNoteRepository.ts"
+        },
+        {
+          "from": "components/customers/alerts/AlertItemActions.tsx",
+          "to": "lib/repositories/index.ts"
+        }
+      ],
+      "components→services": [
+        {
+          "from": "components/admin/RestoreBackupResultsView.tsx",
+          "to": "lib/services/backupRestoreReport.ts"
+        },
+        {
+          "from": "components/admin/useRestoreBackup.ts",
+          "to": "lib/services/backupRestoreParser.ts"
+        },
+        {
+          "from": "components/admin/useRestoreBackup.ts",
+          "to": "lib/services/backupRestoreReport.ts"
+        },
+        {
+          "from": "components/invoices/InvoiceFormDialog.tsx",
+          "to": "lib/services/invoiceService.ts"
+        },
+        {
+          "from": "components/suppliers/SupplierPaymentDialog.tsx",
+          "to": "lib/services/supplierService.ts"
+        }
+      ],
+      "pages→repositories": [
+        {
+          "from": "pages/accounting/JournalEntriesPage.tsx",
+          "to": "lib/repositories/journalRepository.ts"
+        },
+        {
+          "from": "pages/admin/ActivityLogPage.tsx",
+          "to": "lib/repositories/adminMetricsRepository.ts"
+        },
+        {
+          "from": "pages/admin/ApprovalChainsPage.tsx",
+          "to": "lib/repositories/index.ts"
+        },
+        {
+          "from": "pages/admin/AuditTrailPage.tsx",
+          "to": "lib/repositories/adminMetricsRepository.ts"
+        },
+        {
+          "from": "pages/admin/ExportTemplatesPage.tsx",
+          "to": "lib/repositories/index.ts"
+        }
+      ],
+      "hooks→supabase-client": [
+        {
+          "from": "hooks/customers/useCustomerDetail.ts",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "hooks/customers/useCustomerLayoutPrefs.ts",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "hooks/customers/useUpcomingReminders.ts",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "hooks/invoices/useInvoiceDetails.ts",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "hooks/invoices/useInvoicesList.ts",
+          "to": "integrations/supabase/client.ts"
+        }
+      ],
+      "components→supabase-client": [
+        {
+          "from": "components/admin/EventDispatcherCard.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "components/admin/useRestoreBackup.ts",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "components/auth/TwoFactorSetup.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "components/customers/details/CustomerPinnedNote.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "components/customers/tabs/CustomerTabNotes.tsx",
+          "to": "integrations/supabase/client.ts"
+        }
+      ],
+      "pages→supabase-client": [
+        {
+          "from": "pages/ForgotPasswordPage.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "pages/ResetPasswordPage.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "pages/admin/BackupPage.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "pages/admin/CustomizationsPage.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
+          "from": "pages/admin/DispatcherBatchDetailPage.tsx",
+          "to": "integrations/supabase/client.ts"
+        }
+      ],
+      "domain→ui": []
+    }
+  }
+}

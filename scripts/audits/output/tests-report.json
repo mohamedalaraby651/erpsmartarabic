@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "vitest": {
+    "ran": true,
+    "passed": 1187,
+    "failed": 0,
+    "total": 1187
+  },
+  "hardStopTriggered": false
+}

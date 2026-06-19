@@ -1,0 +1,1003 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "totalRoutes": 98,
+  "byWorkspace": {
+    "dashboard": 2,
+    "other": 28,
+    "auth": 4,
+    "dev": 3,
+    "platform": 2,
+    "finance": 13,
+    "admin": 2,
+    "system": 11,
+    "hr": 3,
+    "inventory": 5,
+    "sales": 9,
+    "procurement": 11,
+    "reports": 5
+  },
+  "workflowCandidates": 18,
+  "routes": [
+    {
+      "route": "(index)",
+      "element": "Dashboard",
+      "workspace": "dashboard",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "(index)",
+      "element": "PlatformDashboard",
+      "workspace": "dashboard",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "*",
+      "element": "NotFound",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/",
+      "element": "AppLayout",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/auth",
+      "element": "Auth",
+      "workspace": "auth",
+      "requiresAuth": false,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/dev/pdf-jobs",
+      "element": "PdfJobsPage",
+      "workspace": "dev",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/dev/pdf-sandbox",
+      "element": "PdfSandboxPage",
+      "workspace": "dev",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/dev/pdf-telemetry",
+      "element": "PdfTelemetryPage",
+      "workspace": "dev",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/forgot-password",
+      "element": "ForgotPasswordPage",
+      "workspace": "auth",
+      "requiresAuth": false,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/index",
+      "element": "Navigate",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/landing",
+      "element": "LandingPage",
+      "workspace": "auth",
+      "requiresAuth": false,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/platform",
+      "element": "PlatformLayout",
+      "workspace": "platform",
+      "requiresAuth": true,
+      "permission": "admin",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/platform/auth",
+      "element": "PlatformAuth",
+      "workspace": "platform",
+      "requiresAuth": true,
+      "permission": "admin",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/reset-password",
+      "element": "ResetPasswordPage",
+      "workspace": "auth",
+      "requiresAuth": false,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "accounting/chart-of-accounts",
+      "element": "ChartOfAccountsPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "accounting/journals",
+      "element": "JournalEntriesPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "accounting/posting-log",
+      "element": "PostingLogPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "activity-log",
+      "element": "ActivityLogPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "admin",
+      "element": "RoleGuard",
+      "workspace": "admin",
+      "requiresAuth": true,
+      "permission": "admin",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "admins",
+      "element": "PlatformAdminsPage",
+      "workspace": "admin",
+      "requiresAuth": true,
+      "permission": "admin",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "approval-chains",
+      "element": "ApprovalChainsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "approvals",
+      "element": "ApprovalsPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "attachments",
+      "element": "AttachmentsPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "attendance",
+      "element": "AttendancePage",
+      "workspace": "hr",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "audit-trail",
+      "element": "AuditTrailPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "backup",
+      "element": "BackupPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "billing",
+      "element": "PlatformBillingPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "categories",
+      "element": "CategoriesPage",
+      "workspace": "inventory",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "collections",
+      "element": "CollectionDashboard",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "credit-notes",
+      "element": "CreditNotesPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "credit-notes/:id",
+      "element": "CreditNoteDetailsPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "customers",
+      "element": "CustomersPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "customers/:id",
+      "element": "CustomerDetailsPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "customizations",
+      "element": "CustomizationsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "dashboard",
+      "element": "AdminDashboard",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "delivery-notes",
+      "element": "DeliveryNotesPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "delivery-notes/:id",
+      "element": "LogisticsDocumentDetailsPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "dispatcher-batches",
+      "element": "DispatcherBatchesPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "dispatcher-batches/:correlationId",
+      "element": "DispatcherBatchDetailPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "domain-events",
+      "element": "DomainEventsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "employees",
+      "element": "EmployeesPage",
+      "workspace": "hr",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "employees/:id",
+      "element": "EmployeeDetailsPage",
+      "workspace": "hr",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "expense-categories",
+      "element": "ExpenseCategoriesPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "expenses",
+      "element": "ExpensesPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "export-templates",
+      "element": "ExportTemplatesPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "goods-receipts",
+      "element": "GoodsReceiptsPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "goods-receipts/:id",
+      "element": "LogisticsDocumentDetailsPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "install",
+      "element": "InstallPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "inventory",
+      "element": "InventoryPage",
+      "workspace": "inventory",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "invoices",
+      "element": "InvoicesPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "invoices/:id",
+      "element": "InvoiceDetailsPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "kpis",
+      "element": "KPIDashboard",
+      "workspace": "reports",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "metrics",
+      "element": "MetricsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "notifications",
+      "element": "NotificationsPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "open-file",
+      "element": "OpenFilePage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "payments",
+      "element": "PaymentsPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "permissions",
+      "element": "PermissionsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "price-lists",
+      "element": "PriceListsPage",
+      "workspace": "inventory",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "products",
+      "element": "ProductsPage",
+      "workspace": "inventory",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "products/:id",
+      "element": "ProductDetailsPage",
+      "workspace": "inventory",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "profile",
+      "element": "UnifiedSettingsPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "protocol",
+      "element": "ProtocolHandlerPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "purchase-invoices",
+      "element": "PurchaseInvoicesPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "purchase-invoices/:id",
+      "element": "LogisticsDocumentDetailsPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "purchase-invoices/approvals",
+      "element": "PurchaseInvoiceApprovalsPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "purchase-orders",
+      "element": "PurchaseOrdersPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "purchase-orders/:id",
+      "element": "PurchaseOrderDetailsPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "quotations",
+      "element": "QuotationsPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "quotations/:id",
+      "element": "QuotationDetailsPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "quotes",
+      "element": "QuotesPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "quotes/new",
+      "element": "QuoteNewPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "reports",
+      "element": "ReportsPage",
+      "workspace": "reports",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "reports",
+      "element": "PlatformReportsPage",
+      "workspace": "reports",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "reports/returns",
+      "element": "ReturnsReportPage",
+      "workspace": "reports",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "reports/sales",
+      "element": "SalesReportsPage",
+      "workspace": "reports",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "role-limits",
+      "element": "RoleLimitsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "roles",
+      "element": "RolesPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "sales-orders",
+      "element": "SalesOrdersPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "sales-orders/:id",
+      "element": "SalesOrderDetailsPage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": true
+    },
+    {
+      "route": "sales-pipeline",
+      "element": "SalesPipelinePage",
+      "workspace": "sales",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "search",
+      "element": "SearchPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "settings",
+      "element": "UnifiedSettingsPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "settings",
+      "element": "PlatformSettingsPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "settings/alerts",
+      "element": "CustomerAlertSettingsPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "share-target",
+      "element": "ShareTargetPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "sod-rules",
+      "element": "SodRulesPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "supplier-payments",
+      "element": "SupplierPaymentsPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "suppliers",
+      "element": "SuppliersPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "suppliers/:id",
+      "element": "SupplierDetailsPage",
+      "workspace": "procurement",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "sync",
+      "element": "SyncStatusPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "tasks",
+      "element": "TasksPage",
+      "workspace": "system",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "tenants",
+      "element": "TenantsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "tenants",
+      "element": "TenantsManagementPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "tenants/:id",
+      "element": "TenantDetailsPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "treasury",
+      "element": "TreasuryPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "treasury/:id",
+      "element": "CashRegisterDetailsPage",
+      "workspace": "finance",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "user-management",
+      "element": "UserManagementPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "users",
+      "element": "UsersPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    }
+  ]
+}

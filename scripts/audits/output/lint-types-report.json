@@ -1,0 +1,395 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "asAny": {
+    "total": 138,
+    "byCategory": {
+      "infrastructure": 37,
+      "ui": 26,
+      "tests": 73,
+      "legacy": 2,
+      "generated": 0
+    },
+    "samples": [
+      {
+        "file": "src/__tests__/integration/data-flow.test.tsx",
+        "line": 277,
+        "code": "setLocalItems(prev => [...prev, newItem as any]);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/integration/pwa-offline.test.ts",
+        "line": 59,
+        "code": "setTimeout(() => mockIDBRequest.onsuccess?.({ target: mockIDBRequest } as any), 0);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/integration/pwa-offline.test.ts",
+        "line": 138,
+        "code": "const syncManager = (ready as any).sync;",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/integration/pwa-offline.test.ts",
+        "line": 178,
+        "code": "mockIDBRequest.onupgradeneeded?.({ target: mockIDBRequest } as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useAuth.test.tsx",
+        "line": 8,
+        "code": "const error = new Error(message) as any;",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useAuth.test.tsx",
+        "line": 237,
+        "code": "data: { session: mockSession as any },",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useAuth.test.tsx",
+        "line": 252,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useAuth.test.tsx",
+        "line": 277,
+        "code": "error: { message: 'Network error', status: 500 } as any",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useAuth.test.tsx",
+        "line": 295,
+        "code": "data: { session: mockSession as any },",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useAuth.test.tsx",
+        "line": 308,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 35,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 62,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 68,
+        "code": "result.current.onMouseUp({} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 90,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 95,
+        "code": "result.current.onMouseUp({} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 113,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 118,
+        "code": "result.current.onMouseUp({} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 156,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 181,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 186,
+        "code": "result.current.onMouseLeave({} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 203,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 208,
+        "code": "result.current.onTouchCancel({} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 230,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 236,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 248,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 249,
+        "code": "result.current.onMouseUp({} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 270,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 297,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+        "line": 326,
+        "code": "} as any);",
+        "category": "tests"
+      },
+      {
+        "file": "src/__tests__/unit/hooks/useOfflineData.test.ts",
+        "line": 116,
+        "code": "} as any);",
+        "category": "tests"
+      }
+    ]
+  },
+  "console": {
+    "total": 120,
+    "byCategory": {
+      "debug": 2,
+      "error-handler": 83,
+      "telemetry": 3,
+      "leftover": 32
+    },
+    "samples": [
+      {
+        "file": "src/components/admin/useRestoreBackup.ts",
+        "line": 309,
+        "code": "console.error('[RestoreBackup] restore error:', err);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/admin/useRestoreBackup.ts",
+        "line": 379,
+        "code": "console.error('[RestoreBackup] rollback error:', err);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/customers/details/CustomerErrorBoundary.tsx",
+        "line": 25,
+        "code": "console.error('[CustomerErrorBoundary]', error, info.componentStack);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/dashboard/WidgetErrorBoundary.tsx",
+        "line": 21,
+        "code": "console.error(`[Widget:${this.props.name || 'unknown'}]`, error, info);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/errors/AppErrorBoundary.tsx",
+        "line": 39,
+        "code": "console.error('[AppErrorBoundary] Caught error:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/errors/AppErrorBoundary.tsx",
+        "line": 40,
+        "code": "console.error('[AppErrorBoundary] Component stack:', errorInfo.componentStack);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/export/ExportWithTemplateButton.tsx",
+        "line": 157,
+        "code": "console.error('Export error:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/offline/OfflineIndicator.tsx",
+        "line": 42,
+        "code": "console.error('Error fetching sync queue count:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/offline/OfflineIndicator.tsx",
+        "line": 76,
+        "code": "console.error('Sync failed:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/print/QuotationPrintView.tsx",
+        "line": 60,
+        "code": "console.error('PDF generation error:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/shared/ImageUpload.tsx",
+        "line": 131,
+        "code": "if (import.meta.env.DEV) console.error('Error uploading image:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/shared/LogoUpload.tsx",
+        "line": 91,
+        "code": "console.error('Upload error:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/components/shared/PageErrorBoundary.tsx",
+        "line": 30,
+        "code": "console.error('[PageErrorBoundary]', error, info.componentStack);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/customers/useCustomerLayoutPrefs.ts",
+        "line": 129,
+        "code": "console.warn(\"[customer-layout] failed to sync prefs:\", e);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useAppBadge.ts",
+        "line": 12,
+        "code": "import.meta.env.DEV && console.log('[App Badge] Not supported in this browser');",
+        "category": "leftover"
+      },
+      {
+        "file": "src/hooks/useAppBadge.ts",
+        "line": 19,
+        "code": "import.meta.env.DEV && console.log(`[App Badge] Set to ${count}`);",
+        "category": "leftover"
+      },
+      {
+        "file": "src/hooks/useAppBadge.ts",
+        "line": 22,
+        "code": "import.meta.env.DEV && console.log('[App Badge] Cleared');",
+        "category": "leftover"
+      },
+      {
+        "file": "src/hooks/useAppBadge.ts",
+        "line": 26,
+        "code": "console.error('[App Badge] Error:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useAppBadge.ts",
+        "line": 36,
+        "code": "import.meta.env.DEV && console.log('[App Badge] Cleared');",
+        "category": "leftover"
+      },
+      {
+        "file": "src/hooks/useAppBadge.ts",
+        "line": 39,
+        "code": "console.error('[App Badge] Error clearing:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useApprovalChain.ts",
+        "line": 119,
+        "code": "console.error('Error creating approval request:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useApprovalChain.ts",
+        "line": 202,
+        "code": "console.error('Error fetching pending approvals:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useAuth.tsx",
+        "line": 119,
+        "code": "if (import.meta.env.DEV) console.error('Error fetching user role:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useAuth.tsx",
+        "line": 143,
+        "code": "if (import.meta.env.DEV) console.error('Error fetching user role:', error);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useCustomShortcuts.ts",
+        "line": 77,
+        "code": "console.warn('Failed to save shortcuts:', e);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useFileHandling.ts",
+        "line": 134,
+        "code": "console.log('[File Handling] Processed files:', processedFiles);",
+        "category": "leftover"
+      },
+      {
+        "file": "src/hooks/useFileHandling.ts",
+        "line": 141,
+        "code": "console.error('[File Handling] Error:', err);",
+        "category": "error-handler"
+      },
+      {
+        "file": "src/hooks/useInstallPrompt.ts",
+        "line": 61,
+        "code": "if (import.meta.env.DEV) console.log('[PWA 2.0] Install prompt available');",
+        "category": "leftover"
+      },
+      {
+        "file": "src/hooks/useInstallPrompt.ts",
+        "line": 68,
+        "code": "if (import.meta.env.DEV) console.log('[PWA 2.0] App installed successfully');",
+        "category": "leftover"
+      },
+      {
+        "file": "src/hooks/useInstallPrompt.ts",
+        "line": 75,
+        "code": "if (import.meta.env.DEV) console.log('[PWA 2.0] Display mode changed to standalone');",
+        "category": "leftover"
+      }
+    ]
+  },
+  "typescript": {
+    "strictErrors": 0,
+    "hardStopTriggered": false
+  },
+  "eslint": {
+    "errors": 31,
+    "warnings": 786
+  }
+}

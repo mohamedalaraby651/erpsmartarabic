@@ -1,0 +1,1114 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "topFolders": [
+    "__tests__",
+    "components",
+    "config",
+    "domain",
+    "hooks",
+    "integrations",
+    "lib",
+    "pages",
+    "styles",
+    "test",
+    "types"
+  ],
+  "targetLayersGap": [
+    "ui",
+    "contracts",
+    "workspaces",
+    "workflows"
+  ],
+  "totalFiles": 932,
+  "totalLoc": 143669,
+  "tree": {
+    "dir": "src",
+    "files": 932,
+    "loc": 143669,
+    "children": [
+      {
+        "dir": "src/__tests__",
+        "files": 50,
+        "loc": 12447,
+        "children": [
+          {
+            "dir": "src/__tests__/integration",
+            "files": 14,
+            "loc": 4959,
+            "children": []
+          },
+          {
+            "dir": "src/__tests__/security",
+            "files": 9,
+            "loc": 1828,
+            "children": []
+          },
+          {
+            "dir": "src/__tests__/unit",
+            "files": 27,
+            "loc": 5660,
+            "children": [
+              {
+                "dir": "src/__tests__/unit/financial-engine",
+                "files": 1,
+                "loc": 64,
+                "children": []
+              },
+              {
+                "dir": "src/__tests__/unit/hooks",
+                "files": 16,
+                "loc": 4106,
+                "children": []
+              },
+              {
+                "dir": "src/__tests__/unit/lib",
+                "files": 6,
+                "loc": 1164,
+                "children": []
+              },
+              {
+                "dir": "src/__tests__/unit/repositories",
+                "files": 4,
+                "loc": 326,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dir": "src/components",
+        "files": 430,
+        "loc": 58657,
+        "children": [
+          {
+            "dir": "src/components/accounting",
+            "files": 3,
+            "loc": 743,
+            "children": []
+          },
+          {
+            "dir": "src/components/admin",
+            "files": 8,
+            "loc": 1856,
+            "children": []
+          },
+          {
+            "dir": "src/components/attendance",
+            "files": 1,
+            "loc": 109,
+            "children": []
+          },
+          {
+            "dir": "src/components/auth",
+            "files": 2,
+            "loc": 386,
+            "children": []
+          },
+          {
+            "dir": "src/components/categories",
+            "files": 1,
+            "loc": 198,
+            "children": []
+          },
+          {
+            "dir": "src/components/commercial",
+            "files": 1,
+            "loc": 185,
+            "children": []
+          },
+          {
+            "dir": "src/components/credit-notes",
+            "files": 1,
+            "loc": 436,
+            "children": []
+          },
+          {
+            "dir": "src/components/customers",
+            "files": 82,
+            "loc": 10789,
+            "children": [
+              {
+                "dir": "src/components/customers/alerts",
+                "files": 4,
+                "loc": 391,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/charts",
+                "files": 3,
+                "loc": 177,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/details",
+                "files": 18,
+                "loc": 2403,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/dialogs",
+                "files": 10,
+                "loc": 1794,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/filters",
+                "files": 4,
+                "loc": 457,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/form",
+                "files": 4,
+                "loc": 249,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/hero",
+                "files": 3,
+                "loc": 309,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/list",
+                "files": 14,
+                "loc": 1999,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/mobile",
+                "files": 10,
+                "loc": 1500,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/shared",
+                "files": 3,
+                "loc": 224,
+                "children": []
+              },
+              {
+                "dir": "src/components/customers/tabs",
+                "files": 9,
+                "loc": 1286,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/components/customization",
+            "files": 1,
+            "loc": 263,
+            "children": []
+          },
+          {
+            "dir": "src/components/dashboard",
+            "files": 20,
+            "loc": 2625,
+            "children": [
+              {
+                "dir": "src/components/dashboard/_shared",
+                "files": 2,
+                "loc": 166,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/components/employees",
+            "files": 1,
+            "loc": 325,
+            "children": []
+          },
+          {
+            "dir": "src/components/errors",
+            "files": 1,
+            "loc": 111,
+            "children": []
+          },
+          {
+            "dir": "src/components/expenses",
+            "files": 2,
+            "loc": 365,
+            "children": []
+          },
+          {
+            "dir": "src/components/export",
+            "files": 2,
+            "loc": 494,
+            "children": []
+          },
+          {
+            "dir": "src/components/filters",
+            "files": 2,
+            "loc": 206,
+            "children": []
+          },
+          {
+            "dir": "src/components/inventory",
+            "files": 6,
+            "loc": 875,
+            "children": []
+          },
+          {
+            "dir": "src/components/invoices",
+            "files": 8,
+            "loc": 1287,
+            "children": []
+          },
+          {
+            "dir": "src/components/keyboard",
+            "files": 1,
+            "loc": 154,
+            "children": []
+          },
+          {
+            "dir": "src/components/landing",
+            "files": 7,
+            "loc": 654,
+            "children": []
+          },
+          {
+            "dir": "src/components/layout",
+            "files": 22,
+            "loc": 2734,
+            "children": [
+              {
+                "dir": "src/components/layout/mobile",
+                "files": 7,
+                "loc": 531,
+                "children": []
+              },
+              {
+                "dir": "src/components/layout/shared",
+                "files": 3,
+                "loc": 242,
+                "children": []
+              },
+              {
+                "dir": "src/components/layout/sidebar",
+                "files": 4,
+                "loc": 436,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/components/logistics",
+            "files": 3,
+            "loc": 502,
+            "children": []
+          },
+          {
+            "dir": "src/components/mobile",
+            "files": 17,
+            "loc": 2160,
+            "children": []
+          },
+          {
+            "dir": "src/components/navigation",
+            "files": 3,
+            "loc": 379,
+            "children": []
+          },
+          {
+            "dir": "src/components/notifications",
+            "files": 2,
+            "loc": 299,
+            "children": []
+          },
+          {
+            "dir": "src/components/offline",
+            "files": 3,
+            "loc": 500,
+            "children": []
+          },
+          {
+            "dir": "src/components/payments",
+            "files": 2,
+            "loc": 441,
+            "children": []
+          },
+          {
+            "dir": "src/components/platform",
+            "files": 2,
+            "loc": 173,
+            "children": []
+          },
+          {
+            "dir": "src/components/print",
+            "files": 10,
+            "loc": 1467,
+            "children": [
+              {
+                "dir": "src/components/print/__tests__",
+                "files": 1,
+                "loc": 232,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/components/products",
+            "files": 3,
+            "loc": 512,
+            "children": []
+          },
+          {
+            "dir": "src/components/purchase-orders",
+            "files": 1,
+            "loc": 440,
+            "children": []
+          },
+          {
+            "dir": "src/components/quotations",
+            "files": 4,
+            "loc": 703,
+            "children": []
+          },
+          {
+            "dir": "src/components/reports",
+            "files": 20,
+            "loc": 2968,
+            "children": [
+              {
+                "dir": "src/components/reports/templateEditor",
+                "files": 5,
+                "loc": 633,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/components/sales-cycle",
+            "files": 1,
+            "loc": 17,
+            "children": []
+          },
+          {
+            "dir": "src/components/sales-orders",
+            "files": 1,
+            "loc": 513,
+            "children": []
+          },
+          {
+            "dir": "src/components/search",
+            "files": 1,
+            "loc": 101,
+            "children": []
+          },
+          {
+            "dir": "src/components/settings",
+            "files": 25,
+            "loc": 6088,
+            "children": [
+              {
+                "dir": "src/components/settings/ExportCenter",
+                "files": 8,
+                "loc": 1732,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/components/shared",
+            "files": 35,
+            "loc": 4434,
+            "children": []
+          },
+          {
+            "dir": "src/components/sidebar",
+            "files": 6,
+            "loc": 842,
+            "children": []
+          },
+          {
+            "dir": "src/components/suppliers",
+            "files": 46,
+            "loc": 4637,
+            "children": [
+              {
+                "dir": "src/components/suppliers/alerts",
+                "files": 2,
+                "loc": 193,
+                "children": []
+              },
+              {
+                "dir": "src/components/suppliers/charts",
+                "files": 3,
+                "loc": 258,
+                "children": []
+              },
+              {
+                "dir": "src/components/suppliers/dialogs",
+                "files": 4,
+                "loc": 439,
+                "children": []
+              },
+              {
+                "dir": "src/components/suppliers/filters",
+                "files": 3,
+                "loc": 205,
+                "children": []
+              },
+              {
+                "dir": "src/components/suppliers/hero",
+                "files": 8,
+                "loc": 484,
+                "children": []
+              },
+              {
+                "dir": "src/components/suppliers/list",
+                "files": 6,
+                "loc": 468,
+                "children": []
+              },
+              {
+                "dir": "src/components/suppliers/mobile",
+                "files": 4,
+                "loc": 255,
+                "children": []
+              },
+              {
+                "dir": "src/components/suppliers/tabs",
+                "files": 4,
+                "loc": 400,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/components/system",
+            "files": 2,
+            "loc": 226,
+            "children": []
+          },
+          {
+            "dir": "src/components/table",
+            "files": 5,
+            "loc": 472,
+            "children": []
+          },
+          {
+            "dir": "src/components/tenant",
+            "files": 3,
+            "loc": 363,
+            "children": []
+          },
+          {
+            "dir": "src/components/transitions",
+            "files": 1,
+            "loc": 45,
+            "children": []
+          },
+          {
+            "dir": "src/components/treasury",
+            "files": 2,
+            "loc": 380,
+            "children": []
+          },
+          {
+            "dir": "src/components/ui",
+            "files": 54,
+            "loc": 4716,
+            "children": []
+          },
+          {
+            "dir": "src/components/ui-kit",
+            "files": 5,
+            "loc": 455,
+            "children": []
+          }
+        ]
+      },
+      {
+        "dir": "src/config",
+        "files": 1,
+        "loc": 39,
+        "children": []
+      },
+      {
+        "dir": "src/domain",
+        "files": 22,
+        "loc": 1395,
+        "children": [
+          {
+            "dir": "src/domain/pdf",
+            "files": 22,
+            "loc": 1395,
+            "children": [
+              {
+                "dir": "src/domain/pdf/entities",
+                "files": 4,
+                "loc": 302,
+                "children": []
+              },
+              {
+                "dir": "src/domain/pdf/rendering",
+                "files": 2,
+                "loc": 164,
+                "children": []
+              },
+              {
+                "dir": "src/domain/pdf/services",
+                "files": 4,
+                "loc": 240,
+                "children": []
+              },
+              {
+                "dir": "src/domain/pdf/value-objects",
+                "files": 11,
+                "loc": 673,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dir": "src/hooks",
+        "files": 129,
+        "loc": 12564,
+        "children": [
+          {
+            "dir": "src/hooks/accounting",
+            "files": 6,
+            "loc": 309,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/admin",
+            "files": 1,
+            "loc": 54,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/approvals",
+            "files": 1,
+            "loc": 30,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/categories",
+            "files": 1,
+            "loc": 56,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/collections",
+            "files": 1,
+            "loc": 15,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/credit-notes",
+            "files": 1,
+            "loc": 48,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/customers",
+            "files": 15,
+            "loc": 1552,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/employees",
+            "files": 1,
+            "loc": 175,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/expenses",
+            "files": 1,
+            "loc": 113,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/inventory",
+            "files": 1,
+            "loc": 65,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/invoices",
+            "files": 2,
+            "loc": 298,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/logistics",
+            "files": 3,
+            "loc": 285,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/products",
+            "files": 1,
+            "loc": 139,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/quotations",
+            "files": 1,
+            "loc": 50,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/sales-cycle",
+            "files": 1,
+            "loc": 124,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/suppliers",
+            "files": 7,
+            "loc": 512,
+            "children": []
+          },
+          {
+            "dir": "src/hooks/treasury",
+            "files": 1,
+            "loc": 97,
+            "children": []
+          }
+        ]
+      },
+      {
+        "dir": "src/integrations",
+        "files": 3,
+        "loc": 7300,
+        "children": [
+          {
+            "dir": "src/integrations/lovable",
+            "files": 1,
+            "loc": 39,
+            "children": []
+          },
+          {
+            "dir": "src/integrations/supabase",
+            "files": 2,
+            "loc": 7261,
+            "children": []
+          }
+        ]
+      },
+      {
+        "dir": "src/lib",
+        "files": 189,
+        "loc": 22770,
+        "children": [
+          {
+            "dir": "src/lib/__tests__",
+            "files": 1,
+            "loc": 51,
+            "children": []
+          },
+          {
+            "dir": "src/lib/api",
+            "files": 1,
+            "loc": 340,
+            "children": []
+          },
+          {
+            "dir": "src/lib/credit-notes",
+            "files": 1,
+            "loc": 138,
+            "children": []
+          },
+          {
+            "dir": "src/lib/exports",
+            "files": 1,
+            "loc": 98,
+            "children": []
+          },
+          {
+            "dir": "src/lib/financial-engine",
+            "files": 7,
+            "loc": 606,
+            "children": []
+          },
+          {
+            "dir": "src/lib/pdf",
+            "files": 88,
+            "loc": 7691,
+            "children": [
+              {
+                "dir": "src/lib/pdf/arabic",
+                "files": 6,
+                "loc": 397,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/config",
+                "files": 5,
+                "loc": 349,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/diagnostics",
+                "files": 23,
+                "loc": 1773,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/engine",
+                "files": 11,
+                "loc": 1107,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/fonts",
+                "files": 7,
+                "loc": 469,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/layout",
+                "files": 4,
+                "loc": 235,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/routing",
+                "files": 4,
+                "loc": 467,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/services",
+                "files": 2,
+                "loc": 217,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/templates",
+                "files": 15,
+                "loc": 1747,
+                "children": []
+              },
+              {
+                "dir": "src/lib/pdf/utils",
+                "files": 4,
+                "loc": 254,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/lib/queries",
+            "files": 2,
+            "loc": 438,
+            "children": []
+          },
+          {
+            "dir": "src/lib/repositories",
+            "files": 44,
+            "loc": 5972,
+            "children": []
+          },
+          {
+            "dir": "src/lib/seo",
+            "files": 1,
+            "loc": 62,
+            "children": []
+          },
+          {
+            "dir": "src/lib/services",
+            "files": 8,
+            "loc": 877,
+            "children": []
+          },
+          {
+            "dir": "src/lib/utils",
+            "files": 1,
+            "loc": 8,
+            "children": []
+          }
+        ]
+      },
+      {
+        "dir": "src/pages",
+        "files": 99,
+        "loc": 26770,
+        "children": [
+          {
+            "dir": "src/pages/accounting",
+            "files": 3,
+            "loc": 794,
+            "children": []
+          },
+          {
+            "dir": "src/pages/admin",
+            "files": 18,
+            "loc": 5781,
+            "children": []
+          },
+          {
+            "dir": "src/pages/approvals",
+            "files": 1,
+            "loc": 265,
+            "children": []
+          },
+          {
+            "dir": "src/pages/attachments",
+            "files": 1,
+            "loc": 432,
+            "children": []
+          },
+          {
+            "dir": "src/pages/attendance",
+            "files": 1,
+            "loc": 355,
+            "children": []
+          },
+          {
+            "dir": "src/pages/categories",
+            "files": 1,
+            "loc": 323,
+            "children": []
+          },
+          {
+            "dir": "src/pages/collections",
+            "files": 1,
+            "loc": 243,
+            "children": []
+          },
+          {
+            "dir": "src/pages/credit-notes",
+            "files": 5,
+            "loc": 574,
+            "children": [
+              {
+                "dir": "src/pages/credit-notes/components",
+                "files": 2,
+                "loc": 160,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/pages/customers",
+            "files": 2,
+            "loc": 1347,
+            "children": []
+          },
+          {
+            "dir": "src/pages/delivery-notes",
+            "files": 1,
+            "loc": 125,
+            "children": []
+          },
+          {
+            "dir": "src/pages/dev",
+            "files": 3,
+            "loc": 738,
+            "children": []
+          },
+          {
+            "dir": "src/pages/employees",
+            "files": 2,
+            "loc": 726,
+            "children": []
+          },
+          {
+            "dir": "src/pages/expenses",
+            "files": 2,
+            "loc": 665,
+            "children": []
+          },
+          {
+            "dir": "src/pages/file",
+            "files": 1,
+            "loc": 271,
+            "children": []
+          },
+          {
+            "dir": "src/pages/goods-receipts",
+            "files": 1,
+            "loc": 134,
+            "children": []
+          },
+          {
+            "dir": "src/pages/install",
+            "files": 1,
+            "loc": 379,
+            "children": []
+          },
+          {
+            "dir": "src/pages/inventory",
+            "files": 1,
+            "loc": 147,
+            "children": []
+          },
+          {
+            "dir": "src/pages/invoices",
+            "files": 2,
+            "loc": 815,
+            "children": []
+          },
+          {
+            "dir": "src/pages/landing",
+            "files": 1,
+            "loc": 23,
+            "children": []
+          },
+          {
+            "dir": "src/pages/logistics",
+            "files": 1,
+            "loc": 195,
+            "children": []
+          },
+          {
+            "dir": "src/pages/notifications",
+            "files": 1,
+            "loc": 217,
+            "children": []
+          },
+          {
+            "dir": "src/pages/payments",
+            "files": 1,
+            "loc": 415,
+            "children": []
+          },
+          {
+            "dir": "src/pages/platform",
+            "files": 8,
+            "loc": 1400,
+            "children": []
+          },
+          {
+            "dir": "src/pages/pricing",
+            "files": 1,
+            "loc": 258,
+            "children": []
+          },
+          {
+            "dir": "src/pages/products",
+            "files": 2,
+            "loc": 584,
+            "children": []
+          },
+          {
+            "dir": "src/pages/protocol",
+            "files": 1,
+            "loc": 152,
+            "children": []
+          },
+          {
+            "dir": "src/pages/purchase-invoices",
+            "files": 2,
+            "loc": 195,
+            "children": []
+          },
+          {
+            "dir": "src/pages/purchase-orders",
+            "files": 5,
+            "loc": 857,
+            "children": [
+              {
+                "dir": "src/pages/purchase-orders/components",
+                "files": 3,
+                "loc": 261,
+                "children": []
+              }
+            ]
+          },
+          {
+            "dir": "src/pages/quotations",
+            "files": 2,
+            "loc": 940,
+            "children": []
+          },
+          {
+            "dir": "src/pages/quotes",
+            "files": 3,
+            "loc": 595,
+            "children": []
+          },
+          {
+            "dir": "src/pages/reports",
+            "files": 4,
+            "loc": 1315,
+            "children": []
+          },
+          {
+            "dir": "src/pages/sales-orders",
+            "files": 2,
+            "loc": 780,
+            "children": []
+          },
+          {
+            "dir": "src/pages/search",
+            "files": 1,
+            "loc": 423,
+            "children": []
+          },
+          {
+            "dir": "src/pages/settings",
+            "files": 2,
+            "loc": 378,
+            "children": []
+          },
+          {
+            "dir": "src/pages/share",
+            "files": 1,
+            "loc": 227,
+            "children": []
+          },
+          {
+            "dir": "src/pages/suppliers",
+            "files": 3,
+            "loc": 1093,
+            "children": []
+          },
+          {
+            "dir": "src/pages/sync",
+            "files": 1,
+            "loc": 423,
+            "children": []
+          },
+          {
+            "dir": "src/pages/tasks",
+            "files": 1,
+            "loc": 408,
+            "children": []
+          },
+          {
+            "dir": "src/pages/treasury",
+            "files": 2,
+            "loc": 512,
+            "children": []
+          }
+        ]
+      },
+      {
+        "dir": "src/styles",
+        "files": 1,
+        "loc": 154,
+        "children": []
+      },
+      {
+        "dir": "src/test",
+        "files": 4,
+        "loc": 360,
+        "children": [
+          {
+            "dir": "src/test/mocks",
+            "files": 2,
+            "loc": 215,
+            "children": []
+          }
+        ]
+      },
+      {
+        "dir": "src/types",
+        "files": 1,
+        "loc": 38,
+        "children": []
+      }
+    ]
+  }
+}
