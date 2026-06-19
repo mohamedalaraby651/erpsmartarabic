@@ -1,8 +1,7 @@
 {
   "schemaVersion": 1,
-  "fitness": "check-integration-scope",
+  "fitness": "check-regression-lock",
   "baselineVersion": "UX-1E",
-  "scannedFiles": 15,
   "violations": [],
   "pass": true
 }
