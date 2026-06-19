@@ -11,13 +11,18 @@ const OUT = resolve(__dirname, "output/tests-report.json");
 
 let out = "", failed = 0, passed = 0, total = 0, ran = true;
 try {
-  out = execSync("bunx vitest run --reporter=default --silent", { cwd: ROOT, encoding: "utf8", maxBuffer: 128 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
+  out = execSync("bunx vitest run --reporter=default", { cwd: ROOT, encoding: "utf8", maxBuffer: 128 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
 } catch (e) {
   out = (e.stdout?.toString() ?? "") + (e.stderr?.toString() ?? "");
 }
-const mp = out.match(/Tests\s+(?:(\d+)\s+failed.*?\|\s*)?(\d+)\s+passed(?:\s+\((\d+)\))?/);
-if (mp) { failed = +(mp[1] ?? 0); passed = +mp[2]; total = +(mp[3] ?? (passed + failed)); }
-else ran = false;
+// Strip ANSI then match: "Tests  N failed | N passed (M)" or "Tests  N passed (M)"
+const clean = out.replace(/\x1b\[[0-9;]*m/g, "");
+let mp = clean.match(/Tests\s+(\d+)\s+failed\s*\|\s*(\d+)\s+passed\s*\((\d+)\)/);
+if (mp) { failed = +mp[1]; passed = +mp[2]; total = +mp[3]; }
+else {
+  mp = clean.match(/Tests\s+(\d+)\s+passed\s*\((\d+)\)/);
+  if (mp) { passed = +mp[1]; total = +mp[2]; } else ran = false;
+}
 
 const report = {
   schemaVersion: 1,
