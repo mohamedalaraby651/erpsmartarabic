@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "unusedDependencies": [],
+  "unusedDevDependencies": [
+    "@tailwindcss/typography",
+    "@vitest/coverage-v8",
+    "autoprefixer",
+    "depcheck",
+    "madge",
+    "postcss",
+    "rollup-plugin-visualizer",
+    "ts-complex"
+  ],
+  "missing": {
+    "@playwright/test": [
+      "/dev-server/e2e/accessibility.spec.ts",
+      "/dev-server/e2e/auth.spec.ts",
+      "/dev-server/e2e/customer-journey.spec.ts",
+      "/dev-server/e2e/export-rtl.spec.ts",
+      "/dev-server/e2e/helpers/exportAssertions.ts",
+      "/dev-server/e2e/inventory-journey.spec.ts",
+      "/dev-server/e2e/mobile-journey.spec.ts",
+      "/dev-server/e2e/navigation.spec.ts",
+      "/dev-server/e2e/performance.spec.ts",
+      "/dev-server/e2e/reports-journey.spec.ts",
+      "/dev-server/e2e/responsive-design.spec.ts",
+      "/dev-server/e2e/rtl-layout.spec.ts",
+      "/dev-server/e2e/sales-journey.spec.ts",
+      "/dev-server/e2e/security-journey.spec.ts",
+      "/dev-server/e2e/settings-journey.spec.ts",
+      "/dev-server/playwright.config.ts"
+    ],
+    "html2canvas": [
+      "/dev-server/src/lib/pdf/engine/chunkedRender.ts"
+    ],
+    "pdf-parse": [
+      "/dev-server/e2e/helpers/exportAssertions.ts"
+    ],
+    "unzipper": [
+      "/dev-server/e2e/helpers/exportAssertions.ts"
+    ]
+  },
+  "invalidFiles": {
+    "/dev-server/tsconfig.node.json": "SyntaxError: /dev-server/tsconfig.node.json: Expected double-quoted property name in JSON at position 127 (line 8 column 5)\n    at parse (<anonymous>)\n    at Object..json (node:internal/modules/cjs/loader:1851:39)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Module.require (node:internal/modules/cjs/loader:1463:12)\n    at require (node:internal/modules/helpers:147:16)\n    at readJSON (/dev-server/node_modules/depcheck/dist/utils/index.js:24:10)\n    at parseTTypeScript (/dev-server/node_modules/depcheck/dist/special/ttypescript.js:16:41)"
+  },
+  "invalidDirs": {}
+}
