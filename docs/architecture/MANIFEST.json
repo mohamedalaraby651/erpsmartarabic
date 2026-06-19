@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "generatedAt": "2026-06-19T01:46:43.420Z",
+  "generatedAt": "2026-06-19T01:49:25.026Z",
   "environment": {
     "nodeVersion": "v22.22.0",
     "packageManager": "bun@1.3.3",
-    "gitCommit": "5faa44aa1a4b8b45ee42915c54794cecce1ad1e5",
+    "gitCommit": "b9c880b089c6da8e90dbb2acfc01d49faf4ceef6",
     "gitBranch": "edit/edt-36a8e1a5-25bf-49e5-afd5-e50dc6114c5f",
     "gitTag": "architecture-baseline-ux0",
     "lockfileHash": "57954bd8ba6493ea7d74faa1381295829ff33ed882e78e1a7bf9166fa2530203",
@@ -56,7 +56,7 @@
     "bundleTotalBytes": 4920767,
     "tscStrictErrors": 0,
     "eslintErrors": 31,
-    "eslintWarnings": 784,
+    "eslintWarnings": 786,
     "vitestPassed": 1187,
     "vitestTotal": 1187,
     "maintainabilityIndexAvg": 90.19,
@@ -115,8 +115,9 @@
     "sourceChanged": false
   },
   "determinism": {
-    "verified": null,
-    "runs": 0,
-    "diff": null
+    "verified": true,
+    "runs": 2,
+    "diff": "none",
+    "tool": "sha256sum"
   }
 }
