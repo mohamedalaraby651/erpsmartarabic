@@ -13,6 +13,7 @@
     "preflight:fix": "bash scripts/preflight-check.sh --fix",
     "preflight:dry-run": "bash scripts/preflight-check.sh --dry-run",
     "generate:sitemap": "bunx tsx scripts/generate-sitemap.ts",
+    "fitness:token-export": "node scripts/fitness/check-token-export.mjs",
     "predev": "bunx tsx scripts/generate-sitemap.ts",
     "prebuild": "bunx tsx scripts/generate-sitemap.ts"
   },

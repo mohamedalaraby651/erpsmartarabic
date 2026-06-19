@@ -40,7 +40,9 @@ export function logStructured(log: StructuredLog): void {
       error: '\x1b[31m', // Red
     };
     const reset = '\x1b[0m';
-    
+
+    // allow-console: logger — dev-only pretty printer
+    // eslint-disable-next-line no-console
     console.log(
       `${colors[log.level]}[${log.level.toUpperCase()}]${reset} ${log.message}`,
       log.context
@@ -48,8 +50,10 @@ export function logStructured(log: StructuredLog): void {
     return;
   }
 
-  // In production, send to backend (could be Edge Function)
-  // For now, we'll use console.log with JSON format
+  // In production, send to backend (could be Edge Function).
+  // For now, structured JSON is written to the runtime sink below.
+  // allow-console: sink — structured logger production transport
+  // eslint-disable-next-line no-console
   console.log(JSON.stringify(formattedLog));
 }
 

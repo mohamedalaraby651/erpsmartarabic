@@ -34,7 +34,11 @@ function classifyAsAny(file) {
   return "legacy";
 }
 function classifyConsole(line) {
+  // Explicit opt-in markers win over heuristics.
+  if (/\/\/\s*allow-console:\s*(sink|logger|infra)/i.test(line)) return "telemetry";
   if (/\/\/\s*ts-ignore|telemetry|track|metric/i.test(line)) return "telemetry";
+  // Dev-guarded debug helpers are an allowed exception (UX-1A policy).
+  if (/import\.meta\.env\.DEV|process\.env\.NODE_ENV/.test(line)) return "debug";
   if (/catch|error|fail|warn/i.test(line)) return "error-handler";
   if (/debug|todo|fixme|temp/i.test(line)) return "debug";
   return "leftover";
@@ -61,7 +65,10 @@ for (const f of files) {
     }
     const conMatches = line.match(/\bconsole\.(log|warn|error|info|debug|trace)\b/g);
     if (conMatches) {
-      const cat = classifyConsole(line);
+      // Inspect a 3-line window so block-scope DEV guards / allow-console
+      // markers on the previous line are recognised.
+      const context = [lines[i - 2] ?? "", lines[i - 1] ?? "", line].join("\n");
+      const cat = classifyConsole(context);
       consoleByCat[cat] += conMatches.length;
       consoleTotal += conMatches.length;
       if (consoleSamples.length < 30) consoleSamples.push({ file: f, line: i + 1, code: line.trim().slice(0, 160), category: cat });
