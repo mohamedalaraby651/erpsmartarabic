@@ -19,3 +19,19 @@
 ---
 
 Locked: UX-0. Modifications require ADR `0001-*` or later.
+
+## UX-1 Governance Pre-flight (Wave 0)
+
+These documents extend the principles above and are binding from UX-1 onward:
+
+- [Contract Versioning](../contracts/CONTRACT_VERSIONING.md)
+- [UI Performance Budget](./UI_PERFORMANCE_BUDGET.md)
+- [Canonical Component Criteria & Lifecycle](./CANONICAL_COMPONENT_CRITERIA.md)
+- [Workspace API](./WORKSPACE_API.md)
+- [Workspace Certification](./WORKSPACE_CERTIFICATION.md)
+- [State Hierarchy](./STATE_HIERARCHY.md)
+- [UX Regression Checklist](../qa/UX_REGRESSION_CHECKLIST.md)
+- [ADR Template](../adr/TEMPLATE.md)
+- [ADR Registry (INDEX)](../adr/INDEX.md)
+- [Engineering Scorecard](./ENGINEERING_SCORECARD.md)
+- [Token Changelog](./TOKEN_CHANGELOG.md)
