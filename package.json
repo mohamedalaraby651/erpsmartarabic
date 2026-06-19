@@ -19,7 +19,12 @@
     "fitness:shell-a11y": "node scripts/fitness/check-shell-a11y.mjs",
     "fitness:shell-runtime-purity": "node scripts/fitness/check-shell-runtime-purity.mjs",
     "fitness:workspace-api-shape": "bunx tsx scripts/fitness/check-workspace-api-shape.mjs",
+    "fitness:primitive-isolation": "node scripts/fitness/check-primitive-isolation.mjs",
+    "fitness:lifecycle-tags": "node scripts/fitness/check-canonical-lifecycle-tags.mjs",
+    "fitness:rtl-logical": "node scripts/fitness/check-rtl-logical-properties.mjs",
     "fitness:shell": "npm run fitness:token-export && npm run fitness:shell-isolation && npm run fitness:shell-token-only && npm run fitness:shell-a11y && npm run fitness:shell-runtime-purity && npm run fitness:workspace-api-shape",
+    "fitness:primitives": "npm run fitness:primitive-isolation && npm run fitness:lifecycle-tags && npm run fitness:rtl-logical",
+    "score:canonical": "node scripts/audits/score-canonical-components.mjs",
     "tokens:export": "bunx tsx scripts/build-token-json.mjs",
     "predev": "bunx tsx scripts/generate-sitemap.ts",
     "prebuild": "bunx tsx scripts/generate-sitemap.ts"

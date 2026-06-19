@@ -8,8 +8,81 @@
 // Tokens (UX-1A)
 export * from "./tokens";
 
-// Primitives (UX-1A+)
+// Primitives (UX-1A+ / UX-1C canonical set)
 export { Button, buttonVariants, type ButtonProps } from "./primitives/Button";
+export { IconButton, type IconButtonProps } from "./primitives/IconButton";
+export { Input, type InputProps } from "./primitives/Input";
+export { Textarea, type TextareaProps } from "./primitives/Textarea";
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+} from "./primitives/Select";
+export { Checkbox } from "./primitives/Checkbox";
+export { RadioGroup, RadioGroupItem } from "./primitives/RadioGroup";
+export { Switch } from "./primitives/Switch";
+export { Label, type LabelProps } from "./primitives/Label";
+export { FormField, type FormFieldProps } from "./primitives/FormField";
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "./primitives/Card";
+export { Badge, type BadgeProps } from "./primitives/Badge";
+export { Avatar, AvatarImage, AvatarFallback } from "./primitives/Avatar";
+export { Separator } from "./primitives/Separator";
+export { Skeleton } from "./primitives/Skeleton";
+export { Spinner, type SpinnerProps } from "./primitives/Spinner";
+export {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "./primitives/Tooltip";
+export {
+  Dialog,
+  DialogTrigger,
+  DialogClose,
+  DialogPortal,
+  DialogOverlay,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "./primitives/Dialog";
+export {
+  Sheet,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  type SheetContentProps,
+  type SheetSide,
+} from "./primitives/Sheet";
+export { Toaster, toast, type ToasterProps } from "./primitives/Toast";
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "./primitives/Tabs";
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+} from "./primitives/Table";
+export type { Size, Tone, Variant, FieldAriaProps } from "./primitives/types";
 
 // Shell — providers
 export {
