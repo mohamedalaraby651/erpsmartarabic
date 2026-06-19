@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "filesAnalyzed": 0,
+  "cyclomatic": {
+    "max": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0,
+    "p99": 0
+  },
+  "maintainabilityIndexAvg": 0,
+  "top20MostComplex": []
+}
