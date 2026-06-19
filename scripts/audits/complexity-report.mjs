@@ -40,28 +40,26 @@ for (const f of files) {
   rows.push({ file: relative(ROOT, f), loc, fileCyclomatic: fileCC, avgFnCyclomatic: perFnCC });
 }
 rows.sort((a, b) => a.file.localeCompare(b.file));
+const cycSorted = rows.map(r => r.fileCyclomatic).sort((a, b) => a - b);
 function pct(arr, p) { if (!arr.length) return 0; const i = Math.min(arr.length - 1, Math.floor((p / 100) * arr.length)); return arr[i]; }
 
-// crude maintainability index proxy: 171 − 5.2·ln(volume) − 0.23·CC − 16.2·ln(loc)
-const mi = rows.map(r => {
-  const v = Math.log(Math.max(1, r.loc * 10));
-  return Math.max(0, Math.min(100, 171 - 5.2 * v - 0.23 * r.maxCyclomatic - 16.2 * Math.log(Math.max(1, r.loc))));
-});
+const mi = rows.map(r => Math.max(0, Math.min(100, 171 - 0.23 * r.fileCyclomatic - 16.2 * Math.log(Math.max(1, r.loc)))));
 const miAvg = mi.length ? +(mi.reduce((a, b) => a + b, 0) / mi.length).toFixed(2) : 0;
 
 const report = {
   schemaVersion: 1,
   baselineVersion: "UX-0",
+  method: "heuristic decision-point count (UX-0 proxy)",
   filesAnalyzed: rows.length,
   cyclomatic: {
-    max: cycMax[cycMax.length - 1] ?? 0,
-    p50: pct(cycMax, 50),
-    p90: pct(cycMax, 90),
-    p95: pct(cycMax, 95),
-    p99: pct(cycMax, 99),
+    max: cycSorted[cycSorted.length - 1] ?? 0,
+    p50: pct(cycSorted, 50),
+    p90: pct(cycSorted, 90),
+    p95: pct(cycSorted, 95),
+    p99: pct(cycSorted, 99),
   },
   maintainabilityIndexAvg: miAvg,
-  top20MostComplex: [...rows].sort((a, b) => b.maxCyclomatic - a.maxCyclomatic || a.file.localeCompare(b.file)).slice(0, 20),
+  top20MostComplex: [...rows].sort((a, b) => b.fileCyclomatic - a.fileCyclomatic || a.file.localeCompare(b.file)).slice(0, 20),
 };
 
 mkdirSync(dirname(OUT), { recursive: true });
