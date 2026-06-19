@@ -282,13 +282,15 @@ export default function IntegrationHarnessPage(): JSX.Element {
           >
             <FormSection title="Customer" description="Mock-backed adapter">
               {Object.keys(form.values).map((name) => (
-                <FormField key={name} label={name} htmlFor={`${form.id}-${name}`}>
-                  <Input
-                    id={`${form.id}-${name}`}
-                    name={name}
-                    value={form.values[name]}
-                    onChange={(e) => form.setField(name, e.target.value)}
-                  />
+                <FormField key={name} label={name}>
+                  {({ inputId }) => (
+                    <Input
+                      id={inputId}
+                      name={name}
+                      value={form.values[name]}
+                      onChange={(e) => form.setField(name, e.target.value)}
+                    />
+                  )}
                 </FormField>
               ))}
             </FormSection>
