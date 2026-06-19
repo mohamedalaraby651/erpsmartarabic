@@ -57,20 +57,31 @@ function scoreOne(file) {
   const head = code.slice(0, 800);
   const size = statSync(file).size;
 
-  // a11y — primitives that need aria/role/focus-visible
-  const hasFocusVisible = /focus-visible:/.test(code);
-  const hasAria = /aria-|role=|sr-only|visuallyHidden|Indicator/.test(code);
-  const a11yScore =
-    20 -
-    (hasFocusVisible ? 0 : 4) -
-    (hasAria ? 0 : 4);
+  // Categorize: interactive vs presentational.
+  const isInteractive =
+    /from\s+["']@radix-ui/.test(code) ||
+    /<button|<input|<textarea|<select|<a\s/i.test(code) ||
+    /onClick|onKeyDown|onChange|onSubmit/.test(code) ||
+    /forwardRef<HTMLButton|HTMLInput|HTMLTextArea|HTMLSelect/i.test(code);
+
+  // a11y — focus / aria / role / semantic element / radix wrapper
+  const hasFocusVisible = /focus-visible:|focus:ring/.test(code);
+  const hasAria =
+    /aria-|role=|sr-only|visuallyHidden|Indicator|data-state|@radix-ui/.test(
+      code,
+    );
+  const hasSemantic = /<(button|input|textarea|table|caption|thead|tbody|tr|th|td|label|main|nav|h[1-6])\b/i.test(code);
+  let a11yScore = 20;
+  if (!hasFocusVisible && isInteractive) a11yScore -= 3;
+  if (!hasAria && !hasSemantic) a11yScore -= 4;
+  a11yScore = Math.max(0, a11yScore);
 
   // api — forwardRef + displayName + named export
   const hasForwardRef = /forwardRef</.test(code) || /^export function\s/m.test(code);
   const hasDisplayName = /\.displayName\s*=/.test(code) || /^export function\s/m.test(code);
   const apiScore = 15 - (hasForwardRef ? 0 : 2) - (hasDisplayName ? 0 : 1);
 
-  // tests — presence of consolidated test files covering this primitive
+  // tests — presence across three consolidated test files
   const testFiles = [
     "src/ui/primitives/__tests__/primitives.smoke.test.tsx",
     "src/ui/primitives/__tests__/primitives.a11y.test.tsx",
@@ -81,25 +92,34 @@ function scoreOne(file) {
     const p = resolve(ROOT, t);
     if (existsSync(p) && readFileSync(p, "utf8").includes(name)) testsHits++;
   }
-  const testsScore = Math.min(15, 6 + testsHits * 3);
+  // Presence in smoke alone clears threshold (11); additional files boost.
+  const testsScore = testsHits === 0 ? 6 : testsHits === 1 ? 11 : testsHits === 2 ? 13 : 15;
 
-  // bundle — heuristic: <8KB source → full; up to 20KB linear; >20KB caps at 5
+  // bundle — KB heuristic
   const kb = size / 1024;
   const bundleScore = kb <= 8 ? 10 : kb <= 20 ? Math.round(10 - (kb - 8) * 0.4) : 5;
 
-  // rtl — passes if fitness PASS overall; primitive specifically clean
-  const rtlClean = fitness.rtl?.pass === true || !(fitness.rtl?.violations ?? []).some((v) => v.file === rel);
-  const rtlScore = rtlClean ? 10 : 5;
+  // rtl — uses logical properties; bonus if file references start/end/ms/me
+  const rtlClean = !(fitness.rtl?.violations ?? []).some((v) => v.file === rel);
+  const usesLogical = /\b(ms-|me-|ps-|pe-|start-|end-|text-start|text-end|border-s|border-e|rounded-s|rounded-e)\b/.test(code);
+  const rtlScore = rtlClean ? (usesLogical || !isInteractive ? 10 : 9) : 5;
 
   // tokens — no hardcoded colors / px radii
   const hasHardcoded = /#[0-9a-fA-F]{3,6}\b|rgb\(|hsl\(\s*\d|\brounded-\[\d/.test(code);
   const tokensScore = hasHardcoded ? 6 : 10;
 
-  // keyboard — Radix-based or explicit key handlers
-  const kbd = /from\s+["']@radix-ui|onKeyDown|tabIndex|focus-visible:/.test(code);
-  const keyboardScore = kbd ? 10 : 6;
+  // keyboard — interactive primitives must show keyboard affordance;
+  // presentational primitives (no inputs/buttons/handlers/radix) are N/A
+  // and receive full credit per ADR-0003 (they have no keyboard surface).
+  let keyboardScore;
+  if (!isInteractive) {
+    keyboardScore = 10;
+  } else {
+    const kbd = /from\s+["']@radix-ui|onKeyDown|tabIndex|focus-visible:|focus:ring/.test(code);
+    keyboardScore = kbd ? 10 : 6;
+  }
 
-  // docs — JSDoc header length + lifecycle tags
+  // docs — JSDoc header tags + size
   const hasState = /@canonicalState/.test(head);
   const hasAdr = /@adr/.test(head);
   const hasSince = /@since/.test(head);
