@@ -137,6 +137,30 @@ export default tseslint.config(
   },
   {
     /**
+     * UX-1B — Shell isolation (WARN only, mirrors fitness:shell-isolation).
+     *
+     * `src/ui/layout/**` and `src/ui/providers/**` must not import workspace,
+     * repository, integration, supabase, or app component code. Graduated to
+     * error in UX-2 (per graduated enforcement plan).
+     */
+    files: ["src/ui/layout/**/*.{ts,tsx}", "src/ui/providers/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["warn", {
+        patterns: [
+          { group: ["@/workspaces/*"], message: "Shell may not import workspaces." },
+          { group: ["@/lib/repositories/*"], message: "Shell may not import repositories." },
+          { group: ["@/integrations/*"], message: "Shell may not import integrations." },
+          { group: ["@supabase/*"], message: "Shell may not import @supabase." },
+          {
+            group: ["@/components/*", "!@/components/ui/*"],
+            message: "Shell may only import @/components/ui/* shadcn primitives.",
+          },
+        ],
+      }],
+    },
+  },
+  {
+    /**
      * Repository boundary: لا يجوز استيراد عميل Supabase
      * من داخل مكوّنات/صفحات UI. يُسمح فقط في:
      *  - src/lib/repositories/**
