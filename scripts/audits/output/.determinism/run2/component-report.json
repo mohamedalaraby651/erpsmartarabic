@@ -1,0 +1,496 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "UX-0",
+  "totalFiles": 873,
+  "totalLoc": 129492,
+  "byKind": {
+    "other": 2,
+    "feature": 283,
+    "dialog": 41,
+    "hook": 134,
+    "layout": 24,
+    "chart": 8,
+    "table": 7,
+    "form": 2,
+    "primitive": 58,
+    "config": 2,
+    "domain": 22,
+    "integration": 3,
+    "lib": 142,
+    "query-service": 2,
+    "repository": 44,
+    "page": 99
+  },
+  "avgComponentLoc": 161.07,
+  "avgHookLoc": 100,
+  "avgProps": 5.13,
+  "filesOver500": 7,
+  "filesOver300": 93,
+  "oversizeFiles": [
+    {
+      "file": "src/integrations/supabase/types.ts",
+      "kind": "integration",
+      "loc": 7244,
+      "props": 0
+    },
+    {
+      "file": "src/pages/customers/CustomerDetailsPage.tsx",
+      "kind": "page",
+      "loc": 855,
+      "props": 21
+    },
+    {
+      "file": "src/components/ui/sidebar.tsx",
+      "kind": "primitive",
+      "loc": 638,
+      "props": 0
+    },
+    {
+      "file": "src/lib/pdfGenerator.ts",
+      "kind": "lib",
+      "loc": 627,
+      "props": 0
+    },
+    {
+      "file": "src/lib/arabicFont.ts",
+      "kind": "lib",
+      "loc": 547,
+      "props": 0
+    },
+    {
+      "file": "src/components/customers/list/CustomerListCard.tsx",
+      "kind": "feature",
+      "loc": 544,
+      "props": 12
+    },
+    {
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "kind": "dialog",
+      "loc": 513,
+      "props": 3
+    }
+  ],
+  "largeFiles": [
+    {
+      "file": "src/integrations/supabase/types.ts",
+      "kind": "integration",
+      "loc": 7244,
+      "props": 0
+    },
+    {
+      "file": "src/pages/customers/CustomerDetailsPage.tsx",
+      "kind": "page",
+      "loc": 855,
+      "props": 21
+    },
+    {
+      "file": "src/components/ui/sidebar.tsx",
+      "kind": "primitive",
+      "loc": 638,
+      "props": 0
+    },
+    {
+      "file": "src/lib/pdfGenerator.ts",
+      "kind": "lib",
+      "loc": 627,
+      "props": 0
+    },
+    {
+      "file": "src/lib/arabicFont.ts",
+      "kind": "lib",
+      "loc": 547,
+      "props": 0
+    },
+    {
+      "file": "src/components/customers/list/CustomerListCard.tsx",
+      "kind": "feature",
+      "loc": 544,
+      "props": 12
+    },
+    {
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "kind": "dialog",
+      "loc": 513,
+      "props": 3
+    },
+    {
+      "file": "src/components/layout/MobileDrawer.tsx",
+      "kind": "layout",
+      "loc": 494,
+      "props": 4
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "kind": "page",
+      "loc": 492,
+      "props": 0
+    },
+    {
+      "file": "src/pages/reports/ReturnsReportPage.tsx",
+      "kind": "page",
+      "loc": 488,
+      "props": 0
+    },
+    {
+      "file": "src/pages/quotations/QuotationsPage.tsx",
+      "kind": "page",
+      "loc": 472,
+      "props": 0
+    },
+    {
+      "file": "src/pages/invoices/InvoiceDetailsPage.tsx",
+      "kind": "page",
+      "loc": 468,
+      "props": 0
+    },
+    {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "kind": "page",
+      "loc": 468,
+      "props": 0
+    },
+    {
+      "file": "src/components/settings/BackupTab.tsx",
+      "kind": "feature",
+      "loc": 467,
+      "props": 0
+    },
+    {
+      "file": "src/pages/employees/EmployeeDetailsPage.tsx",
+      "kind": "page",
+      "loc": 459,
+      "props": 0
+    },
+    {
+      "file": "src/lib/navigation.ts",
+      "kind": "lib",
+      "loc": 457,
+      "props": 0
+    },
+    {
+      "file": "src/components/settings/ThemeCustomizer.tsx",
+      "kind": "feature",
+      "loc": 446,
+      "props": 1
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrdersPage.tsx",
+      "kind": "page",
+      "loc": 441,
+      "props": 0
+    },
+    {
+      "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "kind": "dialog",
+      "loc": 440,
+      "props": 4
+    },
+    {
+      "file": "src/pages/suppliers/SupplierDetailsPage.tsx",
+      "kind": "page",
+      "loc": 438,
+      "props": 0
+    },
+    {
+      "file": "src/components/admin/useRestoreBackup.ts",
+      "kind": "hook",
+      "loc": 437,
+      "props": 0
+    },
+    {
+      "file": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "kind": "dialog",
+      "loc": 436,
+      "props": 0
+    },
+    {
+      "file": "src/pages/attachments/AttachmentsPage.tsx",
+      "kind": "page",
+      "loc": 432,
+      "props": 0
+    },
+    {
+      "file": "src/components/shared/AttachmentUploadForm.tsx",
+      "kind": "form",
+      "loc": 425,
+      "props": 11
+    },
+    {
+      "file": "src/pages/search/SearchPage.tsx",
+      "kind": "page",
+      "loc": 423,
+      "props": 0
+    },
+    {
+      "file": "src/pages/sync/SyncStatusPage.tsx",
+      "kind": "page",
+      "loc": 423,
+      "props": 0
+    },
+    {
+      "file": "src/pages/expenses/ExpensesPage.tsx",
+      "kind": "page",
+      "loc": 421,
+      "props": 0
+    },
+    {
+      "file": "src/pages/suppliers/SuppliersPage.tsx",
+      "kind": "page",
+      "loc": 421,
+      "props": 0
+    },
+    {
+      "file": "src/pages/payments/PaymentsPage.tsx",
+      "kind": "page",
+      "loc": 415,
+      "props": 0
+    },
+    {
+      "file": "src/pages/admin/RolesPage.tsx",
+      "kind": "page",
+      "loc": 414,
+      "props": 0
+    },
+    {
+      "file": "src/components/export/ExportWithTemplateButton.tsx",
+      "kind": "feature",
+      "loc": 413,
+      "props": 4
+    },
+    {
+      "file": "src/components/settings/ExportCenter/RenderProfileSection.tsx",
+      "kind": "feature",
+      "loc": 410,
+      "props": 0
+    },
+    {
+      "file": "src/components/shared/AttachmentsList.tsx",
+      "kind": "feature",
+      "loc": 410,
+      "props": 6
+    },
+    {
+      "file": "src/pages/admin/UserManagementPage.tsx",
+      "kind": "page",
+      "loc": 409,
+      "props": 0
+    },
+    {
+      "file": "src/pages/tasks/TasksPage.tsx",
+      "kind": "page",
+      "loc": 408,
+      "props": 0
+    },
+    {
+      "file": "src/pages/admin/BackupPage.tsx",
+      "kind": "page",
+      "loc": 407,
+      "props": 0
+    },
+    {
+      "file": "src/components/settings/SettingsExportImport.tsx",
+      "kind": "feature",
+      "loc": 406,
+      "props": 0
+    },
+    {
+      "file": "src/lib/repositories/customerRepository.ts",
+      "kind": "repository",
+      "loc": 394,
+      "props": 0
+    },
+    {
+      "file": "src/components/layout/AppSidebar.tsx",
+      "kind": "layout",
+      "loc": 393,
+      "props": 4
+    },
+    {
+      "file": "src/pages/install/InstallPage.tsx",
+      "kind": "page",
+      "loc": 379,
+      "props": 0
+    },
+    {
+      "file": "src/pages/admin/CustomizationsPage.tsx",
+      "kind": "page",
+      "loc": 378,
+      "props": 0
+    },
+    {
+      "file": "src/pages/accounting/ChartOfAccountsPage.tsx",
+      "kind": "page",
+      "loc": 377,
+      "props": 0
+    },
+    {
+      "file": "src/App.tsx",
+      "kind": "other",
+      "loc": 375,
+      "props": 0
+    },
+    {
+      "file": "src/lib/repositories/logisticsRepository.ts",
+      "kind": "repository",
+      "loc": 373,
+      "props": 0
+    },
+    {
+      "file": "src/pages/admin/UsersPage.tsx",
+      "kind": "page",
+      "loc": 372,
+      "props": 0
+    },
+    {
+      "file": "src/pages/admin/RoleLimitsPage.tsx",
+      "kind": "page",
+      "loc": 371,
+      "props": 0
+    },
+    {
+      "file": "src/pages/dev/PdfJobsPage.tsx",
+      "kind": "page",
+      "loc": 371,
+      "props": 0
+    },
+    {
+      "file": "src/components/customers/mobile/CustomerMobileProfile.tsx",
+      "kind": "feature",
+      "loc": 370,
+      "props": 24
+    },
+    {
+      "file": "src/pages/platform/TenantsManagementPage.tsx",
+      "kind": "page",
+      "loc": 366,
+      "props": 0
+    },
+    {
+      "file": "src/components/settings/ExportCenter/LivePreviewPanel.tsx",
+      "kind": "feature",
+      "loc": 358,
+      "props": 0
+    }
+  ],
+  "inventory": {
+    "tables": [
+      "src/components/invoices/InvoiceItemsTable.tsx",
+      "src/components/logistics/LogisticsItemsTable.tsx",
+      "src/components/quotations/QuotationItemsTable.tsx",
+      "src/components/reports/templateEditor/TemplateGrid.tsx",
+      "src/components/shared/ResponsiveItemsTable.tsx",
+      "src/components/shared/StatsGrid.tsx",
+      "src/components/table/VirtualizedTable.tsx"
+    ],
+    "dialogs": [
+      "src/components/accounting/AccountFormDialog.tsx",
+      "src/components/accounting/JournalDetailDialog.tsx",
+      "src/components/accounting/JournalFormDialog.tsx",
+      "src/components/admin/RestoreBackupDialog.tsx",
+      "src/components/attendance/LeaveRequestDialog.tsx",
+      "src/components/categories/CategoryFormDialog.tsx",
+      "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "src/components/customers/dialogs/CustomerReminderDialog.tsx",
+      "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "src/components/employees/EmployeeFormDialog.tsx",
+      "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "src/components/expenses/ExpenseFormDialog.tsx",
+      "src/components/inventory/StockMovementDialog.tsx",
+      "src/components/inventory/WarehouseFormDialog.tsx",
+      "src/components/invoices/BulkPrintConfirmDialog.tsx",
+      "src/components/invoices/InvoiceApprovalDialog.tsx",
+      "src/components/invoices/InvoiceFormDialog.tsx",
+      "src/components/keyboard/ShortcutsModal.tsx",
+      "src/components/payments/PaymentFormDialog.tsx",
+      "src/components/products/ProductFormDialog.tsx",
+      "src/components/products/ProductImportDialog.tsx",
+      "src/components/products/ProductVariantDialog.tsx",
+      "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "src/components/quotations/QuotationFormDialog.tsx",
+      "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "src/components/settings/ImportOptionsDialog.tsx",
+      "src/components/suppliers/SupplierFormDialog.tsx",
+      "src/components/suppliers/SupplierImportDialog.tsx",
+      "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "src/components/treasury/CashRegisterFormDialog.tsx",
+      "src/components/treasury/CashTransactionDialog.tsx"
+    ],
+    "forms": [
+      "src/components/mobile/FullScreenForm.tsx",
+      "src/components/shared/AttachmentUploadForm.tsx"
+    ],
+    "primitivesUi": [
+      "accordion",
+      "alert",
+      "alert-dialog",
+      "aspect-ratio",
+      "avatar",
+      "badge",
+      "breadcrumb",
+      "button",
+      "calendar",
+      "card",
+      "carousel",
+      "chart",
+      "checkbox",
+      "collapsible",
+      "command",
+      "context-menu",
+      "data-table-actions",
+      "data-table-header",
+      "dialog",
+      "drawer",
+      "dropdown-menu",
+      "form",
+      "hover-card",
+      "input",
+      "input-otp",
+      "label",
+      "menubar",
+      "navigation-menu",
+      "pagination",
+      "popover",
+      "progress",
+      "radio-group",
+      "resizable",
+      "responsive-dialog",
+      "scroll-area",
+      "select",
+      "separator",
+      "sheet",
+      "sidebar",
+      "skeleton",
+      "slider",
+      "sonner",
+      "switch",
+      "table",
+      "table-skeleton",
+      "tabs",
+      "tap-tooltip",
+      "textarea",
+      "toast",
+      "toaster",
+      "toggle",
+      "toggle-group",
+      "tooltip",
+      "use-toast"
+    ],
+    "primitivesUiKit": [
+      "StandardFormDialog",
+      "StandardPageHeader",
+      "UnifiedStatsDisplay",
+      "index"
+    ],
+    "competingPrimitives": []
+  }
+}
