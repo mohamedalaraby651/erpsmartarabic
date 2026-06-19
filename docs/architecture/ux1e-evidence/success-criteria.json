@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "generatedFor": "ux1e-v3",
+  "composites": [
+    {
+      "name": "DataGrid",
+      "definition": "No contract change; every emitted event conforms to CompositeEvent; renders 5000 rows without runtime errors; sort/selection/density are UI-state only.",
+      "met": true,
+      "evidence": ["snapshots/DataGrid.contract.snapshot.json", "scenarios.large", "events.large.json"]
+    },
+    {
+      "name": "Form",
+      "definition": "Supports happy/error/slow scenarios with no prop changes; lifecycle phase transitions emitted correctly; never references a data layer.",
+      "met": true,
+      "evidence": ["snapshots/Form.contract.snapshot.json", "scenarios.happy/error/slow"]
+    },
+    {
+      "name": "FormDialog",
+      "definition": "Emits OverlaySpec only; owns zero overlay runtime state (no portal/focus trap/escape inside the composite).",
+      "met": true,
+      "evidence": ["snapshots/FormDialog.contract.snapshot.json", "fitness/check-overlay-ownership"]
+    },
+    {
+      "name": "PageHeader",
+      "definition": "Consumes derived aggregates as plain props; no data-source coupling; renders correctly in RTL.",
+      "met": true,
+      "evidence": ["snapshots/PageHeader.contract.snapshot.json", "scenarios.unicode"]
+    },
+    {
+      "name": "StatGrid",
+      "definition": "Pure presentation of primitive aggregates; no async, no fetch, no formatters tied to domain types.",
+      "met": true,
+      "evidence": ["snapshots/StatGrid.contract.snapshot.json"]
+    },
+    {
+      "name": "DescriptionList",
+      "definition": "Pure presentation; renders arbitrary item arrays without coupling to domain shapes.",
+      "met": true,
+      "evidence": ["snapshots/DescriptionList.contract.snapshot.json"]
+    },
+    {
+      "name": "EmptyState",
+      "definition": "Renders under empty scenario without prop drift; no implicit i18n dependency.",
+      "met": true,
+      "evidence": ["snapshots/EmptyState.contract.snapshot.json", "scenarios.empty"]
+    },
+    {
+      "name": "ErrorState",
+      "definition": "Renders under error scenario without prop drift; no implicit i18n dependency.",
+      "met": true,
+      "evidence": ["snapshots/ErrorState.contract.snapshot.json", "scenarios.error"]
+    },
+    {
+      "name": "LoadingState",
+      "definition": "Renders under slow scenario without prop drift; uses aria-busy.",
+      "met": true,
+      "evidence": ["snapshots/LoadingState.contract.snapshot.json", "scenarios.slow"]
+    },
+    {
+      "name": "Pagination",
+      "definition": "Pure UI controller; emits grid.page.change envelope; never decides server pagination strategy.",
+      "met": true,
+      "evidence": ["snapshots/Pagination.contract.snapshot.json"]
+    }
+  ]
+}
