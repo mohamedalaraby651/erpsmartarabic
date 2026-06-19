@@ -48,8 +48,9 @@ export function makeEnvironment(seed: number): PerfEnvironment {
     typeof navigator !== "undefined" && typeof navigator.userAgent === "string"
       ? navigator.userAgent
       : null;
+  const proc = (globalThis as { process?: { versions?: { node?: string } } }).process;
   return {
-    node: typeof process !== "undefined" ? process.versions?.node ?? null : null,
+    node: proc?.versions?.node ?? null,
     vitest: null,
     jsdom: ua && ua.includes("jsdom") ? ua : null,
     userAgent: ua,

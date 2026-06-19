@@ -95,10 +95,10 @@ export const duplicateIds: Scenario = {
   formInitial: baseFormInitial,
 };
 
-const nullRows: MockCustomer[] = customers.slice(0, 10).map((c, i) => ({
+const nullRows: MockCustomer[] = customers.slice(0, 10).map((c, i): MockCustomer => ({
   ...c,
   name: i % 3 === 0 ? "" : c.name,
-  phone: null,
+  phone: null as string | null,
 }));
 export const nullFields: Scenario = {
   name: "nullFields",

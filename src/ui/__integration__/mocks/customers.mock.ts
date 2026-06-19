@@ -14,6 +14,7 @@ export interface MockCustomer {
   readonly city: string;
   readonly balance: number;
   readonly createdAt: string;
+  readonly [key: string]: string | number | null;
 }
 
 const CITIES = ["Riyadh", "Jeddah", "Dammam", "Mecca", "Medina", "Khobar"];
