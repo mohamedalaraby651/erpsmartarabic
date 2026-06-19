@@ -13,9 +13,13 @@ const OUT = resolve(__dirname, "output/dependency-report.json");
 
 function madge(args, tmpName) {
   const tmp = resolve(__dirname, `output/.${tmpName}`);
-  execSync(`bunx madge ${args.join(" ")} --extensions ts,tsx,js,jsx --ts-config tsconfig.json src > ${tmp}`, {
-    cwd: ROOT, stdio: ["ignore", "ignore", "pipe"], maxBuffer: 256 * 1024 * 1024,
-  });
+  try {
+    execSync(`bunx madge ${args.join(" ")} --extensions ts,tsx,js,jsx --ts-config tsconfig.json src > ${tmp}`, {
+      cwd: ROOT, stdio: ["ignore", "ignore", "pipe"], maxBuffer: 256 * 1024 * 1024,
+    });
+  } catch {
+    // madge exits non-zero on circular detection; output file is still written via redirection
+  }
   const raw = readFileSync(tmp, "utf8");
   try { unlinkSync(tmp); } catch {}
   return JSON.parse(raw);
