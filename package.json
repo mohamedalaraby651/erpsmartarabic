@@ -14,6 +14,12 @@
     "preflight:dry-run": "bash scripts/preflight-check.sh --dry-run",
     "generate:sitemap": "bunx tsx scripts/generate-sitemap.ts",
     "fitness:token-export": "node scripts/fitness/check-token-export.mjs",
+    "fitness:shell-isolation": "node scripts/fitness/check-shell-isolation.mjs",
+    "fitness:shell-token-only": "node scripts/fitness/check-shell-token-only.mjs",
+    "fitness:shell-a11y": "node scripts/fitness/check-shell-a11y.mjs",
+    "fitness:workspace-api-shape": "bunx tsx scripts/fitness/check-workspace-api-shape.mjs",
+    "fitness:shell": "npm run fitness:token-export && npm run fitness:shell-isolation && npm run fitness:shell-token-only && npm run fitness:shell-a11y && npm run fitness:workspace-api-shape",
+    "tokens:export": "bunx tsx scripts/build-token-json.mjs",
     "predev": "bunx tsx scripts/generate-sitemap.ts",
     "prebuild": "bunx tsx scripts/generate-sitemap.ts"
   },

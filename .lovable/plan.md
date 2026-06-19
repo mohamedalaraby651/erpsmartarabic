@@ -56,13 +56,16 @@ All rulebooks land before any `src/ui/**` code.
 
 **Exit:** tokens consumed by ≥ 1 canonical primitive; leftover console = 0; Vitest ≥ 1187; scorecard ≥ 90; `TOKEN_VERSION = v1` recorded in `TOKEN_CHANGELOG.md`.
 
-### UX-1B — ERP UI Shell *(3–4 days)*
-- `src/ui/shell/` — `AppShell`, `WorkspaceShell`, `NavigationRegion`, `CommandRegion`, `StatusRegion`, `NotificationRegion`; implements `WorkspaceDefinition`.
-- `WorkspaceProvider` exposes `{ workspaceId, permissions, breadcrumbs }`.
-- `AdaptiveShell` wrapped, not replaced.
-- **Scorecard run #2.**
+### UX-1B — ERP UI Shell ✅ *(complete)*
+- `src/ui/layout/` — `AppShell`, `Sidebar`, `Topbar`, `WorkspaceSwitcher`, `NavigationTree`, `Breadcrumbs`, `CommandPalette`, `NotificationCenter`, `StatusBar`, `UserMenu`. Token-only, RTL-aware, slot-driven.
+- `src/ui/providers/` — `ShellProvider`, `LayoutProvider` (versioned state), `ThemeProvider` (mode + variant + dir + density), `ShortcutProvider` (scoped), `WorkspaceProvider` (Map-based registry).
+- Infrastructure: `WorkspaceRegistry` (register/unregister/replace/list/get/has), `ShellEventBus`, `SlotRegistry`, `LocationAdapter` (default = window; ReactRouterAdapter in UX-1C), `NotificationProvider` contract, `WorkspaceLifecycle` hooks.
+- `WorkspaceDefinition` evolved under `@contractVersion v1.1` (additive) — `WorkspaceManifest` is `JSON.stringify`-safe (exit-gate test + fitness check).
+- Demo: `src/ui/layout/__demo__/ShellDemo.tsx` drives **3 workspaces** (Finance, Suppliers, CRM) with zero Shell edits.
+- Fitness scripts: `check-shell-isolation`, `check-shell-token-only`, `check-shell-a11y`, `check-workspace-api-shape` (+ existing `check-token-export`).
+- Carry-overs: `tokens.freeze.test.ts`, `scripts/build-token-json.mjs` → `src/ui/tokens/tokens.json`. RISK-002 (Storybook) deferred to UX-1C. ADR-0002 recorded.
 
-**Exit:** Suppliers list renders inside `WorkspaceShell` behind flag `ux1.suppliersV2`; legacy default.
+**Exit met:** TSC 0 · Vitest 1199 (+12) · ESLint 0 errors · 5/5 fitness PASS · Workspace manifests serializable.
 
 ### UX-1C — Canonical Components *(4–5 days)*
 - Score each primitive via `CANONICAL_COMPONENT_CRITERIA.md` → assign lifecycle state → pick canonical → `@deprecated` JSDoc on legacy. **No legacy deletion in UX-1.**

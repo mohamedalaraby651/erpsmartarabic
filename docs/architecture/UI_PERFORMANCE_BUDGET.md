@@ -12,6 +12,9 @@
 | Workspace shell mount (warm) | ≤ 80 ms | same marker |
 | Route transition (intra-workspace) | ≤ 150 ms | Performance API marker `route-ready` |
 | Time to first interaction in POC route | ≤ 1.5 s on cable, ≤ 3.5 s on Slow 4G | Browser performance trace |
+| Sidebar render (p95) | ≤ 3 ms | React Profiler |
+| Workspace switch | ≤ 20 ms | `workspace:changed` event timestamp |
+| Command palette search (1 000 commands) | ≤ 30 ms | Manual perf trace |
 
 ## Architectural Budgets
 
