@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-overlay-ownership",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 14,
+  "violations": [],
+  "pass": true
+}

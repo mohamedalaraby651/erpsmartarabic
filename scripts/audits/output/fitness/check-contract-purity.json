@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-contract-purity",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 5,
+  "violations": [],
+  "pass": true
+}

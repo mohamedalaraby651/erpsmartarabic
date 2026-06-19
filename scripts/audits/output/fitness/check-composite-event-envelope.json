@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-composite-event-envelope",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 14,
+  "emissions": 9,
+  "violations": [],
+  "pass": true
+}
