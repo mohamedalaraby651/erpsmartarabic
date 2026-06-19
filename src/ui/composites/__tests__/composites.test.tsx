@@ -81,7 +81,7 @@ describe("Composites — smoke", () => {
       </Form>,
     );
     fireEvent.change(screen.getByTestId("a"), { target: { value: "x" } });
-    fireEvent.submit(screen.getByRole("form", { hidden: true }) ?? document.querySelector("form")!);
+    fireEvent.submit(document.querySelector("form")!);
     expect(events.length).toBeGreaterThan(0);
     for (const ev of events) {
       expect(typeof ev.type).toBe("string");
