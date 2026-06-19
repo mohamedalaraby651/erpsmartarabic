@@ -2,8 +2,8 @@
 // scripts/audits/dep-graph.mjs
 // UX-0: Dependency graph + circular deps + import-layer violations.
 // Output: scripts/audits/output/dependency-report.json (deterministic).
-import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { mkdirSync, writeFileSync, readFileSync, unlinkSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,17 +11,18 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "../..");
 const OUT = resolve(__dirname, "output/dependency-report.json");
 
-function madge(args) {
-  const raw = execFileSync(
-    "bunx",
-    ["madge", ...args, "--extensions", "ts,tsx,js,jsx", "--ts-config", "tsconfig.json", "src"],
-    { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
-  );
-  return raw;
+function madge(args, tmpName) {
+  const tmp = resolve(__dirname, `output/.${tmpName}`);
+  execSync(`bunx madge ${args.join(" ")} --extensions ts,tsx,js,jsx --ts-config tsconfig.json src > ${tmp}`, {
+    cwd: ROOT, stdio: ["ignore", "ignore", "pipe"], maxBuffer: 256 * 1024 * 1024,
+  });
+  const raw = readFileSync(tmp, "utf8");
+  try { unlinkSync(tmp); } catch {}
+  return JSON.parse(raw);
 }
 
-const graphJson = JSON.parse(madge(["--json"]));
-const circularJson = JSON.parse(madge(["--circular", "--json"]));
+const graphJson = madge(["--json"], "madge-graph.json");
+const circularJson = madge(["--circular", "--json"], "madge-circular.json");
 
 // Build sorted, deterministic graph
 const sortedGraph = {};
