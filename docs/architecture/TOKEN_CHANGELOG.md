@@ -25,10 +25,13 @@ A patch-level bump (typos, comments) does not change `TOKEN_VERSION`.
 
 ### v1 — UX-1A (initial)
 
-- **Date:** _TBD on UX-1A merge_
+- **Date:** 2026-06-19
 - **Added:** semantic color palette (HSL), typography scale, spacing scale, radius scale, elevation scale, motion (durations + easings).
 - **Removed:** —
-- **Notes:** Baseline frozen at end of UX-1. Sourced from existing project semantic tokens in `src/index.css`.
+- **Source of truth:** CSS variables in `src/index.css`, mirrored programmatically in `src/ui/tokens/*`.
+- **Public API:** `src/ui/tokens/index.ts` (also re-exported from `src/ui/index.ts`). Deep imports forbidden — enforced by `scripts/fitness/check-token-export.mjs`.
+- **Pilot consumer:** canonical `Button` at `src/ui/primitives/Button.tsx`.
+- **Notes:** Initial Foundation Freeze candidate. Will be locked to `v1` at end of UX-1.
 
 <!--
 New versions append below. Template:

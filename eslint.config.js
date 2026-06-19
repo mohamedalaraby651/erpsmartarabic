@@ -84,6 +84,59 @@ export default tseslint.config(
   },
   {
     /**
+     * UX-1A — Design Token discipline (WARN only).
+     *
+     * Inside `src/ui/**` and `src/workspaces/**`, forbid hardcoded visual
+     * primitives. Use semantic tokens / Tailwind utilities backed by
+     * `src/ui/tokens` and `src/index.css` CSS variables.
+     *
+     * Graduated to error in a later wave once violations reach zero.
+     */
+    files: ["src/ui/**/*.{ts,tsx}", "src/workspaces/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": ["warn",
+        ...restrictedSyntaxEntries,
+        {
+          // Hardcoded hex colors in JSX / string literals.
+          selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}){1,2}$/]",
+          message:
+            "لا تستخدم ألواناً ثابتة (#hex). استخدم رموز التصميم من '@/ui/tokens' أو Tailwind utilities (bg-primary, text-foreground, ...).",
+        },
+        {
+          // Hardcoded HSL/RGB color strings.
+          selector: "Literal[value=/^(?:hsl|rgb)a?\\(/]",
+          message:
+            "لا تستخدم قيم hsl()/rgb() حرفية. استخدم رموز التصميم أو CSS variables (var(--...)) من نظام التصميم.",
+        },
+        {
+          // Hardcoded font-family strings.
+          selector: "Literal[value=/font-family\\s*:/i]",
+          message:
+            "لا تحدد font-family حرفياً. استخدم --font-sans أو رمز fontFamily من '@/ui/tokens'.",
+        },
+        {
+          // Arbitrary Tailwind color/radius values like text-[#fff] or rounded-[6px].
+          selector: "Literal[value=/(?:text|bg|border|fill|stroke|ring|shadow)-\\[#[0-9a-fA-F]{3,8}\\]/]",
+          message:
+            "لا تستخدم Tailwind arbitrary colors (text-[#...]). استخدم الرموز الدلالية (text-primary, bg-card, ...).",
+        },
+        {
+          // Arbitrary pixel radii — radius must derive from --radius.
+          selector: "Literal[value=/\\brounded-\\[(?:\\d+px|\\d*\\.?\\d+rem)\\]/]",
+          message:
+            "لا تستخدم radii ثابتة (rounded-[6px]). استخدم rounded-sm/md/lg/xl المرتبطة بـ --radius.",
+        },
+        {
+          // Discourage NEW `as any` inside UI/workspaces (warning, not blocking).
+          selector: "TSAsExpression > TSAnyKeyword",
+          message:
+            "تجنّب 'as any' داخل src/ui/** و src/workspaces/**. استخدم type واضح أو unknown مع type guard.",
+        },
+      ],
+    },
+  },
+  {
+    /**
      * Repository boundary: لا يجوز استيراد عميل Supabase
      * من داخل مكوّنات/صفحات UI. يُسمح فقط في:
      *  - src/lib/repositories/**
