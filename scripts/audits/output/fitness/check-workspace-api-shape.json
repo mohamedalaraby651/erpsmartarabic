@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-workspace-api-shape",
+  "baselineVersion": "UX-1",
+  "samples": [
+    "finance",
+    "suppliers",
+    "crm"
+  ],
+  "violations": [],
+  "pass": true
+}

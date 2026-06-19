@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-shell-runtime-purity",
+  "baselineVersion": "UX-1",
+  "scannedFiles": 32,
+  "violations": [],
+  "pass": true
+}
