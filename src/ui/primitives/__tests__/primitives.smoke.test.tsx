@@ -51,10 +51,15 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
+  Toaster,
 } from "@/ui";
 import { X } from "lucide-react";
 
 describe("Canonical primitives — smoke", () => {
+  it("Toaster host mounts", () => {
+    render(<Toaster />);
+  });
+
   it("Button renders with accessible role", () => {
     render(<Button>Save</Button>);
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
