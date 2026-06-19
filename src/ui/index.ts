@@ -82,7 +82,7 @@ export {
   TableCell,
   TableCaption,
 } from "./primitives/Table";
-export type { Size, Tone, Variant, Density, FieldAriaProps } from "./primitives/types";
+export type { Size, Tone, Variant, FieldAriaProps } from "./primitives/types";
 
 // Shell — providers
 export {
