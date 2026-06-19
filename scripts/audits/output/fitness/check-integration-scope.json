@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-integration-scope",
+  "baselineVersion": "UX-1E",
+  "scannedFiles": 15,
+  "violations": [
+    {
+      "file": "src/ui/__integration__/mocks/seed.ts",
+      "why": "crypto.randomUUID() in mocks/** (E5)"
+    },
+    {
+      "file": "src/ui/__integration__/mocks/seed.ts",
+      "why": "Date.now() in mocks/** (E5)"
+    },
+    {
+      "file": "src/ui/__integration__/mocks/seed.ts",
+      "why": "Math.random() in mocks/** (E5)"
+    }
+  ],
+  "pass": false
+}

@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "composite": "LoadingState",
+  "contracts": [
+    {
+      "label": "CompositeEvent",
+      "file": "src/ui/contracts/CompositeEvent.ts",
+      "exportedSymbols": [
+        "export interface CompositeEvent<",
+        "export type CompositeEventHandler<E extends CompositeEvent> = (event: E) => void;",
+        "export type EventPayload = Readonly<",
+        "export type EventScalar = string | number | boolean | null | undefined;"
+      ],
+      "exportedInterfaces": [
+        {
+          "name": "CompositeEvent",
+          "body": "export interface CompositeEvent< TType extends string = string, TPayload extends EventPayload = EventPayload, > { readonly type: TType; readonly payload: TPayload; }"
+        }
+      ]
+    },
+    {
+      "label": "DataGridContract",
+      "file": "src/ui/contracts/DataGridContract.ts",
+      "exportedSymbols": [
+        "export interface ColumnDef<TRow extends Record<string, unknown>> {",
+        "export interface GridDensityChangePayload extends EventPayload {",
+        "export interface GridPageChangePayload extends EventPayload {",
+        "export interface GridRowActivatePayload extends EventPayload {",
+        "export interface GridSelectionChangePayload extends EventPayload {",
+        "export interface GridSortChangePayload extends EventPayload {",
+        "export interface SelectionState {",
+        "export interface SortState {",
+        "export type DensityMode = \"comfortable\" | \"compact\";",
+        "export type GridUIEvent =",
+        "export type RowId = string;",
+        "export type SortDirection = \"asc\" | \"desc\";"
+      ],
+      "exportedInterfaces": [
+        {
+          "name": "ColumnDef",
+          "body": "export interface ColumnDef<TRow extends Record<string, unknown>> { readonly id: string; readonly header: string; readonly accessor?: keyof TRow & string; readonly sortable?: boolean; readonly align?: \"start\" | \"center\" | \"end\"; readonly width?: number | string; readonly render?: (row: TRow) => unknown; }"
+        },
+        {
+          "name": "GridDensityChangePayload",
+          "body": "export interface GridDensityChangePayload extends EventPayload { readonly density: DensityMode; }"
+        },
+        {
+          "name": "GridPageChangePayload",
+          "body": "export interface GridPageChangePayload extends EventPayload { readonly page: number; }"
+        },
+        {
+          "name": "GridRowActivatePayload",
+          "body": "export interface GridRowActivatePayload extends EventPayload { readonly rowId: RowId; }"
+        },
+        {
+          "name": "GridSelectionChangePayload",
+          "body": "export interface GridSelectionChangePayload extends EventPayload { readonly selectedIds: ReadonlyArray<RowId>; }"
+        },
+        {
+          "name": "GridSortChangePayload",
+          "body": "export interface GridSortChangePayload extends EventPayload { readonly columnId: string; readonly direction: SortDirection; }"
+        },
+        {
+          "name": "SelectionState",
+          "body": "export interface SelectionState { readonly mode: \"none\" | \"single\" | \"multi\"; readonly selectedIds: ReadonlyArray<RowId>; }"
+        },
+        {
+          "name": "SortState",
+          "body": "export interface SortState { readonly columnId: string; readonly direction: SortDirection; }"
+        }
+      ]
+    },
+    {
+      "label": "FormContract",
+      "file": "src/ui/contracts/FormContract.ts",
+      "exportedSymbols": [
+        "export interface FieldDescriptor {",
+        "export interface FormDirtyPayload extends EventPayload {",
+        "export interface FormErrorPayload extends EventPayload {",
+        "export interface FormResetPayload extends EventPayload {",
+        "export interface FormSubmitPayload extends EventPayload {",
+        "export type FormLifecyclePhase =",
+        "export type FormUIEvent ="
+      ],
+      "exportedInterfaces": [
+        {
+          "name": "FieldDescriptor",
+          "body": "export interface FieldDescriptor { readonly name: string; readonly label?: string; readonly required?: boolean; readonly hint?: string; }"
+        },
+        {
+          "name": "FormDirtyPayload",
+          "body": "export interface FormDirtyPayload extends EventPayload { readonly dirty: boolean; }"
+        },
+        {
+          "name": "FormErrorPayload",
+          "body": "export interface FormErrorPayload extends EventPayload { readonly id: string; readonly message: string; }"
+        },
+        {
+          "name": "FormResetPayload",
+          "body": "export interface FormResetPayload extends EventPayload { readonly id: string; }"
+        },
+        {
+          "name": "FormSubmitPayload",
+          "body": "export interface FormSubmitPayload extends EventPayload { readonly id: string; }"
+        }
+      ]
+    },
+    {
+      "label": "OverlaySpec",
+      "file": "src/ui/contracts/OverlaySpec.ts",
+      "exportedSymbols": [
+        "export interface OverlayClosePayload extends EventPayload {",
+        "export interface OverlayOpenPayload extends EventPayload {",
+        "export interface OverlaySpec {",
+        "export type OverlaySize = \"sm\" | \"md\" | \"lg\" | \"xl\";",
+        "export type OverlayUIEvent ="
+      ],
+      "exportedInterfaces": [
+        {
+          "name": "OverlayClosePayload",
+          "body": "export interface OverlayClosePayload extends EventPayload { readonly id: string; readonly reason: \"user\" | \"submit\" | \"cancel\" | \"escape\"; }"
+        },
+        {
+          "name": "OverlayOpenPayload",
+          "body": "export interface OverlayOpenPayload extends EventPayload { readonly id: string; }"
+        },
+        {
+          "name": "OverlaySpec",
+          "body": "export interface OverlaySpec { readonly id: string; readonly title: string; readonly description?: string; readonly size?: OverlaySize; readonly dismissible?: boolean; /** Slot identifier resolved by the Shell Dialog renderer. */ readonly bodySlot: string; /** Optional footer slot identifier. */ readonly footerSlot?: string; }"
+        }
+      ]
+    }
+  ],
+  "surface": {
+    "label": "LoadingState",
+    "file": "src/ui/composites/state/LoadingState.tsx",
+    "exportedSymbols": [
+      "export const LoadingState = React.forwardRef<HTMLDivElement, LoadingStateProps>(",
+      "export interface LoadingStateProps extends React.HTMLAttributes<HTMLDivElement> {"
+    ],
+    "exportedInterfaces": [
+      {
+        "name": "LoadingStateProps",
+        "body": "export interface LoadingStateProps extends React.HTMLAttributes<HTMLDivElement> { label?: string; }"
+      }
+    ]
+  }
+}
