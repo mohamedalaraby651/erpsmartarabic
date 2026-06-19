@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-regression-lock",
+  "baselineVersion": "UX-1E",
+  "violations": [],
+  "pass": true
+}

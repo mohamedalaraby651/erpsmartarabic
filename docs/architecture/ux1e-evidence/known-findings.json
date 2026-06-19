@@ -1,0 +1,18 @@
+[
+  {
+    "id": "RISK-006-01",
+    "severity": "minor",
+    "composite": "DataGrid",
+    "summary": "No row virtualization at 5000 rows. First-render and page transitions remain under budget for spike scenarios, but a real ERP grid will need a virtualizer.",
+    "owner": "UI Architecture",
+    "deferredTo": "UX-1F"
+  },
+  {
+    "id": "RISK-006-02",
+    "severity": "minor",
+    "composite": "Form",
+    "summary": "FormDirty is emitted on every keystroke without a debounce. Acceptable for spike; UX-2 may add a `dirty` boundary at submit time.",
+    "owner": "UI Architecture",
+    "deferredTo": "UX-2"
+  }
+]
