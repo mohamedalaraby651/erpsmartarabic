@@ -56,9 +56,16 @@ function walk(dir, out = []) {
 const files = walk(SCAN);
 const violations = [];
 
+function stripComments(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:"'`\\])\/\/[^\n]*/g, "$1");
+}
+
 for (const f of files) {
   const rel = relative(ROOT, f).split(sep).join("/");
-  const code = readFileSync(f, "utf8");
+  const raw = readFileSync(f, "utf8");
+  const code = stripComments(raw);
   for (const r of FORBIDDEN_GLOBAL) if (r.pattern.test(code)) violations.push({ file: rel, why: r.why });
   if (rel.includes("/adapters/")) {
     for (const r of FORBIDDEN_IN_ADAPTERS) if (r.pattern.test(code)) violations.push({ file: rel, why: r.why });
