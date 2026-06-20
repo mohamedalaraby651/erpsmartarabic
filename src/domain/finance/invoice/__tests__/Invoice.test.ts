@@ -223,15 +223,16 @@ describe("Invoice — aggregation (sole site for totals)", () => {
     expect(g.value.amount).toBe(3875);
   });
 
-  test("rounding stays at the single mulScalar boundary (no aggregate rounding)", () => {
+  test("totals = sum of per-line rounded values (rounding happens per line, never on the aggregate)", () => {
     const inv = mustInvoice();
-    // 1 × 1 minor × 5% bp=500 → 1 * 500 / 10000 = 0.05 → HAFZ → 1 (per line)
-    inv.addLine(mustLine(1, 1, 500));
-    inv.addLine(mustLine(1, 1, 500));
+    // Each line: 1 × 3 minor at bp=5000 (50%) → 3·5000/10000 = 1.5 → HAFZ → 2.
+    // Per-line sum: 2 + 2 = 4. Re-rounding the aggregate net would give
+    // (3+3)·5000/10000 = 3 — proving the aggregate must NOT re-round.
+    inv.addLine(mustLine(1, 3, 5000));
+    inv.addLine(mustLine(1, 3, 5000));
     const t = inv.totalTax();
     if (!isOk(t)) throw new Error("totals failed");
-    // Sum of per-line HAFZ rounds: 1 + 1 = 2 (NOT a re-rounded 0).
-    expect(t.value.amount).toBe(2);
+    expect(t.value.amount).toBe(4);
   });
 
   test("totals recomputed live; no derived state stored", () => {
