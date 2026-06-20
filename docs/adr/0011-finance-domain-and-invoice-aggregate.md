@@ -111,6 +111,16 @@ On failure → `Result.err(CorruptEventStream)`.
   - No `round2`, no `toFixed`, no `parseFloat` anywhere in `src/domain/finance/**`.
 - **R-1106f** **Fitness guard.** `check-domain-purity` is extended to forbid the tokens `Math.round`, `toFixed`, `parseFloat`, and numeric literals containing a decimal point inside `src/domain/finance/**`, with a single allow-list entry for `Money.mulScalar` (the `Math.round` call site in `Money.ts`).
 
+### Amendment A1 — BigInt Intermediate in `mulScalar` (interpretive, non-breaking)
+
+Adopted: 2026-06-20. Effective immediately for `src/domain/finance/**`. R-1106a..f remain locked verbatim; this amendment is interpretive only.
+
+**Clarification of R-1106c.** The clause "No floating intermediate is permitted" is implemented by performing the multiplication and division inside `mulScalar` using `BigInt` exact integer arithmetic. The final conversion to `number` is performed only after the rounded result is proven to lie within `[-MAX_SAFE_INTEGER, +MAX_SAFE_INTEGER]`; otherwise `Result.err(NonIntegerMoney)` is returned. BigInt is integer-only and therefore satisfies — rather than contradicts — R-1106c.
+
+**Relation to R-1106f.** `Math.round` remains globally forbidden by R-1106f. No allow-list exceptions are introduced or required for this implementation. The enforcement model in `check-domain-purity` is unchanged.
+
+**Rounding semantics.** Half-Away-From-Zero (HAFZ) is now exact in both signs (e.g. `mulScalar(-1, 1, 2) = -1`), strictly aligned with ADR-0011 §4 intent.
+
 ---
 
 ## 5. Invoice State Machine — Transition Table
