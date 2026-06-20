@@ -21,6 +21,7 @@
 | [ADR-0006](./0006-temporal-model-and-clock-port.md) | Accepted | — | Temporal model: `Instant` VO + `ClockPort` single authority | UX-2 / Step 0 | 2026-06-19 |
 | [ADR-0008](./0008-error-mapping-and-unit-of-work.md) | Accepted | — | Error model, `Result`, and Transaction Finality | UX-2 / Step 0 | 2026-06-19 |
 | [ADR-0010](./0010-repository-failure-taxonomy.md) | Accepted | — | `RepositoryFailure` taxonomy + retryability classifier | UX-2 / Step 0 | 2026-06-19 |
+| [ADR-0011](./0011-finance-domain-and-invoice-aggregate.md) | Accepted | — | Finance Domain Bounded Context + Invoice Aggregate Contract (Integer-only Money, explicit state machine, aggregate-enforced event ordering) | UX-2A | 2026-06-20 |
 
 <!--
 New entries append below this line. Keep the table sorted by ADR id ascending.

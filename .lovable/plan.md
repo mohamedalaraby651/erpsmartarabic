@@ -1,109 +1,118 @@
-# Step 1 — Shared-Kernel Scaffolding (Ratified v3 — Final)
+# Step 2 — UX-2A: Finance Domain (Invoice) — Plan v3
 
-Approved for implementation. v3 folds in the four long-term hardening recommendations from review.
+Incorporates the pre-approval audit. Two mandatory fixes (arithmetic model lock, explicit state machine) and one clarification (event ordering authority) are now embedded as **first-class requirements of ADR-0011**, not implementation details.
 
-## Four Authorities
+Execution remains gated in two phases. No `src/**` code in Phase A.
 
-| Authority | Single Source | Active From |
-|---|---|---|
-| Time | `ClockPort` | Step 1 |
-| Identity | `IdPort` | Step 1 |
-| Retry Policy | `isRetryable()` | Step 1 |
-| Transaction Boundary | `UnitOfWorkPort` | UX-2B |
+---
 
-Both Temporal and Identity Authority live in **ADR-0006** (extended), not a new ADR-0012. ADR-0006 sections: (a) Temporal Authority, (b) Identity Authority, including Rule R-0008 (Id opacity, no `as Id<T>` outside allowed boundaries).
+## Phase A — ADR-0011 Only (Contract Lock)
 
-## Scope
+Single deliverable: `docs/adr/0011-finance-domain-and-invoice-aggregate.md` + `docs/adr/INDEX.md` row. Zero `src/**` changes. Zero tests. Zero scripts. Zero migrations.
 
-```
-src/shared-kernel/
-├── result/        Result<T,E>  — Operational Outcome
-├── either/        Either<L,R>  — Algebraic ADT only (NOT for errors)
-├── errors/        DomainError, ApplicationError,
-│                  InfrastructureFailure{phase:'execution'|'commit'|'post-commit'},
-│                  RepositoryFailure (union), isRetryable (SINGLE export)
-├── time/          Instant (immutable, no zero-arg factory), ClockPort
-├── identity/      Id<TBrand> (opaque branded VO), IdPort
-├── events/        DomainEvent { id, occurredAt:Instant, type, payload,
-│                                 metadata?: Readonly<{correlationId?, causationId?}> }
-├── context/       RequestContext (Readonly: tenantId, userId, correlationId, locale)
-├── base/          ValueObject, Entity (with version), AggregateRoot
-├── pagination/    Page, PageRequest
-└── index.ts       SOLE public surface (barrel)
-```
+### Audit fixes — locked into ADR-0011
 
-Tests under `src/shared-kernel/__tests__/`.
+#### FIX 1 — Arithmetic Model (resolves R-1106 ambiguity)
 
-## Contract refinements
+**Decision: Option A — Integer-only minor-unit arithmetic. Locked. Half-away-from-zero rounding occurs at exactly one boundary: tax computation.**
 
-**Result vs Either (contractual separation):**
-- `Result<T, E>` — every use case, repository, port, and handler returns this.
-- `Either<L, R>` — algebraic choice between two equally valid types; **MUST NOT** carry application errors. Allowed only inside shared-kernel for composite/mathematical models.
-- Enforced (later) by a fitness rule banning `Either` in return positions of `application/**`, `domain/**` ports, and repositories.
+Rationale: ERP-safe, eliminates float drift, makes audit reconciliation deterministic. Aligns with the project-wide "Financial Precision" rule (`Math.round(v*100)/100` is the *legacy* formula and is explicitly **deprecated inside `domain/finance/**`**; it remains valid only in legacy UI projections until UX-2C migrates them).
 
-**Aggregate Version (placeholder from day one):**
-- `Entity` exposes `protected readonly version: number` (default `0`).
-- `AggregateRoot.pullEvents()` returns frozen snapshot and clears buffer; bumping version is reserved for UX-2B (Optimistic Concurrency) — no logic added in Step 1.
-- Reason: retrofitting `version` later mutates every aggregate signature.
+Locked rules added to ADR-0011:
+- **R-1106a** `Money.amount` is `number` constrained to a safe 53-bit integer in **minor units** (e.g. 1500 = 15.00 USD). Floats are forbidden as storage; runtime guard: `Number.isInteger(amount) && Math.abs(amount) <= Number.MAX_SAFE_INTEGER`.
+- **R-1106b** `Money.add` / `Money.sub` are exact integer ops; require equal `currency`; return `Result<Money, MoneyError>`.
+- **R-1106c** `Money.mulScalar(numerator, denominator)`: the **only** rounding boundary. Computed as `Math.round((amount * numerator) / denominator)` on integers. No floating intermediate.
+- **R-1106d** Tax computation = `lineTax = mulScalar(lineNet, basisPoints, 10000)`. No other site is permitted to round.
+- **R-1106e** Totals: `lineNet = qty * unitPrice.amount` (integer); `lineGross = lineNet + lineTax` (integer); `totalGross = Σ lineGross` (integer). No `round2` anywhere in `domain/finance/**`.
+- **R-1106f** Fitness guard: `check-domain-purity` is extended to forbid `Math.round`, `toFixed`, `parseFloat`, and `.` numeric literals containing a decimal point inside `src/domain/finance/**` outside `Money.mulScalar`.
 
-**DomainEvent metadata (optional, reserved):**
-- `metadata?: Readonly<{ correlationId?: string; causationId?: string }>` baked in from day one.
-- Not consumed yet; reserves the interface shape for Saga / Outbox / Event Replay / distributed tracing without future breaking change.
+#### FIX 2 — Invoice State Machine (resolves R-1108 ambiguity)
 
-**ValueObject:**
-- Each VO declares identity fields explicitly (`protected identityFields()`).
-- `equals()` compares only those fields, order-independent. No `JSON.stringify`.
+**Decision: explicit finite state machine, encoded as a transition table inside ADR-0011 and mirrored 1:1 by `InvoiceStatus.ts` in Phase B.**
 
-**AggregateRoot:**
-- `protected record(event)`, `public pullEvents(): readonly DomainEvent[]` (frozen, then cleared). No public getter/setter, no direct array access.
+States: `Draft | Issued | PartiallyPaid | Paid | Void`.
 
-**Instant:**
-- Equality by `epochMillis` only.
-- Round-trip test: `Instant → epochMillis → Instant` is `equals` to original.
+Transition table (locked):
 
-**Result — Monad law tests:**
-- Left Identity, Right Identity, Associativity, `map` identity, `map` composition.
+| From            | Trigger              | Guard                                                 | To              | Event emitted             |
+|-----------------|----------------------|-------------------------------------------------------|-----------------|---------------------------|
+| Draft           | `issue()`            | `lines.length >= 1` ∧ R-1101..R-1105 hold             | Issued          | `InvoiceIssued`           |
+| Issued          | `applyPayment(p)`    | `p > 0` ∧ `paidSoFar + p < totalGross`                | PartiallyPaid   | `InvoicePaymentApplied`   |
+| Issued          | `applyPayment(p)`    | `p > 0` ∧ `paidSoFar + p == totalGross`               | Paid            | `InvoicePaymentApplied`   |
+| PartiallyPaid   | `applyPayment(p)`    | `p > 0` ∧ `paidSoFar + p < totalGross`                | PartiallyPaid   | `InvoicePaymentApplied`   |
+| PartiallyPaid   | `applyPayment(p)`    | `p > 0` ∧ `paidSoFar + p == totalGross`               | Paid            | `InvoicePaymentApplied`   |
+| Issued          | `void(reason)`       | reason ∈ `VoidReasonCode`                             | Void            | `InvoiceVoided`           |
+| PartiallyPaid   | `void(reason)`       | reason ∈ `VoidReasonCode`                             | Void            | `InvoiceVoided`           |
+| *any other*     | *any trigger*        | —                                                     | **rejected**    | none — `Result.err(InvalidTransition{from, trigger})` |
 
-**RequestContext:**
-- `Readonly`; `tenantId`, `userId`, `correlationId`, `locale` immutable post-construction.
+Locked rules:
+- **R-1108a** Every invalid (from, trigger) combination MUST return `Result.err(InvalidTransition)`. Aggregate MUST NOT throw, MUST NOT mutate, MUST NOT emit an event on rejection.
+- **R-1108b** `status` is **derived** from the event log via a pure reducer `statusOf(events): InvoiceStatus`. It is never a stored field on `Invoice`. The transition table is the spec of this reducer.
+- **R-1108c** Overpayment (`paidSoFar + p > totalGross`) is rejected per R-1107 with `Result.err(PaymentExceedsTotal)`. Not a state transition.
+- **R-1108d** Terminal states (`Paid`, `Void`) accept no triggers — all yield `InvalidTransition`.
 
-**Id (Rule R-0008, into ADR-0006):**
-- `Id<TBrand>` opaque branded VO. No `as Id<T>` assertions outside `shared-kernel/identity/**`, allow-listed repository deserialization boundaries (empty in Step 1), and `__tests__/**`.
+#### CLARIFICATION 3 — Event Ordering Authority (point 4 of audit)
 
-## Fitness checks (`scripts/fitness/`)
+Locked in ADR-0011:
+- **R-1110a** Ordering is **enforced by the aggregate**, not by the consumer. The aggregate's reducer + transition table is the single source of truth for legal sequences. Consumers (read models, sagas in later phases) MAY assume order is valid because the aggregate refused to record any out-of-order event.
+- **R-1110b** Each event carries `sequence: number` (monotonic, starting at 1, gap-free, assigned by the aggregate at `record(...)` time). `occurredAt: Instant` comes from `ClockPort`. `(invoiceId, sequence)` is the canonical event identity; `eventId: Id<DomainEvent>` is provided by `IdPort` for distributed tracing only.
+- **R-1110c** Rehydration: `Invoice.fromHistory(events)` MUST verify `sequence` is `1..n` gap-free and that the resulting state matches the transition table; otherwise returns `Result.err(CorruptEventStream)`.
 
-**Active in Step 1 (4):**
-- `check-temporal-authority` — forbids `Date.now`, `new Date(...)`, `performance.now`, `Intl.*` outside `shared-kernel/time/ClockPort.ts` and test fixtures.
-- `check-identity-authority` — forbids `crypto.randomUUID`, `uuid()`, `Math.random`-based id generation, AND `as Id<...>` assertions outside allowed paths.
-- `check-retryability-single-source` — exactly one exported `isRetryable` under `shared-kernel/errors/**`.
-- `check-no-deep-imports` (NEW) — any import path matching `shared-kernel/*/...` outside `src/shared-kernel/**` is a violation. Only `from "@/shared-kernel"` (the barrel) is permitted.
+### ADR-0011 — final section list
 
-**Pending (scaffolded, return `{ pending: true }`):**
-`check-domain-purity`, `check-domain-service-purity`, `check-aggregate-boundaries`, `check-domain-events-immutable`, `check-error-mapping`, `check-repository-failure-taxonomy`, `check-handler-signature`, `check-ui-infrastructure-isolation`, `check-composition-root-uniqueness`, `check-transaction-finality`.
+1. Bounded Context (Finance / Billing) + scope/anti-scope (unchanged from v2).
+2. Invariants **R-1101..R-1110** with the R-1106a..f and R-1108a..d sub-rules above.
+3. Event Catalogue with **R-1110a..c** ordering authority + `sequence`/`eventId` fields.
+4. **Arithmetic Model — Integer-only, Locked** (FIX 1, full text).
+5. **Invoice State Machine — Transition Table** (FIX 2, full text).
+6. Aggregate Boundary (Invoice root; InvoiceLine VO owned).
+7. Ports — exact signatures (Repository + ReadModel, `Result<…, RepositoryFailure>`).
+8. Explicit Prohibitions (no react, no `@supabase/*`, no `fetch`, no `Math.round` outside `Money.mulScalar`, no `UnitOfWorkPort`, no handlers, no orchestration).
+9. Verification Hooks — each rule mapped to its fitness check (incl. the extended `check-domain-purity` guard from R-1106f).
+10. Isolation vs UX-1E (UI ⇄ domain barrier).
 
-`scripts/fitness/run-all.ts` runs the full suite.
+### Phase A exit criteria
+- ADR-0011 merged with all 10 sections including the locked Arithmetic Model and State Machine tables.
+- `docs/adr/INDEX.md` updated.
+- No file changes outside `docs/adr/**`.
 
-## Pre-flight
+**STOP. Await ratification before Phase B.**
 
-Re-run security scan to triage residual TOTP finding → `docs/security/totp-scan-followup.md`.
-- **False Positive:** document and close. Step 2 may proceed.
-- **Residual Read Path:** Step 2 (Domain) **blocked** until closed.
+---
 
-Does not block Step 1 start.
+## Phase B — Implementation (only after ADR-0011 ratified)
 
-## Non-goals
+Scope and folder layout unchanged from v2, with these v3 deltas driven by the audit fixes:
 
-No `domain/finance/**`, no `application/**`, no `infrastructure/**`, no edits to `src/integrations/supabase/**`, no UI changes.
+### Code deltas vs v2
 
-## Exit criteria (Step 1 → UX-2A gate)
+- `Money.ts` exposes `add`, `sub`, `mulScalar(num, den)`, `eqCurrency`. No `mul(scalar: number)` with float. No `round2`. Constructor validates `Number.isInteger(amount)`.
+- `InvoiceStatus.ts` exports the union `'Draft'|'Issued'|'PartiallyPaid'|'Paid'|'Void'` and `statusOf(events)` pure reducer mirroring the ADR table 1:1.
+- `Invoice.ts` exposes behavior methods `issue()`, `applyPayment(p)`, `void(reason)`. Each consults the transition table; on miss → `Result.err(InvalidTransition)`. On hit → constructs event with `sequence = lastSequence + 1` and `occurredAt = clock.now()`, then `record(event)`.
+- `Invoice.fromHistory(events)` performs R-1110c verification.
+- `events/`: payloads `Readonly<…>` and include `sequence: number`, `occurredAt: Instant`, `eventId: Id<DomainEvent>`, optional `metadata`.
+- `errors/InvoiceDomainError.ts` union includes: `InvalidTransition`, `PaymentExceedsTotal`, `EmptyInvoiceLines`, `CurrencyMismatch`, `NegativePrice`, `TaxRateOutOfRange`, `CorruptEventStream`, `NonIntegerMoney`.
 
-1. All shared-kernel modules compile under strict TS with zero React/Supabase imports.
-2. Unit tests green: Result Monad laws, Instant equality + round-trip, RepositoryFailure exhaustiveness, isRetryable mapping, AggregateRoot record/pullEvents contract, ValueObject identity-field equality, Id branding + assertion prohibition, Entity.version default.
-3. Four Active fitness checks pass (incl. `check-no-deep-imports`).
-4. All Pending checks present and runnable.
-5. `@/shared-kernel` is the sole import surface used anywhere outside `src/shared-kernel/**`.
-6. TOTP scan triaged and documented.
+### Fitness checks — flip 10 from `pending` to Active (unchanged from v2)
 
-## ADR follow-up
+Plus **extension** to `check-domain-purity` per R-1106f: ban `Math.round`, `toFixed`, `parseFloat`, and decimal numeric literals inside `src/domain/finance/**`, with a single allow-list entry for `Money.mulScalar`.
 
-Extend **ADR-0006** with the Identity Authority section + Rule R-0008. No new ADR-0012.
+### Tests (raised targets to cover the new rules)
+
+- **Money**: integer-guard rejection, `add`/`sub` currency mismatch, `mulScalar` rounding edges (0.5 boundary, negative, large), no float leakage.
+- **State Machine**: one test per legal row + one per representative illegal (from, trigger) combination; terminal-state rejection; overpayment rejection.
+- **Event ordering**: `sequence` monotonic; `fromHistory` accepts gap-free, rejects gaps / out-of-order / type mismatch.
+- **Aggregate invariants**: R-1101..R-1110 exhaustive.
+- **Port contract**: type-level `expectType<…>` only.
+- Target: **≥ 75 new tests** green (raised from ≥ 60 to cover state-machine matrix + Money edges), `src/domain/finance/**` coverage ≥ 95%.
+
+### Phase B exit (UX-2A → UX-2B gate)
+1. Strict TS compile clean.
+2. Imports in `domain/**` limited to `@/shared-kernel` + siblings.
+3. All 4 prior Active + 10 flipped checks pass; extended `check-domain-purity` (R-1106f) passes.
+4. ≥ 75 tests green; coverage ≥ 95%.
+5. No additions under `src/application/**`, `src/infrastructure/**`, `src/integrations/supabase/**`, `src/components/**`, `src/pages/**`, `supabase/migrations/**`.
+
+---
+
+**Awaiting approval to execute Phase A (ADR-0011 only) with the two mandatory fixes and ordering clarification locked in.**
