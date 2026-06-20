@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { unsafeId, idEquals } from "@/shared-kernel";
+import * as InvoiceIdModule from "../InvoiceId";
 import type { InvoiceId } from "../InvoiceId";
 import { invoiceIdEquals } from "../InvoiceId";
 
@@ -23,11 +24,11 @@ describe("InvoiceId — opaque branded identity", () => {
   });
 
   test("module exposes no factory — generation is IdPort's job", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require("../InvoiceId") as Record<string, unknown>;
+    const mod = InvoiceIdModule as unknown as Record<string, unknown>;
     expect(typeof mod.generate).toBe("undefined");
     expect(typeof mod.of).toBe("undefined");
     expect(typeof mod.create).toBe("undefined");
     expect(typeof mod.new).toBe("undefined");
+    expect(typeof mod.InvoiceId).toBe("undefined"); // no runtime class either
   });
 });
