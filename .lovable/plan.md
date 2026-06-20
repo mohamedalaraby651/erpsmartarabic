@@ -1,67 +1,83 @@
-# Wave 1.1 — `Currency.ts` (تعديلان إجباريان قبل التنفيذ)
+# Wave 1.2 — `Money.ts` (Financial Arithmetic Kernel)
 
-الكود الذي قدمته صحيح معمارياً، لكن لن يجتاز TS strict ولا فحوصات الـ fitness الحالية بسبب تعارضين موضوعيين مع shared-kernel. أحتاج موافقتك على التعديلين قبل البناء.
+تطبيق صارم لـ ADR-0011 §4 (R-1106a..f). هذا أخطر ملف في الـ kernel كله — كل بقية الحسابات في `Invoice` ستبنى فوقه.
 
-## 🔴 تعارض 1 — Deep import محظور
+## 🔒 النطاق المسموح (قفل صارم)
+- إنشاء: `src/domain/finance/shared/Money.ts`
+- إنشاء: `src/domain/finance/shared/__tests__/Money.test.ts`
+- لا تعديل في `Currency.ts` ولا أي ملف آخر. لا ADR، لا shared-kernel، لا index barrels.
 
-كتبت:
+## 🧱 التصميم — `Money.ts`
+
+### بنية الـ VO
+- `class Money` — `private constructor(amount: number, currency: Currency)` + `Object.freeze(this)`.
+- خصائص مكشوفة `readonly`: `amount: number` (minor units integer)، `currency: Currency`.
+- **بدون** أي ميثود يعرض float أو يحوّل لـ major units (المسؤولية في طبقة UI لاحقاً، خارج الـ domain).
+
+### الـ Factories
+- `static of(amount: number, currency: Currency): Result<Money, MoneyDomainError>`
+  - حارس R-1106a: `Number.isInteger(amount) && Math.abs(amount) <= Number.MAX_SAFE_INTEGER` وإلا `NonIntegerMoney`.
+- `static zero(currency: Currency): Money` — اختصار آمن (صفر عدد صحيح، لا حاجة لـ Result).
+
+### العمليات الحسابية
+- `add(other: Money): Result<Money, MoneyDomainError>` — R-1106b. يتحقق `this.currency.equals(other.currency)`، وإلا `CurrencyMismatch`. ثم `of(this.amount + other.amount, this.currency)` (يلتقط overflow عبر نفس حارس R-1106a).
+- `sub(other: Money): Result<Money, MoneyDomainError>` — مطابق لـ `add`.
+- `mulScalar(numerator: number, denominator: number): Result<Money, MoneyDomainError>` — **النقطة الوحيدة في الـ kernel كله المسموح فيها بـ `Math.round`** (R-1106c/f).
+  - حراس مسبقة: `Number.isInteger(numerator)` و `Number.isInteger(denominator)` و `denominator !== 0` و كلاهما ضمن `MAX_SAFE_INTEGER` ⇒ `InvalidScalar` كنوع فرعي من الخطأ.
+  - الحساب: `Math.round((this.amount * numerator) / denominator)` ثم تمريره عبر `of(...)` لاكتشاف overflow في الناتج (يرجع `NonIntegerMoney`).
+- `eq(other: Money): boolean` — مقارنة بنيوية (نفس currency.code + نفس amount).
+- `isZero(): boolean`، `isNegative(): boolean`، `isPositive(): boolean` — مقارنات أعداد صحيحة فقط.
+
+### تصنيف الأخطاء (محلي للـ Money)
 ```ts
-import { Result } from '@/shared-kernel/result/Result';
+export type MoneyDomainError =
+  | { kind: "NonIntegerMoney"; amount: number; currencyCode: string }
+  | { kind: "CurrencyMismatch"; left: string; right: string }
+  | { kind: "InvalidScalar"; numerator: number; denominator: number; reason: "NonInteger" | "ZeroDenominator" | "Unsafe" };
 ```
+ملاحظة: ADR-0011 يذكر صراحةً `NonIntegerMoney` و `CurrencyMismatch`. `InvalidScalar` إضافة لازمة لتنفيذ شرط R-1106c ("MUST be safe integers; denominator !== 0") — هي امتدادٌ محلي لا يكسر أي قاعدة ADR. سيُدمج لاحقاً في `InvoiceDomainError` في Wave 5.
 
-لكن `src/shared-kernel/index.ts` ينص حرفياً:
-> All consumers MUST import from `@/shared-kernel` only. Deep imports … are forbidden by `check-no-deep-imports`.
+### قيود اللغة (R-1106f)
+- لا `toFixed`، لا `parseFloat`، لا decimal literals في الملف كله.
+- `Math.round` يظهر **مرة واحدة فقط** داخل جسم `mulScalar` (allow-list موعود في R-1106f).
+- لا `new Date`، لا `fetch`، لا `supabase`، لا deep imports.
+- الاستيراد الخارجي الوحيد = `@/shared-kernel` (Result/ok/err) + استيراد محلي `./Currency`.
 
-سيؤدي هذا إلى فشل أحد الـ 10 fitness checks المقرر تفعيلها في Wave 9 (`ui-infrastructure-isolation` / deep-imports family). يجب أن يكون:
-```ts
-import { Result, isOk, isErr } from '@/shared-kernel';
-```
+## 🧪 الاختبارات — `Money.test.ts` (≥ 28 حالة)
 
-## 🔴 تعارض 2 — Result لا يملك instance methods
+تغطية:
+1. **Construction (5)**: `of(0, USD)` ok؛ `of(1500, USD)` ok؛ `of(1.5, USD)` ⇒ `NonIntegerMoney`؛ `of(NaN, USD)` ⇒ err؛ `of(Number.MAX_SAFE_INTEGER + 1, USD)` ⇒ err.
+2. **zero (2)**: `Money.zero(USD).amount === 0`؛ `Money.zero(JPY).currency.code === 'JPY'`.
+3. **add (4)**: نفس عملة ⇒ مجموع صحيح؛ عملتان مختلفتان ⇒ `CurrencyMismatch`؛ overflow ⇒ `NonIntegerMoney`؛ مع zero.
+4. **sub (3)**: نفس عملة ⇒ فرق (يقبل سالب)؛ عملتان مختلفتان ⇒ err؛ underflow.
+5. **mulScalar — الصحيحة (6)**:
+   - `1500 * 15 / 100 = 225` (15% ضريبة على 15.00 = 2.25).
+   - `1500 * 1500 / 10000 = 225` (basisPoints path R-1106d).
+   - half-away-from-zero موجب: `1 * 1 / 2 = 1` (Math.round(0.5)=1 — موضوع لاحظة).
+   - half-away-from-zero سالب: `-1 * 1 / 2 = 0` (سلوك `Math.round` لـ -0.5 هو 0؛ نوثقها في الاختبار كـ documented JS behavior).
+   - أمثلة JPY (exponent 0): `100 * 5 / 100 = 5`.
+   - أمثلة KWD (exponent 3): `1000 * 75 / 1000 = 75`.
+6. **mulScalar — الحراس (5)**: `den=0` ⇒ `InvalidScalar/ZeroDenominator`؛ `num=1.5` ⇒ `InvalidScalar/NonInteger`؛ `den=NaN` ⇒ err؛ `num=MAX_SAFE_INTEGER` ⇒ `InvalidScalar/Unsafe`؛ ناتج خارج safe range ⇒ `NonIntegerMoney`.
+7. **eq / isZero / isPositive / isNegative (3)**.
+8. **Immutability (1)**: محاولة تعديل `amount` بعد التجميد لا تنجح.
+9. **Currency isolation (1)**: عملية على `USD+EUR` ترجع `CurrencyMismatch` بدون تنفيذ الحساب.
 
-في `src/shared-kernel/result/Result.ts` (الموجود فعلاً):
-```ts
-export type Result<T, E> = Ok<T> | Err<E>;
-// Ok = { _tag: 'ok', value: T }
-// Err = { _tag: 'err', error: E }
-// Result = { ok, err, isOk, isErr, map, mapErr, flatMap }
-```
+## 🚦 Gate (لا انتقال إلى Wave 1.3 قبل اجتيازها كلها)
 
-أي:
-- لا يوجد `c.isOk()` كميثود — فقط `Result.isOk(c)` / `isOk(c)` كدوال نوع guards.
-- الخطأ يُقرأ عبر `.error` وليس `.value`.
+1. TS strict نظيف على `src/domain/finance/**`.
+2. `bunx vitest run src/domain/finance/shared/__tests__/Money.test.ts` = 28/28 خضراء.
+3. فحص النص:
+   - `rg -n "Math\.round" src/domain/finance/shared/Money.ts` = **سطر واحد فقط** داخل `mulScalar`.
+   - `rg -n "toFixed|parseFloat|new Date|fetch\(|supabase|@/shared-kernel/" src/domain/finance/shared/Money.ts` = ∅.
+   - `rg -n "[0-9]+\.[0-9]+" src/domain/finance/shared/Money.ts` = ∅ (لا decimal literals).
+4. الاستيراد الخارجي الوحيد = `@/shared-kernel`؛ المحلي `./Currency` فقط.
+5. مراجعتك ERP (design + invariant + test + risk) ⇒ موافقة صريحة قبل Wave 1.3 (`TaxRate.ts`).
 
-اختباراتك تستخدم `c.isOk()` و `c.value.exponent`. الجزء الثاني سليم بعد type narrowing، لكن `c.isOk()` ستفشل TS strict.
+## النقطة الوحيدة المطلوب تثبيتها قبل البناء
 
-## ✅ التصحيح المعتمد (الحد الأدنى — لا تغيير في التصميم)
+`InvalidScalar` ليس مذكوراً حرفياً في ADR-0011 — هو الترجمة الطبيعية لشرط R-1106c. هل تعتمده كـ sub-error محلي في `MoneyDomainError`، أم تفضّل دمجه ضمن `NonIntegerMoney` (واحد بدلاً من اثنين)؟
 
-### `src/domain/finance/shared/Currency.ts`
-- استبدال الـ import بسطر واحد: `import { Result, type Result as ResultT } from '@/shared-kernel';` (نستخدم `Result.ok` / `Result.err`، والنوع للتوقيع).
-- باقي الكلاس كما هو حرفياً (private ctor + `Object.freeze(this)` + `CURRENCY_TABLE` مُجمَّد + `equals` + `toString`).
-- `CurrencyDomainError` يبقى نوعاً محلياً مُصدَّراً.
-- لا تغيير في slate الـ 11 عملة ولا exponents.
+- **(أ) `InvalidScalar` مستقل** ← أوضح في diagnostics ومراجعة لاحقاً في Invoice errors. **(موصى به)**
+- **(ب) دمجه في `NonIntegerMoney`** ← تصنيف أبسط لكن يفقد سياق "أين كان الخطأ" (المدخل vs الناتج).
 
-### `src/domain/finance/shared/__tests__/Currency.test.ts`
-(مجلد `__tests__` بدلاً من `tests` لمطابقة convention shared-kernel)
-- استبدال كل `c.isOk()` بـ `isOk(c)` وكل `c.isErr()` بـ `isErr(c)`.
-- بعد `if (isOk(c))` تبقى `c.value.exponent` صحيحة (type guard ينفِّذ التضييق).
-- 12 حالة كما هي — لا حذف ولا إضافة.
-
-## 🚦 Gate (لا انتقال إلى Money.ts قبل اجتيازها كلها)
-
-1. TS strict على `src/domain/finance/**` نظيف.
-2. `bunx vitest run src/domain/finance/shared/__tests__/Currency.test.ts` = 12/12.
-3. `rg "Math\.|toFixed|parseFloat|new Date|fetch\(|supabase|@/shared-kernel/" src/domain/finance/shared/Currency.ts` = ∅.
-4. الـ import الوحيد الخارجي = `@/shared-kernel` (لا deep imports).
-5. مراجعتك ERP: design + invariant + test + risk → موافقة صريحة قبل Wave 1.2 (`Money.ts`).
-
-## النطاق المسموح (قفل صارم)
-- `src/domain/finance/shared/Currency.ts` (إنشاء)
-- `src/domain/finance/shared/__tests__/Currency.test.ts` (إنشاء)
-- لا شيء آخر. لا ADR، لا shared-kernel، لا index barrels، لا migrations.
-
-## القرار المطلوب منك
-- (أ) موافقة على التصحيحين أعلاه → أنتقل لوضع البناء وأنفذ Wave 1.1 فوراً.
-- (ب) رفض → نوقف وننقاش البديل (مثلاً إضافة instance helpers إلى Result في shared-kernel، لكن هذا يكسر "Shared Kernel contracts locked").
-
-أوصي بـ (أ): التعديل سطحي، يحافظ على كل invariant في ADR-0011، ولا يفتح أي ADR مقفل.
+أكّد (أ) أو (ب) → أنتقل لوضع البناء وأنفذ Wave 1.2 فوراً.
