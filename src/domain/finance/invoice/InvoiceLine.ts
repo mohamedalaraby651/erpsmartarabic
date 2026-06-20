@@ -108,7 +108,7 @@ export class InvoiceLine {
    */
   lineTax(): Result<Money, MoneyDomainError> {
     const net = this.lineNet();
-    if (net.kind === "err") return net;
+    if (isErr(net)) return net;
     return this.taxRate.apply(net.value);
   }
 
@@ -118,9 +118,9 @@ export class InvoiceLine {
    */
   lineGross(): Result<Money, MoneyDomainError> {
     const net = this.lineNet();
-    if (net.kind === "err") return net;
+    if (isErr(net)) return net;
     const tax = this.taxRate.apply(net.value);
-    if (tax.kind === "err") return tax;
+    if (isErr(tax)) return tax;
     return net.value.add(tax.value);
   }
 }
