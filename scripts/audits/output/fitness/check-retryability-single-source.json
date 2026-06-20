@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-retryability-single-source",
+  "adr": "ADR-0010",
+  "kernelExporters": [
+    "src/shared-kernel/errors/isRetryable.ts"
+  ],
+  "reimplementations": [],
+  "violations": [],
+  "pass": true
+}

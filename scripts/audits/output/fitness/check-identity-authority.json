@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-identity-authority",
+  "adr": "ADR-0006",
+  "rule": "R-0008",
+  "scannedFiles": 154,
+  "violations": [],
+  "pass": true
+}

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-temporal-authority",
+  "adr": "ADR-0006",
+  "scannedFiles": 154,
+  "violations": [],
+  "pass": true
+}
