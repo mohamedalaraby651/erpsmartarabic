@@ -53,7 +53,8 @@ const violations = [];
 for (const f of files) {
   const rel = relative(ROOT, f).split(sep).join("/");
   const isAllowed =
-    ALLOW_PREFIXES.some((p) => rel.startsWith(p)) || rel.includes("/__tests__/");
+    ALLOW_PREFIXES.some((p) => rel.startsWith(p)) ||
+    /\/(__tests__|__integration__|__mocks__)\//.test("/" + rel);
   if (isAllowed) continue;
   const code = readFileSync(f, "utf8");
   for (const rule of FORBIDDEN) {

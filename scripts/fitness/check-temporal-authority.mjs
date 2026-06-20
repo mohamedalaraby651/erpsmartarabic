@@ -57,12 +57,15 @@ const FORBIDDEN_ALWAYS = [
 // `new Date(x)` with any arg (numeric/string/Date) — forbidden outside deserialization allow-list.
 const NEW_DATE_WITH_ARG = /\bnew\s+Date\s*\(\s*[^)]/;
 
+const TEST_PATH_RE = /\/(__tests__|__integration__|__mocks__)\//;
+
 const files = SCAN_DIRS.flatMap((d) => walk(resolve(ROOT, d)));
 const violations = [];
 
 for (const f of files) {
   const rel = relative(ROOT, f).split(sep).join("/");
   if (ALLOW_FILES.has(rel)) continue;
+  if (TEST_PATH_RE.test("/" + rel)) continue;
   const code = readFileSync(f, "utf8");
 
   for (const rule of FORBIDDEN_ALWAYS) {

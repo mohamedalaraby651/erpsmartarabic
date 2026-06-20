@@ -20,9 +20,10 @@ const OUT = resolve(
 const KERNEL_DIR = resolve(ROOT, "src/shared-kernel/errors");
 const SCAN_OTHER = ["src/domain", "src/application", "src/infrastructure", "src/ui", "src/composition"];
 
-// Matches `export function isRetryable(` or `export const isRetryable =` or `export { isRetryable }`
+// Counts only true DECLARATIONS (function/const/let/var). Re-exports via
+// `export { isRetryable } from "..."` in barrel files are not declarations.
 const EXPORT_DECL =
-  /export\s+(?:function|const|let|var)\s+isRetryable\b|export\s*\{\s*[^}]*\bisRetryable\b[^}]*\}/;
+  /export\s+(?:function|const|let|var)\s+isRetryable\b/;
 const REIMPL =
   /(?:function|const|let|var)\s+isRetryable\b\s*[=(]/;
 
