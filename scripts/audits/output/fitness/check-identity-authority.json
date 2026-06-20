@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-identity-authority",
+  "adr": "ADR-0006",
+  "rule": "R-0008",
+  "scannedFiles": 154,
+  "violations": [
+    {
+      "file": "src/ui/__integration__/mocks/seed.ts",
+      "why": "crypto.randomUUID — use IdPort.generate()"
+    }
+  ],
+  "pass": false
+}

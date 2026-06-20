@@ -1,8 +1,8 @@
-# ADR-0006 — Temporal Model: `Instant` Value Object and `ClockPort` Authority
+# ADR-0006 — Non-Deterministic Authorities: Temporal (`ClockPort`) and Identity (`IdPort`)
 
-- **Status:** Accepted
+- **Status:** Accepted (extended 2026-06-20 with Identity Authority)
 - **Date:** 2026-06-19
-- **Area:** `shared-kernel/time/`, `application/ports/ClockPort.ts`
+- **Area:** `shared-kernel/time/`, `shared-kernel/identity/`, `application/ports/ClockPort.ts`
 - **UX Phase:** UX-2 / Step 0 (ADR-only)
 - **Supersedes:** —
 
@@ -60,8 +60,32 @@ Adopt option 3 with a **Single Temporal Authority** invariant.
 
 If `ClockPort` injection causes unacceptable ergonomic friction across >20 handlers, downgrade to option 2 (`shared-kernel/Clock`) via a superseding ADR. Rollback trigger: developer-experience survey + handler-construction overhead >5% of handler LOC measured across the first vertical slice.
 
+---
+
+## Extension — Identity Authority (added 2026-06-20)
+
+### Context
+
+Identifiers are the second class of non-deterministic value (alongside "now") that touches every aggregate, every repository, and every event. The same authority pattern applies: a single source, an opaque representation, and AST-level enforcement. Per UX-2 plan v3, Identity Authority belongs in this ADR — not a separate one — because both rules express the same architectural pattern (single source for non-deterministic values).
+
+### Lock 2 — Id semantics
+
+`shared-kernel/identity/Id.ts` exports `Id<TBrand extends string>`, an opaque branded string type. It has no runtime class; the brand is a phantom type. Construction is gated by `unsafeId<TBrand>(value)`, callable only from allow-listed locations enforced by the fitness check.
+
+`shared-kernel/identity/IdPort.ts` exports `IdPort.generate<TBrand>(): Id<TBrand>`. Production adapter wraps `crypto.randomUUID()` in `src/infrastructure/identity/UuidIdAdapter.ts`. Tests use `FakeIdAdapter` that yields deterministic sequences.
+
+### Invariant 2 — Single Identity Authority
+
+> **Rule R-0008.** `Id<TBrand>` is an opaque branded value object. Consumers MUST NOT construct identifiers via type assertions (`as Id<T>`), `crypto.randomUUID()`, `uuid()`/`uuidv4()`, or `Math.random`-based schemes — except within: (a) `src/shared-kernel/identity/**`, (b) `src/infrastructure/identity/**` (IdPort implementations), (c) `src/infrastructure/repositories/**` (deserialization boundary), and (d) `__tests__/**` (test fixtures). All other identifier construction MUST go through `IdPort.generate()`. Enforced by `check-identity-authority` (`scripts/fitness/check-identity-authority.mjs`).
+
+### Consequences (Identity)
+
+- Deterministic identifiers in tests (FakeIdAdapter), no flaky id-dependent assertions.
+- Cross-aggregate id assignment is a compile error thanks to brand mismatch.
+- Future migration to ULID / KSUID / Snowflake is a single-adapter swap.
+
 ## References
 
-- `.lovable/plan.md` — UX-2 roadmap v5, Invariant 1
+- `.lovable/plan.md` — UX-2 roadmap v5 + Step 1 v3 (Identity Authority)
 - ADR-0008 (error mapping) — handlers that consume `ClockPort` return `Result`
 - ADR-0010 (RepositoryFailure) — deserialization boundary that materializes `Instant` from storage
