@@ -24,7 +24,7 @@
  * All failures are Results.
  */
 
-import { ok, err } from "@/shared-kernel";
+import { ok, err, isErr } from "@/shared-kernel";
 import type { Result } from "@/shared-kernel";
 import { Money } from "../shared/Money";
 import type { MoneyDomainError } from "../shared/Money";
