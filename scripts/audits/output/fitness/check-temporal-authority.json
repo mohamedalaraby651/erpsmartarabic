@@ -3,23 +3,6 @@
   "fitness": "check-temporal-authority",
   "adr": "ADR-0006",
   "scannedFiles": 154,
-  "violations": [
-    {
-      "file": "src/ui/__integration__/events/EventRecorder.ts",
-      "why": "performance.now() — wall-clock read"
-    },
-    {
-      "file": "src/ui/__integration__/mocks/seed.ts",
-      "why": "Date.now() — use ClockPort.now()"
-    },
-    {
-      "file": "src/ui/__integration__/mocks/seed.ts",
-      "why": "new Date(arg) outside deserialization boundary — derive Instant via ClockPort or Instant.fromEpochMillis"
-    },
-    {
-      "file": "src/ui/__integration__/perf/probes.ts",
-      "why": "performance.now() — wall-clock read"
-    }
-  ],
-  "pass": false
+  "violations": [],
+  "pass": true
 }
