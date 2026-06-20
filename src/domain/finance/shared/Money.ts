@@ -2,8 +2,8 @@
  * Money — Financial Arithmetic Kernel (ADR-0011 §4, R-1106a..f).
  *
  * Integer-only minor-unit arithmetic. The single rounding boundary in the
- * finance domain lives inside `mulScalar` (allow-listed `Math.round`).
- *
+ * finance domain lives inside `mulScalar`, implemented via BigInt exact
+ * arithmetic per ADR-0011 §4 Amendment A1 (no IEEE-754 intermediate).
  * Pure VO: no I/O, no time, no infrastructure. Currency uniformity is
  * enforced on every binary op. All failures are values (Result), never throws.
  */
