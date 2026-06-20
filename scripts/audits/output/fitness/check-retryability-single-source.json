@@ -3,18 +3,9 @@
   "fitness": "check-retryability-single-source",
   "adr": "ADR-0010",
   "kernelExporters": [
-    "src/shared-kernel/errors/index.ts",
     "src/shared-kernel/errors/isRetryable.ts"
   ],
   "reimplementations": [],
-  "violations": [
-    {
-      "why": "Expected exactly 1 isRetryable exporter under shared-kernel/errors, found 2",
-      "files": [
-        "src/shared-kernel/errors/index.ts",
-        "src/shared-kernel/errors/isRetryable.ts"
-      ]
-    }
-  ],
-  "pass": false
+  "violations": [],
+  "pass": true
 }
