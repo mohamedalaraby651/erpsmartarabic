@@ -2,8 +2,8 @@
  * Money — Financial Arithmetic Kernel (ADR-0011 §4, R-1106a..f).
  *
  * Integer-only minor-unit arithmetic. The single rounding boundary in the
- * finance domain lives inside `mulScalar` (allow-listed `Math.round`).
- *
+ * finance domain lives inside `mulScalar`, implemented via BigInt exact
+ * arithmetic per ADR-0011 §4 Amendment A1 (no IEEE-754 intermediate).
  * Pure VO: no I/O, no time, no infrastructure. Currency uniformity is
  * enforced on every binary op. All failures are values (Result), never throws.
  */
@@ -89,12 +89,13 @@ export class Money {
 
   /**
    * R-1106c — the ONLY rounding boundary in the finance domain.
-   * `Math.round` is allow-listed by R-1106f at this exact call site.
    *
-   * Note: JS `Math.round` is half-toward-+Infinity (positive ties round up,
-   * negative ties also round toward zero, e.g. round(-0.5) === 0).
-   * ADR-0011 §4 mandates this exact formula; downstream tax computation only
-   * operates on non-negative line nets, so positive half-away-from-zero holds.
+   * Implementation per ADR-0011 §4 Amendment A1: multiplication and division
+   * are performed on BigInt (exact integer arithmetic); no IEEE-754 floating
+   * intermediate exists at any point. The final BigInt → Number conversion is
+   * guarded against MAX_SAFE_INTEGER overflow before delegating to Money.of.
+   *
+   * Rounding mode: Half-Away-From-Zero (HAFZ), exact for both signs.
    */
   mulScalar(
     numerator: number,
@@ -128,8 +129,33 @@ export class Money {
       });
     }
 
-    const rounded = Math.round((this.amount * numerator) / denominator);
-    return Money.of(rounded, this.currency);
+    // BigInt fixed-point pipeline (no IEEE-754 anywhere in the boundary).
+    const a = BigInt(this.amount);
+    const n = BigInt(numerator);
+    const d = BigInt(denominator);
+
+    const product = a * n;
+    const absProduct = product < 0n ? -product : product;
+    const absD = d < 0n ? -d : d;
+
+    // Half-Away-From-Zero on BigInt: round magnitude, then re-apply sign.
+    const absRounded = (absProduct + absD / 2n) / absD;
+    const productIsNegative = product < 0n;
+    const denominatorIsNegative = d < 0n;
+    const resultIsNegative = productIsNegative !== denominatorIsNegative;
+    const roundedBig = resultIsNegative ? -absRounded : absRounded;
+
+    // Guard the BigInt → Number boundary before delegating to Money.of.
+    const MAX = BigInt(Number.MAX_SAFE_INTEGER);
+    if (roundedBig > MAX || roundedBig < -MAX) {
+      return err({
+        kind: "NonIntegerMoney",
+        amount: Number(roundedBig),
+        currencyCode: this.currency.code,
+      });
+    }
+
+    return Money.of(Number(roundedBig), this.currency);
   }
 
   // ─── Predicates ───────────────────────────────────────────────────────────

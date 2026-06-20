@@ -131,11 +131,27 @@ describe("Money VO — mulScalar happy paths (R-1106c/d)", () => {
     expect(isOk(r) && r.value.amount === 1).toBe(true);
   });
 
-  test("documented JS Math.round on negative tie: -1 * 1 / 2 = 0", () => {
-    // Math.round(-0.5) === 0 in JS — documented quirk; ADR §4 explicitly
-    // uses Math.round, downstream tax inputs are non-negative.
+  test("half-away-from-zero on negative tie: -1 * 1 / 2 = -1 (Amendment A1)", () => {
+    // BigInt HAFZ is symmetric; corrects the JS Math.round(-0.5)===0 quirk.
     const r = mustMoney(-1, USD).mulScalar(1, 2);
-    expect(isOk(r) && r.value.amount === 0).toBe(true);
+    expect(isOk(r) && r.value.amount === -1).toBe(true);
+  });
+
+  test("BigInt intermediate: 10^14 * 10^5 / 10 stays exact (overflow window closed)", () => {
+    // Intermediate product = 10^19 > MAX_SAFE_INTEGER (~9.007e15).
+    // With IEEE-754 this would lose precision before division; BigInt is exact.
+    // Final result = 10^18 which is also > MAX_SAFE_INTEGER, so we expect
+    // a clean NonIntegerMoney rejection at the Number boundary (not silent drift).
+    const r = mustMoney(10 ** 14, USD).mulScalar(10 ** 5, 10);
+    expect(isErr(r)).toBe(true);
+    if (isErr(r)) expect(r.error.kind).toBe("NonIntegerMoney");
+  });
+
+  test("BigInt intermediate: large product reducing back into safe range is exact", () => {
+    // amount=10^12, num=10^6 → product 10^18 (unsafe), /10^6 → 10^12 (safe).
+    // Under IEEE-754 the intermediate would corrupt the final value; BigInt preserves it exactly.
+    const r = mustMoney(10 ** 12, USD).mulScalar(10 ** 6, 10 ** 6);
+    expect(isOk(r) && r.value.amount === 10 ** 12).toBe(true);
   });
 
   test("JPY (exponent 0): 100 * 5 / 100 = 5", () => {
