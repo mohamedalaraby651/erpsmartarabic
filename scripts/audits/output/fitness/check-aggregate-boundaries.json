@@ -2,58 +2,7 @@
   "schemaVersion": 1,
   "fitness": "check-aggregate-boundaries",
   "adr": "ADR-0011",
-  "scannedFiles": 31,
-  "violations": [
-    {
-      "file": "src/domain/pdf/entities/DocumentRenderProfile.ts",
-      "import": "../value-objects/PdfBranding",
-      "why": "aggregate 'entities' imports from sibling aggregate 'value-objects'"
-    },
-    {
-      "file": "src/domain/pdf/entities/DocumentRenderProfile.ts",
-      "import": "../value-objects/PdfLayout",
-      "why": "aggregate 'entities' imports from sibling aggregate 'value-objects'"
-    },
-    {
-      "file": "src/domain/pdf/entities/DocumentRenderProfile.ts",
-      "import": "../value-objects/PdfTypography",
-      "why": "aggregate 'entities' imports from sibling aggregate 'value-objects'"
-    },
-    {
-      "file": "src/domain/pdf/entities/DocumentRenderProfile.ts",
-      "import": "../value-objects/PdfWatermark",
-      "why": "aggregate 'entities' imports from sibling aggregate 'value-objects'"
-    },
-    {
-      "file": "src/domain/pdf/rendering/RenderProfileMapper.test.ts",
-      "import": "../entities/DocumentRenderProfile",
-      "why": "aggregate 'rendering' imports from sibling aggregate 'entities'"
-    },
-    {
-      "file": "src/domain/pdf/rendering/RenderProfileMapper.ts",
-      "import": "../entities/DocumentRenderProfile",
-      "why": "aggregate 'rendering' imports from sibling aggregate 'entities'"
-    },
-    {
-      "file": "src/domain/pdf/services/ProfileDiff.test.ts",
-      "import": "../entities/DocumentRenderProfile",
-      "why": "aggregate 'services' imports from sibling aggregate 'entities'"
-    },
-    {
-      "file": "src/domain/pdf/services/ProfileDiff.ts",
-      "import": "../entities/DocumentRenderProfile",
-      "why": "aggregate 'services' imports from sibling aggregate 'entities'"
-    },
-    {
-      "file": "src/domain/pdf/services/ProfileMerger.test.ts",
-      "import": "../entities/DocumentRenderProfile",
-      "why": "aggregate 'services' imports from sibling aggregate 'entities'"
-    },
-    {
-      "file": "src/domain/pdf/services/ProfileMerger.ts",
-      "import": "../entities/DocumentRenderProfile",
-      "why": "aggregate 'services' imports from sibling aggregate 'entities'"
-    }
-  ],
-  "pass": false
+  "scannedFiles": 10,
+  "violations": [],
+  "pass": true
 }
