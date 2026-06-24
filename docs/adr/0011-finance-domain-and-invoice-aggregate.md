@@ -216,3 +216,34 @@ All four already-Active checks (`check-temporal-authority`, `check-identity-auth
 - Phase B implementation has zero ambiguity on arithmetic, state transitions, or event ordering — every contested point is locked.
 - Any future change to rounding, status semantics, or event order MUST land as a new ADR superseding the relevant section here.
 - Phase B is unblocked to scaffold `src/domain/finance/**` and flip 10 pending fitness checks to Active.
+
+---
+
+## 11. Amendment A2 — Wave 5 Payment & Void Behaviors (Reviewer-Locked)
+
+**Status:** Accepted (Wave 5). Extends §2 and §5 without superseding either.
+
+### A2.1 New invariants
+
+- **R-1111 — Payment terminality.** `applyPayment` MUST reject any status other than `Issued` or `PartiallyPaid` with `PaymentOnTerminalStatus`. Draft is rejected through the same error (it has no outstanding amount until issued).
+- **R-1112 — Strict guard order.** `applyPayment` MUST evaluate guards in this exact order and stop at the first failure:
+  1. status terminality
+  2. currency uniformity (`PaymentCurrencyMismatch`)
+  3. positivity, `amount > 0` minor units (`NonPositivePayment`)
+  4. overpayment, `amount.amount ≤ outstandingAmount().amount` (`OverPayment`)
+- **R-1113 — Single overpayment source.** The overpayment guard MUST consult `outstandingAmount()`; no inline gross-vs-paid arithmetic is permitted (Lock L1).
+- **R-1114 — Pure payment projection.** `paidAmount()` MUST be a pure reduction over `#history`. The aggregate MUST NOT cache a paid total (Lock L2).
+- **R-1115 — Reducer-only lifecycle.** No code path may assign to a hypothetical `#status` field; `status()` MUST always delegate to `statusOf(#history)` (Locks L6/L7).
+- **R-1116 — Void terminality & reason normalization.** `void(reason, …)` MUST reject `Paid` and `Void` with `VoidOnTerminalStatus`. The reason text MUST be trimmed; the normalized string MUST have length in `[1, 240]` (`VoidReasonInvalid`), and the **normalized** value MUST be the one recorded in the event payload (Lock L5).
+- **R-1117 — Event-order integrity at replay (A2-R1).** `fromHistory` MUST reject any stream whose first event is not `InvoiceIssued` (`reason: "IssuedNotFirst"`). No `InvoicePaymentApplied` or `InvoiceVoided` may precede the issuance event.
+- **R-1118 — Terminal void in history (A2-R2).** `fromHistory` MUST reject any event that follows an `InvoiceVoided` in the stream (`reason: "EventAfterVoid"`), including a second `InvoiceVoided`.
+
+### A2.2 Behavioral contracts
+
+- `pullEvents()` drains uncommitted only. A freshly rehydrated aggregate MUST return `[]` until a new command runs.
+- All Wave-5 events MUST be passed through `freezeEvent(...)`; payload mutability is rejected statically by `check-domain-events-immutable`.
+
+### A2.3 Fitness activation
+
+- `check-aggregate-boundaries` — ACTIVE. Forbids cross-aggregate imports inside `src/domain/<context>/`; only `shared/` and `@/shared-kernel` are allowed cross-cutting modules.
+- `check-domain-events-immutable` — ACTIVE. Every property declared in any `interface` under `src/domain/**/events/**` MUST carry the `readonly` modifier.
