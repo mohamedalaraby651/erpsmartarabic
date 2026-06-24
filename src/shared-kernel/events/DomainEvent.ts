@@ -19,6 +19,12 @@ export interface DomainEvent<TPayload = unknown> {
   readonly type: string;
   readonly payload: Readonly<TPayload>;
   readonly metadata?: Readonly<DomainEventMetadata>;
+  /**
+   * Optional monotonic per-aggregate sequence. Event-sourced aggregates
+   * (e.g. Invoice) require it and enforce gap-free 1..N. Pure event-bus
+   * publishers may omit it.
+   */
+  readonly sequence?: number;
 }
 
 export function freezeEvent<T>(e: DomainEvent<T>): DomainEvent<T> {

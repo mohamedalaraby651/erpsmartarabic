@@ -1,83 +1,193 @@
-# Wave 1.2 — `Money.ts` (Financial Arithmetic Kernel)
+# Wave 4 — Event Sourcing Alignment (Locked Scope)
 
-تطبيق صارم لـ ADR-0011 §4 (R-1106a..f). هذا أخطر ملف في الـ kernel كله — كل بقية الحسابات في `Invoice` ستبنى فوقه.
+تنفيذ التحول البنيوي لـ `Invoice` من mutable-status إلى **event-sourced aggregate** كما يفرض ADR-0011 §3, §5, §6 (R-1108b, R-1110a–c). كل التعديلات محصورة داخل `src/domain/finance/**` + إضافة طفيفة في `src/shared-kernel/events/`.
 
-## 🔒 النطاق المسموح (قفل صارم)
-- إنشاء: `src/domain/finance/shared/Money.ts`
-- إنشاء: `src/domain/finance/shared/__tests__/Money.test.ts`
-- لا تعديل في `Currency.ts` ولا أي ملف آخر. لا ADR، لا shared-kernel، لا index barrels.
+---
 
-## 🧱 التصميم — `Money.ts`
+## ١) القرارات المعتمدة (من حوار المراجعة)
 
-### بنية الـ VO
-- `class Money` — `private constructor(amount: number, currency: Currency)` + `Object.freeze(this)`.
-- خصائص مكشوفة `readonly`: `amount: number` (minor units integer)، `currency: Currency`.
-- **بدون** أي ميثود يعرض float أو يحوّل لـ major units (المسؤولية في طبقة UI لاحقاً، خارج الـ domain).
+| البند | القرار |
+|---|---|
+| توقيت Event Sourcing | **الآن** — قبل Payments/Void، لتثبيت البنية قبل إضافة السلوك |
+| حقن الزمن/الهوية | **parameters صريحة** على كل transition — لا `ClockPort`/`IdPort` داخل الـ aggregate |
+| تسلسل الأحداث | `DomainEvent` → `InvoiceEvent` → الأحداث المتخصصة (قابل لإعادة الاستخدام عبر BCs) |
+| `#status` | **يُحذف بالكامل** — `status()` reducer-only؛ لا cached field على السطح |
+| Rehydration | `Invoice.fromHistory(events)` فقط — **لا snapshots** في هذه المرحلة |
+| `pullEvents()` | **drain semantics** — يُرجع الأحداث الجديدة غير المنشورة ثم يفرغها |
 
-### الـ Factories
-- `static of(amount: number, currency: Currency): Result<Money, MoneyDomainError>`
-  - حارس R-1106a: `Number.isInteger(amount) && Math.abs(amount) <= Number.MAX_SAFE_INTEGER` وإلا `NonIntegerMoney`.
-- `static zero(currency: Currency): Money` — اختصار آمن (صفر عدد صحيح، لا حاجة لـ Result).
+---
 
-### العمليات الحسابية
-- `add(other: Money): Result<Money, MoneyDomainError>` — R-1106b. يتحقق `this.currency.equals(other.currency)`، وإلا `CurrencyMismatch`. ثم `of(this.amount + other.amount, this.currency)` (يلتقط overflow عبر نفس حارس R-1106a).
-- `sub(other: Money): Result<Money, MoneyDomainError>` — مطابق لـ `add`.
-- `mulScalar(numerator: number, denominator: number): Result<Money, MoneyDomainError>` — **النقطة الوحيدة في الـ kernel كله المسموح فيها بـ `Math.round`** (R-1106c/f).
-  - حراس مسبقة: `Number.isInteger(numerator)` و `Number.isInteger(denominator)` و `denominator !== 0` و كلاهما ضمن `MAX_SAFE_INTEGER` ⇒ `InvalidScalar` كنوع فرعي من الخطأ.
-  - الحساب: `Math.round((this.amount * numerator) / denominator)` ثم تمريره عبر `of(...)` لاكتشاف overflow في الناتج (يرجع `NonIntegerMoney`).
-- `eq(other: Money): boolean` — مقارنة بنيوية (نفس currency.code + نفس amount).
-- `isZero(): boolean`، `isNegative(): boolean`، `isPositive(): boolean` — مقارنات أعداد صحيحة فقط.
+## ٢) ما يُبنى في هذه الموجة
 
-### تصنيف الأخطاء (محلي للـ Money)
-```ts
-export type MoneyDomainError =
-  | { kind: "NonIntegerMoney"; amount: number; currencyCode: string }
-  | { kind: "CurrencyMismatch"; left: string; right: string }
-  | { kind: "InvalidScalar"; numerator: number; denominator: number; reason: "NonInteger" | "ZeroDenominator" | "Unsafe" };
+### أ) Shared Kernel — DomainEvent base (إن لم يكن موجوداً بالشكل المطلوب)
+
+تحت `src/shared-kernel/events/`:
+
+```text
+DomainEvent.ts        // base envelope: eventId, occurredAt, sequence
+DomainEventId.ts      // Id<"DomainEvent"> alias
+Instant.ts            // (موجود مسبقاً في time/ — يُعاد استخدامه)
 ```
-ملاحظة: ADR-0011 يذكر صراحةً `NonIntegerMoney` و `CurrencyMismatch`. `InvalidScalar` إضافة لازمة لتنفيذ شرط R-1106c ("MUST be safe integers; denominator !== 0") — هي امتدادٌ محلي لا يكسر أي قاعدة ADR. سيُدمج لاحقاً في `InvoiceDomainError` في Wave 5.
 
-### قيود اللغة (R-1106f)
-- لا `toFixed`، لا `parseFloat`، لا decimal literals في الملف كله.
-- `Math.round` يظهر **مرة واحدة فقط** داخل جسم `mulScalar` (allow-list موعود في R-1106f).
-- لا `new Date`، لا `fetch`، لا `supabase`، لا deep imports.
-- الاستيراد الخارجي الوحيد = `@/shared-kernel` (Result/ok/err) + استيراد محلي `./Currency`.
+`DomainEvent` interface:
+- `readonly eventId: DomainEventId`
+- `readonly occurredAt: Instant`
+- `readonly sequence: number` (≥1, monotonic, gap-free — التحقق مسؤولية الـ aggregate)
+- `readonly metadata?: Readonly<{ correlationId?: string; causationId?: string }>`
 
-## 🧪 الاختبارات — `Money.test.ts` (≥ 28 حالة)
+سأفحص `src/shared-kernel/events/` أولاً قبل الإنشاء وأعيد استخدام الموجود إن أمكن.
 
-تغطية:
-1. **Construction (5)**: `of(0, USD)` ok؛ `of(1500, USD)` ok؛ `of(1.5, USD)` ⇒ `NonIntegerMoney`؛ `of(NaN, USD)` ⇒ err؛ `of(Number.MAX_SAFE_INTEGER + 1, USD)` ⇒ err.
-2. **zero (2)**: `Money.zero(USD).amount === 0`؛ `Money.zero(JPY).currency.code === 'JPY'`.
-3. **add (4)**: نفس عملة ⇒ مجموع صحيح؛ عملتان مختلفتان ⇒ `CurrencyMismatch`؛ overflow ⇒ `NonIntegerMoney`؛ مع zero.
-4. **sub (3)**: نفس عملة ⇒ فرق (يقبل سالب)؛ عملتان مختلفتان ⇒ err؛ underflow.
-5. **mulScalar — الصحيحة (6)**:
-   - `1500 * 15 / 100 = 225` (15% ضريبة على 15.00 = 2.25).
-   - `1500 * 1500 / 10000 = 225` (basisPoints path R-1106d).
-   - half-away-from-zero موجب: `1 * 1 / 2 = 1` (Math.round(0.5)=1 — موضوع لاحظة).
-   - half-away-from-zero سالب: `-1 * 1 / 2 = 0` (سلوك `Math.round` لـ -0.5 هو 0؛ نوثقها في الاختبار كـ documented JS behavior).
-   - أمثلة JPY (exponent 0): `100 * 5 / 100 = 5`.
-   - أمثلة KWD (exponent 3): `1000 * 75 / 1000 = 75`.
-6. **mulScalar — الحراس (5)**: `den=0` ⇒ `InvalidScalar/ZeroDenominator`؛ `num=1.5` ⇒ `InvalidScalar/NonInteger`؛ `den=NaN` ⇒ err؛ `num=MAX_SAFE_INTEGER` ⇒ `InvalidScalar/Unsafe`؛ ناتج خارج safe range ⇒ `NonIntegerMoney`.
-7. **eq / isZero / isPositive / isNegative (3)**.
-8. **Immutability (1)**: محاولة تعديل `amount` بعد التجميد لا تنجح.
-9. **Currency isolation (1)**: عملية على `USD+EUR` ترجع `CurrencyMismatch` بدون تنفيذ الحساب.
+### ب) Finance Invoice Events
 
-## 🚦 Gate (لا انتقال إلى Wave 1.3 قبل اجتيازها كلها)
+تحت `src/domain/finance/invoice/events/`:
 
-1. TS strict نظيف على `src/domain/finance/**`.
-2. `bunx vitest run src/domain/finance/shared/__tests__/Money.test.ts` = 28/28 خضراء.
-3. فحص النص:
-   - `rg -n "Math\.round" src/domain/finance/shared/Money.ts` = **سطر واحد فقط** داخل `mulScalar`.
-   - `rg -n "toFixed|parseFloat|new Date|fetch\(|supabase|@/shared-kernel/" src/domain/finance/shared/Money.ts` = ∅.
-   - `rg -n "[0-9]+\.[0-9]+" src/domain/finance/shared/Money.ts` = ∅ (لا decimal literals).
-4. الاستيراد الخارجي الوحيد = `@/shared-kernel`؛ المحلي `./Currency` فقط.
-5. مراجعتك ERP (design + invariant + test + risk) ⇒ موافقة صريحة قبل Wave 1.3 (`TaxRate.ts`).
+```text
+InvoiceEvent.ts                // extends DomainEvent; adds invoiceId
+InvoiceIssued.ts               // + number, currency, lines snapshot, totalGross
+InvoicePaymentApplied.ts       // + amount: Money            (payload فقط — السلوك في Wave 5)
+InvoiceVoided.ts               // + reasonCode: VoidReasonCode (payload فقط — السلوك في Wave 5)
+index.ts                       // discriminated union AnyInvoiceEvent
+```
 
-## النقطة الوحيدة المطلوب تثبيتها قبل البناء
+كل event:
+- `Readonly<…>` بالكامل، بدون methods، بدون behavior.
+- `type` discriminant: `"InvoiceIssued" | "InvoicePaymentApplied" | "InvoiceVoided"`.
+- في Wave 4 نُعرّف الأنواع الثلاثة كاملة، لكن نُصدر فقط `InvoiceIssued` فعلياً عبر `issue()`. الباقي يصبح فاعلاً في Wave 5.
 
-`InvalidScalar` ليس مذكوراً حرفياً في ADR-0011 — هو الترجمة الطبيعية لشرط R-1106c. هل تعتمده كـ sub-error محلي في `MoneyDomainError`، أم تفضّل دمجه ضمن `NonIntegerMoney` (واحد بدلاً من اثنين)؟
+### ج) Reducer + Status
 
-- **(أ) `InvalidScalar` مستقل** ← أوضح في diagnostics ومراجعة لاحقاً في Invoice errors. **(موصى به)**
-- **(ب) دمجه في `NonIntegerMoney`** ← تصنيف أبسط لكن يفقد سياق "أين كان الخطأ" (المدخل vs الناتج).
+تحت `src/domain/finance/invoice/`:
 
-أكّد (أ) أو (ب) → أنتقل لوضع البناء وأنفذ Wave 1.2 فوراً.
+```text
+InvoiceStatus.ts      // type "Draft" | "Issued" | "PartiallyPaid" | "Paid" | "Void"
+                      // (PartiallyPaid مُعرَّف الآن لكن غير قابل للوصول قبل Wave 5)
+statusOf.ts           // pure reducer: (events: readonly AnyInvoiceEvent[]) => InvoiceStatus
+```
+
+`statusOf` يطبّق transition table ADR §5 بحرفيتها. أي تسلسل غير قانوني يُعتبر مستحيلاً هنا لأن `record()` يرفضه عند الإصدار، و`fromHistory()` يرفضه عند الإعادة.
+
+### د) إعادة هيكلة `Invoice.ts`
+
+التغييرات المحورية:
+
+- **حذف**: `#status`, `#lines` كحالة قابلة للتعديل، `markPaid()`, `cancel()` (تنتقل لـ Wave 5 بأسماء ADR: `applyPayment` / `void`).
+- **يُحتفظ به** (يُعاد توصيله عبر الـ reducer):
+  - `addLine` / `removeLine` — يبقيان structural-only في `Draft` (لا يولدان events؛ تعديلات pre-issue على draft؛ يصبحان جزءاً من snapshot `InvoiceIssued`).
+  - `totalNet/totalTax/totalGross` — تبقى projections من الـ lines الحالية.
+- **يُضاف**:
+  - `#history: AnyInvoiceEvent[]` — كل الأحداث المعتمدة (تاريخ + جديدة).
+  - `#uncommitted: AnyInvoiceEvent[]` — الأحداث الجديدة منذ آخر `pullEvents()`.
+  - `#nextSequence: number` — يبدأ من 1.
+  - `record(event)` (من `AggregateRoot` أو خاص) — يلحق بـ history + uncommitted، يزيد sequence.
+  - `pullEvents(): readonly AnyInvoiceEvent[]` — **drain**: يُرجع نسخة مجمّدة من `#uncommitted` ثم يفرغها. الاستدعاء التالي يُرجع `[]` حتى يحدث `record` جديد.
+  - `getHistory(): readonly AnyInvoiceEvent[]` — للقراءة فقط (للاختبارات/التشخيص).
+  - `status(): InvoiceStatus` — يُحسب دائماً بـ `statusOf(this.#history)`.
+  - `issue(now: Instant, eventId: DomainEventId): Result<void, InvoiceError>`:
+    1. guard: status === Draft، lines.length ≥ 1، R-1101..R-1105 (دلتا تحقق إضافية إن لزم).
+    2. يبني `InvoiceIssued` بـ `sequence = #nextSequence`.
+    3. `record(event)`.
+  - `static fromHistory(events: readonly AnyInvoiceEvent[]): Result<Invoice, InvoiceError>`:
+    - يتحقق R-1110c: `sequence` متصلة `1..n` بدون فجوات/تكرار/ترتيب خاطئ → وإلا `CorruptEventStream`.
+    - يبني invoice فارغ ثم يطبّق كل حدث عبر apply داخلي.
+    - بعد البناء: `#uncommitted = []` (لأن كل الأحداث "تاريخية"، ليست جديدة).
+- **يبقى Pure**: لا `Date.now()`, لا UUID generation, لا I/O.
+
+### هـ) تصنيف الأخطاء (إضافات)
+
+```ts
+type InvoiceEventStreamError =
+  | { kind: "CorruptEventStream"; reason: "GapInSequence" | "Duplicate" | "OutOfOrder" | "EmptyHistory" }
+  | { kind: "IllegalReplayTransition"; from: InvoiceStatus; eventType: string };
+
+type InvoiceError = InvoiceDomainError | InvoiceLineError | MoneyDomainError | InvoiceEventStreamError;
+```
+
+### و) الاختبارات
+
+تحت `src/domain/finance/invoice/__tests__/`:
+
+- `events/InvoiceIssued.test.ts` — payload immutability، الـ discriminant.
+- `statusOf.test.ts` — كل خلية في transition table + الحالات الفارغة (`[]` → `Draft`).
+- `Invoice.eventsourcing.test.ts`:
+  - `issue()` يولّد حدثاً واحداً بـ `sequence=1`.
+  - `pullEvents()` يُرجع الحدث الجديد ثم يصبح فارغاً.
+  - الاستدعاء الثاني لـ `pullEvents()` بدون `record` جديد → `[]`.
+  - `status()` ينتقل من `Draft` إلى `Issued` بعد `issue()`.
+  - بعد `issue()`، `addLine` يرجع `StructuralEditLocked`.
+- `Invoice.rehydration.test.ts`:
+  - round-trip: `issue → pullEvents → fromHistory(events) → status()==='Issued'` و projections تطابق.
+  - رفض: gap (`[seq=1, seq=3]`)، duplicate (`[seq=1, seq=1]`)، تنازلي، تاريخ فارغ، حدث غير قانوني بعد terminal.
+- `Invoice.test.ts` (القديمة): تحديث/إزالة اختبارات `markPaid`/`cancel` (يعاد إدخالها في Wave 5 بأسماء ADR).
+
+**هدف العداد:** الإبقاء على الأخضر بالكامل، مع زيادة العدد بـ ~25–35 اختباراً جديداً.
+
+---
+
+## ٣) الـ API السطحي بعد Wave 4
+
+```ts
+class Invoice extends AggregateRoot<"InvoiceId"> {
+  static create(props): Result<Invoice, InvoiceDomainError>;
+  static fromHistory(events): Result<Invoice, InvoiceError>;
+
+  // identity & basics
+  getNumber(): InvoiceNumber;
+  getCurrency(): Currency;
+  getCustomerId(): CustomerId | undefined;
+
+  // derived state
+  status(): InvoiceStatus;                 // ← reducer-only، لا حقل مخزّن
+  getLines(): readonly InvoiceLine[];      // snapshot دفاعي
+
+  // structural (Draft only)
+  addLine(line): Result<void, InvoiceDomainError>;
+  removeLine(index): Result<void, InvoiceDomainError>;
+
+  // lifecycle (event-sourced)
+  issue(now: Instant, eventId: DomainEventId): Result<void, InvoiceError>;
+  // applyPayment + void → Wave 5
+
+  // aggregation (لا تغيير)
+  totalNet(): Result<Money, InvoiceError>;
+  totalTax(): Result<Money, InvoiceError>;
+  totalGross(): Result<Money, InvoiceError>;
+
+  // event sourcing surface
+  pullEvents(): readonly AnyInvoiceEvent[]; // drain semantics
+  getHistory(): readonly AnyInvoiceEvent[]; // read-only
+}
+```
+
+---
+
+## ٤) خارج النطاق (يُؤجَّل صراحة)
+
+- `applyPayment` و `void(reason)` + `VoidReasonCode` → **Wave 5**.
+- Ports (`InvoiceRepository`, `InvoiceReadModel`, `InvoiceNumberPort`) → **Wave 6**.
+- Domain Services (`InvoiceNumberService`, `TaxPolicy`) → **Wave 7**.
+- Application use cases و UoW → **Wave 8** (UX-2B).
+- Snapshots للأداء → مؤجَّل بلا تاريخ.
+
+---
+
+## ٥) ضمانات النقاء (Halt conditions)
+
+- صفر `Math.round`, `toFixed`, `parseFloat`, decimal literals داخل `src/domain/finance/**` (باستثناء `Money.mulScalar` المسموح به).
+- صفر استيراد لـ `react`, `@supabase/*`, `Date`, `window`, `document`.
+- صفر حقن `ClockPort`/`IdPort` داخل الـ aggregate — الـ caller يمرر `Instant` و `DomainEventId` صراحة.
+- صفر mutation خارج `record()` (بعد إعادة الهيكلة)؛ `addLine`/`removeLine` على draft pre-issue يُعاملان كـ structural setup لا event-emitting (مُسوَّى في snapshot `InvoiceIssued`).
+- لا snapshots، لا cached status، لا derived state مخزَّن.
+
+---
+
+## ٦) معايير القبول
+
+1. كل اختبارات Wave 1–3 الحالية تبقى خضراء (مع تكييف اختبارات `markPaid`/`cancel`).
+2. `Invoice.fromHistory(invoice.pullEvents())` بعد `create + addLine + issue` يُنتج aggregate مكافئاً تماماً (status, lines, totals).
+3. `pullEvents()` ثانيةً بدون `record` جديد = `[]`.
+4. الـ reducer `statusOf` يطبّق ADR §5 بحرفيتها — مغطّى باختبار لكل خلية.
+5. أي تسلسل أحداث غير قانوني يُرفض في `fromHistory` بـ `CorruptEventStream` أو `IllegalReplayTransition` — بدون throw.
+
+---
+
+عند الموافقة، أبدأ بفحص `src/shared-kernel/events/` و `AggregateRoot` لتحديد ما هو موجود فعلاً، ثم أنفذ التغييرات في دفعة واحدة محصورة داخل `src/domain/finance/**` + الإضافة الدنيا في `src/shared-kernel/events/`.
