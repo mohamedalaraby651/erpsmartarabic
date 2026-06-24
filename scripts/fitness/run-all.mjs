@@ -14,13 +14,13 @@ const ACTIVE = [
   "check-identity-authority.mjs",
   "check-retryability-single-source.mjs",
   "check-no-deep-imports.mjs",
+  "check-aggregate-boundaries.mjs",
+  "check-domain-events-immutable.mjs",
 ];
 
 const PENDING = [
   "check-domain-purity.mjs",
   "check-domain-service-purity.mjs",
-  "check-aggregate-boundaries.mjs",
-  "check-domain-events-immutable.mjs",
   "check-error-mapping.mjs",
   "check-repository-failure-taxonomy.mjs",
   "check-handler-signature.mjs",
