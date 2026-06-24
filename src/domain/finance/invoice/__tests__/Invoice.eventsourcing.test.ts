@@ -159,7 +159,7 @@ describe("Invoice — rehydration via fromHistory (no snapshot)", () => {
       type: "InvoiceVoided",
       sequence: 1,
       invoiceId: id,
-      payload: { reasonCode: "Erroneous" },
+      payload: { reasonCode: "Erroneous", reason: "test" },
     };
     const r = Invoice.fromHistory(id, [voided]);
     expect(isErr(r)).toBe(true);

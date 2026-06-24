@@ -1,5 +1,5 @@
 /**
- * Invoice — Event-Sourced Aggregate Root (ADR-0011 §5–§6, Wave 4).
+ * Invoice — Event-Sourced Aggregate Root (ADR-0011 §5–§6, Waves 4–5).
  *
  * Architectural shape (locked):
  *   - State is DERIVED from an immutable event stream — never stored as
@@ -13,10 +13,20 @@
  *     pure: no ClockPort, no IdPort, no I/O, no framework.
  *   - Sequence is gap-free 1..N and authored exclusively by the aggregate.
  *
- * Wave 4 wires the Draft → Issued transition end-to-end (event recorded,
- * replayed, drained). Payment and Void *behavior* are deferred to Wave 5;
- * their event payloads and the reducer already account for them so Wave 5
- * is purely additive.
+ * Wave 5 — Payment & Void behaviors (Reviewer-Locked L1..L7):
+ *   - L1: overpayment guard uses outstandingAmount() — single source of truth.
+ *   - L2: paidAmount() is a pure reduction over #history (no cached field).
+ *   - L3: terminal-status check fires BEFORE any arithmetic.
+ *   - L4: strict guard order — status → currency → positivity → overpayment.
+ *   - L5: void reason is trimmed and length-validated (1..240) BEFORE record.
+ *   - L6: NO `this.#status = ...` writes anywhere; status is reducer-only.
+ *   - L7: lifecycle changes ONLY via InvoiceIssued | InvoicePaymentApplied
+ *         | InvoiceVoided — no other mutation path exists.
+ *
+ * Per ADR-0011 §6 Amendment A2:
+ *   - A2-R1: the FIRST event MUST be InvoiceIssued; no payment/void may
+ *            precede it in the stream.
+ *   - A2-R2: NO event MAY appear after InvoiceVoided.
  *
  * Structural Draft-time edits (addLine / removeLine) intentionally do NOT
  * emit events: a Draft has no public lifecycle, no consumers, and no read
@@ -41,13 +51,23 @@ import type {
   AnyInvoiceEvent,
   DomainEventId,
   InvoiceIssued,
+  InvoicePaymentApplied,
+  InvoiceVoided,
+  VoidReasonCode,
 } from "./events";
-import { INVOICE_ISSUED } from "./events";
+import {
+  INVOICE_ISSUED,
+  INVOICE_PAYMENT_APPLIED,
+  INVOICE_VOIDED,
+} from "./events";
 
 /** Business identity for an invoice's counterparty. Opaque outside this VO. */
 export type CustomerId = Id<"CustomerId">;
 
 export type { InvoiceStatus } from "./statusOf";
+
+const VOID_REASON_MIN = 1;
+const VOID_REASON_MAX = 240;
 
 export type InvoiceDomainError =
   | { readonly kind: "EmptyInvoice" }
@@ -67,6 +87,26 @@ export type InvoiceDomainError =
       readonly op: "addLine" | "removeLine";
     }
   | { readonly kind: "LineIndexOutOfRange"; readonly index: number }
+  // ── Wave 5 — payment guards (L3/L4 order) ────────────────────────────────
+  | { readonly kind: "PaymentOnTerminalStatus"; readonly status: InvoiceStatus }
+  | {
+      readonly kind: "PaymentCurrencyMismatch";
+      readonly invoiceCurrency: string;
+      readonly paymentCurrency: string;
+    }
+  | { readonly kind: "NonPositivePayment"; readonly amountMinor: number }
+  | {
+      readonly kind: "OverPayment";
+      readonly attemptedMinor: number;
+      readonly outstandingMinor: number;
+    }
+  // ── Wave 5 — void guards ─────────────────────────────────────────────────
+  | { readonly kind: "VoidOnTerminalStatus"; readonly status: InvoiceStatus }
+  | {
+      readonly kind: "VoidReasonInvalid";
+      readonly reason: "Empty" | "TooLong";
+      readonly length: number;
+    }
   | {
       readonly kind: "RehydrationError";
       readonly reason:
@@ -74,7 +114,9 @@ export type InvoiceDomainError =
         | "NonMonotonicSequence"
         | "IssuedEventMissing"
         | "DuplicateIssuedEvent"
-        | "InvoiceIdMismatch";
+        | "InvoiceIdMismatch"
+        | "IssuedNotFirst"
+        | "EventAfterVoid";
     };
 
 /** Errors a caller may surface — aggregate-level + propagated errors. */
@@ -144,7 +186,7 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
   /**
    * Status is ALWAYS computed via the reducer. Even when the aggregate has
    * just recorded an event, the public surface presents status as derived,
-   * never as a stored property.
+   * never as a stored property. (Lock L6/L7.)
    */
   status(): InvoiceStatus {
     return statusOf(this.#history);
@@ -209,9 +251,6 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
 
   /**
    * Draft → Issued. Records InvoiceIssued with a full snapshot.
-   *
-   * Inputs `now` and `eventId` are plain values; the aggregate is unaware
-   * of their origin (ClockPort / IdPort live in the application layer).
    */
   issue(
     now: Instant,
@@ -228,8 +267,6 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
       return err({ kind: "EmptyInvoice" });
     }
 
-    // Compute gross snapshot ONCE, here, using the same aggregate-level fold
-    // policy as Wave 3 (sum of per-line rounded values; no aggregate re-round).
     const gross = this.#computeGross(this.#draftLines);
     if (isErr(gross)) return gross;
 
@@ -252,6 +289,109 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
     return ok(undefined);
   }
 
+  /**
+   * Issued | PartiallyPaid → PartiallyPaid | Paid. Records
+   * InvoicePaymentApplied with the validated minor-unit amount.
+   *
+   * Guard order (Lock L4, irreversible):
+   *   1. status terminality (Draft/Paid/Void are rejected)   — L3
+   *   2. currency uniformity                                  — financial integrity
+   *   3. positivity (> 0 minor units)                         — domain rule
+   *   4. overpayment vs outstandingAmount()                   — L1
+   */
+  applyPayment(
+    amount: Money,
+    now: Instant,
+    eventId: DomainEventId,
+  ): Result<void, InvoiceError> {
+    const s = this.status();
+    if (s !== "Issued" && s !== "PartiallyPaid") {
+      return err({ kind: "PaymentOnTerminalStatus", status: s });
+    }
+    if (!amount.currency.equals(this.#currency)) {
+      return err({
+        kind: "PaymentCurrencyMismatch",
+        invoiceCurrency: this.#currency.code,
+        paymentCurrency: amount.currency.code,
+      });
+    }
+    if (!amount.isPositive()) {
+      return err({
+        kind: "NonPositivePayment",
+        amountMinor: amount.amount,
+      });
+    }
+    const outstanding = this.outstandingAmount();
+    if (isErr(outstanding)) return outstanding;
+    if (amount.amount > outstanding.value.amount) {
+      return err({
+        kind: "OverPayment",
+        attemptedMinor: amount.amount,
+        outstandingMinor: outstanding.value.amount,
+      });
+    }
+
+    const ev: InvoicePaymentApplied = {
+      id: eventId,
+      occurredAt: now,
+      type: INVOICE_PAYMENT_APPLIED,
+      sequence: this.#nextSequence,
+      invoiceId: this.id,
+      payload: {
+        amountMinor: amount.amount,
+        currencyCode: this.#currency.code,
+      },
+    };
+    this.#append(freezeEvent(ev) as InvoicePaymentApplied);
+    return ok(undefined);
+  }
+
+  /**
+   * Issued | PartiallyPaid | Draft → Void. Records InvoiceVoided after
+   * trimming and length-validating the reason text (Lock L5).
+   *
+   * Cancelled-from-Paid is explicitly rejected (Paid is terminal).
+   *
+   * Method name is `void` per ADR-0011 §6 (valid in ES method shorthand).
+   */
+  void(
+    reason: string,
+    now: Instant,
+    eventId: DomainEventId,
+    reasonCode: VoidReasonCode = "Other",
+  ): Result<void, InvoiceError> {
+    const s = this.status();
+    if (s === "Paid" || s === "Void") {
+      return err({ kind: "VoidOnTerminalStatus", status: s });
+    }
+    const normalized = reason.trim();
+    if (normalized.length < VOID_REASON_MIN) {
+      return err({
+        kind: "VoidReasonInvalid",
+        reason: "Empty",
+        length: normalized.length,
+      });
+    }
+    if (normalized.length > VOID_REASON_MAX) {
+      return err({
+        kind: "VoidReasonInvalid",
+        reason: "TooLong",
+        length: normalized.length,
+      });
+    }
+
+    const ev: InvoiceVoided = {
+      id: eventId,
+      occurredAt: now,
+      type: INVOICE_VOIDED,
+      sequence: this.#nextSequence,
+      invoiceId: this.id,
+      payload: { reasonCode, reason: normalized },
+    };
+    this.#append(freezeEvent(ev) as InvoiceVoided);
+    return ok(undefined);
+  }
+
   // ─── Aggregation (lines source = issued snapshot if present else draft) ─
 
   totalNet(): Result<Money, InvoiceError> {
@@ -264,6 +404,39 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
 
   totalGross(): Result<Money, InvoiceError> {
     return this.#fold((line) => line.lineGross());
+  }
+
+  /**
+   * Pure reduction over the event history — Lock L2.
+   * NO cached field exists; the value is always computed.
+   */
+  paidAmount(): Result<Money, MoneyDomainError> {
+    let total = 0;
+    for (const ev of this.#history) {
+      if (ev.type === "InvoicePaymentApplied") {
+        total += ev.payload.amountMinor;
+      }
+    }
+    return Money.of(total, this.#currency);
+  }
+
+  /**
+   * outstandingAmount = totalGross − paidAmount.
+   * Single source of truth used by the overpayment guard (Lock L1).
+   * Floors at zero if cumulative payments somehow exceed gross (shouldn't
+   * occur given the L1 guard, but defended for replay-only invariants).
+   */
+  outstandingAmount(): Result<Money, InvoiceError> {
+    const gross = this.totalGross();
+    if (isErr(gross)) return gross;
+    const paid = this.paidAmount();
+    if (isErr(paid)) return paid;
+    const diff = gross.value.sub(paid.value);
+    if (isErr(diff)) return diff;
+    if (diff.value.isNegative()) {
+      return ok(Money.zero(this.#currency));
+    }
+    return diff;
   }
 
   #fold(
@@ -300,16 +473,9 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
   // ─── Event sourcing infrastructure ──────────────────────────────────────
 
   /**
-   * Drains *uncommitted* events (those recorded since the last pull) and
-   * returns them as a frozen snapshot. The durable #history is untouched.
-   *
-   *   record(A); record(B); pullEvents() === [A, B]
-   *   pullEvents()                       === []
-   *
-   * This mirrors the AggregateRoot.pullEvents contract from the kernel
-   * but operates on the aggregate's own uncommitted buffer (the kernel's
-   * default buffer is intentionally unused here because event-sourced
-   * aggregates need both a history log AND a drain buffer).
+   * Drains *uncommitted* events (recorded since the last pull) and returns
+   * a frozen snapshot. The durable #history is untouched. Replayed
+   * aggregates always return [] until a fresh command runs.
    */
   override pullEvents(): readonly AnyInvoiceEvent[] {
     const snapshot = Object.freeze(this.#uncommitted.slice());
@@ -318,16 +484,15 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
   }
 
   /**
-   * Rebuilds an Invoice exclusively from its event history. No snapshot
-   * input (Wave 4 design): snapshots are a Wave-8+ performance concern
-   * and must not leak into the model.
+   * Rebuilds an Invoice exclusively from its event history.
    *
-   * Validates:
+   * Validates (in declaration order; first failure wins):
    *   - history is non-empty
    *   - sequences are gap-free 1..N
    *   - every event's invoiceId matches `id`
-   *   - exactly one InvoiceIssued (and it is sequence 1 — the only event
-   *     that introduces the snapshot the reducer relies on)
+   *   - the FIRST event is InvoiceIssued (A2-R1)
+   *   - exactly one InvoiceIssued
+   *   - NO event appears after InvoiceVoided (A2-R2)
    */
   static fromHistory(
     id: InvoiceId,
@@ -338,20 +503,21 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
     }
 
     let issuedSeen = 0;
+    let voidedSeen = false;
     let issuedEvent: InvoiceIssued | null = null;
     for (let i = 0; i < history.length; i++) {
       const ev = history[i];
       if (ev.sequence !== i + 1) {
-        return err({
-          kind: "RehydrationError",
-          reason: "NonMonotonicSequence",
-        });
+        return err({ kind: "RehydrationError", reason: "NonMonotonicSequence" });
       }
       if (ev.invoiceId !== id) {
-        return err({
-          kind: "RehydrationError",
-          reason: "InvoiceIdMismatch",
-        });
+        return err({ kind: "RehydrationError", reason: "InvoiceIdMismatch" });
+      }
+      if (voidedSeen) {
+        return err({ kind: "RehydrationError", reason: "EventAfterVoid" });
+      }
+      if (i === 0 && ev.type !== "InvoiceIssued") {
+        return err({ kind: "RehydrationError", reason: "IssuedNotFirst" });
       }
       if (ev.type === "InvoiceIssued") {
         issuedSeen++;
@@ -362,13 +528,12 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
           });
         }
         issuedEvent = ev;
+      } else if (ev.type === "InvoiceVoided") {
+        voidedSeen = true;
       }
     }
     if (issuedEvent === null) {
-      return err({
-        kind: "RehydrationError",
-        reason: "IssuedEventMissing",
-      });
+      return err({ kind: "RehydrationError", reason: "IssuedEventMissing" });
     }
 
     const payload = issuedEvent.payload;

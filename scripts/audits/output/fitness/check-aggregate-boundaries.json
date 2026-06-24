@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "fitness": "check-aggregate-boundaries",
-  "pending": true,
-  "pass": true,
-  "note": "Scaffolded in Step 1; activated in a later step."
+  "adr": "ADR-0011",
+  "scannedFiles": 10,
+  "violations": [],
+  "pass": true
 }

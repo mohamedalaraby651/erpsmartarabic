@@ -42,7 +42,7 @@ const voided = (seq: number): InvoiceVoided => ({
   type: "InvoiceVoided",
   sequence: seq,
   invoiceId: id,
-  payload: { reasonCode: "Erroneous" },
+  payload: { reasonCode: "Erroneous", reason: "test" },
 });
 
 describe("statusOf — pure reducer", () => {
