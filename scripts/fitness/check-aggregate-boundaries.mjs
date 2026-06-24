@@ -34,10 +34,17 @@ const OUT = resolve(
 const TEST_RE = /\/(__tests__|__integration__|__mocks__)\//;
 const IMPORT_RE = /from\s+["']([^"']+)["']/g;
 
+/**
+ * Contexts that follow the aggregate-per-subdirectory convention (ADR-0011).
+ * Other contexts (e.g. `pdf/`) use tactical DDD subfolders (entities/,
+ * services/, value-objects/) and are intentionally NOT scanned here.
+ */
+const AGGREGATED_CONTEXTS = new Set(["finance"]);
+
 function listContexts(root) {
   try {
     return readdirSync(root, { withFileTypes: true })
-      .filter((e) => e.isDirectory())
+      .filter((e) => e.isDirectory() && AGGREGATED_CONTEXTS.has(e.name))
       .map((e) => e.name);
   } catch {
     return [];
