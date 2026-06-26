@@ -31,8 +31,7 @@ function makeIssuedInvoice(): Invoice {
     currency: usd,
   }).value!;
   const line = InvoiceLine.of({
-    description: "Widget",
-    quantity: 1,
+    qty: 1,
     unitPrice: Money.of(1000, usd).value!,
     taxRate: TaxRate.zero(),
   }).value!;
