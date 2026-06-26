@@ -1,0 +1,66 @@
+{
+  "wave": "UX-2B Wave 1 — Application Layer (Invoice Command Handlers)",
+  "scope": "src/application/finance/**",
+  "publicSurface": "src/application/finance/index.ts",
+  "domainContractGap": {
+    "id": "D5",
+    "summary": "Invoice.committedVersion() — accessor for InvoiceRepository.appendEvents expectedVersion",
+    "adr": "docs/adr/0011-finance-domain-and-invoice-aggregate.md (Amendment A5)",
+    "publicSurfaceDelta": "0 new exported symbols (method on existing Invoice class)"
+  },
+  "errorBoundary": {
+    "sealed": "InvoiceApplicationError (Discriminated Union)",
+    "variants": [
+      "ValidationError",
+      "DomainRuleViolation",
+      "NotFound",
+      "ConcurrencyConflict",
+      "InfrastructureUnavailable"
+    ],
+    "rule": "Handlers return Promise<Result<TOk, InvoiceApplicationError>>. NO DomainError, NO RepositoryFailure, NO InfrastructureFailure leak.",
+    "translators": [
+      "fromInvoiceError",
+      "fromCurrencyError",
+      "fromTaxRateError",
+      "fromInvoiceNumberError",
+      "fromRepositoryFailure"
+    ]
+  },
+  "handlers": [
+    "IssueInvoiceHandler",
+    "ApplyInvoicePaymentHandler",
+    "VoidInvoiceHandler"
+  ],
+  "fakes": [
+    "FakeClock (ClockPort)",
+    "FakeIdPort (IdPort)",
+    "InMemoryInvoiceRepository (InvoiceRepository)"
+  ],
+  "fitness": {
+    "new": ["check-application-purity"],
+    "activeTotal": 18,
+    "passing": 18
+  },
+  "tests": {
+    "applicationLayer": 28,
+    "financeDomain": 183,
+    "total": 211,
+    "files": [
+      "IssueInvoiceHandler.test.ts (12)",
+      "ApplyInvoicePaymentHandler.test.ts (7)",
+      "VoidInvoiceHandler.test.ts (5)",
+      "Determinism.test.ts (2)",
+      "Concurrency.test.ts (2)"
+    ]
+  },
+  "tsStrict": {
+    "config": "tsconfig.application.json",
+    "extends": "tsconfig.finance.json",
+    "errors": 0
+  },
+  "nextWaves": [
+    "UX-2B Wave 2 — Repository Adapter (Supabase / Postgres)",
+    "UX-2B Wave 3 — Outbox / Event Publisher",
+    "UX-2B Wave 4 — UI Wiring (React)"
+  ]
+}
