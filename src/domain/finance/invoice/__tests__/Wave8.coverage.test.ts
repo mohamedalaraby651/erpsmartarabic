@@ -139,4 +139,40 @@ describe("Wave 8 — coverage closure", () => {
     );
     expect(() => assertNever(null as never)).toThrowError(/<unknown>/);
   });
+
+  test("InvoiceLine.lineNet/lineTax/lineGross propagate Money overflow errors (InvoiceLine.ts defensive branches)", () => {
+    // Defensive: InvoiceLine.of accepts qty=MAX_SAFE_INTEGER and unitPrice at
+    // MAX_SAFE_INTEGER, but the product overflows the safe-integer boundary
+    // inside Money.mulScalar — exercising the `isErr(net)` early-returns.
+    const huge = Number.MAX_SAFE_INTEGER;
+    const line = must(
+      InvoiceLine.of({
+        qty: huge,
+        unitPrice: must(Money.of(huge, USD)),
+        taxRate: must(TaxRate.of(0)),
+      }),
+    );
+    const net = line.lineNet();
+    expect(isErr(net)).toBe(true);
+    const tax = line.lineTax(); // early-returns the net error (L111)
+    expect(isErr(tax)).toBe(true);
+    const gross = line.lineGross(); // early-returns the net error (L121)
+    expect(isErr(gross)).toBe(true);
+
+    // For L123 (tax-side err with net ok): pick values where qty*unitPrice
+    // stays safe but tax projection (bp/10000) overflows.
+    const halfMax = Math.floor(Number.MAX_SAFE_INTEGER / 2);
+    const line2 = must(
+      InvoiceLine.of({
+        qty: 1,
+        unitPrice: must(Money.of(halfMax, USD)),
+        taxRate: must(TaxRate.of(5000)), // 50%
+      }),
+    );
+    const net2 = line2.lineNet();
+    expect(isOk(net2)).toBe(true);
+    // halfMax * 5000 vastly exceeds MAX_SAFE_INTEGER → tax projection fails.
+    const gross2 = line2.lineGross();
+    expect(isErr(gross2)).toBe(true);
+  });
 });
