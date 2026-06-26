@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "fitness": "check-domain-api-stability",
   "adr": "ADR-0011 (Wave 6 A3)",
-  "scannedFiles": 1062,
-  "externalImports": 0,
+  "scannedFiles": 1081,
+  "externalImports": 12,
   "violations": [],
   "pass": true
 }

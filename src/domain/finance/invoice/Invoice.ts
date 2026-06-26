@@ -446,6 +446,28 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
   }
 
   /**
+   * Committed version — the count of events already persisted for this
+   * aggregate. This is the value the application layer MUST pass as
+   * `expectedVersion` to `InvoiceRepository.appendEvents`.
+   *
+   * Semantics (UX-2B Wave 1 — Contract Gap D5):
+   *   - brand-new aggregate (never persisted)        ⇒ 0
+   *   - rehydrated via `fromHistory(N events)`       ⇒ N
+   *   - after a command but BEFORE `pullEvents()`    ⇒ N (unchanged)
+   *     (the just-recorded events are still uncommitted, so they do not
+   *      yet count as committed; appendEvents must target version N)
+   *   - after `pullEvents()` succeeds and the next load               ⇒ N+k
+   *
+   * Implementation: `#history.length − #uncommitted.length`. The
+   * aggregate intentionally does NOT expose `#history` or `#uncommitted`
+   * directly — callers depend on the domain notion ("committed version"),
+   * not on the storage notion ("event count").
+   */
+  committedVersion(): number {
+    return this.#history.length - this.#uncommitted.length;
+  }
+
+  /**
    * Rebuilds an Invoice exclusively from its event history.
    *
    * Validates (in declaration order; first failure wins):

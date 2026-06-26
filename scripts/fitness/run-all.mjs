@@ -34,6 +34,8 @@ const ACTIVE = [
   "check-domain-bigint-boundary.mjs",
   // Wave 8 (G2)
   "check-domain-strictness.mjs",
+  // UX-2B Wave 1
+  "check-application-purity.mjs",
 ];
 
 const PENDING = [];

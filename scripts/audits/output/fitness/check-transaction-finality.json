@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "fitness": "check-transaction-finality",
   "adr": "ADR-0008",
-  "scannedFiles": 0,
+  "scannedFiles": 3,
   "violations": [],
   "pass": true
 }

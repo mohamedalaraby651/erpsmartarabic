@@ -365,3 +365,31 @@ Any change under `src/domain/finance/**` MUST cite exactly one of:
 3. **New ADR** — a numbered amendment to this document or a successor ADR.
 
 Refactors without one of the three are rejected at review.
+
+## Amendment A5 — Contract Gap D5 (UX-2B Wave 1 enablement)
+
+UX-2B Wave 1 (Application Layer — Invoice Command Handlers) needs to pass
+`expectedVersion` to `InvoiceRepository.appendEvents`. The Wave 6 port
+contract already specifies the semantics ("length of `#history` AT LOAD
+time"), but Wave 8 sealed the aggregate without exposing that value
+publicly. The handler must therefore obtain it from the aggregate
+without leaking storage internals.
+
+**Resolution (D5, change-policy category: Contract gap).**
+
+Added a single domain-level accessor on `Invoice`:
+
+```ts
+committedVersion(): number
+```
+
+- brand-new aggregate ⇒ `0`
+- rehydrated from N events ⇒ `N`
+- uncommitted events do NOT advance the value; only events that have
+  been pulled by infrastructure (i.e. moved out of `#uncommitted`)
+  count as committed
+
+Public surface delta: **zero new exported symbols** (method on an
+already-exported class). No new types, no new ports, no behavioural
+change to existing commands. Tracked in `ux2a-wave8-defects.json` D5.
+

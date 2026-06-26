@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-application-purity",
+  "adr": "UX-2B Wave 1",
+  "scope": "src/application/finance",
+  "scannedFiles": 10,
+  "violations": [],
+  "pass": true
+}

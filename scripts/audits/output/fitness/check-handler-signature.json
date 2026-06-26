@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "fitness": "check-handler-signature",
   "adr": "ADR-0008/ADR-0011",
-  "scannedFiles": 0,
+  "scannedFiles": 3,
   "violations": [],
   "pass": true
 }
