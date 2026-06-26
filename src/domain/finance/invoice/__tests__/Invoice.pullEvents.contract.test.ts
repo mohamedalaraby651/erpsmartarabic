@@ -9,7 +9,7 @@
  *    but pullEvents performs NO deep-freeze pass.
  */
 import { describe, it, expect } from "vitest";
-import { unsafeId, Instant } from "@/shared-kernel";
+import { unsafeId, Instant, isErr } from "@/shared-kernel";
 import {
   Invoice,
   InvoiceNumber,
@@ -89,7 +89,7 @@ describe("Invoice.pullEvents — Wave 6 contract", () => {
       history,
     ).value!;
     const r = rehydrated.issue(now, eid(99));
-    expect(r.ok).toBe(false);
+    expect(isErr(r)).toBe(true);
     // No event must have been buffered during a rejected command.
     expect(rehydrated.pullEvents().length).toBe(0);
   });
