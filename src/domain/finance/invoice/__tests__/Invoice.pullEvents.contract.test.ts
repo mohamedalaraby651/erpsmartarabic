@@ -21,7 +21,7 @@ import {
 import type { DomainEventId } from "../events";
 
 const usd = Currency.of("USD").value!;
-const now = Instant.now();
+const now = Instant.fromEpochMillis(1_700_000_000_000);
 const eid = (n: number) => unsafeId<"DomainEventId">(`evt-${n}`) as DomainEventId;
 
 function makeIssuedInvoice(): Invoice {
