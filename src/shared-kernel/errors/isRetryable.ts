@@ -15,6 +15,7 @@ export function isRetryable(failure: RepositoryFailure): boolean {
     case "Network":
     case "Serialization":
       return true;
+    case "CorruptedPersistenceData":
     case "Conflict":
     case "DuplicateKey":
     case "NotFound":
