@@ -50,9 +50,7 @@ export class ApplyInvoicePaymentHandler {
   async execute(
     cmd: ApplyInvoicePaymentCommand,
     ctx: Readonly<RequestContext>,
-  ): Promise<
-    Result<ApplyInvoicePaymentResult, InvoiceApplicationError>
-  > {
+  ): Promise<Result<ApplyInvoicePaymentResult, InvoiceApplicationError>> {
     // 1. Parse VOs
     const currencyR = Currency.of(cmd.currencyCode);
     if (isErr(currencyR)) return err(fromCurrencyError(currencyR.error));
