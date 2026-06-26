@@ -11,7 +11,7 @@
  * Timeout / Network / Unknown, supporting concurrency and retryability
  * tests without touching real infrastructure.
  */
-import { ok, err } from "@/shared-kernel";
+import { ok, err, isErr } from "@/shared-kernel";
 import type {
   Result,
   RepositoryFailure,
@@ -57,7 +57,7 @@ export class InMemoryInvoiceRepository implements InvoiceRepository {
       return err({ kind: "NotFound", message: "invoice not found", id: String(id) });
     }
     const reh = Invoice.fromHistory(id, history.slice());
-    if (reh.kind === "err") {
+    if (isErr(reh)) {
       return err({
         kind: "Serialization",
         message: `corrupt history: ${reh.error.kind}`,
