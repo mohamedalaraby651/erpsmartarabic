@@ -9,7 +9,7 @@
  *    but pullEvents performs NO deep-freeze pass.
  */
 import { describe, it, expect } from "vitest";
-import { ok, unsafeId, Instant } from "@/shared-kernel";
+import { unsafeId, Instant } from "@/shared-kernel";
 import {
   Invoice,
   InvoiceNumber,
