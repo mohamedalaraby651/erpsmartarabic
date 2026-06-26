@@ -8,7 +8,7 @@
  */
 import { describe, test, expect } from "vitest";
 import { isOk, isErr, unsafeId, Instant } from "@/shared-kernel";
-import type { DomainEventId } from "@/shared-kernel";
+import type { Result } from "@/shared-kernel";
 import { Currency } from "../../shared/Currency";
 import { Money } from "../../shared/Money";
 import { TaxRate } from "../../shared/TaxRate";
@@ -18,10 +18,14 @@ import { Invoice } from "../Invoice";
 import type { InvoiceId } from "../InvoiceId";
 import { statusOf } from "../statusOf";
 import { assertNever } from "../errors/InvoiceDomainError";
-import type { InvoiceIssued, InvoicePaymentApplied } from "../events";
+import type {
+  DomainEventId,
+  InvoiceIssued,
+  InvoicePaymentApplied,
+} from "../events";
 
-function must<T, E>(r: { ok: true; value: T } | { ok: false; error: E }): T {
-  if (!isOk(r)) throw new Error("must: " + JSON.stringify(r));
+function must<T, E>(r: Result<T, E>): T {
+  if (!isOk(r)) throw new Error("must: failed result");
   return r.value;
 }
 
