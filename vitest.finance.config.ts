@@ -22,9 +22,15 @@ export default defineConfig({
       exclude: [
         "**/__tests__/**",
         "**/*.test.ts",
+        // Public barrels — re-exports only.
         "**/index.ts",
         "**/events/index.ts",
         "**/ports/index.ts",
+        // Type-only modules (interfaces / contracts) — no executable code.
+        "src/domain/finance/invoice/events/InvoiceEvent.ts",
+        "src/domain/finance/invoice/ports/InvoiceRepository.ts",
+        "src/domain/finance/invoice/ports/InvoiceReadModel.ts",
+        "src/domain/finance/invoice/ports/InvoiceView.ts",
       ],
       thresholds: {
         statements: 95,
