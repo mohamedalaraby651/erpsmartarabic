@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.finance.json",
+  "include": [
+    "src/domain/finance/**/*.ts",
+    "src/application/finance/**/*.ts",
+    "src/shared-kernel/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx"
+  ]
+}
