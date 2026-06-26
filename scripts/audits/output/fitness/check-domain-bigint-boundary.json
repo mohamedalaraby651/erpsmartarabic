@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-domain-bigint-boundary",
+  "adr": "ADR-0011 (Wave 6 C3)",
+  "scannedFiles": 5,
+  "violations": [],
+  "pass": true
+}

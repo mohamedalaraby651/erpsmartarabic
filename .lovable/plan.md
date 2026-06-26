@@ -1,193 +1,99 @@
-# Wave 4 — Event Sourcing Alignment (Locked Scope)
+# UX-2A Phase B — Wave 6 (Final-Locked) → Wave 7 → Wave 8
 
-تنفيذ التحول البنيوي لـ `Invoice` من mutable-status إلى **event-sourced aggregate** كما يفرض ADR-0011 §3, §5, §6 (R-1108b, R-1110a–c). كل التعديلات محصورة داخل `src/domain/finance/**` + إضافة طفيفة في `src/shared-kernel/events/`.
-
----
-
-## ١) القرارات المعتمدة (من حوار المراجعة)
-
-| البند | القرار |
-|---|---|
-| توقيت Event Sourcing | **الآن** — قبل Payments/Void، لتثبيت البنية قبل إضافة السلوك |
-| حقن الزمن/الهوية | **parameters صريحة** على كل transition — لا `ClockPort`/`IdPort` داخل الـ aggregate |
-| تسلسل الأحداث | `DomainEvent` → `InvoiceEvent` → الأحداث المتخصصة (قابل لإعادة الاستخدام عبر BCs) |
-| `#status` | **يُحذف بالكامل** — `status()` reducer-only؛ لا cached field على السطح |
-| Rehydration | `Invoice.fromHistory(events)` فقط — **لا snapshots** في هذه المرحلة |
-| `pullEvents()` | **drain semantics** — يُرجع الأحداث الجديدة غير المنشورة ثم يفرغها |
+تم دمج الملاحظات الثلاث الأخيرة كتوضيحات في ADR-0011 Amendment A2-bis. لا تغييرات تصميمية، فقط تثبيت دلالات.
 
 ---
 
-## ٢) ما يُبنى في هذه الموجة
+## 0) التوضيحات الثلاث المُقفَلة في ADR
 
-### أ) Shared Kernel — DomainEvent base (إن لم يكن موجوداً بالشكل المطلوب)
+### C1 — تعريف `expectedVersion` في `appendEvents`
+> `expectedVersion` = نسخة الـ Aggregate **قبل** إضافة الأحداث الجديدة (pre-append version) = طول `#history` المُستعاد من `load()`.
+> - فاتورة جديدة (لم تُحفظ بعد) → `expectedVersion = 0`.
+> - فاتورة مُحمَّلة بـ N أحداث ثم أُضيف M جديد → النداء: `appendEvents(id, N, [...M], ctx)`.
+> - عدم التطابق مع التخزين ⇒ `RepositoryFailure.kind = "Conflict"` مع `{ expected, actual }`.
 
-تحت `src/shared-kernel/events/`:
+### C2 — دلالة "Frozen" في `pullEvents()`
+> `Object.freeze(array)` على المصفوفة المُعادة **فقط** (shallow). لا deep-freeze لكل event، لأن الأحداث منشأة عبر factories تُجمِّد payloadها بالفعل عند الإنشاء (Wave 4). هذا يحافظ على O(1) للسحب.
 
-```text
-DomainEvent.ts        // base envelope: eventId, occurredAt, sequence
-DomainEventId.ts      // Id<"DomainEvent"> alias
-Instant.ts            // (موجود مسبقاً في time/ — يُعاد استخدامه)
-```
-
-`DomainEvent` interface:
-- `readonly eventId: DomainEventId`
-- `readonly occurredAt: Instant`
-- `readonly sequence: number` (≥1, monotonic, gap-free — التحقق مسؤولية الـ aggregate)
-- `readonly metadata?: Readonly<{ correlationId?: string; causationId?: string }>`
-
-سأفحص `src/shared-kernel/events/` أولاً قبل الإنشاء وأعيد استخدام الموجود إن أمكن.
-
-### ب) Finance Invoice Events
-
-تحت `src/domain/finance/invoice/events/`:
-
-```text
-InvoiceEvent.ts                // extends DomainEvent; adds invoiceId
-InvoiceIssued.ts               // + number, currency, lines snapshot, totalGross
-InvoicePaymentApplied.ts       // + amount: Money            (payload فقط — السلوك في Wave 5)
-InvoiceVoided.ts               // + reasonCode: VoidReasonCode (payload فقط — السلوك في Wave 5)
-index.ts                       // discriminated union AnyInvoiceEvent
-```
-
-كل event:
-- `Readonly<…>` بالكامل، بدون methods، بدون behavior.
-- `type` discriminant: `"InvoiceIssued" | "InvoicePaymentApplied" | "InvoiceVoided"`.
-- في Wave 4 نُعرّف الأنواع الثلاثة كاملة، لكن نُصدر فقط `InvoiceIssued` فعلياً عبر `issue()`. الباقي يصبح فاعلاً في Wave 5.
-
-### ج) Reducer + Status
-
-تحت `src/domain/finance/invoice/`:
-
-```text
-InvoiceStatus.ts      // type "Draft" | "Issued" | "PartiallyPaid" | "Paid" | "Void"
-                      // (PartiallyPaid مُعرَّف الآن لكن غير قابل للوصول قبل Wave 5)
-statusOf.ts           // pure reducer: (events: readonly AnyInvoiceEvent[]) => InvoiceStatus
-```
-
-`statusOf` يطبّق transition table ADR §5 بحرفيتها. أي تسلسل غير قانوني يُعتبر مستحيلاً هنا لأن `record()` يرفضه عند الإصدار، و`fromHistory()` يرفضه عند الإعادة.
-
-### د) إعادة هيكلة `Invoice.ts`
-
-التغييرات المحورية:
-
-- **حذف**: `#status`, `#lines` كحالة قابلة للتعديل، `markPaid()`, `cancel()` (تنتقل لـ Wave 5 بأسماء ADR: `applyPayment` / `void`).
-- **يُحتفظ به** (يُعاد توصيله عبر الـ reducer):
-  - `addLine` / `removeLine` — يبقيان structural-only في `Draft` (لا يولدان events؛ تعديلات pre-issue على draft؛ يصبحان جزءاً من snapshot `InvoiceIssued`).
-  - `totalNet/totalTax/totalGross` — تبقى projections من الـ lines الحالية.
-- **يُضاف**:
-  - `#history: AnyInvoiceEvent[]` — كل الأحداث المعتمدة (تاريخ + جديدة).
-  - `#uncommitted: AnyInvoiceEvent[]` — الأحداث الجديدة منذ آخر `pullEvents()`.
-  - `#nextSequence: number` — يبدأ من 1.
-  - `record(event)` (من `AggregateRoot` أو خاص) — يلحق بـ history + uncommitted، يزيد sequence.
-  - `pullEvents(): readonly AnyInvoiceEvent[]` — **drain**: يُرجع نسخة مجمّدة من `#uncommitted` ثم يفرغها. الاستدعاء التالي يُرجع `[]` حتى يحدث `record` جديد.
-  - `getHistory(): readonly AnyInvoiceEvent[]` — للقراءة فقط (للاختبارات/التشخيص).
-  - `status(): InvoiceStatus` — يُحسب دائماً بـ `statusOf(this.#history)`.
-  - `issue(now: Instant, eventId: DomainEventId): Result<void, InvoiceError>`:
-    1. guard: status === Draft، lines.length ≥ 1، R-1101..R-1105 (دلتا تحقق إضافية إن لزم).
-    2. يبني `InvoiceIssued` بـ `sequence = #nextSequence`.
-    3. `record(event)`.
-  - `static fromHistory(events: readonly AnyInvoiceEvent[]): Result<Invoice, InvoiceError>`:
-    - يتحقق R-1110c: `sequence` متصلة `1..n` بدون فجوات/تكرار/ترتيب خاطئ → وإلا `CorruptEventStream`.
-    - يبني invoice فارغ ثم يطبّق كل حدث عبر apply داخلي.
-    - بعد البناء: `#uncommitted = []` (لأن كل الأحداث "تاريخية"، ليست جديدة).
-- **يبقى Pure**: لا `Date.now()`, لا UUID generation, لا I/O.
-
-### هـ) تصنيف الأخطاء (إضافات)
-
-```ts
-type InvoiceEventStreamError =
-  | { kind: "CorruptEventStream"; reason: "GapInSequence" | "Duplicate" | "OutOfOrder" | "EmptyHistory" }
-  | { kind: "IllegalReplayTransition"; from: InvoiceStatus; eventType: string };
-
-type InvoiceError = InvoiceDomainError | InvoiceLineError | MoneyDomainError | InvoiceEventStreamError;
-```
-
-### و) الاختبارات
-
-تحت `src/domain/finance/invoice/__tests__/`:
-
-- `events/InvoiceIssued.test.ts` — payload immutability، الـ discriminant.
-- `statusOf.test.ts` — كل خلية في transition table + الحالات الفارغة (`[]` → `Draft`).
-- `Invoice.eventsourcing.test.ts`:
-  - `issue()` يولّد حدثاً واحداً بـ `sequence=1`.
-  - `pullEvents()` يُرجع الحدث الجديد ثم يصبح فارغاً.
-  - الاستدعاء الثاني لـ `pullEvents()` بدون `record` جديد → `[]`.
-  - `status()` ينتقل من `Draft` إلى `Issued` بعد `issue()`.
-  - بعد `issue()`، `addLine` يرجع `StructuralEditLocked`.
-- `Invoice.rehydration.test.ts`:
-  - round-trip: `issue → pullEvents → fromHistory(events) → status()==='Issued'` و projections تطابق.
-  - رفض: gap (`[seq=1, seq=3]`)، duplicate (`[seq=1, seq=1]`)، تنازلي، تاريخ فارغ، حدث غير قانوني بعد terminal.
-- `Invoice.test.ts` (القديمة): تحديث/إزالة اختبارات `markPaid`/`cancel` (يعاد إدخالها في Wave 5 بأسماء ADR).
-
-**هدف العداد:** الإبقاء على الأخضر بالكامل، مع زيادة العدد بـ ~25–35 اختباراً جديداً.
+### C3 — قاعدة عامة لـ BigInt على الحدود
+> أي قيمة `bigint` تخرج من `src/domain/finance/**` إلى أي طبقة أخرى **يجب** أن تُحوَّل إلى `string` أولًا.
+> - يُفعَّل عبر fitness check `domain-bigint-boundary` يفحص أن DTOs المُصدَّرة من `index.ts` لا تحتوي حقل `bigint` ظاهر.
+> - Money view: `{ minor: string; currency: Currency }` — مرجعي للنمط.
 
 ---
 
-## ٣) الـ API السطحي بعد Wave 4
+## 1) Wave 6 — ترتيب التنفيذ المُلزَم (Risk-Minimizing Order)
 
-```ts
-class Invoice extends AggregateRoot<"InvoiceId"> {
-  static create(props): Result<Invoice, InvoiceDomainError>;
-  static fromHistory(events): Result<Invoice, InvoiceError>;
+### Step 1 — `errors/InvoiceDomainError.ts`
+- إنشاء Discriminated Union الكامل (R-1101..R-1118b) بدون `message`.
+- `Invoice.ts` يعيد التصدير `export { InvoiceDomainError } from "./errors/InvoiceDomainError"` للحفاظ على التوافق الخلفي.
+- `assertNever(e)` helper.
+- **بوابة:** كل 200 اختبار يبقى أخضر.
 
-  // identity & basics
-  getNumber(): InvoiceNumber;
-  getCurrency(): Currency;
-  getCustomerId(): CustomerId | undefined;
+### Step 2 — عقود الـ Ports
+- `ports/InvoiceRepository.ts`: `load` + `appendEvents(id, expectedVersion, events, ctx)`. **لا** `save()`.
+- `ports/InvoiceReadModel.ts`: `byId` + `list(query, ctx): Page<InvoiceView>`.
+- `ports/RepositoryFailure.ts`: union مغلق بـ `kind: "Conflict" | "NotFound" | "Transient" | "Unavailable"`.
+- `ports/RequestContext.ts`: type alias = `Readonly<{ tenantId; userId; correlationId; now: Instant }>`.
+- **بوابة:** `tsgo` أخضر (الـ ports مجرد types، لا تنفيذ).
 
-  // derived state
-  status(): InvoiceStatus;                 // ← reducer-only، لا حقل مخزّن
-  getLines(): readonly InvoiceLine[];      // snapshot دفاعي
+### Step 3 — `pullEvents()` تثبيت السلوك
+- تعديل `Invoice.ts:314-318` ليُرجع `Object.freeze([...this.#uncommitted])` ثم يُفرِّغ.
+- اختبارات جديدة في `Invoice.pullEvents.contract.test.ts`:
+  - frozen (TypeError on push).
+  - النداء الثاني بدون أوامر جديدة = `[]`.
+  - النداء بعد `fromHistory()` مباشرة = `[]`.
+  - shallow-only: events داخل المصفوفة تبقى frozen (موروث من Wave 4)، لا re-freeze.
+- **بوابة:** الاختبارات الجديدة + 200 سابقة خضراء.
 
-  // structural (Draft only)
-  addLine(line): Result<void, InvoiceDomainError>;
-  removeLine(index): Result<void, InvoiceDomainError>;
+### Step 4 — `src/domain/finance/index.ts` (Public Surface)
+- يُصدِّر فقط القائمة المُحدَّدة في الخطة السابقة.
+- يُحجَب: `statusOf`, helpers داخلية، `__tests__`.
+- نقل أي استيراد خارج finance يستخدم مسارًا عميقًا → `@/domain/finance` (لا يوجد حاليًا، فالعملية وقائية).
+- **بوابة:** `tsgo` + كل الاختبارات خضراء.
 
-  // lifecycle (event-sourced)
-  issue(now: Instant, eventId: DomainEventId): Result<void, InvoiceError>;
-  // applyPayment + void → Wave 5
-
-  // aggregation (لا تغيير)
-  totalNet(): Result<Money, InvoiceError>;
-  totalTax(): Result<Money, InvoiceError>;
-  totalGross(): Result<Money, InvoiceError>;
-
-  // event sourcing surface
-  pullEvents(): readonly AnyInvoiceEvent[]; // drain semantics
-  getHistory(): readonly AnyInvoiceEvent[]; // read-only
-}
-```
-
----
-
-## ٤) خارج النطاق (يُؤجَّل صراحة)
-
-- `applyPayment` و `void(reason)` + `VoidReasonCode` → **Wave 5**.
-- Ports (`InvoiceRepository`, `InvoiceReadModel`, `InvoiceNumberPort`) → **Wave 6**.
-- Domain Services (`InvoiceNumberService`, `TaxPolicy`) → **Wave 7**.
-- Application use cases و UoW → **Wave 8** (UX-2B).
-- Snapshots للأداء → مؤجَّل بلا تاريخ.
+### Step 5 — ADR-0011 Amendment A2-bis
+- توثيق C1, C2, C3 + Public Surface النهائي + جدول حالات `RepositoryFailure`.
+- **بوابة:** مراجعة بصرية للملف.
 
 ---
 
-## ٥) ضمانات النقاء (Halt conditions)
+## 2) Wave 7 — 9 Fitness Checks (تفعيل)
 
-- صفر `Math.round`, `toFixed`, `parseFloat`, decimal literals داخل `src/domain/finance/**` (باستثناء `Money.mulScalar` المسموح به).
-- صفر استيراد لـ `react`, `@supabase/*`, `Date`, `window`, `document`.
-- صفر حقن `ClockPort`/`IdPort` داخل الـ aggregate — الـ caller يمرر `Instant` و `DomainEventId` صراحة.
-- صفر mutation خارج `record()` (بعد إعادة الهيكلة)؛ `addLine`/`removeLine` على draft pre-issue يُعاملان كـ structural setup لا event-emitting (مُسوَّى في snapshot `InvoiceIssued`).
-- لا snapshots، لا cached status، لا derived state مخزَّن.
+| # | Check | الحالة |
+|---|---|---|
+| 1 | `domain-purity` (+ `JSON.*` ban) | ACTIVE |
+| 2 | `domain-service-purity` (+ `uuid`/`nanoid`/`randomUUID` ban) | ACTIVE |
+| 3 | `error-mapping` | ACTIVE |
+| 4 | `repository-failure-taxonomy` (يمنع `unknown`/`Error`/`string`/`any`) | ACTIVE |
+| 5 | `handler-signature` (يفرض `Readonly<RequestContext>`) | ACTIVE |
+| 6 | `ui-infrastructure-isolation` | ACTIVE |
+| 7 | `composition-root-uniqueness` (+ `SupabaseClient`/`PrismaClient`) | ACTIVE |
+| 8 | `transaction-finality` (يكتشف `commit→write` و `save→commit→save`) | ACTIVE |
+| 9 | `domain-api-stability` (allow-list `@/domain/finance` only) | ACTIVE |
+| 10 | **`domain-bigint-boundary`** (جديد من C3) | ACTIVE |
+
+= **10 fitness checks جديدة + 6 سابقة = 16 ACTIVE**.
 
 ---
 
-## ٦) معايير القبول
+## 3) Wave 8 — Exit Gate
 
-1. كل اختبارات Wave 1–3 الحالية تبقى خضراء (مع تكييف اختبارات `markPaid`/`cancel`).
-2. `Invoice.fromHistory(invoice.pullEvents())` بعد `create + addLine + issue` يُنتج aggregate مكافئاً تماماً (status, lines, totals).
-3. `pullEvents()` ثانيةً بدون `record` جديد = `[]`.
-4. الـ reducer `statusOf` يطبّق ADR §5 بحرفيتها — مغطّى باختبار لكل خلية.
-5. أي تسلسل أحداث غير قانوني يُرفض في `fromHistory` بـ `CorruptEventStream` أو `IllegalReplayTransition` — بدون throw.
+- **Coverage:** Statements/Branches/Functions/Lines كلها ≥ 95% على `src/domain/finance/**`.
+- **TS Strict (نطاق finance):** `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride` عبر `tsconfig.finance.json`.
+- **Import Audit:** allow-list صريح (`shared-kernel/*` + siblings فقط).
+- **Zero-Change Audit:** بوابة CI رسمية — لا تعديلات خارج `src/domain/finance/**`, `scripts/fitness/**`, `docs/adr/**`, `CHANGELOG.md`.
+- **ADR-0011 Amendment A3:** توثيق Public Surface النهائي + `appendEvents` contract + `domain-api-stability` + `domain-bigint-boundary`.
 
 ---
 
-عند الموافقة، أبدأ بفحص `src/shared-kernel/events/` و `AggregateRoot` لتحديد ما هو موجود فعلاً، ثم أنفذ التغييرات في دفعة واحدة محصورة داخل `src/domain/finance/**` + الإضافة الدنيا في `src/shared-kernel/events/`.
+## 4) معايير القبول النهائية
+
+- ✅ Wave 6: 5 خطوات بالترتيب، كل خطوة لا تكسر اختبارًا.
+- ✅ 10 fitness checks ACTIVE بصفر انتهاكات (16 إجمالًا).
+- ✅ Coverage finance ≥95% على المؤشرات الأربعة.
+- ✅ Zero-Change Audit أخضر.
+- ✅ ADR-0011 A2-bis + A3 معتمدان.
+- ✅ لا `save()`, لا `message` في أخطاء الدومين, لا `bigint` يعبر حدود الدومين, لا استيراد عميق من خارج finance.
+
+هل أبدأ Wave 6 Step 1 الآن؟

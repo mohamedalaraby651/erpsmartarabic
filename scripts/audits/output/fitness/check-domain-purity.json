@@ -1,7 +1,9 @@
 {
   "schemaVersion": 1,
   "fitness": "check-domain-purity",
-  "pending": true,
-  "pass": true,
-  "note": "Scaffolded in Step 1; activated in a later step."
+  "adr": "ADR-0011",
+  "scope": "src/domain/finance",
+  "scannedFiles": 19,
+  "violations": [],
+  "pass": true
 }
