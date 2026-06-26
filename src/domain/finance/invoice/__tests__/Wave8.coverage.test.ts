@@ -167,4 +167,36 @@ describe("Wave 8 — coverage closure", () => {
     // is always ≤ net. L123 is therefore documented as defensively dead;
     // see scripts/audits/output/ux2a-wave8-defects.json (D4).
   });
+
+  test("Invoice.create / issue carries customerId into InvoiceIssued payload (Invoice.ts customerId branch)", () => {
+    // Covers the `customerId !== undefined` true branch in the payload
+    // assembly at issue-time.
+    const customerId = unsafeId<"CustomerId">("cust-1") as unknown as Parameters<
+      typeof Invoice.create
+    >[0]["customerId"];
+    const r = Invoice.create({
+      id,
+      number: must(InvoiceNumber.of("INV-2026-9003")),
+      currency: USD,
+      customerId,
+    });
+    const inv = must(r);
+    inv.addLine(
+      must(
+        InvoiceLine.of({
+          qty: 1,
+          unitPrice: must(Money.of(100, USD)),
+          taxRate: must(TaxRate.of(0)),
+        }),
+      ),
+    );
+    must(inv.issue(t(1), ev("e-iss-cust")));
+    expect(inv.getCustomerId()).toBe(customerId);
+    const events = inv.pullEvents();
+    expect(events.length).toBe(1);
+    const issued = events[0]!;
+    // Narrow: payload should now include customerId.
+    const payload = (issued as { payload: { customerId?: unknown } }).payload;
+    expect(payload.customerId).toBe(customerId);
+  });
 });
