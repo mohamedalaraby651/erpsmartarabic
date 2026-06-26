@@ -45,6 +45,18 @@
       "fix": "NOT applied. Adding `/* v8 ignore next */` pragmas would constitute a production edit (Wave 8 defect-class) without any behavioural benefit. The branch threshold was lowered to 90% with an explicit rationale in vitest.finance.config.ts; statements/functions/lines stay at 95%.",
       "behavioralChange": "none — production behaviour is unchanged; only the coverage gate ceiling was negotiated.",
       "status": "accepted-as-carve-out"
+    },
+    {
+      "id": "D5",
+      "gate": "post-lock (UX-2B Wave 1 enablement)",
+      "file": "src/domain/finance/invoice/Invoice.ts",
+      "lines": "committedVersion() accessor",
+      "rule": "change-policy category: contract-gap (ADR-0011 Amendment A5)",
+      "rootCause": "InvoiceRepository.appendEvents(id, expectedVersion, ...) defines expectedVersion as 'length of #history AT LOAD time'. The application layer needs to read that number from the aggregate without leaking storage internals (#history / #uncommitted). Before D5 there was no public domain accessor for it.",
+      "fix": "Added `Invoice.committedVersion()` returning `#history.length - #uncommitted.length`. Returns 0 for a brand-new aggregate, N for one rehydrated from N events, and stays at N after a command but before pullEvents() — exactly the value to pass as expectedVersion.",
+      "behavioralChange": "none — no existing command or query is modified; no new exported symbol on the public surface (method added to the already-exported Invoice class).",
+      "status": "fixed"
     }
   ]
 }
+
