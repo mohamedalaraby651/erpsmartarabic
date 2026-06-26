@@ -30,7 +30,7 @@ function makeIssuedInvoice(): Invoice {
     number: InvoiceNumber.of("INV-001").value!,
     currency: usd,
   }).value!;
-  const line = InvoiceLine.create({
+  const line = InvoiceLine.of({
     description: "Widget",
     quantity: 1,
     unitPrice: Money.of(1000, usd).value!,
