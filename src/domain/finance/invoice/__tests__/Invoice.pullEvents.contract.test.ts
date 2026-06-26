@@ -34,7 +34,7 @@ function makeIssuedInvoice(): Invoice {
     description: "Widget",
     quantity: 1,
     unitPrice: Money.of(1000, usd).value!,
-    taxRate: TaxRate.fromBasisPoints(0).value!,
+    taxRate: TaxRate.zero(),
   }).value!;
   inv.addLine(line);
   inv.issue(now, eid(1));
