@@ -16,7 +16,7 @@ export default defineConfig({
     include: ["src/domain/finance/**/*.test.ts"],
     coverage: {
       provider: "v8",
-      reporter: ["text-summary", "json-summary"],
+      reporter: ["text-summary", "json-summary", "json"],
       reportsDirectory: "scripts/audits/output/finance-coverage",
       include: ["src/domain/finance/**"],
       exclude: [
