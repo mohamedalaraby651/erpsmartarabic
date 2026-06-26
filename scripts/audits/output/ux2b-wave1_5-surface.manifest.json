@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "generatorVersion": 1,
+  "module": "@/application/finance",
+  "generatedAt": "2026-06-26T18:03:35.731Z",
+  "groups": {
+    "commands": [
+      "ApplyInvoicePaymentCommand",
+      "IssueInvoiceCommand",
+      "VoidInvoiceCommand"
+    ],
+    "commandInputs": [
+      "IssueInvoiceLineInput"
+    ],
+    "results": [
+      "ApplyInvoicePaymentResult",
+      "IssueInvoiceResult",
+      "VoidInvoiceResult"
+    ],
+    "handlers": [
+      "ApplyInvoicePaymentHandler",
+      "IssueInvoiceHandler",
+      "VoidInvoiceHandler"
+    ],
+    "handlerDeps": [
+      "ApplyInvoicePaymentHandlerDeps",
+      "IssueInvoiceHandlerDeps",
+      "VoidInvoiceHandlerDeps"
+    ],
+    "errors": [
+      "InvoiceApplicationError"
+    ],
+    "errorFactories": [
+      "ERRINVOICE_APP_ERR"
+    ],
+    "other": []
+  },
+  "contentHash": "56815fb7909a5b1f59daf51cd8554ca671691d9fa757389f40ebf87d2a455ece"
+}
