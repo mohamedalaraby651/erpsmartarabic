@@ -90,6 +90,7 @@ export type InvoiceApplicationError =
         | "Timeout"
         | "Network"
         | "Serialization"
+        | "CorruptedPersistenceData"
         | "DuplicateKey"
         | "PermissionDenied"
         | "Unknown";
