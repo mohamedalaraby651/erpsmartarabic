@@ -199,4 +199,53 @@ describe("Wave 8 — coverage closure", () => {
     const payload = (issued as { payload: { customerId?: unknown } }).payload;
     expect(payload.customerId).toBe(customerId);
   });
+
+  test("outstandingAmount propagates paidAmount overflow via crafted history (Invoice.ts defensive isErr branches)", () => {
+    // Crafted history bypasses the command-time overpayment guard so that
+    // cumulative payments overflow MAX_SAFE_INTEGER inside Money.add, hitting
+    // the defensive `isErr(paid)` early-return in outstandingAmount().
+    const HUGE = Number.MAX_SAFE_INTEGER;
+    const issued: InvoiceIssued = {
+      id: ev("ovf-1"),
+      occurredAt: t(1),
+      type: "InvoiceIssued",
+      sequence: 1,
+      invoiceId: id,
+      payload: {
+        number: must(InvoiceNumber.of("INV-2026-9004")),
+        currency: USD,
+        lines: [
+          must(
+            InvoiceLine.of({
+              qty: 1,
+              unitPrice: must(Money.of(HUGE, USD)),
+              taxRate: must(TaxRate.of(0)),
+            }),
+          ),
+        ],
+        totalGrossMinor: HUGE,
+        currencyCode: "USD",
+      },
+    };
+    const pay1: InvoicePaymentApplied = {
+      id: ev("ovf-2"),
+      occurredAt: t(2),
+      type: "InvoicePaymentApplied",
+      sequence: 2,
+      invoiceId: id,
+      payload: { amountMinor: HUGE, currencyCode: "USD" },
+    };
+    const pay2: InvoicePaymentApplied = {
+      id: ev("ovf-3"),
+      occurredAt: t(3),
+      type: "InvoicePaymentApplied",
+      sequence: 3,
+      invoiceId: id,
+      payload: { amountMinor: HUGE, currencyCode: "USD" },
+    };
+    const inv = must(Invoice.fromHistory(id, [issued, pay1, pay2]));
+    // paidAmount() should overflow → outstandingAmount returns err.
+    const out = inv.outstandingAmount();
+    expect(isErr(out)).toBe(true);
+  });
 });
