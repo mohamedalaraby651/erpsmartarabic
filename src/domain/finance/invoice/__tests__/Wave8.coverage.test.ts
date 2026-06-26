@@ -175,14 +175,14 @@ describe("Wave 8 — coverage closure", () => {
   test("Invoice.create / issue carries customerId into InvoiceIssued payload (Invoice.ts customerId branch)", () => {
     // Covers the `customerId !== undefined` true branch in the payload
     // assembly at issue-time.
-    type CID = NonNullable<Parameters<typeof Invoice.create>[0]["customerId"]>;
-    const customerId = unsafeId<"CustomerId">("cust-1") as unknown as CID;
-    const r = Invoice.create({
+    const customerId = unsafeId<"CustomerId">("cust-1") as unknown as never;
+    const props = {
       id,
       number: must(InvoiceNumber.of("INV-2026-9003")),
       currency: USD,
       customerId,
-    });
+    };
+    const r = Invoice.create(props);
     const inv = must(r);
     inv.addLine(
       must(
