@@ -152,8 +152,7 @@ export function fromInvoiceError(
 ): InvoiceApplicationError {
   switch (e.kind) {
     // Money kernel errors — VO-level (treat as input validation)
-    case "InvalidAmount":
-    case "AmountOverflow":
+    case "NonIntegerMoney":
     case "CurrencyMismatch":
     case "InvalidScalar":
       return validationError(ERR.INVALID_MONEY, "money", {
@@ -184,9 +183,8 @@ export function fromInvoiceError(
     default: {
       // Exhaustive — any new domain variant forces a compile-time update.
       const _exhaustive: never = e;
-      return validationError(ERR.INVALID_COMMAND, "unknown", {
-        unknown: String((_exhaustive as { kind?: string }).kind ?? "?"),
-      });
+      void _exhaustive;
+      return validationError(ERR.INVALID_COMMAND, "unknown");
     }
   }
 }
