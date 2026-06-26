@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "fitness": "check-aggregate-boundaries",
   "adr": "ADR-0011",
-  "scannedFiles": 10,
+  "scannedFiles": 15,
   "violations": [],
   "pass": true
 }

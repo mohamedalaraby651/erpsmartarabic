@@ -72,9 +72,10 @@ export type InvoiceDomainError =
  * to force a compile-time error when a new variant is added without handling.
  */
 export function assertNever(x: never): never {
-  throw new Error(
-    `Unhandled InvoiceDomainError variant: ${JSON.stringify(x)}`,
-  );
+  // Avoid JSON.stringify here — it is banned in src/domain/** by
+  // `check-domain-purity`. The discriminator is enough for triage.
+  const kind = (x as { kind?: string } | null)?.kind ?? "<unknown>";
+  throw new Error(`Unhandled InvoiceDomainError variant: ${kind}`);
 }
 
 /**
