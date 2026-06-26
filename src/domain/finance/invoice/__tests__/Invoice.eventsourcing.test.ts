@@ -6,7 +6,7 @@ import { TaxRate } from "../../shared/TaxRate";
 import { InvoiceLine } from "../InvoiceLine";
 import { InvoiceNumber } from "../InvoiceNumber";
 import { Invoice } from "../Invoice";
-import type { InvoiceId } from "../Invoice" with { "resolution-mode": "import" };
+import type { InvoiceId } from "../InvoiceId";
 import type {
   AnyInvoiceEvent,
   DomainEventId,
@@ -61,7 +61,7 @@ describe("Invoice — event sourcing (Wave 4)", () => {
     inv.issue(t(1), evId("e1"));
     const first = inv.pullEvents();
     expect(first.length).toBe(1);
-    expect(first[0].type).toBe("InvoiceIssued");
+    expect(first[0]!.type).toBe("InvoiceIssued");
     expect(Object.isFrozen(first)).toBe(true);
     const second = inv.pullEvents();
     expect(second).toEqual([]);
@@ -80,13 +80,13 @@ describe("Invoice — event sourcing (Wave 4)", () => {
     inv.issue(t(1), evId("e1"));
     const ev = inv.getHistory()[0];
     expect(Object.isFrozen(ev)).toBe(true);
-    expect(Object.isFrozen(ev.payload)).toBe(true);
+    expect(Object.isFrozen(ev!.payload)).toBe(true);
   });
 
   test("sequence starts at 1 and is authored by the aggregate", () => {
     const inv = draftWithLines();
     inv.issue(t(1), evId("e1"));
-    expect(inv.getHistory()[0].sequence).toBe(1);
+    expect(inv.getHistory()[0]!.sequence).toBe(1);
   });
 
   test("issued snapshot captures totalGross in minor units", () => {
@@ -205,7 +205,7 @@ describe("Invoice — temporal & identity authority (R-0001 / R-0008)", () => {
     // occurredAt (no hidden clock).
     const a = draftWithLines();
     a.issue(t(42), evId("e1"));
-    expect(a.getHistory()[0].occurredAt.toEpochMillis()).toBe(42);
+    expect(a.getHistory()[0]!.occurredAt.toEpochMillis()).toBe(42);
   });
 });
 

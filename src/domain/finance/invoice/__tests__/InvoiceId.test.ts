@@ -25,10 +25,10 @@ describe("InvoiceId — opaque branded identity", () => {
 
   test("module exposes no factory — generation is IdPort's job", () => {
     const mod = InvoiceIdModule as unknown as Record<string, unknown>;
-    expect(typeof mod.generate).toBe("undefined");
-    expect(typeof mod.of).toBe("undefined");
-    expect(typeof mod.create).toBe("undefined");
-    expect(typeof mod.new).toBe("undefined");
-    expect(typeof mod.InvoiceId).toBe("undefined"); // no runtime class either
+    expect(typeof mod["generate"]).toBe("undefined");
+    expect(typeof mod["of"]).toBe("undefined");
+    expect(typeof mod["create"]).toBe("undefined");
+    expect(typeof mod["new"]).toBe("undefined");
+    expect(typeof mod["InvoiceId"]).toBe("undefined"); // no runtime class either
   });
 });

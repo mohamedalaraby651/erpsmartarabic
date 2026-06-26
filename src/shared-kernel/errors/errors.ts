@@ -49,28 +49,33 @@ export type RepositoryFailure =
   | { readonly kind: "PermissionDenied"; readonly message: string }
   | { readonly kind: "Unknown"; readonly message: string; readonly cause?: unknown };
 
-export const DomainError = (code: string, message: string, details?: Readonly<Record<string, unknown>>): DomainError => ({
-  kind: "DomainError",
-  code,
-  message,
-  details,
-});
+// Defect D3 (Wave 8 G2): under exactOptionalPropertyTypes the factories
+// must NOT write `details: undefined` / `cause: undefined` onto the object.
+// The optional key is attached only when the caller supplied a value.
+export const DomainError = (
+  code: string,
+  message: string,
+  details?: Readonly<Record<string, unknown>>,
+): DomainError => {
+  const base = { kind: "DomainError" as const, code, message };
+  return details === undefined ? base : { ...base, details };
+};
 
 export const ApplicationError = (
   code: string,
   message: string,
   details?: Readonly<Record<string, unknown>>,
-): ApplicationError => ({ kind: "ApplicationError", code, message, details });
+): ApplicationError => {
+  const base = { kind: "ApplicationError" as const, code, message };
+  return details === undefined ? base : { ...base, details };
+};
 
 export const InfrastructureFailure = (
   phase: InfrastructurePhase,
   code: string,
   message: string,
   cause?: unknown,
-): InfrastructureFailure => ({
-  kind: "InfrastructureFailure",
-  phase,
-  code,
-  message,
-  cause,
-});
+): InfrastructureFailure => {
+  const base = { kind: "InfrastructureFailure" as const, phase, code, message };
+  return cause === undefined ? base : { ...base, cause };
+};

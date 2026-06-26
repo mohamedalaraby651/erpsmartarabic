@@ -225,20 +225,27 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
     const gross = this.#computeGross(this.#draftLines);
     if (isErr(gross)) return gross;
 
+    // Defect D1 (Wave 8 G2): under exactOptionalPropertyTypes, an optional
+    // field cannot be assigned `undefined` explicitly. Build the payload
+    // without `customerId` and attach it only when defined.
+    const basePayload = {
+      number: this.#number,
+      currency: this.#currency,
+      lines: Object.freeze(this.#draftLines.slice()),
+      totalGrossMinor: gross.value.amount,
+      currencyCode: this.#currency.code,
+    };
+    const payload: InvoiceIssued["payload"] =
+      this.#customerId === undefined
+        ? basePayload
+        : { ...basePayload, customerId: this.#customerId };
     const ev: InvoiceIssued = {
       id: eventId,
       occurredAt: now,
       type: INVOICE_ISSUED,
       sequence: this.#nextSequence,
       invoiceId: this.id,
-      payload: {
-        number: this.#number,
-        currency: this.#currency,
-        customerId: this.#customerId,
-        lines: Object.freeze(this.#draftLines.slice()),
-        totalGrossMinor: gross.value.amount,
-        currencyCode: this.#currency.code,
-      },
+      payload,
     };
     this.#append(freezeEvent(ev) as InvoiceIssued);
     return ok(undefined);
@@ -460,8 +467,10 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
     let issuedSeen = 0;
     let voidedSeen = false;
     let issuedEvent: InvoiceIssued | null = null;
-    for (let i = 0; i < history.length; i++) {
-      const ev = history[i];
+    // Defect D2 (Wave 8 G2): for...of avoids `history[i]: T|undefined` under
+    // noUncheckedIndexedAccess while preserving the original validation order.
+    let i = 0;
+    for (const ev of history) {
       if (ev.sequence !== i + 1) {
         return err({ kind: "RehydrationError", reason: "NonMonotonicSequence" });
       }
@@ -486,6 +495,7 @@ export class Invoice extends AggregateRoot<"InvoiceId"> {
       } else if (ev.type === "InvoiceVoided") {
         voidedSeen = true;
       }
+      i++;
     }
     if (issuedEvent === null) {
       return err({ kind: "RehydrationError", reason: "IssuedEventMissing" });

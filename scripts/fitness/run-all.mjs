@@ -32,6 +32,8 @@ const ACTIVE = [
   "check-transaction-finality.mjs",
   "check-domain-api-stability.mjs",
   "check-domain-bigint-boundary.mjs",
+  // Wave 8 (G2)
+  "check-domain-strictness.mjs",
 ];
 
 const PENDING = [];

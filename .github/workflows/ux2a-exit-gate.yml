@@ -1,0 +1,73 @@
+name: UX-2A Exit Gate (Finance Domain v1 Lock)
+
+# Wave 8 verification pipeline — runs the four executable gates that
+# protect the locked finance domain:
+#   G0 — Readiness     (clean tree, no TODOs in src/domain/finance/**)
+#   G2 — TS Strictness (tsconfig.finance.json + strictness fitness check)
+#   G1 — Coverage      (vitest.finance.config.ts thresholds)
+#   G3 — Fitness Suite (all 17 active checks)
+#
+# G4 (surface snapshot), G5 (ADR traceability), G6 (Lock declaration)
+# are human-review or document-only gates and are not wired here.
+
+on:
+  push:
+    paths:
+      - "src/domain/finance/**"
+      - "src/shared-kernel/**"
+      - "scripts/fitness/**"
+      - "scripts/audits/**"
+      - "tsconfig.finance.json"
+      - "vitest.finance.config.ts"
+      - ".github/workflows/ux2a-exit-gate.yml"
+  pull_request:
+    paths:
+      - "src/domain/finance/**"
+      - "src/shared-kernel/**"
+      - "scripts/fitness/**"
+      - "tsconfig.finance.json"
+      - "vitest.finance.config.ts"
+  workflow_dispatch:
+
+jobs:
+  exit-gate:
+    name: UX-2A Wave 8 — Finance Domain Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # G0 — Readiness: no TODO/FIXME inside the locked domain.
+      - name: G0 — Readiness (no TODO/FIXME)
+        run: |
+          if grep -RnE "TODO|FIXME" src/domain/finance/ 2>&1 | grep -v Binary; then
+            echo "::error::G0 failed — TODO/FIXME inside locked domain"
+            exit 1
+          fi
+
+      # G2 — TS Strictness: dedicated tsconfig.
+      - name: G2 — TS Strictness (tsconfig.finance.json)
+        run: bunx tsgo --noEmit -p tsconfig.finance.json
+
+      # G1 — Coverage gate (thresholds enforced by vitest config).
+      - name: G1 — Coverage Gate (≥95% S/F/L, ≥90% B documented)
+        run: bunx vitest run --config ./vitest.finance.config.ts --coverage
+
+      # G3 — Fitness Suite (17 active checks, including domain-strictness).
+      - name: G3 — Fitness Suite (all active)
+        run: node scripts/fitness/run-all.mjs
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ux2a-finance-coverage
+          path: scripts/audits/output/finance-coverage/
+          if-no-files-found: warn

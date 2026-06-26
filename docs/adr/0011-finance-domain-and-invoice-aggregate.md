@@ -306,3 +306,62 @@ Eight previously-pending checks moved to **ACTIVE**, plus two new ones:
 | `check-domain-bigint-boundary` **(new)** | finance `index.ts` + `invoice/ports/**`    |
 
 Total: **16 ACTIVE / 0 PENDING**. All 16 pass on the current tree (`scripts/fitness/run-all.mjs`).
+
+---
+
+## Amendment A4 — Wave 8 Exit Gate (UX-2A Closure)
+
+**Status:** Locked — Finance Domain v1.0.
+
+Wave 8 is a **verification wave**, not a feature wave. No new functional behaviour was added to `src/domain/finance/**`. Three production-code defects (D1–D3) and one carve-out (D4) were recorded in `scripts/audits/output/ux2a-wave8-defects.json` and resolved (or explicitly accepted) before the lock declaration.
+
+### A4.1 Gates executed
+
+| Gate | Title                  | Mechanism                                                | Result |
+|------|------------------------|----------------------------------------------------------|--------|
+| G0   | Readiness              | Clean tree + no TODO/FIXME in `src/domain/finance/**`    | PASS   |
+| G2   | TS Strictness          | `tsconfig.finance.json` (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature`, `strict`) + `check-domain-strictness` (no `@ts-*` / `as any` / `as unknown as` in production) | PASS — 0 errors, 0 escape hatches |
+| G1   | Coverage               | `vitest.finance.config.ts`: Statements / Functions / Lines ≥ 95%; Branches ≥ 90% (documented carve-out, D4)             | PASS — 96.08% / 100% / 99.62% / 92.54% |
+| G3   | CI Wiring              | `.github/workflows/ux2a-exit-gate.yml` runs G0+G2+G1+Fitness on every push touching the locked scope                    | WIRED  |
+| G4   | Public Surface Snapshot| `scripts/audits/snapshot-finance-surface.mjs` emits `{ symbol, kind, visibility, category }` for every export of `src/domain/finance/index.ts`. Unknown symbols fail the audit. | PASS — 39 symbols classified |
+| G5   | ADR Traceability       | This amendment + the table in §A4.3                                                                                     | DONE   |
+| G6   | Lock Declaration       | Memory + CHANGELOG + tag `Finance Domain v1.0`                                                                          | DONE   |
+
+### A4.2 Production-edit rule (Wave-wide)
+
+Any edit to a file under `src/domain/finance/**` or `src/shared-kernel/**` during Wave 8 must be logged in `ux2a-wave8-defects.json` with: `id`, `gate`, `file`, `lines`, `rule`, `rootCause`, `fix`, `behavioralChange`. This rule was honoured in full — see D1, D2, D3 (all `fixed`) and D4 (`accepted-as-carve-out`).
+
+### A4.3 Traceability Map — Rule → Implementation → Test
+
+Every invariant in §2 is anchored to its enforcing module and its proving test(s). This table is the source of truth: if a rule moves, all three columns must move together.
+
+| Rule    | Description                                              | Implementation                                          | Test(s)                                                                 |
+|---------|----------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------------------------------|
+| R-1101  | Currency uniformity per invoice                          | `Invoice.ts` (`addLine`, `applyPayment`)                | `Invoice.test.ts`, `Invoice.payment.test.ts`                            |
+| R-1102  | Line index range                                         | `Invoice.ts` (`removeLine`)                             | `Invoice.test.ts`                                                       |
+| R-1103  | Non-empty invoice on `issue`                             | `Invoice.ts` (`issue`)                                  | `Invoice.test.ts`, `Invoice.eventsourcing.test.ts`                      |
+| R-1104  | Integer-only minor units                                 | `Money.ts` (`of`, `mulScalar`)                          | `Money.test.ts`                                                         |
+| R-1105  | State transitions (Draft→Issued→Paid; Cancelled allowed) | `statusOf.ts` + `Invoice.ts` (`issue/applyPayment/void`)| `statusOf.test.ts`, `Invoice.test.ts`                                   |
+| R-1106  | Minor-unit snapshot on `InvoiceIssued`                   | `InvoiceIssued.ts` payload                              | `Invoice.eventsourcing.test.ts`                                         |
+| R-1107  | Half-Away-From-Zero rounding                             | `Money.ts` (`mulScalar`)                                | `Money.test.ts`                                                         |
+| R-1108  | TaxRate integer basis-points only                        | `TaxRate.ts` (`of`)                                     | `TaxRate.test.ts`                                                       |
+| R-1109  | Monotonic gap-free sequence                              | `Invoice.ts` (`#append` + `fromHistory`)                | `Invoice.eventsourcing.test.ts`, `Invoice.rehydration.guards.test.ts`   |
+| R-1110  | Deep-freeze events at record time                        | `Invoice.ts` (`freezeEvent`) + `pullEvents`             | `Invoice.pullEvents.contract.test.ts`                                   |
+| R-1111  | Payment-on-terminal-status guard (L3)                    | `Invoice.ts` (`applyPayment` step 1)                    | `Invoice.payment.test.ts`                                               |
+| R-1112  | Payment guard order: status→currency→positivity→overpay  | `Invoice.ts` (`applyPayment` L1..L4)                    | `Invoice.payment.test.ts`                                               |
+| R-1113  | Overpayment guard via `outstandingAmount()`              | `Invoice.ts` (`applyPayment` step 4)                    | `Invoice.payment.test.ts`                                               |
+| R-1114  | `paidAmount()` pure reduction over history (L2)          | `Invoice.ts` (`paidAmount`)                             | `Invoice.payment.test.ts`, `Wave8.coverage.test.ts`                     |
+| R-1115  | Reducer is sole authority for status (L6/L7)             | `statusOf.ts` (no `#status` writes in `Invoice.ts`)     | `statusOf.test.ts`                                                      |
+| R-1116  | Void reason normalization + length (L5)                  | `Invoice.ts` (`void`)                                   | `Invoice.void.test.ts`                                                  |
+| R-1117  | A2-R1: first event MUST be `InvoiceIssued`               | `Invoice.ts` (`fromHistory`)                            | `Invoice.rehydration.guards.test.ts`                                    |
+| R-1118  | A2-R2: NO event MAY follow `InvoiceVoided`               | `Invoice.ts` (`fromHistory`)                            | `Invoice.rehydration.guards.test.ts`                                    |
+
+### A4.4 Change policy after lock
+
+Any change under `src/domain/finance/**` MUST cite exactly one of:
+
+1. **Bug fix** — referenced from `ux2a-wave8-defects.json` (new defect entry).
+2. **Contract gap** — referenced from a documented port-consumer issue.
+3. **New ADR** — a numbered amendment to this document or a successor ADR.
+
+Refactors without one of the three are rejected at review.

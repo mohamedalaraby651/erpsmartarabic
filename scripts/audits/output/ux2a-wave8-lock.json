@@ -1,0 +1,17 @@
+{
+  "lock": "Finance Domain v1.0",
+  "scope": "src/domain/finance/**",
+  "adr": "docs/adr/0011-finance-domain-and-invoice-aggregate.md (Amendment A4)",
+  "surface": "scripts/audits/output/ux2a-wave8-surface.json",
+  "defects": "scripts/audits/output/ux2a-wave8-defects.json",
+  "gates": {
+    "G0_readiness": "PASS",
+    "G2_strictness": "PASS (tsgo 0 errors, check-domain-strictness 0 violations)",
+    "G1_coverage":  "PASS (S 96.08% / F 100% / L 99.62% / B 92.54% — D4 carve-out)",
+    "G3_ci":        "WIRED (.github/workflows/ux2a-exit-gate.yml)",
+    "G4_surface":   "PASS (39 symbols classified)",
+    "G5_adr":       "DONE (R-1101..R-1118 traceability table)",
+    "G6_lock":      "DECLARED"
+  },
+  "changePolicy": ["bug-fix (defect entry)", "contract-gap (port consumer)", "new-ADR"]
+}
