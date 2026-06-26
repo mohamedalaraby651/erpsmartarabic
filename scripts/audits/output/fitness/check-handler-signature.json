@@ -2,20 +2,7 @@
   "schemaVersion": 1,
   "fitness": "check-handler-signature",
   "adr": "ADR-0008/ADR-0011",
-  "scannedFiles": 4,
-  "violations": [
-    {
-      "file": "src/application/finance/invoice/handlers/ApplyInvoicePaymentHandler.ts",
-      "why": "handler must return Promise<Result<...>>"
-    },
-    {
-      "file": "src/application/finance/invoice/handlers/index.ts",
-      "why": "handler must take RequestContext"
-    },
-    {
-      "file": "src/application/finance/invoice/handlers/index.ts",
-      "why": "handler must return Promise<Result<...>>"
-    }
-  ],
-  "pass": false
+  "scannedFiles": 3,
+  "violations": [],
+  "pass": true
 }

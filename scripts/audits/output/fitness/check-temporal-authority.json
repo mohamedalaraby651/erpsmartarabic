@@ -2,7 +2,12 @@
   "schemaVersion": 1,
   "fitness": "check-temporal-authority",
   "adr": "ADR-0006",
-  "scannedFiles": 187,
-  "violations": [],
-  "pass": true
+  "scannedFiles": 206,
+  "violations": [
+    {
+      "file": "src/application/finance/invoice/handlers/IssueInvoiceHandler.ts",
+      "why": "new Date() with no args — use ClockPort.now()"
+    }
+  ],
+  "pass": false
 }

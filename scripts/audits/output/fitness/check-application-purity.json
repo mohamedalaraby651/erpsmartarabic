@@ -3,7 +3,7 @@
   "fitness": "check-application-purity",
   "adr": "UX-2B Wave 1",
   "scope": "src/application/finance",
-  "scannedFiles": 11,
+  "scannedFiles": 10,
   "violations": [],
   "pass": true
 }

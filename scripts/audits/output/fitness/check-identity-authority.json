@@ -3,7 +3,12 @@
   "fitness": "check-identity-authority",
   "adr": "ADR-0006",
   "rule": "R-0008",
-  "scannedFiles": 187,
-  "violations": [],
-  "pass": true
+  "scannedFiles": 206,
+  "violations": [
+    {
+      "file": "src/application/finance/invoice/handlers/IssueInvoiceHandler.ts",
+      "why": "crypto.randomUUID — use IdPort.generate()"
+    }
+  ],
+  "pass": false
 }
