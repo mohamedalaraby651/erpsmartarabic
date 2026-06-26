@@ -159,20 +159,12 @@ describe("Wave 8 — coverage closure", () => {
     const gross = line.lineGross(); // early-returns the net error (L121)
     expect(isErr(gross)).toBe(true);
 
-    // For L123 (tax-side err with net ok): pick values where qty*unitPrice
-    // stays safe but tax projection (bp/10000) overflows.
-    const halfMax = Math.floor(Number.MAX_SAFE_INTEGER / 2);
-    const line2 = must(
-      InvoiceLine.of({
-        qty: 1,
-        unitPrice: must(Money.of(halfMax, USD)),
-        taxRate: must(TaxRate.of(5000)), // 50%
-      }),
-    );
-    const net2 = line2.lineNet();
-    expect(isOk(net2)).toBe(true);
-    // halfMax * 5000 vastly exceeds MAX_SAFE_INTEGER → tax projection fails.
-    const gross2 = line2.lineGross();
-    expect(isErr(gross2)).toBe(true);
+    // Note on L123 (tax-side error with net ok): the only way to make
+    // `taxRate.apply(net)` fail after `lineNet` succeeds is to exceed the
+    // BigInt→Number safe-integer boundary AFTER the bp/10000 division. With
+    // current TaxRate (0..10000 bp) and Money (≤MAX_SAFE_INTEGER) inputs that
+    // is provably impossible — apply divides by 10000, so the bounded result
+    // is always ≤ net. L123 is therefore documented as defensively dead;
+    // see scripts/audits/output/ux2a-wave8-defects.json (D4).
   });
 });
