@@ -60,6 +60,11 @@ import {
   INVOICE_PAYMENT_APPLIED,
   INVOICE_VOIDED,
 } from "./events";
+// Wave 6 — InvoiceDomainError lives in its own module (Discriminated Union).
+// Re-exported here so existing consumers keep working unchanged.
+export type { InvoiceDomainError } from "./errors/InvoiceDomainError";
+export { assertNever } from "./errors/InvoiceDomainError";
+import type { InvoiceDomainError } from "./errors/InvoiceDomainError";
 
 /** Business identity for an invoice's counterparty. Opaque outside this VO. */
 export type CustomerId = Id<"CustomerId">;
@@ -68,56 +73,6 @@ export type { InvoiceStatus } from "./statusOf";
 
 const VOID_REASON_MIN = 1;
 const VOID_REASON_MAX = 240;
-
-export type InvoiceDomainError =
-  | { readonly kind: "EmptyInvoice" }
-  | {
-      readonly kind: "InvalidStateTransition";
-      readonly from: InvoiceStatus;
-      readonly to: InvoiceStatus;
-    }
-  | {
-      readonly kind: "LineCurrencyMismatch";
-      readonly invoiceCurrency: string;
-      readonly lineCurrency: string;
-    }
-  | {
-      readonly kind: "StructuralEditLocked";
-      readonly status: InvoiceStatus;
-      readonly op: "addLine" | "removeLine";
-    }
-  | { readonly kind: "LineIndexOutOfRange"; readonly index: number }
-  // ── Wave 5 — payment guards (L3/L4 order) ────────────────────────────────
-  | { readonly kind: "PaymentOnTerminalStatus"; readonly status: InvoiceStatus }
-  | {
-      readonly kind: "PaymentCurrencyMismatch";
-      readonly invoiceCurrency: string;
-      readonly paymentCurrency: string;
-    }
-  | { readonly kind: "NonPositivePayment"; readonly amountMinor: number }
-  | {
-      readonly kind: "OverPayment";
-      readonly attemptedMinor: number;
-      readonly outstandingMinor: number;
-    }
-  // ── Wave 5 — void guards ─────────────────────────────────────────────────
-  | { readonly kind: "VoidOnTerminalStatus"; readonly status: InvoiceStatus }
-  | {
-      readonly kind: "VoidReasonInvalid";
-      readonly reason: "Empty" | "TooLong";
-      readonly length: number;
-    }
-  | {
-      readonly kind: "RehydrationError";
-      readonly reason:
-        | "EmptyHistory"
-        | "NonMonotonicSequence"
-        | "IssuedEventMissing"
-        | "DuplicateIssuedEvent"
-        | "InvoiceIdMismatch"
-        | "IssuedNotFirst"
-        | "EventAfterVoid";
-    };
 
 /** Errors a caller may surface — aggregate-level + propagated errors. */
 export type InvoiceError =
