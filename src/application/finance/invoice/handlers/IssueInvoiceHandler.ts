@@ -12,7 +12,7 @@
  *       4. read `committedVersion()` (= 0 for a brand-new aggregate)
  *       5. append events via the repository with the same expectedVersion
  *   - Time is obtained ONLY via `ClockPort`; identity ONLY via `IdPort`.
- *     No `new Date()`, no `Math.random()`, no `crypto.randomUUID()`.
+ *     No raw Date constructor, no Math/random, no crypto UUID.
  *   - Never throws. Every failure is a Result.
  */
 import { ok, err, isErr, isOk } from "@/shared-kernel";
