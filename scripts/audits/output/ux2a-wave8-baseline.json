@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "gate": "G0",
+  "timestamp": "2026-06-26T10:05:47Z",
+  "git": {
+    "head": "055188a6953851cb7da58809263e7803998a7208",
+    "clean": true
+  },
+  "tests": {
+    "files": 136,
+    "total": 1471,
+    "passed": 1471,
+    "failed": 0
+  },
+  "fitness": {
+    "active": 16,
+    "pending": 0,
+    "failures": 0
+  },
+  "finance": {
+    "fileCount": 32,
+    "todoCount": 0,
+    "fixmeCount": 0,
+    "hackCount": 0
+  },
+  "notes": "Baseline locked. Wave 8 may only produce: tests, fitness checks, audit scripts, tsconfig.finance.json, CI workflow, ADR amendment, CHANGELOG, memory updates. Any production-code edit under src/domain/finance/** is a Defect."
+}

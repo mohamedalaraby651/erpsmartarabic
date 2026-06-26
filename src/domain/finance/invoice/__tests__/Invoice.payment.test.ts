@@ -6,7 +6,7 @@ import { TaxRate } from "../../shared/TaxRate";
 import { InvoiceLine } from "../InvoiceLine";
 import { InvoiceNumber } from "../InvoiceNumber";
 import { Invoice } from "../Invoice";
-import type { InvoiceId } from "../Invoice" with { "resolution-mode": "import" };
+import type { InvoiceId } from "../InvoiceId";
 import type { DomainEventId } from "../events";
 
 const C = (code: string) => {
@@ -149,10 +149,10 @@ describe("Invoice.applyPayment — Lock L1..L7", () => {
     const inv = issued();
     inv.applyPayment(M(500), t(2), evId("p1"));
     const ev = inv.getHistory()[1];
-    expect(ev.type).toBe("InvoicePaymentApplied");
-    expect(ev.sequence).toBe(2);
+    expect(ev!.type).toBe("InvoicePaymentApplied");
+    expect(ev!.sequence).toBe(2);
     expect(Object.isFrozen(ev)).toBe(true);
-    expect(Object.isFrozen(ev.payload)).toBe(true);
+    expect(Object.isFrozen(ev!.payload)).toBe(true);
   });
 
   test("L2: paidAmount() is a pure reduction (no cached field)", () => {

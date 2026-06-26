@@ -6,7 +6,7 @@ import { TaxRate } from "../../shared/TaxRate";
 import { InvoiceLine } from "../InvoiceLine";
 import { InvoiceNumber } from "../InvoiceNumber";
 import { Invoice } from "../Invoice";
-import type { InvoiceId } from "../Invoice" with { "resolution-mode": "import" };
+import type { InvoiceId } from "../InvoiceId";
 import type { DomainEventId, InvoiceVoided } from "../events";
 
 const USD = (() => {

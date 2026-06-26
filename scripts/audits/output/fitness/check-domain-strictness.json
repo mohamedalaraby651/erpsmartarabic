@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-domain-strictness",
+  "adr": "ADR-0011 (Wave 8 G2)",
+  "scope": "src/domain/finance",
+  "scannedFiles": 19,
+  "violations": [],
+  "pass": true
+}

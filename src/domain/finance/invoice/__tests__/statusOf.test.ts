@@ -8,7 +8,7 @@ import type {
   InvoicePaymentApplied,
   InvoiceVoided,
 } from "../events";
-import type { InvoiceId } from "../Invoice" with { "resolution-mode": "import" };
+import type { InvoiceId } from "../InvoiceId";
 
 const id = unsafeId<"InvoiceId">("inv") as InvoiceId;
 const evId = (s: string): DomainEventId => unsafeId<"DomainEvent">(s);

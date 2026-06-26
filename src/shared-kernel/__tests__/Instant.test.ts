@@ -52,7 +52,7 @@ describe("Instant", () => {
   });
 
   it("exports no zero-arg factory (compile-time guarantee enforced by fitness check)", () => {
-    // @ts-expect-error — no Instant.now() exists
+
     expect(() => (Instant as { now?: () => Instant }).now?.()).not.toThrow();
     expect((Instant as { now?: unknown }).now).toBeUndefined();
   });

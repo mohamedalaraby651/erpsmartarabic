@@ -42,9 +42,9 @@ describe("AggregateRoot", () => {
 
   it("exposes no public getter/setter for the event buffer", () => {
     const agg = new TestAggregate(unsafeId<"Test">("t-3"));
-    expect((agg as unknown as Record<string, unknown>).events).toBeUndefined();
+    expect((agg as unknown as Record<string, unknown>)["events"]).toBeUndefined();
     expect(
-      (agg as unknown as Record<string, unknown>).uncommittedEvents,
+      (agg as unknown as Record<string, unknown>)["uncommittedEvents"],
     ).toBeUndefined();
   });
 

@@ -6,7 +6,8 @@ import { TaxRate } from "../../shared/TaxRate";
 import { InvoiceLine } from "../InvoiceLine";
 import { InvoiceNumber } from "../InvoiceNumber";
 import { Invoice } from "../Invoice";
-import type { InvoiceId, CustomerId } from "../Invoice" with { "resolution-mode": "import" };
+import type { InvoiceId } from "../InvoiceId";
+import type { CustomerId } from "../Invoice";
 import type { DomainEventId } from "../events";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -46,7 +47,8 @@ const now = (ms = 1_700_000_000_000): Instant => Instant.fromEpochMillis(ms);
 const evId = (s: string): DomainEventId => unsafeId<"DomainEvent">(s);
 
 const mustInvoice = (currency: Currency = USD, customerId?: CustomerId, id: InvoiceId = idA): Invoice => {
-  const r = Invoice.create({ id, number: mustNumber("INV-2026-0001"), currency, customerId });
+  const props = customerId === undefined ? { id, number: mustNumber("INV-2026-0001"), currency } : { id, number: mustNumber("INV-2026-0001"), currency, customerId };
+  const r = Invoice.create(props);
   if (!isOk(r)) throw new Error("bad invoice");
   return r.value;
 };
@@ -150,11 +152,11 @@ describe("Invoice — lifecycle (Wave 4: Draft → Issued)", () => {
     expect(inv.status()).toBe("Issued");
     const hist = inv.getHistory();
     expect(hist.length).toBe(1);
-    expect(hist[0].type).toBe("InvoiceIssued");
-    expect(hist[0].sequence).toBe(1);
-    expect(hist[0].invoiceId).toBe(idA);
-    expect(hist[0].id).toBe(evId("e1"));
-    expect(hist[0].occurredAt.toEpochMillis()).toBe(123);
+    expect(hist[0]!.type).toBe("InvoiceIssued");
+    expect(hist[0]!.sequence).toBe(1);
+    expect(hist[0]!.invoiceId).toBe(idA);
+    expect(hist[0]!.id).toBe(evId("e1"));
+    expect(hist[0]!.occurredAt.toEpochMillis()).toBe(123);
   });
 
   test("issue() from non-Draft is rejected (InvalidStateTransition)", () => {
@@ -245,9 +247,9 @@ describe("Invoice — design boundary guards", () => {
   test("Invoice exposes no #status field; status() is derived", () => {
     const inv = mustInvoice();
     // Private # fields are inaccessible at runtime; assert public surface only.
-    expect((inv as unknown as Record<string, unknown>).status).toBeTypeOf(
+    expect((inv as unknown as Record<string, unknown>)["status"]).toBeTypeOf(
       "function",
     );
-    expect((inv as unknown as Record<string, unknown>)._status).toBeUndefined();
+    expect((inv as unknown as Record<string, unknown>)["_status"]).toBeUndefined();
   });
 });

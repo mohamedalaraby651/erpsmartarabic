@@ -1,99 +1,125 @@
-# UX-2A Phase B — Wave 6 (Final-Locked) → Wave 7 → Wave 8
+# UX-2A Wave 8 — Exit Gate (Revised v2)
 
-تم دمج الملاحظات الثلاث الأخيرة كتوضيحات في ADR-0011 Amendment A2-bis. لا تغييرات تصميمية، فقط تثبيت دلالات.
+التعديلات المعتمدة من المراجعة: إضافة **G0 Readiness**, تقديم **G2 قبل G1**, إثراء snapshot في G4, ربط ثلاثي Rule→Impl→Test في G5, وقاعدة "أي تعديل إنتاج = Defect".
 
----
-
-## 0) التوضيحات الثلاث المُقفَلة في ADR
-
-### C1 — تعريف `expectedVersion` في `appendEvents`
-> `expectedVersion` = نسخة الـ Aggregate **قبل** إضافة الأحداث الجديدة (pre-append version) = طول `#history` المُستعاد من `load()`.
-> - فاتورة جديدة (لم تُحفظ بعد) → `expectedVersion = 0`.
-> - فاتورة مُحمَّلة بـ N أحداث ثم أُضيف M جديد → النداء: `appendEvents(id, N, [...M], ctx)`.
-> - عدم التطابق مع التخزين ⇒ `RepositoryFailure.kind = "Conflict"` مع `{ expected, actual }`.
-
-### C2 — دلالة "Frozen" في `pullEvents()`
-> `Object.freeze(array)` على المصفوفة المُعادة **فقط** (shallow). لا deep-freeze لكل event، لأن الأحداث منشأة عبر factories تُجمِّد payloadها بالفعل عند الإنشاء (Wave 4). هذا يحافظ على O(1) للسحب.
-
-### C3 — قاعدة عامة لـ BigInt على الحدود
-> أي قيمة `bigint` تخرج من `src/domain/finance/**` إلى أي طبقة أخرى **يجب** أن تُحوَّل إلى `string` أولًا.
-> - يُفعَّل عبر fitness check `domain-bigint-boundary` يفحص أن DTOs المُصدَّرة من `index.ts` لا تحتوي حقل `bigint` ظاهر.
-> - Money view: `{ minor: string; currency: Currency }` — مرجعي للنمط.
+الترتيب النهائي: **G0 → G2 → G1 → G3 → G4 → G5 → G6**.
 
 ---
 
-## 1) Wave 6 — ترتيب التنفيذ المُلزَم (Risk-Minimizing Order)
+## القاعدة الذهبية لـ Wave 8
 
-### Step 1 — `errors/InvoiceDomainError.ts`
-- إنشاء Discriminated Union الكامل (R-1101..R-1118b) بدون `message`.
-- `Invoice.ts` يعيد التصدير `export { InvoiceDomainError } from "./errors/InvoiceDomainError"` للحفاظ على التوافق الخلفي.
-- `assertNever(e)` helper.
-- **بوابة:** كل 200 اختبار يبقى أخضر.
+> أي تعديل في production code (`src/domain/finance/**` خارج اختبارات) أثناء Wave 8 **يوقف التنفيذ فورًا** ويُسجَّل كـ Defect في `scripts/audits/output/ux2a-wave8-defects.json` مع: `{ gate, file, rule, rootCause, fixPlan }`. لا يُدمج كجزء طبيعي من البوابة.
 
-### Step 2 — عقود الـ Ports
-- `ports/InvoiceRepository.ts`: `load` + `appendEvents(id, expectedVersion, events, ctx)`. **لا** `save()`.
-- `ports/InvoiceReadModel.ts`: `byId` + `list(query, ctx): Page<InvoiceView>`.
-- `ports/RepositoryFailure.ts`: union مغلق بـ `kind: "Conflict" | "NotFound" | "Transient" | "Unavailable"`.
-- `ports/RequestContext.ts`: type alias = `Readonly<{ tenantId; userId; correlationId; now: Instant }>`.
-- **بوابة:** `tsgo` أخضر (الـ ports مجرد types، لا تنفيذ).
-
-### Step 3 — `pullEvents()` تثبيت السلوك
-- تعديل `Invoice.ts:314-318` ليُرجع `Object.freeze([...this.#uncommitted])` ثم يُفرِّغ.
-- اختبارات جديدة في `Invoice.pullEvents.contract.test.ts`:
-  - frozen (TypeError on push).
-  - النداء الثاني بدون أوامر جديدة = `[]`.
-  - النداء بعد `fromHistory()` مباشرة = `[]`.
-  - shallow-only: events داخل المصفوفة تبقى frozen (موروث من Wave 4)، لا re-freeze.
-- **بوابة:** الاختبارات الجديدة + 200 سابقة خضراء.
-
-### Step 4 — `src/domain/finance/index.ts` (Public Surface)
-- يُصدِّر فقط القائمة المُحدَّدة في الخطة السابقة.
-- يُحجَب: `statusOf`, helpers داخلية، `__tests__`.
-- نقل أي استيراد خارج finance يستخدم مسارًا عميقًا → `@/domain/finance` (لا يوجد حاليًا، فالعملية وقائية).
-- **بوابة:** `tsgo` + كل الاختبارات خضراء.
-
-### Step 5 — ADR-0011 Amendment A2-bis
-- توثيق C1, C2, C3 + Public Surface النهائي + جدول حالات `RepositoryFailure`.
-- **بوابة:** مراجعة بصرية للملف.
+استثناء وحيد: إصلاح خطأ نوع كشفه G2 — يُسجَّل أيضًا كـ Defect حتى لو كان السطر الواحد.
 
 ---
 
-## 2) Wave 7 — 9 Fitness Checks (تفعيل)
+## G0 — Readiness Gate (دقائق)
 
-| # | Check | الحالة |
-|---|---|---|
-| 1 | `domain-purity` (+ `JSON.*` ban) | ACTIVE |
-| 2 | `domain-service-purity` (+ `uuid`/`nanoid`/`randomUUID` ban) | ACTIVE |
-| 3 | `error-mapping` | ACTIVE |
-| 4 | `repository-failure-taxonomy` (يمنع `unknown`/`Error`/`string`/`any`) | ACTIVE |
-| 5 | `handler-signature` (يفرض `Readonly<RequestContext>`) | ACTIVE |
-| 6 | `ui-infrastructure-isolation` | ACTIVE |
-| 7 | `composition-root-uniqueness` (+ `SupabaseClient`/`PrismaClient`) | ACTIVE |
-| 8 | `transaction-finality` (يكتشف `commit→write` و `save→commit→save`) | ACTIVE |
-| 9 | `domain-api-stability` (allow-list `@/domain/finance` only) | ACTIVE |
-| 10 | **`domain-bigint-boundary`** (جديد من C3) | ACTIVE |
+- التحقق من Git Working Tree نظيف (لا ملفات مُعدَّلة/غير مُتعقَّبة خارج ما ستنتجه Wave 8).
+- مسح `src/domain/finance/**` بحثًا عن `TODO`, `FIXME`, `XXX`, `HACK` → يجب أن يكون صفرًا.
+- تشغيل الحزمة الكاملة (1471 اختبار) + `node scripts/fitness/run-all.mjs` كـ baseline.
+- حفظ `scripts/audits/output/ux2a-wave8-baseline.json`:
+  ```json
+  {
+    "timestamp": "...",
+    "git": { "head": "...", "clean": true },
+    "tests": { "total": 1471, "passed": 1471 },
+    "fitness": { "active": 16, "violations": 0 },
+    "financeFileCount": N,
+    "todoCount": 0
+  }
+  ```
+- **بوابة:** أي إخفاق يوقف Wave 8 قبل أن يبدأ.
 
-= **10 fitness checks جديدة + 6 سابقة = 16 ACTIVE**.
+## G2 — TS Strictness (قبل التغطية)
+
+- إنشاء `tsconfig.finance.json` يمتد من `tsconfig.app.json`:
+  - `noUncheckedIndexedAccess: true`
+  - `exactOptionalPropertyTypes: true`
+  - `noImplicitOverride: true`
+  - `noPropertyAccessFromIndexSignature: true`
+  - `include`: `src/domain/finance/**`, `src/shared-kernel/**`
+- تشغيل `tsgo --noEmit -p tsconfig.finance.json` — صفر أخطاء.
+- إنشاء fitness check `check-domain-strictness.mjs` يمسح `src/domain/finance/**` لـ: `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `as any`, `as unknown as`. أي تطابق = فشل.
+- إضافته إلى `run-all.mjs` (**17 ACTIVE**).
+- أي خطأ نوع يستلزم تعديل إنتاج → **Defect** قبل المتابعة.
+
+## G1 — Coverage Gate (≥95%)
+
+- إضافة سكوب finance في `vitest.config.ts` (أو `vitest.finance.config.ts` منفصل):
+  - `include`: `src/domain/finance/**/*.test.ts`
+  - `coverage.include`: `src/domain/finance/**`
+  - `coverage.exclude`: `**/__tests__/**`, `**/events/index.ts`, barrels
+  - `coverage.thresholds`: 95 على الأربعة (`statements/branches/functions/lines`) مع `perFile: false` (مستوى الـ scope).
+- تشغيل وحفظ `scripts/audits/output/finance-coverage.json` (ملخص لا full HTML).
+- سدّ الفجوات **باختبارات فقط**. الفروع الدفاعية المستحيلة → `/* c8 ignore next */` + سطر تعليقي يحيل إلى R-#### في ADR.
+
+## G3 — CI Wiring
+
+- مراجعة `.github/workflows/**` الموجود.
+- إضافة (أو إنشاء) `.github/workflows/ux2a-exit-gate.yml` يحوي 3 خطوات فقط:
+  1. `node scripts/fitness/run-all.mjs`
+  2. `bunx vitest run --coverage` بسكوب finance مع enforcement العتبات
+  3. `bunx tsgo --noEmit -p tsconfig.finance.json`
+- لا يُعدَّل أي workflow آخر.
+
+## G4 — Public Surface Snapshot (مُثرى)
+
+- سكربت `scripts/audits/snapshot-finance-surface.mjs` يحلّل `src/domain/finance/index.ts` ويولّد `scripts/audits/output/finance-public-surface.json`:
+  ```json
+  [
+    { "symbol": "InvoiceRepository", "kind": "interface", "visibility": "public", "category": "port" },
+    { "symbol": "Money",             "kind": "value",     "visibility": "public", "category": "value-object" },
+    { "symbol": "InvoiceIssued",     "kind": "type",      "visibility": "public", "category": "event" },
+    { "symbol": "InvoiceDomainError","kind": "type",      "visibility": "public", "category": "error" }
+  ]
+  ```
+- التصنيفات: `value-object | aggregate | event | port | error | id | enum`.
+- مراجعة يدوية: لا helper داخلي مُسرَّب، لا `bigint`/`Money` خام يعبر port.
+
+## G5 — ADR-0011 Reality Sync + Traceability Matrix
+
+- مراجعة قواعد R-1101..R-1118b والتأكد أن النص = الكود.
+- إضافة **§Traceability Matrix** بثلاث أعمدة:
+  | Rule | Implementation | Test |
+  |---|---|---|
+  | R-1110 | `Invoice.ts` (pullEvents) | `Invoice.pullEvents.contract.test.ts` |
+  | R-1106 | `Invoice.ts` (applyPayment) | `Invoice.payment.test.ts` |
+  | ... | ... | ... |
+- إضافة **Amendment A4 — Exit Gate Closure** يحوي: نتائج G0..G4 (أرقام فعلية + مسارات الـ JSON)، إعلان `Finance Domain v1 = Locked`، قواعد التغيير اللاحقة (3 فقط).
+
+## G6 — Lock Declaration
+
+- `mem://index.md` (Core) يضاف سطر:
+  > Finance Domain v1.0 مغلق بعد UX-2A Wave 8. أي تغيير في `src/domain/finance/**` يتطلب: (1) Bug fix موثَّق، أو (2) Contract gap موثَّق، أو (3) ADR جديد معتمد.
+- ملف ذاكرة جديد `mem://architecture/finance-domain-v1-lock` يحوي القواعد الثلاث + رابط ADR-0011 A4.
+- `CHANGELOG.md`: إدخال `## [UX-2A Wave 8] - Finance Domain v1.0 Locked` يلخّص G0..G6.
+- Tag منطقي داخلي: ذِكر `Finance Domain v1.0` في عنوان قسم CHANGELOG وفي A4 (لا git tag — Lovable لا يديره).
 
 ---
 
-## 3) Wave 8 — Exit Gate
+## النطاق المسموح لـ Wave 8 (لا تعديلات خارجه)
 
-- **Coverage:** Statements/Branches/Functions/Lines كلها ≥ 95% على `src/domain/finance/**`.
-- **TS Strict (نطاق finance):** `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride` عبر `tsconfig.finance.json`.
-- **Import Audit:** allow-list صريح (`shared-kernel/*` + siblings فقط).
-- **Zero-Change Audit:** بوابة CI رسمية — لا تعديلات خارج `src/domain/finance/**`, `scripts/fitness/**`, `docs/adr/**`, `CHANGELOG.md`.
-- **ADR-0011 Amendment A3:** توثيق Public Surface النهائي + `appendEvents` contract + `domain-api-stability` + `domain-bigint-boundary`.
+- `src/domain/finance/**` — **اختبارات فقط** (الإنتاج = Defect).
+- `scripts/fitness/check-domain-strictness.mjs` + `run-all.mjs`.
+- `scripts/audits/snapshot-finance-surface.mjs` + `output/ux2a-wave8-*.json`, `finance-coverage.json`, `finance-public-surface.json`.
+- `tsconfig.finance.json`, `vitest.config.ts` (سكوب finance فقط).
+- `.github/workflows/ux2a-exit-gate.yml`.
+- `docs/adr/0011-finance-domain-and-invoice-aggregate.md` (A4 + Traceability).
+- `CHANGELOG.md`, `mem://index.md`, `mem://architecture/finance-domain-v1-lock`.
 
----
+## معايير القبول
 
-## 4) معايير القبول النهائية
+| البوابة | الحد |
+|---|---|
+| G0 | baseline أخضر + صفر TODO/FIXME |
+| G2 | tsgo نظيف على tsconfig.finance + check-domain-strictness ACTIVE/PASS (17/17) |
+| G1 | Statements/Branches/Functions/Lines ≥ 95% (scope finance) |
+| G3 | workflow `ux2a-exit-gate.yml` موجود وصالح syntactically |
+| G4 | surface snapshot منشور بالتصنيف الموسَّع |
+| G5 | A4 + Traceability Matrix كاملة (كل R-#### له صف) |
+| G6 | memory + CHANGELOG محدَّثان |
+| Defects | السجل صفر — أو موثَّق ومُغلق |
 
-- ✅ Wave 6: 5 خطوات بالترتيب، كل خطوة لا تكسر اختبارًا.
-- ✅ 10 fitness checks ACTIVE بصفر انتهاكات (16 إجمالًا).
-- ✅ Coverage finance ≥95% على المؤشرات الأربعة.
-- ✅ Zero-Change Audit أخضر.
-- ✅ ADR-0011 A2-bis + A3 معتمدان.
-- ✅ لا `save()`, لا `message` في أخطاء الدومين, لا `bigint` يعبر حدود الدومين, لا استيراد عميق من خارج finance.
-
-هل أبدأ Wave 6 Step 1 الآن؟
+هل أنتقل لوضع البناء وأبدأ بـ **G0**؟
