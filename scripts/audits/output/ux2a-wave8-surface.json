@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "gate": "UX-2A Wave 8 G4",
+  "entry": "src/domain/finance/index.ts",
+  "totalSymbols": 39,
+  "byCategory": {
+    "event": 8,
+    "value-object": 7,
+    "error": 7,
+    "identity": 3,
+    "event-brand": 3,
+    "aggregate": 2,
+    "view": 3,
+    "port": 3,
+    "enum": 2,
+    "helper": 1
+  },
+  "symbols": [
+    {
+      "symbol": "AnyInvoiceEvent",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "Currency",
+      "kind": "value",
+      "visibility": "public",
+      "category": "value-object"
+    },
+    {
+      "symbol": "CurrencyCode",
+      "kind": "type",
+      "visibility": "public",
+      "category": "value-object"
+    },
+    {
+      "symbol": "CurrencyDomainError",
+      "kind": "type",
+      "visibility": "public",
+      "category": "error"
+    },
+    {
+      "symbol": "CustomerId",
+      "kind": "type",
+      "visibility": "public",
+      "category": "identity"
+    },
+    {
+      "symbol": "DomainEventId",
+      "kind": "type",
+      "visibility": "public",
+      "category": "identity"
+    },
+    {
+      "symbol": "INVOICE_ISSUED",
+      "kind": "const",
+      "visibility": "public",
+      "category": "event-brand"
+    },
+    {
+      "symbol": "INVOICE_PAYMENT_APPLIED",
+      "kind": "const",
+      "visibility": "public",
+      "category": "event-brand"
+    },
+    {
+      "symbol": "INVOICE_VOIDED",
+      "kind": "const",
+      "visibility": "public",
+      "category": "event-brand"
+    },
+    {
+      "symbol": "Invoice",
+      "kind": "value",
+      "visibility": "public",
+      "category": "aggregate"
+    },
+    {
+      "symbol": "InvoiceCreateProps",
+      "kind": "type",
+      "visibility": "public",
+      "category": "aggregate"
+    },
+    {
+      "symbol": "InvoiceDomainError",
+      "kind": "type",
+      "visibility": "public",
+      "category": "error"
+    },
+    {
+      "symbol": "InvoiceError",
+      "kind": "type",
+      "visibility": "public",
+      "category": "error"
+    },
+    {
+      "symbol": "InvoiceEvent",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "InvoiceId",
+      "kind": "type",
+      "visibility": "public",
+      "category": "identity"
+    },
+    {
+      "symbol": "InvoiceIssued",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "InvoiceIssuedPayload",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "InvoiceLine",
+      "kind": "value",
+      "visibility": "public",
+      "category": "value-object"
+    },
+    {
+      "symbol": "InvoiceLineError",
+      "kind": "type",
+      "visibility": "public",
+      "category": "error"
+    },
+    {
+      "symbol": "InvoiceLineProps",
+      "kind": "type",
+      "visibility": "public",
+      "category": "value-object"
+    },
+    {
+      "symbol": "InvoiceLineView",
+      "kind": "type",
+      "visibility": "public",
+      "category": "view"
+    },
+    {
+      "symbol": "InvoiceListQuery",
+      "kind": "type",
+      "visibility": "public",
+      "category": "port"
+    },
+    {
+      "symbol": "InvoiceNumber",
+      "kind": "value",
+      "visibility": "public",
+      "category": "value-object"
+    },
+    {
+      "symbol": "InvoiceNumberDomainError",
+      "kind": "type",
+      "visibility": "public",
+      "category": "error"
+    },
+    {
+      "symbol": "InvoicePaymentApplied",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "InvoicePaymentAppliedPayload",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "InvoiceReadModel",
+      "kind": "type",
+      "visibility": "public",
+      "category": "port"
+    },
+    {
+      "symbol": "InvoiceRepository",
+      "kind": "type",
+      "visibility": "public",
+      "category": "port"
+    },
+    {
+      "symbol": "InvoiceStatus",
+      "kind": "type",
+      "visibility": "public",
+      "category": "enum"
+    },
+    {
+      "symbol": "InvoiceView",
+      "kind": "type",
+      "visibility": "public",
+      "category": "view"
+    },
+    {
+      "symbol": "InvoiceVoided",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "InvoiceVoidedPayload",
+      "kind": "type",
+      "visibility": "public",
+      "category": "event"
+    },
+    {
+      "symbol": "Money",
+      "kind": "value",
+      "visibility": "public",
+      "category": "value-object"
+    },
+    {
+      "symbol": "MoneyDomainError",
+      "kind": "type",
+      "visibility": "public",
+      "category": "error"
+    },
+    {
+      "symbol": "MoneyView",
+      "kind": "type",
+      "visibility": "public",
+      "category": "view"
+    },
+    {
+      "symbol": "TaxRate",
+      "kind": "value",
+      "visibility": "public",
+      "category": "value-object"
+    },
+    {
+      "symbol": "TaxRateDomainError",
+      "kind": "type",
+      "visibility": "public",
+      "category": "error"
+    },
+    {
+      "symbol": "VoidReasonCode",
+      "kind": "type",
+      "visibility": "public",
+      "category": "enum"
+    },
+    {
+      "symbol": "assertNever",
+      "kind": "value",
+      "visibility": "public",
+      "category": "helper"
+    }
+  ],
+  "unknown": []
+}
