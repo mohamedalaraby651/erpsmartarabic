@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "fitness": "check-error-mapping",
-  "pending": true,
-  "pass": true,
-  "note": "Scaffolded in Step 1; activated in a later step."
+  "adr": "ADR-0008/ADR-0011",
+  "scannedFiles": 19,
+  "violations": [],
+  "pass": true
 }
