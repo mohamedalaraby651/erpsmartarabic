@@ -2,7 +2,7 @@
 /**
  * Fitness — Transaction Finality (ADR-0008).
  *
- * Scope: `src/application/**/handlers/**` — vacuous PASS until UX-2B.
+ * Scope: `src/application/** /handlers/**` — vacuous PASS until UX-2B.
  * When handlers exist, each handler body MUST NOT:
  *  - perform a read after a write within the same call (heuristic: a
  *    `.findBy*` / `.byId(` / `.list(` call following an `.appendEvents(`

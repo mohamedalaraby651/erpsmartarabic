@@ -2,7 +2,7 @@
 /**
  * Fitness — Handler Signature (ADR-0008/ADR-0011).
  *
- * Scope: `src/application/**/handlers/**` — vacuous-pass until UX-2B lands.
+ * Scope: `src/application/** /handlers/**` — vacuous-pass until UX-2B lands.
  * When handlers exist, each handler MUST:
  *  - take `(cmd, ctx: Readonly<RequestContext>)` as its arguments
  *  - return `Promise<Result<..., DomainError | ApplicationError | RepositoryFailure>>`
