@@ -1,0 +1,69 @@
+{
+  "wave": "UX-2B Wave 1.5 — Contract & Boundary Lock",
+  "status": "LOCKED",
+  "adr": "docs/adr/0012-infrastructure-adapter-and-event-sourcing.md (DRAFT)",
+  "intent": "Freeze all contracts the Infrastructure adapter will honour BEFORE implementation begins, so any future CI failure is attributable to local Adapter (2A) or to database/composition wiring (2B), never to a contract drift.",
+  "decisions": {
+    "D-0012-01": "RepositoryFailure split: Serialization (retryable, wire/parse) vs CorruptedPersistenceData (non-retryable, semantic-at-rest).",
+    "D-0012-02": "RepositoryFailure.Conflict.actualVersion remains OPTIONAL — adapters are not forced into a second read.",
+    "D-0012-03": "Application public surface = logical Manifest with rule-based classifier, hash excludes generatedAt, 'other' gate distinguishes WARN vs FAIL by comparison to baseline.",
+    "D-0012-04": "Bidirectional Adapter ↔ Application boundary (Infra→App AND App→Infra both forbidden).",
+    "D-0012-05": "EventCodec lives in Infrastructure only; round-trip tests required in BOTH directions.",
+    "D-0012-06": "Composition Root is the sole tri-layer importer (enforced in Wave 2B).",
+    "D-0012-07": "Wave 2B integration suite registered with 3 mandatory scenarios: Concurrency, Re-hydration, RLS isolation."
+  },
+  "kernelChanges": {
+    "RepositoryFailure": "+CorruptedPersistenceData variant (with optional aggregateId, sequence, cause).",
+    "isRetryable": "Updated exhaustive switch — CorruptedPersistenceData → false.",
+    "InvoiceApplicationError.InfrastructureUnavailable.cause": "+CorruptedPersistenceData literal."
+  },
+  "applicationSurface": {
+    "barrel": "src/application/finance/index.ts",
+    "manifest": "scripts/audits/output/ux2b-wave1_5-surface.manifest.json",
+    "hashSidecar": "scripts/audits/output/ux2b-wave1_5-surface.manifest.sha256",
+    "totals": {
+      "commands": 3,
+      "commandInputs": 1,
+      "results": 3,
+      "handlers": 3,
+      "handlerDeps": 3,
+      "errors": 1,
+      "errorFactories": 1,
+      "other": 0
+    }
+  },
+  "newFitnessChecks": [
+    {
+      "name": "check-application-surface",
+      "rule": "Negative-only rules on src/application/finance barrels: no re-exports from __tests__/fakes/__mocks__, no Mapper/Codec/Util/Helpers/Internal files, no @/infrastructure/** or @/domain/** re-exports, no '_' or 'Internal' symbol names."
+    },
+    {
+      "name": "check-adapter-error-boundary",
+      "rule": "Bidirectional. Infra→App forbidden (no app imports, no InvoiceApplicationError, no fromRepositoryFailure, no re-impl of isRetryable, no throw). App→Infra forbidden (no @/infrastructure/**, no @supabase/*, no pg/postgrest/kysely/drizzle, no SupabaseInvoiceRepository/EventCodec/PostgrestError mention)."
+    }
+  ],
+  "fitness": {
+    "activeTotal": 20,
+    "passing": 20,
+    "addedThisWave": [
+      "check-application-surface",
+      "check-adapter-error-boundary"
+    ]
+  },
+  "tests": {
+    "total": 245,
+    "passing": 245,
+    "addedThisWave": [
+      "src/application/finance/__tests__/PublicSurface.test.ts (3)",
+      "src/shared-kernel/__tests__/RepositoryFailure.test.ts (+CorruptedPersistenceData coverage)"
+    ]
+  },
+  "tsStrict": {
+    "config": "tsconfig.application.json",
+    "errors": 0
+  },
+  "nextWaves": [
+    "UX-2B Wave 2A — SupabaseInvoiceRepository + EventCodec (local unit tests, no DB).",
+    "UX-2B Wave 2B — Migration, RLS, integration tests (3 scenarios), Composition Root, ADR-0012 → Accepted."
+  ]
+}
