@@ -27,8 +27,21 @@ export interface InfrastructureFailure {
 }
 
 /**
- * Canonical repository failure union (ADR-0010).
+ * Canonical repository failure union (ADR-0010, refined by ADR-0012).
  * isRetryable() is the SINGLE classifier — no adapter may re-implement it.
+ *
+ * Serialization vs CorruptedPersistenceData (ADR-0012 refinement):
+ *   - `Serialization`           transport / parse-level failures: invalid
+ *                               JSON, an undecodable wire shape, an
+ *                               unknown event `type` discriminator.
+ *                               (Retryable: another node / replica may
+ *                               return a healthy payload.)
+ *   - `CorruptedPersistenceData` semantic invariant broken AT REST:
+ *                               negative `sequence`, payload missing
+ *                               required fields, type known but its
+ *                               fields violate the domain contract. The
+ *                               row itself is bad — retrying cannot help.
+ *                               (Non-retryable. Operator must investigate.)
  */
 export type RepositoryFailure =
   | { readonly kind: "Timeout"; readonly message: string; readonly cause?: unknown }
@@ -36,6 +49,13 @@ export type RepositoryFailure =
   | {
       readonly kind: "Serialization";
       readonly message: string;
+      readonly cause?: unknown;
+    }
+  | {
+      readonly kind: "CorruptedPersistenceData";
+      readonly message: string;
+      readonly aggregateId?: string;
+      readonly sequence?: number;
       readonly cause?: unknown;
     }
   | {

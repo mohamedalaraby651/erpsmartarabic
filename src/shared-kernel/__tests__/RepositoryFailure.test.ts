@@ -18,6 +18,7 @@ describe("RepositoryFailure + isRetryable", () => {
       { kind: "NotFound", message: "nf" },
       { kind: "PermissionDenied", message: "p" },
       { kind: "Unknown", message: "u" },
+      { kind: "CorruptedPersistenceData", message: "corrupt" },
     ];
     for (const f of cases) expect(isRetryable(f)).toBe(false);
   });
@@ -28,12 +29,13 @@ describe("RepositoryFailure + isRetryable", () => {
       "Timeout",
       "Network",
       "Serialization",
+      "CorruptedPersistenceData",
       "Conflict",
       "DuplicateKey",
       "NotFound",
       "PermissionDenied",
       "Unknown",
     ];
-    expect(all.length).toBe(8);
+    expect(all.length).toBe(9);
   });
 });

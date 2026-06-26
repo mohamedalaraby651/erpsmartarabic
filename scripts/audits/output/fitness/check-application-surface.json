@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-application-surface",
+  "adr": "UX-2B Wave 1.5",
+  "scope": "src/application/finance — public barrels",
+  "scannedFiles": 2,
+  "violations": [],
+  "pass": true
+}

@@ -36,6 +36,9 @@ const ACTIVE = [
   "check-domain-strictness.mjs",
   // UX-2B Wave 1
   "check-application-purity.mjs",
+  // UX-2B Wave 1.5
+  "check-application-surface.mjs",
+  "check-adapter-error-boundary.mjs",
 ];
 
 const PENDING = [];

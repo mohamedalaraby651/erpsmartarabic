@@ -90,6 +90,7 @@ export type InvoiceApplicationError =
         | "Timeout"
         | "Network"
         | "Serialization"
+        | "CorruptedPersistenceData"
         | "DuplicateKey"
         | "PermissionDenied"
         | "Unknown";
@@ -243,6 +244,7 @@ export function fromRepositoryFailure(
     case "Timeout":
     case "Network":
     case "Serialization":
+    case "CorruptedPersistenceData":
     case "DuplicateKey":
     case "PermissionDenied":
     case "Unknown":
