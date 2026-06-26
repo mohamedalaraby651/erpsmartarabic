@@ -247,3 +247,62 @@ All four already-Active checks (`check-temporal-authority`, `check-identity-auth
 
 - `check-aggregate-boundaries` — ACTIVE. Forbids cross-aggregate imports inside `src/domain/<context>/`; only `shared/` and `@/shared-kernel` are allowed cross-cutting modules.
 - `check-domain-events-immutable` — ACTIVE. Every property declared in any `interface` under `src/domain/**/events/**` MUST carry the `readonly` modifier.
+
+---
+
+## 12. Amendment A3 — Wave 6 Public Surface, Ports & Error Module
+
+**Status:** Accepted (Wave 6). Extends §6 and §7; supersedes nothing.
+
+### A3.1 Public surface
+
+- `src/domain/finance/index.ts` is the **sole** import point for any consumer outside `src/domain/finance/**`. Deep imports (e.g. `@/domain/finance/invoice/Invoice`) are forbidden and statically enforced by `check-domain-api-stability`.
+- The reducer `statusOf`, the freeze helpers, and the raw event factories are intentionally NOT re-exported.
+
+### A3.2 `InvoiceDomainError` is a real Discriminated Union
+
+- Moved out of `Invoice.ts` into `src/domain/finance/invoice/errors/InvoiceDomainError.ts`. The Invoice module re-exports the type for backward compatibility.
+- Every variant carries `kind: string` (the discriminator) and structured data fields ONLY. **No `message`, no `code`-as-presentation-text, no `details: unknown` bag.** Presentation text is a UI concern (`@/ui/*` will hold the translation table); the domain is machine-typed.
+- `assertNever(x: never)` is provided for exhaustive switches; its body MUST NOT call `JSON.stringify` (forbidden by `check-domain-purity`).
+
+### A3.3 Ports
+
+- `InvoiceRepository` (write-side, event-sourced):
+  - `load(id, ctx)` → `Result<Invoice, RepositoryFailure>` (never `null`).
+  - `appendEvents(id, expectedVersion, events, ctx)` → `Result<void, RepositoryFailure>`.
+  - **C1 lock:** `expectedVersion` is the aggregate's **pre-append** version (i.e. the length of `#history` at load time; `0` for a brand-new aggregate). Storage mismatch ⇒ `RepositoryFailure { kind: "Conflict", expectedVersion, actualVersion }`.
+  - There is NO `save(invoice)` method on this port — persistence is an event append, never a snapshot write.
+- `InvoiceReadModel` (read-side):
+  - `byId(id, ctx)` and `list(query, ctx)` return `InvoiceView` / `Page<InvoiceView>`.
+  - The view type lives in `ports/InvoiceView.ts`. Monetary fields cross as `MoneyView = { minor: string; currency: string }` — see C3.
+- `ctx: Readonly<RequestContext>` on every port method. The shared-kernel factory `createRequestContext(...)` freezes the value.
+
+### A3.4 `pullEvents()` contract
+
+- **C2 lock:** Returns a **shallow-frozen** array (`Object.freeze(this.#uncommitted.slice())`). The aggregate MUST NOT deep-freeze each event on every pull — events are already frozen at record time via `freezeEvent(...)` (Wave 4).
+- Pull is destructive: the internal uncommitted queue is cleared so a second pull (with no new commands in between) returns `[]`.
+- A freshly rehydrated aggregate MUST return `[]` until a new command runs (verified by `Invoice.pullEvents.contract.test.ts`).
+- The durable `#history` is NEVER touched by `pullEvents()`.
+
+### A3.5 BigInt boundary
+
+- **C3 lock:** Any `bigint` produced inside the aggregate MUST be serialized to `string` before crossing the domain boundary. The read-side enforces this via `MoneyView.minor: string`. `check-domain-bigint-boundary` scans `src/domain/finance/index.ts` and `src/domain/finance/invoice/ports/**` for `bigint` / `BigInt` / numeric `n`-suffix literals and fails the build on any hit.
+
+### A3.6 Fitness activation (Wave 7)
+
+Eight previously-pending checks moved to **ACTIVE**, plus two new ones:
+
+| Check                                  | Scope                                        |
+|----------------------------------------|----------------------------------------------|
+| `check-domain-purity`                  | `src/domain/finance/**` (production)         |
+| `check-domain-service-purity`          | `src/domain/finance/**/services/**`          |
+| `check-error-mapping`                  | `src/domain/finance/**` (no `throw new`)     |
+| `check-repository-failure-taxonomy`    | `src/domain/**/ports/*Repo(sitory).ts`       |
+| `check-handler-signature`              | `src/application/**/handlers/**` (vacuous)   |
+| `check-ui-infrastructure-isolation`    | `src/domain/**` + `src/application/**`       |
+| `check-composition-root-uniqueness`    | `src/**` (vacuous)                           |
+| `check-transaction-finality`           | `src/application/**/handlers/**` (vacuous)   |
+| `check-domain-api-stability` **(new)** | `src/**` excluding `src/domain/finance/**`   |
+| `check-domain-bigint-boundary` **(new)** | finance `index.ts` + `invoice/ports/**`    |
+
+Total: **16 ACTIVE / 0 PENDING**. All 16 pass on the current tree (`scripts/fitness/run-all.mjs`).
