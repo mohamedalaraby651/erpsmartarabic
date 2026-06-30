@@ -59,10 +59,7 @@ async function buildFullStream() {
 describe("EventCodecRegistry round-trip", () => {
   it("encodes and decodes all three event types byte-for-byte equivalently", async () => {
     const { repository, invoiceId } = await buildFullStream();
-    const reloaded = await repository.load(invoiceId, TEST_CTX);
-    expect(isOk(reloaded)).toBe(true);
-    if (!isOk(reloaded)) return;
-    const events = reloaded.value.pullEvents();
+    const events = repository.historyOf(invoiceId);
     expect(events.map((e) => e.type)).toEqual([
       "InvoiceIssued",
       "InvoicePaymentApplied",
