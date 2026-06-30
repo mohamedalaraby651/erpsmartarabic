@@ -34,10 +34,9 @@ async function captureRows(): Promise<{
     { invoiceId: id, amountMinor: 100, currencyCode: "USD" },
     TEST_CTX,
   );
-  const loaded = await repository.load(id, TEST_CTX);
-  if (!isOk(loaded)) throw new Error("setup failed");
   const reg = createDefaultInvoiceCodecRegistry();
-  const rows = loaded.value.pullEvents().map((e) => {
+  const events = repository.historyOf(id);
+  const rows = events.map((e) => {
     const r = reg.encode(e);
     if (!isOk(r)) throw new Error("encode failed");
     return r.value as PersistedEventRow;
