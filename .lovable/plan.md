@@ -1,140 +1,121 @@
-# UX-2B Wave 1 — Application Layer (Invoice Command Handlers) — v2
 
-تُحدِّث هذه النسخة نقطتين بناءً على ملاحظاتك، وتُبقي بقية النطاق كما اعتُمد.
+# UX-2B Waves 2A + 2B — Final v3 (4 reviewer refinements absorbed)
 
----
-
-## التعديل 1 — `committedVersion()` بدلالة مجال موثَّقة
-
-تُضاف على `Invoice` (داخل سطح UX-2A، Contract Gap **D5**) مع توثيق صريح:
-
-```ts
-/**
- * Committed version = number of events already persisted for this aggregate.
- *  - brand-new aggregate (never persisted) ⇒ 0
- *  - rehydrated from N events             ⇒ N
- * Uncommitted events do NOT advance this number; they advance it only after
- * `appendEvents` succeeds and the aggregate is reloaded.
- * This is the value to pass as `expectedVersion` to InvoiceRepository.
- */
-committedVersion(): number
-```
-
-تحديثات مرافقة:
-- ADR-0011 §A4 — توسعة محدودة للسطح، ليست كسراً للقفل.
-- `ux2a-wave8-defects.json` — إدراج D5 (Contract Gap موثَّق).
-- `ux2a-wave8-surface.json` — تحديث snapshot السطح.
-- اختبار وحدة على `Invoice` يثبت: `create` ⇒ 0، `fromHistory(N)` ⇒ N، بعد `issue/applyPayment/void` يبقى الرقم على آخر قيمة ملتزمة حتى يُسحب الـ events ويُعاد التحميل.
-
-> طبقة Application لا تحسب أي رقم بنفسها؛ تستدعي `invoice.committedVersion()` فقط.
+All four points accepted. Diffs vs. v2 below; everything else (registry codec, rehydrator split, `tenant_id` + `current_tenant()`, `metadata`, `schema_version`, FinanceModule, manifest lock, 4 integration scenarios, `PROJECT_MAP.md` with DEPENDENCY/FITNESS sections) is unchanged.
 
 ---
 
-## التعديل 2 — توحيد عقد الأخطاء (لا تسرّب لـ `RepositoryFailure`)
+## Reviewer refinements — adopted
 
-سيكون توقيع كل Handler بدقة:
+### R1. Drop `InvariantViolation`; reuse `CorruptedPersistenceData` with `cause` discriminator
+- **Reverted from v2:** no new variant in `RepositoryFailure`.
+- `EventStreamRehydrator` catches `Invoice.fromHistory` failures and returns:
+  ```ts
+  { kind: "CorruptedPersistenceData",
+    message: "rehydration invariant violation",
+    aggregateId, sequence,
+    cause: { reason: "InvariantViolation", domainError } }
+  ```
+- Decode failures use the same kind with `cause: { reason: "DecodeFailure", … }`.
+- `isRetryable` already returns `false` for `CorruptedPersistenceData` → no kernel change.
+- `InvoiceApplicationError.fromRepositoryFailure` is unchanged; the `cause.reason` literal is for diagnostics only and is **not** part of the public Application surface.
+- **Net kernel diff in Wave 2: zero.** The kernel stays exactly at its Wave 1.5 lock.
 
+### R2. `schema_version` is owned by the Codec, not the Repository
+- `EventCodec.encode(event) → { type, schemaVersion, payload, metadata }`.
+- `EventCodec.decode(row) → Result<DomainEvent, RepositoryFailure>` — Codec selects the per-version decoder by `row.schemaVersion`.
+- `SupabaseInvoiceRepository` is a pure transport: it never reads `schema_version`, never inspects `type`, never branches on payload. It only:
+  - on append: takes the Codec output and inserts the four columns + `tenant_id`, `aggregate_id`, `sequence`, `event_id`, `occurred_at`;
+  - on load: selects rows ordered by `(aggregate_id, sequence)` and hands each row to `EventCodec.decode`.
+- Adding a v2 of any event = one new file in `codec/codecs/`, one `register()` call. Zero Repository changes. Zero migration.
+- Forbidden-pattern rule added to `check-application-purity` / infra checks: `schemaVersion`/`schema_version` literals MUST NOT appear in `SupabaseInvoiceRepository.ts` (asserted by a tiny grep test in the unit suite, not a fitness check — too narrow to warrant one).
+
+### R3. `FinanceModule.queries` is an open object, not `Record<string, never>`
 ```ts
-execute(
-  ctx: Readonly<RequestContext>,
-  cmd: <CommandDTO>,
-): Promise<Result<HandlerOk, ApplicationError>>
+export interface FinanceModule {
+  commands: {
+    issueInvoice:        IssueInvoiceHandler["execute"];
+    applyInvoicePayment: ApplyInvoicePaymentHandler["execute"];
+    voidInvoice:         VoidInvoiceHandler["execute"];
+  };
+  queries: {
+    invoice?: InvoiceReadModel;     // populated in a future wave
+  };
+  repositories: {
+    invoice: InvoiceRepository;
+  };
+}
 ```
+- `queries.invoice` is `?` so today's composition leaves it `undefined`; the manifest snapshot records the **shape**, not the runtime presence — adding the projection later is additive.
+- The composition surface snapshot (Wave 2B) classifies `queries` as a present-but-possibly-empty namespace; no `Record<string, never>` anywhere.
 
-**`ApplicationError` يصبح الحدّ الوحيد بين طبقة Application وما فوقها** (UI/Edge/Adapters). لا `DomainError` ولا `RepositoryFailure` يظهران في التوقيع. الـ Handler يلفّ كل شيء:
-
-```ts
-export type ApplicationError =
-  | { readonly kind: "ValidationFailed"; readonly field: string; readonly reason: string }
-  | { readonly kind: "DomainRejected"; readonly cause: InvoiceDomainError }   // مغلَّف
-  | { readonly kind: "NotFound"; readonly id: string }
-  | { readonly kind: "ConcurrencyConflict"; readonly expectedVersion: number; readonly actualVersion: number }
-  | { readonly kind: "InfrastructureUnavailable"; readonly retryable: boolean; readonly category: RepositoryFailure["kind"] };
-```
-
-ملاحظات على التغليف:
-- `InvoiceDomainError` يبقى **بنية معروفة** داخل `DomainRejected.cause` لأن طبقة UI/i18n تحتاج تمييز الـ `kind` لعرض الرسائل المناسبة، لكنه يصل دائماً مغلَّفاً داخل `ApplicationError` ولا يظهر مستقلاً في التوقيع.
-- `RepositoryFailure` **لا يُمرَّر أبداً** للخارج. يُختزل إلى: `NotFound` / `ConcurrencyConflict` / `InfrastructureUnavailable`. حقل `retryable` يُحسب داخل الـ Handler عبر `isRetryable()` (المصدر الوحيد، ADR-0010) و`category` يحفظ التصنيف الأصلي للـ telemetry دون كشف الـ `cause` أو الـ `message` الخام.
-- أخطاء التحقق الشكلي للـ DTO (currency code غير معروف، quantity سالب على مستوى الـ DTO، إلخ) تُرجَع كـ `ValidationFailed` قبل لمس الـ aggregate.
-
-`assertNever` exhaustiveness helper مرفق ليُجبر الـ UI لاحقاً على التعامل مع كل `kind`.
+### R4. Infrastructure ↔ UI isolation — extend `check-adapter-error-boundary`
+- New forbidden patterns inside `INFRA_BANS`:
+  ```
+  from "@/components/**"   • from "@/pages/**"   • from "@/features/**"
+  from "@/hooks/**"        • from "@/ui/**"
+  + relative variants
+  + symbol-level: useState/useEffect/React/JSX in non-test infra files
+  ```
+- Scope stays `src/infrastructure/**` production files only (tests excluded as today).
+- Combined with the existing `check-ui-infrastructure-isolation` (UI → infra direction), the Infrastructure layer is now **bidirectionally sealed against UI** in addition to the existing seal against Application.
 
 ---
 
-## ما سيُبنى (لم يتغيّر هيكلياً)
+## Final layered import matrix (locked at end of Wave 2B)
 
 ```text
-src/application/finance/invoice/
-├── commands/
-│   ├── IssueInvoiceCommand.ts
-│   ├── ApplyPaymentCommand.ts
-│   └── VoidInvoiceCommand.ts
-├── handlers/
-│   ├── IssueInvoiceHandler.ts        # load? → create → issue → appendEvents(committedVersion)
-│   ├── ApplyPaymentHandler.ts        # load → applyPayment → appendEvents(committedVersion)
-│   └── VoidInvoiceHandler.ts         # load → void → appendEvents(committedVersion)
-├── errors/ApplicationError.ts        # union أعلاه + assertNever + mapRepositoryFailure (private)
-├── __tests__/
-│   ├── IssueInvoiceHandler.test.ts
-│   ├── ApplyPaymentHandler.test.ts
-│   ├── VoidInvoiceHandler.test.ts
-│   ├── determinism.test.ts
-│   ├── concurrency.test.ts
-│   └── fakes/
-│       ├── InMemoryInvoiceRepository.ts   # يحاكي expectedVersion بدقّة
-│       ├── FixedClock.ts
-│       └── DeterministicIdPort.ts
-└── index.ts                          # السطح العام لـ UX-2B Wave 1
+                       imports →
+                Domain  Application  Infrastructure  UI  Composition
+Domain            ✓         ✗            ✗            ✗      ✗
+Application       ✓         ✓            ✗            ✗      ✗
+Infrastructure    ✓         ✗            ✓            ✗      ✗
+UI                ✗         ✗            ✗            ✓      ✓
+Composition       ✓         ✓            ✓            ✗      ✓
 ```
+Every cell is enforced by at least one fitness check; the table is the authoritative section of `PROJECT_MAP.md → DEPENDENCY RULES`.
 
-## بروتوكول الـ Handler (موحّد)
+---
 
-1. تحقّق شكلي من الـ DTO → عند الفشل: `err(ValidationFailed)`.
-2. بناء VOs (Money/TaxRate/InvoiceId/…) → الفشل ⇒ `ValidationFailed`.
-3. `repo.load(id, ctx)` (أو إنشاء جديد في Issue) → `NotFound` / `InfrastructureUnavailable`.
-4. استدعاء أمر الـ aggregate (`issue`/`applyPayment`/`void`) مع `clock.now()` و`id.next()` → الفشل ⇒ `DomainRejected`.
-5. `const version = invoice.committedVersion();` ثم `repo.appendEvents(id, version, invoice.pullEvents(), ctx)`.
-6. تصنيف فشل الـ append: `Conflict` ⇒ `ConcurrencyConflict`، البقية ⇒ `InfrastructureUnavailable { retryable: isRetryable(f) }`.
-7. إرجاع `ok({ id, version: version + appended.length })`.
+## Updated file inventory (delta from v2)
 
-لا قراءة بعد كتابة. لا `throw`. لا `console.*`.
+**Removed (R1):**
+- ~~`src/shared-kernel/errors/errors.ts` edit (+InvariantViolation)~~
+- ~~`src/shared-kernel/errors/isRetryable.ts` edit~~
+- ~~`src/shared-kernel/__tests__/RepositoryFailure.test.ts` edit~~
+- ~~`InvoiceApplicationError.ts` translator arm edit~~
 
-## Fitness — `check-application-purity.mjs` (جديد، يُضاف إلى ACTIVE)
+**Changed (R2):**
+- `EventCodec` interface gains `schemaVersion` in its output type.
+- `SupabaseInvoiceRepository` shrinks: pure transport, no version-awareness.
+- Unit test `SupabaseInvoiceRepository.purity.test.ts` asserts no `schemaVersion` / `schema_version` literals in the file.
 
-يمنع في `src/application/**` (ما عدا `__tests__/`):
-- استيراد `@/integrations/**`, `@/lib/repositories/**`, أو أي شيء فيه `supabase`.
-- `new Date(`, `Date.now(`, `Math.random(`, `crypto.randomUUID(`.
-- استيراد عميق من `src/domain/finance/**` (السطح فقط: `@/domain/finance`).
-- `throw new` في أي ملف `*Handler.ts`.
-- وجود `RepositoryFailure` في توقيع أي export من ملف `*Handler.ts` (regex على نص الـ return type) — يضمن عدم تسرّب نوع البنية التحتية.
+**Changed (R3):**
+- `src/composition/finance.ts`: `queries: { invoice?: InvoiceReadModel }`.
 
-`check-handler-signature` القائم سيلتقط الـ handlers تلقائياً بمجرد ظهورها (وقد رأينا أنه vacuous-pass حالياً).
+**Changed (R4):**
+- `scripts/fitness/check-adapter-error-boundary.mjs`: `INFRA_BANS` extended with UI-layer paths and React/JSX symbols.
 
-## بوّابة الخروج المصغّرة (Wave 1)
+Everything else from v2 (codec registry, `EventStreamRehydrator`, migration with `tenant_id` + `metadata` + `schema_version` + `current_tenant()`, four integration scenarios incl. Gap Detection, `check-tri-import-exclusivity`, `PROJECT_MAP.md` with DEPENDENCY RULES + FITNESS RULES, 100% branch coverage on `pgErrorMap`, two lock files, ADR-0012 → Accepted at end of 2B) stands as written.
 
-| فحص | الحد |
-|---|---|
-| `tsgo` على `src/application/finance/**` بصرامة `tsconfig.finance.json` الموسَّعة | 0 |
-| `vitest run src/application/finance` | ≥ 95% S/F/L، ≥ 90% B |
-| `scripts/fitness/run-all.mjs` | 18/18 (يشمل `check-application-purity`) |
-| `src/domain/finance/**` diff | فقط `committedVersion()` + اختباره، موثَّق كـ D5 |
-| تحقّق عقد الأخطاء | grep يثبت أن لا `RepositoryFailure` يظهر في أي توقيع تحت `src/application/finance/**` |
+---
 
-## تسلسل التنفيذ
+## Milestones (final)
 
-1. توسيع `tsconfig.finance.json` (أو إنشاء `tsconfig.application.json` يرث منه) ليشمل `src/application/finance/**`.
-2. إضافة `committedVersion()` + اختباره؛ تحديث ADR + D5 + surface snapshot.
-3. كتابة `ApplicationError` + `mapRepositoryFailure` (داخلي، غير مُصدَّر).
-4. كتابة الـ commands + fakes.
-5. كتابة الـ handlers الثلاثة + اختباراتها (Happy / Domain rejections / NotFound / Conflict / Unavailable / Determinism / Concurrency).
-6. كتابة `check-application-purity.mjs` وتفعيله في `run-all.mjs`.
-7. تشغيل البوّابة وتسجيل النتيجة تحت `downstream.ux2b_wave1` في `ux2a-wave8-lock.json` دون المساس بقفل UX-2A.
+1. **M2A-1** Codec registry + 3 codecs (each carrying its own `schemaVersion`) + bidirectional round-trip tests + frozen fixtures.
+2. **M2A-2** `EventStreamRehydrator` + `SupabaseInvoiceRepository` (pure transport) + `pgErrorMap` with 100% branch coverage + purity test forbidding version literals in the repo file.
+3. **M2A-3** Extended `check-adapter-error-boundary` (UI bans) green; `tsconfig.infrastructure.json` 0 errors; Wave 2A lock written.
+4. **M2B-1** Single migration: `invoice_events` (with `tenant_id`, `schema_version`, `metadata`, `occurred_at`, `created_at`, unique `(aggregate_id, sequence)`) + `public.current_tenant()` security-definer + GRANTs + RLS policies.
+5. **M2B-2** `FinanceModule` (with open `queries`) + `check-tri-import-exclusivity` green.
+6. **M2B-3** Four integration scenarios green under `INTEGRATION=1`: Concurrency, Rehydration, Tenant RLS, Gap Detection.
+7. **M2B-4** ADR-0012 flipped to **Accepted**, `INDEX.md` row added, `PROJECT_MAP.md` published with DEPENDENCY + FITNESS sections, `ux2b-wave2b-lock.json` written.
 
-## خارج النطاق (مؤكَّد)
+---
 
-- Supabase repository adapter — Wave 2.
-- Outbox/Event publishing — Wave 3.
-- UI wiring واستبدال `invoiceRepository` القديم — Wave 4.
-- Read-side (`InvoiceReadModel` adapter + Query handlers) — موجة منفصلة.
+## Out of scope (unchanged)
 
-هل أبدأ التنفيذ بهذا النطاق المُحدَّث؟
+`InvoiceReadModel` implementation; outbox to `domain_events`; UI wiring; data backfill; event v2 schemas.
+
+---
+
+If you approve, I will execute **Wave 2A end-to-end**, write its lock, then proceed to **Wave 2B** in the same flow without further plan revisions unless a documented Contract Gap surfaces.

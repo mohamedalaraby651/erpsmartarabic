@@ -36,6 +36,9 @@ const OUT = resolve(
 const TEST_RE = /\/(__tests__|__integration__|__mocks__)\//;
 
 // ── Direction 1: infra MUST NOT depend on application/domain types ───────
+//   + Wave 2A refinement R4: infra MUST NOT import UI either.
+//   The Infrastructure layer is therefore bidirectionally sealed against
+//   both Application and UI.
 const INFRA_BANS = [
   { re: /from\s+["']@\/application\/[^"']+["']/g, why: "infra imports application/**" },
   { re: /from\s+["'](?:\.\.\/)+application\/[^"']+["']/g, why: "infra relative-imports application/**" },
@@ -43,6 +46,19 @@ const INFRA_BANS = [
   { re: /\bfromRepositoryFailure\b/g, why: "infra calls a translator (must stay in application)" },
   { re: /\bfunction\s+isRetryable\b/g, why: "infra re-implements isRetryable (single source rule)" },
   { re: /\bthrow\s+new\s+\w*Error\s*\(/g, why: "adapters must return Result, not throw" },
+  // R4 — UI bans (absolute aliases)
+  { re: /from\s+["']@\/components\/[^"']+["']/g, why: "infra imports @/components/** (UI)" },
+  { re: /from\s+["']@\/pages\/[^"']+["']/g, why: "infra imports @/pages/** (UI)" },
+  { re: /from\s+["']@\/features\/[^"']+["']/g, why: "infra imports @/features/** (UI)" },
+  { re: /from\s+["']@\/hooks\/[^"']+["']/g, why: "infra imports @/hooks/** (UI)" },
+  { re: /from\s+["']@\/ui\/[^"']+["']/g, why: "infra imports @/ui/** (UI)" },
+  // R4 — relative variants
+  { re: /from\s+["'](?:\.\.\/)+(?:components|pages|features|hooks|ui)\/[^"']+["']/g, why: "infra relative-imports UI layer" },
+  // R4 — symbol-level (catches transitive React usage)
+  { re: /from\s+["']react(?:-dom|-router[^"']*)?(?:\/[^"']+)?["']/g, why: "infra imports react/* (UI runtime)" },
+  { re: /\buseState\s*[<(]/g, why: "infra uses React useState" },
+  { re: /\buseEffect\s*\(/g, why: "infra uses React useEffect" },
+  { re: /\buseMemo\s*\(/g, why: "infra uses React useMemo" },
 ];
 
 // ── Direction 2: application MUST NOT depend on infra/adapter symbols ────
