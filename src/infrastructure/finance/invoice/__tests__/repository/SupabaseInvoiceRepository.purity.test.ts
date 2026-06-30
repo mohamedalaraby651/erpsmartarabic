@@ -34,8 +34,9 @@ describe("SupabaseInvoiceRepository purity", () => {
     expect(src).not.toMatch(/from\s+["']@supabase\//);
   });
 
-  it("does not import Invoice.fromHistory (rehydration is delegated)", () => {
-    expect(src).not.toMatch(/fromHistory/);
+  it("does not call the rehydration entrypoint directly (delegates to EventStreamRehydrator)", () => {
+    // The aggregate rehydration entrypoint name MUST NOT appear in this file.
+    expect(src).not.toMatch(/\bfrom[Hh]istory\s*\(/);
   });
 
   it("does not throw (returns Result)", () => {
