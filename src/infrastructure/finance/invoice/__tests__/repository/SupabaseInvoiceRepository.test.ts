@@ -72,10 +72,12 @@ async function buildOneIssuedRow(): Promise<{
   const issue = new IssueInvoiceHandler({ repository, clock, idPort });
   const id = makeInvoiceId("inv-supa-1");
   await issue.execute(makeIssueCmd({ invoiceId: id }), TEST_CTX);
-  const loaded = await repository.load(id, TEST_CTX);
-  if (!isOk(loaded)) throw new Error("setup");
+  const events = repository.historyOf(id);
   const reg = createDefaultInvoiceCodecRegistry();
-  const enc = reg.encode(loaded.value.pullEvents()[0]!);
+  const enc = reg.encode(events[0]!);
+  if (!isOk(enc)) throw new Error("enc");
+  return { row: enc.value as PersistedEventRow, invoiceId: id };
+}
   if (!isOk(enc)) throw new Error("enc");
   return { row: enc.value as PersistedEventRow, invoiceId: id };
 }
