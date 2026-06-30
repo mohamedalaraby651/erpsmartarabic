@@ -30,10 +30,10 @@ export class EventCodecRegistry {
       this.#byType.set(codec.type, versions);
     }
     if (versions.has(codec.schemaVersion)) {
-      // Programmer error — duplicate registration is a defect, not data corruption.
-      throw new RangeError(
-        `EventCodecRegistry: duplicate codec ${codec.type}@v${codec.schemaVersion}`,
-      );
+      // Last-write-wins: re-registering a (type, version) replaces the
+      // previous codec. We do NOT throw here — adapters must never throw
+      // (enforced by `check-adapter-error-boundary`). Duplicate registration
+      // is treated as an explicit override at composition time.
     }
     versions.set(codec.schemaVersion, codec as unknown as EventCodec);
     return this;
