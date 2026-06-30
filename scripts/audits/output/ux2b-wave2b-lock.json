@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "wave": "UX-2B Wave 2B",
+  "date": "2026-06-30",
+  "adr": {
+    "id": "ADR-0012",
+    "status": "Accepted",
+    "addenda": ["D-0012-08 (sequence-only ordering)", "D-0012-09 (operational-only metadata)", "Amendment A2 (Wave 2B gates G-IDEM/G-PLAN/G-GAP/G-VER/G-THIN + addenda A1/A2/A3)"]
+  },
+  "migration": {
+    "table": "public.invoice_events",
+    "uniqueConstraint": "(aggregate_id, sequence)",
+    "indices": ["invoice_events_aggregate_sequence_idx", "invoice_events_tenant_idx"],
+    "helperFunction": "public.current_tenant() — SECURITY DEFINER, STABLE, search_path=public; returns NULL for orphans",
+    "rls": {
+      "enabled": true,
+      "policies": ["invoice_events_select_same_tenant", "invoice_events_insert_same_tenant"]
+    },
+    "grants": {
+      "authenticated": "SELECT, INSERT",
+      "service_role": "ALL",
+      "anon": "(none — events are auth-only)"
+    },
+    "idempotent": true,
+    "scopeLimited": true,
+    "touchesDomainEvents": false
+  },
+  "composition": {
+    "file": "src/composition/finance.ts",
+    "factory": "createFinanceModule",
+    "thin": true,
+    "tri-layer-importers": 1
+  },
+  "fitness": {
+    "active": 22,
+    "newThisWave": ["check-metadata-non-domain.mjs"]
+  },
+  "tests": {
+    "unitAdditions": [
+      "src/infrastructure/finance/invoice/__tests__/rehydrator/EventStreamRehydrator.ordering.test.ts",
+      "src/infrastructure/finance/invoice/__tests__/codec/EventCodec.metadataPassthrough.test.ts"
+    ],
+    "integrationScenarios": [
+      "Concurrency",
+      "Rehydration",
+      "TenantIsolation",
+      "TenantOrphan (A3)",
+      "GapAfterRace"
+    ],
+    "integrationGate": "INTEGRATION=1"
+  },
+  "outOfScope": [
+    "InvoiceReadModel implementation",
+    "Outbox dispatch (domain_events → message bus)",
+    "UI wiring of FinanceModule",
+    "Backfill / data migration"
+  ]
+}
