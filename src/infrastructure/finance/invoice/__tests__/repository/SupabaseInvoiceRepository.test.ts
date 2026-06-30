@@ -78,9 +78,7 @@ async function buildOneIssuedRow(): Promise<{
   if (!isOk(enc)) throw new Error("enc");
   return { row: enc.value as PersistedEventRow, invoiceId: id };
 }
-  if (!isOk(enc)) throw new Error("enc");
-  return { row: enc.value as PersistedEventRow, invoiceId: id };
-}
+
 
 describe("SupabaseInvoiceRepository", () => {
   const codec = createDefaultInvoiceCodecRegistry();
