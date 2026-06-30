@@ -34,16 +34,16 @@ async function buildFullStream() {
     invoiceId: makeInvoiceId("inv-rt-1"),
     customerId: undefined,
   });
-  const r1 = await issue.handle(cmd, TEST_CTX);
+  const r1 = await issue.execute(cmd, TEST_CTX);
   expect(isOk(r1)).toBe(true);
 
-  const r2 = await pay.handle(
+  const r2 = await pay.execute(
     { invoiceId: cmd.invoiceId, amountMinor: 1000, currencyCode: "USD" },
     TEST_CTX,
   );
   expect(isOk(r2)).toBe(true);
 
-  const r3 = await v.handle(
+  const r3 = await v.execute(
     {
       invoiceId: cmd.invoiceId,
       reasonCode: "Erroneous",

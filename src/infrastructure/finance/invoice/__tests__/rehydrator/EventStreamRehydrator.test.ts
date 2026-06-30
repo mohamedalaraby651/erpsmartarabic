@@ -29,8 +29,8 @@ async function captureRows(): Promise<{
   const issue = new IssueInvoiceHandler({ repository, clock, idPort });
   const pay = new ApplyInvoicePaymentHandler({ repository, clock, idPort });
   const id = makeInvoiceId("inv-reh-1");
-  await issue.handle(makeIssueCmd({ invoiceId: id }), TEST_CTX);
-  await pay.handle(
+  await issue.execute(makeIssueCmd({ invoiceId: id }), TEST_CTX);
+  await pay.execute(
     { invoiceId: id, amountMinor: 100, currencyCode: "USD" },
     TEST_CTX,
   );

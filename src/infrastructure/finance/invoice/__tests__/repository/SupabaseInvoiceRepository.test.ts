@@ -71,7 +71,7 @@ async function buildOneIssuedRow(): Promise<{
   const { repository, clock, idPort } = makeDeps();
   const issue = new IssueInvoiceHandler({ repository, clock, idPort });
   const id = makeInvoiceId("inv-supa-1");
-  await issue.handle(makeIssueCmd({ invoiceId: id }), TEST_CTX);
+  await issue.execute(makeIssueCmd({ invoiceId: id }), TEST_CTX);
   const loaded = await repository.load(id, TEST_CTX);
   if (!isOk(loaded)) throw new Error("setup");
   const reg = createDefaultInvoiceCodecRegistry();
