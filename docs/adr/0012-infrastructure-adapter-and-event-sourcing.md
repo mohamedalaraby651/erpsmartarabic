@@ -1,9 +1,9 @@
 # ADR-0012 — Infrastructure Adapter & Event-Sourced Persistence (Finance / Invoice)
 
-**Status:** DRAFT — locks the *contracts* for UX-2B Wave 1.5. Implementation
-sections (Adapter, Migration, RLS, Integration tests, Composition Root) are
-filled in during Waves 2A / 2B and the ADR is moved to **Accepted** at the end
-of Wave 2B.
+**Status:** **Accepted** (UX-2B Wave 2B — 2026-06-30). Contracts locked
+in Wave 1.5; Adapter / Codec / Rehydrator delivered in Wave 2A;
+Migration, RLS, Composition Root, integration suite, and ordering /
+metadata addenda delivered in Wave 2B.
 
 **Supersedes / extends:** ADR-0010 (Repository Failure Taxonomy),
 ADR-0011 (Finance Domain & Invoice Aggregate, Amendments A2-bis / A5).
