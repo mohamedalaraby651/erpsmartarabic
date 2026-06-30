@@ -39,6 +39,8 @@ const ACTIVE = [
   // UX-2B Wave 1.5
   "check-application-surface.mjs",
   "check-adapter-error-boundary.mjs",
+  // UX-2B Wave 2B (ADR-0012 §D-0012-09)
+  "check-metadata-non-domain.mjs",
 ];
 
 const PENDING = [];
