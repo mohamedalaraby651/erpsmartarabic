@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fitness": "check-metadata-non-domain",
+  "adr": "ADR-0012 §D-0012-09",
+  "scope": "src/domain/finance/**",
+  "scannedFiles": 19,
+  "violations": [],
+  "pass": true
+}

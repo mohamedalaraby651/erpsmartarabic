@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "fitness": "check-temporal-authority",
   "adr": "ADR-0006",
-  "scannedFiles": 207,
+  "scannedFiles": 209,
   "violations": [],
   "pass": true
 }

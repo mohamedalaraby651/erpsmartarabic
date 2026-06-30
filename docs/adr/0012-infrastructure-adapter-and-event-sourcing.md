@@ -1,9 +1,9 @@
 # ADR-0012 — Infrastructure Adapter & Event-Sourced Persistence (Finance / Invoice)
 
-**Status:** DRAFT — locks the *contracts* for UX-2B Wave 1.5. Implementation
-sections (Adapter, Migration, RLS, Integration tests, Composition Root) are
-filled in during Waves 2A / 2B and the ADR is moved to **Accepted** at the end
-of Wave 2B.
+**Status:** **Accepted** (UX-2B Wave 2B — 2026-06-30). Contracts locked
+in Wave 1.5; Adapter / Codec / Rehydrator delivered in Wave 2A;
+Migration, RLS, Composition Root, integration suite, and ordering /
+metadata addenda delivered in Wave 2B.
 
 **Supersedes / extends:** ADR-0010 (Repository Failure Taxonomy),
 ADR-0011 (Finance Domain & Invoice Aggregate, Amendments A2-bis / A5).
@@ -122,3 +122,73 @@ migration, RLS policies, `composition/finance.ts`, and the lock to
 * `scripts/audits/output/fitness/check-application-surface.json`
 * `scripts/audits/output/fitness/check-adapter-error-boundary.json`
 * `scripts/audits/output/ux2b-wave1_5-lock.json`
+
+---
+
+## 5. Wave 2B addenda (Accepted 2026-06-30)
+
+### D-0012-08 — `sequence` is the SOLE ordering authority
+
+Event rehydration MUST depend only on `(aggregate_id, sequence)`. The
+columns `occurred_at` and `created_at` are observational data (audit,
+debugging, dashboards) and MUST NOT influence reducers, `fromHistory`,
+or the rehydrator's row ordering. If `occurred_at` ever disagrees with
+`sequence` (clock skew, network reorder, retried writes), `sequence`
+wins without exception.
+
+Enforced by:
+* `EventStreamRehydrator.ordering.test.ts` — feeds rows whose
+  `occurred_at` is in reverse chronological order along ascending
+  `sequence` and asserts the rebuild matches the well-ordered baseline.
+* The `(aggregate_id, sequence)` unique constraint at the DB layer.
+
+### D-0012-09 — `metadata` is operational only
+
+`metadata` is reserved for tracing (`correlationId`, `causationId`),
+audit (actor / request id), and integration plumbing (outbox, retries).
+**No domain code may read `metadata` to make a business decision.**
+Business truth lives exclusively in `payload`.
+
+Enforced by:
+* `scripts/fitness/check-metadata-non-domain.mjs` — bans the bare
+  identifier `metadata` inside `src/domain/finance/**` outside the
+  kernel type re-export (active in `run-all.mjs`).
+* `EventCodec.metadataPassthrough.test.ts` — rebuilds the aggregate
+  twice (with empty metadata and with arbitrary noisy metadata) and
+  asserts the resulting state is identical.
+
+### Amendment A2 — Wave 2B verification gates
+
+| Gate     | What it proves                                                                                  | Artefact                                                                  |
+|----------|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| G-IDEM   | Migration is idempotent (second run is a no-op)                                                 | `supabase/migrations/*invoice_events*.sql` (DO/IF-NOT-EXISTS guards)      |
+| G-PLAN   | Read path uses the `(aggregate_id, sequence)` index                                             | `EXPLAIN` snapshot taken in CI integration job                            |
+| G-GAP    | Five integration scenarios pass against a live DB                                               | `src/infrastructure/finance/invoice/__integration__/*.integration.test.ts`|
+| G-VER    | Codec version routing: encode picks latest, decode dispatches by `(type, schema_version)`       | `Codec.roundtrip.test.ts` + registry list assertions                      |
+| G-THIN   | Composition Root is the ONLY file importing domain + application + infrastructure together     | `check-composition-root-uniqueness.mjs`                                  |
+
+### Integration suite (replaces §D-0012-07's three scenarios)
+
+The integration suite, gated behind `INTEGRATION=1`, now covers FIVE
+scenarios:
+
+1. **Concurrency** — two parallel `appendEvents@v=0` produce exactly one
+   `Conflict`.
+2. **Rehydration** — `load()` returns events ordered 1..N gap-free.
+3. **TenantIsolation** — tenant B cannot observe tenant A rows under any
+   code path.
+4. **TenantOrphan (A3)** — a user with zero rows in `user_tenants` (so
+   `current_tenant()` returns `NULL`) sees zero rows and is rejected on
+   insert. Catches partially-provisioned accounts.
+5. **GapAfterRace** — after a Conflict, the losing writer leaves no
+   phantom row at the next slot; sequences remain contiguous.
+
+## 6. Lock artefacts (Wave 2B)
+
+* `supabase/migrations/<timestamp>_*invoice_events*.sql`
+* `src/composition/finance.ts` (sole tri-layer importer)
+* `scripts/fitness/check-metadata-non-domain.mjs`
+* `src/infrastructure/finance/invoice/__tests__/rehydrator/EventStreamRehydrator.ordering.test.ts`
+* `src/infrastructure/finance/invoice/__tests__/codec/EventCodec.metadataPassthrough.test.ts`
+* `src/infrastructure/finance/invoice/__integration__/InvoiceEvents.integration.test.ts`
+* `scripts/audits/output/ux2b-wave2b-lock.json`
