@@ -2262,6 +2262,45 @@ export type Database = {
           },
         ]
       }
+      invoice_events: {
+        Row: {
+          aggregate_id: string
+          created_at: string
+          event_id: string
+          metadata: Json
+          occurred_at: string
+          payload: Json
+          schema_version: number
+          sequence: number
+          tenant_id: string
+          type: string
+        }
+        Insert: {
+          aggregate_id: string
+          created_at?: string
+          event_id: string
+          metadata?: Json
+          occurred_at: string
+          payload: Json
+          schema_version: number
+          sequence: number
+          tenant_id: string
+          type: string
+        }
+        Update: {
+          aggregate_id?: string
+          created_at?: string
+          event_id?: string
+          metadata?: Json
+          occurred_at?: string
+          payload?: Json
+          schema_version?: number
+          sequence?: number
+          tenant_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           created_at: string
@@ -6686,6 +6725,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_tenant: { Args: never; Returns: string }
       decrypt_totp_secret: { Args: { _user_id: string }; Returns: string }
       emit_event: {
         Args: {
