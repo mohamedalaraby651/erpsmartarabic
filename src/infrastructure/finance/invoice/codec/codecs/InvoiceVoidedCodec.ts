@@ -30,7 +30,7 @@ export const InvoiceVoidedCodecV1: EventCodec<InvoiceVoided> = {
 
   encode(event: InvoiceVoided): PersistedEventRow {
     return {
-      event_id: String(event.eventId),
+      event_id: String(event.id),
       aggregate_id: String(event.invoiceId),
       sequence: event.sequence,
       type: INVOICE_VOIDED,
@@ -64,7 +64,7 @@ export const InvoiceVoidedCodecV1: EventCodec<InvoiceVoided> = {
     };
     const ev: InvoiceVoided = Object.freeze({
       type: INVOICE_VOIDED,
-      eventId: unsafeId<"DomainEvent">(row.event_id),
+      id: unsafeId<"DomainEvent">(row.event_id),
       invoiceId: unsafeId<"InvoiceId">(row.aggregate_id),
       sequence: row.sequence,
       occurredAt: Instant.fromISOString(row.occurred_at),

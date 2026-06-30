@@ -63,7 +63,7 @@ export const InvoiceIssuedCodecV1: EventCodec<InvoiceIssued> = {
       payload["customer_id"] = String(p.customerId);
     }
     return {
-      event_id: String(event.eventId),
+      event_id: String(event.id),
       aggregate_id: String(event.invoiceId),
       sequence: event.sequence,
       type: INVOICE_ISSUED,
@@ -175,7 +175,7 @@ export const InvoiceIssuedCodecV1: EventCodec<InvoiceIssued> = {
 
     const ev: InvoiceIssued = Object.freeze({
       type: INVOICE_ISSUED,
-      eventId: unsafeId<"DomainEvent">(row.event_id),
+      id: unsafeId<"DomainEvent">(row.event_id),
       invoiceId: unsafeId<"InvoiceId">(row.aggregate_id),
       sequence: row.sequence,
       occurredAt: instantFromIso(row.occurred_at),
