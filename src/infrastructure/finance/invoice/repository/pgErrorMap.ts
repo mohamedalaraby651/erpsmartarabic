@@ -65,7 +65,9 @@ export function mapPgError(
           ? base
           : { ...base, expectedVersion: ctx.expectedVersion };
       }
-      return { kind: "DuplicateKey", message, key: e.details ?? undefined };
+      return e.details == null
+        ? { kind: "DuplicateKey", message }
+        : { kind: "DuplicateKey", message, key: e.details };
     }
     case PG.FOREIGN_KEY_VIOLATION:
       return {
