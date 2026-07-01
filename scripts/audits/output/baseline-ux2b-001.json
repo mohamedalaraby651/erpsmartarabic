@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "tag": "BASELINE-UX2B-001",
+  "phase": "UX2B",
+  "seq": "001",
+  "builtAt": "2026-07-01T03:49:56.683Z",
+  "composite": "97b7a072bcaae35f43e1749a711f1140340111fccc087fc6b3a2a5d669f5f31a",
+  "entryCount": 16,
+  "entries": [
+    {
+      "path": "docs/adr/0000-architecture-frozen-before-frontend-rewrite.md",
+      "sha256": "07637211fe6cc34a0d945dc62f1f53f0b31c8cc0abcc87bcafc7c3812bd651ac"
+    },
+    {
+      "path": "docs/adr/0002-ui-shell-layout-only.md",
+      "sha256": "92f97f6a1e657690b9ec06b528e3a171e5794500aac3717c90fca16869de3fd2"
+    },
+    {
+      "path": "docs/adr/0003-canonical-primitives-v1.md",
+      "sha256": "7980f725a9a7d8b92d35efa5763e0c9e7b07bae0ab228bd382fb02d3b56972a7"
+    },
+    {
+      "path": "docs/adr/0004-composition-contracts-v1.md",
+      "sha256": "c58b04e16c945d9813d9158c603fc47dcbcb2aa0cac6230cf39602d3b1f02f92"
+    },
+    {
+      "path": "docs/adr/0005-integration-spike-protocol.md",
+      "sha256": "8caadb78ad3ba1147db68d1874408cccb3c764f0e5087de4935b0bbbfce27907"
+    },
+    {
+      "path": "docs/adr/0006-temporal-model-and-clock-port.md",
+      "sha256": "2aec4599e84994db2a26583775dce7a94fa916b7736effeac9c770f1e3b693ef"
+    },
+    {
+      "path": "docs/adr/0008-error-mapping-and-unit-of-work.md",
+      "sha256": "8ab27019b7139558fd1518c7a3325548c601d340524f381f0ae0b8f0389d74c0"
+    },
+    {
+      "path": "docs/adr/0010-repository-failure-taxonomy.md",
+      "sha256": "68678327d2dabf6fea0f82b15ba878a847a6f77cb581ac2a2ee595e2d7ea8251"
+    },
+    {
+      "path": "docs/adr/0011-finance-domain-and-invoice-aggregate.md",
+      "sha256": "d6deb8d733977389eddcdf3e438ba237ae6b7092a9348055beb8ee77f542a1bb"
+    },
+    {
+      "path": "docs/adr/0013-baseline-architecture-tags.md",
+      "sha256": "daba25b72fee9b01c03f0e3a4c4397d57e7742e8f4972b7f4267577db0c71768"
+    },
+    {
+      "path": "PROJECT_MAP.md",
+      "sha256": "03c6babc90240efa306807d354fa4fc07868a05317df434ff9287dec5cd52b1a"
+    },
+    {
+      "path": "scripts/audits/output/ux2a-wave8-lock.json",
+      "sha256": "fb76a1a4eeb26b292c706bf33a5dbb2d46fa5f4cf8d3f25d5510f53f4fa6d04a"
+    },
+    {
+      "path": "scripts/audits/output/ux2b-wave1_5-lock.json",
+      "sha256": "b91803fd4c415d2aa9d974aaa1a00b396728b5431bd9a8178f2404f2b33000d2"
+    },
+    {
+      "path": "scripts/audits/output/ux2b-wave1_5-surface.manifest.json",
+      "sha256": "2b9707bc5ddb111aa6f657151569f35276d1e203558eb4f6dd27f99878233ef1"
+    },
+    {
+      "path": "scripts/audits/output/ux2b-wave1-lock.json",
+      "sha256": "dd15b096e90c4d09435746e787ed9055a2519b83288ebe3098ff7ffe25c90970"
+    },
+    {
+      "path": "scripts/audits/output/ux2b-wave2b-lock.json",
+      "sha256": "3dadbe8b91b76b685944b5626b0448a45968fc0f021d81573cca2f1a506c1293"
+    }
+  ]
+}
