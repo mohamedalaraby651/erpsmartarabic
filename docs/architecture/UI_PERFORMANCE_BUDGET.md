@@ -47,3 +47,48 @@
 - React Profiler check in the Suppliers POC before UX-1E exit.
 - `scripts/audits/bundle-report.mjs` deltas reviewed at every wave gate.
 - Budget breach = scorecard Perf section fails → wave does not pass.
+
+---
+
+## §8 Performance Governance (UX3A-§12)
+
+Added by UX3A Wave 0. Governs the Frontend Platform (`kernel/`, `platform/`, `design-system/`, `ux/`, `ui-contracts/`, `features/*`, `pages/*`). Enforced by CI fitness checks starting Wave 6.5 (`check-bundle-budget.mjs`) and Wave 6.9 (`check-virtualization.mjs`, `check-heavy-components.mjs`, `check-rerender-guards.mjs`).
+
+### 8.1 Per-Route Bundle Ceiling (gzip)
+
+| Route class | Ceiling | Hard fail |
+|---|---|---|
+| Shell entry (root chunk) | 180 KB | 220 KB |
+| Feature route (typical) | 120 KB | 180 KB |
+| Feature route (data-heavy: grid/dashboard) | 180 KB | 250 KB |
+| `/design-system/*` demo route | n/a in prod | must be tree-shaken to 0 KB in prod |
+
+### 8.2 Route Timing Budgets
+
+| Signal | Target (cable) | Target (Slow 4G) | Measured by |
+|---|---|---|---|
+| TTFB (Vite dev / static host) | ≤ 100 ms | ≤ 400 ms | Performance API `responseStart` |
+| First Contentful Paint | ≤ 1.0 s | ≤ 2.5 s | web-vitals |
+| Time to Interactive | ≤ 1.8 s | ≤ 4.0 s | web-vitals |
+| Skeleton visible (min) | ≥ 150 ms | ≥ 150 ms | Prevents flash — enforced by `<Deferred/>` |
+| Skeleton visible (max) | ≤ 1200 ms | ≤ 3000 ms | Otherwise switch to `partial` UI state |
+
+### 8.3 Command Execution (CommandBus)
+
+| Signal | p50 | p95 | p99 |
+|---|---|---|---|
+| Local command (no I/O) | ≤ 8 ms | ≤ 20 ms | ≤ 40 ms |
+| Command dispatching to handler | ≤ 4 ms | ≤ 10 ms | ≤ 20 ms |
+| Optimistic UI resolve | ≤ 16 ms | ≤ 32 ms | ≤ 64 ms |
+| Remote command round-trip | ≤ 300 ms | ≤ 800 ms | ≤ 1500 ms |
+
+### 8.4 Bundle Delta vs Previous Baseline
+
+Every wave's baseline JSON records total-bundle SHA + gzip size. A wave PR fails CI when total gzip grows > 5% versus the previous baseline unless the wave's ADR explicitly waives it with a written justification.
+
+### 8.5 Governance Rules
+
+- Any component rendering a list of > 100 rows **must** use virtualization (`check-virtualization`).
+- Heavy modules (charts, editors, PDF, DnD) **must** be lazy-loaded per route (`check-heavy-components`).
+- Context providers whose value changes on every render **must** be memoized (`check-rerender-guards`).
+- Adding a runtime dep > 30 KB gzip requires an ADR amendment naming a removed dep or a waiver justification.
