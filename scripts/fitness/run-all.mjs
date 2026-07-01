@@ -41,6 +41,8 @@ const ACTIVE = [
   "check-adapter-error-boundary.mjs",
   // UX-2B Wave 2B (ADR-0012 §D-0012-09)
   "check-metadata-non-domain.mjs",
+  // UX-2B → UX-2C boundary (ADR-0013)
+  "check-baseline-tag-integrity.mjs",
 ];
 
 const PENDING = [];
