@@ -3,9 +3,9 @@
   "tag": "BASELINE-UX3A-000",
   "phase": "UX3A",
   "seq": "000",
-  "builtAt": "2026-07-01T04:52:29.333Z",
-  "composite": "97b7a072bcaae35f43e1749a711f1140340111fccc087fc6b3a2a5d669f5f31a",
-  "entryCount": 16,
+  "builtAt": "2026-07-04T10:24:41.998Z",
+  "composite": "689ce5a40de083ed40167462e2ecd6c43c00d8e3883dfde4f8492d8fa133005d",
+  "entryCount": 20,
   "entries": [
     {
       "path": "docs/adr/0000-architecture-frozen-before-frontend-rewrite.md",
@@ -48,8 +48,20 @@
       "sha256": "daba25b72fee9b01c03f0e3a4c4397d57e7742e8f4972b7f4267577db0c71768"
     },
     {
+      "path": "docs/adr/0015-kernel-purity.md",
+      "sha256": "30bfcb96de841bfac354c8ea37d2f7b010fd2b34f86e64c12ac88267c630e4fc"
+    },
+    {
+      "path": "docs/adr/0023-frontend-ports-taxonomy.md",
+      "sha256": "05a3a91d490755fd3dce375bcc2fcc5c6e360bfb8ef5089039573ed428c1ae15"
+    },
+    {
+      "path": "docs/adr/0024-runtime-lifecycle.md",
+      "sha256": "3000c5431bb80eaa0db5e3bde579d11989f4810b67254d7d98111b9355447c96"
+    },
+    {
       "path": "PROJECT_MAP.md",
-      "sha256": "03c6babc90240efa306807d354fa4fc07868a05317df434ff9287dec5cd52b1a"
+      "sha256": "6437b6ae40174564edef5bc6c376c826603e8b71896721ec936f1b1a92d9989b"
     },
     {
       "path": "scripts/audits/output/ux2a-wave8-lock.json",
@@ -70,6 +82,10 @@
     {
       "path": "scripts/audits/output/ux2b-wave2b-lock.json",
       "sha256": "3dadbe8b91b76b685944b5626b0448a45968fc0f021d81573cca2f1a506c1293"
+    },
+    {
+      "path": "scripts/audits/output/ux3a-wave1-lock.json",
+      "sha256": "884fc674df2d716f4205321b7486db41b2e3b5da547e8c5825bc53f4dff78a18"
     }
   ]
 }

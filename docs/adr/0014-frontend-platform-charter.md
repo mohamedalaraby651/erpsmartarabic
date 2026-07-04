@@ -1,6 +1,6 @@
 # ADR-0014 — Frontend Platform Charter
 
-- **Status:** Draft
+- **Status:** Draft (Wave-1 Conditionally Accepted — flips to Accepted at Wave 6.99)
 - **Date:** 2026-07-01
 - **Supersedes:** —
 - **Related:** ADR-0002 (UI Shell layout only), ADR-0003 (Canonical primitives), ADR-0004 (Composition contracts), ADR-0013 (Baseline tags)

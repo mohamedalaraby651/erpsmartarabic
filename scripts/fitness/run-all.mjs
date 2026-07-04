@@ -43,8 +43,13 @@ const ACTIVE = [
   "check-metadata-non-domain.mjs",
   // UX-2B → UX-2C boundary (ADR-0013)
   "check-baseline-tag-integrity.mjs",
-  // UX-3A Wave 0 (report-only; flips to enforcing in Wave 1)
+  // UX-3A Wave 1 (enforcing)
   "check-platform-layering.mjs",
+  "check-kernel-browser-globals.mjs",
+  "check-port-adapter-parity.mjs",
+  "check-port-registry-completeness.mjs",
+  "check-platform-shell-single-entry.mjs",
+  "check-no-new-adaptiveshell-imports.mjs",
 ];
 
 const PENDING = [];

@@ -1,11 +1,16 @@
 # UX3A — Frontend Platform Reference Architecture
 
-- **Status:** Reference (immutable; changes via ADR amendment only)
+- **Status:** LOCKED (immutable; changes via ADR amendment only)
 - **Version:** 1.0.0
+- **Locked-At:** 2026-07-04
+- **Locked-By:** BASELINE-UX3A-000
 - **Owner:** Architecture Council
 - **Companion ADR:** [ADR-0014 — Frontend Platform Charter](../../adr/0014-frontend-platform-charter.md)
-- **Baseline seal:** `BASELINE-UX3A-000`
+- **Companion rules:** [DEPENDENCY_RULES.md](../DEPENDENCY_RULES.md)
+- **Baseline seal:** `BASELINE-UX3A-000` (Wave 0), `BASELINE-UX3A-001` (Wave 1)
 - **Applies to:** All frontend layers (`src/kernel`, `src/platform`, `src/ui`, `src/design-system`, `src/ux`, `src/ui-contracts`, `src/features/*`, `src/pages/*`).
+
+**Change Protocol.** This document is immutable. Any amendment requires (a) a new ADR referencing UX3A-§n, (b) a bumped `Version:` header, (c) a new `Locked-By:` baseline tag, and (d) fitness-check updates that reference the changed invariants.
 
 This document is the *specification*. Waves cite it by section ID (`UX3A-§n`). Deviations require ADR amendment.
 
