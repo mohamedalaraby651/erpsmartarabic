@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "wave": "UX3A-Wave-1",
-  "sealedAt": "2026-07-04T10:22:55.043Z",
+  "sealedAt": "2026-07-04T10:24:25.676Z",
   "baseline": "BASELINE-UX3A-001",
   "fingerprint": "6e4bcc7568111316161999d71e5f84aa4690f5606dd4220521fd9698884822d2",
   "adrs": {
@@ -29,5 +29,5 @@
     "share"
   ],
   "entryCount": 55,
-  "composite": "0612984cd6b8096c51f01fb33cc0e09b470cf14c6dd3df44dc5530fc29552127"
+  "composite": "1bbaee379c923b631fa8dd1adf4caf6de4a34847f9ee4f54ed1d0ddfbeb8ef7f"
 }

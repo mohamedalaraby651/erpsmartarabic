@@ -3,14 +3,14 @@
   "tag": "BASELINE-UX3A-001",
   "phase": "UX3A",
   "seq": "001",
-  "builtAt": "2026-07-04T10:22:55.043Z",
-  "composite": "0612984cd6b8096c51f01fb33cc0e09b470cf14c6dd3df44dc5530fc29552127",
+  "builtAt": "2026-07-04T10:24:25.676Z",
+  "composite": "1bbaee379c923b631fa8dd1adf4caf6de4a34847f9ee4f54ed1d0ddfbeb8ef7f",
   "entryCount": 55,
   "fingerprint": "6e4bcc7568111316161999d71e5f84aa4690f5606dd4220521fd9698884822d2",
   "entries": [
     {
       "path": "docs/adr/0014-frontend-platform-charter.md",
-      "sha256": "24d30fcc4752f6b71baa682d51d5ca04be010e32529d25ce63c53ce458d1c06c"
+      "sha256": "c8ef9793bc8ce3a01e939a1fc088594e65c5083a2161ed446dd315154b11d668"
     },
     {
       "path": "docs/adr/0015-kernel-purity.md",
@@ -30,7 +30,7 @@
     },
     {
       "path": "docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md",
-      "sha256": "65f60264b22e360bb026c1926ada29c4f15fa1a6a16eb2f46513e1d8c3a79df0"
+      "sha256": "e7fcfc5844144a5d524f26025b7cc1a3cd416549f4c6852c8954aa67994a8ba1"
     },
     {
       "path": "scripts/fitness/check-kernel-browser-globals.mjs",
@@ -46,7 +46,7 @@
     },
     {
       "path": "scripts/fitness/check-platform-shell-single-entry.mjs",
-      "sha256": "1375d418ce3f7d5d07cf14694ab45b0149d913d3fb8c33b7549881b53a5b95db"
+      "sha256": "b8df05f7c8bfbed6066256a98196255429ad36d1c7d74ee4e932231ec378c530"
     },
     {
       "path": "scripts/fitness/check-port-adapter-parity.mjs",
