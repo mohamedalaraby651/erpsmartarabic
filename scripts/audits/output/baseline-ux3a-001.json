@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "tag": "BASELINE-UX3A-001",
+  "phase": "UX3A",
+  "seq": "001",
+  "builtAt": "2026-07-04T10:22:55.043Z",
+  "composite": "0612984cd6b8096c51f01fb33cc0e09b470cf14c6dd3df44dc5530fc29552127",
+  "entryCount": 55,
+  "fingerprint": "6e4bcc7568111316161999d71e5f84aa4690f5606dd4220521fd9698884822d2",
+  "entries": [
+    {
+      "path": "docs/adr/0014-frontend-platform-charter.md",
+      "sha256": "24d30fcc4752f6b71baa682d51d5ca04be010e32529d25ce63c53ce458d1c06c"
+    },
+    {
+      "path": "docs/adr/0015-kernel-purity.md",
+      "sha256": "30bfcb96de841bfac354c8ea37d2f7b010fd2b34f86e64c12ac88267c630e4fc"
+    },
+    {
+      "path": "docs/adr/0023-frontend-ports-taxonomy.md",
+      "sha256": "05a3a91d490755fd3dce375bcc2fcc5c6e360bfb8ef5089039573ed428c1ae15"
+    },
+    {
+      "path": "docs/adr/0024-runtime-lifecycle.md",
+      "sha256": "3000c5431bb80eaa0db5e3bde579d11989f4810b67254d7d98111b9355447c96"
+    },
+    {
+      "path": "docs/architecture/DEPENDENCY_RULES.md",
+      "sha256": "53dca0534b78581394041adf14abaff98791571c736b147bf50c84a0c6cb753b"
+    },
+    {
+      "path": "docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md",
+      "sha256": "65f60264b22e360bb026c1926ada29c4f15fa1a6a16eb2f46513e1d8c3a79df0"
+    },
+    {
+      "path": "scripts/fitness/check-kernel-browser-globals.mjs",
+      "sha256": "c51f7a835361117b5c301ac973b194ff3dacfcf7e0e7552949eb3ea67ea97de4"
+    },
+    {
+      "path": "scripts/fitness/check-no-new-adaptiveshell-imports.mjs",
+      "sha256": "de7e3ac41d203527ef3421f545dfa2200f47088df431ff0476bfeeea964ceb63"
+    },
+    {
+      "path": "scripts/fitness/check-platform-layering.mjs",
+      "sha256": "afcbbc730ad965c6ee093fc625de1134ff2d62b867e31b972461f075287c07f9"
+    },
+    {
+      "path": "scripts/fitness/check-platform-shell-single-entry.mjs",
+      "sha256": "1375d418ce3f7d5d07cf14694ab45b0149d913d3fb8c33b7549881b53a5b95db"
+    },
+    {
+      "path": "scripts/fitness/check-port-adapter-parity.mjs",
+      "sha256": "5fc354c4557091e71d83ea3d59e9692752061680dc669cfbb2fd6f16308ebdca"
+    },
+    {
+      "path": "scripts/fitness/check-port-registry-completeness.mjs",
+      "sha256": "1e732cf4600cf2a42cb1665c649b9a6fcce74b82e1a38ac204139abdb62979c3"
+    },
+    {
+      "path": "src/kernel/clock/index.ts",
+      "sha256": "566a27d3a57d351a7c42e3591c3b920c19e0cdfb8e23680998c18079f558f063"
+    },
+    {
+      "path": "src/kernel/culture/index.ts",
+      "sha256": "8a0fc91ebec038d75bfea3794a049d0cb217b352e3a18ca0325016ff22f4b5e1"
+    },
+    {
+      "path": "src/kernel/env/index.ts",
+      "sha256": "d630194615fcac96fb7e132b7f9bb77045da0f34150c991c2d267199b0e58854"
+    },
+    {
+      "path": "src/kernel/flags/index.ts",
+      "sha256": "ea61753d95e8c63e70e5c400c08319ca639b6b5156d3e6469c2eaba576734393"
+    },
+    {
+      "path": "src/kernel/i18n/index.ts",
+      "sha256": "460cddec7ed5b81f71628525f8335545c42402c12b31eafd1f03952e20344f86"
+    },
+    {
+      "path": "src/kernel/identity/index.ts",
+      "sha256": "857237f63fe1d2014c96723ed1d9041a2e7b360cd1ee7b675986f1f34c77c220"
+    },
+    {
+      "path": "src/kernel/index.ts",
+      "sha256": "5112eda31c3831349ead9e4693509fb97956e0ce545a69808be1f173e0fd2da4"
+    },
+    {
+      "path": "src/kernel/permissions/index.ts",
+      "sha256": "640f3764c207e62df28babb25414e5d2019c3984824e33257a0fdfb0df042b7a"
+    },
+    {
+      "path": "src/kernel/tenant/index.ts",
+      "sha256": "2b22f97bda945005081b3d604bc05e352d8a4c48374745a5a308c04c09c675d9"
+    },
+    {
+      "path": "src/platform/ai/index.ts",
+      "sha256": "f7a1706bb68df9f4384ad4520ed8f6f82f58296e8f652174fa1975334406d05b"
+    },
+    {
+      "path": "src/platform/index.ts",
+      "sha256": "9300c25a9b971c83bcafb515d95cc9b85c2a1ffda4cf02c9104d1b6393e255c9"
+    },
+    {
+      "path": "src/platform/modules/index.ts",
+      "sha256": "7983f3138101416f9f3ea9455a57b262fce24e53297674f4e9864b68ec67966b"
+    },
+    {
+      "path": "src/platform/ports/__tests__/PortRegistry.test.ts",
+      "sha256": "6d3bd71d0ea9af65faad3197691b89ae6149d8c839e16aa97ff16878193727f7"
+    },
+    {
+      "path": "src/platform/ports/adapters/browser/BrowserClipboardAdapter.ts",
+      "sha256": "54863790c1aa3f2ddde28b32aafefab04e28d22bb16c3414271181be4a1b0410"
+    },
+    {
+      "path": "src/platform/ports/adapters/browser/BrowserDialogAdapter.ts",
+      "sha256": "e501d7f3b2131141d1ff225ace17a00a04c3b07fa466c4eb24248fb65cd8a4d7"
+    },
+    {
+      "path": "src/platform/ports/adapters/browser/BrowserFilePickerAdapter.ts",
+      "sha256": "aa2f4ec80f6fa64ed7806009b396d0e5113b31319531b9d193cc48b76e8a65aa"
+    },
+    {
+      "path": "src/platform/ports/adapters/browser/BrowserNavigationAdapter.ts",
+      "sha256": "00abdc55d0eb5bbf6ce287a7a93d327ce1cec8eed19ca732df4d40244030498e"
+    },
+    {
+      "path": "src/platform/ports/adapters/browser/BrowserNotificationAdapter.ts",
+      "sha256": "c5ec0cd2ae078ad85c891a644cd35a5d1a5935d26ee67778e5b6ad49cc339e17"
+    },
+    {
+      "path": "src/platform/ports/adapters/browser/BrowserShareAdapter.ts",
+      "sha256": "7a233b1883cb07c6ff3463b1e5a6936ac83c1b494c90e0c73e5fe183069ceadd"
+    },
+    {
+      "path": "src/platform/ports/adapters/browser/BrowserStorageAdapter.ts",
+      "sha256": "3ac38de9706d94ca366e0c33a810b5af563a2a6ec30076d606f6c50f151c9ce7"
+    },
+    {
+      "path": "src/platform/ports/adapters/memory/InMemoryClipboardAdapter.ts",
+      "sha256": "1074b493a314e6a533a21d0917c4d863fa820198286281f8db4a60effbe351bc"
+    },
+    {
+      "path": "src/platform/ports/adapters/memory/InMemoryDialogAdapter.ts",
+      "sha256": "7af058f46d10652b8bb02bb8bcf4d0c61788a793052e3b671db920106aa27e9c"
+    },
+    {
+      "path": "src/platform/ports/adapters/memory/InMemoryFilePickerAdapter.ts",
+      "sha256": "2176a0df168b1d15f237fa7c42e4a55e957d0880e0c85315d2ebef0982092f62"
+    },
+    {
+      "path": "src/platform/ports/adapters/memory/InMemoryNavigationAdapter.ts",
+      "sha256": "7572850ab8b2754402009c911f80f6bf007c4d38a09a30076b6108616b6612f8"
+    },
+    {
+      "path": "src/platform/ports/adapters/memory/InMemoryNotificationAdapter.ts",
+      "sha256": "9c0d54fa8ff9cdec779edd414c0caf760057e815461bd7d5bb0df731d8cc7769"
+    },
+    {
+      "path": "src/platform/ports/adapters/memory/InMemoryShareAdapter.ts",
+      "sha256": "52e4f3f01a5c5b88b7d8c45291cec14c83259653e2cc6a1e1aaca60ae4711f2c"
+    },
+    {
+      "path": "src/platform/ports/adapters/memory/InMemoryStorageAdapter.ts",
+      "sha256": "e133d2391a1fd8f9ac065f7456906cc876614bf220c0bf105f269de3459abd78"
+    },
+    {
+      "path": "src/platform/ports/ClipboardPort.ts",
+      "sha256": "e1af3c0c883fe2aed3170e499b72295c9d67ebee2217c4b738b91c81b4cb824d"
+    },
+    {
+      "path": "src/platform/ports/DialogPort.ts",
+      "sha256": "2b631c8aa180310bca4d283705c48a0368b9fb35961182a6094f9f147c2ea0ec"
+    },
+    {
+      "path": "src/platform/ports/FilePickerPort.ts",
+      "sha256": "56f09b6aa516b105f97d32d14157b2d6480d7c3570eaa0187666cd1f7b445bc6"
+    },
+    {
+      "path": "src/platform/ports/index.ts",
+      "sha256": "f59f52d9ad38fcc992bc7bccbc1c06204162cded604310eaf1db4e79a4aa9268"
+    },
+    {
+      "path": "src/platform/ports/NavigationPort.ts",
+      "sha256": "9e82c67933bb004404f925bb8ad2b81f21ba68f668bd5e7d987db0511f084e72"
+    },
+    {
+      "path": "src/platform/ports/NotificationPort.ts",
+      "sha256": "2de5571cf4ed57c66ba0cc02ca4a411a8a7c1590199622f5eeb1e3ece09401bf"
+    },
+    {
+      "path": "src/platform/ports/PortRegistry.ts",
+      "sha256": "4c67529792cc304071595393112e008f28b55332e8889d8cfd59365dc49e1c30"
+    },
+    {
+      "path": "src/platform/ports/SharePort.ts",
+      "sha256": "b9e89999a28ae898bce5bedb6a33b5e302f2d0489e63e0e7dd8eab39dfe3c58f"
+    },
+    {
+      "path": "src/platform/ports/StoragePort.ts",
+      "sha256": "556238ba8c88e1fa7408d47a34dca1446f3dc28d6d90226b660ab7f46c9c9249"
+    },
+    {
+      "path": "src/platform/registries/index.ts",
+      "sha256": "158e36e2f0631152ad6b491f70bdad8080e3ac36d373a954cd3c89dfb592e4b8"
+    },
+    {
+      "path": "src/platform/runtime/__tests__/PlatformRuntime.test.ts",
+      "sha256": "ba0c9a91155398cc6377803d21c3ebd042157422cdad8c8da3181383898df506"
+    },
+    {
+      "path": "src/platform/runtime/index.ts",
+      "sha256": "a8db4126c41a13356e661c4eb6ab9a7a19712a4355cfa20ca6fb188a7c64c3f3"
+    },
+    {
+      "path": "src/platform/runtime/PlatformRuntime.ts",
+      "sha256": "f3bbde92607eee11e93805d10cbd0918663d6a98e8b855f9343b94b919315ef2"
+    },
+    {
+      "path": "src/platform/runtime/RuntimeContext.ts",
+      "sha256": "917e6b1f39292b30c5c8d841db640b757cabbcd1017f18512bd3e07b2759c437"
+    },
+    {
+      "path": "src/platform/shell/index.ts",
+      "sha256": "96b2933eb523b5ca9853d5b757f6f9257ace8f94b0f8da49c0f498a1d4bb4476"
+    },
+    {
+      "path": "src/platform/shell/PlatformShell.tsx",
+      "sha256": "81cc2db18aef12e5ac0bae311047b3d0a95b71dbf54063b196c48574a26f1017"
+    }
+  ]
+}
