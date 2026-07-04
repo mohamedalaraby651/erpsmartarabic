@@ -19,7 +19,7 @@ import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { join, resolve, dirname, extname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const MODE = "report-only"; // Wave 0
+const MODE = "enforcing"; // Wave 1: flipped from report-only.
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..", "..");
 const SRC = join(ROOT, "src");
