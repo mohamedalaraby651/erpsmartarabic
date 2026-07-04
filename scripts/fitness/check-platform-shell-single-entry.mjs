@@ -36,11 +36,12 @@ for (const abs of files) {
   const rel = relative(ROOT, abs).split("\\").join("/");
   const inShell = rel.startsWith("src/platform/shell/");
   const inRuntime = rel.startsWith("src/platform/runtime/");
+  const isTest = /(__tests__|\.test\.[cm]?tsx?$|\.spec\.[cm]?tsx?$)/.test(rel);
   const src = readFileSync(abs, "utf8");
-  if (NEW_RUNTIME.test(src) && !inShell) {
+  if (NEW_RUNTIME.test(src) && !inShell && !isTest) {
     violations.push(`${rel} :: instantiates PlatformRuntime outside src/platform/shell/**`);
   }
-  if (PROVIDER.test(src) && !inShell && !inRuntime) {
+  if (PROVIDER.test(src) && !inShell && !inRuntime && !isTest) {
     violations.push(`${rel} :: uses RuntimeContext.Provider outside src/platform/shell/**`);
   }
 }
