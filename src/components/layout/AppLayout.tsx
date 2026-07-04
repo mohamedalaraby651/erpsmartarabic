@@ -5,7 +5,7 @@ import { useUserPreferences } from '@/hooks/useUserPreferences';
 import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
-import { AdaptiveShell } from './AdaptiveShell';
+import { PlatformShell } from '@/platform/shell';
 
 export default function AppLayout() {
   const { user, loading, initError, retryInit } = useAuth();
@@ -79,7 +79,7 @@ export default function AppLayout() {
   }
 
   return (
-    <AdaptiveShell
+    <PlatformShell
       isDark={isDark}
       onThemeToggle={toggleTheme}
       showShortcutsModal={showShortcutsModal}

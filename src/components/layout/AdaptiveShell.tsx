@@ -1,3 +1,9 @@
+/**
+ * @deprecated (UX3A Wave 1) — Do not add NEW imports of AdaptiveShell.
+ * `PlatformShell` (`@/platform/shell`) is the single runtime entry point and
+ * the ONLY module allowed to compose this shell. Removal is scheduled for a
+ * later wave. Enforced by `check-no-new-adaptiveshell-imports.mjs`.
+ */
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
