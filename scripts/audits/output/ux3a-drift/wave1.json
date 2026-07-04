@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-04T10:21:46.647Z",
+  "baseline": "BASELINE-UX3A-000",
+  "totalFiles": 1181,
+  "filesPerLayer": {
+    "kernel": 9,
+    "platform": 32,
+    "design-system": 0,
+    "ui-contracts": 0,
+    "ux": 0,
+    "features": 0,
+    "pages": 99,
+    "ui": 110,
+    "components": 430,
+    "other": 501
+  },
+  "crossLayerEdges": {
+    "other->components": 13,
+    "components->components": 1091,
+    "components->pages": 3,
+    "components->platform": 1,
+    "pages->components": 869,
+    "platform->kernel": 2,
+    "platform->components": 1,
+    "ui->ui": 29,
+    "ui->components": 5
+  },
+  "facadeUsage": {
+    "@/kernel": 2,
+    "@/platform": 1,
+    "@/platform/ports": 0,
+    "@/platform/runtime": 0,
+    "@/platform/shell": 1
+  }
+}
