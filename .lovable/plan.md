@@ -1,139 +1,173 @@
-## UX-3A — Frontend Platform Reference Architecture + Staged Execution
+## UX-3A Wave 1 — Kernel + Platform Skeleton + Runtime Lifecycle + Ports + Shell Migration (v3)
 
-Adopts your 8 refinements. First deliverable is a **reference specification document** (immutable, versioned). Subsequent waves execute one-at-a-time; each wave gets its own scoped prompt derived from the reference doc (allowed files, forbidden files, success criteria, fitness checks, stop condition).
-
-### Refinements folded into the architecture
-
-1. **Runtime Lifecycle** — `platform/runtime/{bootstrap,startup,shutdown,hydration,recovery}` with a single `RuntimeLifecycle` contract.
-2. **Frontend Ports** — `platform/ports/{Notification,Dialog,Navigation,Storage,Clipboard,FilePicker,Share}Port.ts` + default browser adapters + in-memory test adapters.
-3. **Rich Module Manifest** — `{ id, version, dependencies[], routes[], commands[], navigation[], permissions[], featureFlags[], widgets[], intelligenceExtensions[] }` with a Zod schema + `check-module-manifest.mjs`.
-4. **Intelligence Layer** — add `context/`, `memory/`, `providers/` alongside `commands/agents/prompts/slots/actions/`.
-5. **UX State Metadata** — every state carries `{ reason?, updatedAt, retryable, userMessageKey?, correlationId? }`; `<UIStateView/>` reads it uniformly.
-6. **Dashboard split** — `platform/dashboard/{widget-runtime,layout-engine,persistence}` as three independent modules behind ports.
-7. **Contracts taxonomy** — `src/ui-contracts/{view,interaction,widget,module}/` with per-category fitness checks.
-8. **Performance Governance** — extend `docs/architecture/UI_PERFORMANCE_BUDGET.md` with per-route bundle ceiling, TTFB, skeleton-visible time, command-execution p95, and wire `check-bundle-budget.mjs` per route.
-
-### Layered model (locked, unchanged from prior revision)
-
-```text
-Platform → Kernel → Runtime → Design System → UX Framework → Feature Modules → Pages
-```
-
-Hard rules (fitness-enforced): no back-edges; `ux/**` bans domain/app/infra/supabase; feature modules consume only public façades (`@/platform`, `@/kernel`, `@/design-system`, `@/ux`, `@/ui-contracts`); no new runtime dependency without an ADR.
-
-### Target directory layout (final)
-
-```text
-src/
-├── kernel/
-│   ├── identity/  clock/  culture/  i18n/  env/  flags/  tenant/  permissions/
-│   └── index.ts
-├── platform/
-│   ├── core/                       # PlatformProvider composition
-│   ├── runtime/
-│   │   ├── bootstrap/  startup/  shutdown/  hydration/  recovery/
-│   │   └── RuntimeLifecycle.ts
-│   ├── ports/                      # NotificationPort, DialogPort, NavigationPort,
-│   │                               #   StoragePort, ClipboardPort, FilePickerPort, SharePort
-│   ├── providers/                  # thin composition
-│   ├── registries/                 # SlotRegistry, ShortcutRegistry index
-│   ├── services/                   # LoggerPort binding, ToastService
-│   ├── shell/                      # adapter over src/ui/AppShell
-│   ├── navigation/                 # Registry + Resolvers (Breadcrumb/Menu/Permission)
-│   ├── workspaces/                 # Registry/Loader/Slots/Lifecycle/Context
-│   ├── modules/                    # ModuleRegistry, ModuleLoader, ModuleManifest (Zod)
-│   ├── commands/                   # CommandRegistry, CommandBus, CommandHandler
-│   ├── events/                     # UIEvent, EventRegistry, Publisher, Subscriber
-│   ├── shortcuts/                  # global bootstrap
-│   ├── command-palette/            # wired to CommandBus + intelligence.commands
-│   ├── notifications/              # NotificationProvider (uses NotificationPort)
-│   ├── dashboard/
-│   │   ├── widget-runtime/  layout-engine/  persistence/
-│   │   └── index.ts
-│   ├── plugins/                    # plugin contract (Marketplace-ready)
-│   ├── intelligence/
-│   │   ├── commands/ agents/ prompts/ slots/ actions/ providers/ context/ memory/
-│   │   └── index.ts
-│   └── index.ts
-├── ui/                             # (unchanged tokens/primitives/composites/shell)
-├── design-system/
-│   ├── tokens/ primitives/ composites/ patterns/  └── index.ts
-├── ux/
-│   ├── interactions/ state/ presentation/ dashboard/  └── index.ts
-├── ui-contracts/
-│   ├── view/       # e.g. finance/invoice.ts
-│   ├── interaction/
-│   ├── widget/
-│   ├── module/
-│   ├── _mocks/
-│   └── index.ts
-└── pages/design-system/            # dev/staging only, code-split out of prod
-```
-
-### Governance additions
-
-**Reference doc (immutable, versioned):** `docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md` (this document, verbatim, with per-section IDs `UX3A-§1..§12`). Any deviation requires an ADR amendment.
-
-**ADRs (Draft → Accepted per wave):** 0014 Charter · 0015 Kernel Contracts · 0016 Command Bus & Events · 0017 Navigation Runtime · 0018 Workspaces & Module Registry · 0019 UX State (+ metadata) · 0020 Data Presentation · 0021 Dashboard Runtime (widget/layout/persistence split) · 0022 Intelligence Reservation · **0023 Runtime Lifecycle** · **0024 Frontend Ports** · **0025 Performance Governance**.
-
-**New fitness checks:** `check-platform-layering`, `check-kernel-purity`, `check-ux-purity`, `check-design-system-purity`, `check-command-bus-usage`, `check-navigation-registry`, `check-module-manifest`, `check-runtime-lifecycle`, `check-frontend-ports-usage`, `check-intelligence-slot-reservation`, `check-ui-state-metadata`, `check-dashboard-module-split`, `check-ui-contract-taxonomy`, `check-no-hardcoded-colors`, `check-legacy-shell-retirement`, `check-legacy-ui-kit-retirement`, `check-bundle-budget`, `check-virtualization`, `check-heavy-components`, `check-rerender-guards`.
-
-**Docs:** `UI_LAYER_MAP.md`, extend `UI_PERFORMANCE_BUDGET.md` per §8, `PROJECT_MAP.md` update per wave, `MANIFEST.json` update per wave.
-
-### Open question resolution
-`/design-system/*` demo routes: dev/staging only, gated by `import.meta.env.DEV || VITE_ENABLE_DESIGN_SYSTEM === 'true'`, code-split out of the production bundle.
+Incorporates the previous five refinements plus six new hardening items: Kernel browser-globals fitness, Architecture Drift Report, Architecture Fingerprint, `DEPENDENCY_RULES.md`, PortRegistry completeness fitness, and PlatformShell single-entry fitness.
 
 ---
 
-### Staged execution — one wave per turn, each with its own scoped prompt
+### Wave 1 Architectural Invariants (authoritative — enforced by fitness + tests)
 
-Every wave delivers: (a) code, (b) tests, (c) fitness activation, (d) ADR promotion, (e) `PROJECT_MAP.md` + `MANIFEST.json` update, (f) wave lock JSON, (g) baseline tag entry. The stop condition for every wave is: all activated fitness checks green in CI **and** wave lock file present.
+1. Platform never depends on UX.
+2. Kernel never depends on Platform.
+3. Ports never depend on their adapters — adapters depend on Ports; never the reverse.
+4. `AppLayout` imports `PlatformShell` only.
+5. `PlatformShell` is the single runtime entry point — **only** file allowed to instantiate `PlatformRuntime` or provide `RuntimeContext`.
+6. Only public façades (`@/kernel`, `@/platform`, `@/platform/ports`, `@/platform/runtime`, `@/platform/shell`) are importable from outside.
+7. Deep imports across layer boundaries are forbidden.
+8. `PlatformRuntime` owns lifecycle.
+9. Runtime owns Ports (single injection surface = `PortRegistry`, must contain **all** declared ports).
+10. UI owns rendering only — no business logic in Platform or Kernel.
+11. No business logic enters Platform or Kernel from Domain / Application / Infrastructure / Supabase.
+12. Kernel is browser-globals-free — no `window`, `document`, `navigator`, `localStorage`, `sessionStorage`, `fetch`, `XMLHttpRequest`, `WebSocket`, `caches`, `IndexedDB`, `crypto` (browser), `location`, `history`.
 
-- **Wave 0 — Reference doc + Governance seed** *(no `src/**` changes)*
-  Files allowed: `docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md` (new, this plan verbatim + section IDs), `docs/architecture/UI_LAYER_MAP.md` (new skeleton), `docs/adr/0014-frontend-platform-charter.md` (Draft), extend `docs/architecture/UI_PERFORMANCE_BUDGET.md`, seal `BASELINE-UX3A-000` via `build-baseline-tag.mjs`, add `check-platform-layering.mjs` in **report-only** mode, register in `run-all.mjs`. Forbidden: any file under `src/**`. Success: baseline JSON present, ADR-0014 Draft merged, layering report emitted with 0 violations expected (informational).
+---
 
-- **Wave 1 — Kernel + Platform skeletons + Runtime Lifecycle + Ports** *(ADR-0015, ADR-0023, ADR-0024)*
-  Create `src/kernel/**`, `src/platform/core|runtime|ports|providers|registries|services|shell/**` with public façades; wire `platform/shell` to `src/ui/AppShell`; migrate `AppLayout` off `AdaptiveShell` (mobile bottom-nav + FAB preserved via slot registrations); implement `RuntimeLifecycle` (bootstrap/startup/hydration/shutdown/recovery); ship 7 Ports + browser + in-memory adapters. Activate: `check-kernel-purity`, `check-platform-layering` (enforcing), `check-runtime-lifecycle`, `check-frontend-ports-usage`, `check-legacy-shell-retirement`.
+### Phase G-W1 — Approval Gate (no `src/**` changes)
 
-- **Wave 2 — Design System consolidation** *(ADR update to 0003)*
-  Fill token gaps (`surface-*`, `elevation-*`, `radius-*`, `motion-*`, `z-*`, status tones), add high-contrast theme, migrate callers off `components/ui-kit/*`, delete `ui-kit`. Activate: `check-design-system-purity`, `check-no-hardcoded-colors`, `check-legacy-ui-kit-retirement`.
+1. Stamp `docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md` header: `Version: v1.0`, `Status: LOCKED`, `Locked-At: <date>`, `Locked-By: BASELINE-UX3A-000`. Add "Change Protocol" clause.
+2. Append **Wave-1 Conditional Acceptance** clause to ADR-0014.
+3. **New:** Create `docs/architecture/DEPENDENCY_RULES.md` — the canonical, human-readable specification of layer edges, façade whitelist, and the 12 invariants above. All fitness checks and ADRs reference this file by section id (e.g. `DR-§3.2/kernel-purity`).
+4. Add `.github/workflows/ux3a-wave1-gate.yml` running: `bun run build`, the project's configured TypeScript type-check command (whichever `package.json` script exists — do not hardcode `tsgo`), `node scripts/fitness/run-all.mjs`, plus Wave 1 fitness checks and the Drift Report.
+5. Update `PROJECT_MAP.md` and `docs/architecture/MANIFEST.json` to reference `BASELINE-UX3A-000` and the new `DEPENDENCY_RULES.md`.
+6. Append ADR-conflict appendix to the reference doc mapping UX3A onto ADR-0002/0003/0004 (façade layering only; no override).
 
-- **Wave 3 — Runtime: CommandBus + Events + Navigation + Modules + Workspaces** *(ADRs 0016, 0017, 0018)*
-  Implement the five runtime subsystems; ship a rich `ModuleManifest` Zod schema; onboard a **pilot Finance/Invoice UI module** end-to-end through the registries (stubbed handlers). Activate: `check-command-bus-usage`, `check-navigation-registry`, `check-module-manifest`.
+Stop: all six green, evidence under `scripts/audits/output/fitness/` and `scripts/audits/output/ux3a-drift/`.
 
-- **Wave 4 — Interaction Framework** *(`src/ux/interactions`)*
-  Create/Edit/Delete/Confirm/Bulk/Wizard/Search/Filter/ImportExport flows with cancellation tokens + idempotency keys + `useFlow()`; every flow dispatches via CommandBus; demo routes under `/design-system/interactions/*`.
+---
 
-- **Wave 5 — UX State System + Metadata** *(ADR-0019)*
-  11-state discriminated union with metadata `{ reason?, updatedAt, retryable, userMessageKey?, correlationId? }`; `<UIStateView/>`; codemod audit of existing empty/error/loading usages. Activate: `check-ui-state-metadata`.
+### Phase M1..M7 — Execution
 
-- **Wave 6 — Data Presentation Framework** *(ADR-0020)*
-  Shared `PresentationView<TRow>` over `DataGridContract`; adapters for Grid/Card/Kanban/Timeline/Tree/Calendar/Pivot/Chart.
+**Allowed writes:** `src/kernel/**`, `src/platform/**`, `src/components/layout/AppLayout.tsx` (single migration edit), new ADRs, new fitness checks, new tests, lock/baseline/drift/fingerprint JSON, `DEPENDENCY_RULES.md`.
 
-- **Wave 6.3 — Dashboard Runtime (split)** *(ADR-0021)*
-  `platform/dashboard/{widget-runtime,layout-engine,persistence}` as three modules behind ports; `ux/dashboard` UI shells. Any new runtime dep (e.g. `react-grid-layout`) justified inline in ADR-0021. Activate: `check-dashboard-module-split`.
+**Forbidden writes:**
+- `src/ui/**` (Design System is Wave 2's concern) — sole exception is composition inside `src/platform/shell/**` that *renders* existing `src/ui/**` components without modifying them.
+- Command Bus, Event Bus, Navigation Runtime, Module Registry, UX State, Dashboard, Interaction Framework.
+- AI/Intelligence beyond reserved slot name constants.
+- Any new runtime dependency.
 
-- **Wave 6.5 — UI Contracts taxonomy + Demo routes** *(ADR-0004 amendment)*
-  `src/ui-contracts/{view,interaction,widget,module}/` + `_mocks/`; `/design-system/*` gated dev/staging + code-split. Activate: `check-ui-contract-taxonomy`, `check-bundle-budget`.
+#### M1 — Kernel (`src/kernel/**`)
+Pure. No React / DOM / network / Supabase / browser globals. Sub-modules and public façade `@/kernel`:
+`identity/`, `clock/` (+ `SystemClock`, `FakeClock`), `culture/`, `i18n/` (`TranslationPort` + `InMemoryTranslator`), `env/`, `flags/` (`FeatureFlagPort` + `StaticFlagAdapter`), `tenant/`, `permissions/`. `index.ts` is the sole façade.
 
-- **Wave 6.9 — Performance UX pass** *(ADR-0025)*
-  Skeleton timing, `<Deferred/>`/`<Prioritized/>`, route lazy audit, sidebar-hover prefetch, optimistic UI helpers, mandatory virtualization for lists >100, image strategy. Activate: `check-virtualization`, `check-heavy-components`, `check-rerender-guards`.
+#### M2 — Platform skeleton (`src/platform/**`)
+```text
+src/platform/
+├── runtime/          # M3
+├── ports/            # M4
+├── shell/            # M5
+├── registries/       # reserved
+├── modules/          # reserved
+├── ai/               # reserved slot name constants only
+└── index.ts          # public façade
+```
 
-- **Wave 6.99 — Exit Gate**
-  All fitness green in CI, ≥90% branch coverage on Kernel + Runtime + Interaction/State/Dashboard frameworks, Playwright smoke (RTL, dark/high-contrast, keyboard through shell + palette + flows), ADRs 0014–0025 → **Accepted**, seal `BASELINE-UX3A-001` + `ux3a-lock.json`.
+#### M3 — Runtime Lifecycle (`src/platform/runtime/`)
+`PlatformRuntime` with 5 phases: `bootstrap → startup → hydration → shutdown → recovery`. `RuntimeState` union: `idle | bootstrapping | starting | hydrating | ready | shutting-down | recovering | failed`.
 
-### What I will do this turn if approved
-Execute **Wave 0 only**:
-1. Write `docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md` (this reference spec).
-2. Create `docs/architecture/UI_LAYER_MAP.md` skeleton.
-3. Draft `docs/adr/0014-frontend-platform-charter.md`.
-4. Extend `docs/architecture/UI_PERFORMANCE_BUDGET.md` with §8 governance.
-5. Seal `BASELINE-UX3A-000` using existing `build-baseline-tag.mjs`.
-6. Add `check-platform-layering.mjs` (report-only) and wire into `run-all.mjs`.
+**Lifecycle Invariants (dedicated tests):**
+- `startup()` cannot execute before `bootstrap()`.
+- `hydration()` executes at most once.
+- `shutdown()` is idempotent.
+- `recovery()` cannot transition directly to `ready`.
+- `failed` is terminal.
+- Deterministic: accepts injected `ClockPort`, `IdPort`, `FeatureFlagPort`, `TenantContext`, `Culture`, `PortRegistry`.
+- No React inside `runtime/`. The Shell exposes `useRuntimePhase()`.
 
-No `src/**` file will be touched in Wave 0. I will pause for your review before Wave 1.
+#### M4 — Frontend Ports (`src/platform/ports/`)
+Seven ports; each has interface + Browser adapter + In-Memory adapter + tests.
 
-### Confirmations before Wave 1
-1. Approve final directory names (`kernel/`, `platform/runtime`, `platform/ports`, `platform/intelligence`, `ux/`, `ui-contracts/{view,interaction,widget,module}`).
-2. Approve migrating `AppLayout` off `AdaptiveShell` inside Wave 1.
-3. Approve reserving intelligence slots now: `intelligence.panel.right`, `intelligence.command.scope`, `intelligence.topbar.trigger`, `intelligence.workspace.footer`.
+| Port | Browser adapter | In-Memory adapter |
+|---|---|---|
+| `NotificationPort` | shadcn `toast` | array recorder |
+| `DialogPort` | shadcn dialog wrapper | queue resolver |
+| `NavigationPort` | wraps `useNavigate` | navigation recorder |
+| `StoragePort` | `localStorage` + JSON codec | `Map<string,string>` |
+| `ClipboardPort` | `navigator.clipboard` | in-memory buffer |
+| `FilePickerPort` | hidden `<input type=file>` | fixture resolver |
+| `SharePort` | `navigator.share` + clipboard fallback | payload recorder |
+
+Directory rule (invariant #3): interfaces live at `src/platform/ports/`; adapters live at `src/platform/ports/adapters/{browser,memory}/`. Ports must **not** import from `adapters/**`.
+
+`PortRegistry` is the single injection surface, exposed via `PortRegistry.default()` and `PortRegistry.inMemory()`. It exports a `DECLARED_PORTS` const enumerating every port name — used by fitness (M7) to prove completeness.
+
+#### M5 — Shell façade & AppLayout migration
+- Create `src/platform/shell/PlatformShell.tsx`. It is the **only** file that constructs `PlatformRuntime`, publishes `RuntimeContext`, and renders the existing `src/ui/layout/AppShell` plus legacy chrome (`AppSidebar`, `AppHeader`, `MobileHeader`, `MobileBottomNav`, `MobileDrawer`, `FABMenu`, `PageErrorBoundary`, `PageTransition`, `ShortcutsModal`, `CommandBar`, `EnvironmentBadge`) through composition. `src/ui/**` unchanged.
+- **Behavioral Parity (hard exit criterion):** no visible UI regression, no keyboard-shortcut regression, no mobile navigation regression, no RTL regression, no accessibility regression. Verified via: parity structural snapshot, keyboard-shortcut integration test, mobile viewport render test, RTL render test, axe/a11y smoke test.
+- Update `src/components/layout/AppLayout.tsx` to render `PlatformShell`. Keep `AdaptiveShell.tsx` in place with a deprecation banner; a fitness rule forbids **new** imports.
+
+#### M6 — Façades, ADRs, Baseline, Fingerprint, Lock, Drift Report
+
+**Public façades:** `@/kernel`, `@/platform`, `@/platform/ports`, `@/platform/runtime`, `@/platform/shell`.
+
+**ADRs promoted to Accepted:**
+- `docs/adr/0015-kernel-purity.md` (references `DEPENDENCY_RULES.md §Kernel`).
+- `docs/adr/0023-frontend-ports-taxonomy.md` (parity + no-reverse-import rule).
+- `docs/adr/0024-runtime-lifecycle.md` (5-phase model + lifecycle invariants).
+
+**New artifacts:**
+- **Architecture Drift Report** (`scripts/audits/architecture-drift-report.mjs` → `scripts/audits/output/ux3a-drift/wave1.json` + `.md`). Diffs the current layer graph (files per layer, cross-layer edges, façade usage, forbidden-import counts) against `BASELINE-UX3A-000` and against a post-Wave-1 snapshot. Fails CI on any un-approved delta.
+- **Architecture Fingerprint** — `build-baseline-tag.mjs` extended to emit a top-level `fingerprint` field: `sha256` of the sorted `{layer → [publicFaçadeFile, ...]}` map plus the invariants list. Written into `BASELINE-UX3A-001` and also mirrored to `scripts/audits/output/architecture-fingerprint.json` for quick comparison across runs.
+- `PROJECT_MAP.md` and `docs/architecture/UI_LAYER_MAP.md` populated (`kernel/`, `platform/` blocks).
+- `scripts/audits/output/ux3a-wave1-lock.json` (ADR SHAs, port parity, layering report, drift diff, fingerprint, build/test hashes).
+- `docs/architecture/baseline/BASELINE-UX3A-001.md` + `scripts/audits/output/baseline-ux3a-001.json`.
+
+#### M7 — Fitness Checks (new/updated)
+
+| Check | File | Invariants | Mode |
+|---|---|---|---|
+| `check-platform-layering` | existing | #1, #2, #6, #7, #11 | flipped **enforcing** |
+| `check-port-adapter-parity` | new | #3 | enforcing |
+| `check-kernel-browser-globals` | **new** — bans `window`/`document`/`navigator`/`localStorage`/`sessionStorage`/`fetch`/`XMLHttpRequest`/`WebSocket`/`caches`/`indexedDB`/`crypto`/`location`/`history` identifiers and matching `globalThis.*` accesses inside `src/kernel/**` | #12 | enforcing |
+| `check-port-registry-completeness` | **new** — parses `DECLARED_PORTS` and asserts every listed port has: interface file, browser adapter, memory adapter, and registration in both `PortRegistry.default()` and `PortRegistry.inMemory()` | #9 | enforcing |
+| `check-platform-shell-single-entry` | **new** — asserts `new PlatformRuntime(` and `RuntimeContext.Provider` appear only inside `src/platform/shell/**` | #5, #8 | enforcing |
+| `check-no-new-adaptiveshell-imports` | new | #4, #5 | enforcing |
+| `check-no-deep-imports` | extended | #6, #7 | enforcing |
+| `check-baseline-tag-integrity` | existing | fingerprint | enforcing |
+| Runtime lifecycle unit tests | new | #8 | test |
+| Shell parity tests | new | #5, #10 | test |
+
+All new checks wired into `scripts/fitness/run-all.mjs`.
+
+---
+
+### Exit Criteria (auto-verified in `ux3a-wave1-gate.yml`)
+
+- `bun run build` green.
+- Project's configured TypeScript type-check command green.
+- `node scripts/fitness/run-all.mjs` green — including all 5 new/flipped checks above.
+- All 12 Wave 1 Architectural Invariants covered by a check or test.
+- Zero imports from `@/domain/**`, `@/application/**`, `@/infrastructure/**`, `@/integrations/supabase/**`, `@/ux/**` inside `src/kernel/**` or `src/platform/**`.
+- Zero browser globals in `src/kernel/**`.
+- Every declared port has both adapters and is present in both `PortRegistry` factories.
+- `PlatformRuntime` constructor and `RuntimeContext.Provider` referenced only from `src/platform/shell/**`.
+- `AppLayout.tsx` imports `@/platform/shell` only; no other file imports `AdaptiveShell`.
+- Behavioral Parity tests green.
+- `src/ui/**` git diff empty.
+- `DEPENDENCY_RULES.md`, `PROJECT_MAP.md`, `MANIFEST.json`, `UI_LAYER_MAP.md`, reference doc header updated.
+- ADRs 0015 / 0023 / 0024 = `Accepted`.
+- `ux3a-wave1-lock.json`, `BASELINE-UX3A-001` (with `fingerprint`), and `ux3a-drift/wave1.json` sealed and integrity-verified.
+
+---
+
+### Post-Wave Stop — Architecture Audit (before any Wave 2 work)
+
+- Re-run all fitness checks against the sealed baseline.
+- Verify the Architecture Fingerprint matches the sealed value.
+- Publish `AUDIT-WAVE1.md` summarizing: kernel purity, platform purity, port completeness, shell single-entry proof, drift diff vs `BASELINE-UX3A-000`, and any residual risks.
+- Only after audit sign-off does Wave 2 (Design System consolidation) begin.
+
+---
+
+### Deliverables checklist
+
+- [ ] G-W1 gate artifacts (reference lock header, ADR-0014 conditional clause, CI workflow using project's typecheck script, MANIFEST/PROJECT_MAP updates, `DEPENDENCY_RULES.md`, ADR conflict appendix).
+- [ ] `src/kernel/**` with 8 sub-modules + `@/kernel` façade + unit tests + browser-globals fitness green.
+- [ ] `src/platform/runtime/` with `PlatformRuntime` + 5 lifecycle invariant tests.
+- [ ] `src/platform/ports/` with 7 ports × 2 adapters + parity fitness + registry-completeness fitness.
+- [ ] `src/platform/shell/PlatformShell.tsx` with behavioral-parity test suite + single-entry fitness.
+- [ ] `AppLayout.tsx` migrated; `AdaptiveShell.tsx` deprecated; `src/ui/**` unchanged.
+- [ ] 5 new fitness checks + `check-platform-layering` flipped to enforcing.
+- [ ] Architecture Drift Report generator + Wave 1 diff.
+- [ ] Architecture Fingerprint embedded in `BASELINE-UX3A-001` and mirrored file.
+- [ ] ADRs 0015 / 0023 / 0024 Accepted.
+- [ ] `ux3a-wave1-lock.json` + `BASELINE-UX3A-001` sealed.
+- [ ] `AUDIT-WAVE1.md` prepared as the mandatory pre-Wave-2 stop.
