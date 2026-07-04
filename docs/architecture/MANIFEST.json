@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "baselineVersion": "UX-0",
+  "baselineVersion": "UX3A-001",
   "generatedAt": "2026-06-19T01:49:25.026Z",
   "environment": {
     "nodeVersion": "v22.22.0",
@@ -70,11 +70,11 @@
   "targets": {
     "directDbAccessUi": {
       "value": 0,
-      "phase": "UX-2 → UX-7"
+      "phase": "UX-2 \u2192 UX-7"
     },
     "asAnyInfraPlusUi": {
       "value": 0,
-      "phase": "UX-1 → UX-2"
+      "phase": "UX-1 \u2192 UX-2"
     },
     "consoleLeftover": {
       "value": 0,
@@ -82,7 +82,7 @@
     },
     "filesOver500": {
       "value": 0,
-      "phase": "UX-5 → UX-7"
+      "phase": "UX-5 \u2192 UX-7"
     },
     "circularDeps": {
       "value": 0,
@@ -93,7 +93,7 @@
       "phase": "UX-2"
     },
     "bundleDeltaPerPhase": {
-      "value": "±5%",
+      "value": "\u00b15%",
       "phase": "every phase"
     },
     "vitestPassed": {
@@ -119,5 +119,13 @@
     "runs": 2,
     "diff": "none",
     "tool": "sha256sum"
+  },
+  "dependencyRules": "docs/architecture/DEPENDENCY_RULES.md",
+  "frontendPlatformReference": "docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md",
+  "ux3aBaselines": {
+    "BASELINE-UX3A-000": "scripts/audits/output/baseline-ux3a-000.json",
+    "BASELINE-UX3A-001": "scripts/audits/output/baseline-ux3a-001.json",
+    "fingerprint": "scripts/audits/output/architecture-fingerprint.json",
+    "wave1Lock": "scripts/audits/output/ux3a-wave1-lock.json"
   }
 }
