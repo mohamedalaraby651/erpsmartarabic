@@ -1,0 +1,35 @@
+name: UX-3A Wave 1 Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Build
+        run: bun run build
+      - name: Fitness — full suite
+        run: node scripts/fitness/run-all.mjs
+      - name: Architecture Drift Report
+        run: node scripts/audits/architecture-drift-report.mjs
+      - name: Baseline tag — build + integrity
+        run: |
+          node scripts/audits/build-baseline-tag.mjs || true
+          node scripts/fitness/check-baseline-tag-integrity.mjs
+      - name: Upload drift + baseline artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ux3a-wave1-evidence
+          path: |
+            scripts/audits/output/ux3a-drift/
+            scripts/audits/output/ux3a-wave1-lock.json
+            scripts/audits/output/baseline-ux3a-001.json
+            scripts/audits/output/architecture-fingerprint.json
