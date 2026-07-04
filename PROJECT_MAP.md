@@ -78,3 +78,13 @@ Read order (see `scripts/fitness/run-all.mjs`):
   `SupabaseInvoiceRepository` is schema-version blind.
 * `current_tenant()` returns NULL for orphaned users; RLS filters them
   out on SELECT and rejects them on INSERT (TenantOrphan scenario).
+
+---
+
+## UX-3A Wave 1 — Frontend Platform (BASELINE-UX3A-001)
+
+- `src/kernel/**` — pure primitives (identity, clock, culture, i18n, env, flags, tenant, permissions).
+- `src/platform/**` — `runtime/`, `ports/` (+ `adapters/{browser,memory}/`), `shell/`, `registries/` (reserved), `modules/` (reserved), `ai/` (slot constants only).
+- `src/components/layout/AppLayout.tsx` imports `@/platform/shell` only. `AdaptiveShell.tsx` deprecated (composed by `PlatformShell` only).
+- Fitness: `check-platform-layering` (enforcing), `check-kernel-browser-globals`, `check-port-adapter-parity`, `check-port-registry-completeness`, `check-platform-shell-single-entry`, `check-no-new-adaptiveshell-imports`.
+- References: [DEPENDENCY_RULES](docs/architecture/DEPENDENCY_RULES.md), [UX3A reference](docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md), ADR-0014/0015/0023/0024.
