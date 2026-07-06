@@ -30,6 +30,7 @@ function RouteSeo(): null {
 //   - NotFound     : tiny + must render even if a chunk fetch fails
 // ─────────────────────────────────────────────────────────────────────────────
 import Auth from "./pages/Auth";
+import OAuthConsent from "./pages/OAuthConsent";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AppLayout from "./components/layout/AppLayout";
