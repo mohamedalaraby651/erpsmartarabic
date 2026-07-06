@@ -13,15 +13,22 @@ import { lovable } from '@/integrations/lovable';
 
 export default function Auth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, signIn, signUp, loading: authLoading } = useAuth();
-  
+
+  // Preserve any `?next=/...` so callers (e.g. the MCP OAuth consent page)
+  // return the user to the URL they came from. Only accept same-origin
+  // relative paths.
+  const rawNext = searchParams.get('next');
+  const safeNext = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
+
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  
+
   // Signup form
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
@@ -29,9 +36,9 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate(safeNext, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, safeNext]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
