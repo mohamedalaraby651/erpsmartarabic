@@ -201,6 +201,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     versionJsonPlugin(),
     criticalChunkPreloadPlugin(),
+    mcpPlugin(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
