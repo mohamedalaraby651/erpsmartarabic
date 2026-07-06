@@ -58,7 +58,7 @@ export default function Auth() {
       toast.error('فشل تسجيل الدخول. يرجى التحقق من البيانات والمحاولة مرة أخرى');
     } else {
       toast.success('تم تسجيل الدخول بنجاح');
-      navigate('/');
+      navigate(safeNext, { replace: true });
     }
   };
 
