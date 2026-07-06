@@ -258,6 +258,7 @@ const App = () => (
               <Routes>
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/" element={<AppLayout />}>
