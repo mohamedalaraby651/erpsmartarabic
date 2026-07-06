@@ -85,7 +85,7 @@ export default function Auth() {
       toast.error('فشل إنشاء الحساب. يرجى التحقق من البيانات والمحاولة مرة أخرى');
     } else {
       toast.success('تم إنشاء الحساب بنجاح');
-      navigate('/');
+      navigate(safeNext, { replace: true });
     }
   };
 
