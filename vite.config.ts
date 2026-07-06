@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import fs from "fs";
 import { componentTagger } from "lovable-tagger";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 
 // Build stamp computed once per build. Used by EnvironmentBadge / AboutSystemCard
 // so users (and support) can verify which version of the bundle is loaded.
