@@ -91,8 +91,11 @@ export default function Auth() {
 
   const handleGoogle = async () => {
     setIsLoading(true);
+    // Route the Google callback back through /auth so the same `next` handoff
+    // applies (a bare origin drops the user on `/` and loses the MCP consent URL).
+    const redirectUri = `${window.location.origin}/auth?next=${encodeURIComponent(safeNext)}`;
     const result = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectUri,
     });
     if (result.error) {
       setIsLoading(false);
