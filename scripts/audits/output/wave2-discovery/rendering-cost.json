@@ -1,0 +1,805 @@
+{
+  "generatedAt": "2026-07-09T00:09:18.110Z",
+  "flags": [
+    {
+      "file": "src/pages/customers/CustomerDetailsPage.tsx",
+      "lines": 855,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/ui/sidebar.tsx",
+      "lines": 638,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/components/customers/list/CustomerListCard.tsx",
+      "lines": 544,
+      "hasMemo": true,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/__tests__/integration/export-print.test.tsx",
+      "lines": 515,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "lines": 513,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/layout/MobileDrawer.tsx",
+      "lines": 494,
+      "hasMemo": true,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "lines": 492,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/reports/ReturnsReportPage.tsx",
+      "lines": 488,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/quotations/QuotationsPage.tsx",
+      "lines": 472,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/invoices/InvoiceDetailsPage.tsx",
+      "lines": 468,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "lines": 468,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/settings/BackupTab.tsx",
+      "lines": 467,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/employees/EmployeeDetailsPage.tsx",
+      "lines": 459,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/__tests__/integration/navigation-routes.test.tsx",
+      "lines": 447,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/settings/ThemeCustomizer.tsx",
+      "lines": 446,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrdersPage.tsx",
+      "lines": 441,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "lines": 440,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/suppliers/SupplierDetailsPage.tsx",
+      "lines": 438,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "lines": 436,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/__tests__/integration/payment-workflow.test.tsx",
+      "lines": 433,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/attachments/AttachmentsPage.tsx",
+      "lines": 432,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/shared/AttachmentUploadForm.tsx",
+      "lines": 425,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/search/SearchPage.tsx",
+      "lines": 423,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/sync/SyncStatusPage.tsx",
+      "lines": 423,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/expenses/ExpensesPage.tsx",
+      "lines": 421,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/suppliers/SuppliersPage.tsx",
+      "lines": 421,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/payments/PaymentsPage.tsx",
+      "lines": 415,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/admin/RolesPage.tsx",
+      "lines": 414,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/export/ExportWithTemplateButton.tsx",
+      "lines": 413,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/settings/ExportCenter/RenderProfileSection.tsx",
+      "lines": 410,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/shared/AttachmentsList.tsx",
+      "lines": 410,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/admin/UserManagementPage.tsx",
+      "lines": 409,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/tasks/TasksPage.tsx",
+      "lines": 408,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/admin/BackupPage.tsx",
+      "lines": 407,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/settings/SettingsExportImport.tsx",
+      "lines": 406,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/__tests__/integration/data-flow.test.tsx",
+      "lines": 402,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/layout/AppSidebar.tsx",
+      "lines": 393,
+      "hasMemo": true,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/__tests__/integration/sales-workflow.test.tsx",
+      "lines": 390,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/App.tsx",
+      "lines": 380,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/install/InstallPage.tsx",
+      "lines": 379,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/admin/CustomizationsPage.tsx",
+      "lines": 378,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/accounting/ChartOfAccountsPage.tsx",
+      "lines": 377,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/__tests__/integration/inventory-workflow.test.tsx",
+      "lines": 376,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/admin/UsersPage.tsx",
+      "lines": 372,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/admin/RoleLimitsPage.tsx",
+      "lines": 371,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/dev/PdfJobsPage.tsx",
+      "lines": 371,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/customers/mobile/CustomerMobileProfile.tsx",
+      "lines": 370,
+      "hasMemo": true,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/__tests__/unit/hooks/useUserPreferences.test.tsx",
+      "lines": 368,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/platform/TenantsManagementPage.tsx",
+      "lines": 366,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/ui/__integration__/harness/IntegrationHarnessPage.tsx",
+      "lines": 365,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/components/settings/ExportCenter/LivePreviewPanel.tsx",
+      "lines": 358,
+      "hasMemo": true,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/settings/SettingsNavigation.tsx",
+      "lines": 357,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/attendance/AttendancePage.tsx",
+      "lines": 355,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/auth/TwoFactorSetup.tsx",
+      "lines": 350,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/admin/DomainEventsPage.tsx",
+      "lines": 347,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/invoices/InvoicesPage.tsx",
+      "lines": 347,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/components/customers/dialogs/CustomerReminderDialog.tsx",
+      "lines": 346,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/__tests__/integration/ui-interactions.test.tsx",
+      "lines": 343,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/shared/ResponsiveItemsTable.tsx",
+      "lines": 342,
+      "hasMemo": true,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/Dashboard.tsx",
+      "lines": 341,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/__tests__/unit/hooks/useFavoritePages.test.tsx",
+      "lines": 340,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/mobile/FABMenu.tsx",
+      "lines": 340,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/__tests__/unit/hooks/useLongPress.test.tsx",
+      "lines": 339,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/reports/KPIDashboard.tsx",
+      "lines": 339,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
+      "lines": 339,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/customers/tabs/CustomerTabInvoices.tsx",
+      "lines": 338,
+      "hasMemo": true,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/admin/SodRulesPage.tsx",
+      "lines": 335,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/products/ProductDetailsPage.tsx",
+      "lines": 334,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/admin/TenantsPage.tsx",
+      "lines": 333,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/admin/RestoreBackupConfigureView.tsx",
+      "lines": 332,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "lines": 327,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/employees/EmployeeFormDialog.tsx",
+      "lines": 325,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "lines": 324,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/print/PrintTemplate.tsx",
+      "lines": 323,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/categories/CategoriesPage.tsx",
+      "lines": 323,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/components/customers/details/StatementOfAccount.tsx",
+      "lines": 321,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/admin/ActivityLogPage.tsx",
+      "lines": 321,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/admin/ApprovalChainsPage.tsx",
+      "lines": 321,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/__tests__/unit/hooks/useAuth.test.tsx",
+      "lines": 320,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/mobile/DataCard.tsx",
+      "lines": 319,
+      "hasMemo": true,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/settings/CompanyInfoSection.tsx",
+      "lines": 317,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/Auth.tsx",
+      "lines": 316,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/shared/FileUpload.tsx",
+      "lines": 315,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/components/shared/AttachmentsSearch.tsx",
+      "lines": 313,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/settings/ExportCenter/AuditTimelinePanel.tsx",
+      "lines": 311,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/RouteErrorPage.tsx",
+      "lines": 310,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": true,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/admin/PermissionsPage.tsx",
+      "lines": 309,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
+      "lines": 309,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/__tests__/unit/hooks/useKeyboardShortcuts.test.tsx",
+      "lines": 307,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/ui/chart.tsx",
+      "lines": 304,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/dashboard/InvoiceQuickActions.tsx",
+      "lines": 302,
+      "hasMemo": true,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/components/reports/InventoryFlowReport.tsx",
+      "lines": 302,
+      "hasMemo": false,
+      "hasUseMemo": true,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/hooks/useAuth.tsx",
+      "lines": 302,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": true,
+      "isPage": false
+    },
+    {
+      "file": "src/components/layout/sidebar/SidebarNavSections.tsx",
+      "lines": 301,
+      "hasMemo": true,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/accounting/JournalFormDialog.tsx",
+      "lines": 299,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/pages/admin/ExportTemplatesPage.tsx",
+      "lines": 298,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": true
+    },
+    {
+      "file": "src/components/logistics/LogisticsDialogs.tsx",
+      "lines": 296,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/admin/RestoreBackupResultsView.tsx",
+      "lines": 294,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/settings/NotificationSettings.tsx",
+      "lines": 293,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    },
+    {
+      "file": "src/components/invoices/InvoiceFormDialog.tsx",
+      "lines": 291,
+      "hasMemo": false,
+      "hasUseMemo": false,
+      "hasUseCallback": false,
+      "isPage": false
+    }
+  ]
+}

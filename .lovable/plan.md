@@ -1,173 +1,312 @@
-## UX-3A Wave 1 — Kernel + Platform Skeleton + Runtime Lifecycle + Ports + Shell Migration (v3)
 
-Incorporates the previous five refinements plus six new hardening items: Kernel browser-globals fitness, Architecture Drift Report, Architecture Fingerprint, `DEPENDENCY_RULES.md`, PortRegistry completeness fitness, and PlatformShell single-entry fitness.
+# UX-3A — الخارطة المرجعية v3 (بعد ملاحظاتك الـ 10)
 
----
-
-### Wave 1 Architectural Invariants (authoritative — enforced by fitness + tests)
-
-1. Platform never depends on UX.
-2. Kernel never depends on Platform.
-3. Ports never depend on their adapters — adapters depend on Ports; never the reverse.
-4. `AppLayout` imports `PlatformShell` only.
-5. `PlatformShell` is the single runtime entry point — **only** file allowed to instantiate `PlatformRuntime` or provide `RuntimeContext`.
-6. Only public façades (`@/kernel`, `@/platform`, `@/platform/ports`, `@/platform/runtime`, `@/platform/shell`) are importable from outside.
-7. Deep imports across layer boundaries are forbidden.
-8. `PlatformRuntime` owns lifecycle.
-9. Runtime owns Ports (single injection surface = `PortRegistry`, must contain **all** declared ports).
-10. UI owns rendering only — no business logic in Platform or Kernel.
-11. No business logic enters Platform or Kernel from Domain / Application / Infrastructure / Supabase.
-12. Kernel is browser-globals-free — no `window`, `document`, `navigator`, `localStorage`, `sessionStorage`, `fetch`, `XMLHttpRequest`, `WebSocket`, `caches`, `IndexedDB`, `crypto` (browser), `location`, `history`.
+**القرار:** التركيز الكامل على UX-3A. توسّع MCP مؤجَّل بعد Wave 12.
+**الأساس:** Wave 1 مختومة (`BASELINE-UX3A-001`, 28/28 fitness).
+**الأفق:** 3–5 سنوات، منصة واجهة أمامية طويلة العمر.
 
 ---
 
-### Phase G-W1 — Approval Gate (no `src/**` changes)
+## الترتيب النهائي (13 موجة)
 
-1. Stamp `docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md` header: `Version: v1.0`, `Status: LOCKED`, `Locked-At: <date>`, `Locked-By: BASELINE-UX3A-000`. Add "Change Protocol" clause.
-2. Append **Wave-1 Conditional Acceptance** clause to ADR-0014.
-3. **New:** Create `docs/architecture/DEPENDENCY_RULES.md` — the canonical, human-readable specification of layer edges, façade whitelist, and the 12 invariants above. All fitness checks and ADRs reference this file by section id (e.g. `DR-§3.2/kernel-purity`).
-4. Add `.github/workflows/ux3a-wave1-gate.yml` running: `bun run build`, the project's configured TypeScript type-check command (whichever `package.json` script exists — do not hardcode `tsgo`), `node scripts/fitness/run-all.mjs`, plus Wave 1 fitness checks and the Drift Report.
-5. Update `PROJECT_MAP.md` and `docs/architecture/MANIFEST.json` to reference `BASELINE-UX3A-000` and the new `DEPENDENCY_RULES.md`.
-6. Append ADR-conflict appendix to the reference doc mapping UX3A onto ADR-0002/0003/0004 (façade layering only; no override).
-
-Stop: all six green, evidence under `scripts/audits/output/fitness/` and `scripts/audits/output/ux3a-drift/`.
+| # | الموجة | ملاحظة |
+|---|---|---|
+| 1 | Platform Foundation | ✅ مختومة |
+| 2 | **Design System Consolidation** | تنفيذ الآن |
+| 2.5 | **UI API Standardization** *(موسَّعة)* | Primitives + Composites + Layout + Contracts |
+| 3 | Interaction Framework | + بدء استبدال `ui-kit` |
+| 4 | UX State System | + حذف `ui-kit` نهائياً |
+| 5 | Data Presentation Framework | |
+| 6 | Dashboard Framework | |
+| 6.5 | UI Contracts (View Models) | |
+| 6.75 | **Developer Experience** *(جديدة)* | Component Catalog, Playground, Token Viewer, Icon Gallery |
+| 7 | Demo & Showcase | |
+| 8 | **Performance & Quality** *(موسَّعة)* | Perf + A11y + Bundle + Lazy + Virtualization + Memory + Lighthouse + Keyboard + High Contrast QA |
+| 9A | Read Model Wiring | ربط View Models بـ Read Models |
+| 9B | Real-time & Offline | Subscriptions, Optimistic, Offline |
+| 10 | MCP Foundation ثم أدوات القراءة/المحاكاة/الكتابة | |
 
 ---
 
-### Phase M1..M7 — Execution
+## الحوكمة المُعتمَدة قبل Wave 2
 
-**Allowed writes:** `src/kernel/**`, `src/platform/**`, `src/components/layout/AppLayout.tsx` (single migration edit), new ADRs, new fitness checks, new tests, lock/baseline/drift/fingerprint JSON, `DEPENDENCY_RULES.md`.
+- **ADR-0027** — UX-3A Roadmap Freeze (13 موجة، تجميد أي عمل خارج المسار حتى Wave 3).
+- **ADR-0028** — Design System v2 & `ui-kit` Sunset Schedule (Freeze W2 → Replace W3 → Delete W4).
+- **ADR-0029** — UI API Uniformity Charter (يغطي الطبقات الأربع).
+- **ADR-0030** — Theme Registry Contract *(جديد بناءً على ملاحظتك #5)*.
+- **`docs/architecture/UX3A-ROADMAP.md`** — خارطة رسمية Wave 1 → 10.
+- **`docs/mcp/STATUS.md`** — يُثبِّت حالة MCP (3 أدوات، Foundation مؤجَّل).
+- **`docs/architecture/design-decisions/`** *(جديد, ملاحظة #2)* — Design Decision Log منفصل عن ADRs:
+  - `DS-001-tone-vs-color.md`
+  - `DS-002-variant-vs-intent.md`
+  - `DS-003-spacing-scale-rationale.md`
+  - `README.md` يشرح متى نستخدم DS بدل ADR (قرارات صغيرة متكررة داخل نظام التصميم).
 
-**Forbidden writes:**
-- `src/ui/**` (Design System is Wave 2's concern) — sole exception is composition inside `src/platform/shell/**` that *renders* existing `src/ui/**` components without modifying them.
-- Command Bus, Event Bus, Navigation Runtime, Module Registry, UX State, Dashboard, Interaction Framework.
-- AI/Intelligence beyond reserved slot name constants.
-- Any new runtime dependency.
+---
 
-#### M1 — Kernel (`src/kernel/**`)
-Pure. No React / DOM / network / Supabase / browser globals. Sub-modules and public façade `@/kernel`:
-`identity/`, `clock/` (+ `SystemClock`, `FakeClock`), `culture/`, `i18n/` (`TranslationPort` + `InMemoryTranslator`), `env/`, `flags/` (`FeatureFlagPort` + `StaticFlagAdapter`), `tenant/`, `permissions/`. `index.ts` is the sole façade.
+## مؤشرات النجاح الكمية (ملاحظتك #10)
 
-#### M2 — Platform skeleton (`src/platform/**`)
-```text
-src/platform/
-├── runtime/          # M3
-├── ports/            # M4
-├── shell/            # M5
-├── registries/       # reserved
-├── modules/          # reserved
-├── ai/               # reserved slot name constants only
-└── index.ts          # public façade
+قالب موحّد يُلحق بكل موجة في `docs/architecture/baseline/AUDIT-WAVE{N}.md`:
+
+| Metric | Target |
+|---|---|
+| Fitness checks | 100% enforcing pass |
+| TypeScript strict errors | 0 |
+| Type coverage (exported symbols) | ≥ 95% |
+| Vitest passing | ≥ baseline (never regress) |
+| Test coverage (touched files) | ≥ 90% |
+| Build time delta | ≤ +10% vs baseline |
+| Bundle budget delta | ≤ ±5% vs baseline |
+| Accessibility | WCAG AA (AAA في Wave 8) |
+| Breaking changes | 0 |
+| Circular deps delta | ≤ 0 |
+| Import layer violations delta | ≤ 0 |
+
+تقاس عبر `scripts/audits/build-manifest.mjs` (موجود) + سكربت جديد `scripts/audits/build-wave-scorecard.mjs`.
+
+---
+
+## Wave 2 — Design System Consolidation
+
+**الهدف:** نظام تصميم موحّد فوق `src/ui/tokens` و`src/ui/primitives`. صفر تغيير سلوكي.
+
+### 2.1 Discovery موسَّع (ملاحظات #3, #4)
+
+سكربتات معلوماتية:
+
+- `scripts/audits/design-system-inventory.mjs` — ألوان hardcoded، خطوط، ظلال، مسافات خارج tokens.
+- `scripts/audits/ui-kit-usage.mjs` — allowlist للاستخدامات الحالية + خريطة إحلال.
+- `scripts/audits/component-duplication.mjs` — يكتشف Button/Badge/Card/Modal/Dialog/Input المكرَّرة **مع Similarity Score** *(ملاحظة #3)*:
+  - AST-based signature (props + variants + JSX shape).
+  - نسبة تشابه %؛ يُرتَّب أعلى ← أسفل ليحدَّد المرشح للحذف أولاً.
+- `scripts/audits/ui-complexity.mjs` — أكبر مكوّن، أكثر مكوّن يستورد، أكثر صفحة تحوي Hooks.
+- `scripts/audits/rendering-cost.mjs` *(informational)* — غياب memo/lazy في مكوّنات ثقيلة.
+- `scripts/audits/ui-dep-graph.mjs` *(جديد, ملاحظة #4)* — dep-graph مركّز على `src/ui/**` و`src/components/**`، يكشف Circular deps داخل UI و**Central components** (أعلى in-degree).
+
+**المخرجات:** JSON + Markdown تحت `scripts/audits/output/wave2-discovery/`.
+
+### 2.2 Design Tokens — تدقيق ومراجعة
+
+- تدقيق `src/ui/tokens/**` (colors/spacing/typography/radius/elevation/motion).
+- التأكد من توافق `--warning`/`--success`/`--info` بين `src/index.css` و`tailwind.config.ts`.
+- تحديث `docs/architecture/TOKEN_CHANGELOG.md` + إنشاء `docs/architecture/DESIGN-TOKENS-V2.md`.
+
+### 2.3 Theme Registry (ملاحظة #5)
+
+بدلاً من hardcode `light|dark|high-contrast` داخل `ThemeProvider`:
+
+- **`src/ui/providers/themeRegistry.ts`** — سجل قابل للتمديد:
+  ```ts
+  export interface ThemeDefinition {
+    id: string;
+    label: string;
+    dataAttr: string;         // data-theme value
+    prefersDark?: boolean;
+    contrast?: "AA" | "AAA";
+  }
+  export const themeRegistry = new Map<string, ThemeDefinition>();
+  export function registerTheme(def: ThemeDefinition): void;
+  ```
+- تسجيل `light`, `dark`, `high-contrast` كثيمات ابتدائية.
+- `ThemeProvider.tsx` يقرأ من السجل، لا من enum ثابت.
+- HSL variables لـ `high-contrast` تُعرَّف في `src/index.css` كـ **stub** (بدون QA فعلي — يُؤجَّل لـ Wave 8).
+- ADR-0030 يوثّق العقد.
+
+### 2.4 Freeze `ui-kit` (ملاحظة #1 من الجولة السابقة)
+
+- `@deprecated` JSDoc + dev-only `console.warn` في `src/components/ui-kit/index.ts`.
+- Fitness: `check-no-new-ui-kit-imports.mjs` + allowlist مسنودة بـ Discovery.
+
+### 2.5 حذف الألوان المباشرة + Typography + Spacing/Elevation
+
+warn → enforcing خلال الموجة:
+
+- `check-no-raw-colors.mjs`
+- `check-typography-tokens.mjs`
+- `check-spacing-elevation.mjs`
+- `check-design-system-inventory.mjs`
+
+### 2.6 اختبارات بصرية Informational
+
+- `scripts/audits/theme-smoke.mjs` — Playwright على Auth/Index بـ light+dark.
+
+### 2.7 Scorecard وبوابة الخروج
+
+- **5 fitness checks جديدة enforcing** (28 → **33**).
+- Scorecard المؤشرات الـ 11 كلها ضمن الأهداف.
+- ADR-0027 + ADR-0028 + ADR-0030 → Accepted.
+- **`BASELINE-UX3A-002`** مختوم.
+
+---
+
+## Wave 2.5 — UI API Standardization *(موسَّعة، ملاحظة #1)*
+
+**الهدف:** توحيد **واجهات** الطبقات الأربع في `src/ui/**` — Primitives + Composites + Layout + Contracts. صفر تغيير سلوكي، APIs additive فقط.
+
+### 2.5.1 نطاق موسَّع
+
+**Layer A — Primitives** (`src/ui/primitives/**`):
+Button, IconButton, Input, Textarea, Select, Card, Dialog, Sheet, Badge, Alert, Tooltip, DropdownMenu, Table.
+
+**Layer B — Composites** (`src/ui/composites/**`):
+DataGrid, DataGridToolbar, Pagination, PageHeader, StatGrid, DescriptionList, Form, FormSection, FormRow, FormActions, FieldArray, FormDialog, EmptyState, ErrorState, LoadingState.
+
+**Layer C — Layout** (`src/ui/layout/**`):
+AppShell, Sidebar, Topbar, StatusBar, CommandPalette.
+
+**Layer D — Contracts** (`src/ui/contracts/**`):
+CompositeEvent, DataGridContract, FormContract, OverlaySpec.
+
+### 2.5.2 معايير التوحيد لكل مكوّن (ملاحظة #6)
+
+Fitness يتحقق من **كل** ما يلي، وليس فقط variants:
+
+| Property | Requirement |
+|---|---|
+| `size` / `tone` / `variant` | من `src/ui/primitives/types.ts` الموحّدة |
+| `disabled` | prop معياري في المكوّنات التفاعلية |
+| `loading` | prop معياري في المكوّنات التي تدعم عمليات async |
+| `className` | prop مقبولة ومضاف عبر `cn(...)` |
+| `data-testid` | prop تُمرَّر إلى العنصر الجذر |
+| `ref` forwarding | `React.forwardRef` مطلوبة للمكوّنات التي ترجع عنصر DOM |
+| `displayName` | مطلوبة على كل forwardRef |
+| `@canonicalState Canonical` | JSDoc tag على المكوّن |
+| No `any` in exported types | مطلوب |
+| Contract test | ملف اختبار موافقة لكل مكوّن |
+
+### 2.5.3 الحوكمة
+
+- ADR-0029 — UI API Uniformity Charter (يغطي الطبقات الأربع).
+- **Fitness جديد:** `check-ui-api-uniformity.mjs` يفحص المعايير الـ 10 أعلاه على الطبقات الأربع.
+- `docs/architecture/PRIMITIVE_API_V1.md` → **`docs/architecture/UI_API_V1.md`** يغطي 4 طبقات.
+- Contract tests: `src/ui/{primitives,composites,layout}/__tests__/api-uniformity.test.ts`.
+
+### 2.5.4 Scorecard وبوابة الخروج
+
+- **34 fitness enforcing** (33 → +1).
+- Scorecard المؤشرات الـ 11.
+- ADR-0029 → Accepted.
+- Contract tests خضراء عبر 4 طبقات.
+- **`BASELINE-UX3A-002.5`** مختوم.
+
+**قيد صارم:** التغييرات additive فقط. الحقول القديمة `@deprecated` ولا تُحذف حتى Wave 4.
+
+---
+
+## القسم التقني — ملفات Wave 2 + Wave 2.5
+
+### جديدة (Wave 2)
+```
+docs/adr/0027-ux3a-roadmap-freeze.md
+docs/adr/0028-design-system-v2-and-ui-kit-sunset.md
+docs/adr/0030-theme-registry-contract.md
+docs/architecture/UX3A-ROADMAP.md
+docs/architecture/DESIGN-TOKENS-V2.md
+docs/architecture/design-decisions/README.md
+docs/architecture/design-decisions/DS-001-tone-vs-color.md
+docs/architecture/design-decisions/DS-002-variant-vs-intent.md
+docs/architecture/design-decisions/DS-003-spacing-scale-rationale.md
+docs/architecture/baseline/AUDIT-WAVE2.md
+docs/architecture/baseline/BASELINE-UX3A-002.md
+docs/mcp/STATUS.md
+scripts/audits/design-system-inventory.mjs
+scripts/audits/ui-kit-usage.mjs
+scripts/audits/component-duplication.mjs        # + Similarity Score
+scripts/audits/ui-complexity.mjs
+scripts/audits/rendering-cost.mjs
+scripts/audits/ui-dep-graph.mjs                 # ملاحظة #4
+scripts/audits/theme-smoke.mjs
+scripts/audits/build-wave-scorecard.mjs         # ملاحظة #10
+scripts/fitness/check-no-raw-colors.mjs
+scripts/fitness/check-typography-tokens.mjs
+scripts/fitness/check-spacing-elevation.mjs
+scripts/fitness/check-design-system-inventory.mjs
+scripts/fitness/check-no-new-ui-kit-imports.mjs
+src/ui/providers/themeRegistry.ts               # ملاحظة #5
+scripts/audits/output/wave2-discovery/*.json
+scripts/audits/output/wave2-discovery/*.md
+scripts/audits/output/baseline-ux3a-002.json
+scripts/audits/output/ux3a-wave2-lock.json
 ```
 
-#### M3 — Runtime Lifecycle (`src/platform/runtime/`)
-`PlatformRuntime` with 5 phases: `bootstrap → startup → hydration → shutdown → recovery`. `RuntimeState` union: `idle | bootstrapping | starting | hydrating | ready | shutting-down | recovering | failed`.
+### جديدة (Wave 2.5)
+```
+docs/adr/0029-ui-api-uniformity-charter.md
+docs/architecture/UI_API_V1.md
+docs/architecture/baseline/AUDIT-WAVE2_5.md
+docs/architecture/baseline/BASELINE-UX3A-002_5.md
+scripts/fitness/check-ui-api-uniformity.mjs
+src/ui/primitives/__tests__/api-uniformity.test.ts
+src/ui/composites/__tests__/api-uniformity.test.ts
+src/ui/layout/__tests__/api-uniformity.test.ts
+scripts/audits/output/baseline-ux3a-002_5.json
+scripts/audits/output/ux3a-wave2_5-lock.json
+```
 
-**Lifecycle Invariants (dedicated tests):**
-- `startup()` cannot execute before `bootstrap()`.
-- `hydration()` executes at most once.
-- `shutdown()` is idempotent.
-- `recovery()` cannot transition directly to `ready`.
-- `failed` is terminal.
-- Deterministic: accepts injected `ClockPort`, `IdPort`, `FeatureFlagPort`, `TenantContext`, `Culture`, `PortRegistry`.
-- No React inside `runtime/`. The Shell exposes `useRuntimePhase()`.
+### مُعدَّلة
+```
+src/index.css                              # high-contrast HSL stub
+src/ui/tokens/**                           # تدقيق فقط
+src/ui/providers/ThemeProvider.tsx         # يقرأ من themeRegistry
+src/components/ui-kit/index.ts             # @deprecated + dev warn
+scripts/fitness/run-all.mjs                # تسجيل 6 checks جديدة
+.github/workflows/ux3a-wave1-gate.yml → ux3a-gate.yml (يدعم W2 + W2.5)
+docs/architecture/MANIFEST.json
+docs/architecture/UI_LAYER_MAP.md
+docs/architecture/TOKEN_CHANGELOG.md
+PROJECT_MAP.md
+# Wave 2.5 فقط: توحيد API additive في:
+src/ui/primitives/{Button,IconButton,Input,Textarea,Select,Card,Dialog,Sheet,Badge,Alert,Tooltip,DropdownMenu,Table}.tsx
+src/ui/composites/{data/DataGrid,form/Form,form/FormDialog,page/PageHeader,state/EmptyState,...}.tsx
+src/ui/layout/{AppShell,Sidebar,Topbar,StatusBar,CommandPalette}.tsx
+```
 
-#### M4 — Frontend Ports (`src/platform/ports/`)
-Seven ports; each has interface + Browser adapter + In-Memory adapter + tests.
+### قيود صارمة (Wave 2 + 2.5)
+- ❌ صفر تعديل على `src/kernel/**` و `src/platform/**`.
+- ❌ صفر تعديل على `domain/`, `application/`, `infrastructure/`, feature hooks.
+- ❌ صفر DB migrations.
+- ❌ صفر تعديل على أدوات MCP الحالية.
+- ❌ صفر حذف من `src/components/ui-kit/**` (Freeze فقط).
+- ❌ صفر breaking changes في UI APIs — additive فقط.
+- ✅ مسموح: `src/ui/**`, tokens, ThemeProvider + Registry, `src/index.css`, docs, fitness scripts.
+- ✅ مسموح: استبدال className hardcoded بـ token classes داخل ملفات الميزات.
 
-| Port | Browser adapter | In-Memory adapter |
+### التبعيات
+- **صفر** تبعيات جديدة.
+
+### النشر
+- لا نشر Edge Functions.
+
+---
+
+## ما بعد Wave 2.5 (مرجعية موجزة، مع التعديلات)
+
+| Wave | مخرج | ملاحظة |
 |---|---|---|
-| `NotificationPort` | shadcn `toast` | array recorder |
-| `DialogPort` | shadcn dialog wrapper | queue resolver |
-| `NavigationPort` | wraps `useNavigate` | navigation recorder |
-| `StoragePort` | `localStorage` + JSON codec | `Map<string,string>` |
-| `ClipboardPort` | `navigator.clipboard` | in-memory buffer |
-| `FilePickerPort` | hidden `<input type=file>` | fixture resolver |
-| `SharePort` | `navigator.share` + clipboard fallback | payload recorder |
+| 3 Interaction Framework | Create/Edit/Delete/Wizard/Bulk/Search/Import/Export | + بدء استبدال `ui-kit` بـ `ui/primitives` |
+| 4 UX State System | 11 حالة + `useUXState` | + حذف `ui-kit` نهائياً |
+| 5 Data Presentation | Table/Cards/Kanban/Timeline/Calendar/Tree/Pivot/Charts | مصدر واحد |
+| 6 Dashboard Framework | Widget Registry + DnD | Mock provider |
+| 6.5 UI Contracts | View Models | |
+| **6.75 Developer Experience** *(ملاحظة #7)* | Component Catalog + Playground + Token Viewer + Icon Gallery | داخلي، بدون تبعيات جديدة إن أمكن |
+| 7 Demo & Showcase | صفحات اختبار داخلية | |
+| **8 Performance & Quality** *(ملاحظة #8)* | Perf + A11y + Bundle + Lazy + Virtualization + Memory + Lighthouse + Keyboard + High Contrast QA (WCAG AAA) | |
+| **9A Read Model Wiring** *(ملاحظة #9)* | ربط View Models بـ Read Models (UX-2C) | |
+| **9B Real-time & Offline** *(ملاحظة #9)* | Subscriptions + Optimistic Updates + Offline | |
+| 10 MCP Foundation → أدوات | حسب خطة MCP v2 السابقة | |
 
-Directory rule (invariant #3): interfaces live at `src/platform/ports/`; adapters live at `src/platform/ports/adapters/{browser,memory}/`. Ports must **not** import from `adapters/**`.
-
-`PortRegistry` is the single injection surface, exposed via `PortRegistry.default()` and `PortRegistry.inMemory()`. It exports a `DECLARED_PORTS` const enumerating every port name — used by fitness (M7) to prove completeness.
-
-#### M5 — Shell façade & AppLayout migration
-- Create `src/platform/shell/PlatformShell.tsx`. It is the **only** file that constructs `PlatformRuntime`, publishes `RuntimeContext`, and renders the existing `src/ui/layout/AppShell` plus legacy chrome (`AppSidebar`, `AppHeader`, `MobileHeader`, `MobileBottomNav`, `MobileDrawer`, `FABMenu`, `PageErrorBoundary`, `PageTransition`, `ShortcutsModal`, `CommandBar`, `EnvironmentBadge`) through composition. `src/ui/**` unchanged.
-- **Behavioral Parity (hard exit criterion):** no visible UI regression, no keyboard-shortcut regression, no mobile navigation regression, no RTL regression, no accessibility regression. Verified via: parity structural snapshot, keyboard-shortcut integration test, mobile viewport render test, RTL render test, axe/a11y smoke test.
-- Update `src/components/layout/AppLayout.tsx` to render `PlatformShell`. Keep `AdaptiveShell.tsx` in place with a deprecation banner; a fitness rule forbids **new** imports.
-
-#### M6 — Façades, ADRs, Baseline, Fingerprint, Lock, Drift Report
-
-**Public façades:** `@/kernel`, `@/platform`, `@/platform/ports`, `@/platform/runtime`, `@/platform/shell`.
-
-**ADRs promoted to Accepted:**
-- `docs/adr/0015-kernel-purity.md` (references `DEPENDENCY_RULES.md §Kernel`).
-- `docs/adr/0023-frontend-ports-taxonomy.md` (parity + no-reverse-import rule).
-- `docs/adr/0024-runtime-lifecycle.md` (5-phase model + lifecycle invariants).
-
-**New artifacts:**
-- **Architecture Drift Report** (`scripts/audits/architecture-drift-report.mjs` → `scripts/audits/output/ux3a-drift/wave1.json` + `.md`). Diffs the current layer graph (files per layer, cross-layer edges, façade usage, forbidden-import counts) against `BASELINE-UX3A-000` and against a post-Wave-1 snapshot. Fails CI on any un-approved delta.
-- **Architecture Fingerprint** — `build-baseline-tag.mjs` extended to emit a top-level `fingerprint` field: `sha256` of the sorted `{layer → [publicFaçadeFile, ...]}` map plus the invariants list. Written into `BASELINE-UX3A-001` and also mirrored to `scripts/audits/output/architecture-fingerprint.json` for quick comparison across runs.
-- `PROJECT_MAP.md` and `docs/architecture/UI_LAYER_MAP.md` populated (`kernel/`, `platform/` blocks).
-- `scripts/audits/output/ux3a-wave1-lock.json` (ADR SHAs, port parity, layering report, drift diff, fingerprint, build/test hashes).
-- `docs/architecture/baseline/BASELINE-UX3A-001.md` + `scripts/audits/output/baseline-ux3a-001.json`.
-
-#### M7 — Fitness Checks (new/updated)
-
-| Check | File | Invariants | Mode |
-|---|---|---|---|
-| `check-platform-layering` | existing | #1, #2, #6, #7, #11 | flipped **enforcing** |
-| `check-port-adapter-parity` | new | #3 | enforcing |
-| `check-kernel-browser-globals` | **new** — bans `window`/`document`/`navigator`/`localStorage`/`sessionStorage`/`fetch`/`XMLHttpRequest`/`WebSocket`/`caches`/`indexedDB`/`crypto`/`location`/`history` identifiers and matching `globalThis.*` accesses inside `src/kernel/**` | #12 | enforcing |
-| `check-port-registry-completeness` | **new** — parses `DECLARED_PORTS` and asserts every listed port has: interface file, browser adapter, memory adapter, and registration in both `PortRegistry.default()` and `PortRegistry.inMemory()` | #9 | enforcing |
-| `check-platform-shell-single-entry` | **new** — asserts `new PlatformRuntime(` and `RuntimeContext.Provider` appear only inside `src/platform/shell/**` | #5, #8 | enforcing |
-| `check-no-new-adaptiveshell-imports` | new | #4, #5 | enforcing |
-| `check-no-deep-imports` | extended | #6, #7 | enforcing |
-| `check-baseline-tag-integrity` | existing | fingerprint | enforcing |
-| Runtime lifecycle unit tests | new | #8 | test |
-| Shell parity tests | new | #5, #10 | test |
-
-All new checks wired into `scripts/fitness/run-all.mjs`.
+كل موجة تحصل على `plan--create` منفصل بـ ADR + Baseline + Fitness Gate + Scorecard.
 
 ---
 
-### Exit Criteria (auto-verified in `ux3a-wave1-gate.yml`)
+## البدء بعد الموافقة
 
-- `bun run build` green.
-- Project's configured TypeScript type-check command green.
-- `node scripts/fitness/run-all.mjs` green — including all 5 new/flipped checks above.
-- All 12 Wave 1 Architectural Invariants covered by a check or test.
-- Zero imports from `@/domain/**`, `@/application/**`, `@/infrastructure/**`, `@/integrations/supabase/**`, `@/ux/**` inside `src/kernel/**` or `src/platform/**`.
-- Zero browser globals in `src/kernel/**`.
-- Every declared port has both adapters and is present in both `PortRegistry` factories.
-- `PlatformRuntime` constructor and `RuntimeContext.Provider` referenced only from `src/platform/shell/**`.
-- `AppLayout.tsx` imports `@/platform/shell` only; no other file imports `AdaptiveShell`.
-- Behavioral Parity tests green.
-- `src/ui/**` git diff empty.
-- `DEPENDENCY_RULES.md`, `PROJECT_MAP.md`, `MANIFEST.json`, `UI_LAYER_MAP.md`, reference doc header updated.
-- ADRs 0015 / 0023 / 0024 = `Accepted`.
-- `ux3a-wave1-lock.json`, `BASELINE-UX3A-001` (with `fingerprint`), and `ux3a-drift/wave1.json` sealed and integrity-verified.
-
----
-
-### Post-Wave Stop — Architecture Audit (before any Wave 2 work)
-
-- Re-run all fitness checks against the sealed baseline.
-- Verify the Architecture Fingerprint matches the sealed value.
-- Publish `AUDIT-WAVE1.md` summarizing: kernel purity, platform purity, port completeness, shell single-entry proof, drift diff vs `BASELINE-UX3A-000`, and any residual risks.
-- Only after audit sign-off does Wave 2 (Design System consolidation) begin.
-
----
-
-### Deliverables checklist
-
-- [ ] G-W1 gate artifacts (reference lock header, ADR-0014 conditional clause, CI workflow using project's typecheck script, MANIFEST/PROJECT_MAP updates, `DEPENDENCY_RULES.md`, ADR conflict appendix).
-- [ ] `src/kernel/**` with 8 sub-modules + `@/kernel` façade + unit tests + browser-globals fitness green.
-- [ ] `src/platform/runtime/` with `PlatformRuntime` + 5 lifecycle invariant tests.
-- [ ] `src/platform/ports/` with 7 ports × 2 adapters + parity fitness + registry-completeness fitness.
-- [ ] `src/platform/shell/PlatformShell.tsx` with behavioral-parity test suite + single-entry fitness.
-- [ ] `AppLayout.tsx` migrated; `AdaptiveShell.tsx` deprecated; `src/ui/**` unchanged.
-- [ ] 5 new fitness checks + `check-platform-layering` flipped to enforcing.
-- [ ] Architecture Drift Report generator + Wave 1 diff.
-- [ ] Architecture Fingerprint embedded in `BASELINE-UX3A-001` and mirrored file.
-- [ ] ADRs 0015 / 0023 / 0024 Accepted.
-- [ ] `ux3a-wave1-lock.json` + `BASELINE-UX3A-001` sealed.
-- [ ] `AUDIT-WAVE1.md` prepared as the mandatory pre-Wave-2 stop.
+1. إنشاء ADR-0027/0028/0030 + `UX3A-ROADMAP.md` + `docs/mcp/STATUS.md` + `docs/architecture/design-decisions/` (README + DS-001..003).
+2. تشغيل Discovery الستة (Design System + ui-kit + Duplication+Similarity + Complexity + Rendering + UI Dep Graph).
+3. إضافة `themeRegistry.ts` وتحويل `ThemeProvider` للقراءة منه (سلوك مطابق للحالي).
+4. إضافة 5 fitness checks بوضع warn.
+5. إصلاح المخالفات على دفعات صغيرة.
+6. تحويل الـ 5 checks إلى enforcing.
+7. تشغيل `build-wave-scorecard.mjs` والتأكد من الأهداف.
+8. ختم `BASELINE-UX3A-002`.
+9. الانتقال إلى Wave 2.5 (UI API Standardization عبر 4 طبقات) بنفس الأسلوب.

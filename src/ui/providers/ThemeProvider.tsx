@@ -2,9 +2,14 @@
  * ThemeProvider — applies layout state (theme mode, variant, direction)
  * to the DOM. Only writes `data-theme`, `data-variant`, `dir`, and the
  * `dark` class on `<html>`. No coupling to app code.
+ *
+ * Wave 2 (UX-3A): theme resolution now goes through
+ * `src/ui/providers/themeRegistry.ts` (ADR-0030). Behavior is unchanged
+ * for existing consumers; the registry is the extension point.
  */
 import { useEffect, type ReactNode } from "react";
 import { useLayout } from "./LayoutProvider";
+import { getTheme } from "./themeRegistry";
 
 function resolveMode(mode: "light" | "dark" | "system"): "light" | "dark" {
   if (mode !== "system") return mode;
@@ -23,8 +28,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
     const resolved = resolveMode(state.themeMode);
-    root.classList.toggle("dark", resolved === "dark");
-    root.setAttribute("data-theme", resolved);
+    // Resolve through the registry so future themes plug in without
+    // editing this provider (ADR-0030). Fall back gracefully if a caller
+    // set an unknown id — preserve Wave 1 behavior.
+    const themeDef = getTheme(resolved);
+    const dataAttr = themeDef?.dataAttr ?? resolved;
+    const prefersDark = themeDef?.prefersDark ?? resolved === "dark";
+    root.classList.toggle("dark", prefersDark);
+    root.setAttribute("data-theme", dataAttr);
     root.setAttribute("data-variant", state.themeVariant);
     root.setAttribute("data-density", state.density);
     root.setAttribute("dir", state.dir);
@@ -36,8 +47,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (typeof window === "undefined" || state.themeMode !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
-      document.documentElement.classList.toggle("dark", mq.matches);
-      document.documentElement.setAttribute("data-theme", mq.matches ? "dark" : "light");
+      const themeDef = getTheme(mq.matches ? "dark" : "light");
+      document.documentElement.classList.toggle("dark", themeDef?.prefersDark ?? mq.matches);
+      document.documentElement.setAttribute("data-theme", themeDef?.dataAttr ?? (mq.matches ? "dark" : "light"));
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);

@@ -1,0 +1,2917 @@
+{
+  "generatedAt": "2026-07-09T00:09:17.845Z",
+  "pairs": [
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 100,
+      "propScore": 100,
+      "jsxScore": 100
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 100,
+      "propScore": 100,
+      "jsxScore": 100
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 100,
+      "propScore": 100,
+      "jsxScore": 99
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 100,
+      "propScore": 100,
+      "jsxScore": 99
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 99,
+      "propScore": 100,
+      "jsxScore": 97
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 96,
+      "propScore": 100,
+      "jsxScore": 91
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 95,
+      "propScore": 100,
+      "jsxScore": 86
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 95,
+      "propScore": 100,
+      "jsxScore": 86
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 93,
+      "propScore": 100,
+      "jsxScore": 83
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 87,
+      "propScore": 100,
+      "jsxScore": 68
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "similarity": 86,
+      "propScore": 100,
+      "jsxScore": 64
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 86,
+      "propScore": 100,
+      "jsxScore": 64
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 84,
+      "propScore": 100,
+      "jsxScore": 60
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 84,
+      "propScore": 100,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 84,
+      "propScore": 75,
+      "jsxScore": 98
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 81,
+      "propScore": 100,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "b": "src/components/treasury/CashTransactionDialog.tsx",
+      "similarity": 81,
+      "propScore": 75,
+      "jsxScore": 91
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "similarity": 79,
+      "propScore": 100,
+      "jsxScore": 48
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 79,
+      "propScore": 100,
+      "jsxScore": 48
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 77,
+      "propScore": 67,
+      "jsxScore": 91
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 76,
+      "propScore": 67,
+      "jsxScore": 91
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 75,
+      "propScore": 67,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "similarity": 74,
+      "propScore": 75,
+      "jsxScore": 74
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 74,
+      "propScore": 100,
+      "jsxScore": 35
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 74,
+      "propScore": 67,
+      "jsxScore": 86
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 74,
+      "propScore": 67,
+      "jsxScore": 85
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 72,
+      "propScore": 67,
+      "jsxScore": 79
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "similarity": 70,
+      "propScore": 100,
+      "jsxScore": 25
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 69,
+      "propScore": 67,
+      "jsxScore": 72
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 67,
+      "propScore": 50,
+      "jsxScore": 93
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 67,
+      "propScore": 50,
+      "jsxScore": 93
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 67,
+      "propScore": 50,
+      "jsxScore": 92
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 67,
+      "propScore": 50,
+      "jsxScore": 93
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 67,
+      "propScore": 50,
+      "jsxScore": 93
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 66,
+      "propScore": 50,
+      "jsxScore": 89
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 66,
+      "propScore": 60,
+      "jsxScore": 76
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 66,
+      "propScore": 100,
+      "jsxScore": 15
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 66,
+      "propScore": 67,
+      "jsxScore": 65
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 66,
+      "propScore": 50,
+      "jsxScore": 91
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 66,
+      "propScore": 50,
+      "jsxScore": 91
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/attendance/LeaveRequestDialog.tsx",
+      "similarity": 65,
+      "propScore": 67,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 65,
+      "propScore": 67,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 65,
+      "propScore": 67,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerDialogManager.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierDialogManager.tsx",
+      "similarity": 65,
+      "propScore": 50,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 65,
+      "propScore": 50,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "similarity": 65,
+      "propScore": 50,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 64,
+      "propScore": 50,
+      "jsxScore": 85
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 64,
+      "propScore": 67,
+      "jsxScore": 60
+    },
+    {
+      "family": "Alert",
+      "a": "src/components/customers/alerts/CustomerAlertsBanner.tsx",
+      "b": "src/components/customers/alerts/CustomerAlertsMobileTrigger.tsx",
+      "similarity": 64,
+      "propScore": 80,
+      "jsxScore": 40
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 64,
+      "propScore": 100,
+      "jsxScore": 10
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 64,
+      "propScore": 100,
+      "jsxScore": 10
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 64,
+      "propScore": 100,
+      "jsxScore": 10
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 64,
+      "propScore": 100,
+      "jsxScore": 11
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 63,
+      "propScore": 67,
+      "jsxScore": 58
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 63,
+      "propScore": 50,
+      "jsxScore": 82
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 63,
+      "propScore": 67,
+      "jsxScore": 58
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 63,
+      "propScore": 50,
+      "jsxScore": 84
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 63,
+      "propScore": 67,
+      "jsxScore": 58
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 63,
+      "propScore": 50,
+      "jsxScore": 81
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 63,
+      "propScore": 50,
+      "jsxScore": 84
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 62,
+      "propScore": 67,
+      "jsxScore": 55
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 62,
+      "propScore": 50,
+      "jsxScore": 80
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 62,
+      "propScore": 40,
+      "jsxScore": 95
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 62,
+      "propScore": 50,
+      "jsxScore": 80
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 61,
+      "propScore": 40,
+      "jsxScore": 92
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 61,
+      "propScore": 40,
+      "jsxScore": 93
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 61,
+      "propScore": 67,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 61,
+      "propScore": 50,
+      "jsxScore": 77
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 61,
+      "propScore": 50,
+      "jsxScore": 78
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 61,
+      "propScore": 50,
+      "jsxScore": 78
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 61,
+      "propScore": 67,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 61,
+      "propScore": 50,
+      "jsxScore": 76
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 61,
+      "propScore": 67,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 60,
+      "propScore": 40,
+      "jsxScore": 90
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 60,
+      "propScore": 50,
+      "jsxScore": 76
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 60,
+      "propScore": 50,
+      "jsxScore": 76
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 60,
+      "propScore": 40,
+      "jsxScore": 91
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 60,
+      "propScore": 50,
+      "jsxScore": 75
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 60,
+      "propScore": 50,
+      "jsxScore": 75
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 60,
+      "propScore": 50,
+      "jsxScore": 76
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 59,
+      "propScore": 40,
+      "jsxScore": 88
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 59,
+      "propScore": 40,
+      "jsxScore": 88
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 59,
+      "propScore": 40,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 59,
+      "propScore": 40,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 59,
+      "propScore": 40,
+      "jsxScore": 88
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 59,
+      "propScore": 50,
+      "jsxScore": 72
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 59,
+      "propScore": 67,
+      "jsxScore": 48
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 59,
+      "propScore": 40,
+      "jsxScore": 88
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 59,
+      "propScore": 40,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 58,
+      "propScore": 40,
+      "jsxScore": 84
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 58,
+      "propScore": 40,
+      "jsxScore": 86
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 58,
+      "propScore": 40,
+      "jsxScore": 85
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 58,
+      "propScore": 50,
+      "jsxScore": 69
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "b": "src/components/treasury/CashTransactionDialog.tsx",
+      "similarity": 58,
+      "propScore": 40,
+      "jsxScore": 86
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 58,
+      "propScore": 67,
+      "jsxScore": 45
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 58,
+      "propScore": 40,
+      "jsxScore": 84
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/attendance/LeaveRequestDialog.tsx",
+      "similarity": 57,
+      "propScore": 40,
+      "jsxScore": 82
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/categories/CategoryFormDialog.tsx",
+      "similarity": 57,
+      "propScore": 33,
+      "jsxScore": 92
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 57,
+      "propScore": 67,
+      "jsxScore": 42
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 57,
+      "propScore": 50,
+      "jsxScore": 68
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 57,
+      "propScore": 40,
+      "jsxScore": 82
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 57,
+      "propScore": 40,
+      "jsxScore": 81
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 57,
+      "propScore": 40,
+      "jsxScore": 82
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 57,
+      "propScore": 33,
+      "jsxScore": 94
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 57,
+      "propScore": 40,
+      "jsxScore": 81
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 40,
+      "jsxScore": 80
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 33,
+      "jsxScore": 90
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 50,
+      "jsxScore": 64
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 40,
+      "jsxScore": 80
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 67,
+      "jsxScore": 39
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/treasury/CashTransactionDialog.tsx",
+      "similarity": 56,
+      "propScore": 40,
+      "jsxScore": 79
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 56,
+      "propScore": 50,
+      "jsxScore": 64
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 40,
+      "jsxScore": 81
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 56,
+      "propScore": 50,
+      "jsxScore": 66
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 40,
+      "jsxScore": 80
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 56,
+      "propScore": 50,
+      "jsxScore": 65
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 55,
+      "propScore": 67,
+      "jsxScore": 37
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/categories/CategoryFormDialog.tsx",
+      "similarity": 55,
+      "propScore": 40,
+      "jsxScore": 78
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/treasury/CashTransactionDialog.tsx",
+      "similarity": 55,
+      "propScore": 40,
+      "jsxScore": 77
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 55,
+      "propScore": 29,
+      "jsxScore": 95
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 55,
+      "propScore": 50,
+      "jsxScore": 63
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 55,
+      "propScore": 50,
+      "jsxScore": 63
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "similarity": 54,
+      "propScore": 33,
+      "jsxScore": 85
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 54,
+      "propScore": 40,
+      "jsxScore": 75
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 54,
+      "propScore": 50,
+      "jsxScore": 59
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 54,
+      "propScore": 33,
+      "jsxScore": 84
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 54,
+      "propScore": 40,
+      "jsxScore": 75
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 54,
+      "propScore": 33,
+      "jsxScore": 86
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 54,
+      "propScore": 50,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 54,
+      "propScore": 50,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 54,
+      "propScore": 50,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 54,
+      "propScore": 50,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 54,
+      "propScore": 50,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 53,
+      "propScore": 40,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 53,
+      "propScore": 40,
+      "jsxScore": 72
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 53,
+      "propScore": 40,
+      "jsxScore": 72
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 53,
+      "propScore": 50,
+      "jsxScore": 57
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 53,
+      "propScore": 40,
+      "jsxScore": 73
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 53,
+      "propScore": 25,
+      "jsxScore": 94
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 53,
+      "propScore": 40,
+      "jsxScore": 72
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 53,
+      "propScore": 40,
+      "jsxScore": 72
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 53,
+      "propScore": 50,
+      "jsxScore": 57
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/accounting/JournalFormDialog.tsx",
+      "similarity": 52,
+      "propScore": 50,
+      "jsxScore": 54
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 52,
+      "propScore": 67,
+      "jsxScore": 30
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "similarity": 52,
+      "propScore": 40,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 52,
+      "propScore": 29,
+      "jsxScore": 87
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "similarity": 52,
+      "propScore": 33,
+      "jsxScore": 79
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 52,
+      "propScore": 40,
+      "jsxScore": 70
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 52,
+      "propScore": 40,
+      "jsxScore": 70
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 52,
+      "propScore": 50,
+      "jsxScore": 55
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 52,
+      "propScore": 50,
+      "jsxScore": 54
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 52,
+      "propScore": 50,
+      "jsxScore": 54
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 52,
+      "propScore": 29,
+      "jsxScore": 88
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 52,
+      "propScore": 29,
+      "jsxScore": 86
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 52,
+      "propScore": 50,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 52,
+      "propScore": 50,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 51,
+      "propScore": 25,
+      "jsxScore": 90
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "similarity": 51,
+      "propScore": 50,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 51,
+      "propScore": 50,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 51,
+      "propScore": 40,
+      "jsxScore": 67
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 51,
+      "propScore": 50,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 51,
+      "propScore": 67,
+      "jsxScore": 27
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 51,
+      "propScore": 29,
+      "jsxScore": 85
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 51,
+      "propScore": 67,
+      "jsxScore": 27
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 51,
+      "propScore": 50,
+      "jsxScore": 54
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 51,
+      "propScore": 67,
+      "jsxScore": 28
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 50,
+      "propScore": 33,
+      "jsxScore": 74
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/categories/CategoryFormDialog.tsx",
+      "similarity": 50,
+      "propScore": 50,
+      "jsxScore": 51
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/employees/EmployeeFormDialog.tsx",
+      "similarity": 50,
+      "propScore": 67,
+      "jsxScore": 26
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 50,
+      "propScore": 40,
+      "jsxScore": 65
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 50,
+      "propScore": 67,
+      "jsxScore": 26
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 50,
+      "propScore": 67,
+      "jsxScore": 24
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 50,
+      "propScore": 67,
+      "jsxScore": 25
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 50,
+      "propScore": 67,
+      "jsxScore": 26
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "similarity": 49,
+      "propScore": 75,
+      "jsxScore": 10
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 49,
+      "propScore": 40,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 49,
+      "propScore": 40,
+      "jsxScore": 63
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 49,
+      "propScore": 67,
+      "jsxScore": 22
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 49,
+      "propScore": 67,
+      "jsxScore": 22
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 49,
+      "propScore": 50,
+      "jsxScore": 49
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 49,
+      "propScore": 29,
+      "jsxScore": 80
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 49,
+      "propScore": 40,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 49,
+      "propScore": 40,
+      "jsxScore": 63
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 49,
+      "propScore": 40,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "similarity": 48,
+      "propScore": 33,
+      "jsxScore": 70
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalDetailDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 48,
+      "propScore": 20,
+      "jsxScore": 90
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 48,
+      "propScore": 40,
+      "jsxScore": 60
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "similarity": 48,
+      "propScore": 67,
+      "jsxScore": 20
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 48,
+      "propScore": 50,
+      "jsxScore": 46
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 48,
+      "propScore": 50,
+      "jsxScore": 46
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 48,
+      "propScore": 67,
+      "jsxScore": 19
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 48,
+      "propScore": 67,
+      "jsxScore": 20
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 48,
+      "propScore": 50,
+      "jsxScore": 45
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 48,
+      "propScore": 40,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 48,
+      "propScore": 33,
+      "jsxScore": 69
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 48,
+      "propScore": 67,
+      "jsxScore": 19
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 48,
+      "propScore": 40,
+      "jsxScore": 60
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 48,
+      "propScore": 67,
+      "jsxScore": 21
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 47,
+      "propScore": 40,
+      "jsxScore": 59
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 47,
+      "propScore": 50,
+      "jsxScore": 43
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 47,
+      "propScore": 67,
+      "jsxScore": 18
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 47,
+      "propScore": 25,
+      "jsxScore": 81
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 47,
+      "propScore": 40,
+      "jsxScore": 58
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 47,
+      "propScore": 25,
+      "jsxScore": 79
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 47,
+      "propScore": 33,
+      "jsxScore": 67
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 47,
+      "propScore": 67,
+      "jsxScore": 16
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 47,
+      "propScore": 40,
+      "jsxScore": 57
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 47,
+      "propScore": 50,
+      "jsxScore": 41
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 47,
+      "propScore": 67,
+      "jsxScore": 18
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 47,
+      "propScore": 40,
+      "jsxScore": 58
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierImportDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 47,
+      "propScore": 67,
+      "jsxScore": 17
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalDetailDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "similarity": 46,
+      "propScore": 20,
+      "jsxScore": 85
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalDetailDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 46,
+      "propScore": 20,
+      "jsxScore": 85
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 55
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 55
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 54
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 16
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 14
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 15
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 15
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/invoices/BulkPrintConfirmDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 15
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 15
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 14
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 55
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 15
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 46,
+      "propScore": 50,
+      "jsxScore": 40
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 29,
+      "jsxScore": 72
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 33,
+      "jsxScore": 65
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 46,
+      "propScore": 25,
+      "jsxScore": 77
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 46,
+      "propScore": 67,
+      "jsxScore": 15
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 46,
+      "propScore": 40,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 46,
+      "propScore": 25,
+      "jsxScore": 78
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 46,
+      "propScore": 25,
+      "jsxScore": 77
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 45,
+      "propScore": 22,
+      "jsxScore": 79
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 13
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "similarity": 45,
+      "propScore": 40,
+      "jsxScore": 53
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 13
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 33,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 45,
+      "propScore": 33,
+      "jsxScore": 63
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 40,
+      "jsxScore": 52
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 40,
+      "jsxScore": 52
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 13
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 13
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 11
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 40,
+      "jsxScore": 51
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 12
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierImportDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 45,
+      "propScore": 67,
+      "jsxScore": 13
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalDetailDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 44,
+      "propScore": 20,
+      "jsxScore": 81
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "similarity": 44,
+      "propScore": 50,
+      "jsxScore": 35
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 44,
+      "propScore": 33,
+      "jsxScore": 61
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 44,
+      "propScore": 29,
+      "jsxScore": 68
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 44,
+      "propScore": 67,
+      "jsxScore": 10
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 44,
+      "propScore": 67,
+      "jsxScore": 10
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 44,
+      "propScore": 67,
+      "jsxScore": 9
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 44,
+      "propScore": 67,
+      "jsxScore": 10
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 44,
+      "propScore": 50,
+      "jsxScore": 35
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 44,
+      "propScore": 67,
+      "jsxScore": 11
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 44,
+      "propScore": 67,
+      "jsxScore": 11
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 44,
+      "propScore": 22,
+      "jsxScore": 76
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 44,
+      "propScore": 29,
+      "jsxScore": 68
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierImportDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 44,
+      "propScore": 67,
+      "jsxScore": 9
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 33,
+      "jsxScore": 57
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 7
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalFormDialog.tsx",
+      "b": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/invoices/BulkPrintConfirmDialog.tsx",
+      "similarity": 43,
+      "propScore": 25,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/invoices/InvoiceApprovalDialog.tsx",
+      "similarity": 43,
+      "propScore": 27,
+      "jsxScore": 68
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 33,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 43,
+      "propScore": 22,
+      "jsxScore": 75
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 43,
+      "propScore": 25,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 7
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 7
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/employees/EmployeeFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 7
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 43,
+      "propScore": 50,
+      "jsxScore": 32
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/expenses/ExpenseFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 43,
+      "propScore": 25,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 43,
+      "propScore": 25,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 7
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductImportDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 43,
+      "propScore": 25,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 43,
+      "propScore": 67,
+      "jsxScore": 8
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/employees/EmployeeFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 50,
+      "jsxScore": 31
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/attendance/LeaveRequestDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 42,
+      "propScore": 25,
+      "jsxScore": 67
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/categories/CategoryFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 42,
+      "propScore": 22,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/invoices/InvoiceFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 60,
+      "jsxScore": 14
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/products/ProductVariantDialog.tsx",
+      "similarity": 42,
+      "propScore": 33,
+      "jsxScore": 54
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 40,
+      "jsxScore": 46
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 42,
+      "propScore": 25,
+      "jsxScore": 68
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/employees/EmployeeFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 4
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 5
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 4
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerMergeDialog.tsx",
+      "b": "src/components/treasury/CashTransactionDialog.tsx",
+      "similarity": 42,
+      "propScore": 50,
+      "jsxScore": 29
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/employees/EmployeeFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 50,
+      "jsxScore": 29
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 6
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 4
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 4
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 42,
+      "propScore": 50,
+      "jsxScore": 29
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 5
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 42,
+      "propScore": 67,
+      "jsxScore": 6
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 50,
+      "jsxScore": 30
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 42,
+      "propScore": 29,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 40,
+      "jsxScore": 44
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/invoices/BulkPrintConfirmDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 42,
+      "propScore": 40,
+      "jsxScore": 46
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/invoices/InvoiceFormDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 42,
+      "propScore": 60,
+      "jsxScore": 16
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/payments/PaymentFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 42,
+      "propScore": 22,
+      "jsxScore": 71
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 41,
+      "propScore": 40,
+      "jsxScore": 42
+    },
+    {
+      "family": "Alert",
+      "a": "src/components/customers/alerts/CustomerAlertsBanner.tsx",
+      "b": "src/components/suppliers/alerts/SupplierAlertsBannerList.tsx",
+      "similarity": 41,
+      "propScore": 40,
+      "jsxScore": 42
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "similarity": 41,
+      "propScore": 25,
+      "jsxScore": 66
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 41,
+      "propScore": 25,
+      "jsxScore": 66
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 41,
+      "propScore": 29,
+      "jsxScore": 59
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/invoices/BulkPrintConfirmDialog.tsx",
+      "similarity": 41,
+      "propScore": 40,
+      "jsxScore": 42
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/employees/EmployeeFormDialog.tsx",
+      "similarity": 41,
+      "propScore": 67,
+      "jsxScore": 3
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseCategoryFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 41,
+      "propScore": 50,
+      "jsxScore": 29
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/payments/PaymentFormDialog.tsx",
+      "similarity": 41,
+      "propScore": 40,
+      "jsxScore": 44
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/logistics/LogisticsDialogs.tsx",
+      "similarity": 41,
+      "propScore": 29,
+      "jsxScore": 59
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/invoices/BulkPrintConfirmDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 41,
+      "propScore": 40,
+      "jsxScore": 42
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/logistics/LogisticsDialogs.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 41,
+      "propScore": 29,
+      "jsxScore": 60
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 41,
+      "propScore": 50,
+      "jsxScore": 27
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/treasury/CashRegisterFormDialog.tsx",
+      "similarity": 41,
+      "propScore": 50,
+      "jsxScore": 27
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/shared/FormDialogFooter.tsx",
+      "b": "src/components/ui-kit/StandardFormDialog.tsx",
+      "similarity": 41,
+      "propScore": 14,
+      "jsxScore": 80
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 41,
+      "propScore": 29,
+      "jsxScore": 59
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "similarity": 40,
+      "propScore": 25,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/AccountFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 40,
+      "propScore": 25,
+      "jsxScore": 62
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/accounting/JournalDetailDialog.tsx",
+      "b": "src/components/accounting/JournalFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 20,
+      "jsxScore": 70
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "similarity": 40,
+      "propScore": 40,
+      "jsxScore": 40
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/admin/RestoreBackupDialog.tsx",
+      "b": "src/components/quotations/QuotationFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 33,
+      "jsxScore": 50
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "b": "src/components/customers/dialogs/CustomerAddressDialog.tsx",
+      "similarity": 40,
+      "propScore": 33,
+      "jsxScore": 51
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "b": "src/components/inventory/StockMovementDialog.tsx",
+      "similarity": 40,
+      "propScore": 33,
+      "jsxScore": 50
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "b": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "similarity": 40,
+      "propScore": 29,
+      "jsxScore": 57
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 40,
+      "propScore": 29,
+      "jsxScore": 56
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/CustomerQuickAddDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 40,
+      "propScore": 25,
+      "jsxScore": 64
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/inventory/WarehouseFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+      "b": "src/components/products/ProductFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 50,
+      "jsxScore": 25
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/employees/EmployeeFormDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 40,
+      "propScore": 50,
+      "jsxScore": 26
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/expenses/ExpenseFormDialog.tsx",
+      "b": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 50,
+      "jsxScore": 26
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/StockMovementDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 40,
+      "propScore": 33,
+      "jsxScore": 50
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/inventory/WarehouseFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/invoices/InvoiceFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplatePreviewDialog.tsx",
+      "similarity": 40,
+      "propScore": 40,
+      "jsxScore": 41
+    },
+    {
+      "family": "Button",
+      "a": "src/components/mobile/FloatingActionButton.tsx",
+      "b": "src/components/print/PrintButton.tsx",
+      "similarity": 40,
+      "propScore": 33,
+      "jsxScore": 50
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/products/ProductImportDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductFormDialog.tsx",
+      "b": "src/components/suppliers/SupplierImportDialog.tsx",
+      "similarity": 40,
+      "propScore": 67,
+      "jsxScore": 0
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/products/ProductVariantDialog.tsx",
+      "b": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "similarity": 40,
+      "propScore": 33,
+      "jsxScore": 51
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/quotations/QuotationFormDialog.tsx",
+      "b": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "similarity": 40,
+      "propScore": 25,
+      "jsxScore": 63
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 40,
+      "propScore": 25,
+      "jsxScore": 63
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/SupplierPaymentDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "similarity": 40,
+      "propScore": 29,
+      "jsxScore": 57
+    },
+    {
+      "family": "Dialog",
+      "a": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+      "b": "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
+      "similarity": 40,
+      "propScore": 29,
+      "jsxScore": 56
+    }
+  ]
+}

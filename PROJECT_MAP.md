@@ -88,3 +88,16 @@ Read order (see `scripts/fitness/run-all.mjs`):
 - `src/components/layout/AppLayout.tsx` imports `@/platform/shell` only. `AdaptiveShell.tsx` deprecated (composed by `PlatformShell` only).
 - Fitness: `check-platform-layering` (enforcing), `check-kernel-browser-globals`, `check-port-adapter-parity`, `check-port-registry-completeness`, `check-platform-shell-single-entry`, `check-no-new-adaptiveshell-imports`.
 - References: [DEPENDENCY_RULES](docs/architecture/DEPENDENCY_RULES.md), [UX3A reference](docs/architecture/reference/UX3A-FRONTEND-PLATFORM.md), ADR-0014/0015/0023/0024.
+
+## UX-3A Wave 2 — Design System Consolidation (in progress)
+
+- ADRs: 0027 (Roadmap Freeze), 0028 (DS v2 + `ui-kit` sunset), 0030 (Theme Registry).
+- Docs: `docs/architecture/UX3A-ROADMAP.md`, `DESIGN-TOKENS-V2.md`, `design-decisions/` (DS-001..003), `mcp/STATUS.md` (MCP paused until Wave 10).
+- Code:
+  - `src/ui/providers/themeRegistry.ts` — new registry (ADR-0030).
+  - `src/ui/providers/ThemeProvider.tsx` — resolves via registry.
+  - `src/index.css` — `[data-theme="high-contrast"]` stub (QA in Wave 8).
+  - `src/components/ui-kit/index.ts` — frozen with `@deprecated` + dev warn.
+- Discovery: `scripts/audits/{design-system-inventory,ui-kit-usage,component-duplication,ui-complexity,rendering-cost,ui-dep-graph,build-wave-scorecard}.mjs`.
+- Fitness (warn → enforcing at wave close): `check-no-raw-colors`, `check-typography-tokens`, `check-spacing-elevation`, `check-design-system-inventory`, `check-no-new-ui-kit-imports`.
+- Baseline: `BASELINE-UX3A-002` (pending seal). Wave 2.5 (UI API Standardization, ADR-0029) is scoped and planned; enforcing check `check-ui-api-uniformity` currently in warn mode.

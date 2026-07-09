@@ -1,0 +1,921 @@
+{
+  "generatedAt": "2026-07-09T00:09:26.219Z",
+  "totals": {
+    "hexColor": 216,
+    "rgbColor": 1,
+    "hslColor": 5,
+    "fontFamily": 10,
+    "boxShadow": 9,
+    "arbitraryPx": 422
+  },
+  "findings": {
+    "hexColor": [
+      {
+        "file": "src/components/print/InvoicePrintView.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/print/PrintTemplate.tsx",
+        "count": 46
+      },
+      {
+        "file": "src/components/reports/ReportTemplateEditor.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/reports/SalesReportTab.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/settings/CompanyInfoSection.tsx",
+        "count": 12
+      },
+      {
+        "file": "src/components/settings/ExportCenter/LivePreviewPanel.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/settings/ThemeCustomizer.tsx",
+        "count": 18
+      },
+      {
+        "file": "src/components/ui/chart.tsx",
+        "count": 5
+      },
+      {
+        "file": "src/domain/pdf/services/ProfileMerger.test.ts",
+        "count": 2
+      },
+      {
+        "file": "src/domain/pdf/value-objects/PdfBranding.test.ts",
+        "count": 8
+      },
+      {
+        "file": "src/domain/pdf/value-objects/PdfBranding.ts",
+        "count": 3
+      },
+      {
+        "file": "src/hooks/useUserPreferences.ts",
+        "count": 2
+      },
+      {
+        "file": "src/lib/arabicFont.test.ts",
+        "count": 2
+      },
+      {
+        "file": "src/lib/pdf/arabic/arabicCss.ts",
+        "count": 3
+      },
+      {
+        "file": "src/lib/pdf/config/ThemeConfig.ts",
+        "count": 6
+      },
+      {
+        "file": "src/lib/pdf/config/pdfConfigSchema.ts",
+        "count": 4
+      },
+      {
+        "file": "src/lib/pdf/engine/HtmlPdfEngine.ts",
+        "count": 1
+      },
+      {
+        "file": "src/lib/pdf/engine/chunkedRender.ts",
+        "count": 1
+      },
+      {
+        "file": "src/lib/pdf/services/PdfRenderService.test.ts",
+        "count": 3
+      },
+      {
+        "file": "src/lib/pdf/templates/InvoiceHtmlTemplate.ts",
+        "count": 10
+      },
+      {
+        "file": "src/lib/pdf/templates/PurchaseOrderHtmlTemplate.test.ts",
+        "count": 1
+      },
+      {
+        "file": "src/lib/pdf/templates/PurchaseOrderHtmlTemplate.ts",
+        "count": 14
+      },
+      {
+        "file": "src/lib/pdf/templates/QuotationHtmlTemplate.ts",
+        "count": 13
+      },
+      {
+        "file": "src/lib/pdf/templates/StatementHtmlTemplate.test.ts",
+        "count": 1
+      },
+      {
+        "file": "src/lib/pdf/templates/StatementHtmlTemplate.ts",
+        "count": 17
+      },
+      {
+        "file": "src/lib/pdf/templates/templateRegistry.test.ts",
+        "count": 2
+      },
+      {
+        "file": "src/lib/printDocument.ts",
+        "count": 14
+      },
+      {
+        "file": "src/lib/themeManager.ts",
+        "count": 10
+      },
+      {
+        "file": "src/main.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/pages/Auth.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/pages/admin/RolesPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/test/mocks/handlers.ts",
+        "count": 1
+      }
+    ],
+    "rgbColor": [
+      {
+        "file": "src/lib/printDocument.ts",
+        "count": 1
+      }
+    ],
+    "hslColor": [
+      {
+        "file": "src/components/reports/AgingReport.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/platform/PlatformDashboard.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/reports/KPIDashboard.tsx",
+        "count": 3
+      }
+    ],
+    "fontFamily": [
+      {
+        "file": "src/components/print/PrintTemplate.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/lib/pdf/arabic/arabicCss.test.ts",
+        "count": 1
+      },
+      {
+        "file": "src/lib/pdf/arabic/arabicCss.ts",
+        "count": 2
+      },
+      {
+        "file": "src/lib/pdf/engine/HtmlPdfEngine.test.ts",
+        "count": 1
+      },
+      {
+        "file": "src/lib/printDocument.ts",
+        "count": 4
+      },
+      {
+        "file": "src/main.tsx",
+        "count": 1
+      }
+    ],
+    "boxShadow": [
+      {
+        "file": "src/components/print/PrintTemplate.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/lib/printDocument.ts",
+        "count": 2
+      },
+      {
+        "file": "src/styles/motion.css",
+        "count": 6
+      }
+    ],
+    "arbitraryPx": [
+      {
+        "file": "src/components/admin/PdfHealthPanel.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/admin/RestoreBackupConfigureView.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/admin/RestoreBackupResultsView.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/admin/RestoreBackupReviewView.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/commercial/DocumentCycleShell.tsx",
+        "count": 5
+      },
+      {
+        "file": "src/components/customers/alerts/CustomerAlertsMobileTrigger.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/customers/details/ActivityDiffViewer.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/customers/details/CommunicationLogTab.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/details/CustomerAgingReport.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/details/CustomerHealthBadge.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/details/CustomerKPICards.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/details/CustomerPinnedNote.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/details/CustomerQuickHistory.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/details/CustomerSalesPipeline.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/details/CustomerTimelineDrawer.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/customers/details/InvoicesReturnsSummary.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/customers/details/StatementOfAccount.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/dialogs/CustomerExportDialog.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/dialogs/CustomerImportDialog.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/dialogs/CustomerReminderDialog.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/customers/dialogs/DuplicateDetectionDialog.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/filters/CustomerFiltersBar.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/list/CollapsedSummaryBar.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/list/CustomerEmptyState.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/customers/list/CustomerLayoutCustomizer.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/customers/list/CustomerListCard.tsx",
+        "count": 17
+      },
+      {
+        "file": "src/components/customers/list/CustomerListRow.tsx",
+        "count": 8
+      },
+      {
+        "file": "src/components/customers/list/CustomerListSkeleton.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/list/CustomerMobileSkeleton.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/list/CustomerMobileView.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/list/CustomerPageHeader.tsx",
+        "count": 9
+      },
+      {
+        "file": "src/components/customers/list/CustomerSavedViews.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/list/CustomerStatsBar.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/customers/list/CustomerSummaryBar.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/mobile/CustomerCompressedHeader.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/customers/mobile/CustomerIconStrip.tsx",
+        "count": 6
+      },
+      {
+        "file": "src/components/customers/mobile/CustomerMobileProfile.tsx",
+        "count": 8
+      },
+      {
+        "file": "src/components/customers/mobile/CustomerMobileStatCard.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/mobile/CustomerQuickSuggestions.tsx",
+        "count": 6
+      },
+      {
+        "file": "src/components/customers/mobile/CustomerSectionsSheet.tsx",
+        "count": 8
+      },
+      {
+        "file": "src/components/customers/mobile/CustomerSwipeHint.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/shared/CustomerActionMenu.tsx",
+        "count": 8
+      },
+      {
+        "file": "src/components/customers/tabs/CustomerTabActivity.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/tabs/CustomerTabBasicInfo.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/customers/tabs/CustomerTabInvoices.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/customers/tabs/CustomerTabNotes.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/customers/tabs/CustomerTabOrders.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/customers/tabs/CustomerTabPayments.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/customers/tabs/CustomerTabQuotations.tsx",
+        "count": 5
+      },
+      {
+        "file": "src/components/dashboard/AlertsBell.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/dashboard/CalendarWidget.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/dashboard/DashboardSkeleton.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/dashboard/FinancialKPIRow.tsx",
+        "count": 5
+      },
+      {
+        "file": "src/components/dashboard/InvoiceQuickActions.tsx",
+        "count": 6
+      },
+      {
+        "file": "src/components/dashboard/LowStockWidget.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/dashboard/RecentInvoicesWidget.tsx",
+        "count": 10
+      },
+      {
+        "file": "src/components/dashboard/SalesChartWidget.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/dashboard/TasksWidget.tsx",
+        "count": 8
+      },
+      {
+        "file": "src/components/dashboard/TodayPerformanceWidget.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/dashboard/_shared/DashboardChip.tsx",
+        "count": 7
+      },
+      {
+        "file": "src/components/dashboard/_shared/DashboardListCard.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/export/ColumnSelector.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/invoices/BulkPrintConfirmDialog.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/invoices/InvoiceItemsTable.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/keyboard/ShortcutsModal.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/landing/CTASection.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/landing/LandingNavbar.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/layout/AdaptiveShell.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/layout/AppHeader.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/layout/AppSidebar.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/layout/MobileBottomNav.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/layout/MobileDrawer.tsx",
+        "count": 6
+      },
+      {
+        "file": "src/components/layout/MobileHeader.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/layout/mobile/MobileDrawerHeader.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/layout/mobile/MobileNavSection.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/layout/mobile/MobileNavSections.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/layout/mobile/MobileQuickActions.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/layout/shared/GlobalSearchTrigger.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/layout/shared/NotificationsBell.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/logistics/LogisticsItemsTable.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/mobile/DataCard.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/mobile/FABMenu.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/mobile/MobileDetailSection.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/mobile/MobileListSkeleton.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/navigation/SmartBreadcrumbs.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/notifications/NotificationBell.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/payments/MultiInvoiceSettlement.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/platform/PlatformLayout.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/platform/PlatformSidebar.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/print/UnifiedExportMenu.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/products/ProductImportDialog.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/quotations/QuotationItemsTable.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/reports/AgingReport.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/reports/CashFlowReport.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/reports/GeographicReport.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/reports/IncomeStatementReport.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/reports/InventoryFlowReport.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/reports/ProfitabilityReport.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/settings/ExportCenter/AssetUploader.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/settings/ExportCenter/AuditTimelinePanel.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/settings/OfflineSettings.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/settings/ThemeCustomizer.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/shared/EmptyState.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/shared/MemoizedStatsCards.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/shared/MobileStatsScroll.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/shared/ResponsiveItemsTable.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/shared/ServerPagination.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/shared/ShimmerSkeleton.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/sidebar/ClickableSearchButton.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/sidebar/NavItemWithBadge.tsx",
+        "count": 6
+      },
+      {
+        "file": "src/components/sidebar/QuickActions.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/sidebar/SidebarSearch.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/suppliers/SupplierImportDialog.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/SupplierPaymentsTab.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/suppliers/SupplierPurchasesChart.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/suppliers/charts/SupplierPurchasesChartRPC.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/suppliers/filters/SupplierFiltersBar.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/hero/SupplierQuickHistory.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/suppliers/hero/SupplierTimelineDrawer.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/list/SupplierListRow.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/components/suppliers/list/SupplierStatsBar.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/suppliers/mobile/SupplierCompressedHeader.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/mobile/SupplierIconStrip.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/mobile/SupplierMobileProfile.tsx",
+        "count": 3
+      },
+      {
+        "file": "src/components/suppliers/tabs/SupplierAgingReport.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/tabs/SupplierNotesTab.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/suppliers/tabs/SupplierStatementTab.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/system/AboutSystemCard.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/system/EnvironmentBadge.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/table/VirtualizedMobileList.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/ui/chart.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/ui/command.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/ui/drawer.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/ui/navigation-menu.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/ui/scroll-area.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/ui/separator.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/components/ui/sidebar.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/ui/textarea.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/ui/toast.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/ui-kit/UnifiedStatsDisplay.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/Dashboard.tsx",
+        "count": 17
+      },
+      {
+        "file": "src/pages/NotFound.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/accounting/PostingLogPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/admin/ActivityLogPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/admin/AdminDashboard.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/admin/BackupPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/admin/MetricsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/admin/PermissionsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/admin/RolesPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/admin/UserManagementPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/attachments/AttachmentsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/attendance/AttendancePage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/credit-notes/CreditNoteDetailsPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/credit-notes/components/CreditNoteTable.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/customers/CustomerDetailsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/customers/CustomersPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/dev/PdfJobsPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/dev/PdfTelemetryPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/employees/EmployeesPage.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/pages/invoices/InvoiceDetailsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/invoices/InvoicesPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/platform/TenantsManagementPage.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/pages/products/ProductDetailsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/products/ProductsPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/purchase-orders/components/PurchaseOrderStats.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/quotations/QuotationsPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/reports/ReportsPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/reports/ReturnsReportPage.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/pages/reports/SalesReportsPage.tsx",
+        "count": 4
+      },
+      {
+        "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/sales-orders/SalesOrdersPage.tsx",
+        "count": 2
+      },
+      {
+        "file": "src/pages/suppliers/SupplierPaymentsPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/pages/sync/SyncStatusPage.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/ui/layout/NotificationCenter.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/ui/layout/WorkspaceSwitcher.tsx",
+        "count": 1
+      }
+    ]
+  }
+}

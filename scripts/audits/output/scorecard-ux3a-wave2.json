@@ -1,0 +1,21 @@
+{
+  "wave": "ux3a-wave2",
+  "generatedAt": "2026-07-09T00:09:26.495Z",
+  "metrics": {
+    "fitnessPassing": true,
+    "typescriptStrictErrors": "unknown (runs in CI)",
+    "typeCoverageExportedSymbols": "≥95% target",
+    "vitestPassing": "unknown (runs in CI)",
+    "testCoverageTouchedFiles": "≥90% target",
+    "buildTimeDelta": "unknown (measured in CI)",
+    "bundleBudgetDelta": "unknown (measured in CI)",
+    "accessibility": "WCAG AA target (AAA in Wave 8)",
+    "breakingChanges": 0,
+    "circularDepsDelta": 2,
+    "importLayerViolationsDelta": 0
+  },
+  "discovery": {
+    "duplicatePairs": 364,
+    "filesWithAnyInUi": "unknown"
+  }
+}

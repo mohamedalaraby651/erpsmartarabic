@@ -1,0 +1,57 @@
+{
+  "baseline": "UX3A-002",
+  "status": "pending",
+  "wave": "UX-3A Wave 2 — Design System Consolidation",
+  "sealedAt": null,
+  "governingADRs": ["0027", "0028", "0030"],
+  "predecessor": "baseline-ux3a-001.json",
+  "artefacts": {
+    "docs": [
+      "docs/adr/0027-ux3a-roadmap-freeze.md",
+      "docs/adr/0028-design-system-v2-and-ui-kit-sunset.md",
+      "docs/adr/0030-theme-registry-contract.md",
+      "docs/architecture/UX3A-ROADMAP.md",
+      "docs/architecture/DESIGN-TOKENS-V2.md",
+      "docs/architecture/design-decisions/README.md",
+      "docs/architecture/design-decisions/DS-001-tone-vs-color.md",
+      "docs/architecture/design-decisions/DS-002-variant-vs-intent.md",
+      "docs/architecture/design-decisions/DS-003-spacing-scale-rationale.md",
+      "docs/architecture/baseline/AUDIT-WAVE2.md",
+      "docs/architecture/baseline/BASELINE-UX3A-002.md",
+      "docs/mcp/STATUS.md"
+    ],
+    "code": [
+      "src/ui/providers/themeRegistry.ts",
+      "src/ui/providers/ThemeProvider.tsx",
+      "src/index.css",
+      "src/components/ui-kit/index.ts"
+    ],
+    "audits": [
+      "scripts/audits/design-system-inventory.mjs",
+      "scripts/audits/ui-kit-usage.mjs",
+      "scripts/audits/component-duplication.mjs",
+      "scripts/audits/ui-complexity.mjs",
+      "scripts/audits/rendering-cost.mjs",
+      "scripts/audits/ui-dep-graph.mjs",
+      "scripts/audits/build-wave-scorecard.mjs"
+    ],
+    "fitness": [
+      "scripts/fitness/check-no-raw-colors.mjs",
+      "scripts/fitness/check-typography-tokens.mjs",
+      "scripts/fitness/check-spacing-elevation.mjs",
+      "scripts/fitness/check-design-system-inventory.mjs",
+      "scripts/fitness/check-no-new-ui-kit-imports.mjs"
+    ]
+  },
+  "sealCriteria": {
+    "fitnessEnforcingGreen": [
+      "check-no-raw-colors",
+      "check-typography-tokens",
+      "check-spacing-elevation",
+      "check-design-system-inventory",
+      "check-no-new-ui-kit-imports"
+    ],
+    "scorecard": "scripts/audits/output/scorecard-ux3a-wave2.json",
+    "breakingChanges": 0
+  }
+}
