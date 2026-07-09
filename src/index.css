@@ -120,6 +120,50 @@
     --shadow-xl: 0 8px 16px -4px hsl(var(--shadow-color) / 0.4), 0 24px 48px -12px hsl(var(--shadow-color) / 0.55);
     --shadow-focus: 0 0 0 3px hsl(var(--ring) / 0.35);
   }
+
+  /**
+   * High-Contrast theme — WCAG AAA stub.
+   * Governed by ADR-0030 (Theme Registry). QA and full palette tuning
+   * are deferred to Wave 8 (Performance & Quality). Values below are
+   * conservative defaults intended to pass basic contrast; they are
+   * NOT the final palette.
+   */
+  [data-theme="high-contrast"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 217 100% 30%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 217 100% 92%;
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 20%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 100% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 100% 22%;
+    --success-foreground: 0 0% 100%;
+    --warning: 30 100% 28%;
+    --warning-foreground: 0 0% 100%;
+    --info: 210 100% 28%;
+    --info-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --border-strong: 0 0% 0%;
+    --input: 0 0% 20%;
+    --ring: 217 100% 30%;
+    --surface-1: 0 0% 100%;
+    --surface-2: 0 0% 98%;
+    --surface-3: 0 0% 96%;
+    --surface-sunken: 0 0% 92%;
+    --shadow-color: 0 0% 0%;
+    --shadow-focus: 0 0 0 3px hsl(var(--ring) / 0.6);
+  }
+
   
   html { direction: rtl; scroll-behavior: smooth; }
   * { @apply border-border; }
