@@ -1,0 +1,459 @@
+{
+  "generatedAt": "2026-07-09T00:09:17.996Z",
+  "largest": [
+    {
+      "file": "src/integrations/supabase/types.ts",
+      "lines": 7284,
+      "importCount": 0,
+      "hookUses": 0
+    },
+    {
+      "file": "src/pages/customers/CustomerDetailsPage.tsx",
+      "lines": 855,
+      "importCount": 47,
+      "hookUses": 30
+    },
+    {
+      "file": "src/components/ui/sidebar.tsx",
+      "lines": 638,
+      "importCount": 12,
+      "hookUses": 13
+    },
+    {
+      "file": "src/lib/pdfGenerator.ts",
+      "lines": 627,
+      "importCount": 5,
+      "hookUses": 0
+    },
+    {
+      "file": "src/__tests__/integration/pwa-offline.test.ts",
+      "lines": 606,
+      "importCount": 1,
+      "hookUses": 0
+    },
+    {
+      "file": "src/domain/finance/invoice/Invoice.ts",
+      "lines": 549,
+      "importCount": 14,
+      "hookUses": 0
+    },
+    {
+      "file": "src/lib/arabicFont.ts",
+      "lines": 547,
+      "importCount": 0,
+      "hookUses": 0
+    },
+    {
+      "file": "src/components/customers/list/CustomerListCard.tsx",
+      "lines": 544,
+      "importCount": 14,
+      "hookUses": 17
+    },
+    {
+      "file": "src/__tests__/integration/export-print.test.tsx",
+      "lines": 515,
+      "importCount": 1,
+      "hookUses": 0
+    },
+    {
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "lines": 513,
+      "importCount": 24,
+      "hookUses": 7
+    },
+    {
+      "file": "src/components/layout/MobileDrawer.tsx",
+      "lines": 494,
+      "importCount": 15,
+      "hookUses": 9
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "lines": 492,
+      "importCount": 42,
+      "hookUses": 31
+    },
+    {
+      "file": "src/pages/reports/ReturnsReportPage.tsx",
+      "lines": 488,
+      "importCount": 12,
+      "hookUses": 7
+    },
+    {
+      "file": "src/__tests__/integration/financial-calculations.test.ts",
+      "lines": 485,
+      "importCount": 1,
+      "hookUses": 0
+    },
+    {
+      "file": "src/pages/quotations/QuotationsPage.tsx",
+      "lines": 472,
+      "importCount": 31,
+      "hookUses": 17
+    },
+    {
+      "file": "src/pages/invoices/InvoiceDetailsPage.tsx",
+      "lines": 468,
+      "importCount": 33,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "lines": 468,
+      "importCount": 32,
+      "hookUses": 13
+    },
+    {
+      "file": "src/components/settings/BackupTab.tsx",
+      "lines": 467,
+      "importCount": 14,
+      "hookUses": 6
+    },
+    {
+      "file": "src/pages/employees/EmployeeDetailsPage.tsx",
+      "lines": 459,
+      "importCount": 15,
+      "hookUses": 5
+    },
+    {
+      "file": "src/lib/navigation.ts",
+      "lines": 457,
+      "importCount": 1,
+      "hookUses": 0
+    },
+    {
+      "file": "src/__tests__/integration/navigation-routes.test.tsx",
+      "lines": 447,
+      "importCount": 6,
+      "hookUses": 15
+    },
+    {
+      "file": "src/components/settings/ThemeCustomizer.tsx",
+      "lines": 446,
+      "importCount": 15,
+      "hookUses": 4
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrdersPage.tsx",
+      "lines": 441,
+      "importCount": 28,
+      "hookUses": 13
+    },
+    {
+      "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "lines": 440,
+      "importCount": 24,
+      "hookUses": 7
+    },
+    {
+      "file": "src/pages/suppliers/SupplierDetailsPage.tsx",
+      "lines": 438,
+      "importCount": 35,
+      "hookUses": 15
+    }
+  ],
+  "topImporters": [
+    {
+      "file": "src/pages/customers/CustomerDetailsPage.tsx",
+      "lines": 855,
+      "importCount": 47,
+      "hookUses": 30
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "lines": 492,
+      "importCount": 42,
+      "hookUses": 31
+    },
+    {
+      "file": "src/pages/suppliers/SupplierDetailsPage.tsx",
+      "lines": 438,
+      "importCount": 35,
+      "hookUses": 15
+    },
+    {
+      "file": "src/pages/invoices/InvoiceDetailsPage.tsx",
+      "lines": 468,
+      "importCount": 33,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/Dashboard.tsx",
+      "lines": 341,
+      "importCount": 32,
+      "hookUses": 15
+    },
+    {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "lines": 468,
+      "importCount": 32,
+      "hookUses": 13
+    },
+    {
+      "file": "src/pages/quotations/QuotationsPage.tsx",
+      "lines": 472,
+      "importCount": 31,
+      "hookUses": 17
+    },
+    {
+      "file": "src/pages/payments/PaymentsPage.tsx",
+      "lines": 415,
+      "importCount": 30,
+      "hookUses": 18
+    },
+    {
+      "file": "src/components/invoices/InvoiceFormDialog.tsx",
+      "lines": 291,
+      "importCount": 28,
+      "hookUses": 13
+    },
+    {
+      "file": "src/pages/invoices/InvoicesPage.tsx",
+      "lines": 347,
+      "importCount": 28,
+      "hookUses": 9
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrdersPage.tsx",
+      "lines": 441,
+      "importCount": 28,
+      "hookUses": 13
+    },
+    {
+      "file": "src/pages/suppliers/SuppliersPage.tsx",
+      "lines": 421,
+      "importCount": 28,
+      "hookUses": 38
+    },
+    {
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "lines": 276,
+      "importCount": 27,
+      "hookUses": 10
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
+      "lines": 339,
+      "importCount": 27,
+      "hookUses": 8
+    },
+    {
+      "file": "src/components/customers/dialogs/CustomerFormDialog.tsx",
+      "lines": 324,
+      "importCount": 26,
+      "hookUses": 10
+    },
+    {
+      "file": "src/pages/expenses/ExpensesPage.tsx",
+      "lines": 421,
+      "importCount": 26,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/products/ProductsPage.tsx",
+      "lines": 250,
+      "importCount": 26,
+      "hookUses": 4
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrdersPage.tsx",
+      "lines": 287,
+      "importCount": 26,
+      "hookUses": 18
+    },
+    {
+      "file": "src/pages/products/ProductDetailsPage.tsx",
+      "lines": 334,
+      "importCount": 25,
+      "hookUses": 12
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
+      "lines": 309,
+      "importCount": 25,
+      "hookUses": 8
+    },
+    {
+      "file": "src/pages/reports/ReportsPage.tsx",
+      "lines": 197,
+      "importCount": 25,
+      "hookUses": 3
+    },
+    {
+      "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "lines": 440,
+      "importCount": 24,
+      "hookUses": 7
+    },
+    {
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "lines": 513,
+      "importCount": 24,
+      "hookUses": 7
+    },
+    {
+      "file": "src/pages/employees/EmployeesPage.tsx",
+      "lines": 267,
+      "importCount": 24,
+      "hookUses": 5
+    },
+    {
+      "file": "src/pages/settings/UnifiedSettingsPage.tsx",
+      "lines": 236,
+      "importCount": 23,
+      "hookUses": 9
+    }
+  ],
+  "hookHeavy": [
+    {
+      "file": "src/pages/suppliers/SuppliersPage.tsx",
+      "lines": 421,
+      "importCount": 28,
+      "hookUses": 38
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "lines": 492,
+      "importCount": 42,
+      "hookUses": 31
+    },
+    {
+      "file": "src/pages/customers/CustomerDetailsPage.tsx",
+      "lines": 855,
+      "importCount": 47,
+      "hookUses": 30
+    },
+    {
+      "file": "src/pages/payments/PaymentsPage.tsx",
+      "lines": 415,
+      "importCount": 30,
+      "hookUses": 18
+    },
+    {
+      "file": "src/pages/pricing/PriceListsPage.tsx",
+      "lines": 258,
+      "importCount": 16,
+      "hookUses": 18
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrdersPage.tsx",
+      "lines": 287,
+      "importCount": 26,
+      "hookUses": 18
+    },
+    {
+      "file": "src/pages/quotations/QuotationsPage.tsx",
+      "lines": 472,
+      "importCount": 31,
+      "hookUses": 17
+    },
+    {
+      "file": "src/pages/Dashboard.tsx",
+      "lines": 341,
+      "importCount": 32,
+      "hookUses": 15
+    },
+    {
+      "file": "src/pages/attendance/AttendancePage.tsx",
+      "lines": 355,
+      "importCount": 19,
+      "hookUses": 15
+    },
+    {
+      "file": "src/pages/suppliers/SupplierDetailsPage.tsx",
+      "lines": 438,
+      "importCount": 35,
+      "hookUses": 15
+    },
+    {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "lines": 468,
+      "importCount": 32,
+      "hookUses": 13
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrdersPage.tsx",
+      "lines": 441,
+      "importCount": 28,
+      "hookUses": 13
+    },
+    {
+      "file": "src/pages/tasks/TasksPage.tsx",
+      "lines": 408,
+      "importCount": 23,
+      "hookUses": 13
+    },
+    {
+      "file": "src/pages/credit-notes/CreditNotesPage.tsx",
+      "lines": 178,
+      "importCount": 21,
+      "hookUses": 12
+    },
+    {
+      "file": "src/pages/inventory/InventoryPage.tsx",
+      "lines": 147,
+      "importCount": 20,
+      "hookUses": 12
+    },
+    {
+      "file": "src/pages/products/ProductDetailsPage.tsx",
+      "lines": 334,
+      "importCount": 25,
+      "hookUses": 12
+    },
+    {
+      "file": "src/pages/quotes/QuoteNewPage.tsx",
+      "lines": 238,
+      "importCount": 20,
+      "hookUses": 12
+    },
+    {
+      "file": "src/pages/Auth.tsx",
+      "lines": 316,
+      "importCount": 12,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/admin/UserManagementPage.tsx",
+      "lines": 409,
+      "importCount": 17,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/expenses/ExpenseCategoriesPage.tsx",
+      "lines": 244,
+      "importCount": 21,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/expenses/ExpensesPage.tsx",
+      "lines": 421,
+      "importCount": 26,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/invoices/InvoiceDetailsPage.tsx",
+      "lines": 468,
+      "importCount": 33,
+      "hookUses": 11
+    },
+    {
+      "file": "src/pages/admin/UsersPage.tsx",
+      "lines": 372,
+      "importCount": 15,
+      "hookUses": 10
+    },
+    {
+      "file": "src/pages/logistics/LogisticsDocumentDetailsPage.tsx",
+      "lines": 195,
+      "importCount": 8,
+      "hookUses": 10
+    },
+    {
+      "file": "src/pages/RouteErrorPage.tsx",
+      "lines": 310,
+      "importCount": 5,
+      "hookUses": 9
+    }
+  ]
+}

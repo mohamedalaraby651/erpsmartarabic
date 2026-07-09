@@ -1,0 +1,100 @@
+{
+  "generatedAt": "2026-07-09T00:09:18.245Z",
+  "fileCount": 545,
+  "central": [
+    {
+      "file": "src/components/ui/button.tsx",
+      "inDegree": 190
+    },
+    {
+      "file": "src/components/ui/card.tsx",
+      "inDegree": 114
+    },
+    {
+      "file": "src/components/ui/badge.tsx",
+      "inDegree": 100
+    },
+    {
+      "file": "src/components/ui/input.tsx",
+      "inDegree": 80
+    },
+    {
+      "file": "src/components/ui/label.tsx",
+      "inDegree": 61
+    },
+    {
+      "file": "src/components/ui/select.tsx",
+      "inDegree": 47
+    },
+    {
+      "file": "src/components/ui/dialog.tsx",
+      "inDegree": 45
+    },
+    {
+      "file": "src/components/ui/skeleton.tsx",
+      "inDegree": 34
+    },
+    {
+      "file": "src/components/ui/textarea.tsx",
+      "inDegree": 34
+    },
+    {
+      "file": "src/components/ui/scroll-area.tsx",
+      "inDegree": 24
+    },
+    {
+      "file": "src/components/ui/table.tsx",
+      "inDegree": 23
+    },
+    {
+      "file": "src/components/ui/switch.tsx",
+      "inDegree": 21
+    },
+    {
+      "file": "src/ui/layout/types.ts",
+      "inDegree": 19
+    },
+    {
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "inDegree": 17
+    },
+    {
+      "file": "src/components/ui/separator.tsx",
+      "inDegree": 17
+    },
+    {
+      "file": "src/components/ui/tooltip.tsx",
+      "inDegree": 17
+    },
+    {
+      "file": "src/components/ui/sheet.tsx",
+      "inDegree": 16
+    },
+    {
+      "file": "src/components/ui/checkbox.tsx",
+      "inDegree": 15
+    },
+    {
+      "file": "src/ui/contracts/index.ts",
+      "inDegree": 14
+    },
+    {
+      "file": "src/ui/index.ts",
+      "inDegree": 13
+    }
+  ],
+  "cycleCount": 2,
+  "cycles": [
+    [
+      "src/ui/composites/index.ts",
+      "src/ui/composites/state/LoadingState.tsx",
+      "src/ui/index.ts",
+      "src/ui/composites/index.ts"
+    ],
+    [
+      "src/components/customers/details/CustomerKPICards.tsx",
+      "src/components/customers/details/CustomerTimelineDrawer.tsx",
+      "src/components/customers/details/CustomerKPICards.tsx"
+    ]
+  ]
+}
