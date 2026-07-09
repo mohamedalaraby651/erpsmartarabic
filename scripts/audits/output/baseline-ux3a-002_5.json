@@ -1,0 +1,17 @@
+{
+  "baseline": "UX3A-002.5",
+  "status": "pending",
+  "wave": "UX-3A Wave 2.5 — UI API Standardization",
+  "sealedAt": null,
+  "governingADRs": ["0029"],
+  "predecessor": "baseline-ux3a-002.json",
+  "sealCriteria": {
+    "fitnessEnforcingGreen": ["check-ui-api-uniformity"],
+    "contractTests": [
+      "src/ui/primitives/__tests__/api-uniformity.test.ts",
+      "src/ui/composites/__tests__/api-uniformity.test.ts",
+      "src/ui/layout/__tests__/api-uniformity.test.ts"
+    ],
+    "breakingChanges": 0
+  }
+}

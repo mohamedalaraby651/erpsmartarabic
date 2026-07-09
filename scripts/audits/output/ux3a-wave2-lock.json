@@ -1,0 +1,13 @@
+{
+  "wave": "ux3a-wave2",
+  "state": "open",
+  "openedAt": "2026-07-08",
+  "closedAt": null,
+  "fitnessMode": {
+    "check-no-raw-colors": "warn",
+    "check-typography-tokens": "warn",
+    "check-spacing-elevation": "warn",
+    "check-design-system-inventory": "warn",
+    "check-no-new-ui-kit-imports": "warn"
+  }
+}
