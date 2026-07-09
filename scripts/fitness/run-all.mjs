@@ -52,7 +52,16 @@ const ACTIVE = [
   "check-no-new-adaptiveshell-imports.mjs",
 ];
 
-const PENDING = [];
+const PENDING = [
+  // UX-3A Wave 2 (warn mode — flips to enforcing at Wave 2 close)
+  "check-no-raw-colors.mjs",
+  "check-typography-tokens.mjs",
+  "check-spacing-elevation.mjs",
+  "check-design-system-inventory.mjs",
+  "check-no-new-ui-kit-imports.mjs",
+  // UX-3A Wave 2.5 (warn mode — flips to enforcing at Wave 2.5 close)
+  "check-ui-api-uniformity.mjs",
+];
 
 let failed = 0;
 for (const name of [...ACTIVE, ...PENDING]) {
