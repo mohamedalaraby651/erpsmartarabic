@@ -59,6 +59,14 @@ const PENDING = [
   "check-spacing-elevation.mjs",
   "check-design-system-inventory.mjs",
   "check-no-new-ui-kit-imports.mjs",
+  // UX-3A Wave 2 Closure — Phase C (warn mode)
+  "check-component-loc-budget.mjs",
+  "check-component-props-budget.mjs",
+  "check-jsx-nesting-depth.mjs",
+  "check-no-inline-styles.mjs",
+  "check-icon-source.mjs",
+  "check-css-modules-scope.mjs",
+  "check-no-any-in-ui.mjs",
   // UX-3A Wave 2.5 (warn mode — flips to enforcing at Wave 2.5 close)
   "check-ui-api-uniformity.mjs",
 ];

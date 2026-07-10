@@ -1,67 +1,74 @@
-# AUDIT — UX-3A Wave 2 (Design System Consolidation)
+# AUDIT-WAVE2 — Design System Consolidation
 
-- **Wave:** UX-3A Wave 2
-- **Governing ADRs:** 0027, 0028, 0030
-- **Predecessor baseline:** `BASELINE-UX3A-001`
-- **Successor baseline:** `BASELINE-UX3A-002` *(to be sealed at wave close)*
+**Status:** in progress — Wave 2 Closure active.
+**Baseline (predecessor):** `BASELINE-UX3A-001` (sealed, 28/28 fitness).
+**Baseline (this wave):** `BASELINE-UX3A-002` (pending seal).
+**Governing ADRs:** 0027, 0028, 0029, 0030.
+**Remediation plan:** [`WAVE2_REMEDIATION_PLAN.md`](../WAVE2_REMEDIATION_PLAN.md).
 
-## Scope
+## Objective
 
-- `src/ui/tokens/**` — audited, not restructured.
-- `src/index.css` — added `[data-theme="high-contrast"]` stub. QA deferred to Wave 8.
-- `src/ui/providers/themeRegistry.ts` — new registry contract (ADR-0030).
-- `src/ui/providers/ThemeProvider.tsx` — reads from registry, behavior preserved.
-- `src/components/ui-kit/index.ts` — frozen (`@deprecated` + dev-only warn).
-- 6 discovery scripts under `scripts/audits/`.
-- 5 fitness checks under `scripts/fitness/` (warn mode).
-- `docs/architecture/design-decisions/` — DS log seeded with DS-001/002/003.
+Close Wave 2 by remediating discovery findings, flipping 5 Wave 2 fitness
+checks (+ 7 Phase-C checks) from warn → enforcing, and sealing the
+`BASELINE-UX3A-002` reference tag.
 
-## Out of scope
+No new features. No new runtime dependencies. No DB or business-logic
+changes.
 
-- `src/kernel/**` and `src/platform/**` — frozen.
-- `domain/`, `application/`, `infrastructure/`, feature hooks — unchanged.
-- DB migrations, Edge Functions — none.
-- Existing MCP tools — untouched (see `docs/mcp/STATUS.md`).
+## 10-phase closure checklist
 
-## Scorecard (target values)
+- [ ] **Phase A — Discovery Backlog.** Categorize the 6 discovery reports
+  under `scripts/audits/output/wave2-discovery/` into auto-fix / manual /
+  deferred buckets. Documented in `WAVE2_REMEDIATION_PLAN.md §Phase A`.
+- [ ] **Phase B — Automation.** Run fix scripts in `--dry-run`, review
+  diff reports, then run with `--write`.
+  - [ ] `node scripts/fixes/fix-design-tokens.mjs`
+  - [ ] `node scripts/fixes/fix-spacing.mjs`
+  - [ ] `node scripts/fixes/fix-typography.mjs`
+  - [ ] `node scripts/fixes/fix-import-order.mjs`
+- [ ] **Phase C — Quality Gates.** 7 new PENDING checks in warn mode;
+  enforce at close.
+- [ ] **Phase D — UI Architecture Audit.**
+  `node scripts/audits/ui-architecture-health.mjs`
+- [ ] **Phase E — Token Coverage.**
+  `node scripts/audits/token-coverage.mjs` — each axis ≥ 95%.
+- [ ] **Phase F — Primitive Contract Report.** Emit
+  `primitive-contract.json`; fixes scheduled in Wave 2.5.
+- [ ] **Phase G — Accessibility Audit.**
+  `node scripts/audits/accessibility-audit.mjs`
+- [ ] **Phase H — Performance Audit.**
+  `node scripts/audits/performance-audit.mjs`
+- [ ] **Phase I — Authoring Documentation.** Publish 6 guides under
+  `docs/architecture/authoring/`.
+- [ ] **Phase J — Baseline Lock.** Flip checks to enforcing, refresh
+  `MANIFEST.json` and `PROJECT_MAP.md`, seal `BASELINE-UX3A-002`.
 
-| Metric | Target | At wave close |
+## Fitness delta
+
+| Check | Wave 2 open | Wave 2 close |
 |---|---|---|
-| Fitness checks | 100% enforcing pass | pending |
-| TypeScript strict errors | 0 | pending |
-| Type coverage (exported symbols) | ≥ 95% | pending |
-| Vitest passing | ≥ baseline | pending |
-| Test coverage (touched files) | ≥ 90% | pending |
-| Build time delta | ≤ +10% | pending |
-| Bundle budget delta | ≤ ±5% | pending |
-| Accessibility | WCAG AA | pending |
-| Breaking changes | 0 | 0 |
-| Circular deps delta | ≤ 0 | pending |
-| Import layer violations delta | ≤ 0 | pending |
+| check-no-raw-colors | warn | enforcing |
+| check-typography-tokens | warn | enforcing |
+| check-spacing-elevation | warn | enforcing |
+| check-design-system-inventory | warn | enforcing |
+| check-no-new-ui-kit-imports | warn | enforcing |
+| check-component-loc-budget | — | warn |
+| check-component-props-budget | — | warn |
+| check-jsx-nesting-depth | — | warn |
+| check-no-inline-styles | — | warn |
+| check-icon-source | — | warn |
+| check-css-modules-scope | — | warn |
+| check-no-any-in-ui | — | warn |
 
-Populated by `scripts/audits/build-wave-scorecard.mjs ux3a-wave2`.
+## Seal criteria
 
-## Discovery reports
+Baseline `BASELINE-UX3A-002` flips from `pending` → `Locked` when:
 
-- `scripts/audits/output/wave2-discovery/design-system-inventory.{json,md}`
-- `scripts/audits/output/wave2-discovery/ui-kit-usage.json`
-- `scripts/audits/output/wave2-discovery/ui-kit-allowlist.json`
-- `scripts/audits/output/wave2-discovery/component-duplication.json` (with similarity score)
-- `scripts/audits/output/wave2-discovery/ui-complexity.json`
-- `scripts/audits/output/wave2-discovery/rendering-cost.json`
-- `scripts/audits/output/wave2-discovery/ui-dep-graph.json`
-
-## Verification
-
-```bash
-node scripts/audits/design-system-inventory.mjs
-node scripts/audits/ui-kit-usage.mjs
-node scripts/audits/component-duplication.mjs
-node scripts/audits/ui-complexity.mjs
-node scripts/audits/rendering-cost.mjs
-node scripts/audits/ui-dep-graph.mjs
-node scripts/fitness/run-all.mjs
-node scripts/audits/build-wave-scorecard.mjs ux3a-wave2
-```
-
-All commands must exit 0.
+- All 5 Wave 2 checks are enforcing green.
+- Zero UI-layer cycles (`ui-dep-graph.json.cycleCount === 0`).
+- Zero cross-layer import violations.
+- All Vitest suites green.
+- `bun run build` succeeds.
+- Scorecard within targets (`scorecard-ux3a-wave2.json`).
+- ADRs 0027, 0028, 0030 remain Accepted.
+- Architecture fingerprint regenerated and pinned.
