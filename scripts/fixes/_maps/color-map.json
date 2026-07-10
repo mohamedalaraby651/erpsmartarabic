@@ -1,0 +1,13 @@
+{
+  "$comment": "Curated map from raw color literals to semantic design tokens. Extend as remediation progresses. Keys are lowercase; hex is 3- or 6-digit.",
+  "hex": {
+    "#fff": "hsl(var(--background))",
+    "#ffffff": "hsl(var(--background))",
+    "#000": "hsl(var(--foreground))",
+    "#000000": "hsl(var(--foreground))"
+  },
+  "rgb": {
+    "rgb(255,255,255)": "hsl(var(--background))",
+    "rgb(0,0,0)": "hsl(var(--foreground))"
+  }
+}
