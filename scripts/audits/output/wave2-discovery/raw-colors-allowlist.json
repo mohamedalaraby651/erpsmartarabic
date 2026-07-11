@@ -1,0 +1,23 @@
+[
+  "src/components/reports/AgingReport.tsx",
+  "src/components/reports/ReportTemplateEditor.tsx",
+  "src/components/reports/SalesReportTab.tsx",
+  "src/components/reports/templateEditor/TemplateEditorDialog.tsx",
+  "src/components/settings/CompanyInfoSection.tsx",
+  "src/components/settings/ExportCenter/LivePreviewPanel.tsx",
+  "src/components/settings/ThemeCustomizer.tsx",
+  "src/components/ui/chart.tsx",
+  "src/domain/pdf/services/ProfileMerger.test.ts",
+  "src/domain/pdf/value-objects/PdfBranding.test.ts",
+  "src/domain/pdf/value-objects/PdfBranding.ts",
+  "src/hooks/useUserPreferences.ts",
+  "src/lib/arabicFont.test.ts",
+  "src/lib/printDocument.ts",
+  "src/lib/themeManager.ts",
+  "src/main.tsx",
+  "src/pages/Auth.tsx",
+  "src/pages/admin/RolesPage.tsx",
+  "src/pages/platform/PlatformDashboard.tsx",
+  "src/pages/reports/KPIDashboard.tsx",
+  "src/test/mocks/handlers.ts"
+]
