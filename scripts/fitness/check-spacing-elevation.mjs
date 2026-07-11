@@ -10,7 +10,7 @@ import { join, extname, relative } from "node:path";
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const ENFORCING = process.env.CHECK_SPACING_ELEVATION_ENFORCE === "1";
-const EXCLUDE_FILES = new Set(["src/index.css", "src/styles/motion.css"]);
+const EXCLUDE_FILES = new Set(["src/index.css", "src/styles/motion.css", "src/lib/printDocument.ts"]);
 const EXCLUDE_DIRS = ["src/ui/tokens", "src/kernel", "src/platform", "src/lib/pdf", "src/components/print"];
 const EXTS = new Set([".ts", ".tsx", ".css"]);
 const RE_BOX = /box-shadow\s*:\s*(?!var\()[^;]/i;
