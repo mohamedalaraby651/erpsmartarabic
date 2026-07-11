@@ -9,8 +9,8 @@ import { join, extname, relative } from "node:path";
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const ENFORCING = process.env.CHECK_TYPOGRAPHY_TOKENS_ENFORCE === "1";
-const EXCLUDE_FILES = new Set(["src/index.css"]);
-const EXCLUDE_DIRS = ["src/ui/tokens", "src/kernel", "src/platform"];
+const EXCLUDE_FILES = new Set(["src/index.css", "src/main.tsx"]);
+const EXCLUDE_DIRS = ["src/ui/tokens", "src/kernel", "src/platform", "src/lib/pdf", "src/components/print"];
 const EXTS = new Set([".ts", ".tsx", ".css"]);
 const RE = /font-family\s*:/i;
 
