@@ -1,14 +1,21 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "totalModules": 933,
-  "totalEdges": 4119,
+  "totalModules": 1195,
+  "totalEdges": 4761,
   "circular": {
-    "count": 6,
+    "count": 8,
     "cycles": [
       [
         "components/customers/details/CustomerKPICards.tsx",
         "components/customers/details/CustomerTimelineDrawer.tsx"
+      ],
+      [
+        "domain/finance/invoice/Invoice.ts",
+        "domain/finance/invoice/errors/InvoiceDomainError.ts",
+        "domain/finance/invoice/statusOf.ts",
+        "domain/finance/invoice/events/index.ts",
+        "domain/finance/invoice/events/InvoiceIssued.ts"
       ],
       [
         "hooks/usePdfProfile.ts",
@@ -32,14 +39,21 @@
         "pages/Dashboard.tsx",
         "components/dashboard/FinancialKPIRow.tsx",
         "components/dashboard/_shared/DashboardChip.tsx"
+      ],
+      [
+        "ui/composites/index.ts",
+        "ui/composites/data/DataGrid.tsx",
+        "ui/index.ts"
       ]
     ]
   },
   "deepestChain": {
-    "length": 16,
+    "length": 18,
     "path": [
       "App.tsx",
       "components/layout/AppLayout.tsx",
+      "platform/shell/index.ts",
+      "platform/shell/PlatformShell.tsx",
       "components/layout/AdaptiveShell.tsx",
       "components/layout/AppSidebar.tsx",
       "components/layout/sidebar/SidebarNavSections.tsx",
@@ -59,11 +73,15 @@
   "topImporters": [
     {
       "file": "App.tsx",
-      "count": 104
+      "count": 106
     },
     {
       "file": "pages/customers/CustomerDetailsPage.tsx",
       "count": 59
+    },
+    {
+      "file": "ui/index.ts",
+      "count": 52
     },
     {
       "file": "lib/pdf/index.ts",
@@ -132,28 +150,24 @@
     {
       "file": "pages/purchase-orders/PurchaseOrdersPage.tsx",
       "count": 23
-    },
-    {
-      "file": "pages/sales-orders/SalesOrderDetailsPage.tsx",
-      "count": 23
     }
   ],
   "topImported": [
     {
       "file": "components/ui/button.tsx",
-      "count": 275
-    },
-    {
-      "file": "components/ui/card.tsx",
-      "count": 201
+      "count": 276
     },
     {
       "file": "lib/utils.ts",
-      "count": 190
+      "count": 232
+    },
+    {
+      "file": "components/ui/card.tsx",
+      "count": 202
     },
     {
       "file": "integrations/supabase/client.ts",
-      "count": 168
+      "count": 169
     },
     {
       "file": "components/ui/badge.tsx",
@@ -185,7 +199,7 @@
     },
     {
       "file": "hooks/use-toast.ts",
-      "count": 65
+      "count": 66
     },
     {
       "file": "components/ui/skeleton.tsx",
@@ -193,6 +207,10 @@
     },
     {
       "file": "components/ui/table.tsx",
+      "count": 59
+    },
+    {
+      "file": "shared-kernel/index.ts",
       "count": 59
     },
     {
@@ -214,21 +232,17 @@
     {
       "file": "components/ui/textarea.tsx",
       "count": 39
-    },
-    {
-      "file": "components/shared/EmptyState.tsx",
-      "count": 29
     }
   ],
   "importLayerViolations": {
-    "total": 202,
+    "total": 203,
     "bySummary": {
       "components→repositories": 69,
       "components→services": 5,
       "pages→repositories": 31,
       "hooks→supabase-client": 31,
       "components→supabase-client": 38,
-      "pages→supabase-client": 28,
+      "pages→supabase-client": 29,
       "domain→ui": 0
     },
     "samples": {
@@ -348,6 +362,10 @@
           "to": "integrations/supabase/client.ts"
         },
         {
+          "from": "pages/OAuthConsent.tsx",
+          "to": "integrations/supabase/client.ts"
+        },
+        {
           "from": "pages/ResetPasswordPage.tsx",
           "to": "integrations/supabase/client.ts"
         },
@@ -357,10 +375,6 @@
         },
         {
           "from": "pages/admin/CustomizationsPage.tsx",
-          "to": "integrations/supabase/client.ts"
-        },
-        {
-          "from": "pages/admin/DispatcherBatchDetailPage.tsx",
           "to": "integrations/supabase/client.ts"
         }
       ],
