@@ -1,0 +1,12 @@
+{
+  "mode": "dry-run",
+  "changedFiles": [
+    "src/components/print/PrintTemplate.tsx",
+    "src/lib/pdf/arabic/arabicCss.test.ts",
+    "src/lib/pdf/arabic/arabicCss.ts",
+    "src/lib/pdf/engine/HtmlPdfEngine.test.ts",
+    "src/lib/printDocument.ts",
+    "src/main.tsx",
+    "src/styles/motion.css"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "mode": "dry-run",
+  "changedFiles": [
+    "src/components/layout/AdaptiveShell.tsx",
+    "src/components/platform/PlatformLayout.tsx",
+    "src/components/ui/scroll-area.tsx"
+  ],
+  "deferred": []
+}
