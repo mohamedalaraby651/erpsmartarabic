@@ -1,18 +1,31 @@
 #!/usr/bin/env node
 /**
- * check-no-raw-colors.mjs — Wave 2 fitness (warn mode).
+ * check-no-raw-colors.mjs — Wave 2 fitness.
  * Feature code must reference colors via HSL CSS vars (Tailwind roles).
  * Raw `#hex`, `rgb(`, `hsl(...)` literals in TS/TSX are flagged.
  *
- * Mode: warn (exits 0) at Wave 2 open; flips to enforcing (exits 1) at
- * Wave 2 close.
+ * Enforcement model: allowlist-freeze (same shape as
+ * `check-no-new-ui-kit-imports`). Files present in the pinned allowlist
+ * hold pre-existing violations (user-configurable brand pickers, chart
+ * palettes, live-preview HTML) — they are permitted but frozen; NEW
+ * violators fail the check.
+ *
+ * Allowlist: scripts/audits/output/wave2-discovery/raw-colors-allowlist.json
+ * Modes:
+ *   warn (default): reports diff, exit 0.
+ *   enforcing (CHECK_NO_RAW_COLORS_ENFORCE=1): fails if any new file
+ *     outside the allowlist has raw color literals.
  */
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { join, extname, relative } from "node:path";
 
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const ENFORCING = process.env.CHECK_NO_RAW_COLORS_ENFORCE === "1";
+const ALLOWLIST_PATH = join(
+  ROOT,
+  "scripts/audits/output/wave2-discovery/raw-colors-allowlist.json",
+);
 const EXCLUDE = [
   "src/ui/tokens",
   "src/kernel",
@@ -40,19 +53,27 @@ function walk(dir, acc = []) {
   return acc;
 }
 
-const violations = [];
+const allowlist = new Set(
+  existsSync(ALLOWLIST_PATH) ? JSON.parse(readFileSync(ALLOWLIST_PATH, "utf8")) : [],
+);
+
+const offenders = new Set();
 for (const rel of walk(SRC)) {
   const src = readFileSync(join(ROOT, rel), "utf8");
   const lines = src.split("\n");
-  lines.forEach((line, i) => {
-    // Skip comments quickly
-    if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
-    if (RE.test(line)) violations.push({ file: rel, line: i + 1, snippet: line.trim().slice(0, 120) });
-  });
+  for (const line of lines) {
+    if (/^\s*(\/\/|\*|\/\*)/.test(line)) continue;
+    if (RE.test(line)) {
+      offenders.add(rel);
+      break;
+    }
+  }
 }
+const newOffenders = [...offenders].filter((f) => !allowlist.has(f)).sort();
 
 const mode = ENFORCING ? "ENFORCING" : "WARN";
-console.log(`[check-no-raw-colors] ${mode} — ${violations.length} violations`);
-for (const v of violations.slice(0, 25)) console.log(`  ${v.file}:${v.line}  ${v.snippet}`);
-if (violations.length > 25) console.log(`  … (${violations.length - 25} more)`);
-process.exit(ENFORCING && violations.length ? 1 : 0);
+console.log(
+  `[check-no-raw-colors] ${mode} — allowlist=${allowlist.size} current=${offenders.size} new=${newOffenders.length}`,
+);
+for (const f of newOffenders.slice(0, 25)) console.log(`  NEW: ${f}`);
+process.exit(ENFORCING && newOffenders.length ? 1 : 0);
