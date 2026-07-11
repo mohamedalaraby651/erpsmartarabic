@@ -83,7 +83,7 @@ export function AdaptiveShell({
         <div
           className={cn(
             'transition-all duration-300 pb-12 lg:pb-0',
-            sidebarCollapsed ? 'lg:mr-[70px]' : 'lg:mr-[260px]'
+            sidebarCollapsed ? 'lg:mr-18' : 'lg:mr-65'
           )}
         >
           <div className="hidden lg:block">

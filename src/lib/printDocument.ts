@@ -49,7 +49,7 @@ export async function printHtmlDocument(opts: {
 
   // Local @font-face wins; only use Google as fallback when no local file.
   const fontHead = useLocal
-    ? `<style>@font-face{font-family:'${primaryFamily}';src:url('${localFontUrl}') format('truetype');font-display:swap;}</style>`
+    ? `<style>@font-face{font-family: var(--font-sans);src:url('${localFontUrl}') format('truetype');font-display:swap;}</style>`
     : googleFontFamily
       ? `<link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -72,7 +72,7 @@ export async function printHtmlDocument(opts: {
 ${fontHead}
 <style id="base-style">
   * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  html, body { margin: 0; padding: 0; background: #e5e7eb; color: #000; font-family: ${fullFontFamily}; }
+  html, body { margin: 0; padding: 0; background: #e5e7eb; color: hsl(var(--foreground)); font-family: var(--font-sans); }
   table { border-collapse: collapse; width: 100%; }
   .toolbar {
     position: sticky; top: 0; z-index: 100;
@@ -84,29 +84,29 @@ ${fontHead}
   }
   .toolbar label { display: inline-flex; align-items: center; gap: 6px; color: #334155; }
   .toolbar select {
-    font-family: inherit; font-size: 14px; padding: 6px 10px;
-    border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #0f172a;
+    font-family: var(--font-sans); font-size: 14px; padding: 6px 10px;
+    border-radius: 6px; border: 1px solid #cbd5e1; background: hsl(var(--background)); color: #0f172a;
   }
   .toolbar button {
-    font-family: inherit; font-size: 14px; cursor: pointer;
+    font-family: var(--font-sans); font-size: 14px; cursor: pointer;
     padding: 8px 16px; border-radius: 6px; border: 1px solid ${brandColor};
-    background: ${brandColor}; color: #fff;
+    background: ${brandColor}; color: hsl(var(--background));
   }
-  .toolbar button.secondary { background: #fff; color: ${brandColor}; }
+  .toolbar button.secondary { background: hsl(var(--background)); color: ${brandColor}; }
   .preview-wrap {
     display: flex; justify-content: center; padding: 24px;
   }
   .page {
-    background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    background: hsl(var(--background)); box-shadow: var(--shadow-md);
     margin: 0 auto; padding: 12mm;
     transition: width .15s ease, min-height .15s ease;
   }
   @page { size: ${defaultPaperSize} ${defaultOrientation}; margin: 10mm; }
   @media print {
-    html, body { background: #fff; }
+    html, body { background: hsl(var(--background)); }
     .no-print { display: none !important; }
     .preview-wrap { padding: 0; }
-    .page { box-shadow: none; padding: 0; width: auto !important; min-height: 0 !important; }
+    .page { box-shadow: var(--shadow-md); padding: 0; width: auto !important; min-height: 0 !important; }
   }
 </style>
 <style id="page-size-style"></style>
@@ -189,7 +189,7 @@ ${fontHead}
             margin: 10,
             filename: safeName + '.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: 'hsl(var(--background))' },
             jsPDF: { unit: 'mm', format: size.toLowerCase(), orientation: or },
             pagebreak: { mode: ['css', 'legacy'] }
           }).from(pageEl).save();

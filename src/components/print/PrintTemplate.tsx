@@ -81,8 +81,8 @@ export function PrintTemplate(props: PrintTemplateProps) {
 
   return (
     <div className="print-template" dir="rtl" style={{
-      backgroundColor: '#ffffff',
-      color: '#000000',
+      backgroundColor: 'hsl(var(--background))',
+      color: 'hsl(var(--foreground))',
       padding: '2rem',
       maxWidth: '56rem',
       margin: '0 auto',
@@ -125,13 +125,13 @@ export function PrintTemplate(props: PrintTemplateProps) {
               height: auto !important;
               padding: 15mm !important;
               margin: 0 !important;
-              background: #ffffff !important;
-              color: #000000 !important;
+              background: hsl(var(--background)) !important;
+              color: hsl(var(--foreground)) !important;
               z-index: 999999 !important;
               display: block !important;
               visibility: visible !important;
               overflow: visible !important;
-              font-family: ${fontFamily} !important;
+              font-family: var(--font-sans);
             }
             .print-template * {
               color-adjust: exact !important;
@@ -149,7 +149,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
               height: auto !important;
               transform: none !important;
               border: none !important;
-              box-shadow: none !important;
+              box-shadow: var(--shadow-md);
               padding: 0 !important;
               margin: 0 !important;
               background: transparent !important;
@@ -164,7 +164,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
             }
             .print-template th {
               background-color: ${brandColor} !important;
-              color: #ffffff !important;
+              color: hsl(var(--background)) !important;
             }
             .print-template .alt-row {
               background-color: #f8fafc !important;
@@ -245,19 +245,19 @@ export function PrintTemplate(props: PrintTemplateProps) {
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1.5rem' }}>
         <thead>
           <tr>
-            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>#</th>
-            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>المنتج</th>
-            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الكمية</th>
-            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>سعر الوحدة</th>
+            <th style={{ backgroundColor: brandColor, color: 'hsl(var(--background))', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>#</th>
+            <th style={{ backgroundColor: brandColor, color: 'hsl(var(--background))', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>المنتج</th>
+            <th style={{ backgroundColor: brandColor, color: 'hsl(var(--background))', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الكمية</th>
+            <th style={{ backgroundColor: brandColor, color: 'hsl(var(--background))', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>سعر الوحدة</th>
             {items.some(i => i.discount && i.discount > 0) && (
-              <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الخصم %</th>
+              <th style={{ backgroundColor: brandColor, color: 'hsl(var(--background))', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>الخصم %</th>
             )}
-            <th style={{ backgroundColor: brandColor, color: '#ffffff', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>الإجمالي</th>
+            <th style={{ backgroundColor: brandColor, color: 'hsl(var(--background))', border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'left' }}>الإجمالي</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item, index) => (
-            <tr key={index} className={index % 2 === 0 ? "alt-row" : ""} style={{ backgroundColor: index % 2 === 0 ? '#f8fafc' : '#ffffff' }}>
+            <tr key={index} className={index % 2 === 0 ? "alt-row" : ""} style={{ backgroundColor: index % 2 === 0 ? '#f8fafc' : 'hsl(var(--background))' }}>
               <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>{index + 1}</td>
               <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'right' }}>{item.name}</td>
               <td style={{ border: '1px solid #cbd5e1', padding: '0.5rem', textAlign: 'center' }}>{item.quantity}</td>

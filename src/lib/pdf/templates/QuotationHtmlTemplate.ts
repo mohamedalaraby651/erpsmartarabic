@@ -165,11 +165,11 @@ export const QUOTATION_HTML_CSS = `
 .quote-head .logo { max-height: 56px; max-width: 180px; object-fit: contain; margin-bottom: 6px; }
 .customer { margin: 8px 0 16px; padding: 10px 12px; background: #f3f7fb; border-right: 4px solid #0d4f8b; }
 .customer h3 { margin: 0 0 6px; font-size: 13px; }
-table.items th { background: #0d4f8b; color: #fff; font-weight: 600; }
-table.items td { background: #fff; }
+table.items th { background: #0d4f8b; color: hsl(var(--background)); font-weight: 600; }
+table.items td { background: hsl(var(--background)); }
 table.totals { width: 50%; margin-right: auto; margin-top: 12px; }
 table.totals th { background: #eaf1f8; text-align: right; }
-table.totals tr.grand th, table.totals tr.grand td { background: #0d4f8b; color: #fff; font-weight: 700; }
+table.totals tr.grand th, table.totals tr.grand td { background: #0d4f8b; color: hsl(var(--background)); font-weight: 700; }
 .terms, .notes { margin-top: 14px; padding: 10px; border: 1px dashed #99b6d1; }
 .terms h4, .notes h4 { margin: 0 0 6px; font-size: 13px; }
 .stamp { margin-top: 18px; text-align: center; font-size: 11px; color: #555; border-top: 1px solid #ddd; padding-top: 8px; }

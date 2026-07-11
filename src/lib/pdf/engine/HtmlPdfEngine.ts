@@ -173,7 +173,7 @@ function buildContainer(p: HtmlPdfPayload, arabicCss: string): HTMLElement {
   wrap.style.position = 'fixed';
   wrap.style.left = '-10000px';
   wrap.style.top = '0';
-  wrap.style.background = '#fff';
+  wrap.style.background = 'hsl(var(--background))';
   if (arabicCss) {
     const style = document.createElement('style');
     style.setAttribute('data-pdf-arabic', '1');

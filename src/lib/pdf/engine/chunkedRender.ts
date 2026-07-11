@@ -238,7 +238,7 @@ export async function renderChunkedHtmlPdf(input: ChunkedRenderInput): Promise<B
         scale,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff',
+        backgroundColor: 'hsl(var(--background))',
       });
       const imgData = canvas.toDataURL('image/jpeg', quality);
       // Scale image height to maintain aspect ratio inside content box.

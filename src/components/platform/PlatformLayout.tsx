@@ -57,7 +57,7 @@ export default function PlatformLayout() {
   return (
     <div className="min-h-screen bg-background">
       <PlatformSidebar />
-      <div className="mr-[260px]">
+      <div className="mr-65">
         <main className="p-6">
           <div className="animate-fade-in">
             <Outlet />
