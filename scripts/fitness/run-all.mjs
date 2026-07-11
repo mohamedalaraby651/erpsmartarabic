@@ -50,15 +50,16 @@ const ACTIVE = [
   "check-port-registry-completeness.mjs",
   "check-platform-shell-single-entry.mjs",
   "check-no-new-adaptiveshell-imports.mjs",
-];
-
-const PENDING = [
-  // UX-3A Wave 2 (warn mode — flips to enforcing at Wave 2 close)
+  // UX-3A Wave 2 Batch A (enforcing — Sprint 1 close)
   "check-no-raw-colors.mjs",
   "check-typography-tokens.mjs",
   "check-spacing-elevation.mjs",
-  "check-design-system-inventory.mjs",
   "check-no-new-ui-kit-imports.mjs",
+];
+
+const PENDING = [
+  // UX-3A Wave 2 (remaining warn — flips to enforcing at Wave 2 close)
+  "check-design-system-inventory.mjs",
   // UX-3A Wave 2 Closure — Phase C (warn mode)
   "check-component-loc-budget.mjs",
   "check-component-props-budget.mjs",
