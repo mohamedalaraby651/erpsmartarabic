@@ -93,7 +93,7 @@ describe('HtmlPdfEngine', () => {
     expect(capturedHtml).toContain('class="pdf-root"');
     expect(capturedHtml).toContain('dir="rtl"');
     expect(capturedHtml).toContain('@font-face');
-    expect(capturedHtml).toContain("font-family: 'Amiri'");
+    expect(capturedHtml).toContain("font-family: var(--font-sans);
     expect(capturedHtml).toMatch(/direction:\s*rtl/);
   });
 

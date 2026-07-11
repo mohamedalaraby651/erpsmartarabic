@@ -1,5 +1,5 @@
 {
-  "mode": "dry-run",
+  "mode": "write",
   "changedFiles": [
     "src/components/print/PrintTemplate.tsx",
     "src/lib/pdf/arabic/arabicCss.test.ts",

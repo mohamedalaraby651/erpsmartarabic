@@ -42,14 +42,14 @@
   /* Pulse glow effects (FAB) */
   .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
   @keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
-    50% { box-shadow: 0 0 0 12px hsl(var(--primary) / 0); }
+    0%, 100% { box-shadow: var(--shadow-md); }
+    50% { box-shadow: var(--shadow-md); }
   }
 
   .animate-pulse-glow-sm { animation: pulseGlowSm 2.5s ease-in-out infinite; }
   @keyframes pulseGlowSm {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3); }
-    50% { box-shadow: 0 0 0 8px hsl(var(--primary) / 0); }
+    0%, 100% { box-shadow: var(--shadow-md); }
+    50% { box-shadow: var(--shadow-md); }
   }
 
   /* Scale bounce */
@@ -123,8 +123,8 @@
   /* Pulse ring */
   .animate-pulse-ring { animation: pulseRing 0.3s ease-out; }
   @keyframes pulseRing {
-    0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
-    100% { box-shadow: 0 0 0 6px hsl(var(--primary) / 0); }
+    0% { box-shadow: var(--shadow-md); }
+    100% { box-shadow: var(--shadow-md); }
   }
 
   /* Stagger fade-in for list children */

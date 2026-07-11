@@ -1,5 +1,5 @@
 {
-  "mode": "dry-run",
+  "mode": "write",
   "changedFiles": [
     "src/components/layout/AdaptiveShell.tsx",
     "src/components/platform/PlatformLayout.tsx",

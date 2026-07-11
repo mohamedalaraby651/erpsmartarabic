@@ -97,7 +97,7 @@ function LivePreviewPanelInner({ profile, height = 560 }: Props) {
         fontSize: `${Math.max(6, deferred.typography.baseFontSizePx * scale * 0.7)}px`,
         lineHeight: deferred.typography.lineHeight,
         color: deferred.branding.textColor,
-        background: '#fff',
+        background: 'hsl(var(--background))',
         boxShadow: '0 4px 24px hsl(var(--foreground) / 0.15)',
         position: 'relative' as const,
         overflow: 'hidden' as const,

@@ -34,7 +34,7 @@ import { markPhase } from "./lib/bootMarks";
       const root = document.getElementById("root");
       if (root) {
         root.innerHTML =
-          '<div style="font-family:system-ui;padding:24px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin:24px;direction:rtl;text-align:right">' +
+          '<div style="font-family: var(--font-sans);padding:24px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin:24px;direction:rtl;text-align:right">' +
           '<strong>تعذّر إقلاع التطبيق</strong><br/>متغيّرات البيئة المطلوبة غير متوفّرة: ' +
           missing.join(", ") +
           "</div>";

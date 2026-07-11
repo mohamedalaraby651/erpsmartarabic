@@ -17,7 +17,7 @@ describe('buildArabicCss', () => {
     expect(fontKey).toBe('amiri');
     expect(fontFamily).toBe('Amiri');
     expect(css).toContain("@font-face");
-    expect(css).toContain("font-family: 'Amiri'");
+    expect(css).toContain("font-family: var(--font-sans);
     expect(css).toContain('base64,AAAA');
     expect(css).not.toContain('data:font/ttf;base64,data:');
   });
