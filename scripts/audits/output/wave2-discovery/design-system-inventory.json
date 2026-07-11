@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-07-10T02:38:14.550Z",
+  "generatedAt": "2026-07-11T06:58:47.242Z",
   "totals": {
-    "hexColor": 216,
-    "rgbColor": 1,
+    "hexColor": 176,
+    "rgbColor": 0,
     "hslColor": 5,
     "fontFamily": 10,
     "boxShadow": 9,
-    "arbitraryPx": 422
+    "arbitraryPx": 417
   },
   "findings": {
     "hexColor": [
@@ -16,7 +16,7 @@
       },
       {
         "file": "src/components/print/PrintTemplate.tsx",
-        "count": 46
+        "count": 34
       },
       {
         "file": "src/components/reports/ReportTemplateEditor.tsx",
@@ -36,7 +36,7 @@
       },
       {
         "file": "src/components/settings/ExportCenter/LivePreviewPanel.tsx",
-        "count": 3
+        "count": 2
       },
       {
         "file": "src/components/settings/ThemeCustomizer.tsx",
@@ -44,7 +44,7 @@
       },
       {
         "file": "src/components/ui/chart.tsx",
-        "count": 5
+        "count": 3
       },
       {
         "file": "src/domain/pdf/services/ProfileMerger.test.ts",
@@ -52,7 +52,7 @@
       },
       {
         "file": "src/domain/pdf/value-objects/PdfBranding.test.ts",
-        "count": 8
+        "count": 4
       },
       {
         "file": "src/domain/pdf/value-objects/PdfBranding.ts",
@@ -68,7 +68,7 @@
       },
       {
         "file": "src/lib/pdf/arabic/arabicCss.ts",
-        "count": 3
+        "count": 2
       },
       {
         "file": "src/lib/pdf/config/ThemeConfig.ts",
@@ -79,20 +79,12 @@
         "count": 4
       },
       {
-        "file": "src/lib/pdf/engine/HtmlPdfEngine.ts",
-        "count": 1
-      },
-      {
-        "file": "src/lib/pdf/engine/chunkedRender.ts",
-        "count": 1
-      },
-      {
         "file": "src/lib/pdf/services/PdfRenderService.test.ts",
         "count": 3
       },
       {
         "file": "src/lib/pdf/templates/InvoiceHtmlTemplate.ts",
-        "count": 10
+        "count": 7
       },
       {
         "file": "src/lib/pdf/templates/PurchaseOrderHtmlTemplate.test.ts",
@@ -100,11 +92,11 @@
       },
       {
         "file": "src/lib/pdf/templates/PurchaseOrderHtmlTemplate.ts",
-        "count": 14
+        "count": 11
       },
       {
         "file": "src/lib/pdf/templates/QuotationHtmlTemplate.ts",
-        "count": 13
+        "count": 10
       },
       {
         "file": "src/lib/pdf/templates/StatementHtmlTemplate.test.ts",
@@ -112,7 +104,7 @@
       },
       {
         "file": "src/lib/pdf/templates/StatementHtmlTemplate.ts",
-        "count": 17
+        "count": 15
       },
       {
         "file": "src/lib/pdf/templates/templateRegistry.test.ts",
@@ -120,7 +112,7 @@
       },
       {
         "file": "src/lib/printDocument.ts",
-        "count": 14
+        "count": 7
       },
       {
         "file": "src/lib/themeManager.ts",
@@ -143,12 +135,7 @@
         "count": 1
       }
     ],
-    "rgbColor": [
-      {
-        "file": "src/lib/printDocument.ts",
-        "count": 1
-      }
-    ],
+    "rgbColor": [],
     "hslColor": [
       {
         "file": "src/components/reports/AgingReport.tsx",
@@ -473,10 +460,6 @@
         "count": 1
       },
       {
-        "file": "src/components/layout/AdaptiveShell.tsx",
-        "count": 2
-      },
-      {
         "file": "src/components/layout/AppHeader.tsx",
         "count": 1
       },
@@ -550,10 +533,6 @@
       },
       {
         "file": "src/components/payments/MultiInvoiceSettlement.tsx",
-        "count": 1
-      },
-      {
-        "file": "src/components/platform/PlatformLayout.tsx",
         "count": 1
       },
       {
@@ -743,10 +722,6 @@
       {
         "file": "src/components/ui/navigation-menu.tsx",
         "count": 1
-      },
-      {
-        "file": "src/components/ui/scroll-area.tsx",
-        "count": 2
       },
       {
         "file": "src/components/ui/separator.tsx",
