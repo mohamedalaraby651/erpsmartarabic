@@ -13,7 +13,16 @@ import { join, extname, relative } from "node:path";
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const ENFORCING = process.env.CHECK_NO_RAW_COLORS_ENFORCE === "1";
-const EXCLUDE = ["src/ui/tokens", "src/kernel", "src/platform", "src/integrations/supabase"];
+const EXCLUDE = [
+  "src/ui/tokens",
+  "src/kernel",
+  "src/platform",
+  "src/integrations/supabase",
+  // PDF/print output rendered by an external engine outside the app theme —
+  // must ship concrete colors. See ADR-0028 §Print-Exempt.
+  "src/lib/pdf",
+  "src/components/print",
+];
 const EXTS = new Set([".ts", ".tsx"]);
 const RE = /(#[0-9a-fA-F]{3,8}\b|\brgba?\(\s*\d|\bhsla?\(\s*\d)/;
 
