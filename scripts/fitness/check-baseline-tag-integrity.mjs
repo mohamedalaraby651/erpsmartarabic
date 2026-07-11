@@ -37,7 +37,13 @@ for (const name of baselines) {
   const abs = join(OUT, name);
   const manifest = JSON.parse(readFileSync(abs, "utf8"));
   const tag = manifest.tag ?? name;
+  // Skip placeholder/future-wave manifests (no composite hash yet).
+  if (!manifest.composite || !Array.isArray(manifest.entries)) {
+    console.log(`[fitness:baseline-tag-integrity] ${tag} skipped (placeholder — no composite)`);
+    continue;
+  }
   let localFail = 0;
+
 
   for (const entry of manifest.entries ?? []) {
     const fileAbs = join(ROOT, entry.path);

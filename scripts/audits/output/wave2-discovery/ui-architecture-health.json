@@ -1,0 +1,247 @@
+{
+  "generatedAt": "2026-07-11T16:07:28.718Z",
+  "moduleCount": 320,
+  "fileCount": 1083,
+  "stability": [
+    {
+      "module": "src/components/ui",
+      "fanIn": 93,
+      "fanOut": 4,
+      "instability": 0.041
+    },
+    {
+      "module": "src/integrations/supabase",
+      "fanIn": 85,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/repositories",
+      "fanIn": 63,
+      "fanOut": 7,
+      "instability": 0.1
+    },
+    {
+      "module": "src/hooks/useAuth",
+      "fanIn": 61,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/use-toast",
+      "fanIn": 46,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/errorHandler",
+      "fanIn": 43,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/components/shared",
+      "fanIn": 39,
+      "fanOut": 15,
+      "instability": 0.278
+    },
+    {
+      "module": "src/lib/utils",
+      "fanIn": 35,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/use-mobile",
+      "fanIn": 32,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/components/mobile",
+      "fanIn": 31,
+      "fanOut": 6,
+      "instability": 0.162
+    },
+    {
+      "module": "src/lib/api",
+      "fanIn": 17,
+      "fanOut": 2,
+      "instability": 0.105
+    },
+    {
+      "module": "src/hooks/useTenant",
+      "fanIn": 12,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useDebounce",
+      "fanIn": 10,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useTableSort",
+      "fanIn": 10,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/queryConfig",
+      "fanIn": 10,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/runtimeTelemetry",
+      "fanIn": 9,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useFormDialog",
+      "fanIn": 9,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/pdf",
+      "fanIn": 9,
+      "fanOut": 7,
+      "instability": 0.438
+    },
+    {
+      "module": "src/hooks/useMutationToast",
+      "fanIn": 8,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/components/print",
+      "fanIn": 8,
+      "fanOut": 9,
+      "instability": 0.529
+    },
+    {
+      "module": "src/lib/arabicFont",
+      "fanIn": 8,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/offlineStorage",
+      "fanIn": 7,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useServerPagination",
+      "fanIn": 7,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/components/export",
+      "fanIn": 7,
+      "fanOut": 5,
+      "instability": 0.417
+    },
+    {
+      "module": "src/lib/services",
+      "fanIn": 6,
+      "fanOut": 3,
+      "instability": 0.333
+    },
+    {
+      "module": "src/lib/uiCopy",
+      "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/validations",
+      "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useFormWizard",
+      "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/lib/haptics",
+      "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/components/navigation",
+      "fanIn": 6,
+      "fanOut": 4,
+      "instability": 0.4
+    },
+    {
+      "module": "src/hooks/useOnlineStatus",
+      "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/components/table",
+      "fanIn": 6,
+      "fanOut": 3,
+      "instability": 0.333
+    },
+    {
+      "module": "src/hooks/useTableFilter",
+      "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useSeo",
+      "fanIn": 5,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useListState",
+      "fanIn": 5,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/logistics",
+      "fanIn": 5,
+      "fanOut": 2,
+      "instability": 0.286
+    },
+    {
+      "module": "src/shared-kernel",
+      "fanIn": 4,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useCustomerAlerts",
+      "fanIn": 4,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/useAlertSettings",
+      "fanIn": 4,
+      "fanOut": 0,
+      "instability": 0
+    },
+    {
+      "module": "src/hooks/usePersistentState",
+      "fanIn": 4,
+      "fanOut": 0,
+      "instability": 0
+    }
+  ]
+}

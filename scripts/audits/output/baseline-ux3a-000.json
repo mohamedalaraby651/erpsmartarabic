@@ -3,9 +3,9 @@
   "tag": "BASELINE-UX3A-000",
   "phase": "UX3A",
   "seq": "000",
-  "builtAt": "2026-07-04T10:24:41.998Z",
-  "composite": "689ce5a40de083ed40167462e2ecd6c43c00d8e3883dfde4f8492d8fa133005d",
-  "entryCount": 20,
+  "builtAt": "2026-07-11T16:06:36.867Z",
+  "composite": "48a29408b499e40a6e909dc9d8f703af1e12c4972446f2e8acb49207d0c1da6c",
+  "entryCount": 26,
   "entries": [
     {
       "path": "docs/adr/0000-architecture-frozen-before-frontend-rewrite.md",
@@ -60,8 +60,24 @@
       "sha256": "3000c5431bb80eaa0db5e3bde579d11989f4810b67254d7d98111b9355447c96"
     },
     {
+      "path": "docs/adr/0027-ux3a-roadmap-freeze.md",
+      "sha256": "b1f78b791678fe192cc000e7331b950fba764e4d389aa54a8407b47606ede3a0"
+    },
+    {
+      "path": "docs/adr/0028-design-system-v2-and-ui-kit-sunset.md",
+      "sha256": "a8b5f52d6ebc24a36965a5d9a019d2c5b1a4571325f45604799861ee224b2645"
+    },
+    {
+      "path": "docs/adr/0029-ui-api-uniformity-charter.md",
+      "sha256": "f9c41259543ec8e94ccb9c7f917e0fb8ac68057d8eb561a63e7860bddea83503"
+    },
+    {
+      "path": "docs/adr/0030-theme-registry-contract.md",
+      "sha256": "98cdcd07b34669c4d634c70b7a937195ca2c7bbebab832730c32cda01f12e7bf"
+    },
+    {
       "path": "PROJECT_MAP.md",
-      "sha256": "6437b6ae40174564edef5bc6c376c826603e8b71896721ec936f1b1a92d9989b"
+      "sha256": "10acbd707701f85ebea4313a109a86d9db3ef0b15f87a125097d44b2cf0486c7"
     },
     {
       "path": "scripts/audits/output/ux2a-wave8-lock.json",
@@ -86,6 +102,14 @@
     {
       "path": "scripts/audits/output/ux3a-wave1-lock.json",
       "sha256": "884fc674df2d716f4205321b7486db41b2e3b5da547e8c5825bc53f4dff78a18"
+    },
+    {
+      "path": "scripts/audits/output/ux3a-wave2_5-lock.json",
+      "sha256": "f93abaa754e4d857346f84e37895bfcd7a9e1a4a1840303bfb4758cdb5cf5834"
+    },
+    {
+      "path": "scripts/audits/output/ux3a-wave2-lock.json",
+      "sha256": "250fe8cb03c7924ad8dff7ef9247fcc93fb2be74943a9a0867180877ec757680"
     }
   ]
 }
