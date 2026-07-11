@@ -1,10 +1,13 @@
 # BASELINE-UX3A-001
 
 - **Sealed:** 2026-07-04
+- **Re-sealed:** 2026-07-11 (Sprint 1.5 — intentional drift from Wave 2 Sprint 1 Batch A: 22 files remediated for tokens/typography/spacing; ADR-0013 re-hash executed via `build-baseline-tag.mjs UX3A 001`)
 - **Wave:** UX-3A Wave 1
 - **Previous:** [BASELINE-UX3A-000](../../../scripts/audits/output/baseline-ux3a-000.json)
 - **Fingerprint:** see `scripts/audits/output/architecture-fingerprint.json`
 - **Lock:** `scripts/audits/output/ux3a-wave1-lock.json`
+- **Machine-readable:** `scripts/audits/output/baseline-ux3a-001.json`
+
 - **Machine-readable:** `scripts/audits/output/baseline-ux3a-001.json`
 
 ## Scope
