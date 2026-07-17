@@ -10,7 +10,7 @@
  * through `onChange`.
  */
 import * as React from "react";
-import { Button } from "@/ui";
+import { Button } from "@/ui/primitives/Button";
 import { cn } from "@/lib/utils";
 
 export interface FieldArrayProps<TItem> {

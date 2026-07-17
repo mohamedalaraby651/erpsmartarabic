@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, CreditCard, Target, TrendingUp } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import type { KPIFilter } from "./CustomerKPICards";
+import type { KPIFilter } from "./types";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];

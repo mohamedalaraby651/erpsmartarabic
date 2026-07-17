@@ -9,7 +9,7 @@
  * Does NOT fetch, does NOT infer totals, does NOT decide strategy.
  */
 import * as React from "react";
-import { Button } from "@/ui";
+import { Button } from "@/ui/primitives/Button";
 import type { CompositeEventHandler, GridUIEvent } from "@/ui/contracts";
 import { cn } from "@/lib/utils";
 
