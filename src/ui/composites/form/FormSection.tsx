@@ -6,7 +6,7 @@
  * @since UX-1D
  */
 import * as React from "react";
-import { Separator } from "@/ui";
+import { Separator } from "@/ui/primitives/Separator";
 import { cn } from "@/lib/utils";
 
 export interface FormSectionProps extends React.HTMLAttributes<HTMLElement> {
