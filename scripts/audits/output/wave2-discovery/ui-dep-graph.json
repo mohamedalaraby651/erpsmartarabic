@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T08:41:21.821Z",
+  "generatedAt": "2026-07-17T08:42:30.569Z",
   "fileCount": 546,
   "central": [
     {
@@ -79,17 +79,10 @@
       "inDegree": 14
     },
     {
-      "file": "src/ui/index.ts",
+      "file": "src/ui/providers/shell-services.ts",
       "inDegree": 12
     }
   ],
-  "cycleCount": 1,
-  "cycles": [
-    [
-      "src/ui/composites/index.ts",
-      "src/ui/composites/page/StatGrid.tsx",
-      "src/ui/index.ts",
-      "src/ui/composites/index.ts"
-    ]
-  ]
+  "cycleCount": 0,
+  "cycles": []
 }

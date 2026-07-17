@@ -1,15 +1,11 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "totalModules": 1195,
-  "totalEdges": 4761,
+  "totalModules": 1196,
+  "totalEdges": 4763,
   "circular": {
-    "count": 8,
+    "count": 6,
     "cycles": [
-      [
-        "components/customers/details/CustomerKPICards.tsx",
-        "components/customers/details/CustomerTimelineDrawer.tsx"
-      ],
       [
         "domain/finance/invoice/Invoice.ts",
         "domain/finance/invoice/errors/InvoiceDomainError.ts",
@@ -39,11 +35,6 @@
         "pages/Dashboard.tsx",
         "components/dashboard/FinancialKPIRow.tsx",
         "components/dashboard/_shared/DashboardChip.tsx"
-      ],
-      [
-        "ui/composites/index.ts",
-        "ui/composites/data/DataGrid.tsx",
-        "ui/index.ts"
       ]
     ]
   },
