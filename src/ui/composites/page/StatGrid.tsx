@@ -9,7 +9,7 @@
  * values.
  */
 import * as React from "react";
-import { Card, CardContent } from "@/ui";
+import { Card, CardContent } from "@/ui/primitives/Card";
 import { cn } from "@/lib/utils";
 
 export interface StatProps extends React.HTMLAttributes<HTMLDivElement> {
