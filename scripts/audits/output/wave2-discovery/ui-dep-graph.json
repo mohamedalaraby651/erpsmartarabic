@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-11T16:07:28.497Z",
-  "fileCount": 545,
+  "generatedAt": "2026-07-17T08:41:21.821Z",
+  "fileCount": 546,
   "central": [
     {
       "file": "src/components/ui/button.tsx",
@@ -80,21 +80,16 @@
     },
     {
       "file": "src/ui/index.ts",
-      "inDegree": 13
+      "inDegree": 12
     }
   ],
-  "cycleCount": 2,
+  "cycleCount": 1,
   "cycles": [
     [
       "src/ui/composites/index.ts",
-      "src/ui/composites/state/LoadingState.tsx",
+      "src/ui/composites/page/StatGrid.tsx",
       "src/ui/index.ts",
       "src/ui/composites/index.ts"
-    ],
-    [
-      "src/components/customers/details/CustomerKPICards.tsx",
-      "src/components/customers/details/CustomerTimelineDrawer.tsx",
-      "src/components/customers/details/CustomerKPICards.tsx"
     ]
   ]
 }
