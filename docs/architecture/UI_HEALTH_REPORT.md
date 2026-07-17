@@ -48,20 +48,17 @@ Architecture Score .......... 7.4 / 10
 
 ---
 
-## 2. Cycles (must reach 0 before Sprint 2 close)
+## 2. Cycles
 
-Whole-tree count = 8. UI-scoped count = 2.
+Post-2B: whole-tree = 6, UI-scope = **0** ✅. Both original UI cycles
+(C1 barrel-in-leaf; C2 KPI↔Timeline type re-export) are eliminated;
+an additional latent StatGrid barrel cycle and four latent barrel
+imports inside `src/ui/composites/**` were hardened proactively — see
+`WAVE2_BATCH_2B_LEDGER.md § 2B.2`.
 
-| # | Cycle | Scope | Notes |
-|---|-------|-------|-------|
-| C1 | `ui/composites/index.ts → ui/composites/state/LoadingState.tsx → ui/index.ts → ui/composites/index.ts` | UI | Barrel↔leaf cycle. Fix: leaf imports primitive tokens directly, not `ui/index.ts`. |
-| C2 | `components/customers/details/CustomerKPICards.tsx ↔ CustomerTimelineDrawer.tsx` | Domain UI | Bidirectional import. Fix: extract shared types to sibling `types.ts`. |
-| C3 | `domain/finance/invoice/Invoice.ts → errors/InvoiceDomainError.ts → statusOf.ts → events/index.ts → events/InvoiceIssued.ts → Invoice.ts` | Domain | Long path through event barrel. Fix: `Invoice.ts` should import concrete event files, not `events/index.ts`. |
-| C4 | `hooks/usePdfProfile.ts ↔ hooks/usePdfProfileRealtime.ts` | Hooks | Extract shared realtime primitive. |
-| C5 | `lib/pdf/diagnostics/PdfLogger.ts ↔ telemetrySink.ts` | PDF | Sink should not import logger; invert. |
-| C6 | `lib/pdf/routing/routePdfRequest.ts ↔ lib/pdf/services/PdfRenderService.ts` | PDF | Router should receive service via DI, not import it. |
-| C7 | `lib/prefetch.ts → pages/Dashboard.tsx → components/dashboard/FinancialKPIRow.tsx` (returns to prefetch) | Feature | Move prefetch config out of `Dashboard.tsx`. |
-| C8 | C7 + one extra hop through `_shared/DashboardChip.tsx` | Feature | Same root cause as C7. |
+Remaining 6 cycles are all outside the Wave 2 remit (domain event
+barrel, PDF diagnostics/routing, Dashboard prefetch triangle) and are
+documented with owning waves in the ledger (D1–D6).
 
 **Sprint 2 Batch 2A verdict:** classified only. Fixes deferred to Batch 2B (with the layer-violation critical set) so each PR carries a single-topic diff.
 
