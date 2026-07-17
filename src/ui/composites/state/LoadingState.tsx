@@ -6,7 +6,7 @@
  * @since UX-1D
  */
 import * as React from "react";
-import { Spinner } from "@/ui";
+import { Spinner } from "@/ui/primitives/Spinner";
 import { cn } from "@/lib/utils";
 
 export interface LoadingStateProps extends React.HTMLAttributes<HTMLDivElement> {
