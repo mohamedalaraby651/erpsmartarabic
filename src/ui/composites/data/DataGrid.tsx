@@ -20,8 +20,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Checkbox,
-} from "@/ui";
+} from "@/ui/primitives/Table";
+import { Checkbox } from "@/ui/primitives/Checkbox";
 import type {
   ColumnDef,
   CompositeEventHandler,
