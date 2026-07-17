@@ -1,20 +1,32 @@
 # UI_HEALTH_REPORT.md
 
-**Wave:** UX-3A Wave 2 — Sprint 2 Batch 2A
+**Wave:** UX-3A Wave 2 — Sprint 2 Batch 2B (post-fix snapshot)
 **Generated:** 2026-07-11
-**Mode:** Report-only. No source files modified.
+**Mode:** Structural repair inside `src/ui/**` and one details pair. No feature-page edits.
 
 Source reports (deterministic, machine-readable):
 
 - `scripts/audits/output/dependency-report.json`
 - `scripts/audits/output/wave2-discovery/ui-dep-graph.json`
 - `scripts/audits/output/wave2-discovery/ui-architecture-health.json`
+- Batch ledger: `docs/architecture/WAVE2_BATCH_2B_LEDGER.md`
 
 ---
 
-## 1. Headline numbers
+## 1. Headline numbers (before → after 2B)
 
 ```text
+                                 before 2B   after 2B
+Cycles (whole tree) ...........        8          6
+Cycles (src/ui only) ..........        2          0   ✅
+Layer violations ..............      203        203   (owned, staged to Sprint 3)
+Modules analyzed ..............      320        320
+Files analyzed (ui+components)       545        546
+Max FanIn .....................       93         93
+Max FanOut (feature code) .....       59         59  (CustomerDetailsPage — Wave 3)
+Public surface (src/ui) .......      121        121  (Batch 2D prune)
+Architecture Score ............      7.4        8.0
+```
 Cycles (whole tree) ......... 8
 Cycles (src/ui only) ........ 2
 Layer violations ............ 203
