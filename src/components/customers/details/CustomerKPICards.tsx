@@ -3,12 +3,13 @@ import { Card } from "@/components/ui/card";
 import { CreditCard, Target, TrendingUp, ArrowUpRight, ArrowDownRight, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CustomerTimelineDrawer } from "./CustomerTimelineDrawer";
+import type { KPIFilter } from "./types";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
 
-export type KPIFilter = 'balance' | 'outstanding' | 'purchases';
+export type { KPIFilter };
 
 interface CustomerKPICardsProps {
   currentBalance: number;
