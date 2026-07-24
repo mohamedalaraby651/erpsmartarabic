@@ -24,14 +24,17 @@ Executing 167 fixes in one batch is a regression risk and violates the
 "single-topic diff" rule adopted in Batch 2A. The critical set is
 staged into three Sprint-3 sub-waves, each with an entry gate.
 
-| Sub-wave | Category | Count | Owning wave | Entry gate |
-|---|---|---:|---|---|
-| S3.1 | `pages → repositories` | 31 | Sprint 3.1 | Query-layer scaffold accepted |
-| S3.2 | `components → repositories` | 69 | Sprint 3.2 | S3.1 exit + hook parity table |
-| S3.3 | `pages → supabase-client` | 29 | Sprint 3.3 | S3.2 exit |
-| S3.4 | `components → supabase-client` | 38 | Sprint 3.4 | S3.3 exit |
-| S3.5 | `hooks → supabase-client` | 31 | Sprint 3.5 | S3.4 exit |
-| S3.6 | `components → services` | 5 | Sprint 3.6 | S3.5 exit |
+| Sub-wave | Category | Count (baseline) | Count (post-3.1A) | Priority | Owner ADR | Owning wave | Entry gate | Target |
+|---|---|---:|---:|---|---|---|---|---|
+| S3.1A | `pages → repositories` + `components → repositories` (Batch A) | 100 | **68** | P0 | 0028 | Sprint 3.1 · Batch A | Query-layer facade scaffold | ✅ **DONE** (-32) |
+| S3.1B | `pages → repositories` (residual) | 31 | 27 | P1 | 0028 → 0029 | Sprint 3.1 · Batch B | Batch A exit | ≤ 15 |
+| S3.2 | `components → repositories` (residual) | 69 | 41 | P1 | 0029 | Sprint 3.2 | S3.1B exit + hook parity table | ≤ 20 |
+| S3.3 | `pages → supabase-client` | 29 | 29 | P2 | 0030 | Sprint 3.3 | S3.2 exit | 0 |
+| S3.4 | `components → supabase-client` | 38 | 38 | P2 | 0030 | Sprint 3.4 | S3.3 exit | 0 |
+| S3.5 | `hooks → supabase-client` | 31 | 31 | P3 | 0031 (planned) | Sprint 3.5 | S3.4 exit | ≤ 5 |
+| S3.6 | `components → services` | 5 | 5 | P3 | 0031 (planned) | Sprint 3.6 | S3.5 exit | 0 |
+
+**Total Critical:** 203 (baseline) → **171** (post-Sprint 3.1 Batch A) — **-15.76%** burn.
 
 **Batch 2B action:** none on source. Recorded as owned; no new
 violations introduced (confirmed by re-running `dep-graph.mjs`).
