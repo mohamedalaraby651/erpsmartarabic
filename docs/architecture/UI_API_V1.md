@@ -40,3 +40,28 @@ Four layers, all under `src/ui/**`:
 - No `any` in exported types (checked by the same script).
 - `check-no-deep-imports`, `check-composite-primitive-only`,
   `check-primitive-isolation` continue to apply from earlier waves.
+
+---
+
+## Application Query Facades — Pending Standardization (Sprint 3.1 Batch A v3)
+
+Introduced by [ADR-0028](../adr/0028-application-query-facades.md). Each facade
+below is a **pure `export *` re-export** of a repository module. Facades MUST
+remain re-exports until Wave 2.5 assigns them a typed Application Query
+contract.
+
+| Facade | Underlying | Status | Owner Wave | Owner ADR |
+|---|---|---|---|---|
+| `@/application/queries/customers` | `lib/repositories/customerRepository` | Pending Standardization | UX-3A Wave 2.5 | 0028 → 0029 |
+| `@/application/queries/suppliers` | `lib/repositories/supplierRepository` | Pending Standardization | UX-3A Wave 2.5 | 0028 → 0029 |
+| `@/application/queries/products`  | `lib/repositories/productRepository`  | Pending Standardization | UX-3A Wave 2.5 | 0028 → 0029 |
+| `@/application/queries/customer-search` | `lib/repositories/customerSearchRepo` | Pending Standardization | UX-3A Wave 2.5 | 0028 → 0029 |
+
+**Facade Creation Rule (Sprint 3.1 v3):** a facade may be created only if it
+is reused by ≥2 UI modules, OR represents a stable public application
+contract, OR is planned in Wave 6.5 (Ports Taxonomy). All four entries above
+satisfy the first two criteria.
+
+**Wave 2.5 exit criterion:** every row here either flips to `Standardized`
+or is deleted (with UI consumers routed elsewhere). Report-only budget
+tracked by `scripts/fitness/check-public-surface-budget.mjs`.
