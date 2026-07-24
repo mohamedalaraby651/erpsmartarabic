@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/lib/validations";
 import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
 import { saveInvoiceWithItems } from "@/lib/services/invoiceService";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRepository } from "@/application/queries/customers";
 import { productRepository } from "@/application/queries/products";
 import { queryKeys } from "@/lib/queryKeys";
 import { useInvoiceItems } from "./useInvoiceItems";

@@ -226,9 +226,9 @@
     }
   ],
   "importLayerViolations": {
-    "total": 172,
+    "total": 171,
     "bySummary": {
-      "components→repositories": 42,
+      "components→repositories": 41,
       "components→services": 5,
       "pages→repositories": 27,
       "hooks→supabase-client": 31,
