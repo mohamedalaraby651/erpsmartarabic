@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRepository } from "@/application/queries/customers";
 import type { Database } from "@/integrations/supabase/types";
 
 type CustomerAddress = Database['public']['Tables']['customer_addresses']['Row'];

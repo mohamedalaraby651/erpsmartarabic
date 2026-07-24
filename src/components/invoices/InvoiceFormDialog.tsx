@@ -14,7 +14,7 @@ import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/li
 import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
 import { saveInvoiceWithItems } from "@/lib/services/invoiceService";
 import { customerRepository } from "@/lib/repositories/customerRepository";
-import { productRepository } from "@/lib/repositories/productRepository";
+import { productRepository } from "@/application/queries/products";
 import { queryKeys } from "@/lib/queryKeys";
 import { useInvoiceItems } from "./useInvoiceItems";
 import { useFormDraft } from "@/hooks/useFormDraft";

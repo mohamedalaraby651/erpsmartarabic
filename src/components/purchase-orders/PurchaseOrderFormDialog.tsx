@@ -47,8 +47,8 @@ import { useFormWizard } from "@/hooks/useFormWizard";
 import { useFormDialog } from "@/hooks/useFormDialog";
 import FormDialogFooter from "@/components/shared/FormDialogFooter";
 import FormFieldError from "@/components/shared/FormFieldError";
-import { listActiveSuppliersForSelect } from "@/lib/repositories/supplierRepository";
-import { listActiveProductsForSelect } from "@/lib/repositories/productRepository";
+import { listActiveSuppliersForSelect } from "@/application/queries/suppliers";
+import { listActiveProductsForSelect } from "@/application/queries/products";
 import { purchaseOrderRepository } from "@/lib/repositories/purchaseOrderRepository";
 import {
   useCreatePurchaseOrder,

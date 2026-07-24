@@ -50,8 +50,8 @@ import { useFormDialog } from "@/hooks/useFormDialog";
 import { useMutationToast } from "@/hooks/useMutationToast";
 import FormDialogFooter from "@/components/shared/FormDialogFooter";
 import FormFieldError from "@/components/shared/FormFieldError";
-import { customerRepository } from "@/lib/repositories/customerRepository";
-import { listActiveProductsForSelect } from "@/lib/repositories/productRepository";
+import { customerRepository } from "@/application/queries/customers";
+import { listActiveProductsForSelect } from "@/application/queries/products";
 import { salesOrderRepository } from "@/lib/repositories/salesOrderRepository";
 import type { Database } from "@/integrations/supabase/types";
 

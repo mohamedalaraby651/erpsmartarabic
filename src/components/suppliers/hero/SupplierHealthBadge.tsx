@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supplierRepository } from '@/lib/repositories/supplierRepository';
+import { supplierRepository } from '@/application/queries/suppliers';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HeartPulse } from 'lucide-react';

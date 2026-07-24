@@ -10,7 +10,7 @@ import { Printer, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { generateStatementPdf } from "@/lib/statementPdfGenerator";
 import { toast } from "sonner";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRepository } from "@/application/queries/customers";
 
 interface StatementOfAccountProps {
   customerName: string;

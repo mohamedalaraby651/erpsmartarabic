@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search, X, Phone, MapPin } from "lucide-react";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
-import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
+import { customerSearchRepo } from "@/application/queries/customer-search";
 
 interface CustomerSearchPreviewProps {
   value: string;

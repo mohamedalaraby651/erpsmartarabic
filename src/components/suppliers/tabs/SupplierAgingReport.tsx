@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supplierRepository, type SupplierAgingResult } from '@/lib/repositories/supplierRepository';
+import { supplierRepository, type SupplierAgingResult } from '@/application/queries/suppliers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
