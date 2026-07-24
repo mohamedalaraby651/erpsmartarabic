@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Search, Merge } from "lucide-react";
 import CustomerMergeDialog from "@/components/customers/dialogs/CustomerMergeDialog";
-import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
+import { customerSearchRepo } from "@/application/queries/customer-search";
 
 interface DuplicateDetectionDialogProps {
   open: boolean;

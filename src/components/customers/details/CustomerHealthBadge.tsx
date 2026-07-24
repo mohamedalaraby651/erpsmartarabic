@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { customerRepository, type CustomerHealthResult } from '@/lib/repositories/customerRepository';
+import { customerRepository, type CustomerHealthResult } from '@/application/queries/customers';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Shield, ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react';

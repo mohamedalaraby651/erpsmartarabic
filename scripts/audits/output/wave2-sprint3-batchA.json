@@ -1,0 +1,28 @@
+{
+  "sprint": "UX-3A/Wave2/Sprint3.1/BatchA",
+  "version": "v3-governance-hardened",
+  "sealedAt": "2026-07-22T00:00:00Z",
+  "criticalViolations": { "before": 203, "after": 171, "delta": -32, "burnPct": 15.76 },
+  "architectureScore": { "before": 8.0, "after": 8.2 },
+  "cycles": { "total": { "before": 6, "after": 6 }, "ui": { "before": 0, "after": 0 } },
+  "fanOut": { "maxBefore": 59, "maxAfter": 59, "newAboveThreshold": 0 },
+  "publicSurface": { "ui/index.ts": 52, "application/queries/index.ts": 4 },
+  "facadesAdded": [
+    "@/application/queries/customers",
+    "@/application/queries/suppliers",
+    "@/application/queries/products",
+    "@/application/queries/customer-search"
+  ],
+  "filesRedirected": 30,
+  "adr": "0028",
+  "fingerprint": "d22b6e094fb7bba9e9c21ca6ad0c1e4f8b43f6de1dfa045e9f0489eec9c1974d",
+  "gates": {
+    "tsgo": "green",
+    "uiCyclesZero": true,
+    "noRegressionOnFanOut": true,
+    "noHooksFacadesCreated": true,
+    "noKernelPlatformDomainInfraWrites": true,
+    "criticalBurnGte15pct": true,
+    "scoreGt8_0": true
+  }
+}

@@ -1,5 +1,4 @@
 {
-  "fingerprint": "6e4bcc7568111316161999d71e5f84aa4690f5606dd4220521fd9698884822d2",
   "facades": {
     "kernel": [
       "index.ts"
@@ -34,5 +33,18 @@
     "W1-INV-11",
     "W1-INV-12"
   ],
-  "generatedAt": "2026-07-04T10:24:25.676Z"
+  "generatedAt": "2026-07-04T10:24:25.676Z",
+  "sprint3_1_batchA": {
+    "criticalBefore": 203,
+    "criticalAfter": 171,
+    "burnPct": 15.76,
+    "facadesAdded": [
+      "application/queries/customers",
+      "application/queries/suppliers",
+      "application/queries/products",
+      "application/queries/customer-search"
+    ]
+  },
+  "fingerprint": "d22b6e094fb7bba9e9c21ca6ad0c1e4f8b43f6de1dfa045e9f0489eec9c1974d",
+  "sealedAt": "2026-07-22T00:00:00Z"
 }

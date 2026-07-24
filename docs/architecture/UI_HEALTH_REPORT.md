@@ -13,20 +13,23 @@ Source reports (deterministic, machine-readable):
 
 ---
 
-## 1. Headline numbers (before → after 2B)
+## 1. Headline numbers (before 2B → after 2B → after Sprint 3.1 · Batch A)
 
 ```text
-                                 before 2B   after 2B
-Cycles (whole tree) ...........        8          6
-Cycles (src/ui only) ..........        2          0   ✅
-Layer violations ..............      203        203   (owned, staged to Sprint 3)
-Modules analyzed ..............      320        320
-Files analyzed (ui+components)       545        546
-Max FanIn .....................       93         93
-Max FanOut (feature code) .....       59         59  (CustomerDetailsPage — Wave 3)
-Public surface (src/ui) .......      121        121  (Batch 2D prune)
-Architecture Score ............      7.4        8.0
+                                 before 2B   after 2B   after 3.1A
+Cycles (whole tree) ...........        8          6           6
+Cycles (src/ui only) ..........        2          0   ✅       0   ✅
+Layer violations (critical) ...      203        203         171   (-32, -15.76%)
+Modules analyzed ..............      320        320         321
+Files analyzed (ui+components)       545        546         546
+Max FanIn .....................       93         93          93
+Max FanOut (feature code) .....       59         59          59  (CustomerDetailsPage — Wave 3)
+Public surface (src/ui) .......      121        121         121  (Batch 2D prune)
+Architecture Score ............      7.4        8.0         8.2
 ```
+
+**Sprint 3.1 Batch A delta:** DependencyDebt reduced by 32 edges (15.76%). Zero regression on cycles, FanOut, or public surface. See `WAVE2_SPRINT3_BATCHA_COMPARISON.md`.
+
 Cycles (whole tree) ......... 8
 Cycles (src/ui only) ........ 2
 Layer violations ............ 203

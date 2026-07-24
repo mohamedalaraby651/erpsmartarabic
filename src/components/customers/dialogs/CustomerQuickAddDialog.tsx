@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRepository } from "@/application/queries/customers";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { egyptGovernorates } from "@/lib/egyptLocations";

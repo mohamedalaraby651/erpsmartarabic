@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { generatePDF } from "@/lib/pdfGeneratorLazy";
-import { supplierRepository } from "@/lib/repositories/supplierRepository";
+import { supplierRepository } from "@/application/queries/suppliers";
 import { FileUpload } from "@/components/shared/FileUpload";
 import { AttachmentsList } from "@/components/shared/AttachmentsList";
 import { DetailPageSkeleton } from "@/components/shared/DetailPageSkeleton";

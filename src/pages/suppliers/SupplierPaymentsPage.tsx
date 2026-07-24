@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supplierPaymentRepository } from '@/lib/repositories/supplierPaymentRepository';
-import { listActiveSuppliersForSelect } from '@/lib/repositories/supplierRepository';
+import { listActiveSuppliersForSelect } from '@/application/queries/suppliers';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

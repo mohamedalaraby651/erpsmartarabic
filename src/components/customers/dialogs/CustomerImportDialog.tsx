@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 // xlsx loaded dynamically inside handlers (perf: tree-shaken from main bundle)
-import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
+import { customerSearchRepo } from "@/application/queries/customer-search";
 
 interface CustomerImportDialogProps {
   open: boolean;

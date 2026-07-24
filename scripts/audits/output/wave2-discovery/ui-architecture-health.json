@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-11T16:07:28.718Z",
-  "moduleCount": 320,
-  "fileCount": 1083,
+  "generatedAt": "2026-07-24T04:34:39.072Z",
+  "moduleCount": 321,
+  "fileCount": 1089,
   "stability": [
     {
       "module": "src/components/ui",
@@ -16,16 +16,16 @@
       "instability": 0
     },
     {
-      "module": "src/lib/repositories",
-      "fanIn": 63,
-      "fanOut": 7,
-      "instability": 0.1
-    },
-    {
       "module": "src/hooks/useAuth",
       "fanIn": 61,
       "fanOut": 0,
       "instability": 0
+    },
+    {
+      "module": "src/lib/repositories",
+      "fanIn": 61,
+      "fanOut": 7,
+      "instability": 0.103
     },
     {
       "module": "src/hooks/use-toast",
@@ -74,6 +74,12 @@
       "fanIn": 12,
       "fanOut": 0,
       "instability": 0
+    },
+    {
+      "module": "src/application/queries",
+      "fanIn": 11,
+      "fanOut": 1,
+      "instability": 0.083
     },
     {
       "module": "src/hooks/useDebounce",
@@ -233,12 +239,6 @@
     },
     {
       "module": "src/hooks/useAlertSettings",
-      "fanIn": 4,
-      "fanOut": 0,
-      "instability": 0
-    },
-    {
-      "module": "src/hooks/usePersistentState",
       "fanIn": 4,
       "fanOut": 0,
       "instability": 0

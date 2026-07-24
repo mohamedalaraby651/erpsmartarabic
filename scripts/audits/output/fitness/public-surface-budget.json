@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-07-24T04:36:18.426Z",
+  "mode": "report-only",
+  "budgets": [
+    {
+      "path": "src/ui/index.ts",
+      "max": 100,
+      "target": 90,
+      "ideal": 75,
+      "exportsCount": 52,
+      "status": "ideal"
+    },
+    {
+      "path": "src/application/queries/index.ts",
+      "max": 40,
+      "target": 30,
+      "ideal": 20,
+      "exportsCount": 4,
+      "status": "ideal"
+    }
+  ]
+}

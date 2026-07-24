@@ -5,7 +5,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { CustomerSearchPreview } from "@/components/customers/filters/CustomerSearchPreview";
 import { FilterChips } from "@/components/filters/FilterChips";
 import { vipLabels, typeLabels } from "@/lib/customerConstants";
-import { customerRepository } from "@/lib/repositories/customerRepository";
+import { customerRepository } from "@/application/queries/customers";
 import { cn } from "@/lib/utils";
 
 interface CustomerFiltersBarProps {
