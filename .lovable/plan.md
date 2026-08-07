@@ -1,183 +1,58 @@
-# UX-3A Wave 2 — Sprint 3.1 · Batch A (v3 — Governance Hardened)
-## Critical Layer Violations Remediation — Presentation/UI Only
+# Sprint 3.1 · Batch B — Residual `pages → repositories` Remediation
 
-الهدف: تقليل المخالفات الحرجة بنسبة ≥15% (167 → ≤142) عبر خطوة تأسيسية تخدم Waves 2.5 / 3 / 4 / 6.5 / 9A، بلا أي تغيير سلوكي أو مساس بـ Kernel/Platform/Domain/Application/Infrastructure/DB/MCP/Runtime/Tokens.
+Scope frozen to the presentation layer. No behavior change, no business logic, no writes outside `src/pages/**`, `src/application/queries/**`, and docs.
 
----
+## Current state (verified this turn)
 
-## Phase 0 — Discovery (Read-only)
-
-قراءة:
-- `docs/architecture/UI_HEALTH_REPORT.md`
-- `docs/architecture/WAVE2_BATCH_2B_LEDGER.md`
-- `scripts/audits/output/dependency-report.json`
-- `scripts/audits/output/wave2-discovery/ui-dep-graph.json`
-- `scripts/audits/output/wave2-discovery/ui-architecture-health.json`
-- `scripts/audits/output/architecture-fingerprint.json` (baseline قبل التعديل)
-
-المخرج: جرد أولي للـ167 حرجة (ملف/سطر/استيراد محظور/FanIn/FanOut).
-
----
-
-## Phase 0.5 — Architecture Decision Gate (NEW — أولوية عالية)
-
-قبل أي إصلاح، لكل مخالفة يتم تصنيفها إلى نوع وقرار مُعتمد:
-
-**Violation Type:** `ImportLeak | WrongDirection | MissingFacade | MissingPublicAPI | BarrelIssue | OwnershipIssue`
-
-**Decision:** `MOVE | EXTRACT | FACADE | DELETE | KEEP-DEFER`
-
-يُوثَّق في `docs/architecture/WAVE2_SPRINT3_BATCHA_DECISIONS.md`. لا يبدأ أي تعديل قبل اعتماد القرار — يضمن ذلك إصلاحات موحّدة لنفس النوع من المشاكل.
-
----
-
-## Phase 1 — اختيار Batch A (25 مخالفة)
-
-ترتيب حسب: **Impact × BlastRadius × (FanIn+FanOut)** مع أولوية للاستدعاءات المباشرة من UI إلى `src/lib/repositories/**` و`src/integrations/supabase/**`.
-
-### Architectural Debt Classification (NEW)
-
-كل مخالفة تُصنَّف أيضًا إلى:
-- `StructuralDebt` — حدود طبقات مكسورة
-- `DependencyDebt` — استيراد مباشر لطبقة أعمق
-- `OwnershipDebt` — الملف في المجلد الخطأ
-- `TemporaryDebt` — Workaround قصير الأجل
-
-يُنتج جدول Before/After لكل تصنيف.
-
----
-
-## Phase 2 — Remediation Loop
+27 page files still import `@/lib/repositories/*` directly. Distribution:
 
 ```text
-Decision (Phase 0.5) → Apply Fix → Verify Gate → Commit slot | ROLLBACK
+admin/*            7 files  (adminMetrics, adminRepository, approval, settings, activityLogs)
+accounting/finance 6 files  (journal, payment, expense x2, treasury x2, supplierPayment)
+sales documents    6 files  (quotation x2, salesOrder, purchaseOrder, quotes/reference, tasks)
+catalog/inventory  5 files  (product, category, priceList, inventory, expenseCategories)
+misc               3 files  (approvals, attendance, tenants)
 ```
 
-**Verify Gate:** `tsgo` + `vitest` + `build` + `ui-dep-graph`. أي Regression ⇒ Rollback فوري وانتقال.
+Existing facades: `customers`, `suppliers`, `products`, `customer-search` (all pure `export *`).
 
-### Architectural Facade Rule (من v2)
+## Target
 
-Public Facade في الطبقة المالكة (`src/application/**` أو `src/platform/**`) — **لا** في `src/hooks/**`. يُمنع Hooks كأغلفة (Wrappers) لـ Repository/Supabase دون مسؤولية معمارية.
+| Metric | Before | Batch B target |
+|---|---:|---:|
+| pages → repositories | 27 | ≤ 13 |
+| Critical total | 171 | ≤ 155 |
+| New public facades | — | ≤ 2 |
+| `src/ui/index.ts` exports | 52 | 52 (unchanged) |
+| UI cycles / total cycles | 0 / 6 | 0 / ≤ 6 |
+| Architecture Score | 8.2 | ≥ 8.2 |
 
-### Facade Creation Rule (NEW)
+## Gate 2 — Reuse First (applied before any new file)
 
-Facade جديد يُنشأ **فقط إذا**:
-- يُعاد استخدامه من ≥2 UI modules، **أو**
-- يمثل عقد تطبيقي عام مستقر (Public Application Contract)، **أو**
-- مخطط له مسبقًا في **Wave 6.5** (Ports Taxonomy)
+1. `products` facade already exists → `ProductDetailsPage`, `PriceListsPage`, `CategoriesPage`, `InventoryPage` route through it or through a widened `products` facade only if the widening is a pure re-export (no contract break).
+2. Only where reuse is impossible do we add a facade — and only two, thematically grouped rather than one-per-repository:
+   - `@/application/queries/documents` — quotation, salesOrder, purchaseOrder, reference (used by ≥4 pages).
+   - `@/application/queries/finance` — journal, payment, expense, treasury, supplierPayment (used by ≥6 pages).
+3. Single-consumer cases (`tasks`, `attendance`, `tenants`, `approvals`, admin-only repos) are **deferred**, not facaded — logged in the ledger with Owner Wave / ADR / Priority. This is why the target is ≤13 rather than 0.
 
-خلاف ذلك: **لا يُنشأ** — يُعاد استخدام facade قائم أو يُؤجَّل الإصلاح.
+## Execution
 
-### Wave 2.5 Handoff (NEW)
+1. **Phase 0** — re-run `scripts/audits/dep-graph.mjs`, snapshot the exact 27 edges into `/tmp` as the working list.
+2. **Phase 0.5** — decision table per file: `REUSE` / `FACADE` / `DEFER`, with the Gate 2 answer recorded.
+3. **Phase 1** — create at most 2 facade modules (pure `export *`, no logic), register both in `src/application/queries/index.ts`.
+4. **Phase 2** — redirect imports file by file; `tsgo` after each cluster.
+5. **Phase 3** — re-audit: `dep-graph.mjs`, `ui-dep-graph.mjs`, `check-public-surface-budget.mjs`.
+6. **Phase 4** — deliverables (below), then re-seal `architecture-fingerprint.json`.
 
-أي Facade جديد يُسجَّل فورًا في `docs/architecture/UI_API_V1.md` تحت علامة **`Pending Standardization`** حتى لا يُفقد عند فتح Wave 2.5.
+## Deliverables
 
-**ممنوع:** تعديل Business Logic / Domain / SQL / Schema / Runtime / Tokens / Edge Functions.
+- `docs/architecture/WAVE2_SPRINT3_BATCHB_DECISIONS.md` — row-per-file decision table.
+- `docs/architecture/WAVE2_SPRINT3_BATCHB_COMPARISON.md` — before/after + debt burn-down.
+- `docs/architecture/WAVE2_SPRINT3_BATCHB_GRAPH_DIFF.md` — added/removed edges, FanIn/FanOut deltas, cycle diff.
+- `docs/architecture/FACADE_REGISTRY.md` — **new**: consolidated table of every Wave 2 facade with the modules consuming it, status, and planned standardization wave (the report requested before Wave 2.5).
+- Updates: `UI_API_V1.md` (new facades as `Pending Standardization`), `WAVE2_BATCH_2B_LEDGER.md` (deferrals with owners), `UI_HEALTH_REPORT.md` (post-3.1B column), ADR-0028 amendment noting the two grouped facades.
+- Re-sealed `scripts/audits/output/architecture-fingerprint.json` + `wave2-sprint3-batchB.json`.
 
----
+## Exit gate (all must hold)
 
-## Phase 3 — Re-audit & Graph Diff
-
-تشغيل: `ui-dep-graph.mjs`, `dep-graph.mjs`, `ui-architecture-health.mjs`, `build-baseline-tag.mjs`.
-
-### Graph Diff (NEW — بدل Snapshot فقط)
-
-مقارنة بين `architecture-fingerprint.json` (baseline) و snapshot جديد:
-- Added edges / Removed edges
-- Changed ownership
-- New barrels / Deleted barrels
-- Cycle diff
-
-يُكتب في `docs/architecture/WAVE2_SPRINT3_BATCHA_GRAPH_DIFF.md`.
-
-### جدول Before/After
-
-| Metric | Before | After | Δ |
-|---|---:|---:|---:|
-| Critical Violations | 167 | ? | ? |
-| — Structural | ? | ? | ? |
-| — Dependency | ? | ? | ? |
-| — Ownership | ? | ? | ? |
-| — Temporary | ? | ? | ? |
-| Major | 31 | ? | ? |
-| Minor | 5 | ? | ? |
-| Cycles (all / UI) | 6 / 0 | ? / 0 | ? |
-| Max FanOut / FanIn | 59 / 93 | ? / ? | ? |
-| `src/ui` public exports | 121 | ? | ? |
-| Architecture Score | 8.0 | ? | ? |
-| **Debt Burn Rate (NEW)** | — | ? % | — |
-
----
-
-## Phase 3.5 — Ledger Update (from v2, تعزيز)
-
-تحديث `WAVE2_BATCH_2B_LEDGER.md`. **لكل عنصر متبقٍ يجب وجود:**
-- `Owner Wave`
-- `Owner ADR`
-- `Priority` (High/Med/Low)
-- `Reason Deferred`
-- `Target Sprint`
-
-**بدون Owner كامل لا يُغلق Batch A.**
-
----
-
-## Phase 4 — Fingerprint Re-seal (NEW)
-
-توليد `architecture-fingerprint.json` الجديد يشمل:
-- Public APIs hash
-- Dependency graph hash
-- Layer graph hash
-- Cycles / FanOut / FanIn / Violations counts
-
-يصبح المرجع لكل Sprint لاحق (Graph Diff).
-
----
-
-## Phase 5 — Deliverables
-
-1. `docs/architecture/WAVE2_SPRINT3_BATCHA.md` — سجل الـ25 (before/decision/fix/after/debt-class).
-2. `docs/architecture/WAVE2_SPRINT3_BATCHA_DECISIONS.md` — قرارات Phase 0.5.
-3. `docs/architecture/WAVE2_SPRINT3_BATCHA_COMPARISON.md` — Before/After + Debt Burn-down.
-4. `docs/architecture/WAVE2_SPRINT3_BATCHA_GRAPH_DIFF.md` — Graph Diff.
-5. `scripts/audits/output/wave2-sprint3-batchA.json` — بيانات آلية.
-6. `scripts/audits/output/architecture-fingerprint.json` — مُعاد ختمها.
-7. `docs/architecture/WAVE2_BATCH_2B_LEDGER.md` — محدَّث بـ Owner لكل عنصر.
-8. `docs/architecture/UI_API_V1.md` — Facades الجديدة موسومة `Pending Standardization`.
-9. `scripts/fitness/check-public-surface-budget.mjs` — Report-only (لا Enforcement).
-
----
-
-## Success Criteria
-
-- ✅ Zero Regression (tsgo / vitest / build خضراء).
-- ✅ UI Cycles = 0 يبقى 0؛ لا cycles جديدة في أي مكان.
-- ✅ FanOut لا يرتفع لأي ملف.
-- ✅ Critical ↓ ≥ **15%** (167 → ≤142).
-- ✅ Architecture Score > 8.0.
-- ✅ **Debt Burn Rate موثَّق** لكل تصنيف من الأربعة.
-- ✅ لا Fitness جديدة Enforcing (فقط `check-public-surface-budget` كـ Report-only).
-- ✅ لا تعديل خارج طبقة UI/Presentation.
-- ✅ لا ملف جديد في `src/hooks/**` إلا وفق قاعدة Facade + توثيق صريح.
-- ✅ **لا Facade جديد** إلا وفق Facade Creation Rule + مسجَّل في `UI_API_V1.md`.
-- ✅ **كل عنصر متبقٍ في Ledger له Owner Wave/ADR/Priority/Reason/Target**.
-- ✅ **Graph Diff مُنتج ومُراجَع**.
-- ✅ **Fingerprint مُعاد ختمه**.
-
----
-
-## Public API Budget (NEW — تُلتزم بها ولا تُنفَّذ الآن)
-
-| Budget | Max | Target | Ideal |
-|---|---:|---:|---:|
-| `src/ui/index.ts` exports | 100 | ≤90 | ≤75 |
-
-قياس فقط في هذا الـ Sprint. تقليم فعلي في Batch 2D/Wave 2.5.
-
----
-
-## Technical Notes
-
-- Discovery: `rg "from ['\"]@/lib/repositories" src/pages src/components src/ui src/hooks` و `rg "from ['\"]@/integrations/supabase/client" src/pages src/components src/ui`.
-- كل إصلاح إما: (أ) استبدال باستيراد Public Facade قائم في `src/application/**` أو `src/platform/**`، (ب) استخراج Facade جديد وفق Facade Creation Rule، (ج) نقل الملف لموقعه الصحيح، (د) تأجيل مع Owner كامل في Ledger.
-- لا مساس: `src/integrations/supabase/client.ts`, `types.ts`, `.env`, `supabase/config.toml`, أي شيء تحت `src/kernel/**` / `src/platform/**` / `src/domain/**` / `src/infrastructure/**`.
+Critical ≤ 155 · UI cycles = 0 · total cycles ≤ 6 · no FanOut regression on any file · `src/ui` public surface unchanged · new facades ≤ 2 and pure re-exports · `tsgo` green · fingerprint re-sealed.
