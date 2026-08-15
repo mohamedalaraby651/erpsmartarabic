@@ -1,64 +1,78 @@
-# Nazra — Enterprise Readiness Program (UX-4)
+# Nazra — UX-4 Enterprise Readiness Program (Execution Contract)
 
-Closes the Enterprise Gaps identified in the Architecture Due Diligence before any new feature work. Feature freeze applies to consequential modules (finance, inventory, sync) until Gate 3 passes.
+Closes Enterprise risk before feature work resumes. A phase is complete only when it has reproducible **Evidence** — not when the ADR or code is written.
 
-## Guiding decisions (locked)
+## Locked decisions
 
-- Modular Monolith. No microservices, no Kubernetes, no multi-region, no full CQRS/Event Sourcing beyond the existing Invoice aggregate.
-- Every consequential boundary must declare: Contract, Invariant, Authority, Scope, Evidence, Failure, Recovery.
-- Rules become machine-checkable fitness checks in CI, not documentation only.
+- Modular Monolith. No microservices, Kubernetes, multi-region, or system-wide CQRS/Event Sourcing.
+- Every consequential boundary declares: Contract, Invariant, Authority, Scope, Evidence, Failure, Recovery.
+- Feature freeze: no new consequential Finance / Inventory / Sync features until G3 passes. Allowed: bug fixes, security fixes, required migrations, UX-4 work, test infrastructure, architecture remediation.
+- No permanent exceptions — every waiver has an owner and an expiry.
 
-## Phase 0 — Boundary Catalog (documentation, no code)
+## Gate 0 — Evidence Integrity (runs before every gate)
 
-- `docs/architecture/BOUNDARY_CATALOG.md` — the 8 boundaries from the analysis with the 7 attributes each and current RAG status.
-- ADR-0031 Enterprise Boundary Contract (P0).
-- ADR-0044 Modular Monolith Strategy (P1) — declares the no-service-extraction rule and its exit conditions.
+Verifies the evidence itself is current: baseline fingerprint, source revision, migration status, test snapshot, fitness snapshot, ADR state, unresolved P0 findings. A stale artifact fails G0 and blocks all downstream gates.
 
-## Phase 1 — Isolation & Authority (P0)
+Baseline fingerprint content (`BASELINE-UX4-00x`): git commit, schema migration version, test count, fitness results, architecture violation counts, ADR state, build hash, dependency lock hash.
 
-ADRs first, then implementation + tests.
+## Phase 0 — Boundary Catalog (first deliverable, no business code)
 
-- ADR-0032 Tenant Isolation Model — tenant identity flow through UI, query cache keys, repositories, RLS, offline store, background jobs, audit.
-- ADR-0033 Authorization & Policy Decision Architecture — a single Policy Decision Point: identity + tenant + role + permission + resource + resource state + action + context.
-- Implementation:
-  - `src/platform/security/PolicyDecisionPoint.ts` with a typed `decide(request): Allow | Deny(reason)`.
-  - Route every consequential command (post, approve, pay, void, delete, export, bulk) through the PDP; server-side re-check stays authoritative.
-  - Tenant-scoped React Query cache key contract + fitness check `check-tenant-scoped-cache.mjs`.
-- Evidence: automated cross-tenant isolation test suite per execution path (query facade, repository, RPC, storage, edge function) replacing the current assertion-shaped `tenant-isolation.test.ts`.
+`docs/architecture/BOUNDARY_CATALOG.md` as an operational table. Every boundary row carries all 16 required fields: Boundary ID, Name, Owner, Contract, Invariant, Authority, Scope, Evidence, Failure, Recovery, Current RAG, Violations, Test Coverage, Fitness Check, ADR, Exit Criteria.
 
-## Phase 2 — Evidence & Determinism (P0)
+The 8 boundaries: UI→Application, Application→Domain, Domain→Repository, Repository→DB, Tenant→Data, User→Permission, Offline→Server, Event→Consumer. Each invariant must be expressible as `Invariant → Fitness Rule → Automated Test → CI Evidence`.
 
-- ADR-0034 Idempotent Command Execution — extends the existing `operation_idempotency` table and `_shared/idempotency.ts` to all payments, postings, stock movements, sync operations, webhooks.
-- ADR-0035 Failure Taxonomy & Recovery Semantics — generalizes `RepositoryFailure`, adding `UnknownOutcome` (timeout after submit) with a reconciliation path.
-- ADR-0036 Unified Audit Evidence Model — who / what / when / tenant / origin / before / after / authority / policy / correlation / result; immutable log; a fitness check that no consequential command path lacks audit emission.
-- ADR-0037 Observability & Correlation Model — `correlation_id` propagated UI → edge → DB across all invocations via the existing `buildRequestHeaders` helper, plus a redaction rule for sensitive fields.
+Also: ADR-0031 Enterprise Boundary Contract (P0), ADR-0044 Modular Monolith Strategy with explicit service-extraction exit conditions (P1). Seal `BASELINE-UX4-001`.
 
-## Phase 3 — Operations & Proof (P0/P1)
+## Phase 1 — Tenant Isolation & Authority (P0)
 
-- ADR-0039 Offline Sync Consistency Model (P0) — ordering, dedup, conflict policy, partial sync, crash recovery.
-- ADR-0040 Backup, Restore & Disaster Recovery (P0) — RPO/RTO targets plus a documented and executed restore drill with integrity, RLS, tenant and business-transaction verification.
-- ADR-0042 Security Threat Model & Trust Boundaries (P0) — assets, actors, trust boundaries, threats, controls, residual risks.
-- ADR-0038 SLO/SLI & Error Budget (P1), ADR-0041 Capacity Model (P1), ADR-0043 External Integration Contract (P1).
+- ADR-0032 Tenant Isolation Model — tenant identity traced through UI → tenant context → query cache → repository → RPC/edge function → storage → RLS, plus background jobs and audit identity.
+- ADR-0033 Authorization & Policy Decision Architecture.
+- `PolicyDecisionPoint` is decision **orchestration only** — never a god object. Domain policy modules (finance, inventory, admin, HR) register with it and own their rules.
+- Rich decision result, so audit can be produced from it:
 
-## Phase 4 — Production Gates
+```text
+allow: { effect, policyId, policyVersion, reason? }
+deny:  { effect, policyId, policyVersion, reason, code }
+```
 
-`docs/governance/PRODUCTION_GATES.md` defines the 7 gates and their blocking criteria; each gate gets a CI workflow that must be green:
+- Route every consequential command (post, approve, pay, void, delete, export, bulk) through the PDP; server-side re-check remains authoritative.
+- Tenant-scoped cache-key contract; keys never keyed on userId/recordId alone.
+- Evidence: real cross-tenant isolation suite per execution path, replacing the assertion-shaped `tenant-isolation.test.ts`. Seal `BASELINE-UX4-002`.
 
-1. Architecture — zero critical violations, zero UI→Supabase, fitness green.
-2. Security — tenant isolation, PDP coverage, RLS tests, no secrets in bundle.
-3. Data Integrity — debit=credit, posted-invoice immutability, no duplicate payment, no orphan transaction, balanced stock movement.
-4. Reliability — failure-injection suite (timeout, duplicate, partial failure, sync interruption, unknown outcome) proving a safe recoverable state.
-5. Performance — P95/P99 budgets and a load test.
-6. Operations — runbooks, alerts, restore drill evidence.
-7. Commercial — pricing/tenant provisioning readiness.
+## Phase 2 — Reliability & Evidence (P0, implemented as one command pipeline)
 
-## Technical notes
+ADR-0034 Idempotency, ADR-0035 Failure Taxonomy, ADR-0036 Audit, ADR-0037 Observability ship together because they compose a single path:
 
-- ADR numbering: 0031–0044 as specified; duplicate `0028` stays as-is (historical), no renumbering.
-- New fitness checks land in `scripts/fitness/` and register in `run-all.mjs`; each starts report-only, then becomes blocking once the backlog is cleared.
-- Database work (audit columns, idempotency extension, immutability triggers) ships as separate migrations with GRANTs and RLS per project standard.
-- Baseline fingerprint re-sealed at the end of each phase (`BASELINE-UX4-00x`).
+```text
+Command → Authorization → Idempotency → Transaction → Result → Audit → Failure/Recovery
+```
 
-## Sequencing
+- Idempotency extended from `operation_idempotency` / `_shared/idempotency.ts` to all payments, postings, stock movements, sync operations, webhooks.
+- `UnknownOutcome` is a **state**, not an error class: `Pending → Submitted → UnknownOutcome → {Confirmed | Rejected | ReconciliationRequired}`, with an explicit reconciliation path. Blind retry is forbidden.
+- Audit is evidence, not a logger: actor, tenant, action, entity, before, after, authority, policy + version, correlation, command, operation, **origin** (web / mobile / offline / background / integration), result, timestamp. Immutable.
+- Correlation IDs propagated UI → edge → DB via `buildRequestHeaders`, with a redaction rule for sensitive fields. Seal `BASELINE-UX4-003`.
 
-Phase 0 is small and unblocks everything. Recommended execution order: Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4, one wave per approval, each wave sealed with evidence before the next starts.
+## Phase 3 — Operations (P0 then P1)
+
+- ADR-0039 Offline Sync Consistency (P0), driven by a tested Failure Matrix: device offline → Queued; duplicate op → Deduplicated; app killed → Recoverable; network timeout → Unknown; server rejects → Failed; conflict → Conflict; partial batch → Resume; corrupted local data → Recovery; logout → Secure cleanup; tenant switch → Isolation.
+- ADR-0040 Backup/Restore/DR (P0) — an executed restore drill proving backup → restore → integrity → RLS → tenant isolation → financial transactions → inventory → audit → application works, recording achieved RPO and RTO.
+- ADR-0042 Security Threat Model & Trust Boundaries (P0).
+- ADR-0038 SLO/SLI & Error Budget, ADR-0041 Capacity Model, ADR-0043 External Integration Contract (P1). Seal `BASELINE-UX4-004`.
+
+## Phase 4 — Production Certification
+
+`docs/governance/PRODUCTION_GATES.md`. Each gate follows `Control → Implementation → Automated Test → Fitness Check → CI → Evidence → Gate`, preceded by G0.
+
+G1 Architecture · G2 Security · G3 Data Integrity · G4 Reliability · G5 Performance · G6 Operations · G7 Commercial. Feature development unfreezes only after the affected area is certified.
+
+## Fitness checks delivered by UX-4
+
+`check-layer-boundaries`, `check-ui-supabase`, `check-tenant-scoped-cache`, `check-pdp-coverage`, `check-consequential-audit`, `check-idempotency-coverage`, `check-correlation-propagation`, `check-no-service-role-client`, `check-financial-invariants`, `check-posted-invoice-immutability`, `check-architecture-contracts`.
+
+Each check documents Rule, Detection method, False-positive strategy, Evidence output, Exit condition — no weak grep scripts. Lifecycle: report-only → backlog → remediation → zero or accepted exceptions → blocking.
+
+`docs/governance/EXCEPTION_REGISTER.md` records every accepted violation: ID, Rule, File/Boundary, Reason, Risk, Owner, Expiry, ADR, Approval.
+
+## Immediate deliverable
+
+Phase 0 only: `BOUNDARY_CATALOG.md` + ADR-0031 + ADR-0044 + `BASELINE-UX4-001`, with zero business-code changes. Phase 1 starts only after that baseline is sealed.
