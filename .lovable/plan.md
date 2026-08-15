@@ -9,11 +9,22 @@ Closes Enterprise risk before feature work resumes. A phase is complete only whe
 - Feature freeze: no new consequential Finance / Inventory / Sync features until G3 passes. Allowed: bug fixes, security fixes, required migrations, UX-4 work, test infrastructure, architecture remediation.
 - No permanent exceptions — every waiver has an owner and an expiry.
 
+## Phase −1 — Close Sprint 3.1 Batch B (entry condition for UX-4)
+
+UX-4 does not start on an unfinished migration. Batch B is not treated as complete without evidence.
+
+- Finish residual `pages → repositories` remediation via the existing/at most two new grouped query facades (`documents`, `finance`), scope frozen to presentation code.
+- Target: residual page→repository violations ≤ 13, critical total ≤ 155, UI cycles stay 0.
+- Publish a unified Progress Log: files touched, before/after violations, tests, fitness results, gaps, risks, next step.
+- Re-run and record the full evidence set: `tsgo`, build, lint, vitest, architecture fitness, layer violations, cycle analysis — the historical 1187/1187 is not accepted as current evidence.
+- Re-measure the architecture baseline and re-seal the fingerprint before any UX-4 work begins.
+
 ## Gate 0 — Evidence Integrity (runs before every gate)
 
 Verifies the evidence itself is current: baseline fingerprint, source revision, migration status, test snapshot, fitness snapshot, ADR state, unresolved P0 findings. A stale artifact fails G0 and blocks all downstream gates.
 
 Baseline fingerprint content (`BASELINE-UX4-00x`): git commit, schema migration version, test count, fitness results, architecture violation counts, ADR state, build hash, dependency lock hash.
+
 
 ## Phase 0 — Boundary Catalog (first deliverable, no business code)
 
@@ -75,4 +86,10 @@ Each check documents Rule, Detection method, False-positive strategy, Evidence o
 
 ## Immediate deliverable
 
-Phase 0 only: `BOUNDARY_CATALOG.md` + ADR-0031 + ADR-0044 + `BASELINE-UX4-001`, with zero business-code changes. Phase 1 starts only after that baseline is sealed.
+Phase −1 first: complete Sprint 3.1 Batch B, publish the Progress Log, re-run the full evidence set, and re-seal the architecture baseline.
+
+Then Phase 0 only: `BOUNDARY_CATALOG.md` + ADR-0031 + ADR-0044 + `BASELINE-UX4-001`, with zero business-code changes. Phase 1 (Security / Tenant Hardening) starts only after that baseline is sealed.
+
+## Gap register mapping
+
+G-001→ADR-0031 (Phase 0), G-002/G-003→Phase 1, G-004/G-005/G-006→Phase 2, G-007/G-008/G-009→Phase 3, G-010..G-014→Phase 3 (P1) and Phase 4. ADR approved ≠ implementation complete ≠ evidence certified; the register tracks all three states separately.
