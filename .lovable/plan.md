@@ -1,58 +1,64 @@
-# Sprint 3.1 · Batch B — Residual `pages → repositories` Remediation
+# Nazra — Enterprise Readiness Program (UX-4)
 
-Scope frozen to the presentation layer. No behavior change, no business logic, no writes outside `src/pages/**`, `src/application/queries/**`, and docs.
+Closes the Enterprise Gaps identified in the Architecture Due Diligence before any new feature work. Feature freeze applies to consequential modules (finance, inventory, sync) until Gate 3 passes.
 
-## Current state (verified this turn)
+## Guiding decisions (locked)
 
-27 page files still import `@/lib/repositories/*` directly. Distribution:
+- Modular Monolith. No microservices, no Kubernetes, no multi-region, no full CQRS/Event Sourcing beyond the existing Invoice aggregate.
+- Every consequential boundary must declare: Contract, Invariant, Authority, Scope, Evidence, Failure, Recovery.
+- Rules become machine-checkable fitness checks in CI, not documentation only.
 
-```text
-admin/*            7 files  (adminMetrics, adminRepository, approval, settings, activityLogs)
-accounting/finance 6 files  (journal, payment, expense x2, treasury x2, supplierPayment)
-sales documents    6 files  (quotation x2, salesOrder, purchaseOrder, quotes/reference, tasks)
-catalog/inventory  5 files  (product, category, priceList, inventory, expenseCategories)
-misc               3 files  (approvals, attendance, tenants)
-```
+## Phase 0 — Boundary Catalog (documentation, no code)
 
-Existing facades: `customers`, `suppliers`, `products`, `customer-search` (all pure `export *`).
+- `docs/architecture/BOUNDARY_CATALOG.md` — the 8 boundaries from the analysis with the 7 attributes each and current RAG status.
+- ADR-0031 Enterprise Boundary Contract (P0).
+- ADR-0044 Modular Monolith Strategy (P1) — declares the no-service-extraction rule and its exit conditions.
 
-## Target
+## Phase 1 — Isolation & Authority (P0)
 
-| Metric | Before | Batch B target |
-|---|---:|---:|
-| pages → repositories | 27 | ≤ 13 |
-| Critical total | 171 | ≤ 155 |
-| New public facades | — | ≤ 2 |
-| `src/ui/index.ts` exports | 52 | 52 (unchanged) |
-| UI cycles / total cycles | 0 / 6 | 0 / ≤ 6 |
-| Architecture Score | 8.2 | ≥ 8.2 |
+ADRs first, then implementation + tests.
 
-## Gate 2 — Reuse First (applied before any new file)
+- ADR-0032 Tenant Isolation Model — tenant identity flow through UI, query cache keys, repositories, RLS, offline store, background jobs, audit.
+- ADR-0033 Authorization & Policy Decision Architecture — a single Policy Decision Point: identity + tenant + role + permission + resource + resource state + action + context.
+- Implementation:
+  - `src/platform/security/PolicyDecisionPoint.ts` with a typed `decide(request): Allow | Deny(reason)`.
+  - Route every consequential command (post, approve, pay, void, delete, export, bulk) through the PDP; server-side re-check stays authoritative.
+  - Tenant-scoped React Query cache key contract + fitness check `check-tenant-scoped-cache.mjs`.
+- Evidence: automated cross-tenant isolation test suite per execution path (query facade, repository, RPC, storage, edge function) replacing the current assertion-shaped `tenant-isolation.test.ts`.
 
-1. `products` facade already exists → `ProductDetailsPage`, `PriceListsPage`, `CategoriesPage`, `InventoryPage` route through it or through a widened `products` facade only if the widening is a pure re-export (no contract break).
-2. Only where reuse is impossible do we add a facade — and only two, thematically grouped rather than one-per-repository:
-   - `@/application/queries/documents` — quotation, salesOrder, purchaseOrder, reference (used by ≥4 pages).
-   - `@/application/queries/finance` — journal, payment, expense, treasury, supplierPayment (used by ≥6 pages).
-3. Single-consumer cases (`tasks`, `attendance`, `tenants`, `approvals`, admin-only repos) are **deferred**, not facaded — logged in the ledger with Owner Wave / ADR / Priority. This is why the target is ≤13 rather than 0.
+## Phase 2 — Evidence & Determinism (P0)
 
-## Execution
+- ADR-0034 Idempotent Command Execution — extends the existing `operation_idempotency` table and `_shared/idempotency.ts` to all payments, postings, stock movements, sync operations, webhooks.
+- ADR-0035 Failure Taxonomy & Recovery Semantics — generalizes `RepositoryFailure`, adding `UnknownOutcome` (timeout after submit) with a reconciliation path.
+- ADR-0036 Unified Audit Evidence Model — who / what / when / tenant / origin / before / after / authority / policy / correlation / result; immutable log; a fitness check that no consequential command path lacks audit emission.
+- ADR-0037 Observability & Correlation Model — `correlation_id` propagated UI → edge → DB across all invocations via the existing `buildRequestHeaders` helper, plus a redaction rule for sensitive fields.
 
-1. **Phase 0** — re-run `scripts/audits/dep-graph.mjs`, snapshot the exact 27 edges into `/tmp` as the working list.
-2. **Phase 0.5** — decision table per file: `REUSE` / `FACADE` / `DEFER`, with the Gate 2 answer recorded.
-3. **Phase 1** — create at most 2 facade modules (pure `export *`, no logic), register both in `src/application/queries/index.ts`.
-4. **Phase 2** — redirect imports file by file; `tsgo` after each cluster.
-5. **Phase 3** — re-audit: `dep-graph.mjs`, `ui-dep-graph.mjs`, `check-public-surface-budget.mjs`.
-6. **Phase 4** — deliverables (below), then re-seal `architecture-fingerprint.json`.
+## Phase 3 — Operations & Proof (P0/P1)
 
-## Deliverables
+- ADR-0039 Offline Sync Consistency Model (P0) — ordering, dedup, conflict policy, partial sync, crash recovery.
+- ADR-0040 Backup, Restore & Disaster Recovery (P0) — RPO/RTO targets plus a documented and executed restore drill with integrity, RLS, tenant and business-transaction verification.
+- ADR-0042 Security Threat Model & Trust Boundaries (P0) — assets, actors, trust boundaries, threats, controls, residual risks.
+- ADR-0038 SLO/SLI & Error Budget (P1), ADR-0041 Capacity Model (P1), ADR-0043 External Integration Contract (P1).
 
-- `docs/architecture/WAVE2_SPRINT3_BATCHB_DECISIONS.md` — row-per-file decision table.
-- `docs/architecture/WAVE2_SPRINT3_BATCHB_COMPARISON.md` — before/after + debt burn-down.
-- `docs/architecture/WAVE2_SPRINT3_BATCHB_GRAPH_DIFF.md` — added/removed edges, FanIn/FanOut deltas, cycle diff.
-- `docs/architecture/FACADE_REGISTRY.md` — **new**: consolidated table of every Wave 2 facade with the modules consuming it, status, and planned standardization wave (the report requested before Wave 2.5).
-- Updates: `UI_API_V1.md` (new facades as `Pending Standardization`), `WAVE2_BATCH_2B_LEDGER.md` (deferrals with owners), `UI_HEALTH_REPORT.md` (post-3.1B column), ADR-0028 amendment noting the two grouped facades.
-- Re-sealed `scripts/audits/output/architecture-fingerprint.json` + `wave2-sprint3-batchB.json`.
+## Phase 4 — Production Gates
 
-## Exit gate (all must hold)
+`docs/governance/PRODUCTION_GATES.md` defines the 7 gates and their blocking criteria; each gate gets a CI workflow that must be green:
 
-Critical ≤ 155 · UI cycles = 0 · total cycles ≤ 6 · no FanOut regression on any file · `src/ui` public surface unchanged · new facades ≤ 2 and pure re-exports · `tsgo` green · fingerprint re-sealed.
+1. Architecture — zero critical violations, zero UI→Supabase, fitness green.
+2. Security — tenant isolation, PDP coverage, RLS tests, no secrets in bundle.
+3. Data Integrity — debit=credit, posted-invoice immutability, no duplicate payment, no orphan transaction, balanced stock movement.
+4. Reliability — failure-injection suite (timeout, duplicate, partial failure, sync interruption, unknown outcome) proving a safe recoverable state.
+5. Performance — P95/P99 budgets and a load test.
+6. Operations — runbooks, alerts, restore drill evidence.
+7. Commercial — pricing/tenant provisioning readiness.
+
+## Technical notes
+
+- ADR numbering: 0031–0044 as specified; duplicate `0028` stays as-is (historical), no renumbering.
+- New fitness checks land in `scripts/fitness/` and register in `run-all.mjs`; each starts report-only, then becomes blocking once the backlog is cleared.
+- Database work (audit columns, idempotency extension, immutability triggers) ships as separate migrations with GRANTs and RLS per project standard.
+- Baseline fingerprint re-sealed at the end of each phase (`BASELINE-UX4-00x`).
+
+## Sequencing
+
+Phase 0 is small and unblocks everything. Recommended execution order: Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4, one wave per approval, each wave sealed with evidence before the next starts.
