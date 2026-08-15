@@ -9,11 +9,22 @@ Closes Enterprise risk before feature work resumes. A phase is complete only whe
 - Feature freeze: no new consequential Finance / Inventory / Sync features until G3 passes. Allowed: bug fixes, security fixes, required migrations, UX-4 work, test infrastructure, architecture remediation.
 - No permanent exceptions — every waiver has an owner and an expiry.
 
+## Phase −1 — Close Sprint 3.1 Batch B (entry condition for UX-4)
+
+UX-4 does not start on an unfinished migration. Batch B is not treated as complete without evidence.
+
+- Finish residual `pages → repositories` remediation via the existing/at most two new grouped query facades (`documents`, `finance`), scope frozen to presentation code.
+- Target: residual page→repository violations ≤ 13, critical total ≤ 155, UI cycles stay 0.
+- Publish a unified Progress Log: files touched, before/after violations, tests, fitness results, gaps, risks, next step.
+- Re-run and record the full evidence set: `tsgo`, build, lint, vitest, architecture fitness, layer violations, cycle analysis — the historical 1187/1187 is not accepted as current evidence.
+- Re-measure the architecture baseline and re-seal the fingerprint before any UX-4 work begins.
+
 ## Gate 0 — Evidence Integrity (runs before every gate)
 
 Verifies the evidence itself is current: baseline fingerprint, source revision, migration status, test snapshot, fitness snapshot, ADR state, unresolved P0 findings. A stale artifact fails G0 and blocks all downstream gates.
 
 Baseline fingerprint content (`BASELINE-UX4-00x`): git commit, schema migration version, test count, fitness results, architecture violation counts, ADR state, build hash, dependency lock hash.
+
 
 ## Phase 0 — Boundary Catalog (first deliverable, no business code)
 
