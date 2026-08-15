@@ -86,4 +86,10 @@ Each check documents Rule, Detection method, False-positive strategy, Evidence o
 
 ## Immediate deliverable
 
-Phase 0 only: `BOUNDARY_CATALOG.md` + ADR-0031 + ADR-0044 + `BASELINE-UX4-001`, with zero business-code changes. Phase 1 starts only after that baseline is sealed.
+Phase −1 first: complete Sprint 3.1 Batch B, publish the Progress Log, re-run the full evidence set, and re-seal the architecture baseline.
+
+Then Phase 0 only: `BOUNDARY_CATALOG.md` + ADR-0031 + ADR-0044 + `BASELINE-UX4-001`, with zero business-code changes. Phase 1 (Security / Tenant Hardening) starts only after that baseline is sealed.
+
+## Gap register mapping
+
+G-001→ADR-0031 (Phase 0), G-002/G-003→Phase 1, G-004/G-005/G-006→Phase 2, G-007/G-008/G-009→Phase 3, G-010..G-014→Phase 3 (P1) and Phase 4. ADR approved ≠ implementation complete ≠ evidence certified; the register tracks all three states separately.
