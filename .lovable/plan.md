@@ -57,19 +57,25 @@ Detail: setItem / removeItem lack explicit return-type annotations (TS7011)
 Severity: Known / Pre-existing
 Status: Open
 Scope: Outside Wave 0
-Classification: deferred — formal class assigned at the start of Wave 1
+Classification: deferred — assigned in Wave 1 Preflight, never inside Batch B
 ```
 
 No application code is touched in Wave 0, this error included.
 
 ## 5. Wave 1 prompt (written, not executed)
 
-`docs/governance/WAVE1_BATCHB_PROMPT.md` — Sprint 3.1 Batch B, scope-frozen, naming unified on **WAVE1**:
-- Deliverable names: `docs/architecture/WAVE1_SPRINT3_BATCHB.md`, `WAVE1_SPRINT3_BATCHB_DECISIONS.md`, `scripts/audits/output/wave1-sprint3-batchB.json`. The `WAVE2_*` naming is retired for this stage; one stage, one name.
+`docs/governance/WAVE1_BATCHB_PROMPT.md` — naming unified on **WAVE1**, split into two separate change units:
+
+**Wave 1 — Preflight (Class A candidate, separate unit)**
+- Classify PRE-TS-001 first. If confirmed trivial: one isolated micro-fix with its own before/after, typecheck/build/test evidence, bounded diff, no behavior change, no architectural impact. If not trivial: defer, no fix.
+- Batch B starts only from the resulting clean checkpoint. **No Batch B remediation may be bundled with PRE-TS-001**, and no unrelated cleanup rides along with either unit.
+- Rule: one scope → one intent → one evidence set → one decision.
+
+**Wave 1 — Sprint 3.1 Batch B (scope-frozen)**
+- Deliverables: `docs/architecture/WAVE1_SPRINT3_BATCHB.md`, `WAVE1_SPRINT3_BATCHB_DECISIONS.md`, `scripts/audits/output/wave1-sprint3-batchB.json`. The `WAVE2_*` naming is retired for this stage.
 - Objective: residual presentation `pages/components → repositories` violations ≤ 13, critical total ≤ 155, UI cycles 0, no FanOut regression.
 - Reuse existing `customers`, `suppliers`, `products`, `customer-search` facades; new facades only on a proven ≥2-consumer need.
-- Prohibited: business logic, hooks-as-facades, writes under `src/kernel|platform|domain|infrastructure`, any SQL/RLS/migration/edge-function change.
-- Opens by classifying and, if confirmed trivial, closing PRE-TS-001 — with no other behavior change bundled in.
+- Prohibited: business logic, hooks-as-facades, writes under `src/kernel|platform|domain|infrastructure`, any SQL/RLS/migration/edge-function change, and any file outside the presentation remediation scope.
 - Evidence re-run required (`tsgo`, build, lint, vitest, fitness run-all, dep-graph before/after, cycles); historical results not accepted. No self-certification.
 
 ## 6. Review Point (gate inside Wave 0, before Wave 1)
