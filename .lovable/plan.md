@@ -38,32 +38,82 @@ Outputs:
 - `scripts/audits/output/codebase-inventory.json`
   - `modules[]` — path, layer (kernel / platform / domain / application / infrastructure / ui / components / pages / lib / hooks / scripts), file count, LOC, public exports.
   - `layers[]` — file counts, inbound/outbound edges, violations observed against `DEPENDENCY_RULES.md`.
-  - `publicSurfaces[]` — exports per barrel (`src/ui`, `src/kernel`, `src/application/queries`, `src/domain/finance`, …) with observed budget status.
+  - `publicSurfaces[]` — exports per barrel (`src/ui`, `src/kernel`, `src/application/queries`, `src/domain/finance`, …) with **observed size vs observed budget**. An exceeded budget is an observation, not a declared architecture violation; that decision belongs to Governance.
   - `hotspots[]` — top FanIn/FanOut modules, cycles, critical violations grouped by source layer.
-  - `backend[]` — tables, RPCs, edge functions (names only, from repo files).
+  - `backend[]` — tables, RPCs, edge functions with `discoverySource: "repository-files"` on every entry. The section is labelled **repository-observed backend surface**, never presented as the complete live backend.
   - `evidence` — the full lineage block from section 2.
 - `docs/architecture/CODEBASE_INVENTORY.md` — human-readable summary rendered from the same JSON.
 
-## 4. Wave 1 prompt (written, not executed)
+**Generation vs health.** Inventory generation and codebase health are reported separately. A pre-existing TypeScript, lint, or test failure does not block Wave 0 and does not change its scope; it is recorded as `Codebase TypeScript Health: KNOWN FAILURE` while `Inventory: GENERATED`. Only a failure that actually prevents generating the inventory blocks the wave.
+
+## 4. Pre-existing issues register
+
+Recorded, not fixed:
+
+```text
+PRE-TS-001
+File: src/integrations/supabase/previewAuthStorage.ts (81, 85)
+Detail: setItem / removeItem lack explicit return-type annotations (TS7011)
+Severity: Known / Pre-existing
+Status: Open
+Scope: Outside Wave 0
+Classification: deferred — formal class assigned at the start of Wave 1
+```
+
+No application code is touched in Wave 0, this error included.
+
+## 5. Wave 1 prompt (written, not executed)
 
 `docs/governance/WAVE1_BATCHB_PROMPT.md` — Sprint 3.1 Batch B, scope-frozen, naming unified on **WAVE1**:
 - Deliverable names: `docs/architecture/WAVE1_SPRINT3_BATCHB.md`, `WAVE1_SPRINT3_BATCHB_DECISIONS.md`, `scripts/audits/output/wave1-sprint3-batchB.json`. The `WAVE2_*` naming is retired for this stage; one stage, one name.
 - Objective: residual presentation `pages/components → repositories` violations ≤ 13, critical total ≤ 155, UI cycles 0, no FanOut regression.
 - Reuse existing `customers`, `suppliers`, `products`, `customer-search` facades; new facades only on a proven ≥2-consumer need.
 - Prohibited: business logic, hooks-as-facades, writes under `src/kernel|platform|domain|infrastructure`, any SQL/RLS/migration/edge-function change.
+- Opens by classifying and, if confirmed trivial, closing PRE-TS-001 — with no other behavior change bundled in.
 - Evidence re-run required (`tsgo`, build, lint, vitest, fitness run-all, dep-graph before/after, cycles); historical results not accepted. No self-certification.
 
-## 5. Review Point (gate inside Wave 0, before Wave 1)
+## 6. Review Point (gate inside Wave 0, before Wave 1)
 
-Compare observed inventory numbers against the Sprint 3.1 assumptions and choose one:
+Compare observed inventory numbers against the Sprint 3.1 assumptions and record a decision record in `PROGRESS_LOG.md`:
+
+```text
+REVIEW-001
+Decision ID / Reviewer / Date
+Baseline: BASELINE-NAZRA-001
+Inventory Snapshot: SNAPSHOT-YYYYMMDD-NNN
+Observed: pages → repositories = N · critical = N · UI cycles = N
+Decision: A | B | C
+Rationale: …
+Approved Next Wave: …
+```
+
 - **A** — numbers match → proceed to Batch B as written.
 - **B** — numbers differ but remain inside Batch B scope → update the Batch B plan, then proceed.
 - **C** — numbers reveal a larger architectural problem → STOP, re-scope, do not execute Batch B.
 
-## Exit criteria for Wave 0
+## Baseline chain (no more full re-analysis after this wave)
 
-Contract + 4 scaffolds + generator + `codebase-inventory.json` + `CODEBASE_INVENTORY.md` exist; business code changes 0, runtime changes 0, DB/RLS changes 0, ADR changes 0, fitness changes 0; inventory generated with hash, commit, snapshot ID and source artifacts linked; Progress Log updated. Certification is not claimed — Wave 0 closes with a Gate Proposal for human approval.
+Wave 0 is the last stage that establishes the project picture without touching code. Every later wave works from Baseline + Delta + Evidence:
 
-## Note
+```text
+BASELINE-NAZRA-001 → Wave 1 → BASELINE-NAZRA-002 → Phase 0 → BASELINE-UX4-001 → Phase 1 → BASELINE-UX4-002
+```
 
-There is a pre-existing TypeScript error in `src/integrations/supabase/previewAuthStorage.ts` (lines 81 / 85 — the `setItem` / `removeItem` arrow functions need explicit `Promise<void>` return types). It is unrelated to this wave and cannot be edited in plan mode; it will be fixed as the first Class A step once execution starts.
+## Allowed / prohibited in Wave 0
+
+Allowed: Master Contract, governance scaffolds, read-only inventory generator, inventory JSON + markdown, baseline/snapshot/evidence records, pre-existing issue register, Wave 1 prompt, Gate Proposal.
+
+Prohibited: fixing the TypeScript error, editing any React/TSX, repositories, hooks, domain, Supabase, RLS, SQL, migrations or edge functions, creating fitness checks, editing ADRs, executing Batch B, any restructuring.
+
+## Closing state of Wave 0
+
+```text
+Implementation: VERIFIED
+Inventory: GENERATED
+Evidence: AVAILABLE
+Certification: NOT CERTIFIED
+Gate Proposal: READY FOR REVIEW
+```
+
+Wave 1 starts only after the Review Point decision is approved.
+
