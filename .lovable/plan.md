@@ -1,42 +1,69 @@
-# Nazra 2.0 — Operating Documents + Codebase Inventory Report
+# Wave 0 — Operating Foundation + Codebase Inventory
 
-Three deliverables, no business-code changes. This wave writes governance documents and one read-only inventory generator; Batch B remediation itself is a separate, later wave.
+Governance and inventory only. Zero business-code, runtime, DB, RLS, ADR, or fitness-check changes. Remediation (Wave 1 — Sprint 3.1 Batch B) does not start in this wave.
 
-## 1. `docs/governance/MASTER_EXECUTION_CONTRACT.md`
+```text
+Wave 0 (Contract + Inventory) → Review Point → Wave 1 Batch B → G0 → Phase 0 → BASELINE-UX4-001 → Trust / Product / Commercial
+```
 
-The Lovable Master Execution Contract v1.0 (Status: LOCKED), captured verbatim in structure as the project's operating contract — all 35 sections: role and prohibitions, governing architecture, strangler migration, the three states (Implemented / Verified / Certified), change classification A–D, architecture proportionality, risk budget, smart freeze, enterprise boundary contract (8 boundaries), tenant isolation, authorization/PDP, consequential commands, command pipeline, idempotency, UnknownOutcome as a state, audit-as-evidence, correlation, financial invariants, offline failure matrix, fitness-check lifecycle, evidence rules, baseline integrity, material change, domain certification and unfreeze, exception governance, backlog model, the A–J execution protocol, pre-implementation rule, scope control, stop conditions, stop report, progress log, scoreboard, final per-batch response format, and the absolute priority ordering.
+## 1. `docs/governance/MASTER_EXECUTION_CONTRACT.md` (v1.0, LOCKED)
 
-Supporting scaffolds created empty-but-structured so later waves append rather than invent:
-- `docs/governance/PROGRESS_LOG.md` (append-only, with the required field template)
-- `docs/governance/SCOREBOARD.md` (Product Completion, Architecture Health, P0 Risk Closure, Certified Domains, Commercial Readiness)
-- `docs/governance/EXCEPTION_REGISTER.md` (ID, Rule, File/Boundary, Reason, Risk, Owner, Expiry, ADR, Approval)
-- `docs/governance/STOP_REPORT_TEMPLATE.md`
+The full operating contract: role and prohibitions, governing architecture, strangler migration, the three states (Implemented / Verified / Certified), change classification A–D, architecture proportionality, risk budget, smart freeze, the 8 enterprise boundaries, tenant isolation, authorization/PDP, consequential commands, command pipeline, idempotency, UnknownOutcome as a state, audit-as-evidence, correlation, financial invariants, offline failure matrix, fitness-check lifecycle, evidence rules, baseline integrity, material change, domain certification and unfreeze, exception governance, backlog model, execution protocol A–J, scope control, stop conditions, stop report, progress log, scoreboard, per-batch response format, priority ordering.
 
-## 2. `docs/governance/WAVE1_BATCHB_PROMPT.md`
+Two rules added explicitly per this review:
 
-Wave 1 — Sprint 3.1 Batch B execution prompt v1.0, copy-paste ready and scope-frozen:
-- Objective: residual presentation `pages/components → repositories` violations down to ≤ 13 (critical total ≤ 155), UI cycles stay 0, no FanOut regression.
-- Reuse the existing `customers`, `suppliers`, `products`, `customer-search` facades; create `documents` / `finance` only on a proven ≥2-consumer need.
-- Prohibited: business logic, hooks-as-facades, writes under `src/kernel|platform|domain|infrastructure`, any SQL/RLS/migration/edge-function change, unrelated cleanup.
-- Protocol A–J with an explicit review stop after PHASE B (plan) and no self-certification at the end.
-- Required evidence: `tsgo`, build, lint, vitest, `scripts/fitness/run-all.mjs`, `dep-graph.mjs` before/after, cycle analysis — historical results are not accepted.
-- Deliverables named up front: `WAVE2_SPRINT3_BATCHB.md`, `WAVE2_SPRINT3_BATCHB_DECISIONS.md`, `scripts/audits/output/wave2-sprint3-batchB.json` with evidence-freshness fields (Evidence ID, Generated At, Git Commit, Environment, Command, Result, Artifact Hash, Owner, Baseline).
+- **Inventory observes; Governance decides.** The inventory states what exists, what connects to what, what is exposed, where the hotspots are, and what violations are observed. It never states that an architecture is acceptable, that a domain is certified, or that a gate passed.
+- **Inventory ≠ Fitness Check.** Inventory and audit tooling are observational. No new architectural fitness check is created in this wave.
 
-## 3. Machine-readable codebase inventory report
+Scaffolds, structured so later waves append rather than invent:
+- `docs/governance/PROGRESS_LOG.md` — append-only; opens with the Wave 0 record (Status: IMPLEMENTED · Verification: PENDING · Certification: NOT CERTIFIED).
+- `docs/governance/SCOREBOARD.md` — Product Completion, Architecture Health, P0 Risk Closure, Certified Domains (n/7), Commercial Readiness.
+- `docs/governance/EXCEPTION_REGISTER.md` — ID, Rule, File/Boundary, Reason, Risk, Owner, Expiry, ADR, Approval.
+- `docs/governance/STOP_REPORT_TEMPLATE.md`.
 
-`scripts/audits/codebase-inventory.mjs` — read-only generator, deterministic output, composing the existing audit JSON (`dependency-report.json`, `component-report.json`, `route-report.json`, `data-access-report.json`, `snapshot-report.json`) plus a fresh static pass. Writes:
+## 2. Evidence & lineage model (extended)
 
-- `scripts/audits/output/codebase-inventory.json` — the agency-facing artifact:
-  - `modules[]`: path, layer (kernel / platform / domain / application / infrastructure / ui / components / pages / lib / hooks / scripts), file count, LOC, public exports.
-  - `layers[]`: file counts, inbound/outbound edges, violation counts against `DEPENDENCY_RULES.md`.
-  - `publicSurfaces[]`: exports per barrel (`src/ui/index.ts`, `src/kernel/index.ts`, `src/application/queries/index.ts`, `src/domain/finance/index.ts`, …) with the budget status.
-  - `hotspots[]`: top FanIn/FanOut modules, cycles, and the critical layer-violation list grouped by source layer.
-  - `backend[]`: tables, RPCs, edge functions (names only, from repo files).
-  - `evidence`: generatedAt, git commit, artifact hash — same freshness fields as every other artifact.
-- `docs/architecture/CODEBASE_INVENTORY.md` — a short human-readable summary rendered from the same JSON, for the agency review.
+Every artifact carries: Evidence ID, Snapshot ID, Baseline ID, Parent Baseline, Git Commit, Generated At, Environment, Command, Result, Artifact Hash, Owner, Validity — plus, for generated reports: **Source Artifacts**, **Generator Version**, **Schema Version**, Dependency Lock Hash, Build Hash.
 
-The generator is added to the audit set and can be run in CI alongside the existing drift report; it changes no application behavior.
+```text
+BASELINE-NAZRA-001 / SNAPSHOT-YYYYMMDD-NNN / COMMIT abc123
+CODEBASE-INVENTORY-001 ← commit X ← generator vY ← source artifacts A/B/C/D ← hash Z
+```
 
-## Out of scope for this wave
+## 3. Codebase inventory (read-only observation tool)
 
-No Batch B code remediation, no ADRs 0031–0044, no fitness checks, no database work. Those follow their own waves once this contract is in place.
+`scripts/audits/codebase-inventory.mjs` — deterministic, read-only, composing the existing audit JSON (`dependency-report.json`, `component-report.json`, `route-report.json`, `data-access-report.json`, `snapshot-report.json`) plus a fresh static pass. Not wired into any gate.
+
+Outputs:
+- `scripts/audits/output/codebase-inventory.json`
+  - `modules[]` — path, layer (kernel / platform / domain / application / infrastructure / ui / components / pages / lib / hooks / scripts), file count, LOC, public exports.
+  - `layers[]` — file counts, inbound/outbound edges, violations observed against `DEPENDENCY_RULES.md`.
+  - `publicSurfaces[]` — exports per barrel (`src/ui`, `src/kernel`, `src/application/queries`, `src/domain/finance`, …) with observed budget status.
+  - `hotspots[]` — top FanIn/FanOut modules, cycles, critical violations grouped by source layer.
+  - `backend[]` — tables, RPCs, edge functions (names only, from repo files).
+  - `evidence` — the full lineage block from section 2.
+- `docs/architecture/CODEBASE_INVENTORY.md` — human-readable summary rendered from the same JSON.
+
+## 4. Wave 1 prompt (written, not executed)
+
+`docs/governance/WAVE1_BATCHB_PROMPT.md` — Sprint 3.1 Batch B, scope-frozen, naming unified on **WAVE1**:
+- Deliverable names: `docs/architecture/WAVE1_SPRINT3_BATCHB.md`, `WAVE1_SPRINT3_BATCHB_DECISIONS.md`, `scripts/audits/output/wave1-sprint3-batchB.json`. The `WAVE2_*` naming is retired for this stage; one stage, one name.
+- Objective: residual presentation `pages/components → repositories` violations ≤ 13, critical total ≤ 155, UI cycles 0, no FanOut regression.
+- Reuse existing `customers`, `suppliers`, `products`, `customer-search` facades; new facades only on a proven ≥2-consumer need.
+- Prohibited: business logic, hooks-as-facades, writes under `src/kernel|platform|domain|infrastructure`, any SQL/RLS/migration/edge-function change.
+- Evidence re-run required (`tsgo`, build, lint, vitest, fitness run-all, dep-graph before/after, cycles); historical results not accepted. No self-certification.
+
+## 5. Review Point (gate inside Wave 0, before Wave 1)
+
+Compare observed inventory numbers against the Sprint 3.1 assumptions and choose one:
+- **A** — numbers match → proceed to Batch B as written.
+- **B** — numbers differ but remain inside Batch B scope → update the Batch B plan, then proceed.
+- **C** — numbers reveal a larger architectural problem → STOP, re-scope, do not execute Batch B.
+
+## Exit criteria for Wave 0
+
+Contract + 4 scaffolds + generator + `codebase-inventory.json` + `CODEBASE_INVENTORY.md` exist; business code changes 0, runtime changes 0, DB/RLS changes 0, ADR changes 0, fitness changes 0; inventory generated with hash, commit, snapshot ID and source artifacts linked; Progress Log updated. Certification is not claimed — Wave 0 closes with a Gate Proposal for human approval.
+
+## Note
+
+There is a pre-existing TypeScript error in `src/integrations/supabase/previewAuthStorage.ts` (lines 81 / 85 — the `setItem` / `removeItem` arrow functions need explicit `Promise<void>` return types). It is unrelated to this wave and cannot be edited in plan mode; it will be fixed as the first Class A step once execution starts.
