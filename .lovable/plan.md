@@ -105,6 +105,8 @@ Wave 0 is the last stage that establishes the project picture without touching c
 BASELINE-NAZRA-001 → Wave 1 → BASELINE-NAZRA-002 → Phase 0 → BASELINE-UX4-001 → Phase 1 → BASELINE-UX4-002
 ```
 
+Full re-analysis may be triggered ONLY by: (1) a major architecture strategy change, (2) database/schema restructuring, (3) a new consequential domain, (4) a major authentication/tenant model change, (5) a large-scale migration invalidating dependency evidence, (6) baseline corruption or evidence-integrity failure, (7) an explicit Governance decision. Otherwise: Baseline + Delta + Evidence only.
+
 ## Allowed / prohibited in Wave 0
 
 Allowed: Master Contract, governance scaffolds, read-only inventory generator, inventory JSON + markdown, baseline/snapshot/evidence records, pre-existing issue register, Wave 1 prompt, Gate Proposal.
