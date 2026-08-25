@@ -19,3 +19,28 @@ One row per baseline. Values are observations recorded from evidence, not judgme
 - A value is entered only when a commit-stamped evidence artifact backs it.
 - "not measured" is a valid, honest value. An estimated number is not.
 - Certified Domains only ever increases through a human-approved Gate Proposal, and decreases automatically on a material change (Contract §26).
+
+## Observed inventory snapshot — BASELINE-NAZRA-001
+
+Source: `CODEBASE-INVENTORY-001` / `SNAPSHOT-20260825-001` (commit `2ef870b`). Observation only.
+
+| Signal | Observed |
+|---|---|
+| Source files (src) | 1202 |
+| Modules | 174 |
+| Dependency edges | 4771 |
+| Routes | 98 |
+| Repositories | 44 |
+| Critical layer violations (total) | 171 |
+| `pages → repositories` | 27 |
+| `components → repositories` | 41 |
+| `components → supabase-client` | 38 |
+| `hooks → supabase-client` | 31 |
+| `pages → supabase-client` | 29 |
+| Cycles (all layers) | 6 |
+| UI cycles | 0 |
+| Max fan-out (non-root) | 59 (`pages/customers/CustomerDetailsPage.tsx`) |
+| Public surfaces over observed budget | 0 / 9 |
+| Edge functions (repository-observed) | 15 |
+| RPCs referenced in code | 47 |
+| Tables/views referenced in code | 97 |
