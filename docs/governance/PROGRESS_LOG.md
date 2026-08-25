@@ -31,8 +31,9 @@ Status:            IMPLEMENTED
 Verification:      PENDING
 Certification:     NOT CERTIFIED
 Baseline:          BASELINE-NAZRA-001 (proposed, unsealed until Review Point)
-Snapshot:          see scripts/audits/output/codebase-inventory.json → evidence.snapshotId
-Commit:            see scripts/audits/output/codebase-inventory.json → evidence.gitCommit
+Snapshot:          SNAPSHOT-20260825-001
+Commit:            2ef870b01e78703a423716f05707729160a07a11
+Evidence:          CODEBASE-INVENTORY-001 (artifactHash d3e23e7ae50ea516…)
 ```
 
 Deliverables:
@@ -79,8 +80,8 @@ Decision ID:        REVIEW-001
 Reviewer:           <human>
 Date:               <pending>
 Baseline:           BASELINE-NAZRA-001
-Inventory Snapshot: <snapshotId from codebase-inventory.json>
-Observed:           pages → repositories = <n> · critical total = <n> · UI cycles = <n>
+Inventory Snapshot: SNAPSHOT-20260825-001
+Observed:           pages → repositories = 27 · critical total = 171 · cycles (all layers) = 6 · UI cycles = 0
 Decision:           A (proceed) | B (adjust Batch B) | C (STOP and re-scope)
 Rationale:
 Approved Next Wave:
