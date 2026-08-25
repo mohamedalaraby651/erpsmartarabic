@@ -1,0 +1,2937 @@
+{
+  "evidence": {
+    "evidenceId": "CODEBASE-INVENTORY-001",
+    "snapshotId": "SNAPSHOT-20260825-001",
+    "baselineId": "BASELINE-NAZRA-001",
+    "parentBaseline": "BASELINE-UX3A-002",
+    "gitCommit": "2ef870b01e78703a423716f05707729160a07a11",
+    "generatedAt": "2026-08-25T21:36:14.497Z",
+    "environment": "lovable-sandbox",
+    "command": "node scripts/audits/codebase-inventory.mjs",
+    "result": "GENERATED",
+    "owner": "Human Governance",
+    "generatorVersion": "1.0.0",
+    "schemaVersion": 1,
+    "sourceArtifacts": [
+      {
+        "path": "scripts/audits/output/dependency-report.json",
+        "present": true,
+        "sha256": "3c1a83a7d3b8ff43b24750ef9c619a6cb9fab966e4fef8130e3850cd608dce94"
+      },
+      {
+        "path": "scripts/audits/output/component-report.json",
+        "present": true,
+        "sha256": "721a4d29a5925334fa30d6300d742992bf2d5a4f33f86c7620cb8adc386c3143"
+      },
+      {
+        "path": "scripts/audits/output/route-report.json",
+        "present": true,
+        "sha256": "bf6106fcac08d768b56dc90c00660607ca5c44a7d5e38865b79f253bbd65c323"
+      },
+      {
+        "path": "scripts/audits/output/data-access-report.json",
+        "present": true,
+        "sha256": "63cfcee087b14ac3a70d266833b1915dc2457943df76ac1fa08f0cb385c50eae"
+      },
+      {
+        "path": "scripts/audits/output/snapshot-report.json",
+        "present": true,
+        "sha256": "27b1c8169da71e5986b75f66e1824b1a4298223a053d87d35b4004d131a2ba8e"
+      }
+    ],
+    "dependencyLockHash": "b74bd3308fe1b446defbe73226b07bf88c0d54db8e1682b1ac0b7af02365d9d0",
+    "artifactHash": "d3e23e7ae50ea51681568d2d3fb0299f7ecdaea0a960bc8867b5a681e57f2b57",
+    "validity": "valid while gitCommit matches HEAD"
+  },
+  "disclaimer": "Inventory observes the system; it does not certify the system or authorize architectural decisions. This artifact is an observation tool, not a fitness check, and is not wired into any gate. Backend entries are a repository-observed surface, not a verified live backend.",
+  "totals": {
+    "sourceFiles": 1202,
+    "modules": 174,
+    "totalModulesInDependencyGraph": 1201,
+    "totalEdges": 4771,
+    "components": 873,
+    "routes": 98,
+    "repositories": 44,
+    "queries": 2
+  },
+  "modules": [
+    {
+      "path": "src/__tests__/integration",
+      "layer": "tests",
+      "files": 14,
+      "loc": 4959,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/__tests__/security",
+      "layer": "tests",
+      "files": 9,
+      "loc": 1828,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/__tests__/unit",
+      "layer": "tests",
+      "files": 27,
+      "loc": 5660,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/App.tsx",
+      "layer": "root",
+      "files": 1,
+      "loc": 380,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/application/finance",
+      "layer": "application",
+      "files": 20,
+      "loc": 1617,
+      "publicExports": 13,
+      "barrels": [
+        {
+          "file": "src/application/finance/index.ts",
+          "exports": 1
+        },
+        {
+          "file": "src/application/finance/invoice/commands/index.ts",
+          "exports": 3
+        },
+        {
+          "file": "src/application/finance/invoice/index.ts",
+          "exports": 9
+        }
+      ]
+    },
+    {
+      "path": "src/application/queries",
+      "layer": "application",
+      "files": 5,
+      "loc": 71,
+      "publicExports": 4,
+      "barrels": [
+        {
+          "file": "src/application/queries/index.ts",
+          "exports": 4
+        }
+      ]
+    },
+    {
+      "path": "src/components",
+      "layer": "components",
+      "files": 1,
+      "loc": 29,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/accounting",
+      "layer": "components",
+      "files": 3,
+      "loc": 743,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/admin",
+      "layer": "components",
+      "files": 8,
+      "loc": 1856,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/attendance",
+      "layer": "components",
+      "files": 1,
+      "loc": 109,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/auth",
+      "layer": "components",
+      "files": 2,
+      "loc": 386,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/categories",
+      "layer": "components",
+      "files": 1,
+      "loc": 198,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/commercial",
+      "layer": "components",
+      "files": 1,
+      "loc": 185,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/credit-notes",
+      "layer": "components",
+      "files": 1,
+      "loc": 436,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/customers",
+      "layer": "components",
+      "files": 83,
+      "loc": 10798,
+      "publicExports": 31,
+      "barrels": [
+        {
+          "file": "src/components/customers/details/index.ts",
+          "exports": 7
+        },
+        {
+          "file": "src/components/customers/dialogs/index.ts",
+          "exports": 10
+        },
+        {
+          "file": "src/components/customers/filters/index.ts",
+          "exports": 3
+        },
+        {
+          "file": "src/components/customers/list/index.ts",
+          "exports": 9
+        },
+        {
+          "file": "src/components/customers/shared/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/components/customization",
+      "layer": "components",
+      "files": 1,
+      "loc": 263,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/dashboard",
+      "layer": "components",
+      "files": 20,
+      "loc": 2625,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/employees",
+      "layer": "components",
+      "files": 1,
+      "loc": 325,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/errors",
+      "layer": "components",
+      "files": 1,
+      "loc": 111,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/expenses",
+      "layer": "components",
+      "files": 2,
+      "loc": 365,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/export",
+      "layer": "components",
+      "files": 2,
+      "loc": 494,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/filters",
+      "layer": "components",
+      "files": 2,
+      "loc": 206,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/inventory",
+      "layer": "components",
+      "files": 6,
+      "loc": 875,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/invoices",
+      "layer": "components",
+      "files": 8,
+      "loc": 1287,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/keyboard",
+      "layer": "components",
+      "files": 1,
+      "loc": 154,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/landing",
+      "layer": "components",
+      "files": 7,
+      "loc": 654,
+      "publicExports": 6,
+      "barrels": [
+        {
+          "file": "src/components/landing/index.ts",
+          "exports": 6
+        }
+      ]
+    },
+    {
+      "path": "src/components/layout",
+      "layer": "components",
+      "files": 22,
+      "loc": 2740,
+      "publicExports": 10,
+      "barrels": [
+        {
+          "file": "src/components/layout/mobile/index.ts",
+          "exports": 6
+        },
+        {
+          "file": "src/components/layout/sidebar/index.ts",
+          "exports": 4
+        }
+      ]
+    },
+    {
+      "path": "src/components/logistics",
+      "layer": "components",
+      "files": 3,
+      "loc": 502,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/mobile",
+      "layer": "components",
+      "files": 17,
+      "loc": 2160,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/navigation",
+      "layer": "components",
+      "files": 3,
+      "loc": 379,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/notifications",
+      "layer": "components",
+      "files": 2,
+      "loc": 299,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/offline",
+      "layer": "components",
+      "files": 3,
+      "loc": 500,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/payments",
+      "layer": "components",
+      "files": 2,
+      "loc": 441,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/platform",
+      "layer": "components",
+      "files": 2,
+      "loc": 173,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/print",
+      "layer": "components",
+      "files": 10,
+      "loc": 1467,
+      "publicExports": 8,
+      "barrels": [
+        {
+          "file": "src/components/print/index.ts",
+          "exports": 8
+        }
+      ]
+    },
+    {
+      "path": "src/components/products",
+      "layer": "components",
+      "files": 3,
+      "loc": 512,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/purchase-orders",
+      "layer": "components",
+      "files": 1,
+      "loc": 440,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/quotations",
+      "layer": "components",
+      "files": 4,
+      "loc": 703,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/reports",
+      "layer": "components",
+      "files": 20,
+      "loc": 2968,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/sales-cycle",
+      "layer": "components",
+      "files": 1,
+      "loc": 17,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/sales-orders",
+      "layer": "components",
+      "files": 1,
+      "loc": 513,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/search",
+      "layer": "components",
+      "files": 1,
+      "loc": 101,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/settings",
+      "layer": "components",
+      "files": 25,
+      "loc": 6088,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/shared",
+      "layer": "components",
+      "files": 35,
+      "loc": 4434,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/sidebar",
+      "layer": "components",
+      "files": 6,
+      "loc": 842,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/suppliers",
+      "layer": "components",
+      "files": 46,
+      "loc": 4637,
+      "publicExports": 16,
+      "barrels": [
+        {
+          "file": "src/components/suppliers/dialogs/index.ts",
+          "exports": 5
+        },
+        {
+          "file": "src/components/suppliers/filters/index.ts",
+          "exports": 2
+        },
+        {
+          "file": "src/components/suppliers/list/index.ts",
+          "exports": 5
+        },
+        {
+          "file": "src/components/suppliers/mobile/index.ts",
+          "exports": 4
+        }
+      ]
+    },
+    {
+      "path": "src/components/system",
+      "layer": "components",
+      "files": 2,
+      "loc": 226,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/table",
+      "layer": "components",
+      "files": 5,
+      "loc": 472,
+      "publicExports": 4,
+      "barrels": [
+        {
+          "file": "src/components/table/index.ts",
+          "exports": 4
+        }
+      ]
+    },
+    {
+      "path": "src/components/tenant",
+      "layer": "components",
+      "files": 3,
+      "loc": 363,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/components/tenant/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/components/transitions",
+      "layer": "components",
+      "files": 1,
+      "loc": 45,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/treasury",
+      "layer": "components",
+      "files": 2,
+      "loc": 380,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/ui",
+      "layer": "components",
+      "files": 54,
+      "loc": 4716,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/components/ui-kit",
+      "layer": "components",
+      "files": 5,
+      "loc": 484,
+      "publicExports": 5,
+      "barrels": [
+        {
+          "file": "src/components/ui-kit/index.ts",
+          "exports": 5
+        }
+      ]
+    },
+    {
+      "path": "src/composition",
+      "layer": "composition",
+      "files": 2,
+      "loc": 75,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/composition/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/config",
+      "layer": "other",
+      "files": 1,
+      "loc": 39,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/domain/finance",
+      "layer": "domain",
+      "files": 33,
+      "loc": 3923,
+      "publicExports": 30,
+      "barrels": [
+        {
+          "file": "src/domain/finance/index.ts",
+          "exports": 19
+        },
+        {
+          "file": "src/domain/finance/invoice/events/index.ts",
+          "exports": 8
+        },
+        {
+          "file": "src/domain/finance/invoice/ports/index.ts",
+          "exports": 3
+        }
+      ]
+    },
+    {
+      "path": "src/domain/pdf",
+      "layer": "domain",
+      "files": 22,
+      "loc": 1395,
+      "publicExports": 11,
+      "barrels": [
+        {
+          "file": "src/domain/pdf/index.ts",
+          "exports": 11
+        }
+      ]
+    },
+    {
+      "path": "src/hooks",
+      "layer": "hooks",
+      "files": 84,
+      "loc": 8642,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/hooks/accounting",
+      "layer": "hooks",
+      "files": 6,
+      "loc": 309,
+      "publicExports": 5,
+      "barrels": [
+        {
+          "file": "src/hooks/accounting/index.ts",
+          "exports": 5
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/admin",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 54,
+      "publicExports": 5,
+      "barrels": [
+        {
+          "file": "src/hooks/admin/index.ts",
+          "exports": 5
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/approvals",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 30,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/hooks/approvals/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/categories",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 56,
+      "publicExports": 5,
+      "barrels": [
+        {
+          "file": "src/hooks/categories/index.ts",
+          "exports": 5
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/collections",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 15,
+      "publicExports": 1,
+      "barrels": [
+        {
+          "file": "src/hooks/collections/index.ts",
+          "exports": 1
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/credit-notes",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 48,
+      "publicExports": 4,
+      "barrels": [
+        {
+          "file": "src/hooks/credit-notes/index.ts",
+          "exports": 4
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/customers",
+      "layer": "hooks",
+      "files": 15,
+      "loc": 1552,
+      "publicExports": 9,
+      "barrels": [
+        {
+          "file": "src/hooks/customers/index.ts",
+          "exports": 9
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/employees",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 175,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/hooks/expenses",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 113,
+      "publicExports": 10,
+      "barrels": [
+        {
+          "file": "src/hooks/expenses/index.ts",
+          "exports": 10
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/inventory",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 65,
+      "publicExports": 6,
+      "barrels": [
+        {
+          "file": "src/hooks/inventory/index.ts",
+          "exports": 6
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/invoices",
+      "layer": "hooks",
+      "files": 2,
+      "loc": 298,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/hooks/logistics",
+      "layer": "hooks",
+      "files": 3,
+      "loc": 285,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/hooks/products",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 139,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/hooks/quotations",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 50,
+      "publicExports": 3,
+      "barrels": [
+        {
+          "file": "src/hooks/quotations/index.ts",
+          "exports": 3
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/sales-cycle",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 124,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/hooks/suppliers",
+      "layer": "hooks",
+      "files": 7,
+      "loc": 512,
+      "publicExports": 7,
+      "barrels": [
+        {
+          "file": "src/hooks/suppliers/index.ts",
+          "exports": 7
+        }
+      ]
+    },
+    {
+      "path": "src/hooks/treasury",
+      "layer": "hooks",
+      "files": 1,
+      "loc": 97,
+      "publicExports": 8,
+      "barrels": [
+        {
+          "file": "src/hooks/treasury/index.ts",
+          "exports": 8
+        }
+      ]
+    },
+    {
+      "path": "src/index.css",
+      "layer": "root",
+      "files": 1,
+      "loc": 699,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/infrastructure/finance",
+      "layer": "infrastructure",
+      "files": 22,
+      "loc": 1801,
+      "publicExports": 15,
+      "barrels": [
+        {
+          "file": "src/infrastructure/finance/index.ts",
+          "exports": 1
+        },
+        {
+          "file": "src/infrastructure/finance/invoice/codec/index.ts",
+          "exports": 7
+        },
+        {
+          "file": "src/infrastructure/finance/invoice/index.ts",
+          "exports": 7
+        }
+      ]
+    },
+    {
+      "path": "src/integrations/lovable",
+      "layer": "integrations",
+      "files": 1,
+      "loc": 39,
+      "publicExports": 1,
+      "barrels": [
+        {
+          "file": "src/integrations/lovable/index.ts",
+          "exports": 1
+        }
+      ]
+    },
+    {
+      "path": "src/integrations/supabase",
+      "layer": "integrations",
+      "files": 3,
+      "loc": 7391,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/kernel",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 15,
+      "publicExports": 8,
+      "barrels": [
+        {
+          "file": "src/kernel/index.ts",
+          "exports": 8
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/clock",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 37,
+      "publicExports": 3,
+      "barrels": [
+        {
+          "file": "src/kernel/clock/index.ts",
+          "exports": 3
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/culture",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 26,
+      "publicExports": 5,
+      "barrels": [
+        {
+          "file": "src/kernel/culture/index.ts",
+          "exports": 5
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/env",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 19,
+      "publicExports": 3,
+      "barrels": [
+        {
+          "file": "src/kernel/env/index.ts",
+          "exports": 3
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/flags",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 20,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/kernel/flags/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/i18n",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 23,
+      "publicExports": 3,
+      "barrels": [
+        {
+          "file": "src/kernel/i18n/index.ts",
+          "exports": 3
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/identity",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 21,
+      "publicExports": 4,
+      "barrels": [
+        {
+          "file": "src/kernel/identity/index.ts",
+          "exports": 4
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/permissions",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 21,
+      "publicExports": 3,
+      "barrels": [
+        {
+          "file": "src/kernel/permissions/index.ts",
+          "exports": 3
+        }
+      ]
+    },
+    {
+      "path": "src/kernel/tenant",
+      "layer": "kernel",
+      "files": 1,
+      "loc": 13,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/kernel/tenant/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/lib",
+      "layer": "lib",
+      "files": 34,
+      "loc": 6493,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/__tests__",
+      "layer": "lib",
+      "files": 1,
+      "loc": 51,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/api",
+      "layer": "lib",
+      "files": 1,
+      "loc": 340,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/credit-notes",
+      "layer": "lib",
+      "files": 1,
+      "loc": 138,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/exports",
+      "layer": "lib",
+      "files": 1,
+      "loc": 98,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/financial-engine",
+      "layer": "lib",
+      "files": 7,
+      "loc": 606,
+      "publicExports": 5,
+      "barrels": [
+        {
+          "file": "src/lib/financial-engine/index.ts",
+          "exports": 5
+        }
+      ]
+    },
+    {
+      "path": "src/lib/mcp",
+      "layer": "lib",
+      "files": 4,
+      "loc": 153,
+      "publicExports": 1,
+      "barrels": [
+        {
+          "file": "src/lib/mcp/index.ts",
+          "exports": 1
+        }
+      ]
+    },
+    {
+      "path": "src/lib/pdf",
+      "layer": "lib",
+      "files": 88,
+      "loc": 7691,
+      "publicExports": 42,
+      "barrels": [
+        {
+          "file": "src/lib/pdf/index.ts",
+          "exports": 42
+        }
+      ]
+    },
+    {
+      "path": "src/lib/queries",
+      "layer": "queries",
+      "files": 2,
+      "loc": 438,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/repositories",
+      "layer": "repositories",
+      "files": 44,
+      "loc": 5972,
+      "publicExports": 67,
+      "barrels": [
+        {
+          "file": "src/lib/repositories/index.ts",
+          "exports": 67
+        }
+      ]
+    },
+    {
+      "path": "src/lib/seo",
+      "layer": "lib",
+      "files": 1,
+      "loc": 62,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/services",
+      "layer": "services",
+      "files": 8,
+      "loc": 877,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/lib/utils",
+      "layer": "lib",
+      "files": 1,
+      "loc": 8,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/main.tsx",
+      "layer": "root",
+      "files": 1,
+      "loc": 145,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages",
+      "layer": "pages",
+      "files": 8,
+      "loc": 1410,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/accounting",
+      "layer": "pages",
+      "files": 3,
+      "loc": 794,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/admin",
+      "layer": "pages",
+      "files": 18,
+      "loc": 5781,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/approvals",
+      "layer": "pages",
+      "files": 1,
+      "loc": 265,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/attachments",
+      "layer": "pages",
+      "files": 1,
+      "loc": 432,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/attendance",
+      "layer": "pages",
+      "files": 1,
+      "loc": 355,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/categories",
+      "layer": "pages",
+      "files": 1,
+      "loc": 323,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/collections",
+      "layer": "pages",
+      "files": 1,
+      "loc": 243,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/credit-notes",
+      "layer": "pages",
+      "files": 5,
+      "loc": 574,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/customers",
+      "layer": "pages",
+      "files": 2,
+      "loc": 1347,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/delivery-notes",
+      "layer": "pages",
+      "files": 1,
+      "loc": 125,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/dev",
+      "layer": "pages",
+      "files": 3,
+      "loc": 738,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/employees",
+      "layer": "pages",
+      "files": 2,
+      "loc": 726,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/expenses",
+      "layer": "pages",
+      "files": 2,
+      "loc": 665,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/file",
+      "layer": "pages",
+      "files": 1,
+      "loc": 271,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/goods-receipts",
+      "layer": "pages",
+      "files": 1,
+      "loc": 134,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/install",
+      "layer": "pages",
+      "files": 1,
+      "loc": 379,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/inventory",
+      "layer": "pages",
+      "files": 1,
+      "loc": 147,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/invoices",
+      "layer": "pages",
+      "files": 2,
+      "loc": 815,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/landing",
+      "layer": "pages",
+      "files": 1,
+      "loc": 23,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/logistics",
+      "layer": "pages",
+      "files": 1,
+      "loc": 195,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/notifications",
+      "layer": "pages",
+      "files": 1,
+      "loc": 217,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/payments",
+      "layer": "pages",
+      "files": 1,
+      "loc": 415,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/platform",
+      "layer": "pages",
+      "files": 8,
+      "loc": 1400,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/pricing",
+      "layer": "pages",
+      "files": 1,
+      "loc": 258,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/products",
+      "layer": "pages",
+      "files": 2,
+      "loc": 584,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/protocol",
+      "layer": "pages",
+      "files": 1,
+      "loc": 152,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/purchase-invoices",
+      "layer": "pages",
+      "files": 2,
+      "loc": 195,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/purchase-orders",
+      "layer": "pages",
+      "files": 5,
+      "loc": 857,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/quotations",
+      "layer": "pages",
+      "files": 2,
+      "loc": 940,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/quotes",
+      "layer": "pages",
+      "files": 3,
+      "loc": 595,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/reports",
+      "layer": "pages",
+      "files": 4,
+      "loc": 1315,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/sales-orders",
+      "layer": "pages",
+      "files": 2,
+      "loc": 780,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/search",
+      "layer": "pages",
+      "files": 1,
+      "loc": 423,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/settings",
+      "layer": "pages",
+      "files": 2,
+      "loc": 378,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/share",
+      "layer": "pages",
+      "files": 1,
+      "loc": 227,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/suppliers",
+      "layer": "pages",
+      "files": 3,
+      "loc": 1093,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/sync",
+      "layer": "pages",
+      "files": 1,
+      "loc": 423,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/tasks",
+      "layer": "pages",
+      "files": 1,
+      "loc": 408,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/pages/treasury",
+      "layer": "pages",
+      "files": 2,
+      "loc": 512,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/platform",
+      "layer": "platform",
+      "files": 1,
+      "loc": 10,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/platform/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/platform/ai",
+      "layer": "platform",
+      "files": 1,
+      "loc": 12,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/platform/ai/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/platform/modules",
+      "layer": "platform",
+      "files": 1,
+      "loc": 5,
+      "publicExports": 1,
+      "barrels": [
+        {
+          "file": "src/platform/modules/index.ts",
+          "exports": 1
+        }
+      ]
+    },
+    {
+      "path": "src/platform/ports",
+      "layer": "platform",
+      "files": 24,
+      "loc": 422,
+      "publicExports": 9,
+      "barrels": [
+        {
+          "file": "src/platform/ports/index.ts",
+          "exports": 9
+        }
+      ]
+    },
+    {
+      "path": "src/platform/registries",
+      "layer": "platform",
+      "files": 1,
+      "loc": 5,
+      "publicExports": 1,
+      "barrels": [
+        {
+          "file": "src/platform/registries/index.ts",
+          "exports": 1
+        }
+      ]
+    },
+    {
+      "path": "src/platform/runtime",
+      "layer": "platform",
+      "files": 4,
+      "loc": 233,
+      "publicExports": 3,
+      "barrels": [
+        {
+          "file": "src/platform/runtime/index.ts",
+          "exports": 3
+        }
+      ]
+    },
+    {
+      "path": "src/platform/shell",
+      "layer": "platform",
+      "files": 2,
+      "loc": 63,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/platform/shell/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/shared-kernel",
+      "layer": "shared-kernel",
+      "files": 1,
+      "loc": 61,
+      "publicExports": 19,
+      "barrels": [
+        {
+          "file": "src/shared-kernel/index.ts",
+          "exports": 19
+        }
+      ]
+    },
+    {
+      "path": "src/shared-kernel/__tests__",
+      "layer": "shared-kernel",
+      "files": 6,
+      "loc": 292,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/base",
+      "layer": "shared-kernel",
+      "files": 3,
+      "loc": 79,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/context",
+      "layer": "shared-kernel",
+      "files": 1,
+      "loc": 19,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/either",
+      "layer": "shared-kernel",
+      "files": 1,
+      "loc": 26,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/errors",
+      "layer": "shared-kernel",
+      "files": 3,
+      "loc": 138,
+      "publicExports": 2,
+      "barrels": [
+        {
+          "file": "src/shared-kernel/errors/index.ts",
+          "exports": 2
+        }
+      ]
+    },
+    {
+      "path": "src/shared-kernel/events",
+      "layer": "shared-kernel",
+      "files": 1,
+      "loc": 36,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/identity",
+      "layer": "shared-kernel",
+      "files": 2,
+      "loc": 47,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/pagination",
+      "layer": "shared-kernel",
+      "files": 1,
+      "loc": 12,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/result",
+      "layer": "shared-kernel",
+      "files": 1,
+      "loc": 43,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/shared-kernel/time",
+      "layer": "shared-kernel",
+      "files": 2,
+      "loc": 81,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/styles",
+      "layer": "other",
+      "files": 1,
+      "loc": 154,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/test",
+      "layer": "tests",
+      "files": 2,
+      "loc": 145,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/test/mocks",
+      "layer": "tests",
+      "files": 2,
+      "loc": 215,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/types",
+      "layer": "types",
+      "files": 1,
+      "loc": 38,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/ui",
+      "layer": "ui",
+      "files": 1,
+      "loc": 178,
+      "publicExports": 52,
+      "barrels": [
+        {
+          "file": "src/ui/index.ts",
+          "exports": 52
+        }
+      ]
+    },
+    {
+      "path": "src/ui/__integration__",
+      "layer": "ui",
+      "files": 18,
+      "loc": 1475,
+      "publicExports": 13,
+      "barrels": [
+        {
+          "file": "src/ui/__integration__/scenarios/index.ts",
+          "exports": 13
+        }
+      ]
+    },
+    {
+      "path": "src/ui/composites",
+      "layer": "ui",
+      "files": 17,
+      "loc": 1316,
+      "publicExports": 13,
+      "barrels": [
+        {
+          "file": "src/ui/composites/index.ts",
+          "exports": 13
+        }
+      ]
+    },
+    {
+      "path": "src/ui/contracts",
+      "layer": "ui",
+      "files": 5,
+      "loc": 267,
+      "publicExports": 4,
+      "barrels": [
+        {
+          "file": "src/ui/contracts/index.ts",
+          "exports": 4
+        }
+      ]
+    },
+    {
+      "path": "src/ui/hooks",
+      "layer": "ui",
+      "files": 6,
+      "loc": 261,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/ui/layout",
+      "layer": "ui",
+      "files": 21,
+      "loc": 1765,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/ui/primitives",
+      "layer": "ui",
+      "files": 31,
+      "loc": 1933,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/ui/providers",
+      "layer": "ui",
+      "files": 8,
+      "loc": 687,
+      "publicExports": 0,
+      "barrels": []
+    },
+    {
+      "path": "src/ui/tokens",
+      "layer": "ui",
+      "files": 8,
+      "loc": 349,
+      "publicExports": 10,
+      "barrels": [
+        {
+          "file": "src/ui/tokens/index.ts",
+          "exports": 10
+        }
+      ]
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "layer": "root",
+      "files": 1,
+      "loc": 23,
+      "publicExports": 0,
+      "barrels": []
+    }
+  ],
+  "layers": [
+    {
+      "layer": "application",
+      "files": 25,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "components",
+      "files": 431,
+      "observedOutboundViolations": 84
+    },
+    {
+      "layer": "composition",
+      "files": 2,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "domain",
+      "files": 55,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "hooks",
+      "files": 129,
+      "observedOutboundViolations": 31
+    },
+    {
+      "layer": "infrastructure",
+      "files": 22,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "integrations",
+      "files": 4,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "kernel",
+      "files": 9,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "lib",
+      "files": 139,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "other",
+      "files": 2,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "pages",
+      "files": 100,
+      "observedOutboundViolations": 56
+    },
+    {
+      "layer": "platform",
+      "files": 34,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "queries",
+      "files": 2,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "repositories",
+      "files": 44,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "root",
+      "files": 4,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "services",
+      "files": 8,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "shared-kernel",
+      "files": 22,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "tests",
+      "files": 54,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "types",
+      "files": 1,
+      "observedOutboundViolations": 0
+    },
+    {
+      "layer": "ui",
+      "files": 115,
+      "observedOutboundViolations": 0
+    }
+  ],
+  "publicSurfaces": [
+    {
+      "barrel": "src/application/finance/index.ts",
+      "present": true,
+      "observedExports": 1,
+      "observedBudget": 30,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/application/queries/index.ts",
+      "present": true,
+      "observedExports": 4,
+      "observedBudget": 30,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/composition/index.ts",
+      "present": true,
+      "observedExports": 2,
+      "observedBudget": 15,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/domain/finance/index.ts",
+      "present": true,
+      "observedExports": 19,
+      "observedBudget": 40,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/infrastructure/finance/index.ts",
+      "present": true,
+      "observedExports": 1,
+      "observedBudget": 20,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/kernel/index.ts",
+      "present": true,
+      "observedExports": 8,
+      "observedBudget": 40,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/platform/index.ts",
+      "present": true,
+      "observedExports": 2,
+      "observedBudget": 40,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/ui/contracts/index.ts",
+      "present": true,
+      "observedExports": 4,
+      "observedBudget": 20,
+      "observedBudgetStatus": "within-observed-budget"
+    },
+    {
+      "barrel": "src/ui/index.ts",
+      "present": true,
+      "observedExports": 52,
+      "observedBudget": 55,
+      "observedBudgetStatus": "within-observed-budget"
+    }
+  ],
+  "hotspots": {
+    "topFanIn": [
+      {
+        "file": "components/ui/button.tsx",
+        "count": 276
+      },
+      {
+        "file": "lib/utils.ts",
+        "count": 232
+      },
+      {
+        "file": "components/ui/card.tsx",
+        "count": 202
+      },
+      {
+        "file": "integrations/supabase/client.ts",
+        "count": 169
+      },
+      {
+        "file": "components/ui/badge.tsx",
+        "count": 163
+      },
+      {
+        "file": "components/ui/input.tsx",
+        "count": 120
+      },
+      {
+        "file": "integrations/supabase/types.ts",
+        "count": 96
+      },
+      {
+        "file": "hooks/useAuth.tsx",
+        "count": 89
+      },
+      {
+        "file": "components/ui/label.tsx",
+        "count": 79
+      },
+      {
+        "file": "lib/errorHandler.ts",
+        "count": 75
+      },
+      {
+        "file": "components/ui/select.tsx",
+        "count": 74
+      },
+      {
+        "file": "hooks/use-toast.ts",
+        "count": 66
+      },
+      {
+        "file": "components/ui/skeleton.tsx",
+        "count": 61
+      },
+      {
+        "file": "components/ui/table.tsx",
+        "count": 59
+      },
+      {
+        "file": "shared-kernel/index.ts",
+        "count": 59
+      }
+    ],
+    "topFanOut": [
+      {
+        "file": "App.tsx",
+        "count": 106
+      },
+      {
+        "file": "pages/customers/CustomerDetailsPage.tsx",
+        "count": 59
+      },
+      {
+        "file": "ui/index.ts",
+        "count": 52
+      },
+      {
+        "file": "lib/pdf/index.ts",
+        "count": 42
+      },
+      {
+        "file": "pages/suppliers/SupplierDetailsPage.tsx",
+        "count": 41
+      },
+      {
+        "file": "pages/customers/CustomersPage.tsx",
+        "count": 39
+      },
+      {
+        "file": "lib/repositories/index.ts",
+        "count": 36
+      },
+      {
+        "file": "pages/Dashboard.tsx",
+        "count": 32
+      },
+      {
+        "file": "pages/invoices/InvoiceDetailsPage.tsx",
+        "count": 29
+      },
+      {
+        "file": "pages/quotations/QuotationDetailsPage.tsx",
+        "count": 28
+      },
+      {
+        "file": "lib/prefetch.ts",
+        "count": 27
+      },
+      {
+        "file": "pages/quotations/QuotationsPage.tsx",
+        "count": 27
+      },
+      {
+        "file": "pages/payments/PaymentsPage.tsx",
+        "count": 26
+      },
+      {
+        "file": "pages/invoices/InvoicesPage.tsx",
+        "count": 25
+      },
+      {
+        "file": "pages/sales-orders/SalesOrdersPage.tsx",
+        "count": 25
+      }
+    ],
+    "cycles": {
+      "count": 6,
+      "cycles": [
+        [
+          "domain/finance/invoice/Invoice.ts",
+          "domain/finance/invoice/errors/InvoiceDomainError.ts",
+          "domain/finance/invoice/statusOf.ts",
+          "domain/finance/invoice/events/index.ts",
+          "domain/finance/invoice/events/InvoiceIssued.ts"
+        ],
+        [
+          "hooks/usePdfProfile.ts",
+          "hooks/usePdfProfileRealtime.ts"
+        ],
+        [
+          "lib/pdf/diagnostics/PdfLogger.ts",
+          "lib/pdf/diagnostics/telemetrySink.ts"
+        ],
+        [
+          "lib/pdf/routing/routePdfRequest.ts",
+          "lib/pdf/services/PdfRenderService.ts"
+        ],
+        [
+          "lib/prefetch.ts",
+          "pages/Dashboard.tsx",
+          "components/dashboard/FinancialKPIRow.tsx"
+        ],
+        [
+          "lib/prefetch.ts",
+          "pages/Dashboard.tsx",
+          "components/dashboard/FinancialKPIRow.tsx",
+          "components/dashboard/_shared/DashboardChip.tsx"
+        ]
+      ]
+    },
+    "deepestChain": {
+      "length": 18,
+      "path": [
+        "App.tsx",
+        "components/layout/AppLayout.tsx",
+        "platform/shell/index.ts",
+        "platform/shell/PlatformShell.tsx",
+        "components/layout/AdaptiveShell.tsx",
+        "components/layout/AppSidebar.tsx",
+        "components/layout/sidebar/SidebarNavSections.tsx",
+        "components/sidebar/NavItemWithBadge.tsx",
+        "lib/prefetch.ts",
+        "pages/Dashboard.tsx",
+        "components/dashboard/RecentInvoicesWidget.tsx",
+        "components/dashboard/InvoiceQuickActions.tsx",
+        "lib/pdf/routing/routePdfRequest.ts",
+        "lib/pdf/printInvoiceHtmlPdf.ts",
+        "lib/pdf/engine/HtmlPdfEngine.ts",
+        "lib/pdf/arabic/arabicCss.ts",
+        "lib/pdf/fonts/fontRegistry.ts",
+        "lib/pdf/diagnostics/errors.ts"
+      ]
+    },
+    "observedLayerViolations": {
+      "total": 171,
+      "bySummary": {
+        "components→repositories": 41,
+        "components→services": 5,
+        "pages→repositories": 27,
+        "hooks→supabase-client": 31,
+        "components→supabase-client": 38,
+        "pages→supabase-client": 29,
+        "domain→ui": 0
+      }
+    }
+  },
+  "backend": [
+    {
+      "name": "approve-expense",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "approve-invoice",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "create-journal",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "event-dispatcher",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "export-customers",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "log-event",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "mcp",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "og-image",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "process-payment",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "render-pdf",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "restore-backup",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "rollback-restore",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "stock-movement",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "validate-invoice",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "verify-totp",
+      "type": "edge-function",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "admin_requeue_event",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "admin_set_user_active",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "batch_validate_delete",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "cancel_delivery_note",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "cancel_goods_receipt",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "check_financial_limit",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "check_rate_limit",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "check_section_permission",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "convert_invoice_to_delivery",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "convert_order_to_invoice",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "convert_quote_to_order",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "ensure_logistics_posting_accounts",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "find_duplicate_customers",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_all_tenants_admin",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_current_tenant",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_customer_aging",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_customer_chart_data",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_customer_financial_summary",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_customer_health_score",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_customer_statement",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_customer_stats",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_dashboard_overview",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_low_stock_products",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_monthly_sales_decline",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_permission_matrix",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_platform_role",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_platform_stats",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_sidebar_counts",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_supplier_aging",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_supplier_chart_data",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_supplier_financial_summary",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_supplier_health_score",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_supplier_statement",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "get_unpaid_invoices_summary",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "is_tenant_member",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "log_bulk_operation",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "merge_customers_atomic",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "needs_approval",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "post_delivery_note",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "post_document_atomic",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "post_goods_receipt",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "post_purchase_invoice",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "save_invoice_with_items",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "save_quotation_with_items",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "switch_user_tenant",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "toggle_tenant_status",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "update_tenant_subscription",
+      "type": "rpc",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "activity_logs",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "approval_chains",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "approval_records",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "attachments",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "attendance_records",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "audit_trail",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "cash_registers",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "cash_transactions",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "chart_of_accounts",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "company_settings",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "credit_note_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "credit_notes",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "custom_roles",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "customer_addresses",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "customer_categories",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "customer_communications",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "customer_notes",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "customer_reminders",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "customers",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "customers_safe",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "delivery_note_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "delivery_notes",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "dispatcher_batch_runs",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "dispatcher_event_executions",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "document_posting_log",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "documents",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "domain_events",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "employees",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "event_dispatcher_backlog",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "event_dispatcher_metrics",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "expense_categories",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "expenses",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "export_templates",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "fiscal_periods",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "goods_receipt_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "goods_receipts",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "invoice_events",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "invoice_item_returns_summary",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "invoice_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "invoices",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "journal_entries",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "journals",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "leave_requests",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "logos",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "notifications",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "payments",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "pdf_export_jobs",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "performance_metrics",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "platform_admins",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "platform_audit_logs",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "price_list_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "price_lists",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "product_categories",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "product_stock",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "product_variants",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "products",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "profiles",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "purchase_invoice_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "purchase_invoices",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "purchase_order_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "purchase_orders",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "push_subscriptions",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "quotation_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "quotations",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "quote_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "quotes",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "rate_limit_config",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "rate_limits",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "report_templates",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "role_field_permissions",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "role_limits",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "role_section_permissions",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "sales_order_items",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "sales_orders",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "section_customizations",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "sod_rules",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "stock_movements",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "supplier_notes",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "supplier_payments",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "suppliers",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "sync_logs",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "tasks",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "tenant_cost_centers",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "tenant_departments",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "tenant_pdf_profile_audit",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "tenant_projects",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "tenants",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_2fa_settings",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_dashboard_settings",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_login_history",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_offline_settings",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_preferences",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_roles",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_saved_views",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_sidebar_settings",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "user_tenants",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    },
+    {
+      "name": "warehouses",
+      "type": "table-or-view",
+      "discoverySource": "repository-files"
+    }
+  ]
+}
