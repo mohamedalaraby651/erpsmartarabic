@@ -4,7 +4,7 @@ Any deviation from a rule in the Master Execution Contract must be registered he
 
 | ID | Rule / Boundary | File or Scope | Reason | Risk | Owner | Expiry | ADR | Approval |
 |---|---|---|---|---|---|---|---|---|
-| _(none)_ | | | | | | | | |
+| EXC-001 | Green typecheck required before a wave gate | `src/integrations/supabase/previewAuthStorage.ts` (TS7011 ×2, PRE-TS-001) | Platform-protected auto-generated file; narrow tsconfig exclusion proved ineffective (file is transitively imported), and broad relaxation would hide app-owned errors | Low — typecheck signal only; `vite build` passes, zero runtime impact | Human Governance | Wave 2 gate (or on next platform regeneration of the file, whichever comes first) | — | Pending human approval |
 
 ## Rules
 
