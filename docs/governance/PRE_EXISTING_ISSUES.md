@@ -13,7 +13,7 @@ Detail:         setItem / removeItem arrow functions lack explicit return-type
                 annotations; tsgo raises TS7011 under tsconfig.app.json
                 (noImplicitAny: true).
 Severity:       Known / Pre-existing — typecheck-only
-Status:         OPEN — DEFERRED (no safe bounded remedy exists today)
+Status:         RESOLVED (Wave 1 Unit 1, isolated micro-change)
 Change class:   Non-trivial BY POLICY (platform-protected auto-generated file),
                 not by complexity.
 ```
@@ -34,13 +34,19 @@ Change class:   Non-trivial BY POLICY (platform-protected auto-generated file),
 5. **Runtime and build are unaffected.** `vite build` exits 0 at this commit; the
    failure is confined to the strict typecheck signal.
 
-### Decision
+### Decision (revised after build gate)
 
-No remedy is applied. The issue stays Open/Deferred and is registered as a
-time-boxed exception (`EXC-001`). Re-evaluate when the platform regenerates
-`previewAuthStorage.ts`, or when a project-owned typecheck wrapper that can
-suppress diagnostics per file (without weakening app-owned coverage) is
-introduced as its own change unit.
+The exclusion route is rejected (see finding 3). The build gate blocks the wave while
+TS7011 is live, so the remedy applied is the **minimum pure-annotation change**, executed
+as its own isolated change unit with no other file touched:
+
+- `setItem` / `removeItem` annotated `: Promise<void>`
+- the two `.then(() => undefined)` callbacks annotated `(): void`
+
+Zero behavior change, zero runtime change, no strictness weakened, no app-owned coverage
+lost. `npx tsgo -p tsconfig.app.json --noEmit` is now clean. `EXC-001` is closed as
+resolved rather than expired. Note: the file is platform-generated; if it is regenerated
+the annotations may be lost and PRE-TS-001 will reappear — re-apply the same micro-change.
 
 ## Rules
 

@@ -95,7 +95,7 @@ Approved Next Wave:
 WAVE / BATCH:      Wave 1 · Unit 1 (Preflight)
 Scope:             PRE-TS-001 only — src/integrations/supabase/previewAuthStorage.ts
 Change class:      Non-trivial BY POLICY (platform-protected auto-generated file)
-Status:            STOPPED (no remedy applied — deliberate)
+Status:            IMPLEMENTED (minimum pure-annotation remedy)
 Verification:      PASS (evidence complete; conclusion is "do not fix")
 Certification:     NOT CERTIFIED
 Baseline:          BASELINE-NAZRA-001 (binds to commit a33f49b9, not 2ef870b)
@@ -109,8 +109,11 @@ errors** — `exclude` drops root files only, and the file is transitively impor
 `client.ts`. Broad relaxation would hide application-owned errors and is prohibited. `vite build`
 exits 0; runtime is unaffected.
 
-Outcome: PRE-TS-001 stays OPEN/DEFERRED; time-boxed exception `EXC-001` registered.
-Source files modified: 0.
+Outcome: exclusion rejected as ineffective; the build gate required a real remedy, so the
+minimum pure-annotation change was applied in isolation (`: Promise<void>` on setItem /
+removeItem, `(): void` on the two then-callbacks). `tsgo -p tsconfig.app.json` is clean;
+no strictness weakened; no other file touched. `EXC-001` closed as resolved.
+Source files modified: 1 (Unit 1 only — zero Batch B files).
 
 ---
 
