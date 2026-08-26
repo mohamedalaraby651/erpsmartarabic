@@ -1,0 +1,80 @@
+{
+  "evidence": {
+    "evidenceId": "WAVE1-PHASEA-001",
+    "snapshotId": "SNAPSHOT-20260826-001",
+    "baselineId": "BASELINE-NAZRA-001",
+    "parentBaseline": "BASELINE-UX3A-002",
+    "gitCommit": "3b7b6c34e8b6a04b9c3a29017aaf1b01d7ffacea",
+    "wave0ArtifactCommit": "a33f49b9",
+    "baselineCommitCorrection": "BASELINE-NAZRA-001 must bind to a33f49b9, not 2ef870b — the later commit is the one holding all ten Wave 0 artifacts.",
+    "generatedAt": "2026-08-26T00:45:00.000Z",
+    "environment": "lovable-sandbox",
+    "commands": [
+      "npx tsgo -p tsconfig.app.json --noEmit",
+      "npx vite build",
+      "node scripts/fitness/run-all.mjs",
+      "node scripts/audits/dep-graph.mjs"
+    ],
+    "result": "AUDIT COMPLETE — recommendation only, no certification",
+    "owner": "Human Governance",
+    "generatorVersion": "1.0.0",
+    "schemaVersion": 1
+  },
+  "phase": "A",
+  "sourceFilesModified": 0,
+  "unit1_PRE_TS_001": {
+    "status": "OPEN_DEFERRED",
+    "changeClass": "non-trivial-by-policy",
+    "sourceOfTruth": "tsconfig.app.json (noImplicitAny: true, include: src)",
+    "narrowExclusionTested": true,
+    "narrowExclusionEffective": false,
+    "reason": "TypeScript exclude removes root files only; previewAuthStorage.ts is transitively imported via client.ts, so both TS7011 errors persist.",
+    "appOwnedCoverageLoss": "none (no change applied)",
+    "buildExit": 0,
+    "exception": "EXC-001"
+  },
+  "canonicalCounts": {
+    "fitness": { "active": 32, "pending": 9, "failures": 0 },
+    "criticalLayerViolationsTotal": 171,
+    "byRoute": {
+      "components→repositories": 41,
+      "components→supabase-client": 38,
+      "hooks→supabase-client": 31,
+      "pages→supabase-client": 29,
+      "pages→repositories": 27,
+      "components→services": 5,
+      "domain→ui": 0
+    },
+    "cycles": { "total": 6, "ui": 0 }
+  },
+  "decisionMatrix": {
+    "rows": 27,
+    "actions": {
+      "REDIRECT_EXISTING_FACADE": 1,
+      "CREATE_GROUPED_FACADE": 15,
+      "DEFER": 11,
+      "OUT_OF_SCOPE": 0,
+      "FALSE_POSITIVE": 0
+    }
+  },
+  "projected": {
+    "pagesToRepositories": { "before": 27, "after": 11, "target": 13, "achievable": true },
+    "criticalTotal": { "before": 171, "after": 155, "target": 155, "achievable": true }
+  },
+  "proposedFacades": [
+    { "path": "@/application/queries/admin", "wraps": ["adminRepository", "adminMetricsRepository"], "consumers": 7 },
+    { "path": "@/application/queries/treasury", "wraps": ["treasuryRepository"], "consumers": 2 },
+    { "path": "@/application/queries/expenses", "wraps": ["expenseRepository"], "consumers": 3 },
+    { "path": "@/application/queries/reference", "wraps": ["referenceRepository"], "consumers": 3 },
+    { "path": "@/application/queries/attendance", "wraps": ["attendanceRepository"], "consumers": 2 },
+    { "path": "@/application/queries/quotations", "wraps": ["legacyQuotationsRepository"], "consumers": 5 },
+    { "path": "@/application/queries/sales-orders", "wraps": ["salesOrderRepository"], "consumers": 2 },
+    { "path": "@/application/queries/purchase-orders", "wraps": ["purchaseOrderRepository"], "consumers": 2 }
+  ],
+  "review001Recommendation": {
+    "letter": "A",
+    "definition": "Scope valid — the observed delta is fully remediable inside the frozen Batch B contract",
+    "selfCertification": false
+  },
+  "phaseB": "STOP — Phase C requires human approval and a frozen BATCHB-SCOPE-001"
+}

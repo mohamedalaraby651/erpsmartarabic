@@ -44,3 +44,15 @@ Source: `CODEBASE-INVENTORY-001` / `SNAPSHOT-20260825-001` (commit `2ef870b`). O
 | Edge functions (repository-observed) | 15 |
 | RPCs referenced in code | 47 |
 | Tables/views referenced in code | 97 |
+
+## Canonical counts — Wave 1 Phase A (fitness pipeline, commit 3b7b6c3)
+
+Sourced from `dep-graph.mjs` + `run-all.mjs`, not from the inventory observer.
+
+| Signal | Canonical | Batch B target | Projected after Phase C |
+|---|---|---|---|
+| Fitness failures | 0 | 0 | 0 |
+| Critical layer violations (total) | 171 | ≤ 155 | 155 |
+| `pages → repositories` | 27 | ≤ 13 | 11 |
+| Cycles (all / UI) | 6 / 0 | 0 UI | 6 / 0 |
+| Vite build | PASS | PASS | PASS |
