@@ -23,7 +23,7 @@ import {
   usePurchaseOrdersCount,
   useDeletePurchaseOrder,
 } from "@/hooks/usePurchaseOrders";
-import type { PurchaseOrderRow } from "@/lib/repositories/purchaseOrderRepository";
+import type { PurchaseOrderRow } from "@/application/queries/purchase-orders";
 import { PurchaseOrderStats } from "./components/PurchaseOrderStats";
 import { PurchaseOrderTable } from "./components/PurchaseOrderTable";
 import { PurchaseOrderMobileList } from "./components/PurchaseOrderMobileList";

@@ -56,3 +56,5 @@ Sourced from `dep-graph.mjs` + `run-all.mjs`, not from the inventory observer.
 | `pages → repositories` | 27 | ≤ 13 | 11 |
 | Cycles (all / UI) | 6 / 0 | 0 UI | 6 / 0 |
 | Vite build | PASS | PASS | PASS |
+
+| 2026-08-27 | WAVE1-PHASEC2-001 | pages→repositories 11 (≤13) | violations 155 (≤155) | UI cycles 0 | fitness failures 0 | FanOut no regression | NOT CERTIFIED |

@@ -1,11 +1,11 @@
 {
   "evidence": {
     "evidenceId": "CODEBASE-INVENTORY-001",
-    "snapshotId": "SNAPSHOT-20260825-001",
+    "snapshotId": "SNAPSHOT-20260827-001",
     "baselineId": "BASELINE-NAZRA-001",
     "parentBaseline": "BASELINE-UX3A-002",
-    "gitCommit": "2ef870b01e78703a423716f05707729160a07a11",
-    "generatedAt": "2026-08-25T21:36:14.497Z",
+    "gitCommit": "9ae653b0aee888b58a68f8316359cfcea26a8cba",
+    "generatedAt": "2026-08-27T11:32:32.363Z",
     "environment": "lovable-sandbox",
     "command": "node scripts/audits/codebase-inventory.mjs",
     "result": "GENERATED",
@@ -16,7 +16,7 @@
       {
         "path": "scripts/audits/output/dependency-report.json",
         "present": true,
-        "sha256": "3c1a83a7d3b8ff43b24750ef9c619a6cb9fab966e4fef8130e3850cd608dce94"
+        "sha256": "e10cd615d3b32c51d2637eb6ee313e1130f0bb97995630f78840ef35aa72b58d"
       },
       {
         "path": "scripts/audits/output/component-report.json",
@@ -40,15 +40,15 @@
       }
     ],
     "dependencyLockHash": "b74bd3308fe1b446defbe73226b07bf88c0d54db8e1682b1ac0b7af02365d9d0",
-    "artifactHash": "d3e23e7ae50ea51681568d2d3fb0299f7ecdaea0a960bc8867b5a681e57f2b57",
+    "artifactHash": "5dce7d378e6180e2413f41323c3d348b5a16cdf104b58bb922361b2c5407d686",
     "validity": "valid while gitCommit matches HEAD"
   },
   "disclaimer": "Inventory observes the system; it does not certify the system or authorize architectural decisions. This artifact is an observation tool, not a fitness check, and is not wired into any gate. Backend entries are a repository-observed surface, not a verified live backend.",
   "totals": {
-    "sourceFiles": 1202,
+    "sourceFiles": 1210,
     "modules": 174,
-    "totalModulesInDependencyGraph": 1201,
-    "totalEdges": 4771,
+    "totalModulesInDependencyGraph": 1210,
+    "totalEdges": 4789,
     "components": 873,
     "routes": 98,
     "repositories": 44,
@@ -111,13 +111,13 @@
     {
       "path": "src/application/queries",
       "layer": "application",
-      "files": 5,
-      "loc": 71,
-      "publicExports": 4,
+      "files": 13,
+      "loc": 176,
+      "publicExports": 12,
       "barrels": [
         {
           "file": "src/application/queries/index.ts",
-          "exports": 4
+          "exports": 12
         }
       ]
     },
@@ -1777,7 +1777,7 @@
   "layers": [
     {
       "layer": "application",
-      "files": 25,
+      "files": 33,
       "observedOutboundViolations": 0
     },
     {
@@ -1828,7 +1828,7 @@
     {
       "layer": "pages",
       "files": 100,
-      "observedOutboundViolations": 56
+      "observedOutboundViolations": 40
     },
     {
       "layer": "platform",
@@ -1887,7 +1887,7 @@
     {
       "barrel": "src/application/queries/index.ts",
       "present": true,
-      "observedExports": 4,
+      "observedExports": 12,
       "observedBudget": 30,
       "observedBudgetStatus": "within-observed-budget"
     },
@@ -2125,11 +2125,11 @@
       ]
     },
     "observedLayerViolations": {
-      "total": 171,
+      "total": 155,
       "bySummary": {
         "components→repositories": 41,
         "components→services": 5,
-        "pages→repositories": 27,
+        "pages→repositories": 11,
         "hooks→supabase-client": 31,
         "components→supabase-client": 38,
         "pages→supabase-client": 29,

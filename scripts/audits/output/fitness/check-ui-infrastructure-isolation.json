@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "fitness": "check-ui-infrastructure-isolation",
   "adr": "ADR-0011",
-  "scannedFiles": 56,
+  "scannedFiles": 64,
   "violations": [],
   "pass": true
 }

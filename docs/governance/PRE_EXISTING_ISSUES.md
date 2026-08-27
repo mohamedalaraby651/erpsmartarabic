@@ -103,3 +103,15 @@ platform-side generator emits the annotations.
 - Classification: Platform Regeneration Drift (recurring)
 - Batch B impact: NONE · Scope hash impact: NONE
 - Evidence: `npx tsgo -p tsconfig.app.json --noEmit` exit 0
+
+### PRE-PDF-001 — 3 pre-existing test failures (observed during C2 evidence run)
+- `src/lib/pdf/arabic/arabicCss.test.ts` — unterminated string constant
+- `src/lib/pdf/engine/HtmlPdfEngine.test.ts` — unterminated string constant
+- `src/domain/pdf/value-objects/PdfBranding.test.ts` — contrastRatio expected 21, got 1
+- Cause: earlier raw-color token substitution inside test string literals
+- Files are outside the Batch B approved set → NOT fixed in C2 (scope contract > green suite)
+- Status: OPEN / separate track
+
+### PRE-TS-001 — recurrence #3 (2026-08-27, during C2 preflight)
+- Same Platform Regeneration Drift; annotations re-applied as preflight before any Batch B write
+- Batch B impact: NONE · Scope hash impact: NONE

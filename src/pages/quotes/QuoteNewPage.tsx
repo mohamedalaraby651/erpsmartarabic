@@ -17,7 +17,7 @@ import { ArrowRight, Save, Plus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateQuote } from "@/hooks/sales-cycle/useQuotes";
 import { customerRepository } from "@/application/queries/customers";
-import { referenceRepository } from "@/lib/repositories/referenceRepository";
+import { referenceRepository } from "@/application/queries/reference";
 import type { Database } from "@/integrations/supabase/types";
 import { useQuotationItems } from "@/components/quotations/useQuotationItems";
 import { QuotationItemsTable } from "@/components/quotations/QuotationItemsTable";

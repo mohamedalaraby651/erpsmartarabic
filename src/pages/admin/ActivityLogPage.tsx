@@ -30,7 +30,7 @@ import { ExportButton } from '@/components/reports/ExportButton';
 import { Activity, Search, Eye, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useActivityLog } from '@/hooks/admin';
-import type { ActivityLogEntry } from '@/lib/repositories/adminMetricsRepository';
+import type { ActivityLogEntry } from '@/application/queries/admin';
 
 const ActivityLogPage = () => {
   const [searchQuery, setSearchQuery] = useState('');

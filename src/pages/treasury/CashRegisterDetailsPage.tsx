@@ -36,7 +36,7 @@ import {
 import type {
   CashRegisterRow,
   CashTransactionRow,
-} from '@/lib/repositories/treasuryRepository';
+} from '@/application/queries/treasury';
 
 type CashRegister = CashRegisterRow;
 type CashTransaction = CashTransactionRow;
