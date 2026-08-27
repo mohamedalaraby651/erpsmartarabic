@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { expenseRepository } from '@/lib/repositories/expenseRepository';
+import { expenseRepository } from '@/application/queries/expenses';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

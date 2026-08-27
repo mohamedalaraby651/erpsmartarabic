@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ShieldCheck, Eye, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuditTrail } from '@/hooks/admin';
-import type { AuditTrailEntry } from '@/lib/repositories/adminMetricsRepository';
+import type { AuditTrailEntry } from '@/application/queries/admin';
 
 type AuditEntry = AuditTrailEntry;
 

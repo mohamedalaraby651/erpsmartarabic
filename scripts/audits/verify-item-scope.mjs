@@ -48,7 +48,7 @@ for (const spec of MIXED_SCOPE_FILES) {
   // 2) Diff must contain only the authorized change.
   let diff = '';
   try {
-    diff = execFileSync('git', ['diff', '--unified=0', '--', spec.path], {
+    diff = execFileSync('git', ['diff', '--unified=0', process.env.SCOPE_BASE || 'HEAD', '--', spec.path], {
       encoding: 'utf8',
     });
   } catch (e) {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { adminRepository } from '@/lib/repositories';
+import { adminRepository } from '@/application/queries/admin';
 import { toast } from 'sonner';
 import { getSafeErrorMessage, logErrorSafely } from '@/lib/errorHandler';
 import PageHeader from '@/components/navigation/PageHeader';

@@ -9,24 +9,24 @@
 | Field | Value |
 |---|---|
 | Evidence ID | CODEBASE-INVENTORY-001 |
-| Snapshot ID | SNAPSHOT-20260825-001 |
+| Snapshot ID | SNAPSHOT-20260827-001 |
 | Baseline | BASELINE-NAZRA-001 |
 | Parent Baseline | BASELINE-UX3A-002 |
-| Git Commit | 2ef870b01e78703a423716f05707729160a07a11 |
-| Generated At | 2026-08-25T21:36:14.497Z |
+| Git Commit | 9ae653b0aee888b58a68f8316359cfcea26a8cba |
+| Generated At | 2026-08-27T11:32:32.363Z |
 | Environment | lovable-sandbox |
 | Command | `node scripts/audits/codebase-inventory.mjs` |
 | Result | GENERATED |
 | Generator Version | 1.0.0 |
 | Schema Version | 1 |
-| Artifact Hash | `d3e23e7ae50ea51681568d2d3fb0299f7ecdaea0a960bc8867b5a681e57f2b57` |
+| Artifact Hash | `5dce7d378e6180e2413f41323c3d348b5a16cdf104b58bb922361b2c5407d686` |
 | Owner | Human Governance |
 
 ### Source artifacts
 
 | Artifact | Present | SHA-256 |
 |---|---|---|
-| `scripts/audits/output/dependency-report.json` | yes | `3c1a83a7d3b8ff43…` |
+| `scripts/audits/output/dependency-report.json` | yes | `e10cd615d3b32c51…` |
 | `scripts/audits/output/component-report.json` | yes | `721a4d29a5925334…` |
 | `scripts/audits/output/route-report.json` | yes | `bf6106fcac08d768…` |
 | `scripts/audits/output/data-access-report.json` | yes | `63cfcee087b14ac3…` |
@@ -36,10 +36,10 @@
 
 | Metric | Observed |
 |---|---|
-| Source files (src) | 1202 |
+| Source files (src) | 1210 |
 | Modules | 174 |
-| Modules in dependency graph | 1201 |
-| Dependency edges | 4771 |
+| Modules in dependency graph | 1210 |
+| Dependency edges | 4789 |
 | Component/hook files | 873 |
 | Routes | 98 |
 | Repositories | 44 |
@@ -49,7 +49,7 @@
 
 | Layer | Files | Observed outbound violations |
 |---|---|---|
-| application | 25 | 0 |
+| application | 33 | 0 |
 | components | 431 | 84 |
 | composition | 2 | 0 |
 | domain | 55 | 0 |
@@ -59,7 +59,7 @@
 | kernel | 9 | 0 |
 | lib | 139 | 0 |
 | other | 2 | 0 |
-| pages | 100 | 56 |
+| pages | 100 | 40 |
 | platform | 34 | 0 |
 | queries | 2 | 0 |
 | repositories | 44 | 0 |
@@ -77,7 +77,7 @@ An entry marked `over-observed-budget` is an **observation**, not a declared arc
 | Barrel | Observed exports | Observed budget | Status |
 |---|---|---|---|
 | `src/application/finance/index.ts` | 1 | 30 | within-observed-budget |
-| `src/application/queries/index.ts` | 4 | 30 | within-observed-budget |
+| `src/application/queries/index.ts` | 12 | 30 | within-observed-budget |
 | `src/composition/index.ts` | 2 | 15 | within-observed-budget |
 | `src/domain/finance/index.ts` | 19 | 40 | within-observed-budget |
 | `src/infrastructure/finance/index.ts` | 1 | 20 | within-observed-budget |
@@ -90,7 +90,7 @@ An entry marked `over-observed-budget` is an **observation**, not a declared arc
 
 - Cycles observed: **6**
 - Deepest import chain: **18**
-- Total observed layer violations: **171**
+- Total observed layer violations: **155**
 
 ### Observed layer violations by route
 
@@ -100,7 +100,7 @@ An entry marked `over-observed-budget` is an **observation**, not a declared arc
 | components→supabase-client | 38 |
 | hooks→supabase-client | 31 |
 | pages→supabase-client | 29 |
-| pages→repositories | 27 |
+| pages→repositories | 11 |
 | components→services | 5 |
 | domain→ui | 0 |
 

@@ -32,7 +32,7 @@ import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/Mobi
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";
 import { useSalesOrdersList, useDeleteSalesOrder } from "@/hooks/useSalesOrders";
-import type { SalesOrderRow } from "@/lib/repositories/salesOrderRepository";
+import type { SalesOrderRow } from "@/application/queries/sales-orders";
 
 type SalesOrder = SalesOrderRow;
 
