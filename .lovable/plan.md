@@ -67,7 +67,9 @@ New facade count:              8
 Approved source files:  [exact list]
 Approved facade files:  [exact list]
 
-Scope Hash: <sha256 over the sorted approved file list>
+Scope Hash: SHA-256 of
+  (approved paths → POSIX separators → lexicographic sort
+   → newline-delimited canonical text)
 
 C2 may modify ONLY approved source files and approved facade files.
 Any file outside the set                → STOP
@@ -76,7 +78,9 @@ Any change to a deferred item           → STOP
 Any DB/RLS/SQL/Edge Function change     → STOP
 ```
 
-The hash is part of the contract, not metadata: C2 must prove `Actual changed files == Approved files` mechanically. `Actual − Approved ≠ ∅` is a STOP even for a trivial file. A supporting file discovered as necessary must surface as a written scope exception before C2, never be added silently. If a deferred row turns out to be required by one of the 16: STOP → explain dependency → human decision → scope amendment.
+The hash is contractual, not metadata. C2 verification: `git diff --name-only` → normalize separators → sort → compare against the approved set, requiring **exact set equality** (`Actual == Approved`), not `Actual ⊆ Approved`. Any difference in either direction is a STOP, even for a trivial file. The only exception is a written Scope Amendment approved *before* the edit. If a deferred row turns out to be required by one of the 16: STOP → explain dependency → human decision → scope amendment.
+
+Baseline chain for C2 (no full re-analysis): `BASELINE-NAZRA-001 @ a33f49b9` + Phase A evidence + C1 scope hash + C1 decision matrix → C2 → delta + evidence → `BASELINE-NAZRA-002` on human approval.
 
 ## Hard rules for this wave
 
