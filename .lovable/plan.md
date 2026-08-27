@@ -2,15 +2,15 @@
 
 Authority granted by this plan ends at the end of C1. **No source file is modified.** C2 (remediation) starts only after a separate human review of the C1 table.
 
-## One discrepancy to resolve before freezing
+## Approved architectural correction
 
-`BATCHB-SCOPE-001` as written allows new facades named `documents` and `finance`. Phase A did **not** propose those names — it explicitly rejected catch-all `finance.ts` / `documents.ts` buckets and instead proposed eight domain-coherent facades:
+`documents` / `finance` are removed from Batch B entirely. The eight domain-coherent Phase A facades (each with proven ≥2 consumers) are the only new facades:
 
 ```text
 admin · treasury · expenses · reference · attendance · quotations · sales-orders · purchase-orders
 ```
 
-The frozen scope will be recorded with the eight Phase A facades (each with proven ≥2 consumers) replacing the `documents` / `finance` clause. Everything else in `BATCHB-SCOPE-001` is recorded verbatim. If you want the literal `documents` / `finance` wording kept instead, say so and C1 is re-issued against that wording.
+Rule recorded in the frozen scope: a facade groups a coherent query responsibility; it must never become a catch-all escape hatch. Everything else in `BATCHB-SCOPE-001` is recorded verbatim.
 
 ## Deliverable 1 — `docs/governance/BATCHB_SCOPE_001.md` (frozen contract)
 
