@@ -141,3 +141,63 @@ Recommendation only; the decision belongs to the reviewer.
 
 Source files modified: 0. **PHASE B = STOP.** Phase C awaits approval and a frozen
 `BATCHB-SCOPE-001`.
+
+## WAVE 1 — Preflight Unit 1 (recurrence) · PRE-TS-001
+
+```text
+WAVE / BATCH:      Wave 1 · Preflight Unit 1 (independent)
+Scope:             src/integrations/supabase/previewAuthStorage.ts (1 file)
+Change class:      Type annotation only — zero behavior change
+Status:            IMPLEMENTED
+Verification:      PASS — npx tsgo -p tsconfig.app.json --noEmit exit 0
+Certification:     NOT CERTIFIED
+Batch B coupling:  NONE — not in BATCHB-SCOPE-001, not in the scope hash
+```
+
+Classified as **Platform Regeneration Drift**. Root cause investigated before re-applying
+(file is platform-generated, no in-repo canonical source, tsconfig exclusion already proven
+ineffective). No durable remedy is claimed; recurrence is expected on future regeneration.
+
+## WAVE 1 — Unit 2 · Sprint 3.1 Batch B · PHASE C1 (Scope Freeze + Execution Plan)
+
+```text
+WAVE / BATCH:      Wave 1 · Unit 2 · Phase C1
+Scope:             Scope freeze + 16-row execution plan (planning only)
+Change class:      Governance / documentation
+Status:            COMPLETE
+Source changes:    0
+Scope:             FROZEN
+Evidence:          WAVE1-PHASEC1-001
+Certification:     NOT CERTIFIED (no self-certification)
+```
+
+Deliverables:
+- `docs/governance/BATCHB_SCOPE_001.md` — LOCKED contract
+- `docs/architecture/WAVE1_SPRINT3_BATCHB_PHASEC1.md` — 16-row plan + Scope Integrity Block
+- `docs/security/2fa-containment-record.md` — CONTAINED / REQUIRED / NOT CERTIFIED, 5 proofs
+- `docs/risk-log/RISK-007-security-backlog.md` — 6 findings, separate Security Track
+
+Architectural correction adopted: `documents` / `finance` removed from Batch B; the eight
+domain-coherent facades are `admin · treasury · expenses · reference · attendance ·
+quotations · sales-orders · purchase-orders`.
+
+```text
+Scope Hash: eab102bd71ccd916f5cf32284d27d0b03ed32008b0849b18687740f7fa32eb84
+Baseline:   BASELINE-NAZRA-001 @ a33f49b9
+Items:      16 authorized · 11 deferred · 8 new facades
+```
+
+C2 must prove **exact set equality** between changed source files and the approved list.
+
+```text
+PHASE C1 — COMPLETE
+Implementation:  VERIFIED
+Source Changes:  0
+Scope:           FROZEN
+Evidence:        AVAILABLE
+Certification:   NOT CERTIFIED
+
+STOP — HUMAN REVIEW REQUIRED
+```
+
+**C2 is NOT started and NOT authorized.**
