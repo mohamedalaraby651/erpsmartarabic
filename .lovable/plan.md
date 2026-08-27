@@ -31,6 +31,8 @@ Each row states whether the import is type-only or value, since type-only redire
 
 The document ends with: the facade files to be created (8), the exact symbols each re-exports, the untouched deferred list (11 rows), and the pre/post evidence commands to be run in C2.
 
+Per-facade admission proof C2 must record (all six, not consumer count alone): ≥2 consumers · coherent responsibility · wraps an existing repository/query responsibility · no business logic · not a hook-as-facade · no semantic change. The facade must stay thin: `Consumer → Facade → existing query/repository`, nothing else.
+
 ## Deliverable 3 — security separation record
 
 `docs/security/2fa-containment-record.md`:
@@ -39,9 +41,10 @@ The document ends with: the facade files to be created (8), the exact symbols ea
 Exposure:       CONTAINED
 Verification:   REQUIRED
 Certification:  NOT CERTIFIED
+Outstanding proofs: 5
 ```
 
-with the four outstanding proofs listed (unauthorized client read denied, server verification works, backup-code verification works, tenant/RLS boundary correct, secret material not exposed).
+The five proofs: unauthorized client read denied · server verification works · backup-code verification works · tenant/RLS boundary correct · secret material not exposed.
 
 `docs/risk-log/RISK-007-security-backlog.md`: the 6 remaining scanner findings (1 TOTP-related, 5 raw DB error disclosure) recorded as a **separate track**, not classified as false positives without scanner evidence, and explicitly out of Batch B.
 
