@@ -39,16 +39,15 @@ the module-specifier line of its existing multi-line type import.
 
 ### File-level (Scope Hash)
 
-`git diff --name-only a33f49b9 -- src` → 26 files:
+`git diff --name-only a33f49b9 -- src | sort` → **25 files**:
 
 ```text
-25 approved files (16 pages + 9 application/queries)  == Approved set   ✔ exact equality
- 1 src/integrations/supabase/previewAuthStorage.ts    -> PRE-TS-001 preflight,
-                                                         declared out of Batch B scope,
-                                                         zero scope-hash impact
+25 approved files (16 pages + 9 application/queries) == Approved set   ✔ exact equality
 ```
 
-Actual − Approved = {previewAuthStorage.ts (declared preflight)} · Approved − Actual = ∅.
+Actual − Approved = ∅ · Approved − Actual = ∅.
+The PRE-TS-001 preflight file (`src/integrations/supabase/previewAuthStorage.ts`) is platform-regenerated;
+it does not appear in the final delta and carries zero scope-hash impact.
 
 ### Item-level (mechanical assertion)
 
