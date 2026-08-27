@@ -208,3 +208,11 @@ STOP — HUMAN REVIEW REQUIRED
 - Approved file list unchanged → Scope Hash unchanged: eab102bd71ccd916f5cf32284d27d0b03ed32008b0849b18687740f7fa32eb84
 - Batch B source changes: 0 · PRE-TS-001 recurrence #2 handled as preflight
 - State: C1 VERIFIED · Scope FROZEN · Item-level boundary REQUIRED · C2 READY FOR AUTHORIZATION · NOT CERTIFIED
+
+## 2026-08-27 — WAVE1-PHASEC2-001 (Batch B remediation executed)
+- 8 thin facades created + barrel updated; 16/16 redirects executed per C1 matrix
+- File-level scope: exact equality (25 approved) + declared preflight file; item-level: MATCH
+- pages→repositories 27 → 11 · violations 171 → 155 · UI cycles 0 · fitness failures 0 · FanOut unchanged
+- tsgo 0 · build 0 · 1581 tests pass (3 pre-existing PDF failures, PRE-PDF-001)
+- Deferred rows untouched (11) · STOP conditions triggered: none
+- Certification: NOT CERTIFIED — awaiting human review → BASELINE-NAZRA-002
