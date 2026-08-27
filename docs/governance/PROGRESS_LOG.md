@@ -201,3 +201,10 @@ STOP — HUMAN REVIEW REQUIRED
 ```
 
 **C2 is NOT started and NOT authorized.**
+
+## 2026-08-27 — Scope amendment (item-level enforcement)
+- Added FILE-INTERNAL SCOPE CONTROL + ITEM-LEVEL SCOPE RULE to `BATCHB_SCOPE_001.md` and `WAVE1_SPRINT3_BATCHB_PHASEC1.md`
+- Added mechanical assertion `scripts/audits/verify-item-scope.mjs` (exit 0 = MATCH, non-zero = STOP)
+- Approved file list unchanged → Scope Hash unchanged: eab102bd71ccd916f5cf32284d27d0b03ed32008b0849b18687740f7fa32eb84
+- Batch B source changes: 0 · PRE-TS-001 recurrence #2 handled as preflight
+- State: C1 VERIFIED · Scope FROZEN · Item-level boundary REQUIRED · C2 READY FOR AUTHORIZATION · NOT CERTIFIED
