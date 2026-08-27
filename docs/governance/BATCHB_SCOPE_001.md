@@ -112,3 +112,87 @@ STOP immediately if: a deferred row becomes necessary · a new facade is propose
 
 - `PRE-TS-001` (Platform Regeneration Drift) — independent Preflight Unit, zero scope-hash impact
 - 2FA containment record and `RISK-007` security backlog — separate Security Track
+
+## FILE-INTERNAL SCOPE CONTROL (contractual — added pre-C2, APPROVED)
+
+```text
+Where an approved source file contains both authorized and deferred
+items, file-level scope equality is insufficient.
+
+C2 MUST additionally enforce item-level change boundaries.
+
+ExpensesPage.tsx:
+  Authorized:
+    Row 10 — import expenseRepository
+    MAY change only the authorized import line.
+
+  Deferred:
+    Row 13 — mapRepoError from '@/lib/repositories/_base'
+    MUST remain byte-identical.
+
+Required proof:
+  git diff -- ExpensesPage.tsx
+
+Expected result:
+  exactly one authorized import-line change;
+  no other changed lines in the file.
+
+Any additional changed line, hunk, import, formatting change,
+reordering, or whitespace modification outside the authorized line
+→ STOP.
+
+No automatic cleanup or formatting is permitted.
+```
+
+## ITEM-LEVEL SCOPE RULE (general)
+
+```text
+If a file contains both authorized and deferred work:
+
+  File membership     = controlled by Scope Hash
+  Change location     = controlled by item-level boundary
+
+Both controls are mandatory.
+
+File approved ≠ entire file editable.
+```
+
+## Mechanical assertion (mandatory in C2)
+
+Visual diff review is NOT sufficient. C2 MUST run, before and after execution:
+
+```bash
+node scripts/audits/verify-item-scope.mjs
+```
+
+The script asserts, for every mixed-scope file, that the diff contains exactly the
+authorized changed lines and that every deferred line is byte-identical.
+Exit code 0 = MATCH → continue. Non-zero = MISMATCH → STOP.
+
+```text
+C2
+                     │
+          ┌──────────┴──────────┐
+          ▼                     ▼
+   File-level control     Item-level control
+   Scope Hash             Deferred boundaries
+          │                     │
+          └──────────┬──────────┘
+                     ▼
+              Exact diff proof
+                     │
+              ┌──────┴──────┐
+              ▼             ▼
+            MATCH         MISMATCH
+              │               │
+              ▼               ▼
+          Continue           STOP
+```
+
+## Scope Hash impact of this amendment
+
+```text
+Approved file list: UNCHANGED
+Scope Hash:         eab102bd71ccd916f5cf32284d27d0b03ed32008b0849b18687740f7fa32eb84 (unchanged)
+Amendment type:     enforcement constraint only (no scope expansion)
+```

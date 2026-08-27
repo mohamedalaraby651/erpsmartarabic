@@ -187,3 +187,62 @@ Certification:   NOT CERTIFIED
 
 STOP — HUMAN REVIEW REQUIRED
 ```
+
+---
+
+## FILE-INTERNAL SCOPE CONTROL (contractual — binds C2)
+
+```text
+Where an approved source file contains both authorized and deferred
+items, file-level scope equality is insufficient.
+
+C2 MUST additionally enforce item-level change boundaries.
+
+ExpensesPage.tsx:
+  Authorized:
+    Row 10 — import expenseRepository
+    MAY change only the authorized import line.
+
+  Deferred:
+    Row 13 — mapRepoError from '@/lib/repositories/_base'
+    MUST remain byte-identical.
+
+Required proof:
+  git diff -- ExpensesPage.tsx
+
+Expected result:
+  exactly one authorized import-line change;
+  no other changed lines in the file.
+
+Any additional changed line, hunk, import, formatting change,
+reordering, or whitespace modification outside the authorized line
+→ STOP.
+
+No automatic cleanup or formatting is permitted.
+```
+
+## ITEM-LEVEL SCOPE RULE (general)
+
+```text
+If a file contains both authorized and deferred work:
+
+  File membership     = controlled by Scope Hash
+  Change location     = controlled by item-level boundary
+
+Both controls are mandatory.
+
+File approved ≠ entire file editable.
+```
+
+Mechanical enforcement (not visual review): `node scripts/audits/verify-item-scope.mjs`
+runs before and after C2 execution. MATCH → continue. MISMATCH → STOP.
+
+```text
+C1                    VERIFIED
+Scope                 FROZEN
+Scope Hash            VERIFIED (eab102bd…32eb84, unchanged by this amendment)
+Item-level boundary   REQUIRED
+PRE-TS-001            RESOLVED (preflight, out of scope)
+C2                    READY FOR AUTHORIZATION
+Certification         NOT CERTIFIED
+```

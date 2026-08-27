@@ -96,3 +96,10 @@ recurrence → independent Unit 1 → fix → typecheck + build
 No Batch B remediation may ever be bundled with PRE-TS-001, and the file never enters
 the Batch B scope hash. Expect recurrence on every future regeneration until the
 platform-side generator emits the annotations.
+
+### PRE-TS-001 — recurrence #2 (2026-08-27)
+- Trigger: platform regeneration of `src/integrations/supabase/previewAuthStorage.ts` (TS7011 @ 81,85)
+- Action: independent Preflight micro-change — re-applied minimal return-type annotations only
+- Classification: Platform Regeneration Drift (recurring)
+- Batch B impact: NONE · Scope hash impact: NONE
+- Evidence: `npx tsgo -p tsconfig.app.json --noEmit` exit 0
