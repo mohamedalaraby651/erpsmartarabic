@@ -233,3 +233,16 @@ STOP — HUMAN REVIEW REQUIRED
 - PRE-TS-001 recurrence #4 handled as an independent preflight micro-change before seal; zero scope-hash impact
 - Explicitly NOT claimed: Batch B Certified · Architecture Certified · G0 Passed · Phase 0 started
 - Next: G0 (Evidence Integrity) → Phase 0 (BOUNDARY_CATALOG.md · ADR-0031 · ADR-0044 · BASELINE-UX4-001)
+
+## 2026-08-28 — G0 Evidence Integrity Gate (G0-NAZRA-001) — PASS
+- Authorization: G0 only. Phase 0 explicitly NOT authorized by this decision.
+- Record: `docs/governance/G0_EVIDENCE_INTEGRITY_RECORD.md` · Machine-readable: `scripts/audits/output/g0-evidence-integrity.json`
+- Baseline under test: BASELINE-NAZRA-002 · Parent `a33f49b9` · Sealed commit `31052763` · Evidence revision `1bf0b5f1`
+- Composite re-verified: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87` (28/28 entries ok)
+- Preflight: PRE-TS-001 **recurrence #5** handled as an independent micro-change before any evidence run (zero scope-hash impact)
+- Evidence regenerated at G0 time (not reused): tsgo 0 · build 0 · lint 39/865 (pre-existing) ·
+  vitest 1581 passed / 1 failed / 3 failed files (PRE-PDF-001) · fitness active=32 pending=9 failures=0 ·
+  dep-graph 1210 modules / 6 cycles / 155 violations / 0 UI cycles / pages→repositories 11 · inventory 174/1210 · item-scope MATCH
+- Hashes recorded: package-lock `36702e53…`, bun.lockb `57954bd8…`, package.json `22df4faa…`, dist aggregate `4db9cb55…`
+- All 16 G0 checks PASS. Known failures (PRE-PDF-001, PRE-TS-001, RISK-007, lint) kept OPEN and visible — none reclassified.
+- Decision: **G0 PASS** · Certification NOT granted · Phase 0 awaiting explicit human authorization

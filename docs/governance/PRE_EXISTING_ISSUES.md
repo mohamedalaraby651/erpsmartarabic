@@ -129,3 +129,11 @@ platform-side generator emits the annotations.
 - Status: **OPEN / Deferred** · Scope: outside C2 · Not to be repaired opportunistically
 - Recorded in the baseline evidence explicitly: the suite is "1581 passing with 3 failing test files",
   never "tests green".
+
+### PRE-TS-001 — recurrence #5 (2026-08-28, G0 preflight)
+- Trigger: platform regeneration of `src/integrations/supabase/previewAuthStorage.ts` (TS7011 @ 79/83)
+- Action: independent preflight micro-change before any G0 evidence run — return-type annotations only
+- Evidence: `npx tsgo -p tsconfig.app.json --noEmit` exit 0
+- Batch B impact: NONE · Scope hash impact: NONE · Baseline composite impact: NONE
+- **Status escalated:** five recurrences. Symptom-only handling is now formally declared insufficient;
+  root-cause chain must be owned as a Phase 0 platform-boundary unit. Recorded in G0-NAZRA-001 check #15.
