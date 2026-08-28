@@ -115,3 +115,17 @@ platform-side generator emits the annotations.
 ### PRE-TS-001 — recurrence #3 (2026-08-27, during C2 preflight)
 - Same Platform Regeneration Drift; annotations re-applied as preflight before any Batch B write
 - Batch B impact: NONE · Scope hash impact: NONE
+
+### PRE-TS-001 — recurrence #4 (2026-08-28, before BASELINE-NAZRA-002 seal)
+- Trigger: platform regeneration of `src/integrations/supabase/previewAuthStorage.ts` (TS7011 @ 79-85)
+- Action: independent preflight micro-change — minimal return-type annotations re-applied only
+- Evidence: `npx tsgo -p tsconfig.app.json --noEmit` exit 0
+- Batch B impact: NONE · Scope hash impact: NONE
+- **Escalation:** four recurrences establish this as *process/platform drift*, not a TypeScript defect.
+  Root-cause chain (canonical source → generator → regeneration trigger → artifact) is now a
+  candidate boundary-ownership question for Phase 0. Do not keep treating the symptom silently.
+
+### PRE-PDF-001 — status at BASELINE-NAZRA-002
+- Status: **OPEN / Deferred** · Scope: outside C2 · Not to be repaired opportunistically
+- Recorded in the baseline evidence explicitly: the suite is "1581 passing with 3 failing test files",
+  never "tests green".
