@@ -216,3 +216,20 @@ STOP — HUMAN REVIEW REQUIRED
 - tsgo 0 · build 0 · 1581 tests pass (3 pre-existing PDF failures, PRE-PDF-001)
 - Deferred rows untouched (11) · STOP conditions triggered: none
 - Certification: NOT CERTIFIED — awaiting human review → BASELINE-NAZRA-002
+
+## 2026-08-28 — BASELINE-NAZRA-002 (sealed)
+- Human review of WAVE1-PHASEC2-001: **C2 VERIFIED / APPROVED FOR BASELINE SEAL** — Certification NOT granted
+- Baseline sealed: `docs/architecture/baseline/BASELINE-NAZRA-002.md`
+  - Parent: BASELINE-NAZRA-001 @ `a33f49b9` · Source commit: `31052763`
+  - Lock: `scripts/audits/output/wave1-batchb-lock.json`
+  - Manifest: `scripts/audits/output/baseline-nazra-002.json` (28 entries)
+  - Composite SHA-256: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`
+  - Integrity re-verified by `check-baseline-tag-integrity.mjs` → ok
+- Evidence regenerated at seal time (not reused): tsgo 0 · build 0 · lint 39/865 (pre-existing) ·
+  vitest 1581 passed / 1 failed / 3 failed files (PRE-PDF-001) · fitness active=32 failures=0 ·
+  dep-graph 1210 modules / 6 cycles / 155 violations · inventory 174 modules / 1210 files
+- Architecture: pages→repositories 11 · layer violations 155 · UI cycles 0 · total cycles 6 · FanOut unchanged
+- Open findings carried: PRE-PDF-001 (OPEN/Deferred), PRE-TS-001 (recurrence #4, Platform Regeneration Drift), RISK-007
+- PRE-TS-001 recurrence #4 handled as an independent preflight micro-change before seal; zero scope-hash impact
+- Explicitly NOT claimed: Batch B Certified · Architecture Certified · G0 Passed · Phase 0 started
+- Next: G0 (Evidence Integrity) → Phase 0 (BOUNDARY_CATALOG.md · ADR-0031 · ADR-0044 · BASELINE-UX4-001)

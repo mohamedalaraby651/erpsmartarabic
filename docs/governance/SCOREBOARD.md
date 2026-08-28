@@ -58,3 +58,18 @@ Sourced from `dep-graph.mjs` + `run-all.mjs`, not from the inventory observer.
 | Vite build | PASS | PASS | PASS |
 
 | 2026-08-27 | WAVE1-PHASEC2-001 | pages→repositories 11 (≤13) | violations 155 (≤155) | UI cycles 0 | fitness failures 0 | FanOut no regression | NOT CERTIFIED |
+
+## BASELINE-NAZRA-002 — sealed 2026-08-28
+
+| Signal | NAZRA-001 | NAZRA-002 | Target | Status |
+|---|---:|---:|---|---|
+| `pages → repositories` | 27 | 11 | ≤ 13 | ✅ |
+| Layer violations (total) | 171 | 155 | ≤ 155 | ✅ |
+| UI cycles | 0 | 0 | 0 | ✅ |
+| Total cycles | 6 | 6 | no regression | ✅ |
+| Fitness failures | 0 | 0 | 0 | ✅ |
+| Typecheck / Build | 0 / 0 | 0 / 0 | 0 / 0 | ✅ |
+| Vitest | 1581 pass / 3 failed files | 1581 pass / 3 failed files | — | ⚠️ PRE-PDF-001 OPEN |
+| Certification | — | NOT CERTIFIED | — | ⛔ |
+
+Composite: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`
