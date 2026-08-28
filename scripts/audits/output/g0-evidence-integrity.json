@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "recordId": "G0-NAZRA-001",
+  "gate": "G0 — Evidence Integrity",
+  "decision": "PASS",
+  "certification": "NOT_CERTIFIED",
+  "phase0Authorized": false,
+  "baseline": "BASELINE-NAZRA-002",
+  "parentBaseline": "BASELINE-NAZRA-001",
+  "parentCommit": "a33f49b9a593967dc5d623f018768de85a0d337c",
+  "sealedCommit": "31052763bf683cd3b1b0467c48c619df116c961c",
+  "evidenceRevision": "1bf0b5f126ee40982512729939d7c658cfc1df62",
+  "composite": "1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87",
+  "scopeHash": "eab102bd71ccd916f5cf32284d27d0b03ed32008b0849b18687740f7fa32eb84",
+  "checks": {
+    "sourceRevision": "PASS",
+    "baselineIdentity": "PASS",
+    "parentBaseline": "PASS",
+    "evidenceFreshness": "PASS",
+    "evidenceLineage": "PASS",
+    "artifactHashes": "PASS",
+    "dependencyLockHash": "PASS",
+    "buildHash": "PASS",
+    "testSnapshot": "PASS",
+    "fitnessSnapshot": "PASS",
+    "architectureSnapshot": "PASS",
+    "adrState": "PASS",
+    "openP0Findings": "PASS",
+    "prePdf001Visibility": "PASS",
+    "preTs001RecurrenceVisibility": "PASS",
+    "noUnauthorizedChanges": "PASS"
+  },
+  "hashes": {
+    "packageLockJson": "36702e53833f5c91936509d182fa2426a14429a99145bd0b44dddc88456793b0",
+    "bunLockb": "57954bd8ba6493ea7d74faa1381295829ff33ed882e78e1a7bf9166fa2530203",
+    "packageJson": "22df4faa92a3ef5ec99f7db637ca2ec31df8c378d80d9536223b16d548e13681",
+    "distAggregate": "4db9cb552efb38d9e54344e98414a5f4dc319f8938177631ee904aac691bc581"
+  },
+  "evidence": {
+    "tsgo": { "exit": 0, "note": "after independent PRE-TS-001 preflight" },
+    "build": { "exit": 0, "note": "chunk-size warnings only" },
+    "vitest": { "exit": 1, "tests": { "passed": 1581, "failed": 1, "skipped": 5 }, "files": { "passed": 154, "failed": 3, "skipped": 1 } },
+    "lint": { "exit": 1, "errors": 39, "warnings": 865, "classification": "all pre-existing" },
+    "fitness": { "exit": 0, "active": 32, "pending": 9, "failures": 0 },
+    "dependencyGraph": { "exit": 0, "modules": 1210, "cycles": 6, "uiCycles": 0, "layerViolations": 155, "pagesToRepositories": 11 },
+    "inventory": { "exit": 0, "modules": 174, "files": 1210 },
+    "itemScope": "MATCH",
+    "baselineTagIntegrity": "OK (28 entries)"
+  },
+  "openFindings": [
+    { "id": "PRE-PDF-001", "status": "OPEN", "classification": "Deferred", "resolvedByG0": false },
+    { "id": "PRE-TS-001", "status": "RECURRING", "recurrences": 5, "classification": "Platform Regeneration Drift", "rootCause": "UNINVESTIGATED", "resolvedByG0": false },
+    { "id": "RISK-007", "status": "OPEN", "track": "Security backlog", "resolvedByG0": false }
+  ],
+  "nextStep": "Human decision record → explicit Phase 0 authorization (BOUNDARY_CATALOG.md, ADR-0031, ADR-0044 → BASELINE-UX4-001)"
+}
