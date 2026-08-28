@@ -73,3 +73,17 @@ Sourced from `dep-graph.mjs` + `run-all.mjs`, not from the inventory observer.
 | Certification | — | NOT CERTIFIED | — | ⛔ |
 
 Composite: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`
+
+## G0 — Evidence Integrity Gate (2026-08-28)
+
+| Check group | Result |
+|---|---|
+| Lineage (revision · baseline · parent) | ✅ consistent |
+| Evidence freshness | ✅ regenerated at G0 time |
+| Hash integrity (28 entries + composite) | ✅ verified |
+| Dependency lock · build hash | ✅ recorded |
+| Test · fitness · architecture snapshots | ✅ reproduce the sealed baseline exactly |
+| ADR state (18 Accepted) | ✅ |
+| Open findings visibility (PRE-PDF-001 · PRE-TS-001 #5 · RISK-007) | ✅ visible, unresolved |
+| Unauthorized changes | ✅ none (25/25 scope · item-level MATCH) |
+| **Decision** | **G0 PASS** — NOT CERTIFIED · Phase 0 NOT authorized |
