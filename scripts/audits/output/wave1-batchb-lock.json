@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "lock": "WAVE1-BATCHB-C2",
+  "evidenceId": "WAVE1-PHASEC2-001",
+  "parentBaseline": "BASELINE-NAZRA-001",
+  "parentCommit": "a33f49b9",
+  "sourceCommit": "31052763bf683cd3b1b0467c48c619df116c961c",
+  "scopeContract": "docs/governance/BATCHB_SCOPE_001.md",
+  "scopeHash": "eab102bd71ccd916f5cf32284d27d0b03ed32008b0849b18687740f7fa32eb84",
+  "scopeFiles": 25,
+  "certification": "NOT_CERTIFIED",
+  "controls": {
+    "fileLevelScopeEquality": "MATCH",
+    "itemLevelScopeAssertion": "MATCH",
+    "deferredItemsUntouched": 11,
+    "scopeDrift": "NONE"
+  },
+  "architecture": {
+    "modules": 1210,
+    "edges": 4789,
+    "totalCycles": 6,
+    "uiCycles": 0,
+    "layerViolationsTotal": 155,
+    "byCategory": {
+      "components→repositories": 41,
+      "components→services": 5,
+      "pages→repositories": 11,
+      "hooks→supabase-client": 31,
+      "components→supabase-client": 38,
+      "pages→supabase-client": 29,
+      "domain→ui": 0
+    },
+    "fanOut": "no regression"
+  },
+  "evidence": {
+    "tsgo": { "command": "npx tsgo -p tsconfig.app.json --noEmit", "exit": 0 },
+    "build": { "command": "npx vite build", "exit": 0, "notes": "chunk-size warnings only" },
+    "lint": { "command": "npm run lint", "exit": 1, "errors": 39, "warnings": 865, "classification": "all pre-existing, none in approved set" },
+    "vitest": {
+      "command": "npx vitest run",
+      "exit": 1,
+      "testFiles": { "failed": 3, "passed": 154, "skipped": 1 },
+      "tests": { "failed": 1, "passed": 1581, "skipped": 5 },
+      "classification": "PRE-PDF-001 — 2 collection (syntax) failures + 1 assertion failure, outside approved set"
+    },
+    "fitness": { "command": "node scripts/fitness/run-all.mjs", "exit": 0, "active": 32, "pending": 9, "failures": 0 },
+    "dependencyGraph": { "command": "node scripts/audits/dep-graph.mjs", "exit": 0 },
+    "inventory": { "command": "node scripts/audits/codebase-inventory.mjs", "exit": 0, "modules": 174, "files": 1210 },
+    "itemScope": { "command": "SCOPE_BASE=a33f49b9 node scripts/audits/verify-item-scope.mjs", "result": "MATCH" }
+  },
+  "openFindings": [
+    { "id": "PRE-PDF-001", "status": "OPEN", "scope": "outside C2", "classification": "Deferred" },
+    { "id": "PRE-TS-001", "status": "RECURRING", "classification": "Platform Regeneration Drift", "recurrences": 4, "scopeHashImpact": "NONE" },
+    { "id": "RISK-007", "status": "OPEN", "track": "Security backlog (separate wave)" }
+  ]
+}
