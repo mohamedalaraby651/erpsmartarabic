@@ -1,11 +1,11 @@
 {
   "evidence": {
     "evidenceId": "CODEBASE-INVENTORY-001",
-    "snapshotId": "SNAPSHOT-20260827-001",
+    "snapshotId": "SNAPSHOT-20260828-001",
     "baselineId": "BASELINE-NAZRA-001",
     "parentBaseline": "BASELINE-UX3A-002",
-    "gitCommit": "9ae653b0aee888b58a68f8316359cfcea26a8cba",
-    "generatedAt": "2026-08-27T11:32:32.363Z",
+    "gitCommit": "6693f5c0a6de118de823af9ef4d6dbec8e414340",
+    "generatedAt": "2026-08-28T01:26:44.336Z",
     "environment": "lovable-sandbox",
     "command": "node scripts/audits/codebase-inventory.mjs",
     "result": "GENERATED",
@@ -40,7 +40,7 @@
       }
     ],
     "dependencyLockHash": "b74bd3308fe1b446defbe73226b07bf88c0d54db8e1682b1ac0b7af02365d9d0",
-    "artifactHash": "5dce7d378e6180e2413f41323c3d348b5a16cdf104b58bb922361b2c5407d686",
+    "artifactHash": "17e45078f872f1be8afd7c2173b8b1b8a9414e68b4d2c5edda0d6dc27efe9629",
     "validity": "valid while gitCommit matches HEAD"
   },
   "disclaimer": "Inventory observes the system; it does not certify the system or authorize architectural decisions. This artifact is an observation tool, not a fitness check, and is not wired into any gate. Backend entries are a repository-observed surface, not a verified live backend.",
