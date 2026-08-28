@@ -12,14 +12,14 @@
 | Snapshot ID | SNAPSHOT-20260828-001 |
 | Baseline | BASELINE-NAZRA-001 |
 | Parent Baseline | BASELINE-UX3A-002 |
-| Git Commit | 6693f5c0a6de118de823af9ef4d6dbec8e414340 |
-| Generated At | 2026-08-28T01:26:44.336Z |
+| Git Commit | f57197303bb58b5f0da62ea36a4c0f4fba8e8c69 |
+| Generated At | 2026-08-28T08:22:43.376Z |
 | Environment | lovable-sandbox |
 | Command | `node scripts/audits/codebase-inventory.mjs` |
 | Result | GENERATED |
 | Generator Version | 1.0.0 |
 | Schema Version | 1 |
-| Artifact Hash | `17e45078f872f1be8afd7c2173b8b1b8a9414e68b4d2c5edda0d6dc27efe9629` |
+| Artifact Hash | `de2689976d39e014e80f9033d84b5d21ebe8ab8e5d9b7454893ab0281ef0ff69` |
 | Owner | Human Governance |
 
 ### Source artifacts
