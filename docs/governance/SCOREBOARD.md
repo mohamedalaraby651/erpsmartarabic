@@ -103,3 +103,23 @@ Composite: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`
 | Evidence lineage | ✅ `a33f49b9` → `31052763` → `1bf0b5f1` → `061c9646` |
 | Typecheck | ⛔ exit 2 — PRE-TS-001 #6, left open by design |
 | Exit gate | **12 / 12 satisfied** · Certification NOT granted |
+
+## Post-Exit Control Resolution — `PXC-NAZRA-001` (2026-08-30)
+
+| Control | Entry | Exit |
+|---|---|---|
+| 1 · PRE-TS-001 ownership | 🔴 recurrence #6, root cause unresolved | 🟢 RESOLVED — Option A′, typecheck 0 diagnostics |
+| 2 · RISK-007 security | 🔴 6 undifferentiated findings | 🟡 CLASSIFIED / PLANNED — 3 units, still OPEN |
+| 3 · PRE-PDF-001 | 🟡 3 failing test files | 🟢 CLOSED — cause documented, remediated |
+| 4 · Lint errors | 🔴 39, no owners | 🟡 CLASSIFIED — 37 across 5 owner classes |
+
+| Metric | Phase 0 exit | Now |
+|---|---:|---:|
+| Typecheck diagnostics | 2 | **0** |
+| Vitest | 1581 pass · 3 failed files | **1592 pass · 0 failed** |
+| ESLint errors / warnings | 39 / 865 | **37 / 865** |
+| Fitness (active · pending · failures) | 32 · 9 · 0 | 32 · 9 · 0 |
+| Layer violations · pages→repositories · UI cycles | 155 · 11 · 0 | 155 · 11 · 0 |
+| Boundaries certified | 0 / 8 | **0 / 8** |
+
+**Decision:** controls resolved/classified · Certification NOT granted · `BASELINE-UX4-001` DRAFT · Phase 1 NOT authorized.

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
   "totalModules": 1210,
-  "totalEdges": 4789,
+  "totalEdges": 4794,
   "circular": {
     "count": 6,
     "cycles": [

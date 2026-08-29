@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "finding": "PRE-TS-001",
+  "containment": "Option A′ — project-owned typecheck contract with bounded platform allowlist",
+  "total": 0,
+  "platformOwned": 0,
+  "projectOwned": 0,
+  "platform": [],
+  "project": [],
+  "verdict": "PASS"
+}

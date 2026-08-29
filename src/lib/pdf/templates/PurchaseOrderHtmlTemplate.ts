@@ -178,11 +178,11 @@ export const PURCHASE_ORDER_HTML_CSS = `
 .parties .party { flex: 1; padding: 10px 12px; background: #f2f8f3; border-right: 4px solid #1f5e3a; }
 .parties .party h3 { margin: 0 0 6px; font-size: 13px; }
 .sku { font-size: 10px; color: #666; margin-top: 2px; }
-table.items th { background: #1f5e3a; color: hsl(var(--background)); font-weight: 600; }
-table.items td { background: hsl(var(--background)); }
+table.items th { background: #1f5e3a; color: #ffffff; font-weight: 600; }
+table.items td { background: #ffffff; }
 table.totals { width: 50%; margin-right: auto; margin-top: 12px; }
 table.totals th { background: #eaf3ec; text-align: right; }
-table.totals tr.grand th, table.totals tr.grand td { background: #1f5e3a; color: hsl(var(--background)); font-weight: 700; }
+table.totals tr.grand th, table.totals tr.grand td { background: #1f5e3a; color: #ffffff; font-weight: 700; }
 .terms, .notes { margin-top: 14px; padding: 10px; border: 1px dashed #99c2a7; }
 .terms h4, .notes h4 { margin: 0 0 6px; font-size: 13px; }
 .signatures { display: flex; justify-content: space-around; margin-top: 32px; gap: 16px; }
