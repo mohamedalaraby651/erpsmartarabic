@@ -30,7 +30,7 @@
       "id": "EV-01",
       "check": "Typecheck contract (project-owned)",
       "command": "node scripts/audits/typecheck-app.mjs",
-      "result": "PASS — total 2 · platform 2 · project 0",
+      "result": "PASS — total 0 · platform 0 · project 0 (after preflight); PASS — total 2 · platform 2 · project 0 (before preflight)",
       "status": "REGENERATED",
       "owner": "Architecture",
       "validity": "current commit",
@@ -40,7 +40,7 @@
       "id": "EV-02",
       "check": "Raw strict typecheck",
       "command": "npx tsgo -p tsconfig.app.json --noEmit",
-      "result": "exit 2 — 2 × TS7011 in src/integrations/supabase/previewAuthStorage.ts (PRE-TS-001 recurrence #7, platform-owned, EXC-002)",
+      "result": "exit 2 at refresh start — 2 × TS7011 in src/integrations/supabase/previewAuthStorage.ts (PRE-TS-001 recurrence #7, platform regeneration). Preflight micro-change re-applied the inner-callback annotation (`.then((): void => undefined)`); raw typecheck now exit 0.",
       "status": "REGENERATED",
       "owner": "Platform",
       "validity": "current commit"
