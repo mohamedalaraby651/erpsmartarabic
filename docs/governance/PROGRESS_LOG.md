@@ -288,3 +288,25 @@ STOP — HUMAN REVIEW REQUIRED
 - Still OPEN: RISK-007 · 37 lint errors · RISK-008 · PRE-TS-001 residual regeneration risk (contained)
 - Boundaries certified: **0 / 8** · `BASELINE-UX4-001` remains DRAFT · Smart Freeze ACTIVE
 - Next: G0 / Evidence Refresh → Human Review → Phase 1 (NOT authorized)
+
+## G0 — Evidence Refresh — `G0R-NAZRA-002` (2026-08-29) — PASS (integrity only)
+
+- Authorization: Human — "G0 Evidence Refresh only". Phase 1 explicitly **NOT** authorized.
+- Mode: Baseline + Delta + Evidence. 10 checks REGENERATED, 2 carried as LINEAGE REFERENCES
+  (Batch B scope hash, architecture fingerprint). No full re-analysis; no Material Change Trigger.
+- Commit `fb311a1e` · Snapshot `SNAPSHOT-20260829-001` · Record `docs/governance/G0_EVIDENCE_REFRESH_RECORD.md`
+  · Machine-readable `scripts/audits/output/g0-evidence-refresh.json`
+- Fresh evidence: typecheck-app PASS (project 0) · raw tsgo exit 0 (after preflight) · build exit 0 ·
+  lint 37 errors / 865 warnings · vitest **1592 passed / 0 failed / 5 skipped / 157 files** ·
+  fitness active 32 · pending 9 · failures 0 · dep-graph 1210 modules / 6 cycles / **0 UI cycles** /
+  **155 violations** / **pages→repositories 11** · inventory 174 / 1210 · baseline integrity ok (28 entries) ·
+  item-level scope MATCH.
+- Lock hashes byte-identical to `G0-NAZRA-001`; `dist` aggregate changed (`4db9cb55…` → `c6347c83…`)
+  solely from the authorized PXC PDF remediation.
+- **PRE-TS-001 recurrence #7** observed at refresh start (platform regenerated the artifact).
+  Project-owned contract held at 0 throughout; inner-callback annotation re-applied as an isolated
+  preflight micro-change. Status stays **CONTAINED**, not closed.
+- **RISK-008** recorded in G0 evidence and promoted to the Phase 1 risk register —
+  Classification: Governance / Tooling Boundary Risk · Phase 1 impact: **TO BE DECIDED AT REVIEW**.
+- Certification NOT granted · Boundaries 0 / 8 · `BASELINE-UX4-001` DRAFT · Smart Freeze ACTIVE.
+- Next: **Human Review** → Phase 1A (Tenant Isolation) → evidence → Phase 1B (Authorization / PDP).

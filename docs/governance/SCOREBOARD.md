@@ -123,3 +123,25 @@ Composite: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`
 | Boundaries certified | 0 / 8 | **0 / 8** |
 
 **Decision:** controls resolved/classified · Certification NOT granted · `BASELINE-UX4-001` DRAFT · Phase 1 NOT authorized.
+
+## G0 Evidence Refresh — `G0R-NAZRA-002` (2026-08-29)
+
+| Check | Result |
+|---|---|
+| Typecheck contract (project-owned) | 🟢 PASS — 0 diagnostics |
+| Raw tsgo | 🟢 exit 0 after preflight (PRE-TS-001 recurrence #7 contained) |
+| Build | 🟢 exit 0 |
+| Tests | 🟢 1592 passed · 0 failed · 5 skipped |
+| Fitness | 🟢 active 32 · pending 9 · failures 0 |
+| Dependency graph | 🟢 1210 modules · 6 cycles · **0 UI cycles** · 155 violations · pages→repositories 11 |
+| Inventory | 🟢 modules 174 · files 1210 |
+| Baseline integrity | 🟢 NAZRA-002 ok (28 entries) |
+| Item-level scope | 🟢 MATCH |
+| Lock hashes | 🟢 unchanged vs G0-NAZRA-001 |
+| Lint | 🟡 37 errors / 865 warnings (classified) |
+| RISK-007 | 🟠 OPEN / PLANNED — Phase 1 impact TBD at review |
+| RISK-008 | 🟠 OPEN — Governance / Tooling Boundary Risk — Phase 1 impact TBD at review |
+| Boundaries certified | 🔴 0 / 8 |
+| Phase 1 | ⛔ NOT AUTHORIZED |
+
+**Decision:** G0 Evidence Refresh **PASS (evidence integrity only)** — ≠ Architecture PASS ≠ Security PASS ≠ Production Ready.

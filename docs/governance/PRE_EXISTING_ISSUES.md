@@ -169,3 +169,18 @@ platform-side generator emits the annotations.
 - `scripts/fixes/**` codemods have no exclusion for `src/lib/pdf/**` and no string-literal guard;
   re-running them re-introduces PRE-PDF-001. Prevention control: a fitness rule forbidding theme
   tokens inside the PDF render boundary. Status: **OPEN**.
+
+### PRE-TS-001 — recurrence #7 (2026-08-29, during G0 Evidence Refresh)
+- Platform regenerated `src/integrations/supabase/previewAuthStorage.ts`; the inner-callback
+  annotation was dropped again and raw `tsgo` returned exit 2 with the same two `TS7011`.
+- The Option A′ contract held: `scripts/audits/typecheck-app.mjs` reported **project = 0** before
+  and after, proving the containment boundary works as designed.
+- Preflight micro-change re-applied `.then((): void => undefined)`; raw typecheck back to exit 0.
+- Status: **CONTAINED** (not closed). Durable fix = Option C (artifact ownership / adapter port),
+  deferred to Phase 1 · BND-01. Recurrence counter: **7**.
+
+### RISK-008 — promoted to Phase 1 risk register (2026-08-29)
+- Classification: **Governance / Tooling Boundary Risk** (control-plane, not code defect).
+- Not closed by the PDF repair: `scripts/fixes/**` still performs mutation without boundary
+  detection, allowed-scope declaration, or pre-mutation verification.
+- Phase 1 impact: **TO BE DECIDED AT REVIEW**. Recorded in `G0R-NAZRA-002` evidence.
