@@ -137,3 +137,8 @@ platform-side generator emits the annotations.
 - Batch B impact: NONE · Scope hash impact: NONE · Baseline composite impact: NONE
 - **Status escalated:** five recurrences. Symptom-only handling is now formally declared insufficient;
   root-cause chain must be owned as a Phase 0 platform-boundary unit. Recorded in G0-NAZRA-001 check #15.
+
+### PRE-TS-001 — recurrence #6 (2026-08-29, Phase 0)
+- Observed at Phase 0 evidence run (`061c9646`): 2 × `TS7011` in `src/integrations/supabase/previewAuthStorage.ts`.
+- **Deliberately NOT repaired.** Phase 0 classifies this as a boundary-ownership defect, not a TypeScript defect.
+- Root cause + ownership: `docs/architecture/PRE-TS-001-ROOT-CAUSE.md`. Status: **OPEN**, resolution unauthorized.

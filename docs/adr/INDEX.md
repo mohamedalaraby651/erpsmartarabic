@@ -25,6 +25,9 @@
 | [ADR-0012](./0012-infrastructure-adapter-and-event-sourcing.md) | Accepted | — | Infrastructure Adapter + Event-Sourced Persistence (Codec Registry, Rehydrator, `invoice_events` + RLS, Composition Root, sequence-only ordering, operational-only metadata) | UX-2B | 2026-06-30 |
 | [ADR-0013](./0013-baseline-architecture-tags.md) | Accepted | — | Baseline Architecture Tags (immutable snapshots, `BASELINE-<PHASE>-<SEQ>`, composite SHA-256, separate from SemVer) | UX-2B → UX-2C | 2026-07-01 |
 
+| [ADR-0031](./0031-enterprise-boundary-contract.md) | Accepted | — | Enterprise Boundary Contract as an operating standard (16-field catalog, Invariant→Fitness→Test→CI chain, no self-certification) | Phase 0 | 2026-08-29 |
+| [ADR-0044](./0044-modular-monolith-and-service-extraction-conditions.md) | Accepted | — | Modular Monolith fixed; service extraction gated by 4 preconditions + 2 of 5 measurable triggers | Phase 0 | 2026-08-29 |
+
 <!--
 New entries append below this line. Keep the table sorted by ADR id ascending.
 When an ADR is superseded:
