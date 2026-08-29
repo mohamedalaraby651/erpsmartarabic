@@ -30,14 +30,14 @@ export async function buildArabicCss(opts: ArabicCssOptions = {}): Promise<Arabi
   const b64 = font.base64.replace(/^data:[^;]+;base64,/, '');
   const css = `
 @font-face {
-  font-family: var(--font-sans);
+  font-family: '${family}';
   src: url(data:font/ttf;base64,${b64}) format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: block;
 }
 .pdf-root, .pdf-root * {
-  font-family: var(--font-sans);
+  font-family: '${family}';
   direction: rtl;
   unicode-bidi: plaintext;
   -webkit-font-smoothing: antialiased;
@@ -47,7 +47,7 @@ export async function buildArabicCss(opts: ArabicCssOptions = {}): Promise<Arabi
   line-height: 1.7;
   color: #111;
   text-align: right;
-  background: hsl(var(--background));
+  background: #ffffff;
 }
 .pdf-root table {
   width: 100%;

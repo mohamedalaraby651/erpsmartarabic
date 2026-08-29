@@ -262,3 +262,29 @@ STOP — HUMAN REVIEW REQUIRED
 - Still OPEN: PRE-PDF-001 · RISK-007 · 39 lint errors · PRE-TS-001
 - Boundaries certified: **0 / 8** · Certification NOT granted · Phase 1 NOT authorized
 - Next: Phase 0 Evidence → G0 → Human Review → seal BASELINE-UX4-001
+
+## 2026-08-30 — Post-Exit Control Resolution (`PXC-NAZRA-001`) — CONTROLS RESOLVED, NOT CERTIFIED
+- Authorization: closure/classification of the four Phase 0 blockers only. Phase 1 NOT authorized.
+- Mode: Baseline + Delta + Evidence. No full re-analysis. No Material Change Trigger.
+- Record: `docs/governance/POST_EXIT_CONTROL_RESOLUTION.md`
+- Control 1 — PRE-TS-001: **RESOLVED**. Option A′ (project-owned typecheck contract,
+  `scripts/audits/typecheck-app.mjs` + bounded EXC-002 allowlist). §8.1 records that recurrences
+  #1–#6 annotated the wrong function expression; the reported column pointed at the inner
+  `.then(() => undefined)` callback. Typecheck now **exit 0 / 0 diagnostics**.
+- Control 2 — RISK-007: **CLASSIFIED / PLANNED** (`docs/security/RISK-007-REMEDIATION-PLAN.md`).
+  6 findings collapse to 3 units (SEC-U1 edge error-mapping · SEC-U2 PostgREST filter sanitation ·
+  SEC-U3 TOTP + 5 outstanding 2FA proofs). Remediation NOT authorized. Status remains OPEN.
+- Control 3 — PRE-PDF-001: **CLOSED** (`docs/governance/PRE-PDF-001-ROOT-CAUSE.md`). Root cause
+  documented before repair: a design-token codemod applied UI theme variables to the PDF render
+  boundary, breaking two test string literals and silently disabling the embedded Arabic font.
+- Control 4 — lint: **CLASSIFIED** (`docs/governance/LINT_CLASSIFICATION.md`). 37 errors in 5
+  ownership classes; 6 of them are misscoped rules, not code defects. No cleanup batch run.
+- Evidence delta: tsgo exit 2 → **0** · vitest 1581 pass/3 failed files → **1592 pass / 0 failed** ·
+  lint 39 → **37** errors (865 warnings unchanged) · fitness active 32 / pending 9 / failures 0 (unchanged) ·
+  dep-graph 1210 modules / 6 cycles / 155 violations / pages→repositories 11 / UI cycles 0 (all unchanged)
+- Architecture surface untouched: no application/domain/infrastructure/platform/migration changes;
+  `BATCHB-SCOPE-001` and `BASELINE-NAZRA-002` lineage intact.
+- New finding: **RISK-008** — codemod boundary leakage (`scripts/fixes/**` lacks a PDF/test-literal guard).
+- Still OPEN: RISK-007 · 37 lint errors · RISK-008 · PRE-TS-001 residual regeneration risk (contained)
+- Boundaries certified: **0 / 8** · `BASELINE-UX4-001` remains DRAFT · Smart Freeze ACTIVE
+- Next: G0 / Evidence Refresh → Human Review → Phase 1 (NOT authorized)

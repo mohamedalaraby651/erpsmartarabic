@@ -1,8 +1,8 @@
 # PRE-TS-001 — Root-Cause Investigation (Platform Regeneration Drift)
 
-- **Status:** INVESTIGATED — ownership recorded, **not closed**
-- **Phase:** Phase 0 (architectural/process investigation, not a repair unit)
-- **Recurrences:** 5 (recurrence #5 handled as an isolated preflight micro-change before the G0 evidence run)
+- **Status:** ROOT CAUSE RESOLVED — see §8 (Control 1 decision). Ownership control now in place.
+- **Phase:** Phase 0 (investigation) → Post-Exit Control Resolution, Control 1 (decision)
+- **Recurrences:** 7 (recurrence #7 observed during Control 1 and diagnosed correctly for the first time)
 - **Boundary:** cross-cutting — artifact ownership at the platform boundary (feeds BND-01)
 
 > Phase 0 explicitly does **not** re-apply the annotation, does not reopen C2, and does not
@@ -77,3 +77,70 @@ BND-01/BND-03).
 - No re-application of return-type annotations in this phase.
 - No tsconfig change in this phase (that is code/tooling change, outside the Phase 0 deliverable).
 - No reopening of C2 or of `BASELINE-NAZRA-002`.
+
+## 8. Control 1 — Decision Record (Post-Exit Control Resolution)
+
+### 8.1 A diagnostic error, sustained for six recurrences
+
+Recurrences #1–#6 all "fixed" the file by annotating the **outer** storage methods:
+
+```ts
+setItem: (key: string, value: string): Promise<void> => { ... }
+```
+
+`tsgo` kept reporting `TS7011` at columns 67 and 63 — positions that are **inside** the
+statement, not at the method head. The actual unannotated function expression was the inner
+callback:
+
+```ts
+return request(...).then(() => undefined);   //  <-- TS7011 reported here
+```
+
+So the recurrence was never purely platform drift. Part of it was **our repair repeatedly
+missing the reported position** and then attributing the persistence to regeneration. The
+ownership analysis in §1–§6 stands; the recurrence count was inflated by a misread diagnostic.
+This is recorded rather than quietly corrected, because "we assumed the tool was wrong" is the
+more valuable lesson than the annotation itself.
+
+### 8.2 Resolution chosen
+
+**Option A′** — a project-owned typecheck *contract*, combined with the now-correct annotation.
+
+```text
+Platform            Lovable Cloud integration scaffolder
+Generated artifact  src/integrations/supabase/previewAuthStorage.ts
+Ownership           content = platform · consumption + contract = Frontend Platform Owner
+Canonical source    platform template (not in this repository)
+Regen trigger       platform-side template revision / integration refresh
+Project contract    scripts/audits/typecheck-app.mjs
+```
+
+`scripts/audits/typecheck-app.mjs` runs the **unchanged** strict typecheck and then classifies
+each diagnostic as `PROJECT` or `PLATFORM` against a bounded, auditable allowlist
+(file + error code + owner + finding + exception id). It:
+
+- never relaxes `tsconfig.app.json`;
+- never edits generated output;
+- fails on **any** project-owned diagnostic;
+- makes a future regeneration visible as a classified, non-blocking platform entry instead of an
+  unexplained red gate.
+
+Options B, C and D were not adopted: B duplicates typecheck projects, C is a real boundary
+improvement but a Phase 1-scale change surface, D is outside our control.
+
+### 8.3 Current evidence
+
+```text
+npx tsgo -p tsconfig.app.json --noEmit      exit 0   (0 diagnostics)
+node scripts/audits/typecheck-app.mjs       exit 0   total=0 platform=0 project=0  verdict=PASS
+```
+
+The allowlist is currently **dormant** — it holds one entry that matches nothing today. That is
+the intended steady state: it activates only if the platform regenerates the artifact without
+the annotation, and it will then report the recurrence explicitly rather than blocking the gate.
+
+### 8.4 Residual risk
+
+Regeneration can still overwrite the file. The difference is that the outcome is now
+**classified and owned** instead of rediscovered. Durable removal of the residual risk is
+Option C (project-owned adapter port), deferred to Phase 1 under BND-01.

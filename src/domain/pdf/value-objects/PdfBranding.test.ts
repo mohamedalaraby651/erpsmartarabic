@@ -17,7 +17,7 @@ describe('PdfBranding', () => {
   });
 
   it('contrastRatio: أسود على أبيض = 21', () => {
-    expect(contrastRatio('hsl(var(--foreground))', 'hsl(var(--background))')).toBeCloseTo(21, 0);
+    expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 0);
   });
 
   it('contrastRatio: نفس اللون = 1', () => {
@@ -36,8 +36,8 @@ describe('PdfBranding', () => {
   it('لا يحذّر من تباين كافٍ', () => {
     const issues = validateBranding({
       ...DEFAULT_BRANDING,
-      textColor: 'hsl(var(--foreground))',
-      secondaryColor: 'hsl(var(--background))',
+      textColor: '#000000',
+      secondaryColor: '#ffffff',
     });
     expect(issues.find((i) => i.field === 'contrast')).toBeUndefined();
   });

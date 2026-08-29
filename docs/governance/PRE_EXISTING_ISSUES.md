@@ -142,3 +142,30 @@ platform-side generator emits the annotations.
 - Observed at Phase 0 evidence run (`061c9646`): 2 × `TS7011` in `src/integrations/supabase/previewAuthStorage.ts`.
 - **Deliberately NOT repaired.** Phase 0 classifies this as a boundary-ownership defect, not a TypeScript defect.
 - Root cause + ownership: `docs/architecture/PRE-TS-001-ROOT-CAUSE.md`. Status: **OPEN**, resolution unauthorized.
+
+### PRE-TS-001 — recurrence #7 and RESOLUTION (2026-08-30, Control 1)
+- Diagnosed correctly for the first time: the `TS7011` columns (67 / 63) point at the inner
+  `.then(() => undefined)` callback, not at the `setItem` / `removeItem` method heads that
+  recurrences #1–#6 annotated. Six repairs annotated a function the compiler never complained about.
+- Action: annotate the reported callback (`.then((): void => undefined)`) **and** introduce a
+  project-owned typecheck contract `scripts/audits/typecheck-app.mjs` (bounded EXC-002 allowlist,
+  fails on any project-owned diagnostic, never relaxes `tsconfig.app.json`).
+- Evidence: `npx tsgo -p tsconfig.app.json --noEmit` exit 0 (0 diagnostics) ·
+  `node scripts/audits/typecheck-app.mjs` PASS (total 0 · platform 0 · project 0)
+- Status: **RESOLVED**. Residual regeneration risk CONTAINED; durable fix (Option C, adapter port)
+  deferred to Phase 1 under BND-01. Details: `docs/architecture/PRE-TS-001-ROOT-CAUSE.md` §8.
+
+### PRE-PDF-001 — CLOSED (2026-08-30, Control 3)
+- Root cause: design-token codemod applied UI theme variables (`var(--font-sans)`,
+  `hsl(var(--background))`) inside the PDF render boundary and inside test string literals,
+  producing 2 unterminated-string parse errors and a silent font/background defect in PDF output.
+- Remediation: literal embedded font family + `#ffffff` backgrounds across `src/lib/pdf/**`;
+  restored (and strengthened) the three damaged test expectations, including
+  `src/domain/pdf/value-objects/PdfBranding.test.ts` contrast assertions.
+- Evidence: full suite **1592 passed · 0 failed · 157 files** · fitness failures 0.
+- Record: `docs/governance/PRE-PDF-001-ROOT-CAUSE.md`
+
+### RISK-008 — Codemod Boundary Leakage (NEW, 2026-08-30)
+- `scripts/fixes/**` codemods have no exclusion for `src/lib/pdf/**` and no string-literal guard;
+  re-running them re-introduces PRE-PDF-001. Prevention control: a fitness rule forbidding theme
+  tokens inside the PDF render boundary. Status: **OPEN**.

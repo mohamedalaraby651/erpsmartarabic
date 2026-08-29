@@ -228,10 +228,10 @@ export const STATEMENT_HTML_CSS = `
 .party { margin: 8px 0 16px; padding: 10px 12px; background: #f6f1fa; border-right: 4px solid #5a2a82; }
 .party h3 { margin: 0 0 6px; font-size: 13px; }
 .party .code { color: #666; font-size: 11px; }
-table.txns th { background: #5a2a82; color: hsl(var(--background)); font-weight: 600; }
+table.txns th { background: #5a2a82; color: #ffffff; font-weight: 600; }
 table.txns td.bal { font-weight: 600; background: #f0e6f7; }
 table.txns tr.opening td { background: #faf6fd; font-style: italic; }
-table.txns tfoot th, table.txns tfoot td { background: #5a2a82; color: hsl(var(--background)); font-weight: 700; }
+table.txns tfoot th, table.txns tfoot td { background: #5a2a82; color: #ffffff; font-weight: 700; }
 table.txns .desc { font-size: 10px; color: #666; margin-top: 2px; }
 table.aging { width: 100%; margin-top: 16px; }
 table.aging th { background: #efe5f8; color: #5a2a82; font-weight: 600; }

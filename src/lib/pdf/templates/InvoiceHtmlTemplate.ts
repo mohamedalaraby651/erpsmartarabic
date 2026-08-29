@@ -165,11 +165,11 @@ export const INVOICE_HTML_CSS = `
 .invoice-head .logo { max-height: 56px; max-width: 180px; object-fit: contain; margin-bottom: 6px; }
 .customer { margin: 8px 0 16px; padding: 10px 12px; background: #f7f7f8; border-right: 4px solid #111; }
 .customer h3 { margin: 0 0 6px; font-size: 13px; }
-table.items th { background: #111; color: hsl(var(--background)); font-weight: 600; }
-table.items td { background: hsl(var(--background)); }
+table.items th { background: #111; color: #ffffff; font-weight: 600; }
+table.items td { background: #ffffff; }
 table.totals { width: 50%; margin-right: auto; margin-top: 12px; }
 table.totals th { background: #f1f1f2; text-align: right; }
-table.totals tr.grand th, table.totals tr.grand td { background: #111; color: hsl(var(--background)); font-weight: 700; }
+table.totals tr.grand th, table.totals tr.grand td { background: #111; color: #ffffff; font-weight: 700; }
 .notes { margin-top: 18px; padding: 10px; border: 1px dashed #bbb; }
 .notes h4 { margin: 0 0 6px; font-size: 13px; }
 ${WATERMARK_IMAGE_BASE_CSS}
