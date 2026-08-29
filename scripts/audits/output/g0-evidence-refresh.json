@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "G0R-NAZRA-002",
+  "gate": "G0 — Evidence Refresh",
+  "mode": "Baseline + Delta + Evidence (no full re-analysis)",
+  "decision": "PASS (evidence integrity only)",
+  "certification": "NOT_GRANTED",
+  "phase1Authorized": false,
+  "snapshotId": "SNAPSHOT-20260829-001",
+  "parentBaseline": "BASELINE-NAZRA-002",
+  "parentRecords": ["G0-NAZRA-001", "PHASE0-NAZRA-001", "PXC-NAZRA-001"],
+  "successorBaseline": { "id": "BASELINE-UX4-001", "status": "DRAFT / NOT SEALED" },
+  "gitCommit": "fb311a1e9df5b5377a8fd6c008d67cd4ef1ca1a5",
+  "generatedAt": "2026-08-29T11:47:00Z",
+  "environment": {
+    "node": "v22.22.0",
+    "runner": "sandbox",
+    "generatorVersion": "scripts/audits + scripts/fitness @ fb311a1e"
+  },
+  "hashes": {
+    "packageJson": "22df4faa92a3ef5ec99f7db637ca2ec31df8c378d80d9536223b16d548e13681",
+    "packageLockJson": "36702e53833f5c91936509d182fa2426a14429a99145bd0b44dddc88456793b0",
+    "bunLockb": "57954bd8ba6493ea7d74faa1381295829ff33ed882e78e1a7bf9166fa2530203",
+    "distAggregate": "c6347c83937955515bca4904235038fae5a1b8fc645b667ee20fed1560505684",
+    "baselineComposite": "1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87",
+    "scopeHash": "eab102bd71ccd916f5cf32284d27d0b03ed32008b0849b18687740f7fa32eb84"
+  },
+  "evidence": [
+    {
+      "id": "EV-01",
+      "check": "Typecheck contract (project-owned)",
+      "command": "node scripts/audits/typecheck-app.mjs",
+      "result": "PASS — total 2 · platform 2 · project 0",
+      "status": "REGENERATED",
+      "owner": "Architecture",
+      "validity": "current commit",
+      "artifact": "scripts/audits/output/typecheck-app.json"
+    },
+    {
+      "id": "EV-02",
+      "check": "Raw strict typecheck",
+      "command": "npx tsgo -p tsconfig.app.json --noEmit",
+      "result": "exit 2 — 2 × TS7011 in src/integrations/supabase/previewAuthStorage.ts (PRE-TS-001 recurrence #7, platform-owned, EXC-002)",
+      "status": "REGENERATED",
+      "owner": "Platform",
+      "validity": "current commit"
+    },
+    {
+      "id": "EV-03",
+      "check": "Build",
+      "command": "npx vite build",
+      "result": "exit 0 — chunk-size warnings only",
+      "status": "REGENERATED",
+      "owner": "Platform",
+      "validity": "current commit",
+      "artifact": "dist/ (aggregate hash above)"
+    },
+    {
+      "id": "EV-04",
+      "check": "Lint",
+      "command": "npm run lint",
+      "result": "exit 1 — 37 errors / 865 warnings (classified, LINT_CLASSIFICATION.md)",
+      "status": "REGENERATED",
+      "owner": "Multiple (classes A–E)",
+      "validity": "current commit"
+    },
+    {
+      "id": "EV-05",
+      "check": "Tests",
+      "command": "bunx vitest run",
+      "result": "exit 0 — 1592 passed · 5 skipped · files 157 passed / 1 skipped",
+      "status": "REGENERATED",
+      "owner": "Engineering",
+      "validity": "current commit"
+    },
+    {
+      "id": "EV-06",
+      "check": "Fitness functions",
+      "command": "node scripts/fitness/run-all.mjs",
+      "result": "exit 0 — active 32 · pending 9 · failures 0",
+      "status": "REGENERATED",
+      "owner": "Architecture",
+      "validity": "current commit"
+    },
+    {
+      "id": "EV-07",
+      "check": "Dependency graph / cycles / violations",
+      "command": "node scripts/audits/dep-graph.mjs",
+      "result": "exit 0 — modules 1210 · edges 4789 · cycles 6 · UI cycles 0 · layer violations 155 · pages→repositories 11",
+      "status": "REGENERATED",
+      "owner": "Architecture",
+      "validity": "current commit",
+      "artifact": "scripts/audits/output/dependency-report.json"
+    },
+    {
+      "id": "EV-08",
+      "check": "Inventory",
+      "command": "node scripts/audits/codebase-inventory.mjs",
+      "result": "exit 0 — modules 174 · files 1210 · layers 20 · surfaces 9",
+      "status": "REGENERATED",
+      "owner": "Architecture",
+      "validity": "current commit"
+    },
+    {
+      "id": "EV-09",
+      "check": "Baseline tag integrity",
+      "command": "node scripts/fitness/check-baseline-tag-integrity.mjs",
+      "result": "exit 0 — BASELINE-NAZRA-002 ok (28 entries); UX2B-001, UX3A-000, UX3A-001 ok",
+      "status": "REGENERATED",
+      "owner": "Governance",
+      "validity": "current commit"
+    },
+    {
+      "id": "EV-10",
+      "check": "Item-level scope assertion",
+      "command": "SCOPE_BASE=a33f49b9 node scripts/audits/verify-item-scope.mjs",
+      "result": "MATCH — authorized change only in src/pages/expenses/ExpensesPage.tsx",
+      "status": "REGENERATED",
+      "owner": "Governance",
+      "validity": "current commit"
+    },
+    {
+      "id": "EV-11",
+      "check": "Scope hash / Batch B lock",
+      "command": "lineage reference (not re-derived)",
+      "result": "eab102bd… unchanged",
+      "status": "LINEAGE_REFERENCE",
+      "owner": "Governance",
+      "validity": "inherited from BASELINE-NAZRA-002"
+    },
+    {
+      "id": "EV-12",
+      "check": "Architecture fingerprint",
+      "command": "lineage reference (not re-derived)",
+      "result": "d22b6e09… sealed 2026-07-22",
+      "status": "LINEAGE_REFERENCE",
+      "owner": "Architecture",
+      "validity": "inherited"
+    }
+  ],
+  "delta": {
+    "vs": "BASELINE-NAZRA-002 (+ PXC-NAZRA-001)",
+    "typecheckProjectOwned": { "baseline": "n/a", "pxc": 0, "now": 0, "change": "unchanged" },
+    "typecheckRaw": { "baseline": "exit 0 after preflight", "pxc": "exit 0", "now": "exit 2 (recurrence #7)", "change": "regressed at platform boundary, contained by EXC-002" },
+    "build": { "baseline": 0, "now": 0, "change": "unchanged" },
+    "lintErrors": { "baseline": 39, "pxc": 37, "now": 37, "change": "unchanged since PXC" },
+    "lintWarnings": { "baseline": 865, "now": 865, "change": "unchanged" },
+    "testsPassed": { "baseline": 1581, "pxc": 1592, "now": 1592, "change": "unchanged since PXC" },
+    "testFilesFailed": { "baseline": 3, "pxc": 0, "now": 0, "change": "unchanged since PXC" },
+    "fitness": { "baseline": "32/9/0", "now": "32/9/0", "change": "unchanged" },
+    "modules": { "baseline": 1210, "now": 1210, "change": "unchanged" },
+    "cycles": { "baseline": 6, "now": 6, "change": "unchanged" },
+    "uiCycles": { "baseline": 0, "now": 0, "change": "unchanged" },
+    "layerViolations": { "baseline": 155, "now": 155, "change": "unchanged" },
+    "pagesToRepositories": { "baseline": 11, "now": 11, "change": "unchanged" },
+    "boundariesCertified": { "baseline": "0/8", "now": "0/8", "change": "unchanged" }
+  },
+  "violationShape": {
+    "components→repositories": 41,
+    "components→supabase-client": 38,
+    "hooks→supabase-client": 31,
+    "pages→supabase-client": 29,
+    "pages→repositories": 11,
+    "components→services": 5,
+    "domain→ui": 0
+  },
+  "openFindings": [
+    { "id": "RISK-007", "status": "OPEN", "classification": "Security", "plan": "docs/security/RISK-007-REMEDIATION-PLAN.md (SEC-U1/U2/U3)", "phase1Impact": "TO BE DECIDED AT REVIEW" },
+    { "id": "RISK-008", "status": "OPEN", "classification": "Governance / Tooling Boundary Risk", "note": "scripts/fixes/** codemods can mutate boundaries they do not own; not closed by the PDF repair", "phase1Impact": "TO BE DECIDED AT REVIEW" },
+    { "id": "LINT-37", "status": "OPEN", "classification": "Classified, owners assigned (classes A–E)", "phase1Impact": "none by itself" },
+    { "id": "PRE-TS-001", "status": "CONTAINED", "recurrences": 7, "note": "Option A′ contract holds: project-owned diagnostics 0; platform artifact regenerated again", "phase1Impact": "none; residual Option C deferred to BND-01" },
+    { "id": "PRE-PDF-001", "status": "CLOSED", "phase1Impact": "none" }
+  ],
+  "nonClaims": [
+    "G0 Evidence Refresh PASS ≠ Architecture PASS",
+    "≠ Security PASS",
+    "≠ Production Ready",
+    "≠ Phase 1 authorization",
+    "Boundaries certified remain 0/8; Smart Freeze remains ACTIVE"
+  ],
+  "nextStep": "Human Review → explicit Phase 1A (Tenant Isolation) authorization; Phase 1B (Authorization / PDP) authorized separately after 1A evidence"
+}
