@@ -8,8 +8,15 @@
   "phase1Authorized": false,
   "snapshotId": "SNAPSHOT-20260829-001",
   "parentBaseline": "BASELINE-NAZRA-002",
-  "parentRecords": ["G0-NAZRA-001", "PHASE0-NAZRA-001", "PXC-NAZRA-001"],
-  "successorBaseline": { "id": "BASELINE-UX4-001", "status": "DRAFT / NOT SEALED" },
+  "parentRecords": [
+    "G0-NAZRA-001",
+    "PHASE0-NAZRA-001",
+    "PXC-NAZRA-001"
+  ],
+  "successorBaseline": {
+    "id": "BASELINE-UX4-001",
+    "status": "DRAFT / NOT SEALED"
+  },
   "gitCommit": "fb311a1e9df5b5377a8fd6c008d67cd4ef1ca1a5",
   "generatedAt": "2026-08-29T11:47:00Z",
   "environment": {
@@ -140,20 +147,81 @@
   ],
   "delta": {
     "vs": "BASELINE-NAZRA-002 (+ PXC-NAZRA-001)",
-    "typecheckProjectOwned": { "baseline": "n/a", "pxc": 0, "now": 0, "change": "unchanged" },
-    "typecheckRaw": { "baseline": "exit 0 after preflight", "pxc": "exit 0", "now": "exit 2 (recurrence #7)", "change": "regressed at platform boundary, contained by EXC-002" },
-    "build": { "baseline": 0, "now": 0, "change": "unchanged" },
-    "lintErrors": { "baseline": 39, "pxc": 37, "now": 37, "change": "unchanged since PXC" },
-    "lintWarnings": { "baseline": 865, "now": 865, "change": "unchanged" },
-    "testsPassed": { "baseline": 1581, "pxc": 1592, "now": 1592, "change": "unchanged since PXC" },
-    "testFilesFailed": { "baseline": 3, "pxc": 0, "now": 0, "change": "unchanged since PXC" },
-    "fitness": { "baseline": "32/9/0", "now": "32/9/0", "change": "unchanged" },
-    "modules": { "baseline": 1210, "now": 1210, "change": "unchanged" },
-    "cycles": { "baseline": 6, "now": 6, "change": "unchanged" },
-    "uiCycles": { "baseline": 0, "now": 0, "change": "unchanged" },
-    "layerViolations": { "baseline": 155, "now": 155, "change": "unchanged" },
-    "pagesToRepositories": { "baseline": 11, "now": 11, "change": "unchanged" },
-    "boundariesCertified": { "baseline": "0/8", "now": "0/8", "change": "unchanged" }
+    "typecheckProjectOwned": {
+      "baseline": "n/a",
+      "pxc": 0,
+      "now": 0,
+      "change": "unchanged"
+    },
+    "typecheckRaw": {
+      "baseline": "exit 0 after preflight",
+      "pxc": "exit 0",
+      "now": "exit 2 → exit 0 after preflight (recurrence #7)",
+      "change": "platform regeneration recurred; contained + preflight re-applied"
+    },
+    "build": {
+      "baseline": 0,
+      "now": 0,
+      "change": "unchanged"
+    },
+    "lintErrors": {
+      "baseline": 39,
+      "pxc": 37,
+      "now": 37,
+      "change": "unchanged since PXC"
+    },
+    "lintWarnings": {
+      "baseline": 865,
+      "now": 865,
+      "change": "unchanged"
+    },
+    "testsPassed": {
+      "baseline": 1581,
+      "pxc": 1592,
+      "now": 1592,
+      "change": "unchanged since PXC"
+    },
+    "testFilesFailed": {
+      "baseline": 3,
+      "pxc": 0,
+      "now": 0,
+      "change": "unchanged since PXC"
+    },
+    "fitness": {
+      "baseline": "32/9/0",
+      "now": "32/9/0",
+      "change": "unchanged"
+    },
+    "modules": {
+      "baseline": 1210,
+      "now": 1210,
+      "change": "unchanged"
+    },
+    "cycles": {
+      "baseline": 6,
+      "now": 6,
+      "change": "unchanged"
+    },
+    "uiCycles": {
+      "baseline": 0,
+      "now": 0,
+      "change": "unchanged"
+    },
+    "layerViolations": {
+      "baseline": 155,
+      "now": 155,
+      "change": "unchanged"
+    },
+    "pagesToRepositories": {
+      "baseline": 11,
+      "now": 11,
+      "change": "unchanged"
+    },
+    "boundariesCertified": {
+      "baseline": "0/8",
+      "now": "0/8",
+      "change": "unchanged"
+    }
   },
   "violationShape": {
     "components→repositories": 41,
@@ -165,11 +233,38 @@
     "domain→ui": 0
   },
   "openFindings": [
-    { "id": "RISK-007", "status": "OPEN", "classification": "Security", "plan": "docs/security/RISK-007-REMEDIATION-PLAN.md (SEC-U1/U2/U3)", "phase1Impact": "TO BE DECIDED AT REVIEW" },
-    { "id": "RISK-008", "status": "OPEN", "classification": "Governance / Tooling Boundary Risk", "note": "scripts/fixes/** codemods can mutate boundaries they do not own; not closed by the PDF repair", "phase1Impact": "TO BE DECIDED AT REVIEW" },
-    { "id": "LINT-37", "status": "OPEN", "classification": "Classified, owners assigned (classes A–E)", "phase1Impact": "none by itself" },
-    { "id": "PRE-TS-001", "status": "CONTAINED", "recurrences": 7, "note": "Option A′ contract holds: project-owned diagnostics 0; platform artifact regenerated again", "phase1Impact": "none; residual Option C deferred to BND-01" },
-    { "id": "PRE-PDF-001", "status": "CLOSED", "phase1Impact": "none" }
+    {
+      "id": "RISK-007",
+      "status": "OPEN",
+      "classification": "Security",
+      "plan": "docs/security/RISK-007-REMEDIATION-PLAN.md (SEC-U1/U2/U3)",
+      "phase1Impact": "TO BE DECIDED AT REVIEW"
+    },
+    {
+      "id": "RISK-008",
+      "status": "OPEN",
+      "classification": "Governance / Tooling Boundary Risk",
+      "note": "scripts/fixes/** codemods can mutate boundaries they do not own; not closed by the PDF repair",
+      "phase1Impact": "TO BE DECIDED AT REVIEW"
+    },
+    {
+      "id": "LINT-37",
+      "status": "OPEN",
+      "classification": "Classified, owners assigned (classes A–E)",
+      "phase1Impact": "none by itself"
+    },
+    {
+      "id": "PRE-TS-001",
+      "status": "CONTAINED",
+      "recurrences": 7,
+      "note": "Option A′ contract held (project-owned diagnostics 0 throughout). Platform artifact regenerated again at refresh time; inner-callback annotation re-applied as an isolated preflight micro-change.",
+      "phase1Impact": "none; residual Option C deferred to BND-01"
+    },
+    {
+      "id": "PRE-PDF-001",
+      "status": "CLOSED",
+      "phase1Impact": "none"
+    }
   ],
   "nonClaims": [
     "G0 Evidence Refresh PASS ≠ Architecture PASS",
