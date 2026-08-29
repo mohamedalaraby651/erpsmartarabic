@@ -1,11 +1,11 @@
 {
   "evidence": {
     "evidenceId": "CODEBASE-INVENTORY-001",
-    "snapshotId": "SNAPSHOT-20260828-001",
+    "snapshotId": "SNAPSHOT-20260829-001",
     "baselineId": "BASELINE-NAZRA-001",
     "parentBaseline": "BASELINE-UX3A-002",
-    "gitCommit": "f57197303bb58b5f0da62ea36a4c0f4fba8e8c69",
-    "generatedAt": "2026-08-28T08:22:43.376Z",
+    "gitCommit": "7677515230245475e6d486fe0b1b1e221f9b0f3f",
+    "generatedAt": "2026-08-29T11:50:44.510Z",
     "environment": "lovable-sandbox",
     "command": "node scripts/audits/codebase-inventory.mjs",
     "result": "GENERATED",
@@ -16,7 +16,7 @@
       {
         "path": "scripts/audits/output/dependency-report.json",
         "present": true,
-        "sha256": "e10cd615d3b32c51d2637eb6ee313e1130f0bb97995630f78840ef35aa72b58d"
+        "sha256": "f980ed2be5eb50c349c34543fc12372397448dfe2689d47b644ed3962b134fa4"
       },
       {
         "path": "scripts/audits/output/component-report.json",
@@ -40,7 +40,7 @@
       }
     ],
     "dependencyLockHash": "b74bd3308fe1b446defbe73226b07bf88c0d54db8e1682b1ac0b7af02365d9d0",
-    "artifactHash": "de2689976d39e014e80f9033d84b5d21ebe8ab8e5d9b7454893ab0281ef0ff69",
+    "artifactHash": "41fb8ed40d68a38083e3862a9e6a74531c5b1626faca583bc01dba669eb8d2bb",
     "validity": "valid while gitCommit matches HEAD"
   },
   "disclaimer": "Inventory observes the system; it does not certify the system or authorize architectural decisions. This artifact is an observation tool, not a fitness check, and is not wired into any gate. Backend entries are a repository-observed surface, not a verified live backend.",
@@ -48,7 +48,7 @@
     "sourceFiles": 1210,
     "modules": 174,
     "totalModulesInDependencyGraph": 1210,
-    "totalEdges": 4789,
+    "totalEdges": 4794,
     "components": 873,
     "routes": 98,
     "repositories": 44,

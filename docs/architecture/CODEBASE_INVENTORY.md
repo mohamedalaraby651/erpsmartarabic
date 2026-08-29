@@ -9,24 +9,24 @@
 | Field | Value |
 |---|---|
 | Evidence ID | CODEBASE-INVENTORY-001 |
-| Snapshot ID | SNAPSHOT-20260828-001 |
+| Snapshot ID | SNAPSHOT-20260829-001 |
 | Baseline | BASELINE-NAZRA-001 |
 | Parent Baseline | BASELINE-UX3A-002 |
-| Git Commit | f57197303bb58b5f0da62ea36a4c0f4fba8e8c69 |
-| Generated At | 2026-08-28T08:22:43.376Z |
+| Git Commit | 7677515230245475e6d486fe0b1b1e221f9b0f3f |
+| Generated At | 2026-08-29T11:50:44.510Z |
 | Environment | lovable-sandbox |
 | Command | `node scripts/audits/codebase-inventory.mjs` |
 | Result | GENERATED |
 | Generator Version | 1.0.0 |
 | Schema Version | 1 |
-| Artifact Hash | `de2689976d39e014e80f9033d84b5d21ebe8ab8e5d9b7454893ab0281ef0ff69` |
+| Artifact Hash | `41fb8ed40d68a38083e3862a9e6a74531c5b1626faca583bc01dba669eb8d2bb` |
 | Owner | Human Governance |
 
 ### Source artifacts
 
 | Artifact | Present | SHA-256 |
 |---|---|---|
-| `scripts/audits/output/dependency-report.json` | yes | `e10cd615d3b32c51…` |
+| `scripts/audits/output/dependency-report.json` | yes | `f980ed2be5eb50c3…` |
 | `scripts/audits/output/component-report.json` | yes | `721a4d29a5925334…` |
 | `scripts/audits/output/route-report.json` | yes | `bf6106fcac08d768…` |
 | `scripts/audits/output/data-access-report.json` | yes | `63cfcee087b14ac3…` |
@@ -39,7 +39,7 @@
 | Source files (src) | 1210 |
 | Modules | 174 |
 | Modules in dependency graph | 1210 |
-| Dependency edges | 4789 |
+| Dependency edges | 4794 |
 | Component/hook files | 873 |
 | Routes | 98 |
 | Repositories | 44 |
