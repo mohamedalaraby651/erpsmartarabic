@@ -87,3 +87,19 @@ Composite: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`
 | Open findings visibility (PRE-PDF-001 · PRE-TS-001 #5 · RISK-007) | ✅ visible, unresolved |
 | Unauthorized changes | ✅ none (25/25 scope · item-level MATCH) |
 | **Decision** | **G0 PASS** — NOT CERTIFIED · Phase 0 NOT authorized |
+
+## Phase 0 — Boundary Model (2026-08-29)
+
+| Item | Result |
+|---|---|
+| Boundaries documented | 8 / 8 |
+| Fields per boundary | 16 / 16 |
+| Boundaries certified | **0 / 8** (🟢 0 · 🟡 6 · 🔴 2 partial-scope) |
+| ADR-0031 · ADR-0044 | ✅ Accepted |
+| Invariant → Fitness → Test → CI mapping | ✅ declared (implementation deferred) |
+| Ownership · Authority · Failure · Recovery · Exit criteria | ✅ all 8 |
+| PRE-TS-001 root-cause ownership | ✅ recorded — status OPEN (recurrence #6 observed, not repaired) |
+| Unauthorized business-code changes | ✅ none (`docs/**` only) |
+| Evidence lineage | ✅ `a33f49b9` → `31052763` → `1bf0b5f1` → `061c9646` |
+| Typecheck | ⛔ exit 2 — PRE-TS-001 #6, left open by design |
+| Exit gate | **12 / 12 satisfied** · Certification NOT granted |

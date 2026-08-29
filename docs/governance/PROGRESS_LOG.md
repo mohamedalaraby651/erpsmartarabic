@@ -246,3 +246,19 @@ STOP — HUMAN REVIEW REQUIRED
 - Hashes recorded: package-lock `36702e53…`, bun.lockb `57954bd8…`, package.json `22df4faa…`, dist aggregate `4db9cb55…`
 - All 16 G0 checks PASS. Known failures (PRE-PDF-001, PRE-TS-001, RISK-007, lint) kept OPEN and visible — none reclassified.
 - Decision: **G0 PASS** · Certification NOT granted · Phase 0 awaiting explicit human authorization
+
+## 2026-08-29 — Phase 0 (Boundary Model + Governance) — COMPLETE, NOT CERTIFIED
+- Authorization: Phase 0 only. No later phase, no security/operational remediation authorized.
+- Record: `docs/governance/PHASE0_EXIT_GATE.md` (`PHASE0-NAZRA-001`) · Evidence revision `061c9646`
+- Deliverables: `docs/architecture/BOUNDARY_CATALOG.md` (8/8 boundaries × 16/16 fields) ·
+  ADR-0031 (Enterprise Boundary Contract) · ADR-0044 (Modular Monolith + extraction conditions) ·
+  `docs/architecture/PRE-TS-001-ROOT-CAUSE.md` · `docs/architecture/baseline/BASELINE-UX4-001.md` (DRAFT, unsealed)
+- Enforcement chain declared per invariant: Invariant → Fitness Rule → Automated Test → CI Evidence (ACTIVE vs PLANNED marked)
+- Evidence at gate: tsgo **exit 2** (2 × TS7011 — PRE-TS-001 **recurrence #6**, deliberately NOT repaired) ·
+  fitness active=32 pending=9 failures=0 · dep-graph 1210 modules / 6 cycles / 155 violations / pages→repositories 11 ·
+  BASELINE-NAZRA-002 integrity ok (28 entries)
+- Diff scope: `docs/**` only — zero business-code changes
+- PRE-TS-001 reclassified from recurring repair to boundary-ownership defect; owner recorded; resolution NOT authorized
+- Still OPEN: PRE-PDF-001 · RISK-007 · 39 lint errors · PRE-TS-001
+- Boundaries certified: **0 / 8** · Certification NOT granted · Phase 1 NOT authorized
+- Next: Phase 0 Evidence → G0 → Human Review → seal BASELINE-UX4-001
