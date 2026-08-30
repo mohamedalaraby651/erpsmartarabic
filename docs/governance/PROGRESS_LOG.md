@@ -327,3 +327,16 @@ STOP — HUMAN REVIEW REQUIRED
 - Explicit prohibition recorded: **no opportunistic remediation of the 37 classified lint errors.**
 - No code change this step. Architecture metrics untouched. Phase 1A **NOT AUTHORIZED**.
 - Characterization: Controlled / Evidence-backed / Pre-Certification.
+
+## 2026-08-30 — HRD-NAZRA-001 decisions settled · BASELINE-UX4-001 SEALED · Phase 1A authorized
+
+- D-1 ACCEPT · D-2 ACCEPT WITH CONSTRAINT (RISK-007 OPEN, excluded from 1A) · D-3 CONTAIN BEFORE
+  EXECUTION (RISK-008 OPEN, mutation control gate mandatory) · D-4 ACCEPT AS CONTAINED (PRE-TS-001,
+  no C2 reopening, Option C deferred to BND-01) · D-5 SEAL.
+- `BASELINE-UX4-001` **SEALED** — composite `e8f506d113e785015fca864a823990bda09f5878e76eb8166305edc4e403f392`,
+  30 entries, artifact `scripts/audits/output/baseline-ux4-001.json`.
+- `PH1A-NAZRA-001` **SIGNED / AUTHORIZED** — BND-05 Tenant → Data only. Approved Scope Hash
+  `9f3349569ab0af16d91c529c47eb629e34e682c9b04d0aa0aa9a42f8dfb96a5a` over 15 frozen entries, with
+  item-level rules and 8 measurable exit criteria (X-1 … X-8).
+- No code change in this record. Certification NOT granted · boundaries 0/8 · Smart Freeze ACTIVE ·
+  Phase 1B NOT authorized. Implementation has not started.
