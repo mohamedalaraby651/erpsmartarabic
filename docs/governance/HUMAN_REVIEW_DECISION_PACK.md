@@ -4,7 +4,7 @@
 - **Input:** `G0R-NAZRA-002` (G0 Evidence Refresh) @ commit `fb311a1e` · `SNAPSHOT-20260829-001`
 - **Review verdict on input:** **ACCEPTED — Evidence Integrity only**
 - **Certification:** **NOT GRANTED** · Boundaries certified **0 / 8**
-- **Phase 1A:** **NOT YET AUTHORIZED**
+- **Phase 1A:** **AUTHORIZED — closed scope only** (see `PH1A-NAZRA-001`), decisions D-1 … D-5 settled 2026-08-30
 - **Smart Freeze:** **ACTIVE**
 - **Mode:** Decision record. No code change. No scope expansion. No opportunistic repair.
 
@@ -127,18 +127,51 @@ Lint                   37 errors (classified, owned)
 
 There is no sufficient basis to declare "Phase 1 is open".
 
-## 5. The five decisions that must be settled before Phase 1A
+## 5. The five decisions — SETTLED (2026-08-30)
 
-| # | Decision | Required outcome | Status |
+| # | Decision | Verdict | Effect |
 |---|---|---|---|
-| D-1 | G0 Evidence Integrity | Accept `G0R-NAZRA-002` as evidence-integrity PASS | **ACCEPTED** |
-| D-2 | RISK-007 disposition | Decide: inside Phase 1A scope, or explicitly out of scope | **PENDING** |
-| D-3 | RISK-008 disposition | Decide the required treatment/control — full remediation is **not** required now | **PENDING** |
-| D-4 | PRE-TS-001 | Accept `CONTAINED` as an explicit residual risk with named owner | **PENDING** |
-| D-5 | `BASELINE-UX4-001` | Define the exact criteria that move it DRAFT → SEALED | **PENDING** |
+| D-1 | G0 Evidence Integrity | **ACCEPT** | `G0R-NAZRA-002` accepted as Evidence Integrity only |
+| D-2 | RISK-007 disposition | **ACCEPT WITH CONSTRAINT** | RISK-007 stays **OPEN**; security remediation is **excluded** from Phase 1A; Phase 1A must not increase RISK-007 exposure |
+| D-3 | RISK-008 disposition | **CONTAIN BEFORE EXECUTION** | RISK-008 stays **OPEN**; any mutation tooling used in Phase 1A requires declared scope + pre-mutation verification + post-mutation evidence; full remediation deferred |
+| D-4 | PRE-TS-001 | **ACCEPT AS CONTAINED** | Remains `CONTAINED`, not closed. No reopening of C2, no baseline edit, recurrence #7 is **not** an architecture regression. Option C deferred to BND-01 |
+| D-5 | `BASELINE-UX4-001` | **SEAL** | Sealed as the Phase 1 reference baseline. Sealing is **not** architecture or security certification |
 
-Only after D-2 … D-5 are settled is the Phase 1A scope defined — to the millimetre — in
-`docs/governance/PHASE1A_AUTHORIZATION_CONTRACT.md` (currently an unsigned template).
+### D-2 — operating rule
+
+```text
+RISK-007  →  OPEN  →  Dedicated Security Track  →  NOT inside Phase 1A scope
+```
+
+Any Phase 1A change touching RLS, tenant authority, authorization, RPC security, or edge functions
+is **Class D** and carries its own independent evidence. No finding may be closed by inference —
+scanner evidence only.
+
+### D-3 — mandatory control gate for mutation tooling
+
+```text
+Declared Scope
+      ↓
+Pre-mutation verification
+      ↓
+Mutation
+      ↓
+Post-mutation verification
+      ↓
+Evidence
+```
+
+Entry condition, not a remediation: **no `scripts/fixes/**` mutation inside Phase 1A** unless it
+runs inside an explicit, pre-verified scope. Any mutation outside that scope is a **STOP**.
+
+### D-5 — what sealing does and does not mean
+
+```text
+BASELINE-NAZRA-002 → G0R-NAZRA-002 → Human Review → BASELINE-UX4-001 SEALED → Phase 1A
+```
+
+Sealed = a fixed reference point for Phase 1. Every later change must be presented as
+**Baseline + Delta + Evidence**. Sealed ≠ Enterprise Certified · Sealed ≠ Architecture PASS.
 
 ## 6. Explicit prohibition: no opportunistic lint cleanup
 
@@ -167,18 +200,20 @@ G0R-NAZRA-002
 Human Review — ACCEPT            ← this record (HRD-NAZRA-001)
        │
        ▼
-Phase 1 Entry Decision
-       ├── D-2 RISK-007 disposition
-       ├── D-3 RISK-008 disposition
-       ├── D-4 PRE-TS-001 containment acceptance
-       ├── D-5 BASELINE-UX4-001 sealing criteria
-       └── Phase 1A exact scope
+D-1 ACCEPT · D-2 ACCEPT WITH CONSTRAINT · D-3 CONTAIN BEFORE EXECUTION
+D-4 ACCEPT AS CONTAINED · D-5 SEAL
        │
        ▼
-PHASE 1A AUTHORIZATION (closed scope contract)
+BASELINE-UX4-001  SEALED   (composite e8f506d1…)
        │
        ▼
-Tenant Isolation implementation → Evidence → Boundary Review → BND-01 Certification
+Smart Freeze      ACTIVE
+       │
+       ▼
+PHASE 1A          AUTHORIZED (PH1A-NAZRA-001, closed scope, hash 9f334956…)
+       │
+       ▼
+BND-05 Tenant → Data → Evidence → Human Review → BND-05 Certification
 ```
 
 ## 8. Current system characterization
@@ -196,5 +231,11 @@ Controlled / Evidence-backed / Pre-Certification
 - ❌ PRE-TS-001 closed
 - ❌ RISK-008 closed
 - ❌ RISK-007 remediated or authorized
-- ❌ Phase 1 authorized (open or partial)
-- ❌ `BASELINE-UX4-001` sealed
+- ❌ Phase 1 authorized **openly** (only the closed Phase 1A contract is authorized)
+- ❌ Phase 1B (Authorization / PDP) authorized
+- ❌ Boundary BND-05 certified
+
+## 10. What this record does grant
+
+- ✅ `BASELINE-UX4-001` **SEALED** as the Phase 1 reference baseline
+- ✅ `PH1A-NAZRA-001` signed and authorized within its frozen scope only
