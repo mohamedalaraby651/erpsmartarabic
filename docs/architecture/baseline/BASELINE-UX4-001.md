@@ -1,6 +1,10 @@
 # BASELINE-UX4-001
 
-- **Status:** **DRAFT — NOT SEALED.** Sealing requires Phase 0 Evidence → G0 → explicit Human Review.
+- **Status:** **SEALED** — 2026-08-30, by Human Governance decision **D-5** in `HRD-NAZRA-001`.
+- **Composite:** `e8f506d113e785015fca864a823990bda09f5878e76eb8166305edc4e403f392` (30 entries) — `scripts/audits/output/baseline-ux4-001.json`
+- **Sealing evidence chain:** `BASELINE-NAZRA-002` → `G0R-NAZRA-002` (PASS, evidence integrity) → Human Review (`HRD-NAZRA-001`) → SEAL
+- **Meaning of the seal:** a fixed reference point for Phase 1 only. Every later change is presented as **Baseline + Delta + Evidence**. Sealed ≠ Architecture PASS ≠ Security PASS ≠ Enterprise Certified.
+- **Authorizes:** `PH1A-NAZRA-001` (Tenant Isolation, closed scope, hash `9f3349569ab0af16d91c529c47eb629e34e682c9b04d0aa0aa9a42f8dfb96a5a`).
 - **Type:** Boundary Model baseline (governance artifact, not a code baseline)
 - **Parent:** `BASELINE-NAZRA-002` (composite `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`, 28 entries — re-verified OK)
 - **Preceding gate:** `G0-NAZRA-001` — PASS (evidence integrity only)
@@ -86,4 +90,4 @@ until their owning domain is individually certified against its boundary exit cr
 - ❌ Security certified
 - ❌ Tests green
 - ❌ Production ready
-- ❌ Phase 1 authorized
+- ❌ Phase 1 authorized openly (only the closed Phase 1A contract `PH1A-NAZRA-001` is authorized)
