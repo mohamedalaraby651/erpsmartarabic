@@ -310,3 +310,20 @@ STOP — HUMAN REVIEW REQUIRED
   Classification: Governance / Tooling Boundary Risk · Phase 1 impact: **TO BE DECIDED AT REVIEW**.
 - Certification NOT granted · Boundaries 0 / 8 · `BASELINE-UX4-001` DRAFT · Smart Freeze ACTIVE.
 - Next: **Human Review** → Phase 1A (Tenant Isolation) → evidence → Phase 1B (Authorization / PDP).
+
+## HRD-NAZRA-001 — Human Review Decision Pack (Phase 1 Entry)
+
+- Input: `G0R-NAZRA-002` @ `fb311a1e` · `SNAPSHOT-20260829-001`.
+- Verdict: **ACCEPTED — Evidence Integrity only.** Certification NOT granted; Smart Freeze ACTIVE.
+- Records created: `docs/governance/HUMAN_REVIEW_DECISION_PACK.md`,
+  `docs/governance/PHASE1A_AUTHORIZATION_CONTRACT.md` (TEMPLATE — UNSIGNED / NOT AUTHORIZED).
+- Decisions: D-1 G0 evidence integrity **ACCEPTED**; D-2 RISK-007 disposition **PENDING**;
+  D-3 RISK-008 treatment **PENDING**; D-4 PRE-TS-001 `CONTAINED` acceptance **PENDING**;
+  D-5 `BASELINE-UX4-001` sealing criteria **PENDING**.
+- PRE-TS-001 stays **CONTAINED** (not closed); durable adapter/port fix deferred to BND-01.
+  Root-cause correction (outer vs inner callback misinterpretation) retained verbatim, not softened.
+- RISK-008 stays **OPEN** in the Phase 1 Risk Register. It constrains *how* Phase 1A executes
+  (no dependence on `scripts/fixes/**` mutating in-scope boundaries) but does not alone block entry.
+- Explicit prohibition recorded: **no opportunistic remediation of the 37 classified lint errors.**
+- No code change this step. Architecture metrics untouched. Phase 1A **NOT AUTHORIZED**.
+- Characterization: Controlled / Evidence-backed / Pre-Certification.
