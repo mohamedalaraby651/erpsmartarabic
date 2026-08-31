@@ -1,0 +1,40 @@
+{
+  "id": "CERT-REV-BND05-JOURNAL-PROOF",
+  "boundary": "BND-05 — Tenant → Data",
+  "generatedAt": "2026-08-31T21:38:26.616Z",
+  "source": "live",
+  "method": "PostgREST with a real authenticated user JWT; throw-away foreign tenant/period/journal created and deleted with the privileged connection",
+  "actingTenant": "a0000000-0000-0000-0000-000000000001",
+  "foreignTenant": "bbbbbbbb-0000-0000-0000-00000000000a",
+  "results": [
+    {
+      "test": "A",
+      "intent": "foreign tenant_id + ordinary payload",
+      "status": 400,
+      "body": "{\"code\":\"23514\",\"details\":null,\"hint\":null,\"message\":\"الفترة المالية مطلوبة لإنشاء قيد محاسبي.\"}",
+      "verdict": "DENIED (other)"
+    },
+    {
+      "test": "B",
+      "intent": "foreign tenant_id + trigger-satisfying payload",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"new row violates row-level security policy for table \\\"journals\\\"\"}",
+      "verdict": "DENIED BY RLS"
+    },
+    {
+      "test": "C",
+      "intent": "foreign journal_entries insert",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"new row violates row-level security policy for table \\\"journal_entries\\\"\"}",
+      "verdict": "DENIED BY RLS"
+    },
+    {
+      "test": "D",
+      "intent": "SELECT foreign-tenant journals",
+      "status": 200,
+      "body": "[]",
+      "verdict": "DENIED (0 rows)"
+    }
+  ],
+  "failures": []
+}
