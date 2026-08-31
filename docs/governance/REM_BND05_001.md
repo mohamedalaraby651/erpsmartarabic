@@ -135,3 +135,16 @@ CERT-REV-BND05-R2    [ ] AUTHORIZED [ ] NOT YET
 BND-05               [ ] STILL HOLD [ ] CERTIFIED (only after R2)
 Reviewer: ____________________   Date: ____________
 ```
+
+## 9. Evidence integrity note
+
+`scripts/audits/output/cert-rev-bnd05.json` was regenerated **after** the
+migration was applied, so its catalog-derived fields (definition md5,
+`caller_controlled_tenant_id`, `search_path`) now describe the post-remediation
+schema while its classifications remain the original CERT-REV-BND05 verdicts.
+This is recorded inside the file itself as `integrityNote`. The immutable
+pre-remediation evidence — `docs/governance/CERT_REV_BND05.md` and
+`scripts/audits/output/cert-rev-bnd05-definer-proof.json` — was **not**
+regenerated and remains the authoritative before-state. Disclosed rather than
+smoothed over; CERT-REV-BND05-R2 must regenerate the classification set
+cleanly from the current schema.

@@ -962,5 +962,6 @@
     "failures": []
   },
   "verdict": "REMEDIATION REQUIRED on 7 function(s) — BND-05 cannot be certified as-is",
-  "certification": "NOT CLAIMED — human decision"
+  "certification": "NOT CLAIMED — human decision",
+  "integrityNote": "REGENERATED at 2026-08-31T22:52Z, i.e. AFTER migration 0005 (REM-BND05-001) was applied. Catalog-derived fields (definition md5, caller_controlled_tenant_id, search_path) therefore reflect the POST-remediation schema, while the hand-authored classifications are the original CERT-REV-BND05 verdicts. The immutable pre-remediation evidence is docs/governance/CERT_REV_BND05.md and scripts/audits/output/cert-rev-bnd05-definer-proof.json, neither of which was regenerated."
 }
