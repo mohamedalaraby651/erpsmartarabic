@@ -1,0 +1,937 @@
+{
+  "id": "CERT-REV-BND05",
+  "boundary": "BND-05 — Tenant → Data",
+  "observation": "PH1A-OBS-001",
+  "generatedAt": "2026-08-31T21:41:01.584Z",
+  "mutation": "none — read-only review",
+  "source": "live catalog (pg_proc / pg_trigger / has_function_privilege)",
+  "ph1aArtifact": {
+    "generatedAt": "2026-08-31T20:36:54.638Z",
+    "x6": 88
+  },
+  "observedNames": 35,
+  "reviewedEntries": 36,
+  "counts": {
+    "ACCEPTED_EXEMPTION": 25,
+    "FALSE_POSITIVE": 4,
+    "REMEDIATION_REQUIRED": 7
+  },
+  "remediationRequired": [
+    {
+      "function": "check_financial_limit(_user_id uuid, _tenant uuid, _limit_type text, _amount numeric)",
+      "severity": "low",
+      "remediation": "Either drop the 4-arg overload or add `if _tenant <> public.get_current_tenant() then return false; end if;`."
+    },
+    {
+      "function": "find_duplicate_customers(p_tenant_id uuid)",
+      "severity": "high",
+      "remediation": "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it)."
+    },
+    {
+      "function": "get_user_tenant_id(_user_id uuid)",
+      "severity": "low",
+      "remediation": "Restrict to `auth.uid()` for the authenticated grant (keep the arbitrary-user form for internal/service_role callers only)."
+    },
+    {
+      "function": "get_user_tenants(_user_id uuid)",
+      "severity": "low",
+      "remediation": "Constrain the authenticated path to `auth.uid()`."
+    },
+    {
+      "function": "is_admin_equivalent_custom_role(_role_id uuid, _tenant_id uuid)",
+      "severity": "low",
+      "remediation": "Add `and _tenant_id = public.get_current_tenant()`."
+    },
+    {
+      "function": "is_period_closed(_tenant_id uuid, _date date)",
+      "severity": "low",
+      "remediation": "Add `and _tenant_id = public.get_current_tenant()`."
+    },
+    {
+      "function": "void_invoice(_invoice_id uuid, _reason text)",
+      "severity": "critical",
+      "remediation": "Add `and tenant_id = public.get_current_tenant()` to the invoice lookup and raise when not found."
+    }
+  ],
+  "functions": [
+    {
+      "function": "_resolve_open_period(_tenant_id uuid, _date date)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "fiscal_periods"
+      ],
+      "definition_md5": "7ca6b381838e2c4d08c45e02dba43a55",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "apply_dn_stock_on_post()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "delivery_note_items",
+        "product_stock",
+        "stock_movements",
+        "sync_logs"
+      ],
+      "definition_md5": "d78cffcf7cbbbbae056d74e2ec690d7a",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "apply_gr_stock_on_post()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "goods_receipt_items",
+        "product_stock",
+        "stock_movements"
+      ],
+      "definition_md5": "48effffdf7dd1c56581548460c638a2d",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "auto_assign_default_tenant()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "user_tenants"
+      ],
+      "definition_md5": "c26e7717f035940b7577e0834c92f7c7",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "check_financial_limit(_user_id uuid, _limit_type text, _value numeric)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "get_current_tenant()",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "client-reachable; see rationale",
+      "tables_touched": [
+        "role_limits",
+        "user_roles"
+      ],
+      "definition_md5": "1f04abd92d3766824c1c7b954ecc978c",
+      "class": "FALSE_POSITIVE",
+      "severity": null,
+      "rationale": "Derives the tenant itself: `_tenant := public.get_current_tenant()` and filters user_roles/role_limits on it. The heuristic missed the predicate because it is held in a variable."
+    },
+    {
+      "function": "check_financial_limit(_user_id uuid, _tenant uuid, _limit_type text, _amount numeric)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
+      "tables_touched": [
+        "role_limits",
+        "user_roles"
+      ],
+      "definition_md5": "16c055173cb5457498683e4390ad7a7f",
+      "class": "REMEDIATION_REQUIRED",
+      "severity": "low",
+      "rationale": "SECURITY DEFINER, EXECUTE granted to authenticated, `_tenant` is caller-controlled and never compared to get_current_tenant(). A caller who knows a foreign tenant id and a foreign user id can learn whether an amount is within that tenant's role limit — a boolean oracle over foreign configuration. No write path. Legacy overload; the 3-arg form supersedes it.",
+      "remediation": "Either drop the 4-arg overload or add `if _tenant <> public.get_current_tenant() then return false; end if;`."
+    },
+    {
+      "function": "compute_three_way_matching()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "goods_receipt_items",
+        "goods_receipts",
+        "purchase_invoice_items",
+        "sync_logs"
+      ],
+      "definition_md5": "c4083d5125d1d0721cf8281995a3ba15",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "create_journal_for_credit_note(_credit_note_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "credit_notes",
+        "document_posting_log",
+        "fiscal_periods",
+        "journal_entries",
+        "journals"
+      ],
+      "definition_md5": "71dcd890a48428e27e11ccfaf1dd665a",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "create_journal_for_delivery_note(_delivery_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "delivery_note_items",
+        "delivery_notes",
+        "journal_entries",
+        "journals",
+        "products"
+      ],
+      "definition_md5": "6f9c2c5e1aff241f7c89a9ff0814e94b",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "create_journal_for_expense(_expense_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "chart_of_accounts",
+        "expense_categories",
+        "expenses",
+        "fiscal_periods",
+        "journal_entries",
+        "journals",
+        "posting_account_map"
+      ],
+      "definition_md5": "8068a0a81fa9bfba70408946e0f09b93",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "create_journal_for_goods_receipt(_receipt_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "goods_receipt_items",
+        "goods_receipts",
+        "journal_entries",
+        "journals"
+      ],
+      "definition_md5": "9d31e1f19e7ce8a921efe221dfa34d9f",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "create_journal_for_invoice(_invoice_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "fiscal_periods",
+        "invoices",
+        "journal_entries",
+        "journals"
+      ],
+      "definition_md5": "bf4a8ba7c712cc4ba1216c43b13f0fb0",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "create_journal_for_payment(_payment_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "fiscal_periods",
+        "journal_entries",
+        "journals",
+        "payments"
+      ],
+      "definition_md5": "872418af42dc4bf4b9189f25db28ec4d",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "create_journal_for_purchase_invoice(_invoice_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "goods_receipts",
+        "journal_entries",
+        "journals",
+        "purchase_invoices"
+      ],
+      "definition_md5": "4574b1681c10d7b6bc9b72881410094e",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "enforce_fiscal_period_open()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "fiscal_periods"
+      ],
+      "definition_md5": "a591661a8954027c92f42717d4adba9c",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "find_duplicate_customers(p_tenant_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
+      "tables_touched": [
+        "customers"
+      ],
+      "definition_md5": "aab3472601a3ca576e284723783e28b7",
+      "class": "REMEDIATION_REQUIRED",
+      "severity": "high",
+      "rationale": "SECURITY DEFINER (RLS bypassed), EXECUTE granted to authenticated, and `p_tenant_id` defaults to NULL which disables the filter entirely: `WHERE (p_tenant_id IS NULL OR ...)`. Calling it with no argument returns customer names and phone numbers from every tenant. This is a direct cross-tenant PII read reachable from a normal client session.",
+      "remediation": "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it)."
+    },
+    {
+      "function": "fn_log_pdf_profile_change()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "auth.uid()",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "tenant_pdf_profile_audit"
+      ],
+      "definition_md5": "23e545039db24b1dd7e3b72dfc7e3a2d",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "gen_quote_number()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "quotes"
+      ],
+      "definition_md5": "1197dc94dc15d833adf68c96abb0d92a",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "get_dashboard_overview()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "auth.uid()",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "client-reachable; see rationale",
+      "tables_touched": [
+        "cash_registers",
+        "customers",
+        "invoice_items",
+        "invoices",
+        "products",
+        "quotations"
+      ],
+      "definition_md5": "7da9787578b9ffe3a0348d0b9080a35c",
+      "class": "FALSE_POSITIVE",
+      "severity": null,
+      "rationale": "Resolves `v_tenant := public.get_user_tenant_id(auth.uid())` and filters every subsequent query on it; returns `{error: no_tenant}` when absent. No caller-controlled tenant input."
+    },
+    {
+      "function": "get_user_tenant_id(_user_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "client-reachable; see rationale",
+      "tables_touched": [
+        "user_tenants"
+      ],
+      "definition_md5": "d083e139114f74d37714eb75a040a20e",
+      "class": "REMEDIATION_REQUIRED",
+      "severity": "low",
+      "rationale": "SECURITY DEFINER over user_tenants, EXECUTE granted to authenticated, `_user_id` caller-controlled and unvalidated: a caller holding another user's uuid learns that user's home tenant. Membership metadata disclosure, not tenant data. Also used internally by other definer functions, so removal is not a pure deletion.",
+      "remediation": "Restrict to `auth.uid()` for the authenticated grant (keep the arbitrary-user form for internal/service_role callers only)."
+    },
+    {
+      "function": "get_user_tenants(_user_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "client-reachable; see rationale",
+      "tables_touched": [
+        "user_tenants"
+      ],
+      "definition_md5": "2a1fdb4c84e32aae6f2059206079255e",
+      "class": "REMEDIATION_REQUIRED",
+      "severity": "low",
+      "rationale": "Same shape as get_user_tenant_id: definer read of user_tenants for any supplied user id, granted to authenticated. Discloses tenant membership of other users.",
+      "remediation": "Constrain the authenticated path to `auth.uid()`."
+    },
+    {
+      "function": "is_admin_equivalent_custom_role(_role_id uuid, _tenant_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
+      "tables_touched": [
+        "custom_roles",
+        "role_section_permissions",
+        "tenants"
+      ],
+      "definition_md5": "d90310a4463207413d9dc51c6a8a9b4c",
+      "class": "REMEDIATION_REQUIRED",
+      "severity": "low",
+      "rationale": "Definer boolean over custom_roles/role_section_permissions with both ids caller-controlled and granted to authenticated. Requires knowledge of a foreign role uuid; discloses one bit about a foreign tenant's role configuration.",
+      "remediation": "Add `and _tenant_id = public.get_current_tenant()`."
+    },
+    {
+      "function": "is_period_closed(_tenant_id uuid, _date date)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
+      "tables_touched": [
+        "fiscal_periods"
+      ],
+      "definition_md5": "03fe0b29ce035cd45fa8e08626660c74",
+      "class": "REMEDIATION_REQUIRED",
+      "severity": "low",
+      "rationale": "Definer boolean over fiscal_periods with a caller-controlled tenant id, granted to authenticated. Discloses whether a foreign tenant has a closed period covering a date.",
+      "remediation": "Add `and _tenant_id = public.get_current_tenant()`."
+    },
+    {
+      "function": "log_activity()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "auth.uid()",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "activity_logs"
+      ],
+      "definition_md5": "be7ea63b5dda5087f855cc05b8c0c11a",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "log_posting_failure(p_tenant uuid, p_doc_type text, p_doc_id uuid, p_event text, p_reason text)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "auth.uid()",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "document_posting_log"
+      ],
+      "definition_md5": "8f0ab457ece46b2d17f094a95ba293bd",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "record_dispatcher_event_execution(_correlation_id text, _event_id uuid, _event_type text, _aggregate_type text, _aggregate_id uuid, _tenant_id uuid, _status text, _error text, _latency_ms integer, _attempts integer)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "dispatcher_event_executions"
+      ],
+      "definition_md5": "fb483fb9d85642b043c8cbed71ad77ea",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "resolve_posting_account(_tenant_id uuid, _posting_key text)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "posting_account_map"
+      ],
+      "definition_md5": "2a4993b8c29bcdd5dc4d3732ef848776",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "reverse_journal_for_credit_note(_credit_note_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "auth.uid()",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "fiscal_periods",
+        "journal_entries",
+        "journals"
+      ],
+      "definition_md5": "95695bc37fc7b3b45e06d8afda3740ed",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "reverse_stock_for_credit_note(_credit_note_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "credit_note_items",
+        "credit_notes",
+        "product_stock",
+        "stock_movements",
+        "warehouses"
+      ],
+      "definition_md5": "c562c54b52126b1ee6bc94edb5b66a7e",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Not reachable from a client: EXECUTE is held only by postgres/service_role, so the function runs on the server plane (edge functions, triggers, scheduled work) where the tenant is supplied by trusted code. Compensating control: grant surface."
+    },
+    {
+      "function": "set_dn_item_tenant()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "delivery_note_items",
+        "delivery_notes"
+      ],
+      "definition_md5": "32070f5f067dd3a0de83e0334dec0d4c",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "set_gr_item_tenant()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "goods_receipt_items",
+        "goods_receipts"
+      ],
+      "definition_md5": "f886a26a053223d1dbefd2d2f210e83a",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "set_pinv_item_tenant()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "purchase_invoice_items",
+        "purchase_invoices"
+      ],
+      "definition_md5": "28b001358f53ddf3cfe7d226fa0e2090",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "set_supplier_notes_tenant()",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": true,
+      "execute_grants": {
+        "authenticated": false,
+        "anon": false,
+        "note": "server plane only (postgres/service_role)"
+      },
+      "tenant_authority": "inherited from the row / caller argument",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "no — not executable by anon/authenticated",
+      "tables_touched": [
+        "supplier_notes",
+        "suppliers"
+      ],
+      "definition_md5": "ba94c2e29b4152b3cae95fe5562ef21e",
+      "class": "ACCEPTED_EXEMPTION",
+      "severity": null,
+      "rationale": "Trigger function. Not directly invocable (no EXECUTE for anon/authenticated) and it only ever sees rows that the statement's own RESTRICTIVE tenant policy already admitted, so its tenant value is the row's own, RLS-checked tenant. Compensating control: table RLS + absent grant."
+    },
+    {
+      "function": "switch_user_tenant(_user_id uuid, _tenant_id uuid)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "auth.uid()",
+      "caller_controlled_tenant_id": true,
+      "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
+      "tables_touched": [
+        "user_tenants"
+      ],
+      "definition_md5": "c2529149663ac7c77e4193c80cb58b68",
+      "class": "FALSE_POSITIVE",
+      "severity": null,
+      "rationale": "Explicitly enforces `auth.uid() = _user_id` and membership in the target tenant before updating user_tenants. Authority is server-derived; the heuristic only missed a literal `get_current_tenant()` call."
+    },
+    {
+      "function": "void_invoice(_invoice_id uuid, _reason text)",
+      "tenant_scoped": true,
+      "security_mode": "SECURITY DEFINER",
+      "search_path": "search_path=public",
+      "trigger_function": false,
+      "execute_grants": {
+        "authenticated": true,
+        "anon": false,
+        "note": "client-reachable"
+      },
+      "tenant_authority": "auth.uid()",
+      "caller_controlled_tenant_id": false,
+      "cross_tenant_reachable": "client-reachable; see rationale",
+      "tables_touched": [
+        "fiscal_periods",
+        "invoices",
+        "journal_entries",
+        "journals",
+        "payments"
+      ],
+      "definition_md5": "fdd4c29815510ce77c5b45ff4688f571",
+      "class": "REMEDIATION_REQUIRED",
+      "severity": "critical",
+      "rationale": "SECURITY DEFINER, EXECUTE granted to authenticated, and the invoice is loaded by id alone: `select * into _inv from public.invoices where id = _invoice_id`. The tenant is then taken FROM THE ROW (`_tenant := _inv.tenant_id`), so every subsequent statement is consistent with the foreign tenant instead of being blocked by it. A caller holding a foreign invoice uuid can cancel that invoice and insert a reversing journal into another tenant's ledger. RLS does not intervene because the function is a definer. This is a cross-tenant WRITE path and it is reachable from an ordinary client session.",
+      "remediation": "Add `and tenant_id = public.get_current_tenant()` to the invoice lookup and raise when not found."
+    },
+    {
+      "function": "ph1a_cross_tenant_probe()",
+      "tenant_scoped": null,
+      "security_mode": "N/A — not present in the catalog",
+      "class": "FALSE_POSITIVE",
+      "severity": null,
+      "rationale": "Listed in the PH1A artifact but absent from the live catalog (dropped by migration 0004). Stale observation, not a finding."
+    }
+  ],
+  "journalProof": {
+    "source": "live",
+    "generatedAt": "2026-08-31T21:38:26.616Z",
+    "results": [
+      {
+        "test": "A",
+        "intent": "foreign tenant_id + ordinary payload",
+        "status": 400,
+        "body": "{\"code\":\"23514\",\"details\":null,\"hint\":null,\"message\":\"الفترة المالية مطلوبة لإنشاء قيد محاسبي.\"}",
+        "verdict": "DENIED (other)"
+      },
+      {
+        "test": "B",
+        "intent": "foreign tenant_id + trigger-satisfying payload",
+        "status": 403,
+        "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"new row violates row-level security policy for table \\\"journals\\\"\"}",
+        "verdict": "DENIED BY RLS"
+      },
+      {
+        "test": "C",
+        "intent": "foreign journal_entries insert",
+        "status": 403,
+        "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"new row violates row-level security policy for table \\\"journal_entries\\\"\"}",
+        "verdict": "DENIED BY RLS"
+      },
+      {
+        "test": "D",
+        "intent": "SELECT foreign-tenant journals",
+        "status": 200,
+        "body": "[]",
+        "verdict": "DENIED (0 rows)"
+      }
+    ],
+    "failures": []
+  },
+  "verdict": "REMEDIATION REQUIRED on 7 function(s) — BND-05 cannot be certified as-is",
+  "certification": "NOT CLAIMED — human decision"
+}
