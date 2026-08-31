@@ -141,14 +141,14 @@ A boundary may be marked 🟢 only when all four links exist and CI evidence is 
 | Invariant | No row is ever readable or writable outside its tenant. Tenant identity is derived server-side from the JWT, never from a client parameter |
 | Authority | **PostgreSQL RLS is the sole authority.** Client-side tenant selection is a UI convenience with zero authority |
 | Scope | All `public` tables, all RPCs, all edge functions, `src/kernel/tenant/**` |
-| Evidence | `src/__tests__/security/tenant-isolation.test.ts`, `src/__tests__/security/accounting-rls.test.ts`, `supabase--linter` |
+| Evidence | `scripts/audits/output/tenant-isolation-report.json` (86 tables, 18 live cross-tenant denial probes) · `src/__tests__/security/tenant-isolation-negative.test.ts` · `src/__tests__/security/tenant-isolation.test.ts` · `src/__tests__/security/accounting-rls.test.ts` |
 | Failure | Cross-tenant read/write — **catastrophic, non-recoverable trust failure** |
 | Recovery | Immediate policy patch + full audit-log review of affected rows + incident record; no silent fix |
-| Current RAG | 🟡 |
-| Violations | Not fully enumerated; RPC-level tenant checks are inconsistent (see `mem://security/multi-tenant-rpc-isolation`) |
-| Test Coverage | Tenant isolation + accounting RLS suites (positive and negative cases) |
-| Fitness Check | `check-identity-authority` (ACTIVE) · `check-tenant-column-and-rls-completeness` (**PLANNED**, SQL-level) |
-| ADR | ADR-0031 (contract standard); tenant authority ADR **owed** in the next phase |
+| Current RAG | 🟢 (PH1A candidate — structural enforcement proven; certification is a human decision) |
+| Violations | 0 structural. Enumerated residual: 37 of 88 tenant-referencing DB functions carry no explicit tenant predicate — all are trigger/generator functions operating on already-RLS-filtered rows; carried as `PH1A-OBS-001`, not certified |
+| Test Coverage | 86/86 tables structurally verified (X-1…X-4) · 18 table families with negative cross-tenant probes (select/insert/update/delete) |
+| Fitness Check | `check-identity-authority` (ACTIVE) · `check-tenant-column-and-rls-completeness` (**ACTIVE, enforcing**) |
+| ADR | ADR-0031 (contract standard) · **ADR-0045** (tenant authority & RLS completeness) |
 | Exit Criteria | Every `public` business table proven to have `tenant_id` + 4 RLS policies + GRANTs, plus a negative cross-tenant test per table family, produced as CI evidence |
 
 ### BND-06 — User → Permission
@@ -222,12 +222,14 @@ A boundary may be marked 🟢 only when all four links exist and CI evidence is 
 | BND-02 Application → Domain | 🟢 finance / 🟡 rest | only finance is modelled |
 | BND-03 Domain → Repository | 🟢 invoice / 🔴 rest | legacy repositories without ports |
 | BND-04 Repository → DB | 🔴 | data-access check not a gate |
-| BND-05 Tenant → Data | 🟡 | RPC tenant checks inconsistent |
+| BND-05 Tenant → Data | 🟢 candidate | PH1A executed; 37 functions without explicit predicate carried as `PH1A-OBS-001` |
 | BND-06 User → Permission | 🟡 | server-side parity unproven |
 | BND-07 Offline → Server | 🟡 | idempotency not systemic |
 | BND-08 Event → Consumer | 🟡 | no schema versioning gate |
 
-**0 boundaries are certified.** Documented ≠ enforced.
+**0 boundaries are certified.** Documented ≠ enforced. BND-05 is a PH1A *candidate*:
+its exit criteria are met with evidence, but certification remains a human decision
+under the no-self-certification rule.
 
 ## 5. Smart Freeze register (unchanged by Phase 0)
 
