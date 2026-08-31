@@ -2,7 +2,7 @@
   "id": "PH1A-TENANT-ISOLATION",
   "boundary": "BND-05",
   "contract": "PH1A-NAZRA-001",
-  "generatedAt": "2026-08-31T20:32:36.098Z",
+  "generatedAt": "2026-08-31T20:36:34.794Z",
   "authority": "public.get_current_tenant() → auth.uid() (server-side, JWT-derived)",
   "summary": {
     "tenantScopedTables": 86,
@@ -12,7 +12,7 @@
     "x2_rls_enabled": 86,
     "x3_four_verb_tenant_policies": 86,
     "x4_grants": 86,
-    "x6_tenant_rpcs": 87,
+    "x6_tenant_rpcs": 88,
     "x6_tenant_rpcs_with_check": 51,
     "x7_probe_tables": 18,
     "x7_probe_failures": 18,
@@ -1888,6 +1888,11 @@
       "references_tenant": true
     },
     {
+      "proname": "ph1a_cross_tenant_probe",
+      "has_tenant_check": false,
+      "references_tenant": true
+    },
+    {
       "proname": "ph1a_fill_log_tenant",
       "has_tenant_check": true,
       "references_tenant": true
@@ -2171,7 +2176,9 @@
         "insert_denied": false,
         "insert_note": "ERROR:  permission denied for table user_tenants\n"
       }
-    ]
+    ],
+    "source": "preserved",
+    "preservedReason": "ERROR:  permission denied for table user_tenants\nCONTEXT:  SQL statement \"UPDATE public.user_tenants SET tenant_id = probe WHERE user_id = actor\"\nPL/pgSQL function inline_code_block line 10 at SQL sta"
   },
   "failures": [
     "customers: X-7 cross-tenant denial",
