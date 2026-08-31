@@ -58,21 +58,29 @@ async function rest(path, init) {
 }
 const rpc = (fn, args) => rest(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args ?? {}) });
 
-function cleanup() {
-  try {
-    sql(`delete from public.invoice_items where tenant_id='${T}';
+// NOTE: the sandbox connection holds only SELECT/INSERT on public tables, so
+// fixture removal must be performed with a privileged connection after the run.
+// The statements below are emitted for the operator and attempted best-effort.
+const CLEANUP_SQL = `delete from public.invoice_items where tenant_id='${T}';
          delete from public.invoices where tenant_id='${T}';
          delete from public.customers where tenant_id='${T}';
          delete from public.fiscal_periods where tenant_id='${T}';
          delete from public.user_tenants where tenant_id='${T}';
          delete from public.activity_logs where tenant_id='${T}';
          delete from public.audit_trail where tenant_id='${T}';
-         delete from public.tenants where id='${T}';`);
+         delete from public.tenants where id='${T}';`;
+
+function cleanup() {
+  try {
+    sql(CLEANUP_SQL);
+    return "deleted";
   } catch (e) {
-    console.error("[rem-bnd05-post-proof] cleanup:", e.message);
+    console.error("[rem-bnd05-post-proof] cleanup requires a privileged connection:", e.message.split("\n")[0]);
+    return "requires-privileged-connection";
   }
 }
 
+let cleanupState = null;
 const results = [];
 let foreignUser = null;
 let actingTenant = null;
@@ -81,15 +89,19 @@ let invoiceStatusAfter = null;
 try {
   cleanup();
   sql(`insert into public.tenants (id,name,slug,is_active)
-       values ('${T}','REM-BND05 post proof','rem-bnd05-post',true);`);
+       values ('${T}','REM-BND05 post proof','rem-bnd05-post',true)
+       on conflict (id) do nothing;`);
   sql(`insert into public.customers (id, tenant_id, name, phone)
        values ('${C1}','${T}','${MARK} One','01000000009'),
-              ('${C2}','${T}','${MARK} Onee','01000000009');`);
+              ('${C2}','${T}','${MARK} Onee','01000000009')
+       on conflict (id) do nothing;`);
   sql(`insert into public.invoices (id, tenant_id, invoice_number, customer_id,
                                     subtotal, total_amount, paid_amount, status)
-       values ('${INV}','${T}','REM-BND05-INV-1','${C1}',100,100,0,'pending');`);
+       values ('${INV}','${T}','REM-BND05-INV-1','${C1}',100,100,0,'pending')
+       on conflict (id) do nothing;`);
   sql(`insert into public.fiscal_periods (id, tenant_id, name, start_date, end_date, is_closed)
-       values ('${PER}','${T}','REM-BND05 period', current_date - 1, current_date + 1, false);`);
+       values ('${PER}','${T}','REM-BND05 period', current_date - 1, current_date + 1, false)
+       on conflict (id) do nothing;`);
 
   const who = await rpc("get_current_tenant");
   actingTenant = who.body.replaceAll('"', "");
@@ -162,7 +174,7 @@ try {
   const n3 = await rpc("get_dashboard_overview");
   results.push({ id: "N-3", severity: "regression", call: "get_dashboard_overview()", ...n3, pass: n3.status === 200 });
 } finally {
-  cleanup();
+  cleanupState = cleanup();
 }
 
 const record = {
@@ -173,6 +185,7 @@ const record = {
   method: "PostgREST with a real authenticated user JWT against a throw-away foreign tenant",
   actingTenant,
   foreignTenant: T,
+  fixtureCleanup: { state: cleanupState, sql: CLEANUP_SQL },
   results,
   failures: results.filter((r) => !r.pass).map((r) => r.id),
   certification: "NOT CLAIMED — human review required",

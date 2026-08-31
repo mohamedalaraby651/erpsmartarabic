@@ -1,0 +1,113 @@
+{
+  "id": "REM-BND05-001-POST-PROOF",
+  "boundary": "BND-05 — Tenant → Data",
+  "generatedAt": "2026-08-31T22:51:56.178Z",
+  "source": "live",
+  "method": "PostgREST with a real authenticated user JWT against a throw-away foreign tenant",
+  "actingTenant": "a0000000-0000-0000-0000-000000000001",
+  "foreignTenant": "dddddddd-0000-0000-0000-00000000000a",
+  "fixtureCleanup": {
+    "state": "requires-privileged-connection",
+    "sql": "delete from public.invoice_items where tenant_id='dddddddd-0000-0000-0000-00000000000a';\n         delete from public.invoices where tenant_id='dddddddd-0000-0000-0000-00000000000a';\n         delete from public.customers where tenant_id='dddddddd-0000-0000-0000-00000000000a';\n         delete from public.fiscal_periods where tenant_id='dddddddd-0000-0000-0000-00000000000a';\n         delete from public.user_tenants where tenant_id='dddddddd-0000-0000-0000-00000000000a';\n         delete from public.activity_logs where tenant_id='dddddddd-0000-0000-0000-00000000000a';\n         delete from public.audit_trail where tenant_id='dddddddd-0000-0000-0000-00000000000a';\n         delete from public.tenants where id='dddddddd-0000-0000-0000-00000000000a';"
+  },
+  "results": [
+    {
+      "id": "R-1",
+      "severity": "critical",
+      "call": "void_invoice(foreign invoice)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "foreign_invoice_status_after": "pending",
+      "pass": true
+    },
+    {
+      "id": "R-2",
+      "severity": "medium",
+      "call": "find_duplicate_customers()  (no argument)",
+      "status": 404,
+      "body": "{\"code\":\"42883\",\"details\":null,\"hint\":\"No function matches the given name and argument types. You might need to add explicit type casts.\",\"message\":\"function similarity(text, text) does not exist\"}",
+      "foreign_pii_returned": false,
+      "pass": false
+    },
+    {
+      "id": "R-2b",
+      "severity": "medium",
+      "call": "find_duplicate_customers(foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "foreign_pii_returned": false,
+      "pass": true
+    },
+    {
+      "id": "R-3",
+      "severity": "low",
+      "call": "get_user_tenant_id(foreign user)",
+      "status": 200,
+      "body": "\"a0000000-0000-0000-0000-000000000001\"",
+      "pass": false
+    },
+    {
+      "id": "R-4",
+      "severity": "low",
+      "call": "get_user_tenants(foreign user)",
+      "status": 200,
+      "body": "[\"a0000000-0000-0000-0000-000000000001\", \"dddddddd-0000-0000-0000-00000000000a\"]",
+      "pass": false
+    },
+    {
+      "id": "R-5",
+      "severity": "low",
+      "call": "is_period_closed(foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "pass": true
+    },
+    {
+      "id": "R-6",
+      "severity": "low",
+      "call": "is_admin_equivalent_custom_role(_, foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "pass": true
+    },
+    {
+      "id": "R-7",
+      "severity": "low",
+      "call": "check_financial_limit(4-arg, foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "pass": true
+    },
+    {
+      "id": "N-1",
+      "severity": "regression",
+      "call": "get_user_tenant_id(self)",
+      "status": 200,
+      "body": "null",
+      "pass": false
+    },
+    {
+      "id": "N-2",
+      "severity": "regression",
+      "call": "check_financial_limit(3-arg, self)",
+      "status": 200,
+      "body": "true",
+      "pass": true
+    },
+    {
+      "id": "N-3",
+      "severity": "regression",
+      "call": "get_dashboard_overview()",
+      "status": 200,
+      "body": "{\"dso_days\": 0, \"overdue_ar\": 440838.00, \"mtd_revenue\": 0, \"cash_balance\": 57000, \"monthly_sales\": [{\"month\": \"2026-03\", \"sales\": 490073.00}], \"today_revenue\": 0, \"invoices_count\": 22, \"outstanding_ar\": 445208.00, \"products_count\": 18, \"customers_count\": 15, \"gross_margin_pct\": 0, \"quotations_count\": 8, \"pending_approvals\": 5, \"gross_margin_value\": 0.00, \"current_period_invoices\": 0, \"previous_period_invoices\": 0}",
+      "pass": true
+    }
+  ],
+  "failures": [
+    "R-2",
+    "R-3",
+    "R-4",
+    "N-1"
+  ],
+  "certification": "NOT CLAIMED — human review required"
+}
