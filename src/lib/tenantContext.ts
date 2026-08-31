@@ -1,4 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
+import { fromServer, type ServerDerivedTenantId } from '@/kernel/tenant';
+
+/**
+ * BND-05 — Tenant → Data (ADR-0045).
+ *
+ * The tenant identity used by this module has ZERO client authority: it is
+ * always the value returned by the server RPC `get_current_tenant()`, which
+ * resolves the tenant from `auth.uid()`. Nothing here may accept a tenant id
+ * from component state, storage, query string or user input, and the database
+ * enforces the same rule independently through RESTRICTIVE RLS policies, so a
+ * compromised client cannot widen its own scope.
+ */
 
 export interface Tenant {
   id: string;
@@ -24,15 +36,16 @@ export interface UserTenant {
 
 // Cache for current tenant
 let currentTenantCache: Tenant | null = null;
-let currentTenantId: string | null = null;
+let currentTenantId: ServerDerivedTenantId | null = null;
 
 /**
  * Get the current tenant ID from the database
  */
-export async function getCurrentTenantId(): Promise<string | null> {
+export async function getCurrentTenantId(): Promise<ServerDerivedTenantId | null> {
   if (currentTenantId) {
     return currentTenantId;
   }
+  // Server-derived only: no client-supplied fallback is permitted here.
 
   const { data, error } = await supabase.rpc('get_current_tenant');
   
@@ -43,8 +56,8 @@ export async function getCurrentTenantId(): Promise<string | null> {
     return null;
   }
 
-  currentTenantId = data;
-  return data;
+  currentTenantId = data ? fromServer(data) : null;
+  return data ? fromServer(data) : null;
 }
 
 /**
