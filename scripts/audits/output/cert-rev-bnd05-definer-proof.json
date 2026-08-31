@@ -1,0 +1,27 @@
+{
+  "id": "CERT-REV-BND05-DEFINER-PROOF",
+  "generatedAt": "2026-08-31T21:41:54.828Z",
+  "source": "live",
+  "method": "PostgREST with a real authenticated user JWT against a throw-away foreign tenant",
+  "results": [
+    {
+      "id": "P-1",
+      "call": "rpc/find_duplicate_customers()  (no argument)",
+      "status": 404,
+      "foreign_pii_returned": false,
+      "body_excerpt": "{\"code\":\"42883\",\"details\":null,\"hint\":\"No function matches the given name and argument types. You might need to add explicit type casts.\",\"message\":\"function extensions.similarity(text, text) does not exist\"}"
+    },
+    {
+      "id": "P-2",
+      "call": "rpc/void_invoice(foreign invoice uuid)",
+      "status": 400,
+      "body_excerpt": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"No open fiscal period for today\"}",
+      "foreign_invoice_status_after": "pending",
+      "foreign_invoice_cancelled": false
+    }
+  ],
+  "conclusion": {
+    "find_duplicate_customers": "not reproduced",
+    "void_invoice": "not reproduced"
+  }
+}

@@ -60,10 +60,12 @@ try {
        on conflict (id) do nothing;`);
   sql(`insert into public.customers (id, tenant_id, name, phone)
        values ('${C1}','${T}','${MARK} One','01000000001'),
-              ('${C2}','${T}','${MARK} Onee','01000000001');`);
-  sql(`insert into public.invoices (id, tenant_id, invoice_number, invoice_date, customer_id,
+              ('${C2}','${T}','${MARK} Onee','01000000001')
+       on conflict (id) do nothing;`);
+  sql(`insert into public.invoices (id, tenant_id, invoice_number, customer_id,
                                     subtotal, total_amount, paid_amount, status)
-       values ('${INV}','${T}','CERT-REV-INV-1', current_date, '${C1}', 100, 100, 0, 'draft');`);
+       values ('${INV}','${T}','CERT-REV-INV-1', '${C1}', 100, 100, 0, 'pending')
+       on conflict (id) do nothing;`);
 
   const p1 = await rest("rpc/find_duplicate_customers", { method: "POST", body: "{}" });
   results.push({
@@ -90,8 +92,7 @@ try {
 } finally {
   // cleanup — triggers disabled so audit rows do not resurrect the FK
   try {
-    sql(`set session_replication_role = replica;
-         delete from public.journal_entries where tenant_id='${T}';
+    sql(`delete from public.journal_entries where tenant_id='${T}';
          delete from public.journals where tenant_id='${T}';
          delete from public.invoice_items where tenant_id='${T}';
          delete from public.invoices where tenant_id='${T}';
