@@ -7234,7 +7234,6 @@ export type Database = {
         Args: { _amount: number; _entity_type: string }
         Returns: boolean
       }
-      ph1a_cross_tenant_probe: { Args: { _tables?: string[] }; Returns: Json }
       post_delivery_note: { Args: { p_id: string }; Returns: Json }
       post_document_atomic: {
         Args: {
