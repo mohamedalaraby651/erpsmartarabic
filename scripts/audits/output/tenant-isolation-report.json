@@ -2,7 +2,7 @@
   "id": "PH1A-TENANT-ISOLATION",
   "boundary": "BND-05",
   "contract": "PH1A-NAZRA-001",
-  "generatedAt": "2026-08-31T20:31:08.723Z",
+  "generatedAt": "2026-08-31T20:32:36.098Z",
   "authority": "public.get_current_tenant() → auth.uid() (server-side, JWT-derived)",
   "summary": {
     "tenantScopedTables": 86,
@@ -12,8 +12,8 @@
     "x2_rls_enabled": 86,
     "x3_four_verb_tenant_policies": 86,
     "x4_grants": 86,
-    "x6_tenant_rpcs": 86,
-    "x6_tenant_rpcs_with_check": 50,
+    "x6_tenant_rpcs": 87,
+    "x6_tenant_rpcs_with_check": 51,
     "x7_probe_tables": 18,
     "x7_probe_failures": 18,
     "failures": 18
@@ -1888,6 +1888,11 @@
       "references_tenant": true
     },
     {
+      "proname": "ph1a_fill_log_tenant",
+      "has_tenant_check": true,
+      "references_tenant": true
+    },
+    {
       "proname": "post_delivery_note",
       "has_tenant_check": true,
       "references_tenant": true
@@ -2000,150 +2005,171 @@
   ],
   "crossTenantProbes": {
     "supported": true,
+    "actor": "ff0e19eb-e2dc-46fe-83fe-7907dd304d9e",
+    "homeTenant": "a0000000-0000-0000-0000-000000000001",
+    "probeTenant": "00000000-0000-4000-8000-0000000000ff",
     "results": [
       {
         "table_name": "customers",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "invoices",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "invoice_items",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "payments",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "products",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "product_stock",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "stock_movements",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "journals",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "journal_entries",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "expenses",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "suppliers",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "purchase_orders",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "quotations",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "employees",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "activity_logs",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "audit_trail",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "chart_of_accounts",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       },
       {
         "table_name": "notifications",
+        "error": "ERROR:  permission denied for table user_tenants\n",
         "select_denied": false,
         "update_denied": false,
         "delete_denied": false,
-        "error": "Command failed: psql postgresql://sandbox_exec.npwofemokwddtutugmas:b4d585ec-84e5-477c-b99b-6311bb39a65a@aws-1-eu-north-1.pooler.supabase.com:6543/postgres -At -c \n      begin;\n      insert into public.tenants (id, name, slug)\n        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');\n      update public.user_tenants\n         set tenant_id = '00000000-0000-4000-8000-00000",
-        "insert_denied": true
+        "insert_denied": false,
+        "insert_note": "ERROR:  permission denied for table user_tenants\n"
       }
     ]
   },

@@ -152,108 +152,105 @@ const PROBE_FAMILIES = [
   "activity_logs", "audit_trail", "chart_of_accounts", "notifications",
 ];
 
-function probeSql() {
-  const per = PROBE_FAMILIES.map(
-    (t) => `
-    select '${t}' as table_name,
-           (select count(*) from public.${t}) as visible_rows,
-           (select count(*) from public.${t} where tenant_id = home) as foreign_rows_visible,
-           (select case when (select count(*) from public.${t}) = 0 then true else false end) as select_denied`,
-  ).join(" union all ");
-  return `
-  begin;
-  create temporary table _probe_home as select tenant_id as home from public.user_tenants limit 1;
-  insert into public.tenants (name, slug) values ('PH1A probe', 'ph1a-probe-' || gen_random_uuid()) returning id \\gset
-  do $$
-  declare u uuid; b uuid;
-  begin
-    select user_id into u from public.user_tenants limit 1;
-    select id into b from public.tenants where slug like 'ph1a-probe-%' limit 1;
-    update public.user_tenants set tenant_id = b where user_id = u;
-  end $$;
-  ${per};
-  rollback;`;
-}
-
 /**
- * Live cross-tenant denial probe. Runs inside a transaction that is always
- * rolled back: a probe tenant is created, the acting user is re-homed to it,
- * and every probe table must then expose zero rows of the original tenant and
- * reject writes carrying a foreign tenant_id.
+ * Live cross-tenant denial probe.
+ *
+ * Each probe runs inside a transaction that is ALWAYS rolled back:
+ *   1. a probe tenant is created and the acting user is re-homed to it,
+ *   2. a copy of one home-tenant row is staged (superuser, satisfies all
+ *      column constraints) with a fresh id,
+ *   3. the session drops to `authenticated` with the real JWT claims,
+ *   4. SELECT / INSERT / UPDATE / DELETE against the *foreign* tenant must
+ *      all be denied — reads return zero rows, writes affect zero rows, and
+ *      the INSERT must fail with a row-level-security error.
  */
 function runProbes() {
   const results = [];
-  const home = q(jsonWrap("select tenant_id from public.user_tenants limit 1"))[0];
-  if (!home) return { supported: false, reason: "no user_tenants row to act as", results };
-  const homeTenant = home.tenant_id;
+  const seed = q(
+    jsonWrap("select user_id, tenant_id from public.user_tenants limit 1"),
+  )[0];
+  if (!seed) return { supported: false, reason: "no user_tenants row to act as", results };
+  const { user_id: actor, tenant_id: homeTenant } = seed;
+  const PROBE_TENANT = "00000000-0000-4000-8000-0000000000ff";
+  const claims = `{"sub":"${actor}","role":"authenticated"}`;
+
+  const preamble = `
+      insert into public.tenants (id, name, slug)
+        values ('${PROBE_TENANT}', 'PH1A probe', 'ph1a-probe');
+      update public.user_tenants set tenant_id = '${PROBE_TENANT}'
+       where user_id = '${actor}';`;
 
   for (const t of PROBE_FAMILIES) {
-    const sql = `
-      begin;
-      insert into public.tenants (id, name, slug)
-        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');
-      update public.user_tenants
-         set tenant_id = '00000000-0000-4000-8000-0000000000ff'
-       where user_id = (select user_id from public.user_tenants limit 1);
+    const row = { table_name: t, error: null };
+
+    // --- SELECT / UPDATE / DELETE denial -------------------------------
+    const rwSql = `begin;${preamble}
       set local role authenticated;
-      set local request.jwt.claims = '{"sub":"${
-        q(jsonWrap("select user_id from public.user_tenants limit 1"))[0].user_id
-      }","role":"authenticated"}';
+      set local request.jwt.claims = '${claims}';
       select json_build_object(
-        'table_name', '${t}',
         'foreign_rows_visible', (select count(*) from public.${t} where tenant_id = '${homeTenant}'),
-        'update_foreign_rows', (with u as (update public.${t} set tenant_id = tenant_id
-                                            where tenant_id = '${homeTenant}' returning 1)
-                                select count(*) from u),
-        'delete_foreign_rows', (with d as (delete from public.${t}
-                                            where tenant_id = '${homeTenant}' returning 1)
-                                select count(*) from d)
-      );
-      rollback;`;
-    let row;
-    try {
-      const raw = execFileSync("psql", [DB, "-At", "-c", sql], { encoding: "utf8" });
-      const line = raw.trim().split("\n").filter((l) => l.startsWith("{")).pop();
-      row = JSON.parse(line);
-      row.select_denied = Number(row.foreign_rows_visible) === 0;
-      row.update_denied = Number(row.update_foreign_rows) === 0;
-      row.delete_denied = Number(row.delete_foreign_rows) === 0;
-      row.error = null;
-    } catch (e) {
-      row = {
-        table_name: t,
-        select_denied: false,
-        update_denied: false,
-        delete_denied: false,
-        error: String(e.message || e).slice(0, 400),
-      };
-    }
-    // INSERT with a foreign tenant_id must be rejected by the restrictive policy.
-    const insSql = `
-      begin;
-      insert into public.tenants (id, name, slug)
-        values ('00000000-0000-4000-8000-0000000000ff', 'PH1A probe', 'ph1a-probe');
-      update public.user_tenants
-         set tenant_id = '00000000-0000-4000-8000-0000000000ff'
-       where user_id = (select user_id from public.user_tenants limit 1);
-      set local role authenticated;
-      set local request.jwt.claims = '{"sub":"${
-        q(jsonWrap("select user_id from public.user_tenants limit 1"))[0].user_id
-      }","role":"authenticated"}';
-      insert into public.${t} (tenant_id) values ('${homeTenant}');
+        'update_affected', (with u as (update public.${t} set tenant_id = tenant_id
+                                        where tenant_id = '${homeTenant}' returning 1)
+                            select count(*) from u),
+        'delete_affected', (with d as (delete from public.${t}
+                                        where tenant_id = '${homeTenant}' returning 1)
+                            select count(*) from d));
       rollback;`;
     try {
-      execFileSync("psql", [DB, "-At", "-v", "ON_ERROR_STOP=1", "-c", insSql], {
+      const raw = execFileSync("psql", [DB, "-At", "-v", "ON_ERROR_STOP=1", "-c", rwSql], {
         encoding: "utf8",
-        stdio: "pipe",
+        stdio: ["ignore", "pipe", "pipe"],
       });
-      row.insert_denied = false;
-    } catch {
-      row.insert_denied = true; // rejected (RLS or NOT NULL on other columns)
+      const line = raw.trim().split("\n").filter((l) => l.startsWith("{")).pop();
+      const parsed = JSON.parse(line);
+      row.foreign_rows_visible = Number(parsed.foreign_rows_visible);
+      row.update_affected = Number(parsed.update_affected);
+      row.delete_affected = Number(parsed.delete_affected);
+      row.select_denied = row.foreign_rows_visible === 0;
+      row.update_denied = row.update_affected === 0;
+      row.delete_denied = row.delete_affected === 0;
+    } catch (e) {
+      row.select_denied = false;
+      row.update_denied = false;
+      row.delete_denied = false;
+      row.error = String(e.stderr || e.message || e).slice(0, 400);
     }
+
+    // --- INSERT denial (constraint-safe clone of a real row) -----------
+    const hasSource = q(
+      jsonWrap(`select 1 as x from public.${t} where tenant_id = '${homeTenant}' limit 1`),
+    ).length > 0;
+    if (!hasSource) {
+      row.insert_denied = null;
+      row.insert_note = "no source row for this tenant — insert probe not applicable";
+    } else {
+      const insSql = `begin;${preamble}
+        create temporary table _ph1a_src on commit drop as
+          select * from public.${t} where tenant_id = '${homeTenant}' limit 1;
+        update _ph1a_src set id = gen_random_uuid();
+        set local role authenticated;
+        set local request.jwt.claims = '${claims}';
+        insert into public.${t} select * from _ph1a_src;
+        rollback;`;
+      try {
+        execFileSync("psql", [DB, "-At", "-v", "ON_ERROR_STOP=1", "-c", insSql], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+        row.insert_denied = false;
+        row.insert_note = "INSERT with foreign tenant_id succeeded — VIOLATION";
+      } catch (e) {
+        const msg = String(e.stderr || e.message || e);
+        row.insert_denied = /row-level security/i.test(msg);
+        row.insert_note = row.insert_denied
+          ? "rejected by row-level security policy"
+          : msg.slice(0, 300);
+      }
+    }
+
     results.push(row);
   }
-  return { supported: true, results };
+  return { supported: true, actor, homeTenant, probeTenant: PROBE_TENANT, results };
 }
 
 const probes = runProbes();
@@ -275,7 +272,9 @@ const unexplained = missingTenantColumn.filter((t) => !(t in EXEMPTIONS));
 for (const t of unexplained) failures.push(`${t}: X-1 missing tenant_id without exemption`);
 
 const probeFailures = (probes.results || []).filter(
-  (r) => !(r.select_denied && r.insert_denied && r.update_denied && r.delete_denied),
+  (r) =>
+    !(r.select_denied && r.update_denied && r.delete_denied) ||
+    r.insert_denied === false,
 );
 for (const r of probeFailures) failures.push(`${r.table_name}: X-7 cross-tenant denial`);
 
