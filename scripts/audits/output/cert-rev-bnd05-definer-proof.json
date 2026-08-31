@@ -1,6 +1,6 @@
 {
   "id": "CERT-REV-BND05-DEFINER-PROOF",
-  "generatedAt": "2026-08-31T21:41:54.828Z",
+  "generatedAt": "2026-08-31T21:42:07.345Z",
   "source": "live",
   "method": "PostgREST with a real authenticated user JWT against a throw-away foreign tenant",
   "results": [
@@ -14,14 +14,14 @@
     {
       "id": "P-2",
       "call": "rpc/void_invoice(foreign invoice uuid)",
-      "status": 400,
-      "body_excerpt": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"No open fiscal period for today\"}",
-      "foreign_invoice_status_after": "pending",
-      "foreign_invoice_cancelled": false
+      "status": 200,
+      "body_excerpt": "{\"success\": true, \"invoice_id\": \"cccccccc-0000-0000-0000-0000000000f1\", \"reversing_journal_id\": null, \"reversing_journal_number\": null}",
+      "foreign_invoice_status_after": "cancelled",
+      "foreign_invoice_cancelled": true
     }
   ],
   "conclusion": {
     "find_duplicate_customers": "not reproduced",
-    "void_invoice": "not reproduced"
+    "void_invoice": "CONFIRMED cross-tenant write (foreign invoice cancelled)"
   }
 }

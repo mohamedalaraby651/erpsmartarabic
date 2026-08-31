@@ -67,6 +67,10 @@ try {
        values ('${INV}','${T}','CERT-REV-INV-1', '${C1}', 100, 100, 0, 'pending')
        on conflict (id) do nothing;`);
 
+  sql(`insert into public.fiscal_periods (id, tenant_id, name, start_date, end_date, is_closed)
+       values ('cccccccc-0000-0000-0000-0000000000fa','${T}','CERT-REV period', current_date - 1, current_date + 1, false)
+       on conflict (id) do nothing;`);
+
   const p1 = await rest("rpc/find_duplicate_customers", { method: "POST", body: "{}" });
   results.push({
     id: "P-1",
@@ -97,6 +101,7 @@ try {
          delete from public.invoice_items where tenant_id='${T}';
          delete from public.invoices where tenant_id='${T}';
          delete from public.customers where tenant_id='${T}';
+         delete from public.fiscal_periods where tenant_id='${T}';
          delete from public.activity_logs where tenant_id='${T}';
          delete from public.audit_trail where tenant_id='${T}';
          delete from public.tenants where id='${T}';`);
