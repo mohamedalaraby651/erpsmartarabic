@@ -60,8 +60,7 @@ const rpc = (fn, args) => rest(`rpc/${fn}`, { method: "POST", body: JSON.stringi
 
 function cleanup() {
   try {
-    sql(`set session_replication_role = replica;
-         delete from public.invoice_items where tenant_id='${T}';
+    sql(`delete from public.invoice_items where tenant_id='${T}';
          delete from public.invoices where tenant_id='${T}';
          delete from public.customers where tenant_id='${T}';
          delete from public.fiscal_periods where tenant_id='${T}';
@@ -95,7 +94,9 @@ try {
   const who = await rpc("get_current_tenant");
   actingTenant = who.body.replaceAll('"', "");
   actingUser = sql(`select user_id from public.user_tenants where tenant_id='${actingTenant}' limit 1;`);
-  foreignUser = sql(`select id from auth.users where id <> '${actingUser}' limit 1;`) || actingUser;
+  foreignUser =
+    sql(`select id from public.profiles where id <> '${actingUser}' limit 1;`) ||
+    "00000000-0000-0000-0000-0000000000ff";
   if (foreignUser && foreignUser !== actingUser) {
     sql(`insert into public.user_tenants (user_id, tenant_id, is_default)
          values ('${foreignUser}','${T}',true) on conflict do nothing;`);
