@@ -55,6 +55,9 @@ const ACTIVE = [
   "check-typography-tokens.mjs",
   "check-spacing-elevation.mjs",
   "check-no-new-ui-kit-imports.mjs",
+  // PH1A (BND-05 — Tenant → Data, enforcing)
+  "check-tenant-column-and-rls-completeness.mjs",
+
 ];
 
 const PENDING = [
