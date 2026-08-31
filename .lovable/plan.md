@@ -1,134 +1,141 @@
-# Nazra — Execution Order Amendment: Frontend Platform (Track A) alongside PH1A (Track B)
+# CERT-REV-BND05 → F0 — Certification Review, then Frontend Platform Baseline
 
-## Verification first (done before this plan)
-
-Read `PROJECT_MAP.md`, `README.md`, `docs/architecture/UX3A-ROADMAP.md`, and re-ran the
-read-only audits. Current measured state (not assumed):
-
-| Signal | Measured now |
-|---|---|
-| Import-layer violations (total) | 155 |
-| `pages → repositories` | 11 |
-| `components → repositories` | 41 |
-| `components → services` | 5 |
-| `hooks → supabase-client` | 31 |
-| `components → supabase-client` | 38 |
-| `pages → supabase-client` | 29 |
-| `domain → ui` | 0 |
-| Files still importing `@/components/ui-kit` | 3 |
-| UI files importing the DB client directly (pages+components) | 68 |
-| `check-ui-api-uniformity` (warn) | 42 components with issues |
-| `check-design-system-inventory` (warn) | 635 findings, budget ∞ |
-| `check-no-inline-styles` (warn) | 48 files |
-| `check-no-any-in-ui` (warn) | 14 files |
-| `check-component-loc-budget` (warn) | 2 over budget (sidebar 638, CustomerDetailsPage 855) |
-
-Conclusion on the open question: **F1/F2 are genuinely still outstanding, but smaller than a
-green-field project.** The residual is concentrated in `components/` and `hooks/`, not in
-`pages/`. `pages → repositories` is already down to 11; the dominant remainder is 98
-direct DB-client imports in UI/hooks plus 46 component→repository/service edges. F3–F6 are
-consolidation work on an existing platform (ui-kit is effectively dead at 3 call sites,
-theme registry exists, tokens v2 exist) — not a rewrite.
-
-## Decision recorded by this amendment
-
-1. `PH1A-NAZRA-001` / BND-05 stays **AUTHORIZED and FROZEN**. It is not reopened, not
-   re-scoped, not paused. Track B continues to its own evidence pack and human review.
-2. A second controlled track (Track A — Frontend Platform Hardening) runs alongside it,
-   starting at F0, with its own scope, scope hash, baseline, evidence, and exit criteria.
-3. Remaining Enterprise Boundaries (BND-01, BND-02, …) are **not** authorized until F1 and
-   F2 are complete, so Finance/Inventory/Sync are built on the settled application layer.
-4. Track A is Consolidation, never Rewrite. Any proposal to redesign the UI wholesale is an
-   automatic STOP.
-
-## Track structure
+Adopted state (no change requested to it):
 
 ```text
-TRACK A — Frontend Platform        TRACK B — Enterprise Boundaries
-  F0 Baseline (measure only)         PH1A / BND-05 (frozen contract)
-  F1 Architecture Completion               │
-  F2 Application/Data Access               ▼
-  F3 UI Platform                     BND-05 Evidence → Human Review
-  F4 State & UX Architecture
-  F5 Quality (a11y / RTL / perf)
-  F6 Mobile / PWA / Offline UX
-            └──────────── F1+F2 complete ────────────┐
-                                                      ▼
-                                           BND-01, BND-02, … → 8/8 → Enterprise Gate
+G0R-NAZRA-002   ACCEPTED        PH1A    CANDIDATE COMPLETE
+BASELINE-UX4-001 SEALED         BND-05  CERTIFICATION HOLD
+PRE-TS-001      CONTAINED       PH1B    NOT AUTHORIZED
+RISK-007 / RISK-008  OPEN       Smart Freeze  ACTIVE
+Boundaries certified 0/8
 ```
 
-Cross-track rule: no file may be mutated by both tracks in the same window. Track A must
-not touch `src/domain/**`, `src/application/finance/**`, RLS, migrations, or any BND-05
-scope item. Track B must not touch `src/ui/**` or `src/components/**`.
+Two units only, in order. Neither is a sprint, neither reopens PH1A scope, neither lifts
+Smart Freeze, neither touches RISK-007/008.
 
-## F0 — Frontend Platform Baseline (first executable unit, measurement only)
+---
 
-Deliverables, no source mutation:
+## Unit 1 — CERT-REV-BND05 (evidence review, zero code mutation)
 
-- `docs/governance/F0_FRONTEND_BASELINE.md` — snapshot ID `SNAPSHOT-F0-001` with the table
-  above plus per-check detail for architecture, repositories/queries, UI API, design system,
-  theme, state, a11y, RTL, performance, PWA.
-- **Classification of the 155 violations** into four buckets, one row per violation with
-  file, edge, and rationale: `legitimate exception` / `transitional` / `false positive` /
-  `actual violation`. Only the last bucket becomes F1/F2 work.
-- Performance budgets left **empty** in F0; numbers are proposed in F5 from measured data,
-  never invented now.
-- `docs/governance/F1_SCOPE_001.md` draft: candidate item list derived from the
-  `actual violation` bucket, with a SHA-256 scope hash frozen only after human approval.
+Deliverable: `docs/governance/CERT_REV_BND05.md` plus a machine-readable
+`scripts/audits/output/cert-rev-bnd05.json`. No source, schema, or policy changes. If the
+review finds a real gap, it is recorded as a finding and BND-05 stays on HOLD — the review
+must not quietly fix anything.
 
-F0 stop condition: baseline + classification presented for review. No remediation starts
-until the F1 scope hash is approved.
+### A. PH1A-OBS-001 — the 37 functions
 
-## F1 — Architecture Completion (after F0 approval)
+Verified before writing this plan: the evidence artifact records 88 tenant-referencing
+functions, 51 with an explicit tenant predicate, so 37 carry `has_tenant_check: false`.
 
-Close only `actual violation` items: residual `pages → repositories`,
-`components → repositories/services`, direct DB-client imports in `pages`/`components`,
-and `hooks → supabase-client` where a query facade already exists. Method is the proven
-Batch B pattern: thin application-layer facades + exact redirects, item-level scope
-assertion via `scripts/audits/verify-item-scope.mjs`, no behaviour change. Target values
-are set from the F0 classification, not from chasing 0.
+For each of the 37, read the function source from the live catalog (`pg_get_functiondef`)
+and record six fields:
 
-## F2 — Application / Data Access Platform
+| Field | Meaning |
+|---|---|
+| tenant-scoped by nature? | does it read/write tenant rows at all |
+| tenant authority location | `get_current_tenant()`, `auth.uid()`, RLS of the tables it touches, or none |
+| caller-controlled `tenant_id`? | does any argument feed a tenant column or predicate |
+| cross-tenant reachable path? | can any argument value reach another tenant's rows |
+| invocability | `SECURITY DEFINER` vs `INVOKER`, and EXECUTE grants to `anon`/`authenticated` |
+| compensating control | what denies cross-tenant access absent an explicit predicate |
 
-Complete the `Repository → Query Service → Application Service → Presentation` chain so
-pages consume an application API, not infrastructure. Includes: query-service coverage for
-the remaining read paths, a documented application surface per module, and an enforcing
-fitness check that bans new UI→infrastructure edges outright (replacing the allowlist).
+The decisive distinction is `SECURITY INVOKER` (RLS still applies — the restrictive
+tenant policies from PH1A are the compensating control) versus `SECURITY DEFINER`
+(RLS bypassed — needs its own predicate or an admin-only grant).
 
-## F3 — UI Platform
+Classification, every row justified:
 
-Flip `check-ui-api-uniformity` to enforcing after fixing the 42 flagged components; delete
-the 3 remaining `ui-kit` call sites and remove the module; consolidate Forms, Tables,
-Dialogs, Filters, Navigation, Empty/Error/Loading states on `src/ui/**`; RTL as a
-first-class prop-level constraint, not a retrofit.
+```text
+37 ── ACCEPTED EXEMPTION      (INVOKER under RLS, or DEFINER with admin-only grant)
+   ├─ FALSE POSITIVE          (does not touch tenant data; detector matched a token)
+   └─ REMEDIATION REQUIRED    (DEFINER, tenant data, no predicate, invocable)
+```
 
-## F4 — State & UX Architecture
+Any row in `REMEDIATION REQUIRED` → BND-05 stays HOLD and the row becomes a scoped
+follow-up contract; it is not fixed inside this review.
 
-Document and enforce the hierarchy: server state → TanStack Query; application state →
-context/services; local UI state → component; offline state → sync layer only. Fitness
-check flags cross-category leaks.
+### B. journals / journal_entries — execution-order proof
 
-## F5 — Quality Layer
+Prove mechanically, not by argument, that the business trigger denying cross-tenant INSERT
+does not create a bypass:
 
-Accessibility (keyboard, focus, semantics, contrast, SR behaviour), RTL sweep (typography,
-spacing, icons, tables, forms, navigation, numbers, dates), and performance budgets
-(bundle, LCP, INP, CLS, route load, query latency, render cost) — values chosen from F0/F5
-measurements and then enforced.
+1. Establish ordering from the catalog: `BEFORE INSERT` triggers run before the row is
+   written; RLS `WITH CHECK` is evaluated at write time. Record the trigger list and
+   timing for both tables.
+2. Probe as `authenticated`, re-homed to the throw-away tenant, inside an aborted
+   transaction — the same harness X-7 already uses:
+   - INSERT with a foreign `tenant_id` → denied (record whether by trigger or policy).
+   - INSERT crafted to satisfy the business trigger (open fiscal period, balanced entry)
+     but carrying a foreign `tenant_id` → must be denied **by the restrictive RLS policy**.
+     This is the test that matters: it shows the trigger is an earlier gate, not the only one.
+   - SELECT / UPDATE / DELETE cross-tenant → zero rows (already evidenced; re-confirmed).
+3. Confirm no `SECURITY DEFINER` posting function inserts into these tables on a path that
+   skips the tenant predicate (cross-checked against the Unit 1A table).
 
-## F6 — Mobile / PWA
+Outcome: if step 2 shows RLS denies the trigger-satisfying case, this is recorded as
+**documented enforcement behaviour**, not a finding.
 
-Responsive → mobile UX → PWA → offline UX → sync UX, coordinated with the Offline/Sync
-boundary semantics rather than a standalone UX layer.
+### Exit of Unit 1
 
-## Governance applied to every F unit
+`CERT_REV_BND05.md` presented for human decision with an explicit recommendation and no
+self-certification. Certification of BND-05 (1/8) remains a human decision.
 
-Same contract already in force for Batch B and PH1A: declared scope → scope hash →
-pre-mutation verification → mutation → post-mutation verification → evidence pack →
-human review. No self-certification. Any drift outside the frozen item list is a STOP.
-Documents to update on approval of this amendment: `docs/architecture/UX3A-ROADMAP.md`
-(add Track A/B split), `docs/MASTER_PROJECT_REFERENCE.md` (execution order), and a new
-ADR recording the reordering decision.
+---
 
-## What this plan executes first, on approval
+## Unit 2 — F0 Frontend Platform Baseline (measure only, starts after BND-05 is decided)
 
-Only **F0** — measurement, classification of the 155, and the F1 scope draft. Nothing else.
+Not a fix, not a refactor, not design system work. One question: what is actually left?
+
+Measured already (read-only, before this plan):
+
+| Signal | Now |
+|---|---|
+| Import-layer violations total | 155 |
+| `pages → repositories` | 11 |
+| `components → repositories` / `→ services` | 41 / 5 |
+| `hooks → supabase-client` | 31 |
+| `components → supabase-client` / `pages → supabase-client` | 38 / 29 |
+| `domain → ui` | 0 |
+| UI files importing the DB client directly | 68 |
+| Remaining `@/components/ui-kit` call sites | 3 |
+| `check-ui-api-uniformity` (warn) | 42 components |
+| `check-design-system-inventory` (warn) | 635 findings |
+| `check-no-inline-styles` / `check-no-any-in-ui` (warn) | 48 / 14 files |
+| `check-component-loc-budget` (warn) | 2 over budget |
+
+F0 adds what is not yet measured: query-service coverage gaps per read path, theme-token
+usage vs hardcoded values, state-ownership map (server / application / local / offline),
+RTL inconsistencies, accessibility gaps, a performance baseline (bundle, LCP, INP, CLS,
+route load, query latency, render cost), and PWA/mobile gaps.
+
+Then the classification that drives everything after it — every one of the 155 assigned a
+bucket with a rationale:
+
+```text
+155 ── legitimate exception
+    ├─ transitional
+    ├─ false positive
+    └─ actual violation   ← the only bucket F1/F2 may touch
+```
+
+Deliverables: `docs/governance/F0_FRONTEND_BASELINE.md` (`SNAPSHOT-F0-001`), the
+classification table, and a draft `F1_SCOPE_001` item list. Performance budget numbers are
+left blank in F0 — they are proposed in F5 from measured data, never invented now.
+No scope hash is frozen and no remediation begins until the human approves the F1 scope.
+
+Order after F0: F1 Architecture → F2 Repository/Query/Application → F3 UI Platform →
+F4 State → F5 Quality/RTL/A11y/Performance → Frontend Platform Gate → next Enterprise
+Boundary. Track A is Consolidation of the existing platform; a proposal to rewrite the UI
+is an automatic STOP.
+
+## Governance applied to both units
+
+Declared scope → pre-verification → work → post-verification → evidence pack → human
+review. No self-certification, no silent baseline edits (differences appear as documented
+Deltas), and any drift outside the declared item list is a STOP. BND-05 certification, if
+granted, certifies one boundary only — it does not close RISK-007, RISK-008, or the
+Smart Freeze.
+
+## Executed on approval
+
+Unit 1 only. F0 begins after the BND-05 certification decision is recorded.
