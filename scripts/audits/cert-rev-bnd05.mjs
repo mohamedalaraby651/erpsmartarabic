@@ -21,6 +21,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, "output/cert-rev-bnd05.json");
 const PH1A = resolve(__dirname, "output/tenant-isolation-report.json");
 const PROOF = resolve(__dirname, "output/cert-rev-bnd05-journal-proof.json");
+const DPROOF = resolve(__dirname, "output/cert-rev-bnd05-definer-proof.json");
 
 const DB = process.env.SUPABASE_DB_URL || process.env.DB_URL;
 if (!DB) {
@@ -62,11 +63,12 @@ const CLASSIFICATION = {
   },
   "find_duplicate_customers(p_tenant_id uuid DEFAULT NULL::uuid)": {
     class: "REMEDIATION_REQUIRED",
-    severity: "high",
+    severity: "medium",
     rationale:
-      "SECURITY DEFINER (RLS bypassed), EXECUTE granted to authenticated, and `p_tenant_id` defaults to NULL which disables the filter entirely: `WHERE (p_tenant_id IS NULL OR ...)`. Calling it with no argument returns customer names and phone numbers from every tenant. This is a direct cross-tenant PII read reachable from a normal client session.",
+      "SECURITY DEFINER (RLS bypassed), EXECUTE granted to authenticated, and `p_tenant_id` defaults to NULL which disables the filter entirely: `WHERE (p_tenant_id IS NULL OR ...)`. By reading, the function would return customer names and phone numbers from every tenant. Empirically (proof P-1) the call fails first with 42883 `function extensions.similarity(text,text) does not exist`, so the disclosure is NOT reachable today — it is latent and becomes live the moment the extension resolves in the function's search_path. Severity is medium rather than high for that reason, and the defect is real either way.",
     remediation:
-      "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it).",
+      "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it). Fix the search_path defect separately, not by leaving the function broken.",
+    evidence: "cert-rev-bnd05-definer-proof.json · P-1",
   },
   "get_dashboard_overview()": {
     class: "FALSE_POSITIVE",
@@ -113,9 +115,10 @@ const CLASSIFICATION = {
     class: "REMEDIATION_REQUIRED",
     severity: "critical",
     rationale:
-      "SECURITY DEFINER, EXECUTE granted to authenticated, and the invoice is loaded by id alone: `select * into _inv from public.invoices where id = _invoice_id`. The tenant is then taken FROM THE ROW (`_tenant := _inv.tenant_id`), so every subsequent statement is consistent with the foreign tenant instead of being blocked by it. A caller holding a foreign invoice uuid can cancel that invoice and insert a reversing journal into another tenant's ledger. RLS does not intervene because the function is a definer. This is a cross-tenant WRITE path and it is reachable from an ordinary client session.",
+      "SECURITY DEFINER, EXECUTE granted to authenticated, and the invoice is loaded by id alone: `select * into _inv from public.invoices where id = _invoice_id`. The tenant is then taken FROM THE ROW (`_tenant := _inv.tenant_id`), so every later statement is consistent with the foreign tenant instead of blocked by it, and RLS never intervenes because the function is a definer. CONFIRMED EMPIRICALLY (proof P-2): an ordinary authenticated session homed in another tenant called rpc/void_invoice with a foreign invoice uuid, received HTTP 200 {success:true}, and the foreign tenant's invoice moved to status `cancelled`. This is a live cross-tenant WRITE.",
     remediation:
       "Add `and tenant_id = public.get_current_tenant()` to the invoice lookup and raise when not found.",
+    evidence: "cert-rev-bnd05-definer-proof.json · P-2",
   },
   "ph1a_cross_tenant_probe()": {
     class: "FALSE_POSITIVE",
@@ -245,6 +248,13 @@ const record = {
     remediation: r.remediation,
   })),
   functions: reviewed,
+  definerProof: (() => {
+    try {
+      return JSON.parse(readFileSync(DPROOF, "utf8"));
+    } catch {
+      return { error: "definer proof artifact missing" };
+    }
+  })(),
   journalProof: journalProof && {
     source: journalProof.source,
     generatedAt: journalProof.generatedAt,

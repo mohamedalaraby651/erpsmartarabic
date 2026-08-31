@@ -2,7 +2,7 @@
   "id": "CERT-REV-BND05",
   "boundary": "BND-05 — Tenant → Data",
   "observation": "PH1A-OBS-001",
-  "generatedAt": "2026-08-31T21:41:01.584Z",
+  "generatedAt": "2026-08-31T21:42:45.311Z",
   "mutation": "none — read-only review",
   "source": "live catalog (pg_proc / pg_trigger / has_function_privilege)",
   "ph1aArtifact": {
@@ -24,8 +24,8 @@
     },
     {
       "function": "find_duplicate_customers(p_tenant_id uuid)",
-      "severity": "high",
-      "remediation": "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it)."
+      "severity": "medium",
+      "remediation": "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it). Fix the search_path defect separately, not by leaving the function broken."
     },
     {
       "function": "get_user_tenant_id(_user_id uuid)",
@@ -440,9 +440,10 @@
       ],
       "definition_md5": "aab3472601a3ca576e284723783e28b7",
       "class": "REMEDIATION_REQUIRED",
-      "severity": "high",
-      "rationale": "SECURITY DEFINER (RLS bypassed), EXECUTE granted to authenticated, and `p_tenant_id` defaults to NULL which disables the filter entirely: `WHERE (p_tenant_id IS NULL OR ...)`. Calling it with no argument returns customer names and phone numbers from every tenant. This is a direct cross-tenant PII read reachable from a normal client session.",
-      "remediation": "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it)."
+      "severity": "medium",
+      "rationale": "SECURITY DEFINER (RLS bypassed), EXECUTE granted to authenticated, and `p_tenant_id` defaults to NULL which disables the filter entirely: `WHERE (p_tenant_id IS NULL OR ...)`. By reading, the function would return customer names and phone numbers from every tenant. Empirically (proof P-1) the call fails first with 42883 `function extensions.similarity(text,text) does not exist`, so the disclosure is NOT reachable today — it is latent and becomes live the moment the extension resolves in the function's search_path. Severity is medium rather than high for that reason, and the defect is real either way.",
+      "remediation": "Ignore the parameter and use `public.get_current_tenant()` as the only filter (or reject a `p_tenant_id` that differs from it). Fix the search_path defect separately, not by leaving the function broken.",
+      "evidence": "cert-rev-bnd05-definer-proof.json · P-1"
     },
     {
       "function": "fn_log_pdf_profile_change()",
@@ -885,8 +886,9 @@
       "definition_md5": "fdd4c29815510ce77c5b45ff4688f571",
       "class": "REMEDIATION_REQUIRED",
       "severity": "critical",
-      "rationale": "SECURITY DEFINER, EXECUTE granted to authenticated, and the invoice is loaded by id alone: `select * into _inv from public.invoices where id = _invoice_id`. The tenant is then taken FROM THE ROW (`_tenant := _inv.tenant_id`), so every subsequent statement is consistent with the foreign tenant instead of being blocked by it. A caller holding a foreign invoice uuid can cancel that invoice and insert a reversing journal into another tenant's ledger. RLS does not intervene because the function is a definer. This is a cross-tenant WRITE path and it is reachable from an ordinary client session.",
-      "remediation": "Add `and tenant_id = public.get_current_tenant()` to the invoice lookup and raise when not found."
+      "rationale": "SECURITY DEFINER, EXECUTE granted to authenticated, and the invoice is loaded by id alone: `select * into _inv from public.invoices where id = _invoice_id`. The tenant is then taken FROM THE ROW (`_tenant := _inv.tenant_id`), so every later statement is consistent with the foreign tenant instead of blocked by it, and RLS never intervenes because the function is a definer. CONFIRMED EMPIRICALLY (proof P-2): an ordinary authenticated session homed in another tenant called rpc/void_invoice with a foreign invoice uuid, received HTTP 200 {success:true}, and the foreign tenant's invoice moved to status `cancelled`. This is a live cross-tenant WRITE.",
+      "remediation": "Add `and tenant_id = public.get_current_tenant()` to the invoice lookup and raise when not found.",
+      "evidence": "cert-rev-bnd05-definer-proof.json · P-2"
     },
     {
       "function": "ph1a_cross_tenant_probe()",
@@ -897,6 +899,33 @@
       "rationale": "Listed in the PH1A artifact but absent from the live catalog (dropped by migration 0004). Stale observation, not a finding."
     }
   ],
+  "definerProof": {
+    "id": "CERT-REV-BND05-DEFINER-PROOF",
+    "generatedAt": "2026-08-31T21:42:07.345Z",
+    "source": "live",
+    "method": "PostgREST with a real authenticated user JWT against a throw-away foreign tenant",
+    "results": [
+      {
+        "id": "P-1",
+        "call": "rpc/find_duplicate_customers()  (no argument)",
+        "status": 404,
+        "foreign_pii_returned": false,
+        "body_excerpt": "{\"code\":\"42883\",\"details\":null,\"hint\":\"No function matches the given name and argument types. You might need to add explicit type casts.\",\"message\":\"function extensions.similarity(text, text) does not exist\"}"
+      },
+      {
+        "id": "P-2",
+        "call": "rpc/void_invoice(foreign invoice uuid)",
+        "status": 200,
+        "body_excerpt": "{\"success\": true, \"invoice_id\": \"cccccccc-0000-0000-0000-0000000000f1\", \"reversing_journal_id\": null, \"reversing_journal_number\": null}",
+        "foreign_invoice_status_after": "cancelled",
+        "foreign_invoice_cancelled": true
+      }
+    ],
+    "conclusion": {
+      "find_duplicate_customers": "not reproduced",
+      "void_invoice": "CONFIRMED cross-tenant write (foreign invoice cancelled)"
+    }
+  },
   "journalProof": {
     "source": "live",
     "generatedAt": "2026-08-31T21:38:26.616Z",
