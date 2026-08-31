@@ -36,6 +36,13 @@
       "when": 1788208626151,
       "tag": "0004_ph1a_tenant_isolation_drop_probe_fn",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788216578932,
+      "tag": "0005_rem_bnd05_001_definer_surface",
+      "breakpoints": true
     }
   ]
 }

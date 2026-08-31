@@ -1,0 +1,68 @@
+{
+  "id": "REM-BND05-001",
+  "boundary": "BND-05 — Tenant → Data",
+  "generatedAt": "2026-08-31T22:55:57.827Z",
+  "parent": "CERT-REV-BND05",
+  "baseline": "BASELINE-UX4-001 (SEALED)",
+  "declaredScope": [
+    {
+      "id": "R-1",
+      "function": "public.void_invoice(uuid,text)",
+      "preMd5": "fdd4c29815510ce77c5b45ff4688f571",
+      "postMd5": "b25c15d2aab3c4a810ff38d161ce03cc",
+      "mutated": true
+    },
+    {
+      "id": "R-2",
+      "function": "public.find_duplicate_customers(uuid)",
+      "preMd5": "aab3472601a3ca576e284723783e28b7",
+      "postMd5": "74d628af9b06445d85555eacb977d1a9",
+      "mutated": true
+    },
+    {
+      "id": "R-3",
+      "function": "public.get_user_tenant_id(uuid)",
+      "preMd5": "d083e139114f74d37714eb75a040a20e",
+      "postMd5": "318a3ba103478cc89f690e7a231e4a45",
+      "mutated": true
+    },
+    {
+      "id": "R-4",
+      "function": "public.get_user_tenants(uuid)",
+      "preMd5": "2a1fdb4c84e32aae6f2059206079255e",
+      "postMd5": "989ce3cf620f3b43cdd5deb1b1def766",
+      "mutated": true
+    },
+    {
+      "id": "R-5",
+      "function": "public.is_period_closed(uuid,date)",
+      "preMd5": "03fe0b29ce035cd45fa8e08626660c74",
+      "postMd5": "fd3b352031adced8c25db57755626834",
+      "mutated": true
+    },
+    {
+      "id": "R-6",
+      "function": "public.is_admin_equivalent_custom_role(uuid,uuid)",
+      "preMd5": "d90310a4463207413d9dc51c6a8a9b4c",
+      "postMd5": "d079e6c0422c449d4596c46cc1a0b2ec",
+      "mutated": true
+    },
+    {
+      "id": "R-7",
+      "function": "public.check_financial_limit(uuid,uuid,text,numeric)",
+      "preMd5": "16c055173cb5457498683e4390ad7a7f",
+      "postMd5": "5ec4a113f1fbdbedaceec35d65fbad22",
+      "mutated": true
+    },
+    {
+      "id": "OUT-OF-SCOPE",
+      "function": "public.check_financial_limit(uuid,text,numeric)",
+      "preMd5": "1f04abd92d3766824c1c7b954ecc978c",
+      "postMd5": "1f04abd92d3766824c1c7b954ecc978c",
+      "mutated": false
+    }
+  ],
+  "scopeHash": "f7ab4776e740e85d3484af574da4a7e43cba69d266ecef8819420ba22520357b",
+  "migration": "drizzle/migrations/0005_rem_bnd05_001_definer_surface.sql",
+  "certification": "NOT CLAIMED — human review required"
+}

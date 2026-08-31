@@ -2,7 +2,7 @@
   "id": "CERT-REV-BND05",
   "boundary": "BND-05 — Tenant → Data",
   "observation": "PH1A-OBS-001",
-  "generatedAt": "2026-08-31T21:42:45.311Z",
+  "generatedAt": "2026-08-31T22:52:53.843Z",
   "mutation": "none — read-only review",
   "source": "live catalog (pg_proc / pg_trigger / has_function_privilege)",
   "ph1aArtifact": {
@@ -181,14 +181,14 @@
         "anon": false,
         "note": "client-reachable"
       },
-      "tenant_authority": "inherited from the row / caller argument",
+      "tenant_authority": "get_current_tenant()",
       "caller_controlled_tenant_id": true,
       "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
       "tables_touched": [
         "role_limits",
         "user_roles"
       ],
-      "definition_md5": "16c055173cb5457498683e4390ad7a7f",
+      "definition_md5": "5ec4a113f1fbdbedaceec35d65fbad22",
       "class": "REMEDIATION_REQUIRED",
       "severity": "low",
       "rationale": "SECURITY DEFINER, EXECUTE granted to authenticated, `_tenant` is caller-controlled and never compared to get_current_tenant(). A caller who knows a foreign tenant id and a foreign user id can learn whether an amount is within that tenant's role limit — a boolean oracle over foreign configuration. No write path. Legacy overload; the 3-arg form supersedes it.",
@@ -425,20 +425,20 @@
       "function": "find_duplicate_customers(p_tenant_id uuid)",
       "tenant_scoped": true,
       "security_mode": "SECURITY DEFINER",
-      "search_path": "search_path=public",
+      "search_path": "search_path=public, extensions",
       "trigger_function": false,
       "execute_grants": {
         "authenticated": true,
         "anon": false,
         "note": "client-reachable"
       },
-      "tenant_authority": "inherited from the row / caller argument",
+      "tenant_authority": "get_current_tenant()",
       "caller_controlled_tenant_id": true,
       "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
       "tables_touched": [
         "customers"
       ],
-      "definition_md5": "aab3472601a3ca576e284723783e28b7",
+      "definition_md5": "74d628af9b06445d85555eacb977d1a9",
       "class": "REMEDIATION_REQUIRED",
       "severity": "medium",
       "rationale": "SECURITY DEFINER (RLS bypassed), EXECUTE granted to authenticated, and `p_tenant_id` defaults to NULL which disables the filter entirely: `WHERE (p_tenant_id IS NULL OR ...)`. By reading, the function would return customer names and phone numbers from every tenant. Empirically (proof P-1) the call fails first with 42883 `function extensions.similarity(text,text) does not exist`, so the disclosure is NOT reachable today — it is latent and becomes live the moment the extension resolves in the function's search_path. Severity is medium rather than high for that reason, and the defect is real either way.",
@@ -527,13 +527,13 @@
         "anon": false,
         "note": "client-reachable"
       },
-      "tenant_authority": "inherited from the row / caller argument",
+      "tenant_authority": "auth.uid()",
       "caller_controlled_tenant_id": false,
       "cross_tenant_reachable": "client-reachable; see rationale",
       "tables_touched": [
         "user_tenants"
       ],
-      "definition_md5": "d083e139114f74d37714eb75a040a20e",
+      "definition_md5": "318a3ba103478cc89f690e7a231e4a45",
       "class": "REMEDIATION_REQUIRED",
       "severity": "low",
       "rationale": "SECURITY DEFINER over user_tenants, EXECUTE granted to authenticated, `_user_id` caller-controlled and unvalidated: a caller holding another user's uuid learns that user's home tenant. Membership metadata disclosure, not tenant data. Also used internally by other definer functions, so removal is not a pure deletion.",
@@ -550,13 +550,13 @@
         "anon": false,
         "note": "client-reachable"
       },
-      "tenant_authority": "inherited from the row / caller argument",
+      "tenant_authority": "auth.uid()",
       "caller_controlled_tenant_id": false,
       "cross_tenant_reachable": "client-reachable; see rationale",
       "tables_touched": [
         "user_tenants"
       ],
-      "definition_md5": "2a1fdb4c84e32aae6f2059206079255e",
+      "definition_md5": "989ce3cf620f3b43cdd5deb1b1def766",
       "class": "REMEDIATION_REQUIRED",
       "severity": "low",
       "rationale": "Same shape as get_user_tenant_id: definer read of user_tenants for any supplied user id, granted to authenticated. Discloses tenant membership of other users.",
@@ -573,7 +573,7 @@
         "anon": false,
         "note": "client-reachable"
       },
-      "tenant_authority": "inherited from the row / caller argument",
+      "tenant_authority": "get_current_tenant()",
       "caller_controlled_tenant_id": true,
       "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
       "tables_touched": [
@@ -581,7 +581,7 @@
         "role_section_permissions",
         "tenants"
       ],
-      "definition_md5": "d90310a4463207413d9dc51c6a8a9b4c",
+      "definition_md5": "d079e6c0422c449d4596c46cc1a0b2ec",
       "class": "REMEDIATION_REQUIRED",
       "severity": "low",
       "rationale": "Definer boolean over custom_roles/role_section_permissions with both ids caller-controlled and granted to authenticated. Requires knowledge of a foreign role uuid; discloses one bit about a foreign tenant's role configuration.",
@@ -598,13 +598,13 @@
         "anon": false,
         "note": "client-reachable"
       },
-      "tenant_authority": "inherited from the row / caller argument",
+      "tenant_authority": "get_current_tenant()",
       "caller_controlled_tenant_id": true,
       "cross_tenant_reachable": "yes — definer + client grant + caller-supplied tenant",
       "tables_touched": [
         "fiscal_periods"
       ],
-      "definition_md5": "03fe0b29ce035cd45fa8e08626660c74",
+      "definition_md5": "fd3b352031adced8c25db57755626834",
       "class": "REMEDIATION_REQUIRED",
       "severity": "low",
       "rationale": "Definer boolean over fiscal_periods with a caller-controlled tenant id, granted to authenticated. Discloses whether a foreign tenant has a closed period covering a date.",
@@ -873,7 +873,7 @@
         "anon": false,
         "note": "client-reachable"
       },
-      "tenant_authority": "auth.uid()",
+      "tenant_authority": "get_current_tenant()",
       "caller_controlled_tenant_id": false,
       "cross_tenant_reachable": "client-reachable; see rationale",
       "tables_touched": [
@@ -883,7 +883,7 @@
         "journals",
         "payments"
       ],
-      "definition_md5": "fdd4c29815510ce77c5b45ff4688f571",
+      "definition_md5": "b25c15d2aab3c4a810ff38d161ce03cc",
       "class": "REMEDIATION_REQUIRED",
       "severity": "critical",
       "rationale": "SECURITY DEFINER, EXECUTE granted to authenticated, and the invoice is loaded by id alone: `select * into _inv from public.invoices where id = _invoice_id`. The tenant is then taken FROM THE ROW (`_tenant := _inv.tenant_id`), so every later statement is consistent with the foreign tenant instead of blocked by it, and RLS never intervenes because the function is a definer. CONFIRMED EMPIRICALLY (proof P-2): an ordinary authenticated session homed in another tenant called rpc/void_invoice with a foreign invoice uuid, received HTTP 200 {success:true}, and the foreign tenant's invoice moved to status `cancelled`. This is a live cross-tenant WRITE.",
@@ -962,5 +962,6 @@
     "failures": []
   },
   "verdict": "REMEDIATION REQUIRED on 7 function(s) — BND-05 cannot be certified as-is",
-  "certification": "NOT CLAIMED — human decision"
+  "certification": "NOT CLAIMED — human decision",
+  "integrityNote": "REGENERATED at 2026-08-31T22:52Z, i.e. AFTER migration 0005 (REM-BND05-001) was applied. Catalog-derived fields (definition md5, caller_controlled_tenant_id, search_path) therefore reflect the POST-remediation schema, while the hand-authored classifications are the original CERT-REV-BND05 verdicts. The immutable pre-remediation evidence is docs/governance/CERT_REV_BND05.md and scripts/audits/output/cert-rev-bnd05-definer-proof.json, neither of which was regenerated."
 }
