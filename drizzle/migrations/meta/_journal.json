@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788208113598,
+      "tag": "0000_ph1a_tenant_isolation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788208309855,
+      "tag": "0001_ph1a_tenant_isolation_log_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788208423937,
+      "tag": "0002_ph1a_tenant_isolation_probe_fn",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788208539422,
+      "tag": "0003_ph1a_tenant_isolation_log_guard_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788208626151,
+      "tag": "0004_ph1a_tenant_isolation_drop_probe_fn",
+      "breakpoints": true
+    }
+  ]
+}
