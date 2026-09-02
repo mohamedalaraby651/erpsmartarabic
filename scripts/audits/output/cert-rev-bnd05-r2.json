@@ -1,0 +1,332 @@
+{
+  "id": "CERT-REV-BND05-R2",
+  "boundary": "BND-05 \u2014 Tenant \u2192 Data",
+  "generatedAt": "2026-09-02T07:34:09.972Z",
+  "source": "live",
+  "mutation": "none \u2014 review only",
+  "method": "PostgREST with a real authenticated user JWT against a fresh throw-away foreign tenant, plus live catalog re-read",
+  "actingTenant": "a0000000-0000-0000-0000-000000000001",
+  "foreignTenant": "eeeeeeee-0000-0000-0000-00000000000a",
+  "lineage": [
+    {
+      "step": "PH1A Evidence",
+      "artifact": "tenant-isolation-report.json",
+      "sha256": "6b5966f444ff8467ff4f299dbff91980823bd0efd167656b8e67a928141aeba0"
+    },
+    {
+      "step": "CERT-REV-BND05",
+      "artifact": "cert-rev-bnd05.json",
+      "sha256": "4476d083b4e73cd40e54c0e89068de427b73d1df872b612214f633faba5bd193"
+    },
+    {
+      "step": "CERT-REV-BND05 journal proof",
+      "artifact": "cert-rev-bnd05-journal-proof.json",
+      "sha256": "5e63faf4228b8d40b8f27de61a8797137fff13273476dc0108446ea17ceb2377"
+    },
+    {
+      "step": "CERT-REV-BND05 definer proof (pre-remediation)",
+      "artifact": "cert-rev-bnd05-definer-proof.json",
+      "sha256": "f5376fd1bf83aa20b397f7c58675816d9a18f45cbb4aadc4ffeed6b170a2ade3"
+    },
+    {
+      "step": "REM-BND05-001 scope",
+      "artifact": "rem-bnd05-001-scope.json",
+      "sha256": "bfed3f2d9cad009c5b022956dcca0144d792092c45d00b42b5bd926ea739100e"
+    },
+    {
+      "step": "REM-BND05-001 post proof",
+      "artifact": "rem-bnd05-001-post-proof.json",
+      "sha256": "130b4366c2106f2edccba223d55a781bd5919025330940c76725953e32329778"
+    },
+    {
+      "step": "Migration",
+      "artifact": "drizzle/migrations/0005_rem_bnd05_001_definer_surface.sql",
+      "sha256": "2ed6cce63cbd13a1e2b40cec1d55800f0535d507afd6c3f03bf9c4451511f3b0"
+    }
+  ],
+  "scopeHash": "f7ab4776e740e85d3484af574da4a7e43cba69d266ecef8819420ba22520357b",
+  "results": [
+    {
+      "id": "R-1",
+      "severity": "critical",
+      "call": "void_invoice(foreign invoice)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "foreign_invoice_status_before": "pending",
+      "foreign_invoice_status_after": "pending",
+      "mutation_occurred": false,
+      "pass": true
+    },
+    {
+      "id": "R-2",
+      "severity": "medium",
+      "call": "find_duplicate_customers()  (no argument)",
+      "status": 404,
+      "body": "{\"code\":\"42883\",\"details\":null,\"hint\":\"No function matches the given name and argument types. You might need to add explicit type casts.\",\"message\":\"function similarity(text, text) does not exist\"}",
+      "foreign_pii_returned": false,
+      "pass": true,
+      "note": "Security containment achieved (no foreign PII disclosed). Functional capability is NOT restored: pg_trgm is absent so similarity() is unresolvable \u2014 PRE-EXT-001, OPEN, outside BND-05 scope."
+    },
+    {
+      "id": "R-2b",
+      "severity": "medium",
+      "call": "find_duplicate_customers(foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "foreign_pii_returned": false,
+      "pass": true
+    },
+    {
+      "id": "R-3",
+      "severity": "low",
+      "call": "get_user_tenant_id(foreign user)",
+      "status": 200,
+      "body": "null",
+      "pass": true
+    },
+    {
+      "id": "R-4",
+      "severity": "low",
+      "call": "get_user_tenants(foreign user)",
+      "status": 200,
+      "body": "[]",
+      "pass": true
+    },
+    {
+      "id": "R-5",
+      "severity": "low",
+      "call": "is_period_closed(foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "pass": true
+    },
+    {
+      "id": "R-6",
+      "severity": "low",
+      "call": "is_admin_equivalent_custom_role(_, foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "pass": true
+    },
+    {
+      "id": "R-7",
+      "severity": "low",
+      "call": "check_financial_limit(4-arg, foreign tenant)",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"cross-tenant access denied\"}",
+      "pass": true
+    },
+    {
+      "id": "X-READ-1",
+      "severity": "critical",
+      "call": "GET invoices?tenant_id=eq.<foreign>",
+      "status": 200,
+      "body": "[]",
+      "pass": true
+    },
+    {
+      "id": "X-READ-2",
+      "severity": "critical",
+      "call": "GET customers?tenant_id=eq.<foreign>",
+      "status": 200,
+      "body": "[]",
+      "pass": true
+    },
+    {
+      "id": "X-WRITE-1",
+      "severity": "critical",
+      "call": "POST customers with foreign tenant_id",
+      "status": 403,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"new row violates row-level security policy for table \\\"customers\\\"\"}",
+      "pass": true
+    },
+    {
+      "id": "N-1",
+      "severity": "regression",
+      "call": "get_user_tenant_id(self)",
+      "status": 200,
+      "body": "\"a0000000-0000-0000-0000-000000000001\"",
+      "pass": true
+    },
+    {
+      "id": "N-2",
+      "severity": "regression",
+      "call": "check_financial_limit(3-arg, self)",
+      "status": 200,
+      "body": "true",
+      "pass": true
+    },
+    {
+      "id": "N-3",
+      "severity": "regression",
+      "call": "get_dashboard_overview()",
+      "status": 200,
+      "body": "{\"dso_days\": 0, \"overdue_ar\": 440838.00, \"mtd_revenue\": 0, \"cash_balance\": 57000, \"monthly_sales\": [], \"today_revenue\": 0, \"invoices_count\": 22, \"outstanding_ar\": 445208.00, \"products_count\": 18, \"customers_count\": 15, \"gross_margin_pct\": 0, \"quotations_count\": 8, \"pending_approvals\": 5, \"gross_margin_value\": 0.00, \"current_period_invoices\": 0, \"previous_period_invoices\": 0}",
+      "pass": true
+    },
+    {
+      "id": "N-4",
+      "severity": "regression",
+      "call": "GET own-tenant invoices",
+      "status": 200,
+      "body": "[{\"id\":\"27edb6d6-7110-4d0a-a553-0e390d79af09\"}]",
+      "pass": true
+    }
+  ],
+  "definerAudit": [
+    {
+      "id": "R-1",
+      "function": "public.void_invoice(uuid,text)",
+      "declaredPostMd5": "b25c15d2aab3c4a810ff38d161ce03cc",
+      "liveMd5": "b25c15d2aab3c4a810ff38d161ce03cc",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{search_path=public}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    },
+    {
+      "id": "R-2",
+      "function": "public.find_duplicate_customers(uuid)",
+      "declaredPostMd5": "74d628af9b06445d85555eacb977d1a9",
+      "liveMd5": "74d628af9b06445d85555eacb977d1a9",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{\"search_path=public, extensions\"}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    },
+    {
+      "id": "R-3",
+      "function": "public.get_user_tenant_id(uuid)",
+      "declaredPostMd5": "318a3ba103478cc89f690e7a231e4a45",
+      "liveMd5": "318a3ba103478cc89f690e7a231e4a45",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{search_path=public}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    },
+    {
+      "id": "R-4",
+      "function": "public.get_user_tenants(uuid)",
+      "declaredPostMd5": "989ce3cf620f3b43cdd5deb1b1def766",
+      "liveMd5": "989ce3cf620f3b43cdd5deb1b1def766",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{search_path=public}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    },
+    {
+      "id": "R-5",
+      "function": "public.is_period_closed(uuid,date)",
+      "declaredPostMd5": "fd3b352031adced8c25db57755626834",
+      "liveMd5": "fd3b352031adced8c25db57755626834",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{search_path=public}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    },
+    {
+      "id": "R-6",
+      "function": "public.is_admin_equivalent_custom_role(uuid,uuid)",
+      "declaredPostMd5": "d079e6c0422c449d4596c46cc1a0b2ec",
+      "liveMd5": "d079e6c0422c449d4596c46cc1a0b2ec",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{search_path=public}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    },
+    {
+      "id": "R-7",
+      "function": "public.check_financial_limit(uuid,uuid,text,numeric)",
+      "declaredPostMd5": "5ec4a113f1fbdbedaceec35d65fbad22",
+      "liveMd5": "5ec4a113f1fbdbedaceec35d65fbad22",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{search_path=public}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    },
+    {
+      "id": "OUT-OF-SCOPE",
+      "function": "public.check_financial_limit(uuid,text,numeric)",
+      "declaredPostMd5": "1f04abd92d3766824c1c7b954ecc978c",
+      "liveMd5": "1f04abd92d3766824c1c7b954ecc978c",
+      "md5Match": true,
+      "security": "DEFINER",
+      "searchPath": "{search_path=public}",
+      "executeGrants": "authenticated,service_role",
+      "anonExecutable": false
+    }
+  ],
+  "observationSetSize": 33,
+  "fixtureCleanup": {
+    "denied": [
+      {
+        "stmt": "delete from public.invoice_items where tenant_id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table invoice_items"
+      },
+      {
+        "stmt": "delete from public.invoices where tenant_id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table invoices"
+      },
+      {
+        "stmt": "delete from public.customers where tenant_id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table customers"
+      },
+      {
+        "stmt": "delete from public.fiscal_periods where tenant_id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table fiscal_periods"
+      },
+      {
+        "stmt": "delete from public.user_tenants where tenant_id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table user_tenants"
+      },
+      {
+        "stmt": "delete from public.activity_logs where tenant_id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table activity_logs"
+      },
+      {
+        "stmt": "delete from public.audit_trail where tenant_id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table audit_trail"
+      },
+      {
+        "stmt": "delete from public.tenants where id='eeeeeeee-0000-0000-0000-00000000000a';",
+        "error": "ERROR:  permission denied for table tenants"
+      }
+    ],
+    "residualTenantRows": 1,
+    "state": "partial",
+    "privilegedCleanup": {
+      "performedBy": "privileged database SQL tool (post-run)",
+      "note": "sandbox_exec holds only SELECT/INSERT on the fixture tables, so in-script cleanup was denied per statement and recorded verbatim above. Cleanup was completed afterwards with the privileged connection; deleting the tenant row required temporarily disabling its user triggers because log_activity() writes an activity_logs row referencing the tenant being deleted (FK 23503).",
+      "verifiedZero": {
+        "tenants": 0,
+        "invoices": 0,
+        "customers": 0,
+        "fiscal_periods": 0,
+        "user_tenants": 0,
+        "activity_logs": 0,
+        "audit_trail": 0
+      },
+      "state": "deleted-verified"
+    }
+  },
+  "findings": {
+    "probeFailures": [],
+    "md5Drift": [],
+    "anonExecutable": [],
+    "preExt001": {
+      "id": "PRE-EXT-001",
+      "status": "OPEN",
+      "statement": "Security containment achieved / functional capability not restored",
+      "detail": "pg_trgm is not installed; find_duplicate_customers cannot resolve similarity(). Outside BND-05 scope."
+    }
+  },
+  "verdict": "R2 EVIDENCE PASS \u2014 certification decision belongs to human review",
+  "certification": "NOT CLAIMED \u2014 human review required"
+}
