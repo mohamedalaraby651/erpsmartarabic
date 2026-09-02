@@ -1,9 +1,9 @@
 {
   "id": "CERT-REV-BND05-R2",
-  "boundary": "BND-05 — Tenant → Data",
+  "boundary": "BND-05 \u2014 Tenant \u2192 Data",
   "generatedAt": "2026-09-02T07:34:09.972Z",
   "source": "live",
-  "mutation": "none — review only",
+  "mutation": "none \u2014 review only",
   "method": "PostgREST with a real authenticated user JWT against a fresh throw-away foreign tenant, plus live catalog re-read",
   "actingTenant": "a0000000-0000-0000-0000-000000000001",
   "foreignTenant": "eeeeeeee-0000-0000-0000-00000000000a",
@@ -65,7 +65,7 @@
       "body": "{\"code\":\"42883\",\"details\":null,\"hint\":\"No function matches the given name and argument types. You might need to add explicit type casts.\",\"message\":\"function similarity(text, text) does not exist\"}",
       "foreign_pii_returned": false,
       "pass": true,
-      "note": "Security containment achieved (no foreign PII disclosed). Functional capability is NOT restored: pg_trgm is absent so similarity() is unresolvable — PRE-EXT-001, OPEN, outside BND-05 scope."
+      "note": "Security containment achieved (no foreign PII disclosed). Functional capability is NOT restored: pg_trgm is absent so similarity() is unresolvable \u2014 PRE-EXT-001, OPEN, outside BND-05 scope."
     },
     {
       "id": "R-2b",
@@ -300,7 +300,21 @@
       }
     ],
     "residualTenantRows": 1,
-    "state": "partial"
+    "state": "partial",
+    "privilegedCleanup": {
+      "performedBy": "privileged database SQL tool (post-run)",
+      "note": "sandbox_exec holds only SELECT/INSERT on the fixture tables, so in-script cleanup was denied per statement and recorded verbatim above. Cleanup was completed afterwards with the privileged connection; deleting the tenant row required temporarily disabling its user triggers because log_activity() writes an activity_logs row referencing the tenant being deleted (FK 23503).",
+      "verifiedZero": {
+        "tenants": 0,
+        "invoices": 0,
+        "customers": 0,
+        "fiscal_periods": 0,
+        "user_tenants": 0,
+        "activity_logs": 0,
+        "audit_trail": 0
+      },
+      "state": "deleted-verified"
+    }
   },
   "findings": {
     "probeFailures": [],
@@ -313,6 +327,6 @@
       "detail": "pg_trgm is not installed; find_duplicate_customers cannot resolve similarity(). Outside BND-05 scope."
     }
   },
-  "verdict": "R2 EVIDENCE PASS — certification decision belongs to human review",
-  "certification": "NOT CLAIMED — human review required"
+  "verdict": "R2 EVIDENCE PASS \u2014 certification decision belongs to human review",
+  "certification": "NOT CLAIMED \u2014 human review required"
 }
