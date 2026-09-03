@@ -378,3 +378,14 @@ STOP — HUMAN REVIEW REQUIRED
 - Query-Service restraint rule adopted: no new Query Service where an existing repository/application facade suffices.
 - Scope hash **NOT** frozen (`scopeHashPreview` informational only). F1 execution **NOT** authorized.
 - Status: BND-05 CERTIFIED (1/8) · F0 ACCEPTED · F1 SCOPE REVIEW · F2…F6 LOCKED · RISK-007/008 OPEN · PRE-EXT-001 OPEN · PRE-TS-001 CONTAINED · Smart Freeze ACTIVE.
+
+## F1-SCOPE-001 — Frozen Authorized Scope (Track A)
+- Human decision: **F1 Scope Review — ACCEPTED WITH CONSTRAINT**. The 95-row preview hash `f6f5d6ae…` is rejected as an F1 hash.
+- Authorized & frozen: **37 items** (F1-A pages→repositories = 4, F1-B components→repositories = 33).
+- Frozen scope hash (SHA-256): `2b4e37a030945bdbd922c8eb50a412e8fe1b95b512e4d3b86faf301d8ff652aa`.
+- Not authorized: **58 items** (F2-C = 24, F2-D = 34) — `docs/governance/F2_SCOPE_CANDIDATE.md`, no hash.
+- Pre-mutation gates: all 37 = ACTUAL_VIOLATION (PASS); Track A/B intersection = 0 files (PASS); new Query Services required = 0.
+- Target-surface gate (Constraint 6): **11 READY**, **26 BLOCKED (STOP)** — no approved facade exists for those edges; F1 may not invent one. Awaiting a separate human decision.
+- Verification (no source mutation from scope generation): typecheck 0/0; fitness 33 active / 9 pending / 0 failures.
+- Disclosed source touch: PRE-TS-001 containment re-applied in `src/integrations/supabase/previewAuthStorage.ts` (recurrence, CONTAINED).
+- Artefacts: `scripts/audits/f1-scope-001.mjs`, `scripts/audits/output/f1-scope-001.json`, `scripts/audits/output/f2-scope-candidate.json`, `docs/governance/F1_SCOPE_001.md`.
