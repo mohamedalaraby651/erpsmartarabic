@@ -101,10 +101,10 @@ const facades = facadePaths.map((p) => {
     provenance,
     provenanceExists: provenanceFile ? existsSync(resolve(ROOT, provenanceFile)) : false,
     adr0028Compliant: exists && nonReexport.length === 0 && violations.length === 0,
-const bySummary = DEP.importLayerViolations.bySummary ?? {};
   };
 });
 
+const bySummary = DEP.importLayerViolations.bySummary ?? {};
 /* ---------------- residual edge classification (direct source scan) ---------------- */
 const approvedEdges = new Set(items.map((i) => `${i.file}::${i.importedModule.replace(/\/index$/, "")}`));
 const uiFiles = sh("git ls-files src/components src/pages").split("\n").filter((f) => /\.(ts|tsx)$/.test(f));
