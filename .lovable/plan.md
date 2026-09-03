@@ -20,29 +20,41 @@ Blocked items split into two kinds:
 
 Barrel items are still executable only when every imported symbol maps to an existing or newly created pure facade; otherwise that item stays BLOCKED and is reported, not forced.
 
-## Batch F1-A — Pages → Application (4 items)
+**First step is not code.** Issue `F1_SCOPE_001-R2` and compute the new hash before any source mutation.
+
+## Scope unit = dependency edge, not file
+
+The frozen unit is the dependency edge. If an approved F1 consumer file contains additional repository edges outside the 37, they remain untouched and are reported as out-of-scope observations.
+
+## Facade rule
+
+A minimal pure re-export facade is permitted only when required to remediate an approved F1 edge. Reuse order: existing application service/query facade → existing pure facade → one new minimal pure re-export facade. No facade-per-consumer, no facade-per-file, no speculative or duplicate facade. A facade may use `export *` or explicit named re-exports **only from an already-existing approved application-layer or repository capability per ADR-0028** — never from a consumer, page, component, or arbitrary module, and never as a new implementation surface. ADR-0028 itself is not modified.
+
+## Batch F1-A — Pages → Application (4 edges)
 
 Items: `PriceListsPage.tsx`, `QuotationDetailsPage.tsx`, `SupplierPaymentsPage.tsx`, `TasksPage.tsx`.
 
-1. Inventory: record exact current import lines and imported symbols per file.
+1. Inventory: record exact current import line, imported symbols, and resolved target facade per edge.
 2. Resolve each symbol to an existing facade under `src/application/queries/**`; create a pure re-export facade only where required.
-3. Apply import-only redirects. No logic, no UI, no signature changes.
-4. Checkpoint verify: `tsgo`, build, fitness, `dep-graph` (pages→repositories must reach 0 for these 4), UI cycles 0.
+3. Apply import-only redirects. No logic, UI, signature, or behavior changes.
+4. Checkpoint: all 4 approved edges eliminated; unrelated repository edges in the same files left untouched and reported only; no new F1 violations; `tsgo`, build, fitness, dep-graph, UI cycles 0.
 
-## Batch F1-B — Components → Application (33 items)
+## Batch F1-B — Components → Application (33 edges)
 
-1. Full inventory of the 33 items, grouped by target repository so one facade serves many consumers (no 33 facades).
-2. Reuse order: existing application service/query facade → existing pure facade → one new minimal pure re-export facade.
-3. Apply all redirects in one controlled pass; register new facades in `src/application/queries/index.ts` and ADR-0028 conventions.
-4. Checkpoint verify: same command set; components→repositories driven to 0 for remediated items; no new page/component → supabase-client edges.
+1. Full inventory of the 33 approved edges, grouped by repository/capability so one facade serves many consumers (never 33 facades).
+2. Reuse order per the facade rule above.
+3. Apply all redirects in one controlled pass. Register a new facade in `src/application/queries/index.ts` **only if the existing application-query import convention requires it** — no speculative barrel edits. Follow ADR-0028; do not modify it.
+4. Checkpoint: 33/33 approved edges eliminated; unrelated edges unchanged and reported; no new page/component → supabase-client edges; no new cycles; `tsgo`, build, fitness, dep-graph.
 
 ## Batch F1-C — Consolidated Verification (no source mutation)
 
 Verify the whole frozen F1 set and produce the evidence pack:
 
-- scope integrity: 37-item mapping, revised hash reproduced, actual changed files ⊆ approved set
+- scope integrity: every changed consumer file corresponds to an approved F1 item; every newly created facade is directly required by one or more approved F1 items; every changed file has a documented F1 purpose; no file modified for unrelated cleanup or future work
+- edge mapping: 37/37 verified — 4/4 F1-A and 33/33 F1-B remediated, unrelated edges unchanged
 - dep-graph before/after: pages→repositories, components→repositories, pages→supabase-client, components→supabase-client, total cycles, UI cycles
-- facade audit: every new facade is a pure `export *` / named re-export — zero logic, validation, mapping, caching, state, DB/Supabase calls, no new repository or query service
+- facade audit: every new facade is pure re-export only, with its re-export source proven to be an approved existing application/repository capability — zero logic, validation, mapping, transformation, caching, state, DB/Supabase calls, no new repository or query service, no new implementation surface
+
 - negative verification: zero diff under BND-05 surfaces, RLS, migrations, finance/domain, permissions, sync, F2 files, PRE-TS-001, PRE-EXT-001
 - `tsgo`, build, Vitest, `scripts/fitness/run-all.mjs`
 - result classified `PASS` / `FAIL` / `BLOCKED`. Never `CERTIFIED`.
