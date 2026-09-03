@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Plus, Clock, Check, FileText, ArrowLeft, AlarmClock, CalendarClock, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { customerRelationsRepo } from "@/lib/repositories/customerRelationsRepo";
+import { customerRelationsRepo } from "@/application/queries/customer-relations";
 import SharedEmptyState from "@/components/shared/SharedEmptyState";
 import { cn } from "@/lib/utils";
 import { tooltips } from "@/lib/uiCopy";

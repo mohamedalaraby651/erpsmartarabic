@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, MessageCircle, StickyNote, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { customerRepository } from '@/lib/repositories';
+import { customerRepository } from '@/application/queries/customers';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { CustomerAlert } from '@/hooks/useCustomerAlerts';

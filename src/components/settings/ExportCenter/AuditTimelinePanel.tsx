@@ -25,7 +25,7 @@ import {
 
 import { usePdfProfile, PDF_PROFILE_QUERY_KEY } from '@/hooks/usePdfProfile';
 import { useTenant } from '@/hooks/useTenant';
-import { pdfProfilesRepository } from '@/lib/repositories/pdfProfilesRepository';
+import { pdfProfilesRepository } from '@/application/queries/pdf-profiles';
 import { labelForPath, type ProfileDiff } from '@/domain/pdf/services/ProfileDiff';
 import { nextVersion } from '@/domain/pdf/value-objects/ProfileVersion';
 import type { DocumentRenderProfile } from '@/domain/pdf/entities/DocumentRenderProfile';

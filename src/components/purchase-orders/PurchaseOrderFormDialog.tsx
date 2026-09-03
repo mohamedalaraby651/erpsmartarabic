@@ -49,7 +49,7 @@ import FormDialogFooter from "@/components/shared/FormDialogFooter";
 import FormFieldError from "@/components/shared/FormFieldError";
 import { listActiveSuppliersForSelect } from "@/application/queries/suppliers";
 import { listActiveProductsForSelect } from "@/application/queries/products";
-import { purchaseOrderRepository } from "@/lib/repositories/purchaseOrderRepository";
+import { purchaseOrderRepository } from "@/application/queries/purchase-orders";
 import {
   useCreatePurchaseOrder,
   useUpdatePurchaseOrder,

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { reportsRepository } from '@/lib/repositories';
+import { reportsRepository } from '@/application/queries/reports';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, DollarSign, ArrowUpDown } from 'lucide-react';
 import { format, eachDayOfInterval } from 'date-fns';

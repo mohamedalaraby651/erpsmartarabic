@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supplierRepository } from '@/lib/repositories';
+import { supplierRepository } from '@/application/queries/suppliers';
 import { Pin } from 'lucide-react';
 
 interface SupplierPinnedNoteProps {

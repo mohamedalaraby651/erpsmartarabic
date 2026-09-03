@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { reportTemplateRepository } from '@/lib/repositories/reportTemplateRepository';
+import { reportTemplateRepository } from '@/application/queries/report-templates';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';

@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { logErrorSafely, getSafeErrorMessage } from '@/lib/errorHandler';
 import { mapRepoError } from '@/lib/repositories/_base';
 import { useRecordCashTransaction } from '@/hooks/treasury';
-import { expenseRepository } from '@/lib/repositories/expenseRepository';
+import { expenseRepository } from '@/application/queries/expenses';
 import {
   Dialog,
   DialogContent,

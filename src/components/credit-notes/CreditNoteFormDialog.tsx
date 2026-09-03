@@ -6,7 +6,7 @@ import {
   useCreateCreditNoteDraft,
 } from '@/hooks/credit-notes';
 import { useQuery } from '@tanstack/react-query';
-import { creditNoteRepository } from '@/lib/repositories/creditNoteRepository';
+import { creditNoteRepository } from '@/application/queries/credit-notes';
 import { mapRepoError } from '@/lib/repositories/_base';
 import { useAuth } from '@/hooks/useAuth';
 import {

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { employeeRepository } from '@/lib/repositories/employeeRepository';
+import { employeeRepository } from '@/application/queries/employees';
 import {
   Dialog,
   DialogContent,

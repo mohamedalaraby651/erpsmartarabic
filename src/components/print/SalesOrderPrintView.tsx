@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { settingsRepository } from "@/lib/repositories/settingsRepository";
-import { salesOrderRepository } from "@/lib/repositories/salesOrderRepository";
+import { settingsRepository } from "@/application/queries/settings";
+import { salesOrderRepository } from "@/application/queries/sales-orders";
 
 import { PrintTemplate } from "./PrintTemplate";
 import { Button } from "@/components/ui/button";
