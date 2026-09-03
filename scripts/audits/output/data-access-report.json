@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "totalHits": 625,
-  "uiHits": 150,
+  "totalHits": 631,
+  "uiHits": 153,
   "byTypeByLayer": {
     "auth": {
       "hooks": 7,
@@ -11,11 +11,11 @@
       "lib:repositories": 2,
       "other": 10,
       "ui:components": 2,
-      "ui:pages": 4
+      "ui:pages": 7
     },
     "read": {
       "hooks": 55,
-      "lib:other": 23,
+      "lib:other": 26,
       "lib:queries": 20,
       "lib:repositories": 187,
       "ui:components": 50,
@@ -45,7 +45,7 @@
   },
   "repositoryCount": 44,
   "queryCount": 2,
-  "repositoryReuseMean": 2.91,
+  "repositoryReuseMean": 2.3,
   "queryReuseMean": 4,
   "repositories": [
     {
@@ -58,11 +58,11 @@
     },
     {
       "file": "src/lib/repositories/adminMetricsRepository.ts",
-      "consumers": 3
+      "consumers": 2
     },
     {
       "file": "src/lib/repositories/adminRepository.ts",
-      "consumers": 1
+      "consumers": 2
     },
     {
       "file": "src/lib/repositories/approvalRepository.ts",
@@ -74,7 +74,7 @@
     },
     {
       "file": "src/lib/repositories/attendanceRepository.ts",
-      "consumers": 0
+      "consumers": 1
     },
     {
       "file": "src/lib/repositories/categoryRepository.ts",
@@ -98,11 +98,11 @@
     },
     {
       "file": "src/lib/repositories/customerRepository.ts",
-      "consumers": 17
+      "consumers": 6
     },
     {
       "file": "src/lib/repositories/customerSearchRepo.ts",
-      "consumers": 8
+      "consumers": 5
     },
     {
       "file": "src/lib/repositories/dimensionsRepository.ts",
@@ -138,7 +138,7 @@
     },
     {
       "file": "src/lib/repositories/legacyQuotationsRepository.ts",
-      "consumers": 4
+      "consumers": 5
     },
     {
       "file": "src/lib/repositories/logisticsRepository.ts",
@@ -170,7 +170,7 @@
     },
     {
       "file": "src/lib/repositories/productRepository.ts",
-      "consumers": 7
+      "consumers": 2
     },
     {
       "file": "src/lib/repositories/purchaseOrderRepository.ts",
@@ -214,7 +214,7 @@
     },
     {
       "file": "src/lib/repositories/supplierRepository.ts",
-      "consumers": 13
+      "consumers": 4
     },
     {
       "file": "src/lib/repositories/tasksRepository.ts",
@@ -222,7 +222,7 @@
     },
     {
       "file": "src/lib/repositories/treasuryRepository.ts",
-      "consumers": 3
+      "consumers": 2
     }
   ],
   "queries": [
@@ -235,7 +235,7 @@
       "consumers": 2
     }
   ],
-  "filesWithHits": 151,
+  "filesWithHits": 155,
   "byFile": {
     "src/__tests__/unit/hooks/useAuth.test.tsx": {
       "layer": "other",
@@ -758,6 +758,27 @@
       },
       "total": 3
     },
+    "src/lib/mcp/tools/list-customers.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/mcp/tools/list-recent-invoices.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
+    "src/lib/mcp/tools/search-products.ts": {
+      "layer": "lib:other",
+      "counts": {
+        "read": 1
+      },
+      "total": 1
+    },
     "src/lib/pdfGenerator.ts": {
       "layer": "lib:other",
       "counts": {
@@ -1171,6 +1192,13 @@
         "auth": 1
       },
       "total": 1
+    },
+    "src/pages/OAuthConsent.tsx": {
+      "layer": "ui:pages",
+      "counts": {
+        "auth": 3
+      },
+      "total": 3
     },
     "src/pages/ResetPasswordPage.tsx": {
       "layer": "ui:pages",

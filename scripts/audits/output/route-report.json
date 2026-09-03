@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "totalRoutes": 98,
+  "totalRoutes": 100,
   "byWorkspace": {
     "dashboard": 2,
-    "other": 28,
+    "other": 30,
     "auth": 4,
     "dev": 3,
     "platform": 2,
@@ -52,6 +52,26 @@
     {
       "route": "/",
       "element": "AppLayout",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/__integration__/ux1e",
+      "element": "IntegrationHarnessPage",
+      "workspace": "other",
+      "requiresAuth": true,
+      "permission": "user",
+      "dataSources": [],
+      "mainRepository": null,
+      "workflowCandidate": false
+    },
+    {
+      "route": "/.lovable/oauth/consent",
+      "element": "OAuthConsent",
       "workspace": "other",
       "requiresAuth": true,
       "permission": "user",
