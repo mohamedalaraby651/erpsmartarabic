@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "totalModules": 1216,
-  "totalEdges": 4805,
+  "totalModules": 1227,
+  "totalEdges": 4827,
   "circular": {
     "count": 6,
     "cycles": [
@@ -103,6 +103,10 @@
       "count": 29
     },
     {
+      "file": "application/queries/index.ts",
+      "count": 27
+    },
+    {
       "file": "lib/prefetch.ts",
       "count": 27
     },
@@ -136,10 +140,6 @@
     },
     {
       "file": "pages/products/ProductsPage.tsx",
-      "count": 23
-    },
-    {
-      "file": "pages/purchase-orders/PurchaseOrdersPage.tsx",
       "count": 23
     }
   ],
@@ -226,9 +226,9 @@
     }
   ],
   "importLayerViolations": {
-    "total": 151,
+    "total": 118,
     "bySummary": {
-      "components→repositories": 41,
+      "components→repositories": 8,
       "components→services": 5,
       "pages→repositories": 7,
       "hooks→supabase-client": 31,
@@ -239,10 +239,6 @@
     "samples": {
       "components→repositories": [
         {
-          "from": "components/attendance/LeaveRequestDialog.tsx",
-          "to": "lib/repositories/index.ts"
-        },
-        {
           "from": "components/categories/CategoryFormDialog.tsx",
           "to": "lib/repositories/_base.ts"
         },
@@ -251,12 +247,16 @@
           "to": "lib/repositories/_base.ts"
         },
         {
-          "from": "components/credit-notes/CreditNoteFormDialog.tsx",
-          "to": "lib/repositories/creditNoteRepository.ts"
+          "from": "components/expenses/ExpenseCategoryFormDialog.tsx",
+          "to": "lib/repositories/_base.ts"
         },
         {
-          "from": "components/customers/alerts/AlertItemActions.tsx",
-          "to": "lib/repositories/index.ts"
+          "from": "components/expenses/ExpenseFormDialog.tsx",
+          "to": "lib/repositories/_base.ts"
+        },
+        {
+          "from": "components/quotations/QuotationFormDialog.tsx",
+          "to": "lib/repositories/_base.ts"
         }
       ],
       "components→services": [
