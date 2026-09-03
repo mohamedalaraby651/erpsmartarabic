@@ -65,7 +65,7 @@ Items: `PriceListsPage.tsx`, `QuotationDetailsPage.tsx`, `SupplierPaymentsPage.t
 
 1. Full inventory of the 33 approved edges, grouped by repository/capability so one facade serves many consumers (never 33 facades).
 2. Reuse order per the facade rule above.
-3. Apply all redirects in one controlled pass. Register a new facade in `src/application/queries/index.ts` **only if the existing application-query import convention requires it** — no speculative barrel edits. Follow ADR-0028; do not modify it.
+3. Apply all redirects in one controlled pass. Register a facade in `src/application/queries/index.ts` ONLY if the existing application-query import convention requires it — no speculative barrel changes. Follow `docs/adr/0028-application-query-facades.md`; do not modify it.
 4. Checkpoint: 33/33 approved edges eliminated; unrelated edges unchanged and reported; no new page/component → supabase-client edges; no new cycles; `tsgo`, build, fitness, dep-graph.
 
 ## Batch F1-C — Consolidated Verification (no source mutation)
