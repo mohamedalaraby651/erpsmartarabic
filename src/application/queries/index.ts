@@ -19,3 +19,7 @@ export * as quotations from "./quotations";
 export * as reference from "./reference";
 export * as salesOrders from "./sales-orders";
 export * as treasury from "./treasury";
+export * as activityLogs from "./activity-logs";
+export * as priceLists from "./price-lists";
+export * as supplierPayments from "./supplier-payments";
+export * as tasks from "./tasks";
