@@ -3,7 +3,7 @@
   "fitness": "check-identity-authority",
   "adr": "ADR-0006",
   "rule": "R-0008",
-  "scannedFiles": 253,
+  "scannedFiles": 264,
   "violations": [],
   "pass": true
 }

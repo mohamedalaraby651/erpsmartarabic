@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { legacyQuotationsRepository } from '@/lib/repositories/legacyQuotationsRepository';
+import { legacyQuotationsRepository } from '@/application/queries/quotations';
 import type { Database } from '@/integrations/supabase/types';
 
 type Product = Database['public']['Tables']['products']['Row'];

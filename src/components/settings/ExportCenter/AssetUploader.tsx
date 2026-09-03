@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/hooks/useTenant';
 import { usePdfAssetUrl } from '@/hooks/usePdfAssetUrl';
-import { pdfAssetsRepository } from '@/lib/repositories/pdfAssetsRepository';
+import { pdfAssetsRepository } from '@/application/queries/pdf-assets';
 import {
   validateAssetUpload,
   detectMimeFromBytes,

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { legacyQuotationsRepository } from "@/lib/repositories/legacyQuotationsRepository";
-import { creditNoteRepository } from "@/lib/repositories/creditNoteRepository";
-import { referenceRepository } from "@/lib/repositories/referenceRepository";
+import { legacyQuotationsRepository } from "@/application/queries/quotations";
+import { creditNoteRepository } from "@/application/queries/credit-notes";
+import { referenceRepository } from "@/application/queries/reference";
 import { mapRepoError } from "@/lib/repositories/_base";
 import {
   ResponsiveDialog as Dialog,

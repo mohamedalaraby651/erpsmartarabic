@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { expenseRepository } from '@/lib/repositories/expenseRepository';
+import { expenseRepository } from '@/application/queries/expenses';
 import { listActiveSuppliersForSelect } from '@/application/queries/suppliers';
 import { useCreateExpense, useUpdateExpense } from '@/hooks/expenses';
 import {

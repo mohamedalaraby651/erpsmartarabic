@@ -48,7 +48,7 @@ import { ar } from 'date-fns/locale';
 import { AttachmentsSearch, AttachmentFilters, defaultFilters } from './AttachmentsSearch';
 import { ATTACHMENT_CATEGORIES } from './AttachmentUploadForm';
 import { cn } from '@/lib/utils';
-import { attachmentsRepository } from '@/lib/repositories';
+import { attachmentsRepository } from '@/application/queries/attachments';
 
 const FILE_ICONS = {
   image: Image,

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { referenceRepository } from "@/lib/repositories/referenceRepository";
+import { referenceRepository } from "@/application/queries/reference";
 import LogisticsItemsTable, { ItemRow } from "./LogisticsItemsTable";
 
 interface BaseProps {

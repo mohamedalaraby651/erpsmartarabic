@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
-import { settingsRepository } from "@/lib/repositories/settingsRepository";
+import { settingsRepository } from "@/application/queries/settings";
 import { AVAILABLE_FONTS } from "@/lib/arabicFont";
 import type { PdfFontKey } from "@/lib/arabicFont";
 

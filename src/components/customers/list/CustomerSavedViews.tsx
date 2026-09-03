@@ -6,7 +6,7 @@ import { Bookmark, Plus, Trash2, Check, Loader2 } from "lucide-react";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { savedViewsRepository } from "@/lib/repositories";
+import { savedViewsRepository } from "@/application/queries/saved-views";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface SavedView {
