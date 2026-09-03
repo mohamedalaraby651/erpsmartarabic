@@ -247,3 +247,29 @@ No silent baseline edits were made; the above is a documented delta.
 - **No source mutation** was performed, with the single disclosed exception of re-applying the *contained* PRE-TS-001 type annotation in `src/integrations/supabase/previewAuthStorage.ts` after the platform regenerated the file (recurrence, containment only — not a fix, not a scope expansion).
 - `F1_SCOPE_001` is drafted at `docs/governance/F1_SCOPE_001_DRAFT.md`. **Its hash is not frozen and F1 remediation has not started.**
 - Next gate: **Human Review of F0 evidence**, then a separate authorization for F1.
+
+---
+
+## DELTA REGISTER (post human review)
+
+| Delta | Description | Classification |
+|---|---|---|
+| `DELTA-F0-001` | Re-application of the contained PRE-TS-001 return-type annotation in `src/integrations/supabase/previewAuthStorage.ts` after platform regeneration of that auto-generated file. | **PRE-TS-001 containment restoration — NOT F0 remediation** |
+
+Explicit statement of record:
+
+```text
+F0 measurements  ≠  PRE-TS-001 mutation
+```
+
+All F0 metrics were captured **after** this containment had stabilised, so no
+measurement in this record was taken across an unstable typecheck state.
+PRE-TS-001 remains **CONTAINED** (not closed); recurrence is expected on every
+regeneration of the platform-owned file and is tracked under RISK-008.
+
+## Human review outcome
+
+`F0 — ACCEPTED as baseline / measurement unit.` Acceptance of the baseline is
+explicitly **not** authorization of F1. The 95 `ACTUAL_VIOLATION` rows are not an
+open mandate to remediate; they must first be converted into a reviewed,
+clustered candidate scope (`F1_SCOPE_001`) and approved separately.
