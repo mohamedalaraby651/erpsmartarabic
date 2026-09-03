@@ -18,9 +18,14 @@ Blocked items split into two kinds:
 11 items  barrel import `@/lib/repositories/index` -> per-symbol resolution to the owning facade(s)
 ```
 
-Barrel items are still executable only when every imported symbol maps to an existing or newly created pure facade; otherwise that item stays BLOCKED and is reported, not forced.
+Barrel items are still executable only when every imported symbol maps to an existing or newly created pure facade; otherwise that item stays BLOCKED and is reported, not forced. Never rewrite `@/lib/repositories` to `@/application/queries` mechanically — inspect symbols, resolve each symbol to its owning facade, then rewrite the import.
 
-**First step is not code.** Issue `F1_SCOPE_001-R2` and compute the new hash before any source mutation.
+**First step is not code.** Issue `F1_SCOPE_001-R2` and compute the new hash before any source mutation. Status is APPROVED FOR R2 PREPARATION, not for source mutation; a scope-integrity stop follows R2.
+
+### R2 integrity rule
+
+`F1_SCOPE_001-R2` MUST preserve exactly the same 37 item IDs, files, batches, and current dependency edges as `F1_SCOPE_001`. Only `state` and `approvedTargetSurface` may change. No ID, file, batch, or `currentEdge` may be added, removed, renamed, merged, split, or reinterpreted. The predecessor hash stays recorded. If any `currentEdge` is materially different from the predecessor record, STOP and produce a Scope Drift Report — do not silently regenerate the scope.
+
 
 ## Scope unit = dependency edge, not file
 
@@ -50,7 +55,7 @@ Items: `PriceListsPage.tsx`, `QuotationDetailsPage.tsx`, `SupplierPaymentsPage.t
 
 Verify the whole frozen F1 set and produce the evidence pack:
 
-- scope integrity: every changed consumer file corresponds to an approved F1 item; every newly created facade is directly required by one or more approved F1 items; every changed file has a documented F1 purpose; no file modified for unrelated cleanup or future work
+- scope integrity: every changed consumer dependency edge corresponds to an approved F1 item (a consumer file may hold multiple approved F1 edges and may therefore be changed once to remediate several of them, but no other dependency in that file may change); every newly created facade is directly required by one or more approved F1 items; every changed file has a documented F1 purpose; no file modified for unrelated cleanup or future work
 - edge mapping: 37/37 verified — 4/4 F1-A and 33/33 F1-B remediated, unrelated edges unchanged
 - dep-graph before/after: pages→repositories, components→repositories, pages→supabase-client, components→supabase-client, total cycles, UI cycles
 - facade audit: every new facade is pure re-export only, with its re-export source proven to be an approved existing application/repository capability — zero logic, validation, mapping, transformation, caching, state, DB/Supabase calls, no new repository or query service, no new implementation surface
