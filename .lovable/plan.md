@@ -23,7 +23,10 @@ Barrel items are still executable only when every imported symbol maps to an exi
 
 ### R2 Scope Integrity Gate
 
-`F1_SCOPE_001-R2` MUST preserve exactly the same 37 item IDs, files, batches, and current dependency edges as `F1_SCOPE_001`. Only `state` and `approvedTargetSurface` may change. No ID, file, batch, or `currentEdge` may be added, removed, renamed, merged, split, or reinterpreted. The predecessor hash stays recorded. If any `currentEdge` is materially different from the predecessor record, STOP and produce a Scope Drift Report — do not silently regenerate the scope.
+`F1_SCOPE_001-R2` MUST preserve exactly the same 37 item IDs, files, batches, and current dependency edges as `F1_SCOPE_001`. Only `state` and `approvedTargetSurface` may change. No ID, file, batch, or `currentEdge` may be added, removed, renamed, merged, split, or reinterpreted. The predecessor hash stays recorded.
+
+After generating R2: **STOP**. Before any source mutation, verify exactly 37 item IDs, the same files, the same batches, the same `currentEdge` values, a predecessor hash matching `F1_SCOPE_001`, that only `state` and `approvedTargetSurface` changed, and that the new hash is reproducible. If any condition fails, produce an `F1-R2 SCOPE DRIFT REPORT` and do not modify source code. No implementation is permitted until the R2 integrity check passes.
+
 
 
 ## Scope unit = dependency edge, not file
