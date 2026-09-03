@@ -370,3 +370,11 @@ STOP — HUMAN REVIEW REQUIRED
 - Single disclosed source touch: PRE-TS-001 recurrence re-applied in
   `src/integrations/supabase/previewAuthStorage.ts` (containment only, not a fix, not scope expansion).
 - Next gate: **Human Review of F0 evidence** → separate authorization → F1. F1 has not started.
+
+## 2026-09-03 — F0 ACCEPTED / F1 SCOPE REVIEW (no mutation)
+
+- `F0-NAZRA-001`: **ACCEPTED** by human review as baseline/measurement unit. `DELTA-F0-001` recorded (PRE-TS-001 containment restoration, not remediation).
+- `F1-SCOPE-001`: **CANDIDATE** produced — 95 ACTUAL_VIOLATION rows clustered into 4 batches by root architectural cause (F1-A 4, F1-B 33, F2-C 24, F2-D 34). Full 155-row classification preserved unchanged.
+- Query-Service restraint rule adopted: no new Query Service where an existing repository/application facade suffices.
+- Scope hash **NOT** frozen (`scopeHashPreview` informational only). F1 execution **NOT** authorized.
+- Status: BND-05 CERTIFIED (1/8) · F0 ACCEPTED · F1 SCOPE REVIEW · F2…F6 LOCKED · RISK-007/008 OPEN · PRE-EXT-001 OPEN · PRE-TS-001 CONTAINED · Smart Freeze ACTIVE.
