@@ -3,7 +3,7 @@
   "fitness": "check-adapter-error-boundary",
   "adr": "UX-2B Wave 1.5 / ADR-0012",
   "scope": "src/infrastructure + src/application",
-  "scannedFiles": 40,
+  "scannedFiles": 51,
   "violations": [],
   "pass": true
 }
