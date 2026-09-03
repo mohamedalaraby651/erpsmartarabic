@@ -32,6 +32,13 @@ const batchB = items.filter((i) => i.batch === "F1-B");
 const importRe = (mod) =>
   new RegExp(`from\\s+["']${mod.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']`);
 
+/** An item may be satisfied by more than one approved surface (e.g. F1-002). */
+const splitTargets = (v) =>
+  String(v ?? "")
+    .split("+")
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith("@/"));
+
 const edgeResults = items.map((item) => {
   const file = resolve(ROOT, item.file);
   const exists = existsSync(file);
@@ -40,14 +47,14 @@ const edgeResults = items.map((item) => {
   const mod = item.importedModule;
   const variants = new Set([mod, mod.replace(/\/index$/, "")]);
   const stillPresent = [...variants].some((v) => importRe(v).test(src));
-  const target = item.approvedTargetSurface;
-  const targetPresent = target ? importRe(target).test(src) : false;
+  const targets = splitTargets(item.approvedTargetSurface);
+  const targetPresent = targets.length > 0 && targets.every((t) => importRe(t).test(src));
   return {
     id: item.id,
     batch: item.batch,
     file: item.file,
     forbiddenSpecifier: mod,
-    approvedTargetSurface: target,
+    approvedTargetSurface: targets,
     edgeEliminated: !stillPresent,
     approvedTargetImported: targetPresent,
     result: !stillPresent && targetPresent ? "PASS" : "FAIL",
@@ -59,7 +66,7 @@ const failed = edgeResults.filter((e) => e.result !== "PASS");
 
 /* ---------------- facade inventory ---------------- */
 const facadePaths = [
-  ...new Set(items.map((i) => i.approvedTargetSurface).filter(Boolean)),
+  ...new Set(items.flatMap((i) => splitTargets(i.approvedTargetSurface))),
 ].map((s) => s.replace("@/", "src/") + ".ts");
 
 const FORBIDDEN_IN_FACADE = [
@@ -97,23 +104,37 @@ const facades = facadePaths.map((p) => {
   };
 });
 
-/* ---------------- residual edge classification ---------------- */
-const scopedFilesByBucket = {
-  "components→repositories": new Set(batchB.map((i) => i.file.replace(/^src\//, ""))),
-  "pages→repositories": new Set(batchA.map((i) => i.file.replace(/^src\//, ""))),
-};
-const samples = DEP.importLayerViolations.samples ?? {};
-const bySummary = DEP.importLayerViolations.bySummary ?? {};
+/* ---------------- residual edge classification (direct source scan) ---------------- */
+const approvedEdges = new Set(items.map((i) => `${i.file}::${i.importedModule.replace(/\/index$/, "")}`));
+const uiFiles = sh("git ls-files src/components src/pages").split("\n").filter((f) => /\.(ts|tsx)$/.test(f));
+const REPO_IMPORT = /from\s+["'](@\/lib\/repositories[^"']*)["']/g;
+
+const scannedResiduals = [];
+for (const f of uiFiles) {
+  const src = readFileSync(resolve(ROOT, f), "utf8");
+  for (const m of src.matchAll(REPO_IMPORT)) {
+    const mod = m[1].replace(/\/index$/, "");
+    scannedResiduals.push({
+      bucket: f.startsWith("src/pages/") ? "pages→repositories" : "components→repositories",
+      from: f,
+      to: mod,
+      f1Scoped: approvedEdges.has(`${f}::${mod}`),
+      reason: mod.endsWith("/_base")
+        ? "error-mapping utility (mapRepoError) — not a read surface; out of F1 scope"
+        : "non-F1 repository edge (not part of the 37 approved edges)",
+    });
+  }
+}
 
 const residual = {};
 for (const bucket of ["components→repositories", "pages→repositories"]) {
-  const rows = samples[bucket] ?? [];
-  const scoped = rows.filter((r) => scopedFilesByBucket[bucket].has(r.from));
+  const rows = scannedResiduals.filter((r) => r.bucket === bucket);
   residual[bucket] = {
-    totalRemaining: bySummary[bucket] ?? 0,
-    f1ScopedRemaining: scoped.length,
-    outOfScopeRemaining: (bySummary[bucket] ?? 0) - scoped.length,
-    outOfScopeEdges: rows.filter((r) => !scopedFilesByBucket[bucket].has(r.from)),
+    scannerTotal: bySummary[bucket] ?? 0,
+    scannedTotal: rows.length,
+    f1ScopedRemaining: rows.filter((r) => r.f1Scoped).length,
+    outOfScopeRemaining: rows.filter((r) => !r.f1Scoped).length,
+    outOfScopeEdges: rows.filter((r) => !r.f1Scoped),
   };
 }
 
@@ -126,7 +147,7 @@ const facadeSet = new Set(facadePaths.concat(["src/application/queries/index.ts"
 const classify = (f) => {
   if (approvedConsumers.has(f)) return "A_approved_consumer_mutation";
   if (facadeSet.has(f)) return "B_minimal_f1_facade";
-  if (f.startsWith("docs/") || f.startsWith("scripts/audits/output/") || f === "public/version.json")
+  if (f.startsWith("docs/") || f.startsWith("scripts/audits/") || f === "public/version.json")
     return "C_governance_or_evidence_artifact";
   return "D_unauthorized";
 };
