@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { priceListRepository, type PriceListRow, type PriceListItemRow } from '@/lib/repositories';
+import { priceListRepository, type PriceListRow, type PriceListItemRow } from '@/application/queries/price-lists';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

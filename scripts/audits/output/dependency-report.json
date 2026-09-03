@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "totalModules": 1212,
-  "totalEdges": 4796,
+  "totalModules": 1216,
+  "totalEdges": 4805,
   "circular": {
     "count": 6,
     "cycles": [
@@ -100,7 +100,7 @@
     },
     {
       "file": "pages/quotations/QuotationDetailsPage.tsx",
-      "count": 28
+      "count": 29
     },
     {
       "file": "lib/prefetch.ts",
@@ -226,11 +226,11 @@
     }
   ],
   "importLayerViolations": {
-    "total": 155,
+    "total": 151,
     "bySummary": {
       "components→repositories": 41,
       "components→services": 5,
-      "pages→repositories": 11,
+      "pages→repositories": 7,
       "hooks→supabase-client": 31,
       "components→supabase-client": 38,
       "pages→supabase-client": 29,
