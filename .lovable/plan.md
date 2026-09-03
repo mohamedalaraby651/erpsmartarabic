@@ -13,10 +13,9 @@ The current frozen record marks 11 items READY and 26 BLOCKED, because Constrain
 
 Blocked items split into two kinds:
 
-```text
-15 items  named repository import  -> new pure facade `@/application/queries/<name>` (mechanical)
-11 items  barrel import `@/lib/repositories/index` -> per-symbol resolution to the owning facade(s)
-```
+- **15 items use named repository imports.** Resolve each symbol against existing application/query facades first. Create one minimal facade only when no suitable existing facade exists. Multiple F1 edges MUST reuse the same facade where the capability is identical.
+- **11 items use the barrel `@/lib/repositories/index`.** Per-symbol resolution to the owning facade(s).
+
 
 Barrel items are still executable only when every imported symbol maps to an existing or newly created pure facade; otherwise that item stays BLOCKED and is reported, not forced. Never rewrite `@/lib/repositories` to `@/application/queries` mechanically — inspect symbols, resolve each symbol to its owning facade, then rewrite the import.
 
