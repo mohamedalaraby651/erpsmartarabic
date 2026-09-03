@@ -410,3 +410,34 @@ STOP — HUMAN REVIEW REQUIRED
 - STOP conditions: none encountered.
 - DELTA (outside F1): PRE-TS-001 recurrence #9 contained; RISK-008 OPEN.
 - Record: `docs/governance/F1A_EXECUTION_RECORD.md`. Certification NOT claimed.
+
+## F1-B — EXECUTED (Track A, source mutation)
+- Authorization: F1-A checkpoint PASS; F1-B AUTHORIZED as one governed batch of 33 component → repository edges.
+- Result: **33/33 approved edges eliminated** across 32 consumer files; 11 new pure re-export facades created; 8 existing facades reused; barrel extended per convention.
+- Unrelated edges in scoped files left untouched: 5 `_base/mapRepoError` imports and 3 further non-F1 scanner edges reported as out-of-scope observations.
+- Metrics: violations 151 → **118**; `components→repositories` 41 → **8**; `pages→repositories` remained 7; supabase-client edges unchanged; cycles 6 → 6; UI cycles 0.
+- Verification: typecheck-app PASS · build PASS · fitness 33 active / 9 pending / 0 failures · dep-graph 1227 modules · Vitest 1619 pass / 5 skip.
+- STOP conditions: none encountered.
+- DELTA (outside F1): PRE-TS-001 recurrence #10 contained; RISK-008 OPEN.
+- Record: `docs/governance/F1B_EXECUTION_RECORD.md`. Certification NOT claimed.
+
+## F1-C — CONSOLIDATED VERIFICATION (verification only, no source mutation)
+- Authority: `F1_SCOPE_001-R2`, hash `e8ec2359…7c7fe8`.
+- Mode: VERIFICATION ONLY; no source change, no facade creation, no cleanup, no PRE-TS fix.
+- Verdict: **PASS** — 37/37 approved edges eliminated; 23/23 facades ADR-0028 pure re-exports; 0 new repositories/query services; 0 UI cycles; total cycles unchanged at 6.
+- Metrics: violations 155 → **118** (−37, matching approved edges); `pages→repositories` 11 → **7**; `components→repositories` 41 → **8**; F2 supabase-client edges unchanged (pages 29, components 38, hooks 31).
+- Residual 15 repository edges honestly reported: 11 `_base/mapRepoError` utility imports + 4 type-only repository imports; all OUT OF SCOPE for F1.
+- PRE-TS-001 recurrence #11 observed during verification, recorded, not remediated; project-owned typecheck held at 0.
+- Evidence: `docs/governance/F1_CONSOLIDATED_VERIFICATION.md`; artifact `scripts/audits/output/f1-verification.json`, hash `6d47790a…`.
+- Certification: NOT claimed.
+
+## HRG-F1-NAZRA-001 — Human Governance Gate Decision (F1)
+- Date: 2026-09-03.
+- Decision: **PASS — ACCEPTED, NOT CERTIFIED.**
+- F1 execution window: **COMPLETE**.
+- F1 frozen scope: **CLOSED** (37/37 items exhausted).
+- Certification: **NOT GRANTED**.
+- Accepted residuals: 15 out-of-scope repository edges (11 `_base/mapRepoError`, 4 type-only imports) remain untouched.
+- Explicit non-decisions / locked: F2 (58 items) UNAUTHORIZED; F3–F6 LOCKED; BND-01…BND-04/BND-06…BND-08 NOT CERTIFIED; RISK-007, RISK-008, PRE-EXT-001 OPEN; PRE-TS-001 CONTAINED; no opportunistic cleanup authorized; no feature freeze modification.
+- Next step: new frozen scope + human authorization required before any further work.
+- Record: `docs/governance/F1_HUMAN_GOVERNANCE_GATE.md`.
