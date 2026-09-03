@@ -145,3 +145,29 @@ Composite: `1b4fafd5d784c0b28daa3fb25653368adc11745b38e5523852b563d4e24cdf87`
 | Phase 1 | ⛔ NOT AUTHORIZED |
 
 **Decision:** G0 Evidence Refresh **PASS (evidence integrity only)** — ≠ Architecture PASS ≠ Security PASS ≠ Production Ready.
+
+## Enterprise boundaries — certification state
+
+| Boundary | State | Evidence |
+|---|---|---|
+| BND-05 Tenant → Data | 🟢 **CERTIFIED (1/8)** | `CERT_REV_BND05_R2.md`, `cert-rev-bnd05-r2.json`, `REM_BND05_001.md` |
+| BND-01 … BND-04, BND-06 … BND-08 | 🔴 NOT CERTIFIED / NOT AUTHORIZED | — |
+
+**Boundaries certified: 1 / 8.** Certification is scoped to BND-05 only; it is not an architecture,
+security, or production-readiness pass. PRE-EXT-001, RISK-007 and RISK-008 remain OPEN.
+
+## F0 — Frontend Platform Baseline (`F0-NAZRA-001`, measurement only)
+
+| Signal | Observed |
+|---|---|
+| Import-layer violations | 155 → ACTUAL 95 · TRANSITIONAL 44 · FALSE POSITIVE 10 · LEGITIMATE 6 |
+| Modules / cycles / UI cycles | 1212 · 6 · 0 |
+| Routes / repositories / query services | 100 · 44 · 2 |
+| Data-access call sites (total / UI) | 631 · 153 |
+| UI uniformity / design-system / ui-kit | 42 · 635 · 2 |
+| Inline styles / UI `any` / over-LOC | 48 · 14 · 2 |
+| Accessibility findings / RTL fitness | 222 · PASS (0 violations) |
+| Bundle / assets / lazy routes | 4,920,767 B · 91 · 89 of 99 |
+| LCP · INP · CLS · query latency | NOT MEASURED (no RUM harness in repo) |
+| Typecheck / fitness / tests | 0 · failures 0 (33 active, 9 pending) · 1619 passed |
+| F1 scope | DRAFT — hash **not** frozen, F1 **not** authorized |
