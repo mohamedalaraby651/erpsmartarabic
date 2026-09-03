@@ -35,7 +35,22 @@ The frozen unit is the dependency edge. If an approved F1 consumer file contains
 
 ## Facade rule
 
-A minimal pure re-export facade is permitted only when required to remediate an approved F1 edge. Reuse order: existing application service/query facade → existing pure facade → one new minimal pure re-export facade. No facade-per-consumer, no facade-per-file, no speculative or duplicate facade. A facade may use `export *` or explicit named re-exports **only from an already-existing approved application-layer or repository capability per ADR-0028** — never from a consumer, page, component, or arbitrary module, and never as a new implementation surface. ADR-0028 itself is not modified.
+A minimal pure re-export facade is permitted only when required to remediate an approved F1 edge. Reuse order: existing application service/query facade → existing pure facade → one new minimal pure re-export facade. No facade-per-consumer, no facade-per-file, no speculative or duplicate facade.
+
+Conventions come from `docs/adr/0028-application-query-facades.md`. Do NOT modify that ADR, and do NOT touch the unrelated ADR-0028 design-system document.
+
+### Facade provenance rule
+
+Every newly created facade MUST declare, in the execution evidence, the exact source capability it re-exports:
+
+```text
+src/application/queries/foo.ts
+    ↓ pure re-export
+src/lib/repositories/fooRepository.ts
+```
+
+A facade MUST NOT re-export from a page, a component, a hook, an arbitrary utility, another consumer, or a newly created implementation. The facade is an architectural boundary only — never an implementation layer, and never a formality created just to silence the dependency audit.
+
 
 ## Batch F1-A — Pages → Application (4 edges)
 
