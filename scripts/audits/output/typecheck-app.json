@@ -2,10 +2,35 @@
   "schemaVersion": 1,
   "finding": "PRE-TS-001",
   "containment": "Option A′ — project-owned typecheck contract with bounded platform allowlist",
-  "total": 0,
-  "platformOwned": 0,
+  "total": 2,
+  "platformOwned": 2,
   "projectOwned": 0,
-  "platform": [],
+  "platform": [
+    {
+      "file": "src/integrations/supabase/previewAuthStorage.ts",
+      "line": 81,
+      "code": "TS7011",
+      "message": "Function expression, which lacks return-type annotation, implicitly has an 'any' return type.",
+      "codes": [
+        "TS7011"
+      ],
+      "owner": "Platform (Lovable Cloud integration scaffolder)",
+      "finding": "PRE-TS-001",
+      "exception": "EXC-002"
+    },
+    {
+      "file": "src/integrations/supabase/previewAuthStorage.ts",
+      "line": 85,
+      "code": "TS7011",
+      "message": "Function expression, which lacks return-type annotation, implicitly has an 'any' return type.",
+      "codes": [
+        "TS7011"
+      ],
+      "owner": "Platform (Lovable Cloud integration scaffolder)",
+      "finding": "PRE-TS-001",
+      "exception": "EXC-002"
+    }
+  ],
   "project": [],
   "verdict": "PASS"
 }
