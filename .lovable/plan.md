@@ -21,7 +21,7 @@ Barrel items are still executable only when every imported symbol maps to an exi
 
 **First step is not code.** Issue `F1_SCOPE_001-R2` and compute the new hash before any source mutation. Status is APPROVED FOR R2 PREPARATION, not for source mutation; a scope-integrity stop follows R2.
 
-### R2 integrity rule
+### R2 Scope Integrity Gate
 
 `F1_SCOPE_001-R2` MUST preserve exactly the same 37 item IDs, files, batches, and current dependency edges as `F1_SCOPE_001`. Only `state` and `approvedTargetSurface` may change. No ID, file, batch, or `currentEdge` may be added, removed, renamed, merged, split, or reinterpreted. The predecessor hash stays recorded. If any `currentEdge` is materially different from the predecessor record, STOP and produce a Scope Drift Report — do not silently regenerate the scope.
 
