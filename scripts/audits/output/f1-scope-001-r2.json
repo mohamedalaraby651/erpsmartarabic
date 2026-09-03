@@ -1,0 +1,1348 @@
+{
+  "schemaVersion": 1,
+  "unit": "F1-SCOPE-001-R2",
+  "status": "REVISED SCOPE — AWAITING HUMAN AUTHORIZATION FOR SOURCE MUTATION",
+  "mode": "SCOPE REVISION ONLY — this script performs no source mutation",
+  "generatedAt": "2026-09-03T17:03:59.168Z",
+  "predecessor": {
+    "unit": "F1-SCOPE-001",
+    "scopeHash": "2b4e37a030945bdbd922c8eb50a412e8fe1b95b512e4d3b86faf301d8ff652aa"
+  },
+  "humanDecision": "F1 Batched Execution Model — APPROVED FOR R2 PREPARATION (2026-09-03)",
+  "revisionReason": "Facade Rule authorized: a minimal pure re-export facade may be created when required to remediate an approved F1 edge. Supersedes C6 for facade-resolvable items only.",
+  "mutableFields": [
+    "state",
+    "approvedTargetSurface"
+  ],
+  "authorizedBatches": {
+    "F1-A": 4,
+    "F1-B": 33
+  },
+  "authorizedItemCount": 37,
+  "readyItemCount": 37,
+  "blockedItemCount": 0,
+  "notAuthorized": {
+    "unit": "F2-SCOPE-CANDIDATE",
+    "F2-C": 24,
+    "F2-D": 34,
+    "note": "The 58 F2 items are candidate scope only and carry NO authorization and NO scope hash."
+  },
+  "classificationPreserved": {
+    "total": 155,
+    "ACTUAL_VIOLATION": 95,
+    "TRANSITIONAL": 44,
+    "FALSE_POSITIVE": 10,
+    "LEGITIMATE_EXCEPTION": 6,
+    "note": "155 is not a reduction target. Only ACTUAL_VIOLATION rows may enter scope."
+  },
+  "constraints": [
+    "C1 — Frozen scope covers the 37 F1-A/F1-B items only; the 95-row set is NOT frozen.",
+    "C2 — No refactoring: current edge → existing approved surface. No repository/hook/service redesign.",
+    "C3 — Behaviour preservation is mandatory and proven per item.",
+    "C4 — No contact with BND-05: domain, finance application, RLS, migrations, security functions are out of scope.",
+    "C5 — The 58 F2 items remain explicit, tracked, and unauthorized.",
+    "C7 — No new Query Services during F1.",
+    "C6-R2 — Missing target surface ⇒ one minimal PURE RE-EXPORT facade, or STOP. No implementation surface.",
+    "C8 — Scope unit is the dependency edge, not the file. Unrelated edges in the same file are reported, never modified.",
+    "C9 — Facade provenance must be declared: facade ← existing repository/application capability only."
+  ],
+  "integrityGate": {
+    "result": "PASS",
+    "checks": [
+      {
+        "check": "predecessor hash matches F1_SCOPE_001",
+        "result": "PASS",
+        "detail": "2b4e37a030945bdbd922c8eb50a412e8fe1b95b512e4d3b86faf301d8ff652aa"
+      },
+      {
+        "check": "item count == 37",
+        "result": "PASS",
+        "detail": "37"
+      },
+      {
+        "check": "IDs unchanged",
+        "result": "PASS",
+        "detail": "ordered ID sequence identical"
+      },
+      {
+        "check": "files unchanged",
+        "result": "PASS",
+        "detail": "all 37 file paths identical"
+      },
+      {
+        "check": "batches unchanged",
+        "result": "PASS",
+        "detail": "F1-A=4 / F1-B=33 membership identical"
+      },
+      {
+        "check": "currentEdge unchanged",
+        "result": "PASS",
+        "detail": "all 37 dependency edges identical"
+      },
+      {
+        "check": "only state + approvedTargetSurface changed",
+        "result": "PASS",
+        "detail": "no other field mutated"
+      }
+    ],
+    "driftFindings": []
+  },
+  "facadesRequired": [
+    {
+      "facade": "@/application/queries/activity-logs",
+      "consumers": [
+        "F1-002"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/activity-logs ← pure re-export of src/lib/repositories/activityLogsRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/attachments",
+      "consumers": [
+        "F1-031"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/attachments ← pure re-export of src/lib/repositories/attachmentsRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/attendance",
+      "consumers": [
+        "F1-005"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/attendance ← pure re-export of src/lib/repositories/attendanceRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/credit-notes",
+      "consumers": [
+        "F1-006",
+        "F1-022"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/credit-notes ← pure re-export of src/lib/repositories/creditNoteRepository.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/customer-relations",
+      "consumers": [
+        "F1-008",
+        "F1-009"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/customer-relations ← pure re-export of src/lib/repositories/customerRelationsRepo.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/customers",
+      "consumers": [
+        "F1-007"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/customers ← pure re-export of src/lib/repositories/customerRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/employees",
+      "consumers": [
+        "F1-011"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/employees ← pure re-export of src/lib/repositories/employeeRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/expenses",
+      "consumers": [
+        "F1-012",
+        "F1-037"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/expenses ← pure re-export of src/lib/repositories/expenseRepository.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/pdf-assets",
+      "consumers": [
+        "F1-029"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/pdf-assets ← pure re-export of src/lib/repositories/pdfAssetsRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/pdf-profiles",
+      "consumers": [
+        "F1-030"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/pdf-profiles ← pure re-export of src/lib/repositories/pdfProfilesRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/price-lists",
+      "consumers": [
+        "F1-001"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/price-lists ← pure re-export of src/lib/repositories/priceListRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/purchase-orders",
+      "consumers": [
+        "F1-015",
+        "F1-021"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/purchase-orders ← pure re-export of src/lib/repositories/purchaseOrderRepository.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/quotations",
+      "consumers": [
+        "F1-002",
+        "F1-017",
+        "F1-023",
+        "F1-025"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/quotations ← pure re-export of src/lib/repositories/legacyQuotationsRepository.ts",
+      "consumerCount": 4
+    },
+    {
+      "facade": "@/application/queries/reference",
+      "consumers": [
+        "F1-013",
+        "F1-024"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/reference ← pure re-export of src/lib/repositories/referenceRepository.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/report-templates",
+      "consumers": [
+        "F1-027"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/report-templates ← pure re-export of src/lib/repositories/reportTemplateRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/reports",
+      "consumers": [
+        "F1-026"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/reports ← pure re-export of src/lib/repositories/reportsRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/sales-orders",
+      "consumers": [
+        "F1-019",
+        "F1-028"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/sales-orders ← pure re-export of src/lib/repositories/salesOrderRepository.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/saved-views",
+      "consumers": [
+        "F1-010",
+        "F1-035"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/saved-views ← pure re-export of src/lib/repositories/savedViewsRepository.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/settings",
+      "consumers": [
+        "F1-014",
+        "F1-016",
+        "F1-018",
+        "F1-020"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/settings ← pure re-export of src/lib/repositories/settingsRepository.ts",
+      "consumerCount": 4
+    },
+    {
+      "facade": "@/application/queries/supplier-payments",
+      "consumers": [
+        "F1-003"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/supplier-payments ← pure re-export of src/lib/repositories/supplierPaymentRepository.ts",
+      "consumerCount": 1
+    },
+    {
+      "facade": "@/application/queries/supplier-relations",
+      "consumers": [
+        "F1-033",
+        "F1-034"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/supplier-relations ← pure re-export of src/lib/repositories/supplierRelationsRepo.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/suppliers",
+      "consumers": [
+        "F1-032",
+        "F1-036"
+      ],
+      "exists": true,
+      "provenance": "@/application/queries/suppliers ← pure re-export of src/lib/repositories/supplierRepository.ts",
+      "consumerCount": 2
+    },
+    {
+      "facade": "@/application/queries/tasks",
+      "consumers": [
+        "F1-004"
+      ],
+      "exists": false,
+      "provenance": "@/application/queries/tasks ← pure re-export of src/lib/repositories/tasksRepository.ts",
+      "consumerCount": 1
+    }
+  ],
+  "facadesToCreate": 15,
+  "facadesReused": 8,
+  "symbolResolution": {
+    "F1-001": {
+      "file": "src/pages/pricing/PriceListsPage.tsx",
+      "symbols": [
+        "priceListRepository",
+        "PriceListRow",
+        "PriceListItemRow"
+      ],
+      "owners": [
+        "priceListRepository"
+      ]
+    },
+    "F1-002": {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "symbols": [
+        "legacyQuotationsRepository",
+        "activityLogsRepository"
+      ],
+      "owners": [
+        "legacyQuotationsRepository",
+        "activityLogsRepository"
+      ]
+    },
+    "F1-003": {
+      "file": "src/pages/suppliers/SupplierPaymentsPage.tsx",
+      "repository": "supplierPaymentRepository",
+      "owners": [
+        "supplierPaymentRepository"
+      ]
+    },
+    "F1-004": {
+      "file": "src/pages/tasks/TasksPage.tsx",
+      "symbols": [
+        "tasksRepository",
+        "TaskRow"
+      ],
+      "owners": [
+        "tasksRepository"
+      ]
+    },
+    "F1-005": {
+      "file": "src/components/attendance/LeaveRequestDialog.tsx",
+      "symbols": [
+        "attendanceRepository"
+      ],
+      "owners": [
+        "attendanceRepository"
+      ]
+    },
+    "F1-006": {
+      "file": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "repository": "creditNoteRepository",
+      "owners": [
+        "creditNoteRepository"
+      ]
+    },
+    "F1-007": {
+      "file": "src/components/customers/alerts/AlertItemActions.tsx",
+      "symbols": [
+        "customerRepository"
+      ],
+      "owners": [
+        "customerRepository"
+      ]
+    },
+    "F1-008": {
+      "file": "src/components/customers/details/CommunicationLogTab.tsx",
+      "repository": "customerRelationsRepo",
+      "owners": [
+        "customerRelationsRepo"
+      ]
+    },
+    "F1-009": {
+      "file": "src/components/customers/dialogs/CustomerReminderDialog.tsx",
+      "repository": "customerRelationsRepo",
+      "owners": [
+        "customerRelationsRepo"
+      ]
+    },
+    "F1-010": {
+      "file": "src/components/customers/list/CustomerSavedViews.tsx",
+      "symbols": [
+        "savedViewsRepository"
+      ],
+      "owners": [
+        "savedViewsRepository"
+      ]
+    },
+    "F1-011": {
+      "file": "src/components/employees/EmployeeFormDialog.tsx",
+      "repository": "employeeRepository",
+      "owners": [
+        "employeeRepository"
+      ]
+    },
+    "F1-012": {
+      "file": "src/components/expenses/ExpenseFormDialog.tsx",
+      "repository": "expenseRepository",
+      "owners": [
+        "expenseRepository"
+      ]
+    },
+    "F1-013": {
+      "file": "src/components/logistics/LogisticsDialogs.tsx",
+      "repository": "referenceRepository",
+      "owners": [
+        "referenceRepository"
+      ]
+    },
+    "F1-014": {
+      "file": "src/components/print/PrintTemplate.tsx",
+      "repository": "settingsRepository",
+      "owners": [
+        "settingsRepository"
+      ]
+    },
+    "F1-015": {
+      "file": "src/components/print/PurchaseOrderPrintView.tsx",
+      "repository": "purchaseOrderRepository",
+      "owners": [
+        "purchaseOrderRepository"
+      ]
+    },
+    "F1-016": {
+      "file": "src/components/print/PurchaseOrderPrintView.tsx",
+      "repository": "settingsRepository",
+      "owners": [
+        "settingsRepository"
+      ]
+    },
+    "F1-017": {
+      "file": "src/components/print/QuotationPrintView.tsx",
+      "repository": "legacyQuotationsRepository",
+      "owners": [
+        "legacyQuotationsRepository"
+      ]
+    },
+    "F1-018": {
+      "file": "src/components/print/QuotationPrintView.tsx",
+      "repository": "settingsRepository",
+      "owners": [
+        "settingsRepository"
+      ]
+    },
+    "F1-019": {
+      "file": "src/components/print/SalesOrderPrintView.tsx",
+      "repository": "salesOrderRepository",
+      "owners": [
+        "salesOrderRepository"
+      ]
+    },
+    "F1-020": {
+      "file": "src/components/print/SalesOrderPrintView.tsx",
+      "repository": "settingsRepository",
+      "owners": [
+        "settingsRepository"
+      ]
+    },
+    "F1-021": {
+      "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "repository": "purchaseOrderRepository",
+      "owners": [
+        "purchaseOrderRepository"
+      ]
+    },
+    "F1-022": {
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "repository": "creditNoteRepository",
+      "owners": [
+        "creditNoteRepository"
+      ]
+    },
+    "F1-023": {
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "repository": "legacyQuotationsRepository",
+      "owners": [
+        "legacyQuotationsRepository"
+      ]
+    },
+    "F1-024": {
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "repository": "referenceRepository",
+      "owners": [
+        "referenceRepository"
+      ]
+    },
+    "F1-025": {
+      "file": "src/components/quotations/useQuotationItems.ts",
+      "repository": "legacyQuotationsRepository",
+      "owners": [
+        "legacyQuotationsRepository"
+      ]
+    },
+    "F1-026": {
+      "file": "src/components/reports/CashFlowReport.tsx",
+      "symbols": [
+        "reportsRepository"
+      ],
+      "owners": [
+        "reportsRepository"
+      ]
+    },
+    "F1-027": {
+      "file": "src/components/reports/ReportTemplateEditor.tsx",
+      "repository": "reportTemplateRepository",
+      "owners": [
+        "reportTemplateRepository"
+      ]
+    },
+    "F1-028": {
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "repository": "salesOrderRepository",
+      "owners": [
+        "salesOrderRepository"
+      ]
+    },
+    "F1-029": {
+      "file": "src/components/settings/ExportCenter/AssetUploader.tsx",
+      "repository": "pdfAssetsRepository",
+      "owners": [
+        "pdfAssetsRepository"
+      ]
+    },
+    "F1-030": {
+      "file": "src/components/settings/ExportCenter/AuditTimelinePanel.tsx",
+      "repository": "pdfProfilesRepository",
+      "owners": [
+        "pdfProfilesRepository"
+      ]
+    },
+    "F1-031": {
+      "file": "src/components/shared/AttachmentsList.tsx",
+      "symbols": [
+        "attachmentsRepository"
+      ],
+      "owners": [
+        "attachmentsRepository"
+      ]
+    },
+    "F1-032": {
+      "file": "src/components/suppliers/hero/SupplierPinnedNote.tsx",
+      "symbols": [
+        "supplierRepository"
+      ],
+      "owners": [
+        "supplierRepository"
+      ]
+    },
+    "F1-033": {
+      "file": "src/components/suppliers/hero/SupplierQuickHistory.tsx",
+      "repository": "supplierRelationsRepo",
+      "owners": [
+        "supplierRelationsRepo"
+      ]
+    },
+    "F1-034": {
+      "file": "src/components/suppliers/hero/SupplierTimelineDrawer.tsx",
+      "repository": "supplierRelationsRepo",
+      "owners": [
+        "supplierRelationsRepo"
+      ]
+    },
+    "F1-035": {
+      "file": "src/components/suppliers/list/SupplierSavedViews.tsx",
+      "symbols": [
+        "savedViewsRepository"
+      ],
+      "owners": [
+        "savedViewsRepository"
+      ]
+    },
+    "F1-036": {
+      "file": "src/components/suppliers/tabs/SupplierNotesTab.tsx",
+      "symbols": [
+        "supplierRepository"
+      ],
+      "owners": [
+        "supplierRepository"
+      ]
+    },
+    "F1-037": {
+      "file": "src/components/treasury/CashTransactionDialog.tsx",
+      "repository": "expenseRepository",
+      "owners": [
+        "expenseRepository"
+      ]
+    }
+  },
+  "scopeHash": "e8ec2359fe4521967aba4d46f77711c047eb4bc4a58e3e0b36ea8db4727c7fe8",
+  "scopeHashAlgorithm": "sha256 over [id, batch, file, currentEdge, state, approvedTargetSurface] of all 37 items",
+  "items": [
+    {
+      "id": "F1-001",
+      "batch": "F1-A",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/pages/pricing/PriceListsPage.tsx",
+      "currentEdge": "pages→repositories: src/pages/pricing/PriceListsPage.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (page) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/price-lists",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `pages→repositories` from src/pages/pricing/PriceListsPage.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-002",
+      "batch": "F1-A",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "currentEdge": "pages→repositories: src/pages/quotations/QuotationDetailsPage.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (page) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/quotations + @/application/queries/activity-logs",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `pages→repositories` from src/pages/quotations/QuotationDetailsPage.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-003",
+      "batch": "F1-A",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/pages/suppliers/SupplierPaymentsPage.tsx",
+      "currentEdge": "pages→repositories: src/pages/suppliers/SupplierPaymentsPage.tsx → src/lib/repositories/supplierPaymentRepository.ts",
+      "importedModule": "@/lib/repositories/supplierPaymentRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (page) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/supplier-payments",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `pages→repositories` from src/pages/suppliers/SupplierPaymentsPage.tsx to src/lib/repositories/supplierPaymentRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-004",
+      "batch": "F1-A",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/pages/tasks/TasksPage.tsx",
+      "currentEdge": "pages→repositories: src/pages/tasks/TasksPage.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (page) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/tasks",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `pages→repositories` from src/pages/tasks/TasksPage.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-005",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/attendance/LeaveRequestDialog.tsx",
+      "currentEdge": "components→repositories: src/components/attendance/LeaveRequestDialog.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/attendance",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/attendance/LeaveRequestDialog.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-006",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/credit-notes/CreditNoteFormDialog.tsx → src/lib/repositories/creditNoteRepository.ts",
+      "importedModule": "@/lib/repositories/creditNoteRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/credit-notes",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/credit-notes/CreditNoteFormDialog.tsx to src/lib/repositories/creditNoteRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-007",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/customers/alerts/AlertItemActions.tsx",
+      "currentEdge": "components→repositories: src/components/customers/alerts/AlertItemActions.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/customers",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/customers/alerts/AlertItemActions.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-008",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/customers/details/CommunicationLogTab.tsx",
+      "currentEdge": "components→repositories: src/components/customers/details/CommunicationLogTab.tsx → src/lib/repositories/customerRelationsRepo.ts",
+      "importedModule": "@/lib/repositories/customerRelationsRepo",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/customer-relations",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/customers/details/CommunicationLogTab.tsx to src/lib/repositories/customerRelationsRepo.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-009",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/customers/dialogs/CustomerReminderDialog.tsx",
+      "currentEdge": "components→repositories: src/components/customers/dialogs/CustomerReminderDialog.tsx → src/lib/repositories/customerRelationsRepo.ts",
+      "importedModule": "@/lib/repositories/customerRelationsRepo",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/customer-relations",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/customers/dialogs/CustomerReminderDialog.tsx to src/lib/repositories/customerRelationsRepo.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-010",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/customers/list/CustomerSavedViews.tsx",
+      "currentEdge": "components→repositories: src/components/customers/list/CustomerSavedViews.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/saved-views",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/customers/list/CustomerSavedViews.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-011",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/employees/EmployeeFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/employees/EmployeeFormDialog.tsx → src/lib/repositories/employeeRepository.ts",
+      "importedModule": "@/lib/repositories/employeeRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/employees",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/employees/EmployeeFormDialog.tsx to src/lib/repositories/employeeRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-012",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/expenses/ExpenseFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/expenses/ExpenseFormDialog.tsx → src/lib/repositories/expenseRepository.ts",
+      "importedModule": "@/lib/repositories/expenseRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/expenses",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/expenses/ExpenseFormDialog.tsx to src/lib/repositories/expenseRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-013",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/logistics/LogisticsDialogs.tsx",
+      "currentEdge": "components→repositories: src/components/logistics/LogisticsDialogs.tsx → src/lib/repositories/referenceRepository.ts",
+      "importedModule": "@/lib/repositories/referenceRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/reference",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/logistics/LogisticsDialogs.tsx to src/lib/repositories/referenceRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-014",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/print/PrintTemplate.tsx",
+      "currentEdge": "components→repositories: src/components/print/PrintTemplate.tsx → src/lib/repositories/settingsRepository.ts",
+      "importedModule": "@/lib/repositories/settingsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/settings",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/print/PrintTemplate.tsx to src/lib/repositories/settingsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-015",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/print/PurchaseOrderPrintView.tsx",
+      "currentEdge": "components→repositories: src/components/print/PurchaseOrderPrintView.tsx → src/lib/repositories/purchaseOrderRepository.ts",
+      "importedModule": "@/lib/repositories/purchaseOrderRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/purchase-orders",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/print/PurchaseOrderPrintView.tsx to src/lib/repositories/purchaseOrderRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-016",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/print/PurchaseOrderPrintView.tsx",
+      "currentEdge": "components→repositories: src/components/print/PurchaseOrderPrintView.tsx → src/lib/repositories/settingsRepository.ts",
+      "importedModule": "@/lib/repositories/settingsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/settings",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/print/PurchaseOrderPrintView.tsx to src/lib/repositories/settingsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-017",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/print/QuotationPrintView.tsx",
+      "currentEdge": "components→repositories: src/components/print/QuotationPrintView.tsx → src/lib/repositories/legacyQuotationsRepository.ts",
+      "importedModule": "@/lib/repositories/legacyQuotationsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/quotations",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/print/QuotationPrintView.tsx to src/lib/repositories/legacyQuotationsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-018",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/print/QuotationPrintView.tsx",
+      "currentEdge": "components→repositories: src/components/print/QuotationPrintView.tsx → src/lib/repositories/settingsRepository.ts",
+      "importedModule": "@/lib/repositories/settingsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/settings",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/print/QuotationPrintView.tsx to src/lib/repositories/settingsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-019",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/print/SalesOrderPrintView.tsx",
+      "currentEdge": "components→repositories: src/components/print/SalesOrderPrintView.tsx → src/lib/repositories/salesOrderRepository.ts",
+      "importedModule": "@/lib/repositories/salesOrderRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/sales-orders",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/print/SalesOrderPrintView.tsx to src/lib/repositories/salesOrderRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-020",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/print/SalesOrderPrintView.tsx",
+      "currentEdge": "components→repositories: src/components/print/SalesOrderPrintView.tsx → src/lib/repositories/settingsRepository.ts",
+      "importedModule": "@/lib/repositories/settingsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/settings",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/print/SalesOrderPrintView.tsx to src/lib/repositories/settingsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-021",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/purchase-orders/PurchaseOrderFormDialog.tsx → src/lib/repositories/purchaseOrderRepository.ts",
+      "importedModule": "@/lib/repositories/purchaseOrderRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/purchase-orders",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/purchase-orders/PurchaseOrderFormDialog.tsx to src/lib/repositories/purchaseOrderRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-022",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/quotations/QuotationFormDialog.tsx → src/lib/repositories/creditNoteRepository.ts",
+      "importedModule": "@/lib/repositories/creditNoteRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/credit-notes",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/quotations/QuotationFormDialog.tsx to src/lib/repositories/creditNoteRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-023",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/quotations/QuotationFormDialog.tsx → src/lib/repositories/legacyQuotationsRepository.ts",
+      "importedModule": "@/lib/repositories/legacyQuotationsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/quotations",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/quotations/QuotationFormDialog.tsx to src/lib/repositories/legacyQuotationsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-024",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/quotations/QuotationFormDialog.tsx → src/lib/repositories/referenceRepository.ts",
+      "importedModule": "@/lib/repositories/referenceRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/reference",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/quotations/QuotationFormDialog.tsx to src/lib/repositories/referenceRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-025",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/quotations/useQuotationItems.ts",
+      "currentEdge": "components→repositories: src/components/quotations/useQuotationItems.ts → src/lib/repositories/legacyQuotationsRepository.ts",
+      "importedModule": "@/lib/repositories/legacyQuotationsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/quotations",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/quotations/useQuotationItems.ts to src/lib/repositories/legacyQuotationsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-026",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/reports/CashFlowReport.tsx",
+      "currentEdge": "components→repositories: src/components/reports/CashFlowReport.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/reports",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/reports/CashFlowReport.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-027",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/reports/ReportTemplateEditor.tsx",
+      "currentEdge": "components→repositories: src/components/reports/ReportTemplateEditor.tsx → src/lib/repositories/reportTemplateRepository.ts",
+      "importedModule": "@/lib/repositories/reportTemplateRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/report-templates",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/reports/ReportTemplateEditor.tsx to src/lib/repositories/reportTemplateRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-028",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "currentEdge": "components→repositories: src/components/sales-orders/SalesOrderFormDialog.tsx → src/lib/repositories/salesOrderRepository.ts",
+      "importedModule": "@/lib/repositories/salesOrderRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/sales-orders",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/sales-orders/SalesOrderFormDialog.tsx to src/lib/repositories/salesOrderRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-029",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/settings/ExportCenter/AssetUploader.tsx",
+      "currentEdge": "components→repositories: src/components/settings/ExportCenter/AssetUploader.tsx → src/lib/repositories/pdfAssetsRepository.ts",
+      "importedModule": "@/lib/repositories/pdfAssetsRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/pdf-assets",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/settings/ExportCenter/AssetUploader.tsx to src/lib/repositories/pdfAssetsRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-030",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/settings/ExportCenter/AuditTimelinePanel.tsx",
+      "currentEdge": "components→repositories: src/components/settings/ExportCenter/AuditTimelinePanel.tsx → src/lib/repositories/pdfProfilesRepository.ts",
+      "importedModule": "@/lib/repositories/pdfProfilesRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/pdf-profiles",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/settings/ExportCenter/AuditTimelinePanel.tsx to src/lib/repositories/pdfProfilesRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-031",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/shared/AttachmentsList.tsx",
+      "currentEdge": "components→repositories: src/components/shared/AttachmentsList.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/attachments",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/shared/AttachmentsList.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-032",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/suppliers/hero/SupplierPinnedNote.tsx",
+      "currentEdge": "components→repositories: src/components/suppliers/hero/SupplierPinnedNote.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/suppliers",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/suppliers/hero/SupplierPinnedNote.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-033",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/suppliers/hero/SupplierQuickHistory.tsx",
+      "currentEdge": "components→repositories: src/components/suppliers/hero/SupplierQuickHistory.tsx → src/lib/repositories/supplierRelationsRepo.ts",
+      "importedModule": "@/lib/repositories/supplierRelationsRepo",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/supplier-relations",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/suppliers/hero/SupplierQuickHistory.tsx to src/lib/repositories/supplierRelationsRepo.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-034",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/suppliers/hero/SupplierTimelineDrawer.tsx",
+      "currentEdge": "components→repositories: src/components/suppliers/hero/SupplierTimelineDrawer.tsx → src/lib/repositories/supplierRelationsRepo.ts",
+      "importedModule": "@/lib/repositories/supplierRelationsRepo",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/supplier-relations",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — no approved application facade exists for this repository. F1 may not invent one.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/suppliers/hero/SupplierTimelineDrawer.tsx to src/lib/repositories/supplierRelationsRepo.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-035",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/suppliers/list/SupplierSavedViews.tsx",
+      "currentEdge": "components→repositories: src/components/suppliers/list/SupplierSavedViews.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/saved-views",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/suppliers/list/SupplierSavedViews.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-036",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/suppliers/tabs/SupplierNotesTab.tsx",
+      "currentEdge": "components→repositories: src/components/suppliers/tabs/SupplierNotesTab.tsx → src/lib/repositories/index.ts",
+      "importedModule": "@/lib/repositories/index",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/suppliers",
+      "targetSurfaceExists": false,
+      "stopReason": "STOP (Constraint 6) — repository barrel import; no single approved facade covers this edge. Requires a separate architectural decision, not an F1 redirect.",
+      "expectedMutation": "NONE — item is blocked and excluded from the F1 mutation window.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/suppliers/tabs/SupplierNotesTab.tsx to src/lib/repositories/index.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    },
+    {
+      "id": "F1-037",
+      "batch": "F1-B",
+      "phase": "F1",
+      "state": "READY",
+      "file": "src/components/treasury/CashTransactionDialog.tsx",
+      "currentEdge": "components→repositories: src/components/treasury/CashTransactionDialog.tsx → src/lib/repositories/expenseRepository.ts",
+      "importedModule": "@/lib/repositories/expenseRepository",
+      "classification": "ACTUAL_VIOLATION",
+      "rootCause": "Presentation (component) binds directly to the repository layer instead of the approved application surface.",
+      "approvedTargetSurface": "@/application/queries/expenses",
+      "targetSurfaceExists": true,
+      "stopReason": null,
+      "expectedMutation": "Exact import-specifier redirect only. No call-site, signature, argument, ordering, or behaviour change.",
+      "behaviorPreservation": "Observable behaviour, rendered output, network calls and financial figures identical pre/post change.",
+      "verificationCommand": "node scripts/audits/verify-item-scope.mjs && node scripts/audits/typecheck-app.mjs && node scripts/fitness/run-all.mjs && npx vitest run && node scripts/audits/dep-graph.mjs",
+      "exitCondition": "Edge `components→repositories` from src/components/treasury/CashTransactionDialog.tsx to src/lib/repositories/expenseRepository.ts absent from dep-graph output; no new forbidden edge introduced.",
+      "queryServiceDecision": "NO — Constraint 7: no Query Service may be created during F1 to satisfy a redirect.",
+      "trackSeparation": "Track A only. File is outside src/domain/**, src/application/finance/**, migrations, RLS and BND-05 security surface (Constraint 4)."
+    }
+  ]
+}
