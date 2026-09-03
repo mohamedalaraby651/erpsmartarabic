@@ -171,3 +171,33 @@ security, or production-readiness pass. PRE-EXT-001, RISK-007 and RISK-008 remai
 | LCP · INP · CLS · query latency | NOT MEASURED (no RUM harness in repo) |
 | Typecheck / fitness / tests | 0 · failures 0 (33 active, 9 pending) · 1619 passed |
 | F1 scope | DRAFT — hash **not** frozen, F1 **not** authorized |
+
+## F1 — Frontend Application Layer Remediation (`F1-NAZRA-001`, Track A, verified)
+
+| Signal | Value |
+|---|---|
+| Frozen scope | `F1_SCOPE_001-R2`, hash `e8ec2359…7c7fe8` |
+| Authorized items | 37 (F1-A 4 pages → repositories, F1-B 33 components → repositories) |
+| Edges eliminated | 37 / 37 |
+| Facades created / reused | 15 new + 8 reused = 23 pure ADR-0028 re-exports |
+| New repositories / query services | 0 |
+| F1-approved residuals | 0 / 37 |
+| Total violations | 155 → **118** (−37, exact edge attribution) |
+| `pages → repositories` | 11 → **7** |
+| `components → repositories` | 41 → **8** |
+| `pages → supabase-client` | 29 (unchanged) |
+| `components → supabase-client` | 38 (unchanged) |
+| `hooks → supabase-client` | 31 (unchanged) |
+| Total cycles / UI cycles | 6 / **0** (unchanged) |
+| Typecheck / build | 0 / 0 |
+| Fitness | 33 active · 9 pending · **0 failures** |
+| Vitest | 1619 passed · 5 skipped |
+| F2 contamination | None |
+| Protected areas touched | None (BND-05 / RLS / finance / domain / migrations untouched) |
+| Out-of-scope residuals accepted | 15 (11 `_base/mapRepoError` + 4 type-only imports) |
+| PRE-TS-001 | CONTAINED — recurrence #11 recorded, not remediated |
+| RISK-007 / RISK-008 / PRE-EXT-001 | OPEN |
+| Machine verdict (F1-C) | **PASS** |
+| Human governance gate | **PASS — ACCEPTED, NOT CERTIFIED** |
+| Certification | **NOT GRANTED** |
+| Next authorized gate | None until new frozen scope + human authorization |
