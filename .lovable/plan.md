@@ -72,7 +72,7 @@ Items: `PriceListsPage.tsx`, `QuotationDetailsPage.tsx`, `SupplierPaymentsPage.t
 
 Verify the whole frozen F1 set and produce the evidence pack:
 
-- scope integrity: every changed consumer dependency edge corresponds to an approved F1 item (a consumer file may hold multiple approved F1 edges and may therefore be changed once to remediate several of them, but no other dependency in that file may change); every newly created facade is directly required by one or more approved F1 items; every changed file has a documented F1 purpose; no file modified for unrelated cleanup or future work
+- scope integrity: 37-item mapping intact and revised hash reproduced; every changed consumer dependency edge corresponds to an approved F1 item (one consumer file may carry several approved edges and be changed once for them, but no other dependency in it may change); every newly created facade is directly required by one or more approved F1 items and declares its provenance; every changed file has a documented F1 purpose; no unrelated file may be modified
 - edge mapping: 37/37 verified — 4/4 F1-A and 33/33 F1-B remediated, unrelated edges unchanged
 - dep-graph before/after: pages→repositories, components→repositories, pages→supabase-client, components→supabase-client, total cycles, UI cycles
 - facade audit: every new facade is pure re-export only, with its re-export source proven to be an approved existing application/repository capability — zero logic, validation, mapping, transformation, caching, state, DB/Supabase calls, no new repository or query service, no new implementation surface
