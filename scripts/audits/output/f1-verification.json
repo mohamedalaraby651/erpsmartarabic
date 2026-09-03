@@ -1,0 +1,1046 @@
+{
+  "schemaVersion": 1,
+  "unit": "F1-C",
+  "mode": "VERIFICATION_ONLY",
+  "generatedAt": "2026-09-03T17:38:43.948Z",
+  "authority": {
+    "scope": "F1_SCOPE_001-R2",
+    "scopeHash": "e8ec2359fe4521967aba4d46f77711c047eb4bc4a58e3e0b36ea8db4727c7fe8",
+    "scopeHashReproduced": "e8ec2359fe4521967aba4d46f77711c047eb4bc4a58e3e0b36ea8db4727c7fe8"
+  },
+  "lineage": {
+    "commit": "fef1eb99cd00169ca0247766f5dd77692fab27bd",
+    "f1WindowStart": "15471476",
+    "baseline": "BASELINE-UX4-001",
+    "snapshot": "SNAPSHOT-20260825-001"
+  },
+  "scopeIntegrity": {
+    "authorizedItemCount": 37,
+    "f1aItems": 4,
+    "f1bItems": 33,
+    "expected": {
+      "total": 37,
+      "f1a": 4,
+      "f1b": 33
+    },
+    "identityMatch": true,
+    "itemIds": [
+      "F1-001",
+      "F1-002",
+      "F1-003",
+      "F1-004",
+      "F1-005",
+      "F1-006",
+      "F1-007",
+      "F1-008",
+      "F1-009",
+      "F1-010",
+      "F1-011",
+      "F1-012",
+      "F1-013",
+      "F1-014",
+      "F1-015",
+      "F1-016",
+      "F1-017",
+      "F1-018",
+      "F1-019",
+      "F1-020",
+      "F1-021",
+      "F1-022",
+      "F1-023",
+      "F1-024",
+      "F1-025",
+      "F1-026",
+      "F1-027",
+      "F1-028",
+      "F1-029",
+      "F1-030",
+      "F1-031",
+      "F1-032",
+      "F1-033",
+      "F1-034",
+      "F1-035",
+      "F1-036",
+      "F1-037"
+    ]
+  },
+  "edgeElimination": {
+    "approved": 37,
+    "eliminated": 37,
+    "failed": [
+      {
+        "id": "F1-002",
+        "batch": "F1-A",
+        "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/quotations + @/application/queries/activity-logs",
+        "edgeEliminated": true,
+        "approvedTargetImported": false,
+        "result": "FAIL"
+      }
+    ],
+    "rows": [
+      {
+        "id": "F1-001",
+        "batch": "F1-A",
+        "file": "src/pages/pricing/PriceListsPage.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/price-lists",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-002",
+        "batch": "F1-A",
+        "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/quotations + @/application/queries/activity-logs",
+        "edgeEliminated": true,
+        "approvedTargetImported": false,
+        "result": "FAIL"
+      },
+      {
+        "id": "F1-003",
+        "batch": "F1-A",
+        "file": "src/pages/suppliers/SupplierPaymentsPage.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/supplierPaymentRepository",
+        "approvedTargetSurface": "@/application/queries/supplier-payments",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-004",
+        "batch": "F1-A",
+        "file": "src/pages/tasks/TasksPage.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/tasks",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-005",
+        "batch": "F1-B",
+        "file": "src/components/attendance/LeaveRequestDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/attendance",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-006",
+        "batch": "F1-B",
+        "file": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/creditNoteRepository",
+        "approvedTargetSurface": "@/application/queries/credit-notes",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-007",
+        "batch": "F1-B",
+        "file": "src/components/customers/alerts/AlertItemActions.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/customers",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-008",
+        "batch": "F1-B",
+        "file": "src/components/customers/details/CommunicationLogTab.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/customerRelationsRepo",
+        "approvedTargetSurface": "@/application/queries/customer-relations",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-009",
+        "batch": "F1-B",
+        "file": "src/components/customers/dialogs/CustomerReminderDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/customerRelationsRepo",
+        "approvedTargetSurface": "@/application/queries/customer-relations",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-010",
+        "batch": "F1-B",
+        "file": "src/components/customers/list/CustomerSavedViews.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/saved-views",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-011",
+        "batch": "F1-B",
+        "file": "src/components/employees/EmployeeFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/employeeRepository",
+        "approvedTargetSurface": "@/application/queries/employees",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-012",
+        "batch": "F1-B",
+        "file": "src/components/expenses/ExpenseFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/expenseRepository",
+        "approvedTargetSurface": "@/application/queries/expenses",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-013",
+        "batch": "F1-B",
+        "file": "src/components/logistics/LogisticsDialogs.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/referenceRepository",
+        "approvedTargetSurface": "@/application/queries/reference",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-014",
+        "batch": "F1-B",
+        "file": "src/components/print/PrintTemplate.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/settingsRepository",
+        "approvedTargetSurface": "@/application/queries/settings",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-015",
+        "batch": "F1-B",
+        "file": "src/components/print/PurchaseOrderPrintView.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/purchaseOrderRepository",
+        "approvedTargetSurface": "@/application/queries/purchase-orders",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-016",
+        "batch": "F1-B",
+        "file": "src/components/print/PurchaseOrderPrintView.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/settingsRepository",
+        "approvedTargetSurface": "@/application/queries/settings",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-017",
+        "batch": "F1-B",
+        "file": "src/components/print/QuotationPrintView.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/legacyQuotationsRepository",
+        "approvedTargetSurface": "@/application/queries/quotations",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-018",
+        "batch": "F1-B",
+        "file": "src/components/print/QuotationPrintView.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/settingsRepository",
+        "approvedTargetSurface": "@/application/queries/settings",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-019",
+        "batch": "F1-B",
+        "file": "src/components/print/SalesOrderPrintView.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/salesOrderRepository",
+        "approvedTargetSurface": "@/application/queries/sales-orders",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-020",
+        "batch": "F1-B",
+        "file": "src/components/print/SalesOrderPrintView.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/settingsRepository",
+        "approvedTargetSurface": "@/application/queries/settings",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-021",
+        "batch": "F1-B",
+        "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/purchaseOrderRepository",
+        "approvedTargetSurface": "@/application/queries/purchase-orders",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-022",
+        "batch": "F1-B",
+        "file": "src/components/quotations/QuotationFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/creditNoteRepository",
+        "approvedTargetSurface": "@/application/queries/credit-notes",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-023",
+        "batch": "F1-B",
+        "file": "src/components/quotations/QuotationFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/legacyQuotationsRepository",
+        "approvedTargetSurface": "@/application/queries/quotations",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-024",
+        "batch": "F1-B",
+        "file": "src/components/quotations/QuotationFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/referenceRepository",
+        "approvedTargetSurface": "@/application/queries/reference",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-025",
+        "batch": "F1-B",
+        "file": "src/components/quotations/useQuotationItems.ts",
+        "forbiddenSpecifier": "@/lib/repositories/legacyQuotationsRepository",
+        "approvedTargetSurface": "@/application/queries/quotations",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-026",
+        "batch": "F1-B",
+        "file": "src/components/reports/CashFlowReport.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/reports",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-027",
+        "batch": "F1-B",
+        "file": "src/components/reports/ReportTemplateEditor.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/reportTemplateRepository",
+        "approvedTargetSurface": "@/application/queries/report-templates",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-028",
+        "batch": "F1-B",
+        "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/salesOrderRepository",
+        "approvedTargetSurface": "@/application/queries/sales-orders",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-029",
+        "batch": "F1-B",
+        "file": "src/components/settings/ExportCenter/AssetUploader.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/pdfAssetsRepository",
+        "approvedTargetSurface": "@/application/queries/pdf-assets",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-030",
+        "batch": "F1-B",
+        "file": "src/components/settings/ExportCenter/AuditTimelinePanel.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/pdfProfilesRepository",
+        "approvedTargetSurface": "@/application/queries/pdf-profiles",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-031",
+        "batch": "F1-B",
+        "file": "src/components/shared/AttachmentsList.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/attachments",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-032",
+        "batch": "F1-B",
+        "file": "src/components/suppliers/hero/SupplierPinnedNote.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/suppliers",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-033",
+        "batch": "F1-B",
+        "file": "src/components/suppliers/hero/SupplierQuickHistory.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/supplierRelationsRepo",
+        "approvedTargetSurface": "@/application/queries/supplier-relations",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-034",
+        "batch": "F1-B",
+        "file": "src/components/suppliers/hero/SupplierTimelineDrawer.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/supplierRelationsRepo",
+        "approvedTargetSurface": "@/application/queries/supplier-relations",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-035",
+        "batch": "F1-B",
+        "file": "src/components/suppliers/list/SupplierSavedViews.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/saved-views",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-036",
+        "batch": "F1-B",
+        "file": "src/components/suppliers/tabs/SupplierNotesTab.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/index",
+        "approvedTargetSurface": "@/application/queries/suppliers",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      },
+      {
+        "id": "F1-037",
+        "batch": "F1-B",
+        "file": "src/components/treasury/CashTransactionDialog.tsx",
+        "forbiddenSpecifier": "@/lib/repositories/expenseRepository",
+        "approvedTargetSurface": "@/application/queries/expenses",
+        "edgeEliminated": true,
+        "approvedTargetImported": true,
+        "result": "PASS"
+      }
+    ]
+  },
+  "facadeInventory": [
+    {
+      "facade": "src/application/queries/price-lists.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/priceListRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/quotations + @/application/queries/activity-logs.ts",
+      "exists": false,
+      "pureReExport": false,
+      "reExportLines": 0,
+      "forbiddenConstructs": [],
+      "provenance": null,
+      "provenanceExists": false,
+      "adr0028Compliant": false
+    },
+    {
+      "facade": "src/application/queries/supplier-payments.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/supplierPaymentRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/tasks.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/tasksRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/attendance.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/attendanceRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/credit-notes.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/creditNoteRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/customers.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/customerRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/customer-relations.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/customerRelationsRepo",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/saved-views.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/savedViewsRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/employees.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/employeeRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/expenses.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/expenseRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/reference.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/referenceRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/settings.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/settingsRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/purchase-orders.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/purchaseOrderRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/quotations.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/legacyQuotationsRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/sales-orders.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/salesOrderRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/reports.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/reportsRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/report-templates.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/reportTemplateRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/pdf-assets.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/pdfAssetsRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/pdf-profiles.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/pdfProfilesRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/attachments.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/attachmentsRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/suppliers.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/supplierRepository",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    },
+    {
+      "facade": "src/application/queries/supplier-relations.ts",
+      "exists": true,
+      "pureReExport": true,
+      "reExportLines": 1,
+      "forbiddenConstructs": [],
+      "provenance": "@/lib/repositories/supplierRelationsRepo",
+      "provenanceExists": true,
+      "adr0028Compliant": true
+    }
+  ],
+  "residualEdges": {
+    "components→repositories": {
+      "totalRemaining": 8,
+      "f1ScopedRemaining": 3,
+      "outOfScopeRemaining": 5,
+      "outOfScopeEdges": [
+        {
+          "from": "components/categories/CategoryFormDialog.tsx",
+          "to": "lib/repositories/_base.ts"
+        },
+        {
+          "from": "components/expenses/ExpenseCategoryFormDialog.tsx",
+          "to": "lib/repositories/_base.ts"
+        }
+      ]
+    },
+    "pages→repositories": {
+      "totalRemaining": 7,
+      "f1ScopedRemaining": 0,
+      "outOfScopeRemaining": 7,
+      "outOfScopeEdges": [
+        {
+          "from": "pages/accounting/JournalEntriesPage.tsx",
+          "to": "lib/repositories/journalRepository.ts"
+        },
+        {
+          "from": "pages/approvals/ApprovalsPage.tsx",
+          "to": "lib/repositories/approvalRepository.ts"
+        },
+        {
+          "from": "pages/categories/CategoriesPage.tsx",
+          "to": "lib/repositories/_base.ts"
+        },
+        {
+          "from": "pages/expenses/ExpenseCategoriesPage.tsx",
+          "to": "lib/repositories/_base.ts"
+        },
+        {
+          "from": "pages/expenses/ExpensesPage.tsx",
+          "to": "lib/repositories/_base.ts"
+        }
+      ]
+    }
+  },
+  "dependencyMetrics": {
+    "totalModules": 1227,
+    "totalEdges": 4827,
+    "cycles": 6,
+    "uiCycles": 0,
+    "importLayerViolationsTotal": 118,
+    "bySummary": {
+      "components→repositories": 8,
+      "components→services": 5,
+      "pages→repositories": 7,
+      "hooks→supabase-client": 31,
+      "components→supabase-client": 38,
+      "pages→supabase-client": 29,
+      "domain→ui": 0
+    }
+  },
+  "changedFileInventory": [
+    {
+      "file": "docs/governance/F1A_EXECUTION_RECORD.md",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "docs/governance/F1B_EXECUTION_RECORD.md",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "docs/governance/PROGRESS_LOG.md",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "public/version.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/f1-verification.mjs",
+      "class": "D_unauthorized"
+    },
+    {
+      "file": "scripts/audits/output/dependency-report.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/fitness/check-adapter-error-boundary.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/fitness/check-domain-api-stability.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/fitness/check-identity-authority.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/fitness/check-no-deep-imports.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/fitness/check-temporal-authority.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/fitness/check-ui-infrastructure-isolation.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/wave2-discovery/design-system-inventory.json",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "scripts/audits/output/wave2-discovery/design-system-inventory.md",
+      "class": "C_governance_or_evidence_artifact"
+    },
+    {
+      "file": "src/application/queries/activity-logs.ts",
+      "class": "D_unauthorized"
+    },
+    {
+      "file": "src/application/queries/attachments.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/credit-notes.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/customer-relations.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/employees.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/index.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/pdf-assets.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/pdf-profiles.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/price-lists.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/report-templates.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/reports.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/saved-views.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/settings.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/supplier-payments.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/supplier-relations.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/application/queries/tasks.ts",
+      "class": "B_minimal_f1_facade"
+    },
+    {
+      "file": "src/components/attendance/LeaveRequestDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/credit-notes/CreditNoteFormDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/customers/alerts/AlertItemActions.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/customers/details/CommunicationLogTab.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/customers/dialogs/CustomerReminderDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/customers/list/CustomerSavedViews.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/employees/EmployeeFormDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/expenses/ExpenseFormDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/logistics/LogisticsDialogs.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/print/PrintTemplate.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/print/PurchaseOrderPrintView.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/print/QuotationPrintView.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/print/SalesOrderPrintView.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/quotations/QuotationFormDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/quotations/useQuotationItems.ts",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/reports/CashFlowReport.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/reports/ReportTemplateEditor.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/sales-orders/SalesOrderFormDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/settings/ExportCenter/AssetUploader.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/settings/ExportCenter/AuditTimelinePanel.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/shared/AttachmentsList.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/suppliers/hero/SupplierPinnedNote.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/suppliers/hero/SupplierQuickHistory.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/suppliers/hero/SupplierTimelineDrawer.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/suppliers/list/SupplierSavedViews.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/suppliers/tabs/SupplierNotesTab.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/components/treasury/CashTransactionDialog.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/pages/pricing/PriceListsPage.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/pages/suppliers/SupplierPaymentsPage.tsx",
+      "class": "A_approved_consumer_mutation"
+    },
+    {
+      "file": "src/pages/tasks/TasksPage.tsx",
+      "class": "A_approved_consumer_mutation"
+    }
+  ],
+  "unauthorizedMutations": [
+    {
+      "file": "scripts/audits/f1-verification.mjs",
+      "class": "D_unauthorized"
+    },
+    {
+      "file": "src/application/queries/activity-logs.ts",
+      "class": "D_unauthorized"
+    }
+  ],
+  "negativeVerification": [
+    {
+      "area": "F2 scope (UI → supabase-client edges)",
+      "changedFiles": [],
+      "clean": true
+    },
+    {
+      "area": "BND-05 / RLS / migrations",
+      "changedFiles": [],
+      "clean": true
+    },
+    {
+      "area": "tenant authority",
+      "changedFiles": [],
+      "clean": true
+    },
+    {
+      "area": "permissions",
+      "changedFiles": [],
+      "clean": true
+    },
+    {
+      "area": "finance",
+      "changedFiles": [],
+      "clean": true
+    },
+    {
+      "area": "domain logic",
+      "changedFiles": [],
+      "clean": true
+    },
+    {
+      "area": "PRE-TS-001 containment file",
+      "changedFiles": [],
+      "clean": true
+    }
+  ],
+  "verdict": "FAIL",
+  "artifactHash": "0ffac397d50534bcd2a793965f3069166c5d1815a42c189aabd07e6a12818922"
+}
