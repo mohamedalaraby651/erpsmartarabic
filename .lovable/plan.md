@@ -18,9 +18,14 @@ Blocked items split into two kinds:
 11 items  barrel import `@/lib/repositories/index` -> per-symbol resolution to the owning facade(s)
 ```
 
-Barrel items are still executable only when every imported symbol maps to an existing or newly created pure facade; otherwise that item stays BLOCKED and is reported, not forced.
+Barrel items are still executable only when every imported symbol maps to an existing or newly created pure facade; otherwise that item stays BLOCKED and is reported, not forced. Never rewrite `@/lib/repositories` to `@/application/queries` mechanically — inspect symbols, resolve each symbol to its owning facade, then rewrite the import.
 
-**First step is not code.** Issue `F1_SCOPE_001-R2` and compute the new hash before any source mutation.
+**First step is not code.** Issue `F1_SCOPE_001-R2` and compute the new hash before any source mutation. Status is APPROVED FOR R2 PREPARATION, not for source mutation; a scope-integrity stop follows R2.
+
+### R2 integrity rule
+
+`F1_SCOPE_001-R2` MUST preserve exactly the same 37 item IDs, files, batches, and current dependency edges as `F1_SCOPE_001`. Only `state` and `approvedTargetSurface` may change. No ID, file, batch, or `currentEdge` may be added, removed, renamed, merged, split, or reinterpreted. The predecessor hash stays recorded. If any `currentEdge` is materially different from the predecessor record, STOP and produce a Scope Drift Report — do not silently regenerate the scope.
+
 
 ## Scope unit = dependency edge, not file
 
