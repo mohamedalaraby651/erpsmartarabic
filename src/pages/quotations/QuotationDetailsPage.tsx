@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { legacyQuotationsRepository, activityLogsRepository } from "@/lib/repositories";
+import { legacyQuotationsRepository } from "@/application/queries/quotations";
+import { activityLogsRepository } from "@/application/queries/activity-logs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
