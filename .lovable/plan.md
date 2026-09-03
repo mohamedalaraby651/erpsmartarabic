@@ -13,18 +13,20 @@ The current frozen record marks 11 items READY and 26 BLOCKED, because Constrain
 
 Blocked items split into two kinds:
 
-```text
-15 items  named repository import  -> new pure facade `@/application/queries/<name>` (mechanical)
-11 items  barrel import `@/lib/repositories/index` -> per-symbol resolution to the owning facade(s)
-```
+- **15 items use named repository imports.** Resolve each symbol against existing application/query facades first. Create one minimal facade only when no suitable existing facade exists. Multiple F1 edges MUST reuse the same facade where the capability is identical.
+- **11 items use the barrel `@/lib/repositories/index`.** Per-symbol resolution to the owning facade(s).
+
 
 Barrel items are still executable only when every imported symbol maps to an existing or newly created pure facade; otherwise that item stays BLOCKED and is reported, not forced. Never rewrite `@/lib/repositories` to `@/application/queries` mechanically — inspect symbols, resolve each symbol to its owning facade, then rewrite the import.
 
 **First step is not code.** Issue `F1_SCOPE_001-R2` and compute the new hash before any source mutation. Status is APPROVED FOR R2 PREPARATION, not for source mutation; a scope-integrity stop follows R2.
 
-### R2 integrity rule
+### R2 Scope Integrity Gate
 
-`F1_SCOPE_001-R2` MUST preserve exactly the same 37 item IDs, files, batches, and current dependency edges as `F1_SCOPE_001`. Only `state` and `approvedTargetSurface` may change. No ID, file, batch, or `currentEdge` may be added, removed, renamed, merged, split, or reinterpreted. The predecessor hash stays recorded. If any `currentEdge` is materially different from the predecessor record, STOP and produce a Scope Drift Report — do not silently regenerate the scope.
+`F1_SCOPE_001-R2` MUST preserve exactly the same 37 item IDs, files, batches, and current dependency edges as `F1_SCOPE_001`. Only `state` and `approvedTargetSurface` may change. No ID, file, batch, or `currentEdge` may be added, removed, renamed, merged, split, or reinterpreted. The predecessor hash stays recorded.
+
+After generating R2: **STOP**. Before any source mutation, verify exactly 37 item IDs, the same files, the same batches, the same `currentEdge` values, a predecessor hash matching `F1_SCOPE_001`, that only `state` and `approvedTargetSurface` changed, and that the new hash is reproducible. If any condition fails, produce an `F1-R2 SCOPE DRIFT REPORT` and do not modify source code. No implementation is permitted until the R2 integrity check passes.
+
 
 
 ## Scope unit = dependency edge, not file
@@ -33,7 +35,22 @@ The frozen unit is the dependency edge. If an approved F1 consumer file contains
 
 ## Facade rule
 
-A minimal pure re-export facade is permitted only when required to remediate an approved F1 edge. Reuse order: existing application service/query facade → existing pure facade → one new minimal pure re-export facade. No facade-per-consumer, no facade-per-file, no speculative or duplicate facade. A facade may use `export *` or explicit named re-exports **only from an already-existing approved application-layer or repository capability per ADR-0028** — never from a consumer, page, component, or arbitrary module, and never as a new implementation surface. ADR-0028 itself is not modified.
+A minimal pure re-export facade is permitted only when required to remediate an approved F1 edge. Reuse order: existing application service/query facade → existing pure facade → one new minimal pure re-export facade. No facade-per-consumer, no facade-per-file, no speculative or duplicate facade.
+
+Conventions come from `docs/adr/0028-application-query-facades.md`. Do NOT modify that ADR, and do NOT touch the unrelated ADR-0028 design-system document.
+
+### Facade provenance rule
+
+Every newly created facade MUST declare, in the execution evidence, the exact source capability it re-exports:
+
+```text
+src/application/queries/foo.ts
+    ↓ pure re-export
+src/lib/repositories/fooRepository.ts
+```
+
+A facade MUST NOT re-export from a page, a component, a hook, an arbitrary utility, another consumer, or a newly created implementation. The facade is an architectural boundary only — never an implementation layer, and never a formality created just to silence the dependency audit.
+
 
 ## Batch F1-A — Pages → Application (4 edges)
 
@@ -48,14 +65,14 @@ Items: `PriceListsPage.tsx`, `QuotationDetailsPage.tsx`, `SupplierPaymentsPage.t
 
 1. Full inventory of the 33 approved edges, grouped by repository/capability so one facade serves many consumers (never 33 facades).
 2. Reuse order per the facade rule above.
-3. Apply all redirects in one controlled pass. Register a new facade in `src/application/queries/index.ts` **only if the existing application-query import convention requires it** — no speculative barrel edits. Follow ADR-0028; do not modify it.
+3. Apply all redirects in one controlled pass. Register a facade in `src/application/queries/index.ts` ONLY if the existing application-query import convention requires it — no speculative barrel changes. Follow `docs/adr/0028-application-query-facades.md`; do not modify it.
 4. Checkpoint: 33/33 approved edges eliminated; unrelated edges unchanged and reported; no new page/component → supabase-client edges; no new cycles; `tsgo`, build, fitness, dep-graph.
 
 ## Batch F1-C — Consolidated Verification (no source mutation)
 
 Verify the whole frozen F1 set and produce the evidence pack:
 
-- scope integrity: every changed consumer dependency edge corresponds to an approved F1 item (a consumer file may hold multiple approved F1 edges and may therefore be changed once to remediate several of them, but no other dependency in that file may change); every newly created facade is directly required by one or more approved F1 items; every changed file has a documented F1 purpose; no file modified for unrelated cleanup or future work
+- scope integrity: 37-item mapping intact and revised hash reproduced; every changed consumer dependency edge corresponds to an approved F1 item (one consumer file may carry several approved edges and be changed once for them, but no other dependency in it may change); every newly created facade is directly required by one or more approved F1 items and declares its provenance; every changed file has a documented F1 purpose; no unrelated file may be modified
 - edge mapping: 37/37 verified — 4/4 F1-A and 33/33 F1-B remediated, unrelated edges unchanged
 - dep-graph before/after: pages→repositories, components→repositories, pages→supabase-client, components→supabase-client, total cycles, UI cycles
 - facade audit: every new facade is pure re-export only, with its re-export source proven to be an approved existing application/repository capability — zero logic, validation, mapping, transformation, caching, state, DB/Supabase calls, no new repository or query service, no new implementation surface
