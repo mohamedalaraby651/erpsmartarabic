@@ -101,6 +101,7 @@ const facades = facadePaths.map((p) => {
     provenance,
     provenanceExists: provenanceFile ? existsSync(resolve(ROOT, provenanceFile)) : false,
     adr0028Compliant: exists && nonReexport.length === 0 && violations.length === 0,
+const bySummary = DEP.importLayerViolations.bySummary ?? {};
   };
 });
 
