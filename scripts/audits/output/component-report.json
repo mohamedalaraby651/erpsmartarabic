@@ -1,36 +1,36 @@
 {
   "schemaVersion": 1,
   "baselineVersion": "UX-0",
-  "totalFiles": 873,
-  "totalLoc": 129492,
+  "totalFiles": 1096,
+  "totalLoc": 142237,
   "byKind": {
-    "other": 2,
-    "feature": 283,
-    "dialog": 41,
-    "hook": 134,
-    "layout": 24,
+    "other": 181,
+    "feature": 284,
+    "dialog": 43,
+    "hook": 144,
+    "layout": 26,
     "chart": 8,
-    "table": 7,
-    "form": 2,
+    "table": 10,
+    "form": 3,
     "primitive": 58,
     "config": 2,
-    "domain": 22,
-    "integration": 3,
-    "lib": 142,
+    "domain": 41,
+    "integration": 4,
+    "lib": 146,
     "query-service": 2,
     "repository": 44,
-    "page": 99
+    "page": 100
   },
-  "avgComponentLoc": 161.07,
-  "avgHookLoc": 100,
-  "avgProps": 5.13,
-  "filesOver500": 7,
-  "filesOver300": 93,
+  "avgComponentLoc": 159.85,
+  "avgHookLoc": 96.69,
+  "avgProps": 5.1,
+  "filesOver500": 8,
+  "filesOver300": 96,
   "oversizeFiles": [
     {
       "file": "src/integrations/supabase/types.ts",
       "kind": "integration",
-      "loc": 7244,
+      "loc": 7573,
       "props": 0
     },
     {
@@ -49,6 +49,12 @@
       "file": "src/lib/pdfGenerator.ts",
       "kind": "lib",
       "loc": 627,
+      "props": 0
+    },
+    {
+      "file": "src/domain/finance/invoice/Invoice.ts",
+      "kind": "domain",
+      "loc": 549,
       "props": 0
     },
     {
@@ -74,7 +80,7 @@
     {
       "file": "src/integrations/supabase/types.ts",
       "kind": "integration",
-      "loc": 7244,
+      "loc": 7573,
       "props": 0
     },
     {
@@ -93,6 +99,12 @@
       "file": "src/lib/pdfGenerator.ts",
       "kind": "lib",
       "loc": 627,
+      "props": 0
+    },
+    {
+      "file": "src/domain/finance/invoice/Invoice.ts",
+      "kind": "domain",
+      "loc": 549,
       "props": 0
     },
     {
@@ -306,6 +318,12 @@
       "props": 4
     },
     {
+      "file": "src/App.tsx",
+      "kind": "other",
+      "loc": 380,
+      "props": 0
+    },
+    {
       "file": "src/pages/install/InstallPage.tsx",
       "kind": "page",
       "loc": 379,
@@ -321,12 +339,6 @@
       "file": "src/pages/accounting/ChartOfAccountsPage.tsx",
       "kind": "page",
       "loc": 377,
-      "props": 0
-    },
-    {
-      "file": "src/App.tsx",
-      "kind": "other",
-      "loc": 375,
       "props": 0
     },
     {
@@ -364,12 +376,6 @@
       "kind": "page",
       "loc": 366,
       "props": 0
-    },
-    {
-      "file": "src/components/settings/ExportCenter/LivePreviewPanel.tsx",
-      "kind": "feature",
-      "loc": 358,
-      "props": 0
     }
   ],
   "inventory": {
@@ -380,7 +386,10 @@
       "src/components/reports/templateEditor/TemplateGrid.tsx",
       "src/components/shared/ResponsiveItemsTable.tsx",
       "src/components/shared/StatsGrid.tsx",
-      "src/components/table/VirtualizedTable.tsx"
+      "src/components/table/VirtualizedTable.tsx",
+      "src/ui/composites/data/DataGrid.tsx",
+      "src/ui/composites/page/StatGrid.tsx",
+      "src/ui/primitives/Table.tsx"
     ],
     "dialogs": [
       "src/components/accounting/AccountFormDialog.tsx",
@@ -423,11 +432,14 @@
       "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
       "src/components/suppliers/dialogs/SupplierQuickAddDialog.tsx",
       "src/components/treasury/CashRegisterFormDialog.tsx",
-      "src/components/treasury/CashTransactionDialog.tsx"
+      "src/components/treasury/CashTransactionDialog.tsx",
+      "src/ui/composites/form/FormDialog.tsx",
+      "src/ui/primitives/Dialog.tsx"
     ],
     "forms": [
       "src/components/mobile/FullScreenForm.tsx",
-      "src/components/shared/AttachmentUploadForm.tsx"
+      "src/components/shared/AttachmentUploadForm.tsx",
+      "src/ui/composites/form/Form.tsx"
     ],
     "primitivesUi": [
       "accordion",

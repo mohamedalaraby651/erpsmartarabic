@@ -1,0 +1,1398 @@
+{
+  "schemaVersion": 1,
+  "unit": "F0-NAZRA-001",
+  "track": "Track A — Frontend Platform Baseline",
+  "mode": "MEASUREMENT AND CLASSIFICATION ONLY — no source mutation",
+  "generatedAt": "2026-09-03T00:28:46.220Z",
+  "predecessor": {
+    "boundary": "BND-05",
+    "state": "CERTIFIED (1/8)",
+    "evidence": "CERT-REV-BND05-R2"
+  },
+  "architecture": {
+    "totalModules": 1212,
+    "totalEdges": 4796,
+    "cycles": 6,
+    "cycleList": [
+      [
+        "domain/finance/invoice/Invoice.ts",
+        "domain/finance/invoice/errors/InvoiceDomainError.ts",
+        "domain/finance/invoice/statusOf.ts",
+        "domain/finance/invoice/events/index.ts",
+        "domain/finance/invoice/events/InvoiceIssued.ts"
+      ],
+      [
+        "hooks/usePdfProfile.ts",
+        "hooks/usePdfProfileRealtime.ts"
+      ],
+      [
+        "lib/pdf/diagnostics/PdfLogger.ts",
+        "lib/pdf/diagnostics/telemetrySink.ts"
+      ],
+      [
+        "lib/pdf/routing/routePdfRequest.ts",
+        "lib/pdf/services/PdfRenderService.ts"
+      ],
+      [
+        "lib/prefetch.ts",
+        "pages/Dashboard.tsx",
+        "components/dashboard/FinancialKPIRow.tsx"
+      ],
+      [
+        "lib/prefetch.ts",
+        "pages/Dashboard.tsx",
+        "components/dashboard/FinancialKPIRow.tsx",
+        "components/dashboard/_shared/DashboardChip.tsx"
+      ]
+    ],
+    "importLayerViolations": {
+      "components→repositories": 41,
+      "components→services": 5,
+      "pages→repositories": 11,
+      "hooks→supabase-client": 31,
+      "components→supabase-client": 38,
+      "pages→supabase-client": 29,
+      "domain→ui": 0
+    },
+    "violationTotalFromDepGraph": 155,
+    "violationTotalReclassified": 155,
+    "classificationTotals": {
+      "ACTUAL_VIOLATION": 95,
+      "TRANSITIONAL": 44,
+      "FALSE_POSITIVE": 10,
+      "LEGITIMATE_EXCEPTION": 6
+    },
+    "classificationByRule": {
+      "components→repositories": {
+        "ACTUAL_VIOLATION": 33,
+        "TRANSITIONAL": 8
+      },
+      "components→services": {
+        "TRANSITIONAL": 5
+      },
+      "components→supabase-client": {
+        "FALSE_POSITIVE": 3,
+        "ACTUAL_VIOLATION": 34,
+        "LEGITIMATE_EXCEPTION": 1
+      },
+      "hooks→supabase-client": {
+        "TRANSITIONAL": 28,
+        "FALSE_POSITIVE": 1,
+        "LEGITIMATE_EXCEPTION": 2
+      },
+      "pages→repositories": {
+        "FALSE_POSITIVE": 4,
+        "TRANSITIONAL": 3,
+        "ACTUAL_VIOLATION": 4
+      },
+      "pages→supabase-client": {
+        "ACTUAL_VIOLATION": 24,
+        "FALSE_POSITIVE": 2,
+        "LEGITIMATE_EXCEPTION": 3
+      }
+    }
+  },
+  "dataAccess": {
+    "repositories": [
+      {
+        "file": "src/lib/repositories/_base.ts",
+        "consumers": 11
+      },
+      {
+        "file": "src/lib/repositories/activityLogsRepository.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/adminMetricsRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/adminRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/approvalRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/attachmentsRepository.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/attendanceRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/categoryRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/coaRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/collectionRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/creditNoteRepository.ts",
+        "consumers": 4
+      },
+      {
+        "file": "src/lib/repositories/customerRelationsRepo.ts",
+        "consumers": 3
+      },
+      {
+        "file": "src/lib/repositories/customerRepository.ts",
+        "consumers": 6
+      },
+      {
+        "file": "src/lib/repositories/customerSearchRepo.ts",
+        "consumers": 5
+      },
+      {
+        "file": "src/lib/repositories/dimensionsRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/employeeRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/expenseRepository.ts",
+        "consumers": 4
+      },
+      {
+        "file": "src/lib/repositories/fiscalPeriodRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/index.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/inventoryRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/invoiceRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/journalRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/legacyQuotationsRepository.ts",
+        "consumers": 5
+      },
+      {
+        "file": "src/lib/repositories/logisticsRepository.ts",
+        "consumers": 3
+      },
+      {
+        "file": "src/lib/repositories/notificationsRepository.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/paymentRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/pdfAssetsRepository.ts",
+        "consumers": 3
+      },
+      {
+        "file": "src/lib/repositories/pdfProfilesRepository.ts",
+        "consumers": 3
+      },
+      {
+        "file": "src/lib/repositories/postingLogRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/priceListRepository.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/productRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/purchaseOrderRepository.ts",
+        "consumers": 4
+      },
+      {
+        "file": "src/lib/repositories/quotationRepository.ts",
+        "consumers": 2
+      },
+      {
+        "file": "src/lib/repositories/referenceRepository.ts",
+        "consumers": 3
+      },
+      {
+        "file": "src/lib/repositories/reportsRepository.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/reportTemplateRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/salesOrderRepository.ts",
+        "consumers": 5
+      },
+      {
+        "file": "src/lib/repositories/savedViewsRepository.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/settingsRepository.ts",
+        "consumers": 4
+      },
+      {
+        "file": "src/lib/repositories/supplierPaymentRepository.ts",
+        "consumers": 1
+      },
+      {
+        "file": "src/lib/repositories/supplierRelationsRepo.ts",
+        "consumers": 3
+      },
+      {
+        "file": "src/lib/repositories/supplierRepository.ts",
+        "consumers": 4
+      },
+      {
+        "file": "src/lib/repositories/tasksRepository.ts",
+        "consumers": 0
+      },
+      {
+        "file": "src/lib/repositories/treasuryRepository.ts",
+        "consumers": 2
+      }
+    ],
+    "queries": [
+      {
+        "file": "src/lib/queries/reportsQueryService.ts",
+        "consumers": 6
+      },
+      {
+        "file": "src/lib/queries/supplierQueryService.ts",
+        "consumers": 2
+      }
+    ]
+  },
+  "uiPlatform": {
+    "designSystemFindings": {
+      "hexColor": 194,
+      "rgbColor": 0,
+      "hslColor": 5,
+      "fontFamily": 10,
+      "boxShadow": 9,
+      "arbitraryPx": 417
+    },
+    "designSystemTotal": 635,
+    "uiKitCallSites": 2,
+    "componentFiles": 1096,
+    "componentsOverLocBudget": null
+  },
+  "routes": {
+    "total": 100
+  },
+  "violations": [
+    {
+      "rule": "components→repositories",
+      "from": "components/attendance/LeaveRequestDialog.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/categories/CategoryFormDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/credit-notes/CreditNoteFormDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/credit-notes/CreditNoteFormDialog.tsx",
+      "to": "lib/repositories/creditNoteRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/customers/alerts/AlertItemActions.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/customers/details/CommunicationLogTab.tsx",
+      "to": "lib/repositories/customerRelationsRepo.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/customers/dialogs/CustomerReminderDialog.tsx",
+      "to": "lib/repositories/customerRelationsRepo.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/customers/list/CustomerSavedViews.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/employees/EmployeeFormDialog.tsx",
+      "to": "lib/repositories/employeeRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/expenses/ExpenseCategoryFormDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/expenses/ExpenseFormDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/expenses/ExpenseFormDialog.tsx",
+      "to": "lib/repositories/expenseRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/logistics/LogisticsDialogs.tsx",
+      "to": "lib/repositories/referenceRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/print/PrintTemplate.tsx",
+      "to": "lib/repositories/settingsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/print/PurchaseOrderPrintView.tsx",
+      "to": "lib/repositories/purchaseOrderRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/print/PurchaseOrderPrintView.tsx",
+      "to": "lib/repositories/settingsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/print/QuotationPrintView.tsx",
+      "to": "lib/repositories/legacyQuotationsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/print/QuotationPrintView.tsx",
+      "to": "lib/repositories/settingsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/print/SalesOrderPrintView.tsx",
+      "to": "lib/repositories/salesOrderRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/print/SalesOrderPrintView.tsx",
+      "to": "lib/repositories/settingsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/purchase-orders/PurchaseOrderFormDialog.tsx",
+      "to": "lib/repositories/purchaseOrderRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/quotations/QuotationFormDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/quotations/QuotationFormDialog.tsx",
+      "to": "lib/repositories/creditNoteRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/quotations/QuotationFormDialog.tsx",
+      "to": "lib/repositories/legacyQuotationsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/quotations/QuotationFormDialog.tsx",
+      "to": "lib/repositories/referenceRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/quotations/useQuotationItems.ts",
+      "to": "lib/repositories/legacyQuotationsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/reports/CashFlowReport.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/reports/ReportTemplateEditor.tsx",
+      "to": "lib/repositories/reportTemplateRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/sales-orders/SalesOrderFormDialog.tsx",
+      "to": "lib/repositories/salesOrderRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/settings/ExportCenter/AssetUploader.tsx",
+      "to": "lib/repositories/pdfAssetsRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/settings/ExportCenter/AuditTimelinePanel.tsx",
+      "to": "lib/repositories/pdfProfilesRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/shared/AttachmentsList.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/suppliers/hero/SupplierPinnedNote.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/suppliers/hero/SupplierQuickHistory.tsx",
+      "to": "lib/repositories/supplierRelationsRepo.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/suppliers/hero/SupplierTimelineDrawer.tsx",
+      "to": "lib/repositories/supplierRelationsRepo.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/suppliers/list/SupplierSavedViews.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/suppliers/SupplierPaymentDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/suppliers/tabs/SupplierNotesTab.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/treasury/CashRegisterFormDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/treasury/CashTransactionDialog.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "components→repositories",
+      "from": "components/treasury/CashTransactionDialog.tsx",
+      "to": "lib/repositories/expenseRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "components→services",
+      "from": "components/admin/RestoreBackupResultsView.tsx",
+      "to": "lib/services/backupRestoreReport.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "application service invoked from UI; moves behind an application command facade in F2"
+    },
+    {
+      "rule": "components→services",
+      "from": "components/admin/useRestoreBackup.ts",
+      "to": "lib/services/backupRestoreParser.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "application service invoked from UI; moves behind an application command facade in F2"
+    },
+    {
+      "rule": "components→services",
+      "from": "components/admin/useRestoreBackup.ts",
+      "to": "lib/services/backupRestoreReport.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "application service invoked from UI; moves behind an application command facade in F2"
+    },
+    {
+      "rule": "components→services",
+      "from": "components/invoices/InvoiceFormDialog.tsx",
+      "to": "lib/services/invoiceService.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "application service invoked from UI; moves behind an application command facade in F2"
+    },
+    {
+      "rule": "components→services",
+      "from": "components/suppliers/SupplierPaymentDialog.tsx",
+      "to": "lib/services/supplierService.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "application service invoked from UI; moves behind an application command facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/admin/EventDispatcherCard.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "client imported but no data-access call site detected in this module"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/admin/useRestoreBackup.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs edge-function directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/auth/TwoFactorSetup.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs edge-function+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/customers/details/CustomerPinnedNote.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/customers/tabs/CustomerTabNotes.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs auth+rpc+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/dashboard/CalendarWidget.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/dashboard/InvoiceQuickActions.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/dashboard/LowStockWidget.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/dashboard/TodayPerformanceWidget.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/export/ExportWithTemplateButton.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/inventory/StockMovementDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/inventory/WarehouseFormDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/invoices/InvoiceApprovalDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs edge-function directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/invoices/useInvoiceItems.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/notifications/NotificationBell.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/payments/MultiInvoiceSettlement.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/payments/PaymentFormDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/print/InvoicePrintView.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/products/ProductVariantDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/reports/InactiveCustomersReport.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/BackupTab.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/CompanyInfoSection.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/ExportCenter/AssetUploader.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "client imported but no data-access call site detected in this module"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/ExportCenter/ExportCenterPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/InvoiceSettingsSection.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/OfflineSettings.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/PersonalInfoSection.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/SecuritySection.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs auth+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/settings/SettingsExportImport.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/shared/AttachmentsList.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs storage+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/shared/AttachmentUploadForm.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/shared/FileUpload.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/shared/ImageUpload.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "client imported but no data-access call site detected in this module"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/shared/LogoUpload.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "LEGITIMATE_EXCEPTION",
+      "rationale": "object-storage access; no relational read/write behind the repository layer"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/suppliers/SupplierFormDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/suppliers/SupplierImportDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/suppliers/SupplierPaymentDialog.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "components→supabase-client",
+      "from": "components/tenant/TenantSettings.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/customers/useCustomerDetail.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/customers/useCustomerLayoutPrefs.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/customers/useUpcomingReminders.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/invoices/useInvoiceDetails.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/invoices/useInvoicesList.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/products/useProductsList.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "client imported but no data-access call site detected in this module"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/suppliers/useSupplierDetail.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useApprovalChain.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useAuth.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useBusinessInsights.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useConvertDocument.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useCustomerAlerts.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useDashboardData.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useDashboardRealtime.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "LEGITIMATE_EXCEPTION",
+      "rationale": "realtime channel subscription; no repository equivalent exists yet by design"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useDashboardSettings.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useEnqueuePdfExport.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useFavoritePages.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useOfflineData.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useOfflineMutation.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/usePdfProfileRealtime.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "LEGITIMATE_EXCEPTION",
+      "rationale": "realtime channel subscription; no repository equivalent exists yet by design"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/usePermissionMatrix.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/usePermissions.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/usePlatformAdmin.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/usePushNotifications.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useRateLimit.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useReportsData.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useSectionCustomization.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useSidebarCounts.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useSidebarOrder.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useSidebarSettings.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "hooks→supabase-client",
+      "from": "hooks/useUserPreferences.ts",
+      "to": "integrations/supabase/client.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "hook is the sanctioned data-access seam; moves behind a query service in F2"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/accounting/JournalEntriesPage.tsx",
+      "to": "lib/repositories/journalRepository.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "type-only import; erased at compile time, no runtime coupling"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/approvals/ApprovalsPage.tsx",
+      "to": "lib/repositories/approvalRepository.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "type-only import; erased at compile time, no runtime coupling"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/categories/CategoriesPage.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/expenses/ExpenseCategoriesPage.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/expenses/ExpensesPage.tsx",
+      "to": "lib/repositories/_base.ts",
+      "classification": "TRANSITIONAL",
+      "rationale": "shared base types/utilities of the repository layer; extract to a contract module in F1"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/inventory/InventoryPage.tsx",
+      "to": "lib/repositories/inventoryRepository.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "type-only import; erased at compile time, no runtime coupling"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/payments/PaymentsPage.tsx",
+      "to": "lib/repositories/paymentRepository.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "type-only import; erased at compile time, no runtime coupling"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/pricing/PriceListsPage.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/quotations/QuotationDetailsPage.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/suppliers/SupplierPaymentsPage.tsx",
+      "to": "lib/repositories/supplierPaymentRepository.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "pages→repositories",
+      "from": "pages/tasks/TasksPage.tsx",
+      "to": "lib/repositories/index.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module imports a repository directly; redirect through @/application/queries in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/BackupPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/CustomizationsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/DispatcherBatchDetailPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "client imported but no data-access call site detected in this module"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/DispatcherBatchesPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "FALSE_POSITIVE",
+      "rationale": "client imported but no data-access call site detected in this module"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/DomainEventsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/PermissionsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/RoleLimitsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/RolesPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/UserManagementPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/admin/UsersPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/attachments/AttachmentsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/dev/PdfJobsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/employees/EmployeeDetailsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/ForgotPasswordPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "LEGITIMATE_EXCEPTION",
+      "rationale": "auth-session access; identity is a kernel port, not a repository concern"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/notifications/NotificationsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/OAuthConsent.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "LEGITIMATE_EXCEPTION",
+      "rationale": "auth-session access; identity is a kernel port, not a repository concern"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/platform/PlatformAdminsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/platform/PlatformBillingPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/platform/PlatformDashboard.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/platform/PlatformReportsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/platform/TenantDetailsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/platform/TenantsManagementPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs rpc+table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/reports/KPIDashboard.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/reports/ReturnsReportPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/reports/SalesReportsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/ResetPasswordPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "LEGITIMATE_EXCEPTION",
+      "rationale": "auth-session access; identity is a kernel port, not a repository concern"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/search/SearchPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/settings/UnifiedSettingsPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    },
+    {
+      "rule": "pages→supabase-client",
+      "from": "pages/sync/SyncStatusPage.tsx",
+      "to": "integrations/supabase/client.ts",
+      "classification": "ACTUAL_VIOLATION",
+      "rationale": "presentation module performs table-query directly; redirect through query facade in F2"
+    }
+  ],
+  "evidenceLineage": {
+    "dependency-report.json": "0fc48e61a15f4ce6b280e43515cc27354236c1c9839a73a9395a1f91782a8506",
+    "data-access-report.json": "f01127a669d6265d6b8db6720ddc42c26a5e060815512e28ae391c7cfff85825",
+    "design-system-inventory.json": "15576990e927acffd63825b0d3e31f282c9988d68a3e01b0b684162bbc61b589",
+    "component-report.json": "0b0853ecb98ffb67c386912180c588f8ba5cff149627d111fec7899d5c13fa32",
+    "route-report.json": "daab744f471e872657095d8a55a8d3b28f1798e95ee0e2cf4d38cb09625ecf17",
+    "cert-rev-bnd05-r2.json": "6b6726c35791292a3fce3650de8d59d5eee27d0c20b883c433c2a4b0c33986ee"
+  },
+  "verdict": "F0 MEASUREMENT COMPLETE — F1 scope is a DRAFT, not frozen; human review required"
+}

@@ -340,3 +340,33 @@ STOP — HUMAN REVIEW REQUIRED
   item-level rules and 8 measurable exit criteria (X-1 … X-8).
 - No code change in this record. Certification NOT granted · boundaries 0/8 · Smart Freeze ACTIVE ·
   Phase 1B NOT authorized. Implementation has not started.
+
+## 2026-09-03 — BND-05 CERTIFIED (1/8) · F0 Frontend Platform Baseline executed (measurement only)
+
+- Human decision recorded: **BND-05 — CERTIFIED (1/8)** on the strength of `CERT-REV-BND05-R2`
+  (R-1…R-7 PASS 7/7 live, `void_invoice` 403/42501 with `pending → pending` no-mutation proof,
+  8/8 SECURITY DEFINER hashes matching post-remediation, `anon` = 0, cross-tenant read/write denied,
+  journal live evidence valid, lineage and deltas documented, fixtures cleaned and verified zero,
+  and no finding remediated inside R2 itself).
+- Not closed by this decision: PRE-EXT-001 (OPEN — *security containment achieved / functional
+  capability not restored*), RISK-007 (OPEN), RISK-008 (OPEN). PRE-TS-001 stays CONTAINED.
+  Smart Freeze ACTIVE. PH1B NOT AUTHORIZED.
+- **F0-NAZRA-001 executed — MEASUREMENT AND CLASSIFICATION ONLY.** No refactoring, no UI redesign,
+  no repository migration, no query-service implementation, no design-system consolidation, no
+  performance / accessibility / RTL fixes.
+- Records: `docs/governance/F0_FRONTEND_BASELINE.md`,
+  `docs/governance/F0_APPENDIX_A_VIOLATION_CLASSIFICATION.md` (all 155 rows),
+  `docs/governance/F1_SCOPE_001_DRAFT.md` (**hash deliberately not frozen**),
+  artifact `scripts/audits/output/f0-frontend-baseline.json`,
+  tooling `scripts/audits/f0-frontend-baseline.mjs`.
+- Classification of the 155: ACTUAL_VIOLATION 95 · TRANSITIONAL 44 · FALSE_POSITIVE 10 ·
+  LEGITIMATE_EXCEPTION 6. The number 155 is explicitly **not** a reduction target.
+- Measurements: 1212 modules · 6 cycles (0 in UI) · 100 routes · 44 repositories · 2 query services ·
+  631 data-access call sites (153 in UI) · 42 UI-uniformity findings · 635 design-system findings ·
+  2 ui-kit call sites · 48 inline-style files · 14 UI `any` files · 2 components over LOC budget ·
+  222 accessibility findings · RTL fitness PASS · bundle 4,920,767 B / 91 assets · 89/99 lazy routes ·
+  memoization 14.0% · 171 heavy components. LCP/INP/CLS and query latency recorded as NOT MEASURED.
+- Verification: typecheck 0 · fitness active 33 / pending 9 / failures 0 · Vitest 1619 passed, 5 skipped.
+- Single disclosed source touch: PRE-TS-001 recurrence re-applied in
+  `src/integrations/supabase/previewAuthStorage.ts` (containment only, not a fix, not scope expansion).
+- Next gate: **Human Review of F0 evidence** → separate authorization → F1. F1 has not started.
