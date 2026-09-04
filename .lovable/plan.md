@@ -1,42 +1,64 @@
-# Post-F1 Findings Gate — NOTIF-001 / DASH-001
+# Post-F1 Findings Gate — Documentation / Triage Gate Only
 
-F1 remains CLOSED (37/37, PASS, not certified). These are new post-F1 findings, registered and scoped separately. No F2 opening, no architecture migration.
+F1 remains CLOSED (37/37, PASS, accepted — not certified). The new findings start a **new lineage**; F1 is not reopened. This gate is documentation-only: source mutation 0, migration 0, RPC 0, grant 0, facade 0, F2 opening 0.
 
-## What I verified live (before proposing anything)
+## Live-verified root causes
 
-**NOTIF-001 — notifications persistence**
-- `src/hooks/useAlertNotifier.ts` → `notificationsRepository.insertMany()` → direct client `insert` into `notifications`.
-- Live policy catalogue on `public.notifications` (7 policies): SELECT/UPDATE/DELETE are user-scoped (`tenant_id = get_current_tenant() AND user_id = auth.uid()`), plus older tenant-only variants. The effective INSERT policy is `notifications_tenant_restrict_insert` — `WITH CHECK (tenant_id = get_current_tenant())`, roles `authenticated, anon`. There is no `notifications_insert_tenant_safe` policy in the live database.
-- **Decisive fact:** `information_schema.role_table_grants` returns **zero rows** for `public.notifications`. No `GRANT` exists for `anon`, `authenticated`, or `service_role`. PostgREST therefore denies every write (and read) with a permission error regardless of RLS.
+**NOTIF-001 — Confirmed (High — Security/Authorization + Reliability)**
 
-So the confirmed root cause is table-level privilege absence, not a missing/failing INSERT policy. A second, independent defect is visible in the same evidence: the INSERT policy checks only `tenant_id`, so any tenant member could write a notification with an arbitrary `user_id` (in-tenant spoofing) once grants exist.
+```text
+Client
+  ↓ useAlertNotifier → notificationsRepository.insertMany()
+  ↓ PostgREST
+  ↓ public.notifications
+  ↓ NO effective table privilege (zero rows in role_table_grants)
+  ↓ WRITE DENIED
+```
 
-**DASH-001 — Recent Invoices**
-- `src/hooks/useDashboardData.ts:159` selects `amount_paid`; the type at line 43 and `RecentInvoicesWidget.tsx:15,106,246` also use `amount_paid`.
-- Schema/canonical field is `paid_amount`, used everywhere else in the app. Confirmed mismatch across query → type → widget.
+**NOTIF-002 — Confirmed (independent, same table)** — the effective INSERT policy `notifications_tenant_restrict_insert` checks only `tenant_id = get_current_tenant()`. If INSERT is ever granted as-is, a tenant member could set an arbitrary `user_id` → in-tenant notification spoofing. A grants-only fix is therefore an incomplete, unacceptable security fix.
 
-## Deliverable of this gate (documentation only)
+**DASH-001 — Confirmed (Medium — Data Contract)** — `useDashboardData.ts` (query + type) and `RecentInvoicesWidget.tsx` use `amount_paid`; the canonical schema field is `paid_amount`, used by the rest of the app. Fix = contract rename only; no `ALTER TABLE`, no duplicate field.
 
-Create `docs/governance/POST_F1_FINDINGS_GATE.md` containing:
+**DASH-002 — Registered (architecture observation)** — `useDashboardData` queries Supabase directly. Filed as F2 candidate, **not** fixed here.
 
-1. Statement that F1 scope stays closed and exhausted; these findings do not reopen it.
-2. **NOTIF-001** — Severity High, class Security/Authorization + Reliability, boundary BND-06 with BND-05 implications.
-   - Confirmed root cause: no table grants on `public.notifications`; PostgREST-level denial.
-   - Secondary finding NOTIF-002: INSERT policy lacks a `user_id = auth.uid()` (or admin-in-tenant) predicate — in-tenant notification spoofing.
-   - Recommended direction (not authorized here): system-generated alerts should be created through a narrow server-side authority (`SECURITY DEFINER` RPC deriving tenant and target user), plus minimum grants; explicitly rejected: `WITH CHECK (true)` or any broad client INSERT.
-3. **DASH-001** — Severity Medium, class Data Contract.
-   - Root cause: `amount_paid` vs canonical `paid_amount`.
-   - Fix direction: rename the contract to `paid_amount` in query, type, and widget. No new column, no `ALTER TABLE`.
-   - Registered secondary architectural observation DASH-002: `useDashboardData` queries Supabase directly (hook → DB edge). Recorded as an F2-candidate item, not fixed here.
-4. Proposed frozen scope for the next unit (`POSTF1_SCOPE_001`) listing exact files/edges, expected mutations, verification commands, and exit conditions — written as a candidate, **no SHA-256 freeze, no source mutation** in this gate.
-5. Human authorization block left unsigned.
+## Deliverables in this step (documentation only)
 
-Also append the two findings to `docs/governance/PRE_EXISTING_ISSUES.md` and a gate row to `docs/governance/PROGRESS_LOG.md`.
+1. `docs/governance/POST_F1_FINDINGS_GATE.md` containing:
+   - Statement: F1 CLOSED/exhausted; findings open a new lineage.
+   - For each finding: ID, root cause (as verified live), classification, boundary, recommended direction, rejected shortcuts (no `WITH CHECK (true)`, no broad client INSERT, no DB schema change for DASH-001).
+   - Empty, unsigned Human Authorization block.
+2. Candidate `POSTF1_SCOPE_001`, split into two units (different risk profiles):
+   - **Unit A — NOTIF-001/002 (Security + persistence):** minimum table grants + narrow server-side creation authority. The authority must: derive tenant server-side (never trust client `tenant_id`), validate target-user tenant membership, be `SECURITY DEFINER` with pinned `search_path`, no `anon` EXECUTE, least-privilege execution, no path for a user to target another user unless the authority model explicitly allows it. Reads (bell/page) stay user-scoped via existing SELECT policy.
+   - **Unit B — DASH-001 (Data contract):** rename `amount_paid` → `paid_amount` in `useDashboardData.ts` (query + type) and `RecentInvoicesWidget.tsx` only. DASH-002 boundary migration stays an F2 candidate.
+   - **No SHA-256 freeze, no source mutation** in this gate.
+3. Append the four findings to `docs/governance/PRE_EXISTING_ISSUES.md`, a gate row to `docs/governance/PROGRESS_LOG.md`, and the three post-F1 tasks to `roadmap.md`.
 
-## Explicitly out of scope in this step
+## Exit conditions recorded for the future implementation unit
 
-No source changes, no migrations, no RPC creation, no grants applied, no F2 opening, no facade work, no PRE-TS-001 handling beyond noting recurrence if it appears.
+**Unit A success ≠ "INSERT succeeds".** Success = Persistence PASS + Authorization PASS + Tenant isolation PASS + Anti-spoofing PASS. Required evidence (not mere unit tests):
 
-## Next step after approval
+```text
+✓ authorized notification succeeds and persists
+✓ appears in NotificationBell and Notifications page
+✓ same-tenant unauthorized target denied
+✓ cross-tenant target denied
+✓ tenant spoofing denied
+✓ anon cannot invoke the authority
+✓ arbitrary client INSERT is not restored
+```
 
-You review the gate document, then issue a frozen scope + authorization for the implementation unit (grants + narrow authority for NOTIF-001; contract rename for DASH-001), each with its own evidence pack.
+**Unit B:** Recent Invoices loads; paid amount displayed from `paid_amount`; no `amount_paid` reference remains in this contract; no schema mutation; no unrelated dashboard behavior changed.
+
+## Order of operations
+
+```text
+POST-F1 GATE (this step, documentation)
+  → Human review
+  → Frozen POSTF1_SCOPE_001
+  → Human authorization
+  → Unit A implementation + evidence  |  Unit B implementation + evidence
+  → Independent verification
+  → Human gate
+```
+
+F2 stays UNAUTHORIZED. PRE-TS-001 recurrence handling remains a separate DELTA. No certification is claimed at any step.
