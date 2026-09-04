@@ -184,3 +184,24 @@ platform-side generator emits the annotations.
 - Not closed by the PDF repair: `scripts/fixes/**` still performs mutation without boundary
   detection, allowed-scope declaration, or pre-mutation verification.
 - Phase 1 impact: **TO BE DECIDED AT REVIEW**. Recorded in `G0R-NAZRA-002` evidence.
+
+### NOTIF-001 — Notifications table has zero Data-API grants (NEW, 2026-09-04)
+- `information_schema.role_table_grants` returns 0 rows for `public.notifications`; PostgREST
+  denies writes before RLS. Customer Alert notifications from `useAlertNotifier` never persist.
+- Classification: Security/Authorization + Reliability. Boundary: BND-06 (BND-05 implications).
+- Status: **OPEN** — triaged in `docs/governance/POST_F1_FINDINGS_GATE.md` (Unit A candidate).
+
+### NOTIF-002 — notifications INSERT policy lacks user_id predicate (NEW, 2026-09-04)
+- Effective policy `notifications_tenant_restrict_insert` checks only
+  `tenant_id = get_current_tenant()`; once grants exist, in-tenant notification spoofing
+  (arbitrary `user_id`) becomes possible.
+- Status: **OPEN** — must be resolved together with NOTIF-001 (grants-only fix rejected).
+
+### DASH-001 — Recent Invoices uses `amount_paid`; canonical field is `paid_amount` (NEW, 2026-09-04)
+- `src/hooks/useDashboardData.ts` + `src/components/dashboard/RecentInvoicesWidget.tsx` contract
+  mismatch. Fix = contract rename only; no schema change.
+- Status: **OPEN** — triaged in `POST_F1_FINDINGS_GATE.md` (Unit B candidate).
+
+### DASH-002 — `useDashboardData` queries the DB directly (NEW, 2026-09-04)
+- Hook → Supabase edge. Registered as **F2 candidate**; not fixed in the post-F1 lineage.
+- Status: **REGISTERED / UNAUTHORIZED**.
