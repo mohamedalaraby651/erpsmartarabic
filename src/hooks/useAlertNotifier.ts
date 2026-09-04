@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { notificationsRepository } from '@/lib/repositories';
 import { useAlertSettings } from './useAlertSettings';
-import { useTenant } from './useTenant';
 import { logErrorSafely } from '@/lib/errorHandler';
 import type { CustomerAlert } from './useCustomerAlerts';
 
@@ -52,15 +51,11 @@ function playNotificationSound() {
  */
 export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
   const { settings } = useAlertSettings();
-  const { tenantId } = useTenant();
   const prevKeysRef = useRef<Set<string>>(getSeenKeys());
 
   // Stable reference for sound setting
   const soundEnabledRef = useRef(settings.soundEnabled);
   soundEnabledRef.current = settings.soundEnabled;
-
-  const tenantIdRef = useRef<string | undefined>(tenantId);
-  tenantIdRef.current = tenantId;
 
   const processAlerts = useCallback(async (newAlerts: CustomerAlert[], uid: string) => {
     // Play sound once

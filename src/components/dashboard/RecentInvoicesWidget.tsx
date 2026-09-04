@@ -12,7 +12,7 @@ interface InvoiceWithCustomer {
   id: string;
   invoice_number: string;
   total_amount: number;
-  amount_paid: number | null;
+  paid_amount: number | null;
   payment_status: string;
   due_date: string | null;
   created_at: string;
@@ -103,7 +103,7 @@ const MobileInvoiceRow = memo(function MobileInvoiceRow({
             customerId={invoice.customer_id}
             customerName={invoice.customers?.name || 'عميل'}
             totalAmount={invoice.total_amount}
-            amountPaid={invoice.amount_paid || 0}
+            amountPaid={invoice.paid_amount || 0}
             paymentStatus={invoice.payment_status}
             dueDate={invoice.due_date}
             createdAt={invoice.created_at}
@@ -243,7 +243,7 @@ export const RecentInvoicesWidget = memo(function RecentInvoicesWidget({ invoice
                 customerId={invoice.customer_id}
                 customerName={invoice.customers?.name || 'عميل'}
                 totalAmount={invoice.total_amount}
-                amountPaid={invoice.amount_paid || 0}
+                amountPaid={invoice.paid_amount || 0}
                 paymentStatus={invoice.payment_status}
                 dueDate={invoice.due_date}
                 createdAt={invoice.created_at}
