@@ -1,0 +1,133 @@
+{
+  "contract_id": "POSTF1_SCOPE_001",
+  "status": "CANDIDATE_PENDING_FREEZE",
+  "parent_gate": "PFG-NAZRA-001",
+  "gate_decision": "PASS_DOCUMENTATION_GATE_ACCEPTED",
+  "date": "2026-09-04",
+  "lineage": [
+    "a33f49b9",
+    "BASELINE-NAZRA-002",
+    "BASELINE-UX4-001",
+    "PFG-NAZRA-001"
+  ],
+  "units": [
+    {
+      "unit": "A",
+      "name": "NOTIF-001_AND_NOTIF-002_NOTIFICATION_SECURITY_AND_PERSISTENCE",
+      "files": [
+        {
+          "path": "src/hooks/useAlertNotifier.ts",
+          "change": "REDIRECT_FROM_DIRECT_REPOSITORY_INSERT_TO_RPC_BACKED_REPOSITORY_CALL"
+        },
+        {
+          "path": "src/lib/repositories/notificationsRepository.ts",
+          "change": "REMOVE_INSERTMANY_DIRECT_INSERT_ADD_CREATE_NOTIFICATION_RPC_WRAPPER"
+        },
+        {
+          "path": "supabase/migrations",
+          "change": "NEW_MIGRATION_RPC_GRANTS_INSERT_PRIVILEGE_REVOCATION",
+          "note": "EXACT_FILENAME_ASSIGNED_AT_IMPLEMENTATION"
+        }
+      ],
+      "authority_contract": {
+        "tenant_source": "SERVER_DERIVED_ONLY",
+        "tenant_function": "public.get_current_tenant()",
+        "client_supplies_tenant_id": false,
+        "target_user_validation": "MEMBER_OF_CALLER_TENANT_VIA_USER_TENANTS",
+        "function_security": "SECURITY_DEFINER",
+        "search_path": "public",
+        "rls_bypass": "RPC_ONLY_VIA_SECURITY_DEFINER",
+        "direct_insert": "DENIED_BY_REVOKE"
+      },
+      "rpc_contract": {
+        "name": "public.create_tenant_notification",
+        "args": [
+          { "name": "target_user_id", "type": "uuid" },
+          { "name": "title", "type": "text" },
+          { "name": "message", "type": "text" },
+          { "name": "notification_type", "type": "text", "default": "'info'" },
+          { "name": "link", "type": "text", "default": "null" }
+        ],
+        "returns": "uuid",
+        "grants": ["authenticated", "service_role"]
+      },
+      "grant_contract": {
+        "revoke": [
+          "INSERT ON public.notifications FROM authenticated",
+          "INSERT ON public.notifications FROM anon"
+        ],
+        "execute": [
+          "EXECUTE ON FUNCTION public.create_tenant_notification(uuid,text,text,text,text) TO authenticated",
+          "EXECUTE ON FUNCTION public.create_tenant_notification(uuid,text,text,text,text) TO service_role"
+        ]
+      },
+      "anti_spoofing": {
+        "direct_insert_denied": true,
+        "anon_rpc_denied": true,
+        "cross_tenant_denied": true,
+        "same_tenant_non_member_denied": true,
+        "tenant_id_set_server_side": true
+      }
+    },
+    {
+      "unit": "B",
+      "name": "DASH-001_DASHBOARD_DATA_CONTRACT",
+      "files": [
+        {
+          "path": "src/hooks/useDashboardData.ts",
+          "change": "RENAME_amount_paid_TO_paid_amount_IN_TYPE_AND_SELECT_QUERY"
+        },
+        {
+          "path": "src/components/dashboard/RecentInvoicesWidget.tsx",
+          "change": "RENAME_amount_paid_TO_paid_amount_IN_RENDER_LOGIC"
+        }
+      ],
+      "constraints": {
+        "schema_change": false,
+        "new_column": false,
+        "query_service": false,
+        "dashboard_refactor": false,
+        "other_invoice_consumers_touched": false
+      }
+    }
+  ],
+  "verification": {
+    "quality_gates": [
+      "tsgo_or_typecheck_zero_project_errors",
+      "bun_run_build_pass",
+      "vitest_pass",
+      "fitness_zero_new_failures"
+    ],
+    "live_evidence": [
+      { "id": "V1", "test": "authorized_alert_fires", "expected": "notification_persists_and_visible_in_bell" },
+      { "id": "V2", "test": "notification_page_read_back", "expected": "row_visible_to_target_user" },
+      { "id": "V3", "test": "same_tenant_non_member_target", "expected": "rpc_403_42501_no_row" },
+      { "id": "V4", "test": "cross_tenant_target", "expected": "rpc_403_42501_no_row" },
+      { "id": "V5", "test": "direct_client_insert_attempt", "expected": "postgrest_denied_no_insert_privilege" },
+      { "id": "V6", "test": "anon_rpc_invoke", "expected": "denied_no_execute" },
+      { "id": "V7", "test": "recent_invoices_loads", "expected": "paid_amount_displayed_no_amount_paid_reference" },
+      { "id": "V8", "test": "dash_regression", "expected": "dashboard_renders_no_runtime_errors" }
+    ]
+  },
+  "forbidden_changes": [
+    "ANY_SCOPE_DRIFT_BEYOND_THE_FIVE_FILES_LISTED",
+    "NEW_FACADE_OR_QUERY_SERVICE_OR_DOMAIN_CHANGE",
+    "SOURCE_MUTATION_IN_F1_FROZEN_FILES_WITHOUT_NEW_SCOPE",
+    "SCHEMA_CHANGE_BEYOND_UNIT_A_MIGRATION",
+    "BROAD_INSERT_GRANT_RESTORE_ON_public.notifications",
+    "F1_SCOPE_REOPEN",
+    "F2_UNAUTHORIZED_OPENING",
+    "OPPORTUNISTIC_CLEANUP_OR_REFACTOR"
+  ],
+  "stop_conditions": [
+    "SCOPE_DRIFT",
+    "NEW_FACADE_QUERY_SERVICE_DOMAIN_REQUIREMENT",
+    "F1_FILE_MUTATION_WITHOUT_NEW_SCOPE",
+    "SCHEMA_CHANGE_OUTSIDE_CONTRACT",
+    "BROAD_INSERT_GRANT_RESTORED",
+    "TEST_BUILD_FITNESS_FAILURE_UNRESOLVABLE_IN_CONTRACT",
+    "PRE-TS-001_RECURRENCE_REQUIRING_NON_MINIMAL_FIX"
+  ],
+  "certification": "NOT_CERTIFIED",
+  "note": "HUMAN_FREEZE_SIGNATURE_REQUIRED_BEFORE_ANY_MUTATION"
+}

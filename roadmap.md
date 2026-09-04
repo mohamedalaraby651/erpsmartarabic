@@ -6,6 +6,6 @@
 
 ## Post-F1 Findings (new lineage)
 - [x] Post-F1 Findings Gate — documentation-only triage (NOTIF-001/002, DASH-001/002)
-- [ ] Human review of the gate
-- [ ] Frozen POSTF1_SCOPE_001 (Unit A: NOTIF security/persistence · Unit B: DASH contract)
+- [x] Human review of the gate — PASS / Documentation Gate Accepted
+- [ ] Frozen POSTF1_SCOPE_001 (Unit A: NOTIF security/persistence · Unit B: DASH contract) — CANDIDATE
 - [ ] Human authorization → Unit A + Unit B implementation + evidence → independent verification → human gate

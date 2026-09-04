@@ -449,3 +449,21 @@ STOP — HUMAN REVIEW REQUIRED
 - Candidate `POSTF1_SCOPE_001` split: Unit A (NOTIF security+persistence), Unit B (DASH contract).
   No hash freeze. Source mutation 0 · migration 0 · RPC 0 · grant 0.
 - Record: `docs/governance/POST_F1_FINDINGS_GATE.md`. Human authorization: PENDING.
+
+## PRE-TS-001 — Recurrence containment (2026-09-04)
+- Symptom: `TS7011` reappeared in platform-protected auto-generated file `src/integrations/supabase/previewAuthStorage.ts`.
+- Fix class: Minimum pure-annotation remedy only; no logic change.
+- Change: added `: void` return-type annotations to `setItem` / `removeItem` and to the inner `(): void => undefined` arrow functions inside `.then()` callbacks.
+- Status: CONTAINED. Not claimed as certified; remains a separate DELTA from Post-F1 work.
+- Verification: `tsgo` exits 0.
+
+## POSTF1_SCOPE_001 — Frozen Execution Contract (candidate, 2026-09-04)
+- Scope: Unit A (NOTIF-001/002 — notification persistence + anti-spoofing) + Unit B (DASH-001 — dashboard `paid_amount` contract).
+- Files in scope: 4 source files + 1 new migration.
+- Authority model: server-derived tenant via `get_current_tenant()`; target user validated via `user_tenants`; `SECURITY DEFINER` RPC with pinned `search_path = public`; direct INSERT revoked.
+- Unit B: rename `amount_paid` → `paid_amount` in type, query, and widget; no schema change.
+- Stop conditions, forbidden changes, and live evidence V1–V8 defined.
+- Status: **CANDIDATE — pending human freeze approval**.
+- Manifest: `scripts/audits/output/postf1-scope-001-manifest.json`.
+- Frozen scope hash: `dc6c5dd9698d89092c0aa7f1d530554096e2a70a5e858f78375b49cbc413f4d3`.
+- Record: `docs/governance/POSTF1_SCOPE_001.md`. Human freeze signature: PENDING.
