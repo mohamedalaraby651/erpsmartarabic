@@ -467,3 +467,11 @@ STOP — HUMAN REVIEW REQUIRED
 - Manifest: `scripts/audits/output/postf1-scope-001-manifest.json`.
 - Frozen scope hash: `dc6c5dd9698d89092c0aa7f1d530554096e2a70a5e858f78375b49cbc413f4d3`.
 - Record: `docs/governance/POSTF1_SCOPE_001.md`. Human freeze signature: PENDING.
+
+## POSTF1_SCOPE_001 — EXECUTED (2026-09-04)
+- Human authorization granted; Unit A + Unit B implemented strictly within contract scope.
+- Unit A: `public.create_tenant_notification` (SECURITY DEFINER, search_path=public, server-derived tenant, target-user membership check); INSERT on `public.notifications` revoked from `authenticated`/`anon`; EXECUTE granted to `authenticated`/`service_role` only.
+- Unit B: `amount_paid` → `paid_amount` in `useDashboardData.ts` and `RecentInvoicesWidget.tsx` (contract-only).
+- Quality: tsgo 0 · build PASS · vitest 1619 passed/5 skipped · fitness active=33 pending=9 failures=0.
+- DELTA: PRE-TS-001 recurrence #12 contained (platform-owned file, annotations only). RISK-008 OPEN.
+- Evidence: `docs/governance/POSTF1_SCOPE_001_EXECUTION_RECORD.md`. NOT CERTIFIED.

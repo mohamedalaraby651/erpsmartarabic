@@ -47,7 +47,7 @@ export type { SodRule, Tenant, RoleSectionPermission, ApprovalChain, ExportTempl
 export { savedViewsRepository } from './savedViewsRepository';
 export type { SavedViewRow, SavedViewSection } from './savedViewsRepository';
 export { notificationsRepository } from './notificationsRepository';
-export type { NotificationInsert } from './notificationsRepository';
+export type { NotificationCreate } from './notificationsRepository';
 export { attachmentsRepository } from './attachmentsRepository';
 export { employeeRepository } from './employeeRepository';
 export type { EmployeeRow, EmployeeInsert, EmployeeUpdate, EmployeeFilters } from './employeeRepository';

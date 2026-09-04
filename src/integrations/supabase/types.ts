@@ -7014,6 +7014,16 @@ export type Database = {
         }
         Returns: string
       }
+      create_tenant_notification: {
+        Args: {
+          link?: string
+          message: string
+          notification_type?: string
+          target_user_id: string
+          title: string
+        }
+        Returns: string
+      }
       current_tenant: { Args: never; Returns: string }
       decrypt_totp_secret: { Args: { _user_id: string }; Returns: string }
       emit_event: {
