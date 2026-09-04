@@ -441,3 +441,11 @@ STOP — HUMAN REVIEW REQUIRED
 - Explicit non-decisions / locked: F2 (58 items) UNAUTHORIZED; F3–F6 LOCKED; BND-01…BND-04/BND-06…BND-08 NOT CERTIFIED; RISK-007, RISK-008, PRE-EXT-001 OPEN; PRE-TS-001 CONTAINED; no opportunistic cleanup authorized; no feature freeze modification.
 - Next step: new frozen scope + human authorization required before any further work.
 - Record: `docs/governance/F1_HUMAN_GOVERNANCE_GATE.md`.
+
+## PFG-NAZRA-001 — Post-F1 Findings Gate (documentation only, 2026-09-04)
+- New lineage; F1 remains CLOSED. Findings: NOTIF-001 (no table grants on `public.notifications`
+  — confirmed live), NOTIF-002 (INSERT policy lacks `user_id` predicate — spoofing once granted),
+  DASH-001 (`amount_paid` vs canonical `paid_amount`), DASH-002 (dashboard hook → DB edge; F2 candidate).
+- Candidate `POSTF1_SCOPE_001` split: Unit A (NOTIF security+persistence), Unit B (DASH contract).
+  No hash freeze. Source mutation 0 · migration 0 · RPC 0 · grant 0.
+- Record: `docs/governance/POST_F1_FINDINGS_GATE.md`. Human authorization: PENDING.
