@@ -43,6 +43,13 @@
       "when": 1788216578932,
       "tag": "0005_rem_bnd05_001_definer_surface",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788513609018,
+      "tag": "0006_postf1_scope_001_unit_a_notification_rpc",
+      "breakpoints": true
     }
   ]
 }
