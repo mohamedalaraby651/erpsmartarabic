@@ -68,18 +68,13 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
       playNotificationSound();
     }
 
-    const tid = tenantIdRef.current;
-    if (!tid) return; // can't insert without tenant — RLS will block
-
-    // Insert notifications with dedup (max 10 per batch)
+    // Tenant is derived server-side by the RPC — never supplied by the client.
     const toInsert = newAlerts.slice(0, 10).map(a => ({
       user_id: uid,
-      tenant_id: tid,
       title: getNotificationTitle(a.type),
       message: a.message,
       type: a.severity === 'error' ? 'alert' : a.severity === 'warning' ? 'warning' : 'info',
       link: `/customers/${a.customerId}`,
-      is_read: false,
     }));
 
     if (toInsert.length > 0) {
@@ -88,7 +83,7 @@ export function useAlertNotifier(alerts: CustomerAlert[], userId?: string) {
         const existingSet = await notificationsRepository.existingTodayKeys(uid, links);
         const filtered = toInsert.filter(n => !existingSet.has(`${n.title}|${n.link}`));
         if (filtered.length > 0) {
-          await notificationsRepository.insertMany(filtered);
+          await notificationsRepository.createMany(filtered);
         }
       } catch (err) {
         logErrorSafely('useAlertNotifier:process', err);
