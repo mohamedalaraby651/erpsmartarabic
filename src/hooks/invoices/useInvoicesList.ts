@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
 import { logErrorSafely } from "@/lib/errorHandler";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -39,6 +40,7 @@ export function useInvoicesList() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const normalizedSearch = sanitizeSearch(debouncedSearch.trim());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [prefillCustomerId, setPrefillCustomerId] = useState<string | undefined>(undefined);
@@ -59,6 +61,31 @@ export function useInvoicesList() {
 
   const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
+  const { data: matchingCustomerIds = [], isFetched: customerSearchResolved } = useQuery({
+    queryKey: ['invoice-search-customer-ids', normalizedSearch],
+    queryFn: async () => {
+      if (!normalizedSearch) return [];
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id')
+        .ilike('name', `%${normalizedSearch}%`)
+        .limit(500);
+      if (error) throw error;
+      return (data || []).map((customer) => customer.id);
+    },
+    enabled: !!normalizedSearch,
+    staleTime: 60 * 1000,
+  });
+
+  const applyGlobalSearch = useCallback((query: any) => {
+    if (!normalizedSearch) return query;
+    const predicates = [`invoice_number.ilike.%${normalizedSearch}%`];
+    if (matchingCustomerIds.length > 0) {
+      predicates.push(`customer_id.in.(${matchingCustomerIds.join(',')})`);
+    }
+    return query.or(predicates.join(','));
+  }, [matchingCustomerIds, normalizedSearch]);
+
   /**
    * Select every invoice that matches the current search term across ALL pages,
    * not just the rows visible on the current page. Fetches IDs only (lightweight).
@@ -68,7 +95,7 @@ export function useInvoicesList() {
     setIsSelectingAll(true);
     try {
       let query = supabase.from('invoices').select('id').limit(500);
-      if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      query = applyGlobalSearch(query);
       const { data, error } = await query;
       if (error) throw error;
       const ids = (data || []).map((r) => r.id);
@@ -84,7 +111,7 @@ export function useInvoicesList() {
     } finally {
       setIsSelectingAll(false);
     }
-  }, [debouncedSearch, toast]);
+  }, [applyGlobalSearch, toast]);
 
 
   const bulkPrint = useCallback(async () => {
@@ -140,12 +167,13 @@ export function useInvoicesList() {
       let query = supabase
         .from('invoices')
         .select(invoiceSelect, { count: 'exact', head: true });
-      if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      query = applyGlobalSearch(query);
       query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
     },
+    enabled: !normalizedSearch || customerSearchResolved,
   });
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
@@ -158,12 +186,13 @@ export function useInvoicesList() {
       let query = supabase.from('invoices').select(invoiceSelect)
         .order('created_at', { ascending: false })
         .range(pagination.range.from, pagination.range.to);
-      if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      query = applyGlobalSearch(query);
       query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { data, error } = await query;
       if (error) throw error;
       return data as unknown as InvoiceWithCustomer[];
     },
+    enabled: !normalizedSearch || customerSearchResolved,
   });
 
   // Filter pick-lists (OPA-UI-003 / FLT-001) — every searchable column offers
