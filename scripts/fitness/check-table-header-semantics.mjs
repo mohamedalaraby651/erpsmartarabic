@@ -49,19 +49,23 @@ for (const file of walk(SRC)) {
   // Rules 1 & 2 — scan every <TableHeader> … </TableHeader> region.
   let depth = 0;
   let headerStart = 0;
+  let inCell = false; // true while inside an open <TableHead> … </TableHead>
   lines.forEach((line, i) => {
     if (/<TableHeader[\s>]/.test(line)) {
       if (depth === 0) headerStart = i + 1;
       depth++;
     }
     if (depth > 0) {
-      if (/<TableCell[\s>/]/.test(line)) {
+      if (!inCell && /<TableCell[\s>/]/.test(line)) {
         violations.push({ rel, line: i + 1, rule: "td-in-thead", detail: `TableCell inside TableHeader (opened line ${headerStart})` });
       }
       const m = line.match(/<([A-Z][A-Za-z0-9_]*)[\s>/]/);
-      if (m && !["TableHeader", "TableRow", ...TH_COMPONENTS].includes(m[1])) {
+      if (!inCell && m && !["TableHeader", "TableRow", "TableCell", ...TH_COMPONENTS].includes(m[1])) {
         violations.push({ rel, line: i + 1, rule: "non-cell-in-header-row", detail: `<${m[1]}> directly inside header row (opened line ${headerStart})` });
       }
+      // Track open/close of a header cell so its children aren't flagged.
+      if (/<TableHead[\s>]/.test(line) && !/\/>/.test(line) && !/<\/TableHead>/.test(line)) inCell = true;
+      if (/<\/TableHead>/.test(line)) inCell = false;
     }
     if (/<\/TableHeader>/.test(line)) depth = Math.max(0, depth - 1);
   });
