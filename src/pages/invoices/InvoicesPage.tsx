@@ -373,9 +373,6 @@ const InvoicesPage = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div><h1 className="text-2xl font-bold">الفواتير</h1><p className="text-muted-foreground">إدارة فواتير المبيعات</p></div>
-        <div className="flex gap-2">
-          <Button onClick={list.handleAdd} size={isMobile ? "sm" : "default"}><Plus className="h-4 w-4 ml-2" />{isMobile ? "جديد" : "فاتورة جديدة"}</Button>
-        </div>
       </div>
 
       {isMobile ? renderMobileView() : (
