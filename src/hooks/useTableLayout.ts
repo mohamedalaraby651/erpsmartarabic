@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 export type TableDensity = 'comfortable' | 'medium' | 'compact';
 
 export interface TableLayoutState {
+  version: number;
   widths: Record<string, number>;
   hidden: string[];
   order: string[];
@@ -21,6 +22,7 @@ export interface TableLayoutState {
 }
 
 const DEFAULT_STATE: TableLayoutState = {
+  version: 2,
   widths: {},
   hidden: [],
   order: [],
@@ -40,15 +42,41 @@ export const DENSITY_LABEL: Record<TableDensity, string> = {
   compact: 'مضغوط',
 };
 
-/** Preferences are scoped per user AND per screen (COL-003). */
-const storageKey = (section: string, userId: string) => `table-layout:${userId}:${section}`;
+export const TABLE_LAYOUT_VERSION = 2;
 
-function read(section: string, userId: string): TableLayoutState {
+/** Preferences are scoped per user, screen, and contract version. */
+export const tableLayoutStorageKey = (section: string, userId: string) =>
+  `table-layout:v${TABLE_LAYOUT_VERSION}:${userId}:${section}`;
+
+const legacyStorageKey = (section: string, userId: string) =>
+  `table-layout:${userId}:${section}`;
+
+export function normalizeTableLayout(input: unknown, allColumnKeys: string[]): TableLayoutState {
+  const value = input && typeof input === 'object' ? input as Partial<TableLayoutState> : {};
+  const validKeys = new Set(allColumnKeys);
+  const widths = Object.fromEntries(
+    Object.entries(value.widths ?? {}).filter(([key, width]) => validKeys.has(key) && Number.isFinite(width)),
+  );
+  const hidden = (value.hidden ?? []).filter((key) => validKeys.has(key));
+  const order = (value.order ?? []).filter((key) => validKeys.has(key));
+  const density = value.density === 'comfortable' || value.density === 'compact' ? value.density : 'medium';
+  return {
+    version: TABLE_LAYOUT_VERSION,
+    widths,
+    hidden,
+    order,
+    density,
+    bodyHeight: typeof value.bodyHeight === 'number' && value.bodyHeight >= 0 ? value.bodyHeight : 0,
+  };
+}
+
+function read(section: string, userId: string, allColumnKeys: string[]): TableLayoutState {
   if (typeof window === 'undefined') return DEFAULT_STATE;
   try {
-    const raw = window.localStorage.getItem(storageKey(section, userId));
+    const raw = window.localStorage.getItem(tableLayoutStorageKey(section, userId))
+      ?? window.localStorage.getItem(legacyStorageKey(section, userId));
     if (!raw) return DEFAULT_STATE;
-    return { ...DEFAULT_STATE, ...(JSON.parse(raw) as Partial<TableLayoutState>) };
+    return normalizeTableLayout(JSON.parse(raw), allColumnKeys);
   } catch {
     return DEFAULT_STATE;
   }
@@ -57,16 +85,16 @@ function read(section: string, userId: string): TableLayoutState {
 export function useTableLayout(section: string, allColumnKeys: string[]) {
   const { user } = useAuth();
   const userId = user?.id ?? 'anonymous';
-  const [state, setState] = useState<TableLayoutState>(() => read(section, userId));
+  const [state, setState] = useState<TableLayoutState>(() => read(section, userId, allColumnKeys));
 
   // Switching account must not inherit the previous user's layout.
   useEffect(() => {
-    setState(read(section, userId));
-  }, [section, userId]);
+    setState(read(section, userId, allColumnKeys));
+  }, [section, userId, allColumnKeys]);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(storageKey(section, userId), JSON.stringify(state));
+      window.localStorage.setItem(tableLayoutStorageKey(section, userId), JSON.stringify(state));
     } catch {
       /* storage may be unavailable (private mode) — layout stays in memory */
     }
@@ -105,6 +133,21 @@ export function useTableLayout(section: string, allColumnKeys: string[]) {
     [allColumnKeys],
   );
 
+  const moveColumnTo = useCallback(
+    (key: string, targetKey: string) => {
+      setState((s) => {
+        const current = s.order.length ? [...s.order] : [...allColumnKeys];
+        const from = current.indexOf(key);
+        const to = current.indexOf(targetKey);
+        if (from < 0 || to < 0 || from === to) return s;
+        current.splice(from, 1);
+        current.splice(to, 0, key);
+        return { ...s, order: current };
+      });
+    },
+    [allColumnKeys],
+  );
+
   const setDensity = useCallback((density: TableDensity) => {
     setState((s) => ({ ...s, density }));
   }, []);
@@ -113,7 +156,14 @@ export function useTableLayout(section: string, allColumnKeys: string[]) {
     setState((s) => ({ ...s, bodyHeight }));
   }, []);
 
-  const reset = useCallback(() => setState(DEFAULT_STATE), []);
+  const reset = useCallback(() => {
+    try {
+      window.localStorage.removeItem(legacyStorageKey(section, userId));
+    } catch {
+      /* storage may be unavailable */
+    }
+    setState(DEFAULT_STATE);
+  }, [section, userId]);
 
   /** Column keys in the user's order, hidden ones removed. */
   const visibleKeys = useMemo(() => {
@@ -139,6 +189,7 @@ export function useTableLayout(section: string, allColumnKeys: string[]) {
     autoFitWidth,
     toggleColumn,
     moveColumn,
+    moveColumnTo,
     setDensity,
     setBodyHeight,
     reset,

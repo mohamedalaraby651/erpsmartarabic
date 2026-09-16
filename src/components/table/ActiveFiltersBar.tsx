@@ -91,7 +91,7 @@ export function ActiveFiltersBar({
   if (!hasFilters && savedSets.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2" aria-live="polite">
       <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Filter className="h-3.5 w-3.5" />
         <span>{hasFilters ? `${entries.length} فلتر نشط` : 'لا توجد فلاتر نشطة'}</span>
