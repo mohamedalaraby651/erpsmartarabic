@@ -14,6 +14,8 @@ import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplate
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { ColumnFilterHeader, type ColumnFilterKind, type FilterOption } from "@/components/ui/column-filter";
 import { ActiveFiltersBar } from "@/components/table/ActiveFiltersBar";
+import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { DENSITY_CLASS, useTableLayout } from "@/hooks/useTableLayout";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -64,11 +66,16 @@ const FILTER_COLUMN_META = Object.fromEntries(
   INVOICE_FILTER_COLUMNS.map((c) => [c.key, { label: c.label, options: c.options }]),
 );
 
+const INVOICE_COLUMN_KEYS = INVOICE_FILTER_COLUMNS.map((c) => c.key);
+const INVOICE_COLUMN_LABELS = INVOICE_FILTER_COLUMNS.map((c) => ({ key: c.key, label: c.label }));
+
 const InvoicesPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const list = useInvoicesList();
   const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+  // Per-user table presentation (widths, density, visible columns, height).
+  const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
 
   // Invoices that match the current selection — used by the preview dialog.
   const selectedInvoices = useMemo(
