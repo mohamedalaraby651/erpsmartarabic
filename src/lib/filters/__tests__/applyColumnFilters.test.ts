@@ -66,4 +66,18 @@ describe('applyColumnFilters', () => {
     applyColumnFilters(q, { unknown: { kind: 'text', text: 'x' }, invoice_number: { kind: 'text', text: '  ' } }, map);
     expect(calls).toEqual([]);
   });
+
+  it('prefers picked values over the free term for text columns (FLT-001)', () => {
+    const multi = makeQuery();
+    applyColumnFilters(
+      multi.q,
+      { customer_name: { kind: 'text', text: 'ignored', values: ['شركة النور للتجارة', 'مزرعة البركة'] } },
+      map,
+    );
+    expect(multi.calls).toEqual(['in:customers.name:شركة النور للتجارة,مزرعة البركة']);
+
+    const single = makeQuery();
+    applyColumnFilters(single.q, { customer_name: { kind: 'text', values: ['مزرعة البركة'] } }, map);
+    expect(single.calls).toEqual(['eq:customers.name:مزرعة البركة']);
+  });
 });
