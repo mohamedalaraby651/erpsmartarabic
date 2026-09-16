@@ -286,7 +286,7 @@ const PaymentsPage = () => {
             <CardTitle>سجل المدفوعات</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <div className="w-full">
               <Table>
                 <TableHeader>
                   <TableRow>

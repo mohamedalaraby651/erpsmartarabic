@@ -57,7 +57,7 @@ export const PurchaseOrderTable = ({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="w-full">
       <Table>
         <TableHeader>
           <TableRow>

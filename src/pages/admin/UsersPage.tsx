@@ -317,11 +317,11 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={user.custom_role_id || ''}
+                        value={user.custom_role_id || '__none__'}
                         onValueChange={(value) => 
                           updateRoleMutation.mutate({
                             userRoleId: user.id,
-                            customRoleId: value || null,
+                            customRoleId: value === '__none__' ? null : value,
                           })
                         }
                       >
@@ -341,7 +341,7 @@ export default function UsersPage() {
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">بدون دور مخصص</SelectItem>
+                          <SelectItem value="__none__">بدون دور مخصص</SelectItem>
                           {customRoles?.map((role) => (
                             <SelectItem key={role.id} value={role.id}>
                               <div className="flex items-center gap-2">

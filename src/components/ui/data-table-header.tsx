@@ -13,8 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TableHead } from '@/components/ui/table';
 import { SortDirection } from '@/hooks/useTableSort';
 import { cn } from '@/lib/utils';
+
+/** Sentinel used by column filters for the "all / no filter" option. */
+export const ALL_FILTER_VALUE = '__all__';
 
 interface DataTableHeaderProps {
   label: string;
@@ -63,8 +67,10 @@ export function DataTableHeader({
   };
 
   return (
-    <div className={cn('flex items-center gap-1', className)}>
+    <TableHead className={cn('whitespace-nowrap', className)}>
+      <div className="flex items-center gap-1">
       <span className="font-medium">{label}</span>
+      
       
       {sortKey && onSort && (
         <Button
@@ -142,14 +148,16 @@ export function DataTableHeader({
 
               {filterType === 'select' && filterOptions && (
                 <Select
-                  value={(filterValue as string) || ''}
-                  onValueChange={(value) => onFilter(filterKey, value || undefined)}
+                  value={(filterValue as string) || ALL_FILTER_VALUE}
+                  onValueChange={(value) =>
+                    onFilter(filterKey, value === ALL_FILTER_VALUE ? undefined : value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="اختر..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">الكل</SelectItem>
+                    <SelectItem value={ALL_FILTER_VALUE}>الكل</SelectItem>
                     {filterOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
@@ -170,6 +178,7 @@ export function DataTableHeader({
           </PopoverContent>
         </Popover>
       )}
-    </div>
+      </div>
+    </TableHead>
   );
 }

@@ -89,14 +89,14 @@ const ProductsPage = () => {
     if (list.error) return <ListErrorState error={list.error} onRetry={() => list.refetch()} />;
     if (list.sortedData.length === 0) return <EmptyState icon={Package} title="لا توجد منتجات" description="ابدأ بإضافة منتجك الأول" action={list.canEdit ? { label: 'إضافة منتج جديد', onClick: list.handleAdd, icon: Plus } : undefined} />;
     return (
-      <div className="overflow-x-auto">
+      <div className="w-full">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead><DataTableHeader label="المنتج" sortKey="name" sortConfig={list.sortConfig} onSort={list.requestSort} /></TableHead>
+              <DataTableHeader label="المنتج" sortKey="name" sortConfig={list.sortConfig} onSort={list.requestSort} />
               <TableHead>الكود</TableHead>
               <TableHead>التصنيف</TableHead>
-              <TableHead><DataTableHeader label="سعر البيع" sortKey="selling_price" sortConfig={list.sortConfig} onSort={list.requestSort} /></TableHead>
+              <DataTableHeader label="سعر البيع" sortKey="selling_price" sortConfig={list.sortConfig} onSort={list.requestSort} />
               <TableHead>المخزون</TableHead>
               <TableHead>الحالة</TableHead>
               <TableHead className="text-left">إجراءات</TableHead>
