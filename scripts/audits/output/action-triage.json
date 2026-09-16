@@ -1,10 +1,10 @@
 {
   "id": "OPA-ACT-001-TRIAGE",
-  "generatedAt": "2026-09-16T15:37:34.845Z",
-  "total": 48,
+  "generatedAt": "2026-09-16T15:37:47.753Z",
+  "total": 43,
   "byKind": {
-    "review": 13,
-    "trigger": 25,
+    "review": 5,
+    "trigger": 28,
     "demo": 10
   },
   "review": [
@@ -37,54 +37,6 @@
       "line": 241,
       "kind": "review",
       "snippet": "<Button variant=\"outline\" size=\"sm\" aria-label=\"تخصيص العرض\" title=\"تخصيص ما يظهر فوق القائمة\">"
-    },
-    {
-      "file": "src/pages/employees/EmployeesPage.tsx",
-      "line": 170,
-      "kind": "review",
-      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"ghost\" size=\"icon\"><MoreHorizontal className=\"h-4 w-4\" /></Button></Dropdo"
-    },
-    {
-      "file": "src/pages/invoices/InvoicesPage.tsx",
-      "line": 202,
-      "kind": "review",
-      "snippet": "<Tooltip><TooltipTrigger asChild><Button variant=\"ghost\" size=\"icon\" onClick={() => list.duplicate(invoice.id)} disabled"
-    },
-    {
-      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
-      "line": 93,
-      "kind": "review",
-      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
-    },
-    {
-      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
-      "line": 265,
-      "kind": "review",
-      "snippet": "<div className=\"text-center py-8\"><CreditCard className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className"
-    },
-    {
-      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
-      "line": 91,
-      "kind": "review",
-      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
-    },
-    {
-      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
-      "line": 296,
-      "kind": "review",
-      "snippet": "<div className=\"text-center py-8\"><Receipt className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className=\"t"
-    },
-    {
-      "file": "src/ui/__integration__/harness/IntegrationHarnessPage.tsx",
-      "line": 298,
-      "kind": "review",
-      "snippet": "<Button type=\"reset\" variant=\"outline\">"
-    },
-    {
-      "file": "src/ui/primitives/__tests__/primitives.smoke.test.tsx",
-      "line": 64,
-      "kind": "review",
-      "snippet": "render(<Button>Save</Button>);"
     }
   ],
   "rows": [
@@ -247,7 +199,7 @@
     {
       "file": "src/pages/employees/EmployeesPage.tsx",
       "line": 170,
-      "kind": "review",
+      "kind": "trigger",
       "snippet": "<DropdownMenuTrigger asChild><Button variant=\"ghost\" size=\"icon\"><MoreHorizontal className=\"h-4 w-4\" /></Button></Dropdo"
     },
     {
@@ -255,12 +207,6 @@
       "line": 157,
       "kind": "trigger",
       "snippet": "<Button variant=\"ghost\" size=\"icon\" className=\"min-h-11 min-w-11\">"
-    },
-    {
-      "file": "src/pages/invoices/InvoicesPage.tsx",
-      "line": 202,
-      "kind": "review",
-      "snippet": "<Tooltip><TooltipTrigger asChild><Button variant=\"ghost\" size=\"icon\" onClick={() => list.duplicate(invoice.id)} disabled"
     },
     {
       "file": "src/pages/platform/TenantsManagementPage.tsx",
@@ -271,14 +217,8 @@
     {
       "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
       "line": 93,
-      "kind": "review",
+      "kind": "trigger",
       "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
-    },
-    {
-      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
-      "line": 265,
-      "kind": "review",
-      "snippet": "<div className=\"text-center py-8\"><CreditCard className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className"
     },
     {
       "file": "src/pages/quotations/QuotationDetailsPage.tsx",
@@ -289,26 +229,14 @@
     {
       "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
       "line": 91,
-      "kind": "review",
+      "kind": "trigger",
       "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
-    },
-    {
-      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
-      "line": 296,
-      "kind": "review",
-      "snippet": "<div className=\"text-center py-8\"><Receipt className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className=\"t"
     },
     {
       "file": "src/pages/tasks/TasksPage.tsx",
       "line": 174,
       "kind": "trigger",
       "snippet": "<Button>"
-    },
-    {
-      "file": "src/ui/__integration__/harness/IntegrationHarnessPage.tsx",
-      "line": 298,
-      "kind": "review",
-      "snippet": "<Button type=\"reset\" variant=\"outline\">"
     },
     {
       "file": "src/ui/composites/__demo__/CompositesGallery.tsx",
@@ -321,12 +249,6 @@
       "line": 99,
       "kind": "demo",
       "snippet": "end={<Button size=\"sm\" variant=\"outline\">Export</Button>}"
-    },
-    {
-      "file": "src/ui/composites/__demo__/CompositesGallery.tsx",
-      "line": 144,
-      "kind": "demo",
-      "snippet": "<Button type=\"reset\" variant=\"ghost\">Reset</Button>"
     },
     {
       "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
@@ -373,7 +295,7 @@
     {
       "file": "src/ui/primitives/__tests__/primitives.smoke.test.tsx",
       "line": 64,
-      "kind": "review",
+      "kind": "demo",
       "snippet": "render(<Button>Save</Button>);"
     }
   ]

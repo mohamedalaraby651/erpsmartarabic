@@ -32,6 +32,7 @@ function walk(dir, acc = []) {
 }
 
 const WIRED = /<Button(?=[^>]*(onClick|asChild|type="submit"|type='submit'|form=))/;
+const TRIGGER_SAME = /(Trigger)[^>]*asChild[^>]*>\s*<Button/;
 const TRIGGER = /(DialogTrigger|AlertDialogTrigger|PopoverTrigger|DropdownMenuTrigger|TooltipTrigger|SheetTrigger|DrawerTrigger|CollapsibleTrigger|HoverCardTrigger|AccordionTrigger|TabsTrigger|SelectTrigger|MenubarTrigger|ContextMenuTrigger)[^>]*asChild/;
 
 const rows = [];
@@ -40,19 +41,23 @@ for (const file of walk(SRC)) {
   if (!text.includes("<Button")) continue;
   const lines = text.split("\n");
   const hasForm = /<form[^>]*onSubmit/.test(text);
-  const isDemo = /__demo__|\/dev\/|Gallery|LivePreview/.test(file);
+  const isDemo = /__demo__|__tests__|__integration__|\/dev\/|Gallery|LivePreview/.test(file);
 
   lines.forEach((line, i) => {
     if (!/<Button[\s>]/.test(line)) return;
     // Look ahead: a multi-line tag may carry the handler on following lines.
-    const tag = lines.slice(i, i + 6).join(" ").split(">")[0] + ">";
+    // Arrow functions contain ">" so the tag end is found by bracket balance.
+    const chunk = lines.slice(i, i + 8).join(" ");
+    const start = chunk.indexOf("<Button");
+    const tag = chunk.slice(start, start + 400);
     if (WIRED.test(tag)) return;
+    if (/^<Button[^>]*\btype="(reset|button)"/.test(tag) && /onClick/.test(chunk.slice(start, start + 600))) return;
 
     const before = lines.slice(Math.max(0, i - 4), i).join(" ");
     const after = lines.slice(i, i + 8).join(" ");
     let kind = "review";
     if (isDemo) kind = "demo";
-    else if (TRIGGER.test(before)) kind = "trigger";
+    else if (TRIGGER.test(before) || TRIGGER_SAME.test(chunk.slice(Math.max(0, start - 200)))) kind = "trigger";
     else if (/<(Link|a)\s/.test(after)) kind = "link";
     else if (hasForm) kind = "submit";
 
