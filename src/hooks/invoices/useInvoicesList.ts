@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useTableSort } from "@/hooks/useTableSort";
-import { useTableFilter } from "@/hooks/useTableFilter";
+import { useColumnFilters } from "@/hooks/useColumnFilters";
+import { applyColumnFilters } from "@/lib/filters/applyColumnFilters";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicateInvoice } from "@/hooks/useDuplicateInvoice";
@@ -16,6 +17,17 @@ type Invoice = Database['public']['Tables']['invoices']['Row'];
 export type InvoiceWithCustomer = Invoice & { customers: { name: string } | null };
 
 const PAGE_SIZE = 25;
+
+/** Maps a UI column id to the database column its filter targets. */
+const INVOICE_FILTER_COLUMNS: Record<string, string> = {
+  invoice_number: 'invoice_number',
+  customer_name: 'customers.name',
+  created_at: 'created_at',
+  total_amount: 'total_amount',
+  paid_amount: 'paid_amount',
+  payment_status: 'payment_status',
+  approval_status: 'approval_status',
+};
 
 export function useInvoicesList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -115,11 +127,21 @@ export function useInvoicesList() {
     }
   }, [location.state]);
 
+  // Column filters are applied server-side so they narrow the whole result
+  // set (every page), not just the rows already loaded.
+  const columnFilters = useColumnFilters();
+  const filtersKey = JSON.stringify(columnFilters.filters);
+  const customerFiltered = !!columnFilters.filters.customer_name;
+  const invoiceSelect = customerFiltered ? '*, customers!inner(name)' : '*, customers(name)';
+
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ['invoices-count', debouncedSearch],
+    queryKey: ['invoices-count', debouncedSearch, filtersKey],
     queryFn: async () => {
-      let query = supabase.from('invoices').select('*', { count: 'exact', head: true });
+      let query = supabase
+        .from('invoices')
+        .select(invoiceSelect, { count: 'exact', head: true });
       if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
@@ -128,18 +150,19 @@ export function useInvoicesList() {
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  useEffect(() => { pagination.resetPage(); }, [debouncedSearch]);
+  useEffect(() => { pagination.resetPage(); }, [debouncedSearch, filtersKey]);
 
   const { data: invoices = [], isLoading, refetch, error } = useQuery({
-    queryKey: ['invoices', debouncedSearch, pagination.currentPage],
+    queryKey: ['invoices', debouncedSearch, filtersKey, pagination.currentPage],
     queryFn: async () => {
-      let query = supabase.from('invoices').select('*, customers(name)')
+      let query = supabase.from('invoices').select(invoiceSelect)
         .order('created_at', { ascending: false })
         .range(pagination.range.from, pagination.range.to);
       if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as unknown as InvoiceWithCustomer[];
     },
   });
 
@@ -184,8 +207,7 @@ export function useInvoicesList() {
     },
   });
 
-  const { filteredData, filters, setFilter } = useTableFilter(invoices);
-  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
+  const { sortedData, sortConfig, requestSort } = useTableSort(invoices);
 
   const handleEdit = useCallback((invoice: Invoice) => { setSelectedInvoice(invoice); setDialogOpen(true); }, []);
   const handleAdd = useCallback(() => { setSelectedInvoice(null); setDialogOpen(true); }, []);
@@ -203,7 +225,7 @@ export function useInvoicesList() {
     dialogOpen, setDialogOpen, selectedInvoice, prefillCustomerId, setPrefillCustomerId,
     printDialogOpen, setPrintDialogOpen, printInvoiceId, setPrintInvoiceId,
     canEdit, canDelete, invoices, isLoading, error: error as Error | null, refetch, sortedData, sortConfig, requestSort,
-    filters, setFilter, deleteMutation, handleEdit, handleAdd, handleRefresh,
+    columnFilters, deleteMutation, handleEdit, handleAdd, handleRefresh,
     statItems, invoiceStats, pagination, totalCount, duplicate, isDuplicating,
     selectedIds, toggleSelect, clearSelection, bulkPrint, isBulkPrinting,
     selectAllFiltered, isSelectingAll,

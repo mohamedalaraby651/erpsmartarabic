@@ -12,6 +12,8 @@ import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { BulkPrintConfirmDialog } from "@/components/invoices/BulkPrintConfirmDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
+import { ColumnFilterHeader, type ColumnFilterKind, type FilterOption } from "@/components/ui/column-filter";
+import { ActiveFiltersBar } from "@/components/table/ActiveFiltersBar";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,6 +36,33 @@ const paymentStatusColors: Record<string, string> = { pending: "bg-destructive/1
 const approvalStatusLabels: Record<string, string> = { draft: "مسودة", pending: "في انتظار الموافقة", approved: "معتمدة", rejected: "مرفوضة" };
 const approvalStatusColors: Record<string, string> = { draft: "bg-muted text-muted-foreground", pending: "bg-warning/10 text-warning", approved: "bg-success/10 text-success", rejected: "bg-destructive/10 text-destructive" };
 const approvalStatusIcons: Record<string, React.ElementType> = { draft: Clock, pending: Send, approved: CheckCircle, rejected: XCircle };
+
+const toOptions = (labels: Record<string, string>): FilterOption[] =>
+  Object.entries(labels).map(([value, label]) => ({ value, label }));
+
+/** Column definitions driving both the header cells and the active-filter chips. */
+const INVOICE_FILTER_COLUMNS: {
+  key: string;
+  label: string;
+  kind: ColumnFilterKind;
+  sortable?: boolean;
+  filterable?: boolean;
+  options?: FilterOption[];
+}[] = [
+  { key: 'invoice_number', label: 'رقم الفاتورة', kind: 'text', sortable: true },
+  { key: 'customer_name', label: 'العميل', kind: 'text' },
+  { key: 'created_at', label: 'التاريخ', kind: 'date', sortable: true },
+  { key: 'total_amount', label: 'الإجمالي', kind: 'number', sortable: true },
+  { key: 'paid_amount', label: 'المدفوع', kind: 'number', sortable: true },
+  // Remaining is derived (total - paid), so it is displayed but not filterable.
+  { key: 'remaining', label: 'المتبقي', kind: 'number', filterable: false },
+  { key: 'payment_status', label: 'حالة الدفع', kind: 'options', options: toOptions(paymentStatusLabels) },
+  { key: 'approval_status', label: 'حالة الاعتماد', kind: 'options', options: toOptions(approvalStatusLabels) },
+];
+
+const FILTER_COLUMN_META = Object.fromEntries(
+  INVOICE_FILTER_COLUMNS.map((c) => [c.key, { label: c.label, options: c.options }]),
+);
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
@@ -167,14 +196,20 @@ const InvoicesPage = () => {
                     {...(someSelected && !allSelected ? { 'data-state': 'indeterminate' as const } : {})}
                   />
                 </TableHead>
-                <DataTableHeader label="رقم الفاتورة" sortKey="invoice_number" sortConfig={list.sortConfig} onSort={list.requestSort} />
-                <DataTableHeader label="العميل" />
-                <DataTableHeader label="التاريخ" sortKey="created_at" sortConfig={list.sortConfig} onSort={list.requestSort} />
-                <DataTableHeader label="الإجمالي" sortKey="total_amount" sortConfig={list.sortConfig} onSort={list.requestSort} />
-                <DataTableHeader label="المدفوع" />
-                <DataTableHeader label="المتبقي" />
-                <DataTableHeader label="حالة الدفع" filterKey="payment_status" filterType="select" filterOptions={[{ value: 'pending', label: 'غير مدفوع' }, { value: 'partial', label: 'جزئي' }, { value: 'paid', label: 'مدفوع' }]} filterValue={list.filters.payment_status as string} onFilter={list.setFilter} />
-                <DataTableHeader label="حالة الاعتماد" filterKey="approval_status" filterType="select" filterOptions={[{ value: 'draft', label: 'مسودة' }, { value: 'pending', label: 'في انتظار الموافقة' }, { value: 'approved', label: 'معتمدة' }, { value: 'rejected', label: 'مرفوضة' }]} filterValue={list.filters.approval_status as string} onFilter={list.setFilter} />
+                {INVOICE_FILTER_COLUMNS.map((col) => (
+                  <ColumnFilterHeader
+                    key={col.key}
+                    label={col.label}
+                    sortKey={col.sortable ? col.key : undefined}
+                    sortConfig={list.sortConfig}
+                    onSort={list.requestSort}
+                    filterKey={col.filterable === false ? undefined : col.key}
+                    filterKind={col.kind}
+                    options={col.options}
+                    value={list.columnFilters.filters[col.key]}
+                    onChange={list.columnFilters.setFilter}
+                  />
+                ))}
                 <DataTableHeader label="إجراءات" className="text-left" />
               </TableRow>
             </TableHeader>
@@ -236,11 +271,20 @@ const InvoicesPage = () => {
               </CardContent></Card>
             ))}
           </div>
-          <Card><CardContent className="p-4">
+          <Card><CardContent className="space-y-3 p-4">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
             </div>
+            <ActiveFiltersBar
+              section="invoices"
+              filters={list.columnFilters.filters}
+              columns={FILTER_COLUMN_META}
+              resultCount={list.totalCount}
+              onRemove={list.columnFilters.removeFilter}
+              onClearAll={list.columnFilters.clearFilters}
+              onApplySet={list.columnFilters.replaceFilters}
+            />
           </CardContent></Card>
           {(() => {
             const pageData = list.sortedData as InvoiceWithCustomer[];
