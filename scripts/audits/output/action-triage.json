@@ -1,0 +1,380 @@
+{
+  "id": "OPA-ACT-001-TRIAGE",
+  "generatedAt": "2026-09-16T15:37:34.845Z",
+  "total": 48,
+  "byKind": {
+    "review": 13,
+    "trigger": 25,
+    "demo": 10
+  },
+  "review": [
+    {
+      "file": "src/components/customers/details/StatementOfAccount.tsx",
+      "line": 307,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"h-8 w-8\" disabled={currentPage >= totalPages} onClick={() => setCurrent"
+    },
+    {
+      "file": "src/components/customers/list/CustomerLayoutCustomizer.tsx",
+      "line": 117,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" aria-label={tooltips.customizeView}>"
+    },
+    {
+      "file": "src/components/customers/tabs/CustomerTabOrders.tsx",
+      "line": 82,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={oPage >= oTotalPages} onClick={() => setOPage(p => p + 1)}>التالي</Button>"
+    },
+    {
+      "file": "src/components/customers/tabs/CustomerTabQuotations.tsx",
+      "line": 91,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={qPage >= qTotalPages} onClick={() => setQPage(p => p + 1)}>التالي</Button>"
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "line": 241,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" aria-label=\"تخصيص العرض\" title=\"تخصيص ما يظهر فوق القائمة\">"
+    },
+    {
+      "file": "src/pages/employees/EmployeesPage.tsx",
+      "line": 170,
+      "kind": "review",
+      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"ghost\" size=\"icon\"><MoreHorizontal className=\"h-4 w-4\" /></Button></Dropdo"
+    },
+    {
+      "file": "src/pages/invoices/InvoicesPage.tsx",
+      "line": 202,
+      "kind": "review",
+      "snippet": "<Tooltip><TooltipTrigger asChild><Button variant=\"ghost\" size=\"icon\" onClick={() => list.duplicate(invoice.id)} disabled"
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
+      "line": 93,
+      "kind": "review",
+      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
+      "line": 265,
+      "kind": "review",
+      "snippet": "<div className=\"text-center py-8\"><CreditCard className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className"
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
+      "line": 91,
+      "kind": "review",
+      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
+      "line": 296,
+      "kind": "review",
+      "snippet": "<div className=\"text-center py-8\"><Receipt className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className=\"t"
+    },
+    {
+      "file": "src/ui/__integration__/harness/IntegrationHarnessPage.tsx",
+      "line": 298,
+      "kind": "review",
+      "snippet": "<Button type=\"reset\" variant=\"outline\">"
+    },
+    {
+      "file": "src/ui/primitives/__tests__/primitives.smoke.test.tsx",
+      "line": 64,
+      "kind": "review",
+      "snippet": "render(<Button>Save</Button>);"
+    }
+  ],
+  "rows": [
+    {
+      "file": "src/components/customers/details/StatementOfAccount.tsx",
+      "line": 307,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"h-8 w-8\" disabled={currentPage >= totalPages} onClick={() => setCurrent"
+    },
+    {
+      "file": "src/components/customers/hero/HeroActions.tsx",
+      "line": 73,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"ghost\" size=\"sm\" aria-label={tooltips.moreActions}>"
+    },
+    {
+      "file": "src/components/customers/list/CustomerColumnSettings.tsx",
+      "line": 66,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" className=\"h-9 text-xs gap-1.5\">"
+    },
+    {
+      "file": "src/components/customers/list/CustomerLayoutCustomizer.tsx",
+      "line": 117,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" aria-label={tooltips.customizeView}>"
+    },
+    {
+      "file": "src/components/customers/list/CustomerPageHeader.tsx",
+      "line": 127,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"sm\">"
+    },
+    {
+      "file": "src/components/customers/list/CustomerSavedViews.tsx",
+      "line": 79,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" className=\"h-9 text-xs gap-1.5\">"
+    },
+    {
+      "file": "src/components/customers/mobile/CustomerMobileProfile.tsx",
+      "line": 266,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11 shrink-0\" aria-label={tooltips.moreActions}>"
+    },
+    {
+      "file": "src/components/customers/tabs/CustomerTabOrders.tsx",
+      "line": 82,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={oPage >= oTotalPages} onClick={() => setOPage(p => p + 1)}>التالي</Button>"
+    },
+    {
+      "file": "src/components/customers/tabs/CustomerTabQuotations.tsx",
+      "line": 91,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={qPage >= qTotalPages} onClick={() => setQPage(p => p + 1)}>التالي</Button>"
+    },
+    {
+      "file": "src/components/customization/InlineCustomizer.tsx",
+      "line": 148,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"ghost\" size=\"icon\" className=\"h-8 w-8\">"
+    },
+    {
+      "file": "src/components/dashboard/AlertsBell.tsx",
+      "line": 46,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"relative\" aria-label={`التنبيهات (${count})`}>"
+    },
+    {
+      "file": "src/components/export/ExportWithTemplateButton.tsx",
+      "line": 230,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"sm\">"
+    },
+    {
+      "file": "src/components/landing/LandingNavbar.tsx",
+      "line": 66,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"ghost\" size=\"icon\">"
+    },
+    {
+      "file": "src/components/layout/AdminMenu.tsx",
+      "line": 24,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"ghost\" size=\"icon\" className=\"relative\">"
+    },
+    {
+      "file": "src/components/navigation/QuickActions.tsx",
+      "line": 87,
+      "kind": "trigger",
+      "snippet": "<Button size=\"sm\" className=\"gap-2\">"
+    },
+    {
+      "file": "src/components/print/UnifiedExportMenu.tsx",
+      "line": 241,
+      "kind": "trigger",
+      "snippet": "<Button variant={variant} size={size} disabled={disabled || isBusy}>"
+    },
+    {
+      "file": "src/components/reports/ExportButton.tsx",
+      "line": 105,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={isExporting}>"
+    },
+    {
+      "file": "src/components/settings/ResetSettingsButton.tsx",
+      "line": 49,
+      "kind": "trigger",
+      "snippet": "<Button ref={ref} variant={variant} size={size} className=\"gap-2\">"
+    },
+    {
+      "file": "src/components/suppliers/list/SupplierPageHeader.tsx",
+      "line": 84,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"sm\"><MoreVertical className=\"h-4 w-4 ml-2\" />أدوات</Button>"
+    },
+    {
+      "file": "src/components/suppliers/mobile/SupplierMobileProfile.tsx",
+      "line": 105,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11 shrink-0\"><MoreHorizontal className=\"h-4 w-4\" /></But"
+    },
+    {
+      "file": "src/components/table/ColumnCustomizer.tsx",
+      "line": 108,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"sm\">"
+    },
+    {
+      "file": "src/components/tenant/TenantSelector.tsx",
+      "line": 62,
+      "kind": "trigger",
+      "snippet": "<Button"
+    },
+    {
+      "file": "src/components/ui/data-table-actions.tsx",
+      "line": 64,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"ghost\" size=\"icon\" className={cn('h-8 w-8', className)}>"
+    },
+    {
+      "file": "src/pages/admin/CustomizationsPage.tsx",
+      "line": 252,
+      "kind": "trigger",
+      "snippet": "<Button size=\"sm\">"
+    },
+    {
+      "file": "src/pages/admin/RolesPage.tsx",
+      "line": 225,
+      "kind": "trigger",
+      "snippet": "<Button>"
+    },
+    {
+      "file": "src/pages/customers/CustomersPage.tsx",
+      "line": 241,
+      "kind": "review",
+      "snippet": "<Button variant=\"outline\" size=\"sm\" aria-label=\"تخصيص العرض\" title=\"تخصيص ما يظهر فوق القائمة\">"
+    },
+    {
+      "file": "src/pages/employees/EmployeesPage.tsx",
+      "line": 170,
+      "kind": "review",
+      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"ghost\" size=\"icon\"><MoreHorizontal className=\"h-4 w-4\" /></Button></Dropdo"
+    },
+    {
+      "file": "src/pages/invoices/InvoiceDetailsPage.tsx",
+      "line": 157,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"ghost\" size=\"icon\" className=\"min-h-11 min-w-11\">"
+    },
+    {
+      "file": "src/pages/invoices/InvoicesPage.tsx",
+      "line": 202,
+      "kind": "review",
+      "snippet": "<Tooltip><TooltipTrigger asChild><Button variant=\"ghost\" size=\"icon\" onClick={() => list.duplicate(invoice.id)} disabled"
+    },
+    {
+      "file": "src/pages/platform/TenantsManagementPage.tsx",
+      "line": 163,
+      "kind": "trigger",
+      "snippet": "<Button>"
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
+      "line": 93,
+      "kind": "review",
+      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
+    },
+    {
+      "file": "src/pages/purchase-orders/PurchaseOrderDetailsPage.tsx",
+      "line": 265,
+      "kind": "review",
+      "snippet": "<div className=\"text-center py-8\"><CreditCard className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className"
+    },
+    {
+      "file": "src/pages/quotations/QuotationDetailsPage.tsx",
+      "line": 184,
+      "kind": "trigger",
+      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className=\"h-5 w-5\" /></Button>"
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
+      "line": 91,
+      "kind": "review",
+      "snippet": "<DropdownMenuTrigger asChild><Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11\"><MoreVertical className"
+    },
+    {
+      "file": "src/pages/sales-orders/SalesOrderDetailsPage.tsx",
+      "line": 296,
+      "kind": "review",
+      "snippet": "<div className=\"text-center py-8\"><Receipt className=\"h-12 w-12 text-muted-foreground/50 mx-auto mb-4\" /><p className=\"t"
+    },
+    {
+      "file": "src/pages/tasks/TasksPage.tsx",
+      "line": 174,
+      "kind": "trigger",
+      "snippet": "<Button>"
+    },
+    {
+      "file": "src/ui/__integration__/harness/IntegrationHarnessPage.tsx",
+      "line": 298,
+      "kind": "review",
+      "snippet": "<Button type=\"reset\" variant=\"outline\">"
+    },
+    {
+      "file": "src/ui/composites/__demo__/CompositesGallery.tsx",
+      "line": 76,
+      "kind": "demo",
+      "snippet": "actions={<Button>New</Button>}"
+    },
+    {
+      "file": "src/ui/composites/__demo__/CompositesGallery.tsx",
+      "line": 99,
+      "kind": "demo",
+      "snippet": "end={<Button size=\"sm\" variant=\"outline\">Export</Button>}"
+    },
+    {
+      "file": "src/ui/composites/__demo__/CompositesGallery.tsx",
+      "line": 144,
+      "kind": "demo",
+      "snippet": "<Button type=\"reset\" variant=\"ghost\">Reset</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+      "line": 55,
+      "kind": "demo",
+      "snippet": "<Button>Default</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+      "line": 56,
+      "kind": "demo",
+      "snippet": "<Button variant=\"secondary\">Secondary</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+      "line": 57,
+      "kind": "demo",
+      "snippet": "<Button variant=\"outline\">Outline</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+      "line": 58,
+      "kind": "demo",
+      "snippet": "<Button variant=\"ghost\">Ghost</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+      "line": 59,
+      "kind": "demo",
+      "snippet": "<Button variant=\"destructive\">Destructive</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+      "line": 60,
+      "kind": "demo",
+      "snippet": "<Button variant=\"success\">Success</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+      "line": 125,
+      "kind": "demo",
+      "snippet": "<Button variant=\"outline\">Hover me</Button>"
+    },
+    {
+      "file": "src/ui/primitives/__tests__/primitives.smoke.test.tsx",
+      "line": 64,
+      "kind": "review",
+      "snippet": "render(<Button>Save</Button>);"
+    }
+  ]
+}
