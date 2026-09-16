@@ -7,6 +7,7 @@
  * never touches data, permissions or queries.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export type TableDensity = 'comfortable' | 'medium' | 'compact';
 
@@ -39,12 +40,13 @@ export const DENSITY_LABEL: Record<TableDensity, string> = {
   compact: 'مضغوط',
 };
 
-const storageKey = (section: string) => `table-layout:${section}`;
+/** Preferences are scoped per user AND per screen (COL-003). */
+const storageKey = (section: string, userId: string) => `table-layout:${userId}:${section}`;
 
-function read(section: string): TableLayoutState {
+function read(section: string, userId: string): TableLayoutState {
   if (typeof window === 'undefined') return DEFAULT_STATE;
   try {
-    const raw = window.localStorage.getItem(storageKey(section));
+    const raw = window.localStorage.getItem(storageKey(section, userId));
     if (!raw) return DEFAULT_STATE;
     return { ...DEFAULT_STATE, ...(JSON.parse(raw) as Partial<TableLayoutState>) };
   } catch {
@@ -53,15 +55,22 @@ function read(section: string): TableLayoutState {
 }
 
 export function useTableLayout(section: string, allColumnKeys: string[]) {
-  const [state, setState] = useState<TableLayoutState>(() => read(section));
+  const { user } = useAuth();
+  const userId = user?.id ?? 'anonymous';
+  const [state, setState] = useState<TableLayoutState>(() => read(section, userId));
+
+  // Switching account must not inherit the previous user's layout.
+  useEffect(() => {
+    setState(read(section, userId));
+  }, [section, userId]);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(storageKey(section), JSON.stringify(state));
+      window.localStorage.setItem(storageKey(section, userId), JSON.stringify(state));
     } catch {
       /* storage may be unavailable (private mode) — layout stays in memory */
     }
-  }, [section, state]);
+  }, [section, userId, state]);
 
   const setWidth = useCallback((key: string, width: number) => {
     setState((s) => ({ ...s, widths: { ...s.widths, [key]: Math.round(width) } }));
