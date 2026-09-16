@@ -404,15 +404,73 @@ export function ColumnFilterHeader({
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">القيمة</Label>
-                      <Input
-                        autoFocus
-                        value={draft.text ?? ''}
-                        onChange={(e) => setDraft((d) => ({ ...d, kind: 'text', text: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === 'Enter') commit({ ...draft, kind: 'text' }); }}
-                        placeholder="اكتب للبحث..."
-                        className="h-8 text-sm"
-                      />
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute end-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          autoFocus
+                          value={draft.text ?? ''}
+                          onChange={(e) => setDraft((d) => ({ ...d, kind: 'text', text: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === 'Enter') commit({ ...draft, kind: 'text' }); }}
+                          placeholder="اكتب للبحث..."
+                          className="h-8 pe-8 text-sm"
+                        />
+                      </div>
                     </div>
+
+                    {/* Existing values of this column — search then pick several
+                        at once (OPA-UI-003 / FLT-001). */}
+                    {hasValueList && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">اختيار من القيم الموجودة</Label>
+                          <span className="text-[11px] text-muted-foreground">{draftValues.length} محدد</span>
+                        </div>
+                        {optionsLoading ? (
+                          <p className="py-3 text-center text-xs text-muted-foreground">جارٍ تحميل القيم...</p>
+                        ) : (
+                          <ScrollArea className="max-h-44 rounded-md border border-border">
+                            <div className="space-y-0.5 p-1">
+                              {(options ?? [])
+                                .filter((o) =>
+                                  o.label.toLowerCase().includes((draft.text ?? '').trim().toLowerCase()),
+                                )
+                                .slice(0, 200)
+                                .map((o) => {
+                                  const checked = draftValues.includes(o.value);
+                                  return (
+                                    <button
+                                      key={o.value}
+                                      type="button"
+                                      onClick={() => toggleValue(o.value)}
+                                      className={cn(
+                                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm transition-colors hover:bg-muted',
+                                        checked && 'bg-primary/5',
+                                      )}
+                                    >
+                                      <Checkbox checked={checked} className="pointer-events-none" />
+                                      <span className="flex-1 truncate">{o.label}</span>
+                                      {checked && <Check className="h-3.5 w-3.5 text-primary" />}
+                                    </button>
+                                  );
+                                })}
+                              {(options ?? []).length === 0 && (
+                                <p className="py-3 text-center text-xs text-muted-foreground">لا توجد قيم</p>
+                              )}
+                            </div>
+                          </ScrollArea>
+                        )}
+                        {draftValues.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => setDraft((d) => ({ ...d, kind: 'text', values: [] }))}
+                          >
+                            إلغاء التحديد
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
 
