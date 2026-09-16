@@ -13,8 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TableHead } from '@/components/ui/table';
 import { SortDirection } from '@/hooks/useTableSort';
 import { cn } from '@/lib/utils';
+
+/** Sentinel used by column filters for the "all / no filter" option. */
+export const ALL_FILTER_VALUE = '__all__';
 
 interface DataTableHeaderProps {
   label: string;
