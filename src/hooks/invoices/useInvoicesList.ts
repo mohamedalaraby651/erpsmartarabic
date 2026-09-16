@@ -77,13 +77,13 @@ export function useInvoicesList() {
     staleTime: 60 * 1000,
   });
 
-  const applyGlobalSearch = useCallback((query: any) => {
-    if (!normalizedSearch) return query;
+  const globalSearchExpression = useMemo(() => {
+    if (!normalizedSearch) return '';
     const predicates = [`invoice_number.ilike.%${normalizedSearch}%`];
     if (matchingCustomerIds.length > 0) {
       predicates.push(`customer_id.in.(${matchingCustomerIds.join(',')})`);
     }
-    return query.or(predicates.join(','));
+    return predicates.join(',');
   }, [matchingCustomerIds, normalizedSearch]);
 
   /**
@@ -95,7 +95,7 @@ export function useInvoicesList() {
     setIsSelectingAll(true);
     try {
       let query = supabase.from('invoices').select('id').limit(500);
-      query = applyGlobalSearch(query);
+      if (globalSearchExpression) query = query.or(globalSearchExpression);
       const { data, error } = await query;
       if (error) throw error;
       const ids = (data || []).map((r) => r.id);
@@ -111,7 +111,7 @@ export function useInvoicesList() {
     } finally {
       setIsSelectingAll(false);
     }
-  }, [applyGlobalSearch, toast]);
+  }, [globalSearchExpression, toast]);
 
 
   const bulkPrint = useCallback(async () => {
@@ -167,7 +167,7 @@ export function useInvoicesList() {
       let query = supabase
         .from('invoices')
         .select(invoiceSelect, { count: 'exact', head: true });
-      query = applyGlobalSearch(query);
+      if (globalSearchExpression) query = query.or(globalSearchExpression);
       query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { count, error } = await query;
       if (error) throw error;
@@ -186,7 +186,7 @@ export function useInvoicesList() {
       let query = supabase.from('invoices').select(invoiceSelect)
         .order('created_at', { ascending: false })
         .range(pagination.range.from, pagination.range.to);
-      query = applyGlobalSearch(query);
+      if (globalSearchExpression) query = query.or(globalSearchExpression);
       query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { data, error } = await query;
       if (error) throw error;
