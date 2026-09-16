@@ -183,8 +183,27 @@ export interface ColumnFilterHeaderProps {
   onAutoFit?: (key: string) => void;
 }
 
-const MIN_COLUMN_WIDTH = 72;
-const MAX_COLUMN_WIDTH = 640;
+export const MIN_COLUMN_WIDTH = 72;
+export const MAX_COLUMN_WIDTH = 640;
+
+/**
+ * Widest natural content in a column (header + body cells), clamped to the
+ * min/max bounds. Pure DOM measurement — no query, no refetch (COL-001).
+ */
+export function measureColumnWidth(cell: HTMLTableCellElement): number {
+  const row = cell.parentElement as HTMLTableRowElement | null;
+  const table = cell.closest('table');
+  if (!row || !table) return MIN_COLUMN_WIDTH;
+  const index = Array.from(row.children).indexOf(cell);
+  if (index < 0) return MIN_COLUMN_WIDTH;
+  let widest = (cell.firstElementChild as HTMLElement | null)?.scrollWidth ?? cell.scrollWidth;
+  table.querySelectorAll('tbody > tr').forEach((r) => {
+    const c = r.children[index] as HTMLElement | undefined;
+    if (c) widest = Math.max(widest, c.scrollWidth);
+  });
+  // Cell padding on both sides plus a little breathing room.
+  return Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, Math.ceil(widest) + 34));
+}
 
 export function ColumnFilterHeader({
   label,
