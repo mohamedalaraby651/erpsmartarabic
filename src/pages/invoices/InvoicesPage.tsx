@@ -518,20 +518,32 @@ const InvoicesPage = () => {
             );
           })()}
           <Card>
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b border-border/60 pb-4">
-              <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <CardHeader className="flex flex-col gap-4 space-y-0 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="h-4 w-4" />
+                </span>
                 <div>
-                  <CardTitle>قائمة الفواتير</CardTitle>
-                  <p className="mt-1 text-xs font-normal text-muted-foreground">{list.totalCount.toLocaleString()} فاتورة مطابقة</p>
+                  <CardTitle className="text-lg">قائمة الفواتير</CardTitle>
+                  <p className="text-xs text-muted-foreground">{list.totalCount.toLocaleString()} فاتورة مطابقة</p>
                 </div>
-                <span className="h-8 w-px bg-border" aria-hidden="true" />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
                 <Button onClick={list.handleAdd}>
                   <Plus className="h-4 w-4 ml-2" />
                   فاتورة جديدة
                 </Button>
+                <span className="h-6 w-px bg-border" aria-hidden="true" />
                 <ExportWithTemplateButton section="invoices" sectionLabel="الفواتير" data={list.sortedData} columns={[{ key: 'invoice_number', label: 'رقم الفاتورة' }, { key: 'customers.name', label: 'العميل' }, { key: 'total_amount', label: 'الإجمالي' }, { key: 'paid_amount', label: 'المدفوع' }, { key: 'payment_status', label: 'حالة الدفع' }, { key: 'created_at', label: 'التاريخ' }]} />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>تخصيص عرض الجدول</TooltipContent>
+                </Tooltip>
               </div>
-              <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
             </CardHeader>
             <CardContent>{renderTableView()}</CardContent>
           </Card>
