@@ -116,11 +116,21 @@ export function useInvoicesList() {
     }
   }, [location.state]);
 
+  // Column filters are applied server-side so they narrow the whole result
+  // set (every page), not just the rows already loaded.
+  const columnFilters = useColumnFilters();
+  const filtersKey = JSON.stringify(columnFilters.filters);
+  const customerFiltered = !!columnFilters.filters.customer_name;
+  const invoiceSelect = customerFiltered ? '*, customers!inner(name)' : '*, customers(name)';
+
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ['invoices-count', debouncedSearch],
+    queryKey: ['invoices-count', debouncedSearch, filtersKey],
     queryFn: async () => {
-      let query = supabase.from('invoices').select('*', { count: 'exact', head: true });
+      let query = supabase
+        .from('invoices')
+        .select(invoiceSelect, { count: 'exact', head: true });
       if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
@@ -129,18 +139,19 @@ export function useInvoicesList() {
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
 
-  useEffect(() => { pagination.resetPage(); }, [debouncedSearch]);
+  useEffect(() => { pagination.resetPage(); }, [debouncedSearch, filtersKey]);
 
   const { data: invoices = [], isLoading, refetch, error } = useQuery({
-    queryKey: ['invoices', debouncedSearch, pagination.currentPage],
+    queryKey: ['invoices', debouncedSearch, filtersKey, pagination.currentPage],
     queryFn: async () => {
-      let query = supabase.from('invoices').select('*, customers(name)')
+      let query = supabase.from('invoices').select(invoiceSelect)
         .order('created_at', { ascending: false })
         .range(pagination.range.from, pagination.range.to);
       if (debouncedSearch) query = query.or(`invoice_number.ilike.%${debouncedSearch}%`);
+      query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as unknown as InvoiceWithCustomer[];
     },
   });
 
