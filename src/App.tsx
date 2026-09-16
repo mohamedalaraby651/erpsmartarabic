@@ -337,7 +337,9 @@ const App = () => (
                   <Route path="collections" element={<CollectionDashboard />} />
                   <Route path="price-lists" element={<PriceListsPage />} />
                   <Route path="kpis" element={<KPIDashboard />} />
-                  {/* Accounting Routes */}
+                  {/* Accounting Routes — the group has no landing screen of its own,
+                      so /accounting resolves to the first accounting surface. */}
+                  <Route path="accounting" element={<Navigate to="/accounting/chart-of-accounts" replace />} />
                   <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
                   <Route path="accounting/journals" element={<JournalEntriesPage />} />
                   <Route path="accounting/posting-log" element={<PostingLogPage />} />
