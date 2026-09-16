@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, Copy, FileText, X, Loader2 } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, FileText, X, Loader2 } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
+import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { BulkPrintConfirmDialog } from "@/components/invoices/BulkPrintConfirmDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -30,6 +31,8 @@ import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList"
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useInvoicesList, type InvoiceWithCustomer } from "@/hooks/invoices/useInvoicesList";
+import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { Database } from "@/integrations/supabase/types";
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -74,7 +77,10 @@ const InvoicesPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const list = useInvoicesList();
+  const { userRole } = useAuth();
+  const { customRole, hasPermission, canViewField } = usePermissions();
   const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+  const [paymentInvoice, setPaymentInvoice] = useState<InvoiceWithCustomer | null>(null);
   // Per-user table presentation (widths, density, visible columns, height).
   const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
 
@@ -111,12 +117,48 @@ const InvoicesPage = () => {
     );
   }, [navigate, list.canEdit, list.canDelete, list.handleEdit, list.deleteMutation]);
 
-  const statItems = useMemo(() => [
-    { label: 'إجمالي الفواتير', value: list.invoiceStats.total, icon: Receipt, color: 'text-primary', bgColor: 'bg-primary/10' },
-    { label: 'غير مدفوعة', value: list.invoiceStats.unpaid, icon: Receipt, color: 'text-destructive', bgColor: 'bg-destructive/10' },
-    { label: 'إجمالي المبيعات', value: `${list.invoiceStats.totalValue.toLocaleString()}`, icon: CreditCard, color: 'text-success', bgColor: 'bg-success/10' },
-    { label: 'مستحق التحصيل', value: `${list.invoiceStats.unpaidValue.toLocaleString()}`, icon: CreditCard, color: 'text-warning', bgColor: 'bg-warning/10' },
-  ], [list.invoiceStats]);
+  const builtInFinancialAccess = userRole === 'admin' || userRole === 'accountant';
+  const canViewFinancialSummary = (customRole ? hasPermission('payments', 'view') : builtInFinancialAccess)
+    && canViewField('invoices', 'total_amount')
+    && canViewField('invoices', 'paid_amount');
+
+  const statItems = useMemo(() => {
+    const common = [
+      { label: 'إجمالي الفواتير', value: list.invoiceStats.total, icon: Receipt, tone: 'primary', statuses: undefined },
+      { label: 'غير مدفوعة', value: list.invoiceStats.unpaid, icon: Clock, tone: 'destructive', statuses: ['pending'] },
+    ];
+    if (canViewFinancialSummary) {
+      return [
+        ...common,
+        { label: 'إجمالي المبيعات', value: `${list.invoiceStats.totalValue.toLocaleString()} ج.م`, icon: CreditCard, tone: 'success', statuses: undefined },
+        { label: 'مستحق التحصيل', value: `${list.invoiceStats.unpaidValue.toLocaleString()} ج.م`, icon: CreditCard, tone: 'warning', statuses: ['pending', 'partial'] },
+      ];
+    }
+    return [
+      ...common,
+      { label: 'مدفوعة جزئيًا', value: list.invoiceStats.partial, icon: CreditCard, tone: 'warning', statuses: ['partial'] },
+      { label: 'مكتملة السداد', value: list.invoiceStats.paid, icon: CheckCircle, tone: 'success', statuses: ['paid'] },
+    ];
+  }, [canViewFinancialSummary, list.invoiceStats]);
+
+  const applySummaryFilter = useCallback((statuses?: string[]) => {
+    list.columnFilters.setFilter('payment_status', statuses
+      ? { kind: 'options', values: statuses }
+      : undefined);
+  }, [list.columnFilters]);
+
+  const isSummaryActive = useCallback((statuses?: string[]) => {
+    const active = list.columnFilters.filters.payment_status?.values ?? [];
+    if (!statuses) return active.length === 0;
+    return active.length === statuses.length && statuses.every((status) => active.includes(status));
+  }, [list.columnFilters.filters.payment_status]);
+
+  const statToneClasses: Record<string, string> = {
+    primary: 'text-primary bg-primary/10',
+    destructive: 'text-destructive bg-destructive/10',
+    success: 'text-success bg-success/10',
+    warning: 'text-warning bg-warning/10',
+  };
 
   const renderMobileView = () => {
     if (list.isLoading && list.sortedData.length === 0) {
@@ -141,17 +183,24 @@ const InvoicesPage = () => {
           {/* 2. Stats chips — secondary info, compact */}
           <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
             {statItems.map((stat, i) => (
-              <Card key={i} className="min-w-[130px] shrink-0 border-border/60 shadow-xs">
-                <CardContent className="p-2.5">
+              <Button
+                key={i}
+                type="button"
+                variant="outline"
+                aria-pressed={isSummaryActive(stat.statuses)}
+                onClick={() => applySummaryFilter(stat.statuses)}
+                className="h-auto min-w-[140px] shrink-0 justify-start border-border/60 p-0 text-start shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
+              >
+                <span className="w-full p-2.5">
                   <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-md ${stat.bgColor}`}><stat.icon className={`h-3.5 w-3.5 ${stat.color}`} /></div>
+                    <span className={`rounded-md p-1.5 ${statToneClasses[stat.tone]}`}><stat.icon className="h-3.5 w-3.5" /></span>
                     <div className="min-w-0">
                       <p className="text-base font-bold tabular-nums leading-tight">{stat.value}</p>
                       <p className="text-[11px] text-muted-foreground leading-tight truncate">{stat.label}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </span>
+              </Button>
             ))}
           </div>
 
@@ -291,7 +340,21 @@ const InvoicesPage = () => {
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}><Eye className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => { list.setPrintInvoiceId(invoice.id); list.setPrintDialogOpen(true); }}><Printer className="h-4 w-4" /></Button>
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => list.duplicate(invoice.id)} disabled={list.isDuplicating}><Copy className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent>نسخ الفاتورة</TooltipContent></Tooltip>
+                        {invoice.payment_status !== 'paid' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`تسجيل دفعة للفاتورة ${invoice.invoice_number}`}
+                                onClick={() => setPaymentInvoice(invoice)}
+                              >
+                                <CreditCard className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>تسجيل دفعة</TooltipContent>
+                          </Tooltip>
+                        )}
                         <DataTableActions onEdit={() => list.handleEdit(invoice as unknown as Invoice)} onDelete={() => list.deleteMutation.mutate(invoice.id)} canEdit={list.canEdit} canDelete={list.canDelete} deleteDescription="سيتم حذف هذه الفاتورة وجميع بنودها نهائياً." />
                       </div>
                     </TableCell>
@@ -318,16 +381,32 @@ const InvoicesPage = () => {
 
       {isMobile ? renderMobileView() : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <section aria-label={canViewFinancialSummary ? 'الملخص المالي للفواتير' : 'ملخص متابعة الفواتير'}>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">{canViewFinancialSummary ? 'الملخص المالي' : 'متابعة حالات السداد'}</p>
+              <p className="text-xs text-muted-foreground">اختر بطاقة لتصفية القائمة</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {statItems.map((stat, i) => (
-              <Card key={i}><CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${stat.bgColor}`}><stat.icon className={`h-5 w-5 ${stat.color}`} /></div>
-                  <div><p className="text-2xl font-bold">{stat.value}</p><p className="text-sm text-muted-foreground">{stat.label}</p></div>
-                </div>
-              </CardContent></Card>
+              <Button
+                key={i}
+                type="button"
+                variant="outline"
+                aria-pressed={isSummaryActive(stat.statuses)}
+                onClick={() => applySummaryFilter(stat.statuses)}
+                className="h-auto min-h-24 justify-start border-border/70 p-4 text-start shadow-xs transition-colors aria-pressed:border-primary aria-pressed:bg-primary/5"
+              >
+                <span className="flex w-full items-center gap-3">
+                  <span className={`rounded-md p-2 ${statToneClasses[stat.tone]}`}><stat.icon className="h-5 w-5" /></span>
+                  <span className="min-w-0">
+                    <span className="block text-xl font-bold tabular-nums">{stat.value}</span>
+                    <span className="block text-sm font-normal text-muted-foreground">{stat.label}</span>
+                  </span>
+                </span>
+              </Button>
             ))}
-          </div>
+            </div>
+          </section>
           <Card><CardContent className="p-4">
             <DataTableToolbar
               search={(
@@ -336,7 +415,6 @@ const InvoicesPage = () => {
                 <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
                 </div>
               )}
-              controls={!isMobile ? <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} /> : undefined}
               status={(
                 <ActiveFiltersBar
                   section="invoices"
@@ -434,11 +512,23 @@ const InvoicesPage = () => {
               </Card>
             );
           })()}
-          <Card><CardHeader><CardTitle>قائمة الفواتير</CardTitle></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+              <CardTitle>قائمة الفواتير</CardTitle>
+              <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
+            </CardHeader>
+            <CardContent>{renderTableView()}</CardContent>
+          </Card>
         </>
       )}
 
       <InvoiceFormDialog open={list.dialogOpen} onOpenChange={(open) => { list.setDialogOpen(open); if (!open) list.setPrefillCustomerId(undefined); }} invoice={list.selectedInvoice} prefillCustomerId={list.prefillCustomerId} />
+      <PaymentFormDialog
+        open={paymentInvoice !== null}
+        onOpenChange={(open) => { if (!open) setPaymentInvoice(null); }}
+        prefillCustomerId={paymentInvoice?.customer_id}
+        prefillInvoiceId={paymentInvoice?.id}
+      />
       {list.printInvoiceId && <InvoicePrintView invoiceId={list.printInvoiceId} open={list.printDialogOpen} onOpenChange={list.setPrintDialogOpen} />}
       <BulkPrintConfirmDialog
         open={bulkPreviewOpen}
