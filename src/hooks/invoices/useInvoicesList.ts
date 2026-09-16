@@ -18,6 +18,17 @@ export type InvoiceWithCustomer = Invoice & { customers: { name: string } | null
 
 const PAGE_SIZE = 25;
 
+/** Maps a UI column id to the database column its filter targets. */
+const INVOICE_FILTER_COLUMNS: Record<string, string> = {
+  invoice_number: 'invoice_number',
+  customer_name: 'customers.name',
+  created_at: 'created_at',
+  total_amount: 'total_amount',
+  paid_amount: 'paid_amount',
+  payment_status: 'payment_status',
+  approval_status: 'approval_status',
+};
+
 export function useInvoicesList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
