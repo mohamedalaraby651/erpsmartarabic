@@ -352,7 +352,6 @@ const InvoicesPage = () => {
                 <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
                 </div>
               )}
-              controls={!isMobile ? <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} /> : undefined}
               status={(
                 <ActiveFiltersBar
                   section="invoices"
@@ -450,7 +449,13 @@ const InvoicesPage = () => {
               </Card>
             );
           })()}
-          <Card><CardHeader><CardTitle>قائمة الفواتير</CardTitle></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+              <CardTitle>قائمة الفواتير</CardTitle>
+              <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
+            </CardHeader>
+            <CardContent>{renderTableView()}</CardContent>
+          </Card>
         </>
       )}
 

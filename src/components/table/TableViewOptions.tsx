@@ -41,12 +41,19 @@ export function TableViewOptions({ layout, columns }: TableViewOptionsProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-          <Settings2 className="h-3.5 w-3.5" />
-          عرض الجدول
+        <Button variant="outline" size="sm" className="h-9 gap-2 px-3" aria-label="تخصيص عرض الجدول">
+          <Settings2 className="h-4 w-4" />
+          <span>عرض الجدول</span>
+          <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+            {DENSITY_LABEL[layout.density]}
+          </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 p-0">
+      <PopoverContent align="end" className="w-80 p-0">
+        <div className="border-b border-border px-3 py-3">
+          <h4 className="text-sm font-semibold">تخصيص عرض الجدول</h4>
+          <p className="mt-1 text-xs text-muted-foreground">اضبط الكثافة والمساحة والأعمدة حسب احتياجك</p>
+        </div>
         <div className="space-y-3 p-3">
           <div className="space-y-1.5">
             <Label className="text-xs">كثافة الصفوف</Label>
