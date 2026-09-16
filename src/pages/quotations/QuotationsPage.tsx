@@ -46,6 +46,7 @@ const statusLabels: Record<string, string> = {
   approved: "معتمد",
   rejected: "مرفوض",
   cancelled: "ملغي",
+  completed: "مكتمل",
 };
 
 const statusColors: Record<string, string> = {
@@ -54,6 +55,7 @@ const statusColors: Record<string, string> = {
   approved: "bg-success/10 text-success",
   rejected: "bg-destructive/10 text-destructive",
   cancelled: "bg-muted text-muted-foreground",
+  completed: "bg-info/10 text-info",
 };
 
 const QuotationsPage = () => {
