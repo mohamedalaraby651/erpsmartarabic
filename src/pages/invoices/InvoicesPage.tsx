@@ -159,14 +159,14 @@ const InvoicesPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableCell className="w-10">
+                <TableHead className="w-10">
                   <Checkbox
                     checked={allSelected}
                     aria-label="تحديد الكل"
                     onCheckedChange={toggleAll}
                     {...(someSelected && !allSelected ? { 'data-state': 'indeterminate' as const } : {})}
                   />
-                </TableCell>
+                </TableHead>
                 <DataTableHeader label="رقم الفاتورة" sortKey="invoice_number" sortConfig={list.sortConfig} onSort={list.requestSort} />
                 <DataTableHeader label="العميل" />
                 <DataTableHeader label="التاريخ" sortKey="created_at" sortConfig={list.sortConfig} onSort={list.requestSort} />

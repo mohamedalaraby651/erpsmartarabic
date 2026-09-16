@@ -93,10 +93,10 @@ const ProductsPage = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead><DataTableHeader label="المنتج" sortKey="name" sortConfig={list.sortConfig} onSort={list.requestSort} /></TableHead>
+              <DataTableHeader label="المنتج" sortKey="name" sortConfig={list.sortConfig} onSort={list.requestSort} />
               <TableHead>الكود</TableHead>
               <TableHead>التصنيف</TableHead>
-              <TableHead><DataTableHeader label="سعر البيع" sortKey="selling_price" sortConfig={list.sortConfig} onSort={list.requestSort} /></TableHead>
+              <DataTableHeader label="سعر البيع" sortKey="selling_price" sortConfig={list.sortConfig} onSort={list.requestSort} />
               <TableHead>المخزون</TableHead>
               <TableHead>الحالة</TableHead>
               <TableHead className="text-left">إجراءات</TableHead>
