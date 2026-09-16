@@ -203,7 +203,7 @@ const InvoicesPage = () => {
                     sortKey={col.sortable ? col.key : undefined}
                     sortConfig={list.sortConfig}
                     onSort={list.requestSort}
-                    filterKey={col.key}
+                    filterKey={col.filterable === false ? undefined : col.key}
                     filterKind={col.kind}
                     options={col.options}
                     value={list.columnFilters.filters[col.key]}
