@@ -50,6 +50,13 @@
       "when": 1788513609018,
       "tag": "0006_postf1_scope_001_unit_a_notification_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789583846778,
+      "tag": "0007_fin_obs_001_reconcile_invoice_paid_amounts",
+      "breakpoints": true
     }
   ]
 }

@@ -66,6 +66,7 @@ export const CustomerTabNotes = memo(function CustomerTabNotes({ customerId }: C
   });
 
   const togglePinMutation = useMutation({
+    meta: { successMessage: 'تم تحديث تثبيت الملاحظة' },
     mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
       const { error } = await supabase
         .from('customer_notes')

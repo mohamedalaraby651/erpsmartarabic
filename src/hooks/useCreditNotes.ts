@@ -74,6 +74,7 @@ function useInvalidateAll(id?: string) {
 export function useConfirmCreditNote(id?: string) {
   const invalidate = useInvalidateAll(id);
   return useMutation({
+    meta: { successMessage: 'تم اعتماد إشعار الدائن' },
     mutationFn: (cnId: string) => creditNoteRepository.confirm(cnId),
     onSuccess: invalidate,
   });
@@ -82,6 +83,7 @@ export function useConfirmCreditNote(id?: string) {
 export function useCancelCreditNote(id?: string) {
   const invalidate = useInvalidateAll(id);
   return useMutation({
+    meta: { successMessage: 'تم إلغاء إشعار الدائن' },
     mutationFn: (cnId: string) => creditNoteRepository.cancel(cnId),
     onSuccess: invalidate,
   });

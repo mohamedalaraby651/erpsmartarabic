@@ -44,6 +44,7 @@ export function CustomerSavedViews({ currentFilters, onApplyView }: CustomerSave
   });
 
   const createMutation = useMutation({
+    meta: { successMessage: 'تم حفظ العرض' },
     mutationFn: async (name: string) => {
       await savedViewsRepository.create({
         userId: user!.id,
@@ -60,6 +61,7 @@ export function CustomerSavedViews({ currentFilters, onApplyView }: CustomerSave
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: 'تم حذف العرض' },
     mutationFn: (id: string) => savedViewsRepository.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-saved-views'] });

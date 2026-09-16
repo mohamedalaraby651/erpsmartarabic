@@ -104,3 +104,88 @@ Separate DELTA: PRE-TS-001 recurrence #15 contained in the platform-owned `src/i
 ---
 
 **Verdict: EXECUTED — PASS.** Certification remains a separate human governance decision.
+
+---
+
+# Addendum A — FIN-OBS-001 remediation (authorized)
+
+**Authorization:** explicit human authorization, 2026-09-16, to make the three
+zero-paid invoices verifiable inside the sales journey.
+**Scope (frozen):** the three named invoices only. Data reconciliation only — no
+ledger posting, no payment mutation, no journal or period change, no schema change.
+
+**Root cause:** `paid_amount` / `payment_status` on `public.invoices` are maintained by
+the application payment flow. The three records were created without passing through
+that flow, so their recorded payments were never reflected on the invoice header.
+
+**Change:** migration `0007_fin_obs_001_reconcile_invoice_paid_amounts.sql` —
+recomputes `paid_amount` from the sum of that invoice's own payment rows and derives
+`payment_status` (`pending` / `partial` / `paid`), restricted to the three IDs and to
+rows that actually disagree.
+
+**Evidence (after execution):**
+
+| Invoice | Total | Payments | paid_amount | payment_status |
+|---|---|---|---|---|
+| INV-20250215-0006 | 60,634.00 | 20,000.00 | 20,000.00 | partial |
+| INV-20250225-0008 | 46,575.00 | 15,000.00 | 15,000.00 | partial |
+| INV-20250120-0013 | 5,175.00 | 2,000.00 | 2,000.00 | partial |
+
+Tenant-wide check before the change: 22 invoices, 3 mismatched. After: the three rows
+above match their payments and render as "جزئي" with correct outstanding amounts on
+`/invoices` (verified live in the browser with a real user session).
+
+**Status:** FIN-OBS-001 — REMEDIATED (EXECUTED, evidence recorded). Not certified.
+
+---
+
+# Addendum B — Phase 5 · OPA-UX-001 (Action Feedback)
+
+**Question answered:** does every write action produce a real success or error message?
+
+## B.1 Measurement
+
+New audit `scripts/audits/action-feedback-audit.mjs` (read-only) inventories every
+`useMutation` definition in `src/` and reports success-feedback coverage.
+
+| Run | Mutations | OK | NO_SUCCESS | SILENT (declared) |
+|---|---|---|---|---|
+| Before | 176 | 140 | 36 | 0 |
+| After | 176 | 170 | 3 | 3 |
+
+## B.2 Change
+
+- `src/lib/mutationFeedback.ts` (new) + wiring in the `MutationCache` in `src/App.tsx`:
+  - **Error:** every failing mutation now shows an Arabic error toast with a safe error
+    description, unless the call site declares its own `onError` (no double reporting)
+    or opts out with `meta.silentError`. Error coverage is therefore global.
+  - **Success:** opt-in via `meta.successMessage`, so existing call-site toasts are never
+    duplicated; background/auto-save actions declare `meta.silentSuccess`.
+- `meta.successMessage` added to 33 previously silent actions (expenses, treasury,
+  categories, credit notes, quotations, inventory, approvals, payments, tenant switch,
+  preferences, warehouses, notes, tasks, reminders, saved views, SoD rules, approval
+  chains). `meta.silentSuccess` declared for 3 background actions (dashboard layout
+  auto-save, notification read state ×2).
+- Presentation only. No repository, service, migration, RLS or permission change.
+
+## B.3 Remaining 3 (reviewed, exempt)
+
+| Location | Reason |
+|---|---|
+| `src/hooks/useMutationToast.ts:27` | JSDoc usage example, not a live mutation |
+| `src/hooks/useExportPdf.ts:82` | Generic wrapper; feedback is supplied by each caller's options |
+| `src/pages/inventory/InventoryPage.tsx:51` | Call site passes its own `onSuccess`/`onError` toasts to `mutate()` |
+
+## B.4 Evidence
+
+- Live browser, real user session: toggling a task showed the toast **"تم تحديث حالة المهمة"**;
+  the change was reverted immediately afterwards (final state identical to initial state).
+- Unit contract test `src/__tests__/unit/lib/mutationFeedback.test.ts` — 6 passed:
+  success message shown, silence without a declared message, `silentSuccess` respected,
+  error always reported, no double report when the call site handles it, `silentError` respected.
+- `scripts/audits/typecheck-app.mjs`: total=0 → PASS.
+- Vitest: 1619 passed / 5 skipped before the addendum; +6 new tests pass.
+- Separate DELTA: PRE-TS-001 recurrence #16 and #17 contained in the platform-owned
+  `src/integrations/supabase/previewAuthStorage.ts` (type annotations only).
+
+**Verdict: EXECUTED — PASS. NOT CERTIFIED.**

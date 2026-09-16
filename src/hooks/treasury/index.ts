@@ -46,6 +46,7 @@ export function useTreasuryBalances() {
 export function useCreateSupplierPayment() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم تسجيل دفعة المورد' },
     mutationFn: (input: RecordSupplierPaymentData) =>
       treasuryRepository.createSupplierPayment(input),
     onSuccess: () => {
@@ -64,6 +65,7 @@ function invalidateRegisters(qc: ReturnType<typeof useQueryClient>) {
 export function useCreateCashRegister() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم إنشاء الصندوق' },
     mutationFn: (input: Parameters<typeof treasuryRepository.createRegister>[0]) =>
       treasuryRepository.createRegister(input),
     onSuccess: () => invalidateRegisters(qc),
@@ -73,6 +75,7 @@ export function useCreateCashRegister() {
 export function useUpdateCashRegister() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم تحديث الصندوق' },
     mutationFn: (params: {
       id: string;
       input: Parameters<typeof treasuryRepository.updateRegister>[1];
@@ -84,6 +87,7 @@ export function useUpdateCashRegister() {
 export function useRecordCashTransaction() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم تسجيل الحركة النقدية' },
     mutationFn: (input: Parameters<typeof treasuryRepository.recordCashTransaction>[0]) =>
       treasuryRepository.recordCashTransaction(input),
     onSuccess: () => {

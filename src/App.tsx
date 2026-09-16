@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { emitTelemetry } from "@/lib/runtimeTelemetry";
+import { notifyMutationError, notifyMutationSuccess } from "@/lib/mutationFeedback";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -180,9 +181,16 @@ const queryCache = new QueryCache({
 });
 
 const mutationCache = new MutationCache({
+  // OPA-UX-001: every write action reports success or failure to the user.
+  // Call sites can tune wording via `meta.successMessage` / `meta.errorMessage`
+  // or opt out with `meta.silentSuccess` / `meta.silentError`.
+  onSuccess: (_data, _vars, _ctx, mutation) => {
+    notifyMutationSuccess(mutation);
+  },
   onError: (error, _vars, _ctx, mutation) => {
     const msg = (error as Error)?.message || String(error);
     const status = (error as { status?: number })?.status;
+    notifyMutationError(error, mutation);
     if (status === 401 || status === 403) return;
     emitTelemetry('mutation_error', msg, {
       errorName: (error as Error)?.name,

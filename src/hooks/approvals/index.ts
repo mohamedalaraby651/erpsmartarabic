@@ -20,6 +20,7 @@ export function usePendingApprovals(filters: ApprovalListFilters = {}) {
 export function useExecuteApprovalAction() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم تنفيذ إجراء الاعتماد' },
     mutationFn: (params: ExecuteApprovalParams) =>
       approvalRepository.executeApprovalAction(params),
     onSuccess: () => {

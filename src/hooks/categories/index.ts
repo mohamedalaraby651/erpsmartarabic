@@ -32,6 +32,7 @@ function invalidate(qc: ReturnType<typeof useQueryClient>) {
 export function useCreateCategory() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم إنشاء التصنيف' },
     mutationFn: (payload: Insert) => categoryRepository.create(payload),
     onSuccess: () => invalidate(qc),
   });
@@ -40,6 +41,7 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم تحديث التصنيف' },
     mutationFn: ({ id, payload }: { id: string; payload: Update }) =>
       categoryRepository.update(id, payload),
     onSuccess: () => invalidate(qc),
@@ -49,6 +51,7 @@ export function useUpdateCategory() {
 export function useDeleteCategory() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم حذف التصنيف' },
     mutationFn: (id: string) => categoryRepository.delete(id),
     onSuccess: () => invalidate(qc),
   });

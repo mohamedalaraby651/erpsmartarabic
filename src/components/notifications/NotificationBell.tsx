@@ -60,6 +60,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
   });
 
   const markAsReadMutation = useMutation({
+    meta: { silentSuccess: true },
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
