@@ -61,6 +61,7 @@ export function useListShortcuts(handlers: ListShortcutHandlers, enabled = true)
           if (handlers.onRefresh) { event.preventDefault(); handlers.onRefresh(); }
           break;
         case '?':
+        case '؟':
           if (handlers.onToggleHelp) { event.preventDefault(); handlers.onToggleHelp(); }
           break;
         default:
