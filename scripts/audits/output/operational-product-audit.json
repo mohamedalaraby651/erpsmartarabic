@@ -1,0 +1,893 @@
+{
+  "id": "OPA-NAZRA-001",
+  "generatedAt": "2026-09-16T11:06:41.619Z",
+  "mode": "measurement-only",
+  "totals": {
+    "files": 1065,
+    "pages": 100,
+    "routes": 100,
+    "guardedRouteWrappers": 1,
+    "buttons": 805,
+    "buttonsWired": 744,
+    "buttonsUnwiredCandidates": 61,
+    "formsSurface": 180,
+    "confirmDialogs": 537,
+    "printSurfaces": 164,
+    "rpcCalls": 61,
+    "repositoryImports": 91,
+    "uiDirectDbFiles": 67
+  },
+  "routes": [
+    {
+      "path": "/landing",
+      "element": "LandingPage"
+    },
+    {
+      "path": "/auth",
+      "element": "Auth"
+    },
+    {
+      "path": "/.lovable/oauth/consent",
+      "element": "OAuthConsent"
+    },
+    {
+      "path": "/forgot-password",
+      "element": "ForgotPasswordPage"
+    },
+    {
+      "path": "/reset-password",
+      "element": "ResetPasswordPage"
+    },
+    {
+      "path": "/",
+      "element": "AppLayout"
+    },
+    {
+      "path": "(index)",
+      "element": "Dashboard"
+    },
+    {
+      "path": "customers",
+      "element": "CustomersPage"
+    },
+    {
+      "path": "customers/:id",
+      "element": "CustomerDetailsPage"
+    },
+    {
+      "path": "products",
+      "element": "ProductsPage"
+    },
+    {
+      "path": "products/:id",
+      "element": "ProductDetailsPage"
+    },
+    {
+      "path": "categories",
+      "element": "CategoriesPage"
+    },
+    {
+      "path": "sales-orders",
+      "element": "SalesOrdersPage"
+    },
+    {
+      "path": "sales-orders/:id",
+      "element": "SalesOrderDetailsPage"
+    },
+    {
+      "path": "invoices",
+      "element": "InvoicesPage"
+    },
+    {
+      "path": "invoices/:id",
+      "element": "InvoiceDetailsPage"
+    },
+    {
+      "path": "payments",
+      "element": "PaymentsPage"
+    },
+    {
+      "path": "credit-notes",
+      "element": "CreditNotesPage"
+    },
+    {
+      "path": "credit-notes/:id",
+      "element": "CreditNoteDetailsPage"
+    },
+    {
+      "path": "inventory",
+      "element": "InventoryPage"
+    },
+    {
+      "path": "suppliers",
+      "element": "SuppliersPage"
+    },
+    {
+      "path": "suppliers/:id",
+      "element": "SupplierDetailsPage"
+    },
+    {
+      "path": "supplier-payments",
+      "element": "SupplierPaymentsPage"
+    },
+    {
+      "path": "purchase-orders",
+      "element": "PurchaseOrdersPage"
+    },
+    {
+      "path": "purchase-orders/:id",
+      "element": "PurchaseOrderDetailsPage"
+    },
+    {
+      "path": "goods-receipts",
+      "element": "GoodsReceiptsPage"
+    },
+    {
+      "path": "goods-receipts/:id",
+      "element": "LogisticsDocumentDetailsPage"
+    },
+    {
+      "path": "delivery-notes",
+      "element": "DeliveryNotesPage"
+    },
+    {
+      "path": "delivery-notes/:id",
+      "element": "LogisticsDocumentDetailsPage"
+    },
+    {
+      "path": "purchase-invoices",
+      "element": "PurchaseInvoicesPage"
+    },
+    {
+      "path": "purchase-invoices/approvals",
+      "element": "PurchaseInvoiceApprovalsPage"
+    },
+    {
+      "path": "purchase-invoices/:id",
+      "element": "LogisticsDocumentDetailsPage"
+    },
+    {
+      "path": "quotes",
+      "element": "QuotesPage"
+    },
+    {
+      "path": "quotes/new",
+      "element": "QuoteNewPage"
+    },
+    {
+      "path": "sales-pipeline",
+      "element": "SalesPipelinePage"
+    },
+    {
+      "path": "quotations",
+      "element": "QuotationsPage"
+    },
+    {
+      "path": "quotations/:id",
+      "element": "QuotationDetailsPage"
+    },
+    {
+      "path": "reports",
+      "element": "ReportsPage"
+    },
+    {
+      "path": "reports/sales",
+      "element": "SalesReportsPage"
+    },
+    {
+      "path": "reports/returns",
+      "element": "ReturnsReportPage"
+    },
+    {
+      "path": "settings",
+      "element": "UnifiedSettingsPage"
+    },
+    {
+      "path": "settings/alerts",
+      "element": "CustomerAlertSettingsPage"
+    },
+    {
+      "path": "search",
+      "element": "SearchPage"
+    },
+    {
+      "path": "notifications",
+      "element": "NotificationsPage"
+    },
+    {
+      "path": "tasks",
+      "element": "TasksPage"
+    },
+    {
+      "path": "admin",
+      "element": "RoleGuard"
+    },
+    {
+      "path": "roles",
+      "element": "RolesPage"
+    },
+    {
+      "path": "permissions",
+      "element": "PermissionsPage"
+    },
+    {
+      "path": "customizations",
+      "element": "CustomizationsPage"
+    },
+    {
+      "path": "users",
+      "element": "UsersPage"
+    },
+    {
+      "path": "user-management",
+      "element": "UserManagementPage"
+    },
+    {
+      "path": "dashboard",
+      "element": "AdminDashboard"
+    },
+    {
+      "path": "activity-log",
+      "element": "ActivityLogPage"
+    },
+    {
+      "path": "audit-trail",
+      "element": "AuditTrailPage"
+    },
+    {
+      "path": "role-limits",
+      "element": "RoleLimitsPage"
+    },
+    {
+      "path": "backup",
+      "element": "BackupPage"
+    },
+    {
+      "path": "export-templates",
+      "element": "ExportTemplatesPage"
+    },
+    {
+      "path": "approval-chains",
+      "element": "ApprovalChainsPage"
+    },
+    {
+      "path": "metrics",
+      "element": "MetricsPage"
+    },
+    {
+      "path": "sod-rules",
+      "element": "SodRulesPage"
+    },
+    {
+      "path": "tenants",
+      "element": "TenantsPage"
+    },
+    {
+      "path": "domain-events",
+      "element": "DomainEventsPage"
+    },
+    {
+      "path": "dispatcher-batches",
+      "element": "DispatcherBatchesPage"
+    },
+    {
+      "path": "dispatcher-batches/:correlationId",
+      "element": "DispatcherBatchDetailPage"
+    },
+    {
+      "path": "approvals",
+      "element": "ApprovalsPage"
+    },
+    {
+      "path": "employees",
+      "element": "EmployeesPage"
+    },
+    {
+      "path": "employees/:id",
+      "element": "EmployeeDetailsPage"
+    },
+    {
+      "path": "profile",
+      "element": "UnifiedSettingsPage"
+    },
+    {
+      "path": "sync",
+      "element": "SyncStatusPage"
+    },
+    {
+      "path": "attachments",
+      "element": "AttachmentsPage"
+    },
+    {
+      "path": "install",
+      "element": "InstallPage"
+    },
+    {
+      "path": "treasury",
+      "element": "TreasuryPage"
+    },
+    {
+      "path": "treasury/:id",
+      "element": "CashRegisterDetailsPage"
+    },
+    {
+      "path": "expenses",
+      "element": "ExpensesPage"
+    },
+    {
+      "path": "expense-categories",
+      "element": "ExpenseCategoriesPage"
+    },
+    {
+      "path": "attendance",
+      "element": "AttendancePage"
+    },
+    {
+      "path": "collections",
+      "element": "CollectionDashboard"
+    },
+    {
+      "path": "price-lists",
+      "element": "PriceListsPage"
+    },
+    {
+      "path": "kpis",
+      "element": "KPIDashboard"
+    },
+    {
+      "path": "accounting/chart-of-accounts",
+      "element": "ChartOfAccountsPage"
+    },
+    {
+      "path": "accounting/journals",
+      "element": "JournalEntriesPage"
+    },
+    {
+      "path": "accounting/posting-log",
+      "element": "PostingLogPage"
+    },
+    {
+      "path": "share-target",
+      "element": "ShareTargetPage"
+    },
+    {
+      "path": "open-file",
+      "element": "OpenFilePage"
+    },
+    {
+      "path": "protocol",
+      "element": "ProtocolHandlerPage"
+    },
+    {
+      "path": "/platform/auth",
+      "element": "PlatformAuth"
+    },
+    {
+      "path": "/platform",
+      "element": "PlatformLayout"
+    },
+    {
+      "path": "(index)",
+      "element": "PlatformDashboard"
+    },
+    {
+      "path": "tenants",
+      "element": "TenantsManagementPage"
+    },
+    {
+      "path": "tenants/:id",
+      "element": "TenantDetailsPage"
+    },
+    {
+      "path": "admins",
+      "element": "PlatformAdminsPage"
+    },
+    {
+      "path": "billing",
+      "element": "PlatformBillingPage"
+    },
+    {
+      "path": "reports",
+      "element": "PlatformReportsPage"
+    },
+    {
+      "path": "settings",
+      "element": "PlatformSettingsPage"
+    },
+    {
+      "path": "/index",
+      "element": "Navigate"
+    },
+    {
+      "path": "/dev/pdf-sandbox",
+      "element": "PdfSandboxPage"
+    },
+    {
+      "path": "/dev/pdf-telemetry",
+      "element": "PdfTelemetryPage"
+    },
+    {
+      "path": "/dev/pdf-jobs",
+      "element": "PdfJobsPage"
+    },
+    {
+      "path": "/__integration__/ux1e",
+      "element": "IntegrationHarnessPage"
+    },
+    {
+      "path": "*",
+      "element": "NotFound"
+    }
+  ],
+  "journeys": {
+    "sales": [
+      {
+        "step": "customers",
+        "route": "customers",
+        "pageFiles": 2
+      },
+      {
+        "step": "products",
+        "route": "products",
+        "pageFiles": 2
+      },
+      {
+        "step": "quotations",
+        "route": "quotations",
+        "pageFiles": 2
+      },
+      {
+        "step": "sales-orders",
+        "route": "sales-orders",
+        "pageFiles": 2
+      },
+      {
+        "step": "invoices",
+        "route": "invoices",
+        "pageFiles": 4
+      },
+      {
+        "step": "payments",
+        "route": "payments",
+        "pageFiles": 1
+      },
+      {
+        "step": "reports",
+        "route": "reports",
+        "pageFiles": 4
+      }
+    ],
+    "purchasing": [
+      {
+        "step": "suppliers",
+        "route": "suppliers",
+        "pageFiles": 3
+      },
+      {
+        "step": "purchase-orders",
+        "route": "purchase-orders",
+        "pageFiles": 5
+      },
+      {
+        "step": "goods-receipts",
+        "route": "goods-receipts",
+        "pageFiles": 1
+      },
+      {
+        "step": "purchase-invoices",
+        "route": "purchase-invoices",
+        "pageFiles": 2
+      },
+      {
+        "step": "supplier",
+        "route": "suppliers",
+        "pageFiles": 3
+      }
+    ],
+    "inventory": [
+      {
+        "step": "products",
+        "route": "products",
+        "pageFiles": 2
+      },
+      {
+        "step": "inventory",
+        "route": "inventory",
+        "pageFiles": 1
+      },
+      {
+        "step": "warehouses",
+        "route": null,
+        "pageFiles": 0
+      },
+      {
+        "step": "stock",
+        "route": null,
+        "pageFiles": 0
+      }
+    ],
+    "accounting": [
+      {
+        "step": "accounting",
+        "route": "accounting/chart-of-accounts",
+        "pageFiles": 3
+      },
+      {
+        "step": "journals",
+        "route": "accounting/journals",
+        "pageFiles": 0
+      },
+      {
+        "step": "chart-of-accounts",
+        "route": "accounting/chart-of-accounts",
+        "pageFiles": 0
+      },
+      {
+        "step": "expenses",
+        "route": "expenses",
+        "pageFiles": 2
+      }
+    ],
+    "hr": [
+      {
+        "step": "employees",
+        "route": "employees",
+        "pageFiles": 2
+      },
+      {
+        "step": "attendance",
+        "route": "attendance",
+        "pageFiles": 1
+      },
+      {
+        "step": "leave",
+        "route": null,
+        "pageFiles": 0
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "OPA-ACT-001",
+      "severity": "P1",
+      "area": "actions",
+      "title": "أزرار بلا معالج مباشر تحتاج تحققًا يدويًا",
+      "detail": "أزرار لا تحمل onClick/asChild/type=submit/form — بعضها مشروع (داخل نموذج) والبعض قد يكون إجراءً معطلًا.",
+      "evidence": {
+        "totalCandidates": 61,
+        "topFiles": [
+          {
+            "file": "src/ui/primitives/__demo__/PrimitivesGallery.tsx",
+            "count": 7
+          },
+          {
+            "file": "src/components/settings/LivePreviewCard.tsx",
+            "count": 3
+          },
+          {
+            "file": "src/ui/composites/__demo__/CompositesGallery.tsx",
+            "count": 3
+          },
+          {
+            "file": "src/components/shared/AttachmentsSearch.tsx",
+            "count": 2
+          },
+          {
+            "file": "src/components/customers/details/StatementOfAccount.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/hero/HeroActions.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/list/CustomerColumnSettings.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/list/CustomerLayoutCustomizer.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/list/CustomerListCard.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/list/CustomerPageHeader.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/list/CustomerSavedViews.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/mobile/CustomerMobileProfile.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/tabs/CustomerTabOrders.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customers/tabs/CustomerTabQuotations.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/customization/InlineCustomizer.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/dashboard/AlertsBell.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/export/ExportWithTemplateButton.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/landing/HeroSection.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/landing/LandingNavbar.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/layout/AdminMenu.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/layout/shared/NotificationsBell.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/layout/shared/UserMenu.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/navigation/QuickActions.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/notifications/NotificationBell.tsx",
+            "count": 1
+          },
+          {
+            "file": "src/components/print/UnifiedExportMenu.tsx",
+            "count": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "OPA-GAP-001",
+      "severity": "P1",
+      "area": "workflow",
+      "title": "وظائف معلنة كغير متاحة / قيد التطوير داخل الواجهة",
+      "detail": "نصوص \"قريبًا\"/\"not implemented\" تعني طريقًا مسدودًا محتملًا في رحلة المستخدم.",
+      "evidence": {
+        "files": [
+          {
+            "file": "src/components/mobile/PinchZoom.tsx",
+            "hits": 1
+          },
+          {
+            "file": "src/hooks/useAlertNotifier.ts",
+            "hits": 1
+          },
+          {
+            "file": "src/hooks/useAuth.tsx",
+            "hits": 1
+          },
+          {
+            "file": "src/pages/collections/CollectionDashboard.tsx",
+            "hits": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "OPA-GAP-002",
+      "severity": "P2",
+      "area": "workflow",
+      "title": "علامات TODO/FIXME في الشيفرة النشطة",
+      "detail": "تحتاج فرزًا: بعضها نواقص تشغيلية وبعضها ملاحظات.",
+      "evidence": {
+        "total": 0,
+        "files": []
+      }
+    },
+    {
+      "id": "OPA-ARC-001",
+      "severity": "P3",
+      "area": "architecture",
+      "title": "وصول مباشر لقاعدة البيانات من طبقة الواجهة",
+      "detail": "دين معماري (نطاق F2 غير المصرّح به) — يُعالج أثناء تعديل الميزة نفسها، لا كحملة منفصلة.",
+      "evidence": {
+        "files": 67,
+        "callSites": 67,
+        "list": [
+          "src/components/admin/EventDispatcherCard.tsx",
+          "src/components/admin/useRestoreBackup.ts",
+          "src/components/auth/TwoFactorSetup.tsx",
+          "src/components/customers/details/CustomerPinnedNote.tsx",
+          "src/components/customers/tabs/CustomerTabNotes.tsx",
+          "src/components/dashboard/CalendarWidget.tsx",
+          "src/components/dashboard/InvoiceQuickActions.tsx",
+          "src/components/dashboard/LowStockWidget.tsx",
+          "src/components/dashboard/TodayPerformanceWidget.tsx",
+          "src/components/export/ExportWithTemplateButton.tsx",
+          "src/components/inventory/StockMovementDialog.tsx",
+          "src/components/inventory/WarehouseFormDialog.tsx",
+          "src/components/invoices/InvoiceApprovalDialog.tsx",
+          "src/components/invoices/useInvoiceItems.ts",
+          "src/components/notifications/NotificationBell.tsx",
+          "src/components/payments/MultiInvoiceSettlement.tsx",
+          "src/components/payments/PaymentFormDialog.tsx",
+          "src/components/print/InvoicePrintView.tsx",
+          "src/components/products/ProductVariantDialog.tsx",
+          "src/components/reports/InactiveCustomersReport.tsx",
+          "src/components/settings/BackupTab.tsx",
+          "src/components/settings/CompanyInfoSection.tsx",
+          "src/components/settings/ExportCenter/AssetUploader.tsx",
+          "src/components/settings/ExportCenter/ExportCenterPage.tsx",
+          "src/components/settings/InvoiceSettingsSection.tsx",
+          "src/components/settings/OfflineSettings.tsx",
+          "src/components/settings/PersonalInfoSection.tsx",
+          "src/components/settings/SecuritySection.tsx",
+          "src/components/settings/SettingsExportImport.tsx",
+          "src/components/shared/AttachmentUploadForm.tsx",
+          "src/components/shared/AttachmentsList.tsx",
+          "src/components/shared/FileUpload.tsx",
+          "src/components/shared/ImageUpload.tsx",
+          "src/components/shared/LogoUpload.tsx",
+          "src/components/suppliers/SupplierFormDialog.tsx",
+          "src/components/suppliers/SupplierImportDialog.tsx",
+          "src/components/suppliers/SupplierPaymentDialog.tsx",
+          "src/components/tenant/TenantSettings.tsx",
+          "src/pages/ForgotPasswordPage.tsx",
+          "src/pages/OAuthConsent.tsx",
+          "src/pages/ResetPasswordPage.tsx",
+          "src/pages/admin/BackupPage.tsx",
+          "src/pages/admin/CustomizationsPage.tsx",
+          "src/pages/admin/DispatcherBatchDetailPage.tsx",
+          "src/pages/admin/DispatcherBatchesPage.tsx",
+          "src/pages/admin/DomainEventsPage.tsx",
+          "src/pages/admin/PermissionsPage.tsx",
+          "src/pages/admin/RoleLimitsPage.tsx",
+          "src/pages/admin/RolesPage.tsx",
+          "src/pages/admin/UserManagementPage.tsx",
+          "src/pages/admin/UsersPage.tsx",
+          "src/pages/attachments/AttachmentsPage.tsx",
+          "src/pages/dev/PdfJobsPage.tsx",
+          "src/pages/employees/EmployeeDetailsPage.tsx",
+          "src/pages/notifications/NotificationsPage.tsx",
+          "src/pages/platform/PlatformAdminsPage.tsx",
+          "src/pages/platform/PlatformBillingPage.tsx",
+          "src/pages/platform/PlatformDashboard.tsx",
+          "src/pages/platform/PlatformReportsPage.tsx",
+          "src/pages/platform/TenantDetailsPage.tsx",
+          "src/pages/platform/TenantsManagementPage.tsx",
+          "src/pages/reports/KPIDashboard.tsx",
+          "src/pages/reports/ReturnsReportPage.tsx",
+          "src/pages/reports/SalesReportsPage.tsx",
+          "src/pages/search/SearchPage.tsx",
+          "src/pages/settings/UnifiedSettingsPage.tsx",
+          "src/pages/sync/SyncStatusPage.tsx"
+        ]
+      }
+    },
+    {
+      "id": "OPA-PRN-001",
+      "severity": "P2",
+      "area": "printing",
+      "title": "سطح الطباعة/التصدير الحالي",
+      "detail": "حصر الملفات التي تنتج مستندات مطبوعة أو PDF لتقييم تطابقها مع حالة العمل.",
+      "evidence": {
+        "files": [
+          "src/components/admin/PdfHealthPanel.tsx",
+          "src/components/customers/mobile/InvoiceLongPressSheet.tsx",
+          "src/components/export/ExportWithTemplateButton.tsx",
+          "src/components/print/InvoicePrintView.tsx",
+          "src/components/print/PdfPreflightAlert.tsx",
+          "src/components/print/PrintTemplate.tsx",
+          "src/components/print/PurchaseOrderPrintView.tsx",
+          "src/components/print/QuotationPrintView.tsx",
+          "src/components/print/SalesOrderPrintView.tsx",
+          "src/components/print/UnifiedExportMenu.tsx",
+          "src/components/settings/ExportCenter/ExportCenterPage.tsx",
+          "src/components/settings/PdfEngineSettings.tsx",
+          "src/domain/pdf/rendering/RenderProfileMapper.ts",
+          "src/hooks/useExportPdf.ts",
+          "src/hooks/useExportSettings.ts",
+          "src/hooks/useKeyboardShortcuts.ts",
+          "src/lib/pdf/arabic/arabicCss.ts",
+          "src/lib/pdf/config/pdfConfigSchema.ts",
+          "src/lib/pdf/diagnostics/errors.ts",
+          "src/lib/pdf/diagnostics/telemetrySink.ts",
+          "src/lib/pdf/engine/EngineStrategyRegistry.ts",
+          "src/lib/pdf/engine/HtmlPdfEngine.ts",
+          "src/lib/pdf/engine/IPdfEngine.ts",
+          "src/lib/pdf/engine/JsPdfEngine.ts",
+          "src/lib/pdf/engine/pickEngine.ts",
+          "src/lib/pdf/featureFlags.ts",
+          "src/lib/pdf/index.ts",
+          "src/lib/pdf/printInvoiceHtmlPdf.ts",
+          "src/lib/pdf/printPurchaseOrderHtmlPdf.ts",
+          "src/lib/pdf/printQuotationHtmlPdf.ts",
+          "src/lib/pdf/printStatementHtmlPdf.ts",
+          "src/lib/pdf/templates/InvoiceHtmlTemplate.ts",
+          "src/lib/pdf/templates/TemplateComposer.ts",
+          "src/lib/pdf/templates/templateRegistry.ts",
+          "src/lib/pdfGenerator.ts",
+          "src/lib/pdfGeneratorLazy.ts",
+          "src/lib/printDocument.ts",
+          "src/pages/dev/PdfSandboxPage.tsx",
+          "src/pages/suppliers/SupplierDetailsPage.tsx",
+          "src/pages/suppliers/SuppliersPage.tsx"
+        ]
+      }
+    },
+    {
+      "id": "OPA-BAK-001",
+      "severity": "P2",
+      "area": "backup",
+      "title": "سطح النسخ الاحتياطي والاسترجاع",
+      "detail": "لا يكفي اعتماد نسخ المزوّد: نحتاج إجراء استرجاع موثّقًا ومُثبتًا.",
+      "evidence": {
+        "files": [
+          "src/components/admin/RestoreBackupConfigureView.tsx",
+          "src/components/admin/RestoreBackupDialog.tsx",
+          "src/components/admin/RestoreBackupResultsView.tsx",
+          "src/components/admin/RestoreBackupReviewView.tsx",
+          "src/components/admin/restoreBackup.constants.ts",
+          "src/components/admin/useRestoreBackup.ts",
+          "src/components/customers/dialogs/CustomerExportDialog.tsx",
+          "src/components/export/ColumnSelector.tsx",
+          "src/components/export/ExportWithTemplateButton.tsx",
+          "src/components/print/UnifiedExportMenu.tsx",
+          "src/components/reports/ExportButton.tsx",
+          "src/components/settings/BackupTab.tsx",
+          "src/components/settings/ExportCenter/AssetUploader.tsx",
+          "src/components/settings/ExportCenter/AuditTimelinePanel.tsx",
+          "src/components/settings/ExportCenter/ExportCenterPage.tsx",
+          "src/components/settings/ExportCenter/FormatPreferencesSection.tsx",
+          "src/components/settings/ExportCenter/LivePreviewPanel.tsx",
+          "src/components/settings/ExportCenter/RenderProfileSection.tsx",
+          "src/components/settings/ExportCenter/useLivePreviewProfile.ts",
+          "src/components/settings/SettingsExportImport.tsx",
+          "src/components/suppliers/dialogs/SupplierExportDialog.tsx",
+          "src/hooks/customers/useCustomerExport.ts",
+          "src/hooks/useEnqueuePdfExport.ts",
+          "src/hooks/useExportPdf.ts",
+          "src/hooks/useExportSettings.ts",
+          "src/lib/exports/customerExcelExport.ts",
+          "src/lib/services/backupExportService.ts",
+          "src/lib/services/backupRestoreParser.ts",
+          "src/lib/services/backupRestoreReport.ts",
+          "src/pages/admin/BackupPage.tsx",
+          "src/pages/admin/ExportTemplatesPage.tsx"
+        ]
+      }
+    },
+    {
+      "id": "OPA-UX-001",
+      "severity": "P2",
+      "area": "ux",
+      "title": "شاشات بها نماذج بلا رسائل نجاح/خطأ ظاهرة",
+      "detail": "المستخدم لا يعرف هل نجحت العملية.",
+      "evidence": {
+        "files": [
+          "src/pages/ForgotPasswordPage.tsx",
+          "src/pages/ResetPasswordPage.tsx",
+          "src/pages/admin/RolesPage.tsx"
+        ]
+      }
+    }
+  ],
+  "bySeverity": {
+    "P1": 2,
+    "P2": 4,
+    "P3": 1
+  }
+}
