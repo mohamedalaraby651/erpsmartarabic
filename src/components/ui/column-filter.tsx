@@ -174,9 +174,18 @@ export interface ColumnFilterHeaderProps {
   filterKey?: string;
   filterKind?: ColumnFilterKind;
   options?: FilterOption[];
+  /** Loading indicator for options fetched from the server. */
+  optionsLoading?: boolean;
   value?: ColumnFilter;
   onChange?: (key: string, filter: ColumnFilter | undefined) => void;
+  /** Column sizing (OPA-UI-003 / COL-001) */
+  width?: number;
+  onResize?: (key: string, width: number) => void;
+  onAutoFit?: (key: string) => void;
 }
+
+const MIN_COLUMN_WIDTH = 72;
+const MAX_COLUMN_WIDTH = 640;
 
 export function ColumnFilterHeader({
   label,
@@ -187,9 +196,39 @@ export function ColumnFilterHeader({
   filterKey,
   filterKind,
   options,
+  optionsLoading,
   value,
   onChange,
+  width,
+  onResize,
+  onAutoFit,
 }: ColumnFilterHeaderProps) {
+  const cellRef = React.useRef<HTMLTableCellElement>(null);
+  const resizeKey = filterKey ?? sortKey ?? label;
+
+  /** Pointer-driven column resize; RTL-aware (the handle sits on the left edge). */
+  const startResize = (e: React.PointerEvent) => {
+    if (!onResize) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = width ?? cellRef.current?.offsetWidth ?? MIN_COLUMN_WIDTH;
+    const rtl = typeof document !== 'undefined' && document.dir === 'rtl';
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const next = Math.min(
+        MAX_COLUMN_WIDTH,
+        Math.max(MIN_COLUMN_WIDTH, startWidth + (rtl ? -dx : dx)),
+      );
+      onResize(resizeKey, next);
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<ColumnFilter>(
     value ?? { kind: filterKind ?? 'text' },
