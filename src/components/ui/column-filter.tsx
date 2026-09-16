@@ -122,7 +122,9 @@ export function resolveDatePreset(preset: string): { from: string; to: string } 
 export function isFilterActive(f: ColumnFilter | undefined): boolean {
   if (!f) return false;
   if (f.kind === 'options') return (f.values?.length ?? 0) > 0;
-  if (f.kind === 'text') return !!f.text?.trim();
+  // A text column may narrow either by a free term or by picked values
+  // (OPA-UI-003: every filter is searchable and multi-selectable).
+  if (f.kind === 'text') return !!f.text?.trim() || (f.values?.length ?? 0) > 0;
   return !!f.from || !!f.to;
 }
 
