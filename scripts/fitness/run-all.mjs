@@ -57,6 +57,9 @@ const ACTIVE = [
   "check-no-new-ui-kit-imports.mjs",
   // PH1A (BND-05 — Tenant → Data, enforcing)
   "check-tenant-column-and-rls-completeness.mjs",
+  // OPA-UI-001 (table header semantics — enforcing)
+  "check-table-header-semantics.mjs",
+
 
 ];
 
