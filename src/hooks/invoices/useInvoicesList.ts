@@ -207,8 +207,7 @@ export function useInvoicesList() {
     },
   });
 
-  const { filteredData, filters, setFilter } = useTableFilter(invoices);
-  const { sortedData, sortConfig, requestSort } = useTableSort(filteredData);
+  const { sortedData, sortConfig, requestSort } = useTableSort(invoices);
 
   const handleEdit = useCallback((invoice: Invoice) => { setSelectedInvoice(invoice); setDialogOpen(true); }, []);
   const handleAdd = useCallback(() => { setSelectedInvoice(null); setDialogOpen(true); }, []);
@@ -226,7 +225,7 @@ export function useInvoicesList() {
     dialogOpen, setDialogOpen, selectedInvoice, prefillCustomerId, setPrefillCustomerId,
     printDialogOpen, setPrintDialogOpen, printInvoiceId, setPrintInvoiceId,
     canEdit, canDelete, invoices, isLoading, error: error as Error | null, refetch, sortedData, sortConfig, requestSort,
-    filters, setFilter, deleteMutation, handleEdit, handleAdd, handleRefresh,
+    columnFilters, deleteMutation, handleEdit, handleAdd, handleRefresh,
     statItems, invoiceStats, pagination, totalCount, duplicate, isDuplicating,
     selectedIds, toggleSelect, clearSelection, bulkPrint, isBulkPrinting,
     selectAllFiltered, isSelectingAll,
