@@ -486,3 +486,12 @@ STOP — HUMAN REVIEW REQUIRED
 - Live browser pass over 13 core routes with a real session: no crash/blank; `/accounting` returns 404 (no parent route).
 - Backlog: P0=0, P1=3 (OPA-ACT-001, OPA-GAP-001, OPA-NAV-001), P2=4, P3=1.
 - PRE-TS-001 recurrence #13 contained in platform-owned previewAuthStorage.ts (annotations only).
+
+## OPA-JRN-001 — Journey Verification + Blocker Remediation
+- Verdict: EXECUTED / PASS (NOT CERTIFIED)
+- Sales chain proven end-to-end (QTN-20250305-0007 → SO-20250220-0006 → INV-20250101-0009 → payment 7,130)
+- Blockers fixed in scope: RPT-001 (reports screen stuck loading), QTN-STAT-001 (missing completed status label)
+- Deferred findings: FIN-OBS-001 (P1, Smart Freeze), PUR-OBS-001, INV-OBS-001, UI-OBS-001, UI-OBS-002
+- Purchasing beyond PO and HR payroll: UNVERIFIED / OUT OF SCOPE
+- Quality: typecheck PASS (0), fitness active=33 pending=9 failures=0
+- PRE-TS-001 recurrence #15 contained separately

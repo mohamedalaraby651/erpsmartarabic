@@ -83,7 +83,8 @@ Findings (recorded, **not** fixed — Smart Freeze):
 | RPT-001 | P1 | Reports screen never left its loading state, blocking the Report step of the sales journey. The date range was rebuilt on every render, changing the data query keys continuously. | `src/pages/reports/ReportsPage.tsx`: the range is now stable across renders. Retested live — KPIs, tabs and charts render. |
 | QTN-STAT-001 | P2 (direct journey evidence) | Quotation status `completed` had no label, so a completed quotation showed an empty status cell — the journey's final state was not visible. | Added the `مكتمل` label/colour in `QuotationsPage.tsx` and `QuotationDetailsPage.tsx`. |
 
-No other source files were modified. No repository, migration, RLS, permission, posting or architecture change.
+No other product source files were modified. No repository, migration, RLS, permission, posting or architecture change.
+Separate DELTA: PRE-TS-001 recurrence #15 contained in the platform-owned `src/integrations/supabase/previewAuthStorage.ts` (type annotations only, no behaviour change).
 
 ## 8. Findings deferred (no scope expansion)
 
