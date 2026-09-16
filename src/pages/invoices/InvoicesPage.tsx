@@ -371,11 +371,19 @@ const InvoicesPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div><h1 className="text-2xl font-bold">الفواتير</h1><p className="text-muted-foreground">إدارة فواتير المبيعات</p></div>
-        <div className="flex gap-2">
-          <Button onClick={list.handleAdd} size={isMobile ? "sm" : "default"}><Plus className="h-4 w-4 ml-2" />{isMobile ? "جديد" : "فاتورة جديدة"}</Button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
+            <Receipt className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">الفواتير</h1>
+            <p className="text-sm text-muted-foreground">إدارة فواتير المبيعات والتحصيل</p>
+          </div>
         </div>
+        <Badge variant="secondary" className="h-8 px-3 text-sm font-medium">
+          {list.totalCount.toLocaleString()} فاتورة
+        </Badge>
       </div>
 
       {isMobile ? renderMobileView() : (
@@ -452,76 +460,90 @@ const InvoicesPage = () => {
               none: 'bg-muted text-muted-foreground border-border',
             };
             return (
-              <Card className={list.selectedIds.size > 0 ? 'border-primary/40 bg-primary/5' : ''}>
-                <CardContent className="p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <Checkbox
-                      checked={allOnPageSelected}
-                      aria-label={allOnPageSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
-                      onCheckedChange={toggleAllOnPage}
-                      {...(someOnPageSelected && !allOnPageSelected ? { 'data-state': 'indeterminate' as const } : {})}
-                    />
-                    <Badge variant="outline" className={`font-bold ${stateBadgeClass[selectionState]}`}>
-                      {stateLabel[selectionState]}
-                    </Badge>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">المحدد:</span>
-                      <span className="font-bold text-primary">{list.selectedIds.size}</span>
-                      <span className="text-muted-foreground">من</span>
-                      <span className="font-medium">{list.totalCount}</span>
-                    </div>
-                    {list.selectedIds.size > 0 && (
-                      <div className="flex items-center gap-2 text-sm border-r pr-3 mr-1">
-                        <span className="text-muted-foreground">إجمالي المحدد:</span>
-                        <span className="font-bold text-success">{selectedTotal.toLocaleString()} ج.م</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" onClick={toggleAllOnPage} disabled={pageData.length === 0}>
-                      {allOnPageSelected ? 'إلغاء تحديد الصفحة' : 'تحديد الصفحة'}
+              <div
+                className="flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-3 rounded-lg border border-border/70 bg-card/95 p-3 shadow-sm backdrop-blur"
+                role="region"
+                aria-label="أدوات التحديد الجمعي للفواتير"
+                aria-live="polite"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  <Checkbox
+                    checked={allOnPageSelected}
+                    aria-label={allOnPageSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                    onCheckedChange={toggleAllOnPage}
+                    {...(someOnPageSelected && !allOnPageSelected ? { 'data-state': 'indeterminate' as const } : {})}
+                  />
+                  <Badge variant="outline" className={`font-bold ${stateBadgeClass[selectionState]}`}>
+                    {stateLabel[selectionState]}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    المحدد: <strong className="text-foreground">{list.selectedIds.size}</strong> من <span className="font-medium">{list.totalCount}</span>
+                  </span>
+                  {list.selectedIds.size > 0 && (
+                    <span className="flex items-center gap-2 border-r pr-3 text-sm text-muted-foreground">
+                      إجمالي المحدد: <strong className="text-success">{selectedTotal.toLocaleString()} ج.م</strong>
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={toggleAllOnPage} disabled={pageData.length === 0}>
+                    {allOnPageSelected ? 'إلغاء تحديد الصفحة' : 'تحديد الصفحة'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={list.selectAllFiltered}
+                    disabled={list.isSelectingAll || list.totalCount === 0}
+                    title={list.debouncedSearch ? 'تحديد كل الفواتير المطابقة للبحث' : 'تحديد كل الفواتير المعروضة'}
+                  >
+                    {list.isSelectingAll && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                    تحديد كل المعروض ({list.totalCount})
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={list.selectedIds.size > 0 ? 'default' : 'outline'}
+                    onClick={() => setBulkPreviewOpen(true)}
+                    disabled={list.isBulkPrinting || list.selectedIds.size === 0}
+                  >
+                    {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
+                    معاينة وطباعة PDF
+                  </Button>
+                  {list.selectedIds.size > 0 && (
+                    <Button size="sm" variant="ghost" onClick={list.clearSelection}>
+                      <X className="h-4 w-4 ml-1" />إلغاء التحديد
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={list.selectAllFiltered}
-                      disabled={list.isSelectingAll || list.totalCount === 0}
-                      title={list.debouncedSearch ? 'تحديد كل الفواتير المطابقة للبحث' : 'تحديد كل الفواتير المعروضة'}
-                    >
-                      {list.isSelectingAll
-                        ? <Loader2 className="h-4 w-4 ml-2 animate-spin" />
-                        : null}
-                      تحديد كل المعروض ({list.totalCount})
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setBulkPreviewOpen(true)}
-                      disabled={list.isBulkPrinting || list.selectedIds.size === 0}
-                    >
-                      {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
-                      معاينة وطباعة دفعية PDF
-                    </Button>
-                    {list.selectedIds.size > 0 && (
-                      <Button size="sm" variant="ghost" onClick={list.clearSelection}>
-                        <X className="h-4 w-4 ml-1" />إلغاء التحديد
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                </div>
+              </div>
             );
           })()}
           <Card>
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b border-border/60 pb-4">
-              <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <CardHeader className="flex flex-col gap-4 space-y-0 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="h-4 w-4" />
+                </span>
                 <div>
-                  <CardTitle>قائمة الفواتير</CardTitle>
-                  <p className="mt-1 text-xs font-normal text-muted-foreground">{list.totalCount.toLocaleString()} فاتورة مطابقة</p>
+                  <CardTitle className="text-lg">قائمة الفواتير</CardTitle>
+                  <p className="text-xs text-muted-foreground">{list.totalCount.toLocaleString()} فاتورة مطابقة</p>
                 </div>
-                <span className="h-8 w-px bg-border" aria-hidden="true" />
-                <ExportWithTemplateButton section="invoices" sectionLabel="الفواتير" data={list.sortedData} columns={[{ key: 'invoice_number', label: 'رقم الفاتورة' }, { key: 'customers.name', label: 'العميل' }, { key: 'total_amount', label: 'الإجمالي' }, { key: 'paid_amount', label: 'المدفوع' }, { key: 'payment_status', label: 'حالة الدفع' }, { key: 'created_at', label: 'التاريخ' }]} />
               </div>
-              <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button onClick={list.handleAdd}>
+                  <Plus className="h-4 w-4 ml-2" />
+                  فاتورة جديدة
+                </Button>
+                <span className="h-6 w-px bg-border" aria-hidden="true" />
+                <ExportWithTemplateButton section="invoices" sectionLabel="الفواتير" data={list.sortedData} columns={[{ key: 'invoice_number', label: 'رقم الفاتورة' }, { key: 'customers.name', label: 'العميل' }, { key: 'total_amount', label: 'الإجمالي' }, { key: 'paid_amount', label: 'المدفوع' }, { key: 'payment_status', label: 'حالة الدفع' }, { key: 'created_at', label: 'التاريخ' }]} />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>تخصيص عرض الجدول</TooltipContent>
+                </Tooltip>
+              </div>
             </CardHeader>
             <CardContent>{renderTableView()}</CardContent>
           </Card>
