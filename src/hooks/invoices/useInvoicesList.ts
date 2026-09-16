@@ -236,6 +236,8 @@ export function useInvoicesList() {
       return {
         total: all.length,
         unpaid: all.filter((i) => i.payment_status === 'pending').length,
+        partial: all.filter((i) => i.payment_status === 'partial').length,
+        paid: all.filter((i) => i.payment_status === 'paid').length,
         totalValue: all.reduce((sum, i) => sum + Number(i.total_amount), 0),
         unpaidValue: all.filter((i) => i.payment_status !== 'paid')
           .reduce((sum, i) => sum + (Number(i.total_amount) - Number(i.paid_amount || 0)), 0),
@@ -244,7 +246,7 @@ export function useInvoicesList() {
     staleTime: 30000,
   });
 
-  const invoiceStats = stats || { total: 0, unpaid: 0, totalValue: 0, unpaidValue: 0 };
+  const invoiceStats = stats || { total: 0, unpaid: 0, partial: 0, paid: 0, totalValue: 0, unpaidValue: 0 };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
