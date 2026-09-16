@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,8 +32,14 @@ export default function ReportsPage() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
 
-  const startDate = customFrom || subDays(new Date(), parseInt(period));
-  const endDate = customTo || new Date();
+  // OPA-JRN-001 / RPT-001: keep the range stable across renders. Recreating
+  // `new Date()` on every render changed the query keys continuously and the
+  // page never left its loading state.
+  const startDate = useMemo(
+    () => customFrom || subDays(new Date(), parseInt(period)),
+    [customFrom, period],
+  );
+  const endDate = useMemo(() => customTo || new Date(), [customTo, period]);
 
   const {
     loadingSales, monthlyTrend, paymentDistribution,

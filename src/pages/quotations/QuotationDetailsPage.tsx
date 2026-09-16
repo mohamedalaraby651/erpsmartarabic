@@ -42,11 +42,12 @@ import { buildOgImageUrl } from "@/lib/seo/ogImage";
 type Quotation = Database['public']['Tables']['quotations']['Row'];
 type Customer = Database['public']['Tables']['customers']['Row'];
 
-const statusLabels: Record<string, string> = { draft: 'مسودة', pending: 'معلق', approved: 'معتمد', rejected: 'مرفوض', cancelled: 'ملغي' };
+const statusLabels: Record<string, string> = { draft: 'مسودة', pending: 'معلق', approved: 'معتمد', rejected: 'مرفوض', cancelled: 'ملغي', completed: 'مكتمل' };
 const statusColors: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground', pending: 'bg-warning/10 text-warning border-warning/20',
   approved: 'bg-success/10 text-success border-success/20', rejected: 'bg-destructive/10 text-destructive border-destructive/20',
   cancelled: 'bg-muted text-muted-foreground',
+  completed: 'bg-info/10 text-info border-info/20',
 };
 
 const QuotationDetailsPage = () => {
