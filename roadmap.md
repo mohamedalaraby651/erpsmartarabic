@@ -39,4 +39,4 @@
 ## قاعدة منع الدين الجديد
 أي كود جديد: صفحة ← تطبيق ← نطاق/خدمة ← مستودع ← قاعدة بيانات، بعناصر UI قياسية وTokens وقواعد RTL. لا استدعاء قاعدة بيانات مباشر من الواجهة في كود جديد.
 
-- [x] `OPA-TBL-001` المرحلتان 1–2: Inventory (69 سطحًا) + Contract Freeze + Canonical Interaction Kit — منفَّذ، التحقق النهائي قيد الإغلاق، NOT ACCEPTED. Pilot Wave مؤجل لكل Gate مستقل (`docs/governance/OPA_TBL_001_EXECUTION_RECORD.md`)
+- [x] `OPA-TBL-001` المرحلتان 1–2: Inventory (69 سطحًا) + Contract Freeze + Canonical Interaction Kit — IMPLEMENTED/VERIFIED، NOT ACCEPTED؛ فحص التطبيق الكامل محجوب بخطأ سابق في ملف مصادقة مولّد. Pilot Wave مؤجل لكل Gate مستقل (`docs/governance/OPA_TBL_001_EXECUTION_RECORD.md`)

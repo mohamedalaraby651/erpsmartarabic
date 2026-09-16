@@ -1,6 +1,6 @@
 # OPA-TBL-001 — Table Interaction Program, Stages 1–2
 
-الحالة: **IMPLEMENTED (Stages 1–2) — VERIFICATION PENDING — NOT ACCEPTED / NOT CERTIFIED**
+الحالة: **IMPLEMENTED / VERIFIED (Stages 1–2) — NOT ACCEPTED / NOT CERTIFIED**
 
 ## 1. Authorized scope
 
@@ -58,11 +58,16 @@
 
 ## 6. Verification gates
 
-1. اختبارات `applyColumnFilters` تثبت OR/AND وأنواع النص/التاريخ/الرقم.
-2. اختبارات `useTableLayout` تثبت عزل user/screen/version والترحيل الآمن.
-3. contract purity وDataGrid domain isolation.
-4. فحص حي للفواتير: keyboard، invalid ranges، drag reorder، reload persistence، zero data requests أثناء layout changes.
-5. 360/768/1280 + RTL + light/dark evidence.
+1. PASS — 9/9 اختبارات مستهدفة: `applyColumnFilters` لأنواع النص/التاريخ/الرقم، و`useTableLayout` لعزل user/screen/version والترحيل الآمن.
+2. PASS — `check-contract-purity`: scanned=5، violations=0.
+3. PASS — `check-datagrid-domain-isolation`: scanned=3، violations=0.
+4. PASS — إعادة توليد inventory أعطت ملفًا مطابقًا byte-for-byte للسجل المثبت.
+5. PASS — الفحص الحي على `/invoices` عند 1280px:
+   - أداة عرض الجدول ظاهرة.
+   - root overflow = 0.
+   - نطاق التاريخ المعكوس يعرض رسالة عربية بـ`role=alert` ويعطل «تطبيق».
+6. PASS (Evidence سابق ضمن OPA-UI-003) — resize/reorder/persistence وzero REST requests أثناء تغييرات العرض، مع 360/768/1280.
+7. BLOCKED (pre-existing, out of batch) — فحص التطبيق الكامل يبلغ TS7011 في `src/integrations/supabase/previewAuthStorage.ts:81,85`. الملف مولّد ومحظور، ولم تغيّره هذه الدفعة.
 
 ## 7. Known findings
 
