@@ -12,6 +12,8 @@ import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { BulkPrintConfirmDialog } from "@/components/invoices/BulkPrintConfirmDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
 import { DataTableHeader } from "@/components/ui/data-table-header";
+import { ColumnFilterHeader, type ColumnFilterKind, type FilterOption } from "@/components/ui/column-filter";
+import { ActiveFiltersBar } from "@/components/table/ActiveFiltersBar";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,6 +36,31 @@ const paymentStatusColors: Record<string, string> = { pending: "bg-destructive/1
 const approvalStatusLabels: Record<string, string> = { draft: "مسودة", pending: "في انتظار الموافقة", approved: "معتمدة", rejected: "مرفوضة" };
 const approvalStatusColors: Record<string, string> = { draft: "bg-muted text-muted-foreground", pending: "bg-warning/10 text-warning", approved: "bg-success/10 text-success", rejected: "bg-destructive/10 text-destructive" };
 const approvalStatusIcons: Record<string, React.ElementType> = { draft: Clock, pending: Send, approved: CheckCircle, rejected: XCircle };
+
+const toOptions = (labels: Record<string, string>): FilterOption[] =>
+  Object.entries(labels).map(([value, label]) => ({ value, label }));
+
+/** Column definitions driving both the header cells and the active-filter chips. */
+const INVOICE_FILTER_COLUMNS: {
+  key: string;
+  label: string;
+  kind: ColumnFilterKind;
+  sortable?: boolean;
+  options?: FilterOption[];
+}[] = [
+  { key: 'invoice_number', label: 'رقم الفاتورة', kind: 'text', sortable: true },
+  { key: 'customer_name', label: 'العميل', kind: 'text' },
+  { key: 'created_at', label: 'التاريخ', kind: 'date', sortable: true },
+  { key: 'total_amount', label: 'الإجمالي', kind: 'number', sortable: true },
+  { key: 'paid_amount', label: 'المدفوع', kind: 'number', sortable: true },
+  { key: 'remaining', label: 'المتبقي', kind: 'number' },
+  { key: 'payment_status', label: 'حالة الدفع', kind: 'options', options: toOptions(paymentStatusLabels) },
+  { key: 'approval_status', label: 'حالة الاعتماد', kind: 'options', options: toOptions(approvalStatusLabels) },
+];
+
+const FILTER_COLUMN_META = Object.fromEntries(
+  INVOICE_FILTER_COLUMNS.map((c) => [c.key, { label: c.label, options: c.options }]),
+);
 
 const InvoicesPage = () => {
   const navigate = useNavigate();
