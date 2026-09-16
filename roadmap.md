@@ -19,7 +19,7 @@
 ## Track A — Product Continuity
 - [x] المرحلة 2: Operational Product Audit `OPA-NAZRA-001` (مصفوفة تشغيل + backlog P0–P3)
 - [x] المرحلة 3: إصلاح P1 `OPA-P1-NAZRA-001` — `/accounting` صار يوجّه لدليل الحسابات؛ `OPA-ACT-001` (صفر زر معطّل فعليًا: 28 trigger + 10 demo + 2 فُحصا يدويًا) و`OPA-GAP-001` (4 رسائل خطأ مشروعة) أُغلقا كـfalse positives موثّقة. بانتظار مراجعة بشرية.
-- [ ] المرحلة 4: اكتمال الرحلات end-to-end (مبيعات، مشتريات، مخزون، مالية تحت نطاق محكوم، موارد بشرية)
+- [ ] المرحلة 4: `OPA-JRN-001` — Journey Verification + Blocker Remediation (مبيعات، مشتريات، مخزون READ-ONLY، HR، مالية Read-Only). إثبات Precondition→Action→Expected State→Evidence→Recovery لكل خطوة؛ الإصلاح فقط إذا كان blocker مباشرًا
 - [ ] المرحلة 5: UX — حالات الأزرار والتغذية الراجعة (`OPA-UX-001`)
 - [ ] المرحلة 6: الطباعة كـworkstream مستقل (`OPA-PRN-001`)
 - [ ] المرحلة 7: النسخ الاحتياطي والاسترجاع بإثبات تعافٍ (`OPA-BAK-001`)
