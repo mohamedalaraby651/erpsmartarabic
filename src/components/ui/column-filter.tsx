@@ -243,7 +243,8 @@ export function ColumnFilterHeader({
   }, [open, value, filterKind]);
 
   const active = isFilterActive(value);
-  const activeCount = value?.kind === 'options' ? value.values?.length ?? 0 : active ? 1 : 0;
+  const pickedCount = value?.values?.length ?? 0;
+  const activeCount = pickedCount > 0 ? pickedCount : active ? 1 : 0;
   const sorted = sortKey && sortConfig?.key === sortKey;
   const SortIcon = sorted ? (sortConfig?.direction === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
 
@@ -256,15 +257,22 @@ export function ColumnFilterHeader({
     o.label.toLowerCase().includes(optionSearch.trim().toLowerCase()),
   );
   const draftValues = draft.values ?? [];
+  const kind: ColumnFilterKind = filterKind ?? 'text';
   const toggleValue = (v: string) =>
     setDraft((d) => {
       const cur = d.values ?? [];
-      return { ...d, kind: 'options', values: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] };
+      return { ...d, kind, values: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] };
     });
+  /** A text column may also expose a pick list of existing values. */
+  const hasValueList = (options?.length ?? 0) > 0 || !!optionsLoading;
 
   return (
-    <TableHead className={cn('whitespace-nowrap', className)}>
-      <div className="flex items-center gap-1">
+    <TableHead
+      ref={cellRef}
+      className={cn('relative whitespace-nowrap', className)}
+      style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+    >
+      <div className="flex items-center gap-1 overflow-hidden">
         {sortKey && onSort ? (
           <button
             type="button"
