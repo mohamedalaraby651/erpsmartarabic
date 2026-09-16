@@ -328,9 +328,12 @@ const InvoicesPage = () => {
             ))}
           </div>
           <Card><CardContent className="space-y-3 p-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
+              </div>
+              {!isMobile && <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />}
             </div>
             <ActiveFiltersBar
               section="invoices"
