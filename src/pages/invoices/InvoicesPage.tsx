@@ -516,6 +516,10 @@ const InvoicesPage = () => {
                   <p className="mt-1 text-xs font-normal text-muted-foreground">{list.totalCount.toLocaleString()} فاتورة مطابقة</p>
                 </div>
                 <span className="h-8 w-px bg-border" aria-hidden="true" />
+                <Button onClick={list.handleAdd}>
+                  <Plus className="h-4 w-4 ml-2" />
+                  فاتورة جديدة
+                </Button>
                 <ExportWithTemplateButton section="invoices" sectionLabel="الفواتير" data={list.sortedData} columns={[{ key: 'invoice_number', label: 'رقم الفاتورة' }, { key: 'customers.name', label: 'العميل' }, { key: 'total_amount', label: 'الإجمالي' }, { key: 'paid_amount', label: 'المدفوع' }, { key: 'payment_status', label: 'حالة الدفع' }, { key: 'created_at', label: 'التاريخ' }]} />
               </div>
               <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
