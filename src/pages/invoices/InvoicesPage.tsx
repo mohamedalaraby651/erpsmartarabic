@@ -371,8 +371,19 @@ const InvoicesPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div><h1 className="text-2xl font-bold">الفواتير</h1><p className="text-muted-foreground">إدارة فواتير المبيعات</p></div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
+            <Receipt className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">الفواتير</h1>
+            <p className="text-sm text-muted-foreground">إدارة فواتير المبيعات والتحصيل</p>
+          </div>
+        </div>
+        <Badge variant="secondary" className="h-8 px-3 text-sm font-medium">
+          {list.totalCount.toLocaleString()} فاتورة
+        </Badge>
       </div>
 
       {isMobile ? renderMobileView() : (
