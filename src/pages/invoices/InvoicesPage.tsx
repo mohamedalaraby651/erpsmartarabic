@@ -167,14 +167,20 @@ const InvoicesPage = () => {
                     {...(someSelected && !allSelected ? { 'data-state': 'indeterminate' as const } : {})}
                   />
                 </TableHead>
-                <DataTableHeader label="رقم الفاتورة" sortKey="invoice_number" sortConfig={list.sortConfig} onSort={list.requestSort} />
-                <DataTableHeader label="العميل" />
-                <DataTableHeader label="التاريخ" sortKey="created_at" sortConfig={list.sortConfig} onSort={list.requestSort} />
-                <DataTableHeader label="الإجمالي" sortKey="total_amount" sortConfig={list.sortConfig} onSort={list.requestSort} />
-                <DataTableHeader label="المدفوع" />
-                <DataTableHeader label="المتبقي" />
-                <DataTableHeader label="حالة الدفع" filterKey="payment_status" filterType="select" filterOptions={[{ value: 'pending', label: 'غير مدفوع' }, { value: 'partial', label: 'جزئي' }, { value: 'paid', label: 'مدفوع' }]} filterValue={list.filters.payment_status as string} onFilter={list.setFilter} />
-                <DataTableHeader label="حالة الاعتماد" filterKey="approval_status" filterType="select" filterOptions={[{ value: 'draft', label: 'مسودة' }, { value: 'pending', label: 'في انتظار الموافقة' }, { value: 'approved', label: 'معتمدة' }, { value: 'rejected', label: 'مرفوضة' }]} filterValue={list.filters.approval_status as string} onFilter={list.setFilter} />
+                {INVOICE_FILTER_COLUMNS.map((col) => (
+                  <ColumnFilterHeader
+                    key={col.key}
+                    label={col.label}
+                    sortKey={col.sortable ? col.key : undefined}
+                    sortConfig={list.sortConfig}
+                    onSort={list.requestSort}
+                    filterKey={col.key}
+                    filterKind={col.kind}
+                    options={col.options}
+                    value={list.columnFilters.filters[col.key]}
+                    onChange={list.columnFilters.setFilter}
+                  />
+                ))}
                 <DataTableHeader label="إجراءات" className="text-left" />
               </TableRow>
             </TableHeader>
