@@ -5,7 +5,8 @@
  * need: row density, visible columns, column order and the height of the
  * scrollable body. Presentation only.
  */
-import { ArrowDown, ArrowUp, RotateCcw, Settings2 } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowDown, ArrowUp, GripVertical, RotateCcw, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -35,6 +36,7 @@ interface TableViewOptionsProps {
 
 export function TableViewOptions({ layout, columns }: TableViewOptionsProps) {
   const byKey = new Map(columns.map((c) => [c.key, c.label]));
+  const [draggedKey, setDraggedKey] = useState<string | null>(null);
 
   return (
     <Popover>
@@ -95,11 +97,21 @@ export function TableViewOptions({ layout, columns }: TableViewOptionsProps) {
               return (
                 <div
                   key={key}
+                  draggable
+                  onDragStart={() => setDraggedKey(key)}
+                  onDragEnd={() => setDraggedKey(null)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={() => {
+                    if (draggedKey) layout.moveColumnTo(draggedKey, key);
+                    setDraggedKey(null);
+                  }}
                   className={cn(
-                    'flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted',
+                    'flex min-h-11 items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted',
+                    draggedKey === key && 'bg-muted opacity-70',
                     !visible && 'opacity-60',
                   )}
                 >
+                  <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" aria-hidden="true" />
                   <Checkbox
                     checked={visible}
                     onCheckedChange={() => layout.toggleColumn(key)}
@@ -109,7 +121,7 @@ export function TableViewOptions({ layout, columns }: TableViewOptionsProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-8 w-8"
                     disabled={index === 0}
                     aria-label="تحريك لأعلى"
                     onClick={() => layout.moveColumn(key, -1)}
@@ -119,7 +131,7 @@ export function TableViewOptions({ layout, columns }: TableViewOptionsProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-8 w-8"
                     disabled={index === layout.orderedKeys.length - 1}
                     aria-label="تحريك لأسفل"
                     onClick={() => layout.moveColumn(key, 1)}

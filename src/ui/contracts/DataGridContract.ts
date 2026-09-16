@@ -27,7 +27,37 @@ export interface SelectionState {
   readonly selectedIds: ReadonlyArray<RowId>;
 }
 
-export type DensityMode = "comfortable" | "compact";
+export type DensityMode = "comfortable" | "medium" | "compact";
+
+/** Filter vocabulary exposed by the UI. Query adapters own its translation. */
+export type GridFilterKind = "options" | "text" | "date" | "number";
+
+/**
+ * Presentation/interaction metadata only. Database column names and business
+ * predicates are deliberately excluded and stay in the application layer.
+ */
+export interface GridColumnInteractionSpec {
+  readonly id: string;
+  readonly label: string;
+  readonly sortable?: boolean;
+  readonly filterable?: boolean;
+  readonly filterKind?: GridFilterKind;
+  readonly resizable?: boolean;
+  readonly hideable?: boolean;
+  readonly minWidth?: number;
+  readonly maxWidth?: number;
+  readonly derived?: boolean;
+}
+
+/** Per-user, per-screen presentation state. It must never invalidate data. */
+export interface GridPresentationState {
+  readonly version: number;
+  readonly widths: Readonly<Record<string, number>>;
+  readonly hidden: ReadonlyArray<string>;
+  readonly order: ReadonlyArray<string>;
+  readonly density: DensityMode;
+  readonly bodyHeight: number;
+}
 
 /**
  * Column definition — presentation-only.

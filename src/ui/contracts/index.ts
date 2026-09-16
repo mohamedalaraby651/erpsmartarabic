@@ -18,8 +18,11 @@ export type {
 export type {
   ColumnDef,
   DensityMode,
+  GridColumnInteractionSpec,
   GridDensityChangePayload,
+  GridFilterKind,
   GridPageChangePayload,
+  GridPresentationState,
   GridRowActivatePayload,
   GridSelectionChangePayload,
   GridSortChangePayload,

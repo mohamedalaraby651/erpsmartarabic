@@ -15,6 +15,7 @@ import { DataTableHeader } from "@/components/ui/data-table-header";
 import { ColumnFilterHeader, type ColumnFilterKind, type FilterOption } from "@/components/ui/column-filter";
 import { ActiveFiltersBar } from "@/components/table/ActiveFiltersBar";
 import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { DENSITY_CLASS, useTableLayout } from "@/hooks/useTableLayout";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { EntityLink } from "@/components/shared/EntityLink";
@@ -327,22 +328,26 @@ const InvoicesPage = () => {
               </CardContent></Card>
             ))}
           </div>
-          <Card><CardContent className="space-y-3 p-4">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
+          <Card><CardContent className="p-4">
+            <DataTableToolbar
+              search={(
+                <div className="relative">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
-              </div>
-              {!isMobile && <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />}
-            </div>
-            <ActiveFiltersBar
-              section="invoices"
-              filters={list.columnFilters.filters}
-              columns={FILTER_COLUMN_META}
-              resultCount={list.totalCount}
-              onRemove={list.columnFilters.removeFilter}
-              onClearAll={list.columnFilters.clearFilters}
-              onApplySet={list.columnFilters.replaceFilters}
+                </div>
+              )}
+              controls={!isMobile ? <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} /> : undefined}
+              status={(
+                <ActiveFiltersBar
+                  section="invoices"
+                  filters={list.columnFilters.filters}
+                  columns={FILTER_COLUMN_META}
+                  resultCount={list.totalCount}
+                  onRemove={list.columnFilters.removeFilter}
+                  onClearAll={list.columnFilters.clearFilters}
+                  onApplySet={list.columnFilters.replaceFilters}
+                />
+              )}
             />
           </CardContent></Card>
           {(() => {

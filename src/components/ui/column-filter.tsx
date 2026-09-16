@@ -264,6 +264,7 @@ export function ColumnFilterHeader({
   const pickedCount = value?.values?.length ?? 0;
   const activeCount = pickedCount > 0 ? pickedCount : active ? 1 : 0;
   const sorted = sortKey && sortConfig?.key === sortKey;
+  const ariaSort = sorted ? (sortConfig?.direction === 'asc' ? 'ascending' : 'descending') : 'none';
   const SortIcon = sorted ? (sortConfig?.direction === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
 
   const commit = (next: ColumnFilter | undefined) => {
@@ -283,12 +284,19 @@ export function ColumnFilterHeader({
     });
   /** A text column may also expose a pick list of existing values. */
   const hasValueList = (options?.length ?? 0) > 0 || !!optionsLoading;
+  const rangeError = React.useMemo(() => {
+    if ((kind !== 'date' && kind !== 'number') || !draft.from || !draft.to) return '';
+    const from = kind === 'number' ? Number(draft.from) : new Date(draft.from).getTime();
+    const to = kind === 'number' ? Number(draft.to) : new Date(draft.to).getTime();
+    return from > to ? 'يجب أن تكون قيمة البداية أقل من أو تساوي قيمة النهاية' : '';
+  }, [draft.from, draft.to, kind]);
 
   return (
     <TableHead
       ref={cellRef}
       className={cn('relative whitespace-nowrap', className)}
       style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+      aria-sort={sortKey ? ariaSort : undefined}
     >
       <div className="flex items-center gap-1 overflow-hidden">
         {sortKey && onSort ? (
@@ -577,12 +585,15 @@ export function ColumnFilterHeader({
                     </div>
                   </>
                 )}
+                {rangeError && (
+                  <p role="alert" className="text-xs text-destructive">{rangeError}</p>
+                )}
               </div>
 
               <Separator />
               <div className="flex justify-end gap-2 p-2">
                 <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>إلغاء</Button>
-                <Button size="sm" onClick={() => commit({ ...draft, kind: filterKind })}>تطبيق</Button>
+                <Button size="sm" disabled={!!rangeError} onClick={() => commit({ ...draft, kind: filterKind })}>تطبيق</Button>
               </div>
             </PopoverContent>
           </Popover>
