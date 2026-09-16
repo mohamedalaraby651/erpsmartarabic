@@ -89,7 +89,7 @@ const ProductsPage = () => {
     if (list.error) return <ListErrorState error={list.error} onRetry={() => list.refetch()} />;
     if (list.sortedData.length === 0) return <EmptyState icon={Package} title="لا توجد منتجات" description="ابدأ بإضافة منتجك الأول" action={list.canEdit ? { label: 'إضافة منتج جديد', onClick: list.handleAdd, icon: Plus } : undefined} />;
     return (
-      <div className="overflow-x-auto">
+      <div className="w-full">
         <Table>
           <TableHeader>
             <TableRow>
