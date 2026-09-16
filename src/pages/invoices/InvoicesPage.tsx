@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, FileText, X, Loader2 } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, FileText, X, Loader2, ChevronDown, Keyboard } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
@@ -33,7 +33,20 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useInvoicesList, type InvoiceWithCustomer } from "@/hooks/invoices/useInvoicesList";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useListShortcuts } from "@/hooks/useListShortcuts";
+import { ShortcutsHelp } from "@/components/shared/ShortcutsHelp";
+import { InvoiceQuickView } from "@/components/invoices/InvoiceQuickView";
 import type { Database } from "@/integrations/supabase/types";
+
+const SUMMARY_COLLAPSE_KEY = 'invoices:summary-strip';
+
+const SHORTCUTS = [
+  { keys: '/', description: 'الانتقال إلى حقل البحث' },
+  { keys: 'N', description: 'فاتورة جديدة' },
+  { keys: 'R', description: 'تحديث القائمة' },
+  { keys: 'Esc', description: 'إغلاق النظرة السريعة أو إلغاء التحديد' },
+  { keys: '؟ / ?', description: 'عرض هذه القائمة' },
+];
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 
@@ -81,8 +94,32 @@ const InvoicesPage = () => {
   const { customRole, hasPermission, canViewField } = usePermissions();
   const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
   const [paymentInvoice, setPaymentInvoice] = useState<InvoiceWithCustomer | null>(null);
+  const [quickInvoice, setQuickInvoice] = useState<InvoiceWithCustomer | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Summary strip collapse state is a presentation preference, kept per browser.
+  const [summaryOpen, setSummaryOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem(SUMMARY_COLLAPSE_KEY) !== 'collapsed';
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(SUMMARY_COLLAPSE_KEY, summaryOpen ? 'expanded' : 'collapsed');
+  }, [summaryOpen]);
   // Per-user table presentation (widths, density, visible columns, height).
   const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
+
+  const shortcutHandlers = useMemo(() => ({
+    onFocusSearch: () => searchRef.current?.focus(),
+    onNew: () => list.handleAdd(),
+    onRefresh: () => list.handleRefresh(),
+    onEscape: () => {
+      if (quickInvoice) { setQuickInvoice(null); return; }
+      if (list.selectedIds.size > 0) list.clearSelection();
+    },
+    onToggleHelp: () => setHelpOpen((prev) => !prev),
+  }), [list, quickInvoice]);
+  useListShortcuts(shortcutHandlers, !isMobile);
 
   // Invoices that match the current selection — used by the preview dialog.
   const selectedInvoices = useMemo(
@@ -323,7 +360,7 @@ const InvoicesPage = () => {
               {(list.sortedData as InvoiceWithCustomer[]).map((invoice) => {
                 const isSelected = list.selectedIds.has(invoice.id);
                 return (
-                  <TableRow key={invoice.id} data-state={isSelected ? 'selected' : undefined} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
+                  <TableRow key={invoice.id} data-state={isSelected ? 'selected' : undefined} className="cursor-pointer hover:bg-muted/50" onClick={() => setQuickInvoice(invoice)}>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onCheckedChange={() => list.toggleSelect(invoice.id)} aria-label={`تحديد فاتورة ${invoice.invoice_number}`} />
                     </TableCell>
@@ -390,9 +427,20 @@ const InvoicesPage = () => {
         <>
           <section aria-label={canViewFinancialSummary ? 'الملخص المالي للفواتير' : 'ملخص متابعة الفواتير'}>
             <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="text-sm font-medium">{canViewFinancialSummary ? 'الملخص المالي' : 'متابعة حالات السداد'}</p>
-              <p className="text-xs text-muted-foreground">اختر بطاقة لتصفية القائمة</p>
+              <button
+                type="button"
+                onClick={() => setSummaryOpen((prev) => !prev)}
+                aria-expanded={summaryOpen}
+                className="flex items-center gap-2 rounded-md px-1 py-1 text-sm font-medium hover:text-primary"
+              >
+                <ChevronDown className={`h-4 w-4 transition-transform ${summaryOpen ? '' : '-rotate-90'}`} />
+                {canViewFinancialSummary ? 'الملخص المالي' : 'متابعة حالات السداد'}
+              </button>
+              <p className="text-xs text-muted-foreground">
+                {summaryOpen ? 'اختر بطاقة لتصفية القائمة' : 'الملخص مطوي — اضغط لعرضه'}
+              </p>
             </div>
+            {summaryOpen && (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {statItems.map((stat, i) => (
               <Button
@@ -401,7 +449,7 @@ const InvoicesPage = () => {
                 variant="outline"
                 aria-pressed={isSummaryActive(stat.statuses)}
                 onClick={() => applySummaryFilter(stat.statuses)}
-                className="h-auto min-h-24 justify-start border-border/70 p-4 text-start shadow-xs transition-colors aria-pressed:border-primary aria-pressed:bg-primary/5"
+                className="h-auto min-h-20 justify-start border-border/70 p-3 text-start shadow-xs transition-colors aria-pressed:border-primary aria-pressed:bg-primary/5"
               >
                 <span className="flex w-full items-center gap-3">
                   <span className={`rounded-md p-2 ${statToneClasses[stat.tone]}`}><stat.icon className="h-5 w-5" /></span>
@@ -413,25 +461,60 @@ const InvoicesPage = () => {
               </Button>
             ))}
             </div>
+            )}
           </section>
-          <Card><CardContent className="p-4">
+          <Card className="sticky top-0 z-20 shadow-sm"><CardContent className="p-4">
             <DataTableToolbar
               search={(
                 <div className="relative">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
+                <Input
+                  ref={searchRef}
+                  placeholder="بحث برقم الفاتورة أو اسم العميل... (اضغط /)"
+                  value={list.searchQuery}
+                  onChange={(e) => list.setSearchQuery(e.target.value)}
+                  className="pr-10 pl-9"
+                />
+                {list.searchQuery && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="مسح البحث"
+                    className="absolute left-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                    onClick={() => { list.setSearchQuery(''); searchRef.current?.focus(); }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
                 </div>
               )}
               status={(
-                <ActiveFiltersBar
-                  section="invoices"
-                  filters={list.columnFilters.filters}
-                  columns={FILTER_COLUMN_META}
-                  resultCount={list.totalCount}
-                  onRemove={list.columnFilters.removeFilter}
-                  onClearAll={list.columnFilters.clearFilters}
-                  onApplySet={list.columnFilters.replaceFilters}
-                />
+                <div className="flex w-full items-center justify-between gap-2">
+                  <ActiveFiltersBar
+                    section="invoices"
+                    filters={list.columnFilters.filters}
+                    columns={FILTER_COLUMN_META}
+                    resultCount={list.totalCount}
+                    onRemove={list.columnFilters.removeFilter}
+                    onClearAll={list.columnFilters.clearFilters}
+                    onApplySet={list.columnFilters.replaceFilters}
+                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="اختصارات لوحة المفاتيح"
+                        onClick={() => setHelpOpen(true)}
+                      >
+                        <Keyboard className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>اختصارات لوحة المفاتيح (؟)</TooltipContent>
+                  </Tooltip>
+                </div>
               )}
             />
           </CardContent></Card>
@@ -459,9 +542,12 @@ const InvoicesPage = () => {
               partial: 'bg-warning/10 text-warning border-warning/30',
               none: 'bg-muted text-muted-foreground border-border',
             };
+            // The bar only exists while something is selected, so it never
+            // steals vertical space from the table in the default state.
+            if (list.selectedIds.size === 0) return null;
             return (
               <div
-                className="flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-3 rounded-lg border border-border/70 bg-card/95 p-3 shadow-sm backdrop-blur"
+                className="sticky bottom-4 z-30 flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-card/95 p-3 shadow-lg backdrop-blur animate-fade-in"
                 role="region"
                 aria-label="أدوات التحديد الجمعي للفواتير"
                 aria-live="polite"
@@ -557,6 +643,18 @@ const InvoicesPage = () => {
         prefillCustomerId={paymentInvoice?.customer_id}
         prefillInvoiceId={paymentInvoice?.id}
       />
+      <InvoiceQuickView
+        invoice={quickInvoice}
+        open={quickInvoice !== null}
+        onOpenChange={(open) => { if (!open) setQuickInvoice(null); }}
+        onOpenFull={(id) => { setQuickInvoice(null); navigate(`/invoices/${id}`); }}
+        onPrint={(id) => { setQuickInvoice(null); list.setPrintInvoiceId(id); list.setPrintDialogOpen(true); }}
+        onRecordPayment={(invoice) => { setQuickInvoice(null); setPaymentInvoice(invoice); }}
+        paymentStatusLabels={paymentStatusLabels}
+        paymentStatusColors={paymentStatusColors}
+        approvalStatusLabels={approvalStatusLabels}
+      />
+      <ShortcutsHelp open={helpOpen} onOpenChange={setHelpOpen} shortcuts={SHORTCUTS} />
       {list.printInvoiceId && <InvoicePrintView invoiceId={list.printInvoiceId} open={list.printDialogOpen} onOpenChange={list.setPrintDialogOpen} />}
       <BulkPrintConfirmDialog
         open={bulkPreviewOpen}
