@@ -46,6 +46,7 @@ const INVOICE_FILTER_COLUMNS: {
   label: string;
   kind: ColumnFilterKind;
   sortable?: boolean;
+  filterable?: boolean;
   options?: FilterOption[];
 }[] = [
   { key: 'invoice_number', label: 'رقم الفاتورة', kind: 'text', sortable: true },
