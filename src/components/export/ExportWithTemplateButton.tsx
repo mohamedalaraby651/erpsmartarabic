@@ -248,12 +248,15 @@ export function ExportWithTemplateButton({
             {templates.length > 0 && (
               <div className="space-y-2">
                 <Label>اختر قالب</Label>
-                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                <Select
+                  value={selectedTemplateId || '__default__'}
+                  onValueChange={(v) => setSelectedTemplateId(v === '__default__' ? '' : v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="القالب الافتراضي" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">القالب الافتراضي</SelectItem>
+                    <SelectItem value="__default__">القالب الافتراضي</SelectItem>
                     {templates.map((template) => (
                       <SelectItem key={template.id} value={template.id}>
                         {template.name} {template.is_default && '(افتراضي)'}
