@@ -374,7 +374,6 @@ const InvoicesPage = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div><h1 className="text-2xl font-bold">الفواتير</h1><p className="text-muted-foreground">إدارة فواتير المبيعات</p></div>
         <div className="flex gap-2">
-          {!isMobile && <ExportWithTemplateButton section="invoices" sectionLabel="الفواتير" data={list.sortedData} columns={[{ key: 'invoice_number', label: 'رقم الفاتورة' }, { key: 'customers.name', label: 'العميل' }, { key: 'total_amount', label: 'الإجمالي' }, { key: 'paid_amount', label: 'المدفوع' }, { key: 'payment_status', label: 'حالة الدفع' }, { key: 'created_at', label: 'التاريخ' }]} />}
           <Button onClick={list.handleAdd} size={isMobile ? "sm" : "default"}><Plus className="h-4 w-4 ml-2" />{isMobile ? "جديد" : "فاتورة جديدة"}</Button>
         </div>
       </div>
@@ -513,8 +512,15 @@ const InvoicesPage = () => {
             );
           })()}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-              <CardTitle>قائمة الفواتير</CardTitle>
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 border-b border-border/60 pb-4">
+              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                <div>
+                  <CardTitle>قائمة الفواتير</CardTitle>
+                  <p className="mt-1 text-xs font-normal text-muted-foreground">{list.totalCount.toLocaleString()} فاتورة مطابقة</p>
+                </div>
+                <span className="h-8 w-px bg-border" aria-hidden="true" />
+                <ExportWithTemplateButton section="invoices" sectionLabel="الفواتير" data={list.sortedData} columns={[{ key: 'invoice_number', label: 'رقم الفاتورة' }, { key: 'customers.name', label: 'العميل' }, { key: 'total_amount', label: 'الإجمالي' }, { key: 'paid_amount', label: 'المدفوع' }, { key: 'payment_status', label: 'حالة الدفع' }, { key: 'created_at', label: 'التاريخ' }]} />
+              </div>
               <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />
             </CardHeader>
             <CardContent>{renderTableView()}</CardContent>
