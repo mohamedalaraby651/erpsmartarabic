@@ -293,23 +293,25 @@ export function ColumnFilterHeader({
         {filterKey && filterKind && onChange && (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
+              {/* The counter lives INSIDE the trigger so it stays attached to
+                  the funnel icon (OPA-UI-003 / DSP-004). */}
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 className={cn(
-                  'h-7 w-7 shrink-0',
+                  'h-7 shrink-0 gap-1 px-1.5',
                   active && 'bg-primary/10 text-primary hover:bg-primary/15',
                 )}
                 aria-label={`تصفية ${label}`}
               >
                 <Filter className={cn('h-3.5 w-3.5', active && 'fill-current')} />
+                {activeCount > 1 && (
+                  <span className="rounded-sm bg-primary/15 px-1 text-[10px] font-semibold tabular-nums text-primary">
+                    {activeCount}
+                  </span>
+                )}
               </Button>
             </PopoverTrigger>
-            {activeCount > 1 && (
-              <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1 text-[10px] tabular-nums">
-                {activeCount}
-              </Badge>
-            )}
             <PopoverContent align="start" className="w-72 p-0">
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-sm font-semibold">تصفية: {label}</span>
