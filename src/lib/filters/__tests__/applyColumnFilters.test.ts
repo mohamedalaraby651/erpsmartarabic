@@ -20,6 +20,7 @@ const map = {
   invoice_number: 'invoice_number',
   created_at: 'created_at',
   total_amount: 'total_amount',
+  customer_name: 'customers.name',
 };
 
 describe('applyColumnFilters', () => {
@@ -74,7 +75,7 @@ describe('applyColumnFilters', () => {
       { customer_name: { kind: 'text', text: 'ignored', values: ['شركة النور للتجارة', 'مزرعة البركة'] } },
       map,
     );
-    expect(multi.calls).toEqual(['in:customers.name:شركة النور للتجارة,مزرعة البركة']);
+    expect(multi.calls).toEqual(['in:customers.name:شركة النور للتجارة|مزرعة البركة']);
 
     const single = makeQuery();
     applyColumnFilters(single.q, { customer_name: { kind: 'text', values: ['مزرعة البركة'] } }, map);
