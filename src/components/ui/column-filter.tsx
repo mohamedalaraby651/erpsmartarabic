@@ -570,6 +570,17 @@ export function ColumnFilterHeader({
           </Popover>
         )}
       </div>
+
+      {onResize && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label={`تغيير عرض عمود ${label}`}
+          onPointerDown={startResize}
+          onDoubleClick={() => onAutoFit?.(resizeKey)}
+          className="absolute inset-y-1 left-0 w-1.5 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-primary/40"
+        />
+      )}
     </TableHead>
   );
 }
