@@ -129,7 +129,7 @@
 
 ### المرحلة 7 — Accessibility & RTL Gate
 - تنقل كامل بلوحة المفاتيح في الرأس، popovers، القوائم، الترتيب وتغيير العرض.
-- focus واضح، أسماء ARIA، الإعلان عن عدد النتائج وتغيّر الفرز.
+- focus واضح، أسماء ARIA، `aria-sort` للرؤوس، و`aria-live` للإعلان عن عدد النتائج وتغيّر الفرز.
 - أهداف لمس 44px في الهاتف، وإغلاق overlays دون فقد الحالة.
 - اختبار RTL/LTR للاتجاهات المنطقية ومقابض السحب والتثبيت.
 - تباين AA وعدم الاعتماد على اللون وحده للحالة.
@@ -181,7 +181,7 @@
 8. Network proof لعدم refetch في تغييرات العرض.  
 9. Preference isolation/persistence.  
 10. Keyboard/ARIA/RTL evidence.  
-11. Performance before/after.  
+11. Visual evidence في RTL والوضعين الفاتح والداكن، ثم Performance before/after.  
 12. Typecheck/tests/fitness.  
 13. Out-of-scope findings وKnown limitations.  
 14. Rollback note.  
