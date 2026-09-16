@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, Copy, FileText, X, Loader2 } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, FileText, X, Loader2 } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
+import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
 import { BulkPrintConfirmDialog } from "@/components/invoices/BulkPrintConfirmDialog";
 import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplateButton";
@@ -75,6 +76,7 @@ const InvoicesPage = () => {
   const isMobile = useIsMobile();
   const list = useInvoicesList();
   const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+  const [paymentInvoice, setPaymentInvoice] = useState<InvoiceWithCustomer | null>(null);
   // Per-user table presentation (widths, density, visible columns, height).
   const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
 
@@ -291,7 +293,21 @@ const InvoicesPage = () => {
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}><Eye className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => { list.setPrintInvoiceId(invoice.id); list.setPrintDialogOpen(true); }}><Printer className="h-4 w-4" /></Button>
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => list.duplicate(invoice.id)} disabled={list.isDuplicating}><Copy className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent>نسخ الفاتورة</TooltipContent></Tooltip>
+                        {invoice.payment_status !== 'paid' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`تسجيل دفعة للفاتورة ${invoice.invoice_number}`}
+                                onClick={() => setPaymentInvoice(invoice)}
+                              >
+                                <CreditCard className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>تسجيل دفعة</TooltipContent>
+                          </Tooltip>
+                        )}
                         <DataTableActions onEdit={() => list.handleEdit(invoice as unknown as Invoice)} onDelete={() => list.deleteMutation.mutate(invoice.id)} canEdit={list.canEdit} canDelete={list.canDelete} deleteDescription="سيتم حذف هذه الفاتورة وجميع بنودها نهائياً." />
                       </div>
                     </TableCell>
@@ -439,6 +455,12 @@ const InvoicesPage = () => {
       )}
 
       <InvoiceFormDialog open={list.dialogOpen} onOpenChange={(open) => { list.setDialogOpen(open); if (!open) list.setPrefillCustomerId(undefined); }} invoice={list.selectedInvoice} prefillCustomerId={list.prefillCustomerId} />
+      <PaymentFormDialog
+        open={paymentInvoice !== null}
+        onOpenChange={(open) => { if (!open) setPaymentInvoice(null); }}
+        prefillCustomerId={paymentInvoice?.customer_id}
+        prefillInvoiceId={paymentInvoice?.id}
+      />
       {list.printInvoiceId && <InvoicePrintView invoiceId={list.printInvoiceId} open={list.printDialogOpen} onOpenChange={list.setPrintDialogOpen} />}
       <BulkPrintConfirmDialog
         open={bulkPreviewOpen}
