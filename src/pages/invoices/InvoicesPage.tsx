@@ -53,7 +53,8 @@ const INVOICE_FILTER_COLUMNS: {
   { key: 'created_at', label: 'التاريخ', kind: 'date', sortable: true },
   { key: 'total_amount', label: 'الإجمالي', kind: 'number', sortable: true },
   { key: 'paid_amount', label: 'المدفوع', kind: 'number', sortable: true },
-  { key: 'remaining', label: 'المتبقي', kind: 'number' },
+  // Remaining is derived (total - paid), so it is displayed but not filterable.
+  { key: 'remaining', label: 'المتبقي', kind: 'number', filterable: false },
   { key: 'payment_status', label: 'حالة الدفع', kind: 'options', options: toOptions(paymentStatusLabels) },
   { key: 'approval_status', label: 'حالة الاعتماد', kind: 'options', options: toOptions(approvalStatusLabels) },
 ];
@@ -269,11 +270,20 @@ const InvoicesPage = () => {
               </CardContent></Card>
             ))}
           </div>
-          <Card><CardContent className="p-4">
+          <Card><CardContent className="space-y-3 p-4">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
             </div>
+            <ActiveFiltersBar
+              section="invoices"
+              filters={list.columnFilters.filters}
+              columns={FILTER_COLUMN_META}
+              resultCount={list.totalCount}
+              onRemove={list.columnFilters.removeFilter}
+              onClearAll={list.columnFilters.clearFilters}
+              onApplySet={list.columnFilters.replaceFilters}
+            />
           </CardContent></Card>
           {(() => {
             const pageData = list.sortedData as InvoiceWithCustomer[];
