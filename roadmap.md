@@ -1,8 +1,11 @@
 # Roadmap
 
+الفلسفة المعتمدة: **Build the product while hardening the platform** — مسارا Product Continuity وArchitecture Evolution يعملان بالتوازي.
+
 ## Current lineage
-- F1: CLOSED (37/37, PASS — accepted, not certified). F2 (58 items): UNAUTHORIZED. F3–F6: LOCKED.
-- Open risks: RISK-007, RISK-008, PRE-EXT-001 OPEN; PRE-TS-001 CONTAINED (recurrence #12).
+- F1: CLOSED (37/37, PASS — accepted, not certified). F2 (58 items): UNAUTHORIZED → يتحول إلى Architecture backlog محكوم بالأثر.
+- Open risks: RISK-007, RISK-008, PRE-EXT-001 OPEN; PRE-TS-001 CONTAINED (recurrence #13).
+- Smart Freeze ACTIVE: الدفاتر، الدفعات، حركة المخزون، المزامنة، سلطة الـtenant، الصلاحيات، RLS، الترحيلات.
 
 ## Post-F1 Findings (new lineage)
 - [x] Post-F1 Findings Gate — documentation-only triage (NOTIF-001/002, DASH-001/002)
@@ -10,4 +13,24 @@
 - [x] POSTF1_SCOPE_001 — human authorization granted
 - [x] Unit A (NOTIF security/persistence via server-derived-tenant RPC) — implemented + evidence
 - [x] Unit B (DASH data contract `paid_amount`) — implemented + evidence
-- [ ] Independent verification → human governance gate (certification not claimed)
+- [x] Independent verification `POSTF1-VERIF-001` — PASS (certification not claimed)
+- [ ] Human governance gate on POSTF1 — pending
+
+## Track A — Product Continuity
+- [x] المرحلة 2: Operational Product Audit `OPA-NAZRA-001` (مصفوفة تشغيل + backlog P0–P3)
+- [ ] المرحلة 3: إصلاح P1 — `OPA-NAV-001` (/accounting = 404)، فرز `OPA-ACT-001` (61 زرًا)، `OPA-GAP-001` (4 مواضع غير متاحة)
+- [ ] المرحلة 4: اكتمال الرحلات end-to-end (مبيعات، مشتريات، مخزون، مالية تحت نطاق محكوم، موارد بشرية)
+- [ ] المرحلة 5: UX — حالات الأزرار والتغذية الراجعة (`OPA-UX-001`)
+- [ ] المرحلة 6: الطباعة كـworkstream مستقل (`OPA-PRN-001`)
+- [ ] المرحلة 7: النسخ الاحتياطي والاسترجاع بإثبات تعافٍ (`OPA-BAK-001`)
+- [ ] المرحلة 8: الأداء — قياس ثم إصلاح (`OPA-PERF-001`)
+- [ ] المرحلة 9: الموبايل/PWA للرحلات الحرجة
+- [ ] المرحلة 10: إتاحة الوصول وRTL ثم Design System تدريجيًا
+
+## Track B — Architecture Evolution (بالتوازي، حسب الأثر)
+- [ ] `OPA-ARC-001`: 67 ملف واجهة بوصول مباشر لقاعدة البيانات — تحويل أثناء تعديل الميزة فقط
+- [ ] الحدود BND-01..04 و06..08 بأولوية المخاطر (BND-05 معتمد)
+- [ ] معالجة المخاطر المفتوحة RISK-007 / RISK-008 / PRE-EXT-001
+
+## قاعدة منع الدين الجديد
+أي كود جديد: صفحة ← تطبيق ← نطاق/خدمة ← مستودع ← قاعدة بيانات، بعناصر UI قياسية وTokens وقواعد RTL. لا استدعاء قاعدة بيانات مباشر من الواجهة في كود جديد.
