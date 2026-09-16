@@ -49,7 +49,7 @@ export function TableViewOptions({ layout, columns }: TableViewOptionsProps) {
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent align="end" sideOffset={8} className="w-80 border-border bg-popover p-0 text-popover-foreground shadow-lg">
         <div className="border-b border-border px-3 py-3">
           <h4 className="text-sm font-semibold">تخصيص عرض الجدول</h4>
           <p className="mt-1 text-xs text-muted-foreground">اضبط الكثافة والمساحة والأعمدة حسب احتياجك</p>
