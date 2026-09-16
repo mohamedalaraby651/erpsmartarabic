@@ -178,6 +178,7 @@ export function DataTableHeader({
           </PopoverContent>
         </Popover>
       )}
-    </div>
+      </div>
+    </TableHead>
   );
 }
