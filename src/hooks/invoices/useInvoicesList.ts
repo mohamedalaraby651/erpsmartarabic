@@ -166,6 +166,38 @@ export function useInvoicesList() {
     },
   });
 
+  // Filter pick-lists (OPA-UI-003 / FLT-001) — every searchable column offers
+  // its existing values so several can be selected at once. Read-only lookups.
+  const { data: customerOptions = [], isLoading: customerOptionsLoading } = useQuery({
+    queryKey: ['invoice-filter-options', 'customers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('name')
+        .order('name')
+        .limit(500);
+      if (error) throw error;
+      const names = Array.from(new Set((data || []).map((r) => r.name).filter(Boolean)));
+      return names.map((n) => ({ value: n as string, label: n as string }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: invoiceNumberOptions = [], isLoading: invoiceNumberOptionsLoading } = useQuery({
+    queryKey: ['invoice-filter-options', 'invoice-numbers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('invoice_number')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      const numbers = Array.from(new Set((data || []).map((r) => r.invoice_number).filter(Boolean)));
+      return numbers.map((n) => ({ value: n as string, label: n as string }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: stats } = useQuery({
     queryKey: ['invoices-stats'],
     queryFn: async () => {
@@ -226,6 +258,7 @@ export function useInvoicesList() {
     printDialogOpen, setPrintDialogOpen, printInvoiceId, setPrintInvoiceId,
     canEdit, canDelete, invoices, isLoading, error: error as Error | null, refetch, sortedData, sortConfig, requestSort,
     columnFilters, deleteMutation, handleEdit, handleAdd, handleRefresh,
+    customerOptions, customerOptionsLoading, invoiceNumberOptions, invoiceNumberOptionsLoading,
     statItems, invoiceStats, pagination, totalCount, duplicate, isDuplicating,
     selectedIds, toggleSelect, clearSelection, bulkPrint, isBulkPrinting,
     selectAllFiltered, isSelectingAll,

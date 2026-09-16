@@ -79,11 +79,14 @@ export function AdaptiveShell({
           <MobileHeader onMenuOpen={() => setMobileMenuOpen(true)} />
         </div>
 
-        {/* Main content — padded to sidebar on desktop */}
+        {/* Main content — offset by the fixed sidebar width on desktop.
+            The offsets must match AppSidebar's own widths (70px / 280px);
+            arbitrary values are used because those sizes are not on the
+            default spacing scale (OPA-UI-003 / DSP-001). */}
         <div
           className={cn(
-            'transition-all duration-300 pb-12 lg:pb-0',
-            sidebarCollapsed ? 'lg:mr-18' : 'lg:mr-65'
+            'min-w-0 overflow-x-hidden transition-all duration-300 pb-12 lg:pb-0',
+            sidebarCollapsed ? 'lg:mr-[70px]' : 'lg:mr-[280px]'
           )}
         >
           <div className="hidden lg:block">

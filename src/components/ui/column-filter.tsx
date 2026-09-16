@@ -21,7 +21,6 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Check, Filter, Search, X } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { TableHead } from '@/components/ui/table';
@@ -122,7 +121,9 @@ export function resolveDatePreset(preset: string): { from: string; to: string } 
 export function isFilterActive(f: ColumnFilter | undefined): boolean {
   if (!f) return false;
   if (f.kind === 'options') return (f.values?.length ?? 0) > 0;
-  if (f.kind === 'text') return !!f.text?.trim();
+  // A text column may narrow either by a free term or by picked values
+  // (OPA-UI-003: every filter is searchable and multi-selectable).
+  if (f.kind === 'text') return !!f.text?.trim() || (f.values?.length ?? 0) > 0;
   return !!f.from || !!f.to;
 }
 
@@ -140,6 +141,13 @@ export function describeFilter(
       : labels.join('، ');
   }
   if (f.kind === 'text') {
+    const picked = f.values ?? [];
+    if (picked.length > 0) {
+      const labels = picked.map((v) => options?.find((o) => o.value === v)?.label ?? v);
+      return labels.length > 2
+        ? `${labels.slice(0, 2).join('، ')} +${labels.length - 2}`
+        : labels.join('، ');
+    }
     const op = TEXT_OPERATORS.find((o) => o.value === f.operator)?.label ?? 'يحتوي على';
     return `${op} «${f.text}»`;
   }
@@ -165,9 +173,18 @@ export interface ColumnFilterHeaderProps {
   filterKey?: string;
   filterKind?: ColumnFilterKind;
   options?: FilterOption[];
+  /** Loading indicator for options fetched from the server. */
+  optionsLoading?: boolean;
   value?: ColumnFilter;
   onChange?: (key: string, filter: ColumnFilter | undefined) => void;
+  /** Column sizing (OPA-UI-003 / COL-001) */
+  width?: number;
+  onResize?: (key: string, width: number) => void;
+  onAutoFit?: (key: string) => void;
 }
+
+const MIN_COLUMN_WIDTH = 72;
+const MAX_COLUMN_WIDTH = 640;
 
 export function ColumnFilterHeader({
   label,
@@ -178,9 +195,39 @@ export function ColumnFilterHeader({
   filterKey,
   filterKind,
   options,
+  optionsLoading,
   value,
   onChange,
+  width,
+  onResize,
+  onAutoFit,
 }: ColumnFilterHeaderProps) {
+  const cellRef = React.useRef<HTMLTableCellElement>(null);
+  const resizeKey = filterKey ?? sortKey ?? label;
+
+  /** Pointer-driven column resize; RTL-aware (the handle sits on the left edge). */
+  const startResize = (e: React.PointerEvent) => {
+    if (!onResize) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = width ?? cellRef.current?.offsetWidth ?? MIN_COLUMN_WIDTH;
+    const rtl = typeof document !== 'undefined' && document.dir === 'rtl';
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const next = Math.min(
+        MAX_COLUMN_WIDTH,
+        Math.max(MIN_COLUMN_WIDTH, startWidth + (rtl ? -dx : dx)),
+      );
+      onResize(resizeKey, next);
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
   const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState<ColumnFilter>(
     value ?? { kind: filterKind ?? 'text' },
@@ -195,7 +242,8 @@ export function ColumnFilterHeader({
   }, [open, value, filterKind]);
 
   const active = isFilterActive(value);
-  const activeCount = value?.kind === 'options' ? value.values?.length ?? 0 : active ? 1 : 0;
+  const pickedCount = value?.values?.length ?? 0;
+  const activeCount = pickedCount > 0 ? pickedCount : active ? 1 : 0;
   const sorted = sortKey && sortConfig?.key === sortKey;
   const SortIcon = sorted ? (sortConfig?.direction === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
 
@@ -208,15 +256,22 @@ export function ColumnFilterHeader({
     o.label.toLowerCase().includes(optionSearch.trim().toLowerCase()),
   );
   const draftValues = draft.values ?? [];
+  const kind: ColumnFilterKind = filterKind ?? 'text';
   const toggleValue = (v: string) =>
     setDraft((d) => {
       const cur = d.values ?? [];
-      return { ...d, kind: 'options', values: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] };
+      return { ...d, kind, values: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] };
     });
+  /** A text column may also expose a pick list of existing values. */
+  const hasValueList = (options?.length ?? 0) > 0 || !!optionsLoading;
 
   return (
-    <TableHead className={cn('whitespace-nowrap', className)}>
-      <div className="flex items-center gap-1">
+    <TableHead
+      ref={cellRef}
+      className={cn('relative whitespace-nowrap', className)}
+      style={width ? { width, minWidth: width, maxWidth: width } : undefined}
+    >
+      <div className="flex items-center gap-1 overflow-hidden">
         {sortKey && onSort ? (
           <button
             type="button"
@@ -237,23 +292,25 @@ export function ColumnFilterHeader({
         {filterKey && filterKind && onChange && (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
+              {/* The counter lives INSIDE the trigger so it stays attached to
+                  the funnel icon (OPA-UI-003 / DSP-004). */}
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 className={cn(
-                  'h-7 w-7 shrink-0',
+                  'h-7 shrink-0 gap-1 px-1.5',
                   active && 'bg-primary/10 text-primary hover:bg-primary/15',
                 )}
                 aria-label={`تصفية ${label}`}
               >
                 <Filter className={cn('h-3.5 w-3.5', active && 'fill-current')} />
+                {activeCount > 1 && (
+                  <span className="rounded-sm bg-primary/15 px-1 text-[10px] font-semibold tabular-nums text-primary">
+                    {activeCount}
+                  </span>
+                )}
               </Button>
             </PopoverTrigger>
-            {activeCount > 1 && (
-              <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1 text-[10px] tabular-nums">
-                {activeCount}
-              </Badge>
-            )}
             <PopoverContent align="start" className="w-72 p-0">
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-sm font-semibold">تصفية: {label}</span>
@@ -346,15 +403,73 @@ export function ColumnFilterHeader({
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">القيمة</Label>
-                      <Input
-                        autoFocus
-                        value={draft.text ?? ''}
-                        onChange={(e) => setDraft((d) => ({ ...d, kind: 'text', text: e.target.value }))}
-                        onKeyDown={(e) => { if (e.key === 'Enter') commit({ ...draft, kind: 'text' }); }}
-                        placeholder="اكتب للبحث..."
-                        className="h-8 text-sm"
-                      />
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute end-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          autoFocus
+                          value={draft.text ?? ''}
+                          onChange={(e) => setDraft((d) => ({ ...d, kind: 'text', text: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === 'Enter') commit({ ...draft, kind: 'text' }); }}
+                          placeholder="اكتب للبحث..."
+                          className="h-8 pe-8 text-sm"
+                        />
+                      </div>
                     </div>
+
+                    {/* Existing values of this column — search then pick several
+                        at once (OPA-UI-003 / FLT-001). */}
+                    {hasValueList && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">اختيار من القيم الموجودة</Label>
+                          <span className="text-[11px] text-muted-foreground">{draftValues.length} محدد</span>
+                        </div>
+                        {optionsLoading ? (
+                          <p className="py-3 text-center text-xs text-muted-foreground">جارٍ تحميل القيم...</p>
+                        ) : (
+                          <ScrollArea className="max-h-44 rounded-md border border-border">
+                            <div className="space-y-0.5 p-1">
+                              {(options ?? [])
+                                .filter((o) =>
+                                  o.label.toLowerCase().includes((draft.text ?? '').trim().toLowerCase()),
+                                )
+                                .slice(0, 200)
+                                .map((o) => {
+                                  const checked = draftValues.includes(o.value);
+                                  return (
+                                    <button
+                                      key={o.value}
+                                      type="button"
+                                      onClick={() => toggleValue(o.value)}
+                                      className={cn(
+                                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm transition-colors hover:bg-muted',
+                                        checked && 'bg-primary/5',
+                                      )}
+                                    >
+                                      <Checkbox checked={checked} className="pointer-events-none" />
+                                      <span className="flex-1 truncate">{o.label}</span>
+                                      {checked && <Check className="h-3.5 w-3.5 text-primary" />}
+                                    </button>
+                                  );
+                                })}
+                              {(options ?? []).length === 0 && (
+                                <p className="py-3 text-center text-xs text-muted-foreground">لا توجد قيم</p>
+                              )}
+                            </div>
+                          </ScrollArea>
+                        )}
+                        {draftValues.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => setDraft((d) => ({ ...d, kind: 'text', values: [] }))}
+                          >
+                            إلغاء التحديد
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -454,6 +569,17 @@ export function ColumnFilterHeader({
           </Popover>
         )}
       </div>
+
+      {onResize && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label={`تغيير عرض عمود ${label}`}
+          onPointerDown={startResize}
+          onDoubleClick={() => onAutoFit?.(resizeKey)}
+          className="absolute inset-y-1 left-0 w-1.5 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-primary/40"
+        />
+      )}
     </TableHead>
   );
 }

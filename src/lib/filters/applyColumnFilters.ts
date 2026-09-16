@@ -29,6 +29,12 @@ function applyOne(q: FilterableQuery, column: string, f: ColumnFilter): Filterab
       return values.length === 1 ? q.eq(column, values[0]) : q.in(column, values);
     }
     case 'text': {
+      // Picked values win over the free term: they are an explicit OR-set
+      // (OPA-UI-003 / FLT-001 — e.g. two customers at once).
+      const picked = f.values ?? [];
+      if (picked.length > 0) {
+        return picked.length === 1 ? q.eq(column, picked[0]) : q.in(column, picked);
+      }
       const term = (f.text ?? '').trim();
       if (!term) return q;
       const safe = escapeLike(term);

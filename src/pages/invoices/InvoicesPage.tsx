@@ -14,6 +14,8 @@ import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplate
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { ColumnFilterHeader, type ColumnFilterKind, type FilterOption } from "@/components/ui/column-filter";
 import { ActiveFiltersBar } from "@/components/table/ActiveFiltersBar";
+import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { DENSITY_CLASS, useTableLayout } from "@/hooks/useTableLayout";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -64,11 +66,16 @@ const FILTER_COLUMN_META = Object.fromEntries(
   INVOICE_FILTER_COLUMNS.map((c) => [c.key, { label: c.label, options: c.options }]),
 );
 
+const INVOICE_COLUMN_KEYS = INVOICE_FILTER_COLUMNS.map((c) => c.key);
+const INVOICE_COLUMN_LABELS = INVOICE_FILTER_COLUMNS.map((c) => ({ key: c.key, label: c.label }));
+
 const InvoicesPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const list = useInvoicesList();
   const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+  // Per-user table presentation (widths, density, visible columns, height).
+  const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
 
   // Invoices that match the current selection — used by the preview dialog.
   const selectedInvoices = useMemo(
@@ -182,11 +189,52 @@ const InvoicesPage = () => {
       else list.sortedData.forEach((i) => { if (!list.selectedIds.has(i.id)) list.toggleSelect(i.id); });
     };
 
+    /** One renderer per column id so hiding / reordering stays data-driven. */
+    const renderCell = (key: string, invoice: InvoiceWithCustomer) => {
+      const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
+      switch (key) {
+        case 'invoice_number':
+          return <EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink>;
+        case 'customer_name':
+          return invoice.customers?.name
+            ? <EntityLink type="customer" id={invoice.customer_id}>{invoice.customers.name}</EntityLink>
+            : '-';
+        case 'created_at':
+          return new Date(invoice.created_at).toLocaleDateString('ar-EG');
+        case 'total_amount':
+          return <span className="font-bold tabular-nums">{Number(invoice.total_amount).toLocaleString()} ج.م</span>;
+        case 'paid_amount':
+          return <span className="tabular-nums text-success">{Number(invoice.paid_amount || 0).toLocaleString()} ج.م</span>;
+        case 'remaining':
+          return <span className={`tabular-nums ${remaining > 0 ? 'text-destructive' : ''}`}>{remaining.toLocaleString()} ج.م</span>;
+        case 'payment_status':
+          return <Badge className={`${paymentStatusColors[invoice.payment_status]} whitespace-nowrap`}>{paymentStatusLabels[invoice.payment_status]}</Badge>;
+        case 'approval_status': {
+          const status = invoice.approval_status || 'draft';
+          const StatusIcon = approvalStatusIcons[status];
+          return (
+            <Badge className={`${approvalStatusColors[status]} gap-1 whitespace-nowrap`}>
+              <StatusIcon className="h-3 w-3" />{approvalStatusLabels[status]}
+            </Badge>
+          );
+        }
+        default:
+          return null;
+      }
+    };
+
+    const visibleColumns = layout.visibleKeys
+      .map((key) => INVOICE_FILTER_COLUMNS.find((c) => c.key === key))
+      .filter(Boolean) as typeof INVOICE_FILTER_COLUMNS;
+
     return (
       <>
-        <div className="w-full">
-          <Table>
-            <TableHeader>
+        <div
+          className="w-full overflow-auto rounded-md border border-border"
+          style={layout.bodyHeight ? { maxHeight: layout.bodyHeight } : undefined}
+        >
+          <Table className={DENSITY_CLASS[layout.density]}>
+            <TableHeader className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_hsl(var(--border))]">
               <TableRow>
                 <TableHead className="w-10">
                   <Checkbox
@@ -196,7 +244,7 @@ const InvoicesPage = () => {
                     {...(someSelected && !allSelected ? { 'data-state': 'indeterminate' as const } : {})}
                   />
                 </TableHead>
-                {INVOICE_FILTER_COLUMNS.map((col) => (
+                {visibleColumns.map((col) => (
                   <ColumnFilterHeader
                     key={col.key}
                     label={col.label}
@@ -205,31 +253,39 @@ const InvoicesPage = () => {
                     onSort={list.requestSort}
                     filterKey={col.filterable === false ? undefined : col.key}
                     filterKind={col.kind}
-                    options={col.options}
+                    options={col.key === 'customer_name' ? list.customerOptions
+                      : col.key === 'invoice_number' ? list.invoiceNumberOptions
+                      : col.options}
+                    optionsLoading={col.key === 'customer_name' ? list.customerOptionsLoading
+                      : col.key === 'invoice_number' ? list.invoiceNumberOptionsLoading
+                      : false}
                     value={list.columnFilters.filters[col.key]}
                     onChange={list.columnFilters.setFilter}
+                    width={layout.widths[col.key]}
+                    onResize={layout.setWidth}
+                    onAutoFit={layout.autoFitWidth}
                   />
                 ))}
-                <DataTableHeader label="إجراءات" className="text-left" />
+                <DataTableHeader label="إجراءات" className="text-end" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {list.sortedData.map((invoice) => {
-                const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
+              {(list.sortedData as InvoiceWithCustomer[]).map((invoice) => {
                 const isSelected = list.selectedIds.has(invoice.id);
                 return (
                   <TableRow key={invoice.id} data-state={isSelected ? 'selected' : undefined} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/invoices/${invoice.id}`)}>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onCheckedChange={() => list.toggleSelect(invoice.id)} aria-label={`تحديد فاتورة ${invoice.invoice_number}`} />
                     </TableCell>
-                    <TableCell><EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink></TableCell>
-                    <TableCell>{invoice.customers?.name ? <EntityLink type="customer" id={invoice.customer_id}>{invoice.customers.name}</EntityLink> : '-'}</TableCell>
-                    <TableCell>{new Date(invoice.created_at).toLocaleDateString('ar-EG')}</TableCell>
-                    <TableCell><span className="font-bold">{Number(invoice.total_amount).toLocaleString()} ج.م</span></TableCell>
-                    <TableCell className="text-success">{Number(invoice.paid_amount || 0).toLocaleString()} ج.م</TableCell>
-                    <TableCell className={remaining > 0 ? 'text-destructive' : ''}>{remaining.toLocaleString()} ج.م</TableCell>
-                    <TableCell><Badge className={paymentStatusColors[invoice.payment_status]}>{paymentStatusLabels[invoice.payment_status]}</Badge></TableCell>
-                    <TableCell>{(() => { const status = invoice.approval_status || 'draft'; const StatusIcon = approvalStatusIcons[status]; return <Badge className={`${approvalStatusColors[status]} gap-1`}><StatusIcon className="h-3 w-3" />{approvalStatusLabels[status]}</Badge>; })()}</TableCell>
+                    {visibleColumns.map((col) => (
+                      <TableCell
+                        key={col.key}
+                        className="truncate whitespace-nowrap"
+                        style={layout.widths[col.key] ? { width: layout.widths[col.key], maxWidth: layout.widths[col.key] } : undefined}
+                      >
+                        {renderCell(col.key, invoice)}
+                      </TableCell>
+                    ))}
                     <TableCell>
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${invoice.id}`)}><Eye className="h-4 w-4" /></Button>
@@ -272,9 +328,12 @@ const InvoicesPage = () => {
             ))}
           </div>
           <Card><CardContent className="space-y-3 p-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="بحث برقم الفاتورة أو اسم العميل..." value={list.searchQuery} onChange={(e) => list.setSearchQuery(e.target.value)} className="pr-10" />
+              </div>
+              {!isMobile && <TableViewOptions layout={layout} columns={INVOICE_COLUMN_LABELS} />}
             </div>
             <ActiveFiltersBar
               section="invoices"
