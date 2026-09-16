@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-16T19:56:37.683Z",
+  "generatedAt": "2026-09-16T20:18:22.433Z",
   "totals": {
     "hexColor": 194,
     "rgbColor": 0,
     "hslColor": 5,
     "fontFamily": 10,
     "boxShadow": 9,
-    "arbitraryPx": 417
+    "arbitraryPx": 418
   },
   "findings": {
     "hexColor": [
@@ -718,6 +718,10 @@
       {
         "file": "src/components/ui/chart.tsx",
         "count": 2
+      },
+      {
+        "file": "src/components/ui/column-filter.tsx",
+        "count": 1
       },
       {
         "file": "src/components/ui/command.tsx",
