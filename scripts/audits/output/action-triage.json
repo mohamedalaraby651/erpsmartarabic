@@ -1,36 +1,18 @@
 {
   "id": "OPA-ACT-001-TRIAGE",
-  "generatedAt": "2026-09-16T15:37:47.753Z",
-  "total": 43,
+  "generatedAt": "2026-09-16T15:37:56.249Z",
+  "total": 40,
   "byKind": {
-    "review": 5,
     "trigger": 28,
+    "review": 2,
     "demo": 10
   },
   "review": [
-    {
-      "file": "src/components/customers/details/StatementOfAccount.tsx",
-      "line": 307,
-      "kind": "review",
-      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"h-8 w-8\" disabled={currentPage >= totalPages} onClick={() => setCurrent"
-    },
     {
       "file": "src/components/customers/list/CustomerLayoutCustomizer.tsx",
       "line": 117,
       "kind": "review",
       "snippet": "<Button variant=\"outline\" size=\"sm\" aria-label={tooltips.customizeView}>"
-    },
-    {
-      "file": "src/components/customers/tabs/CustomerTabOrders.tsx",
-      "line": 82,
-      "kind": "review",
-      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={oPage >= oTotalPages} onClick={() => setOPage(p => p + 1)}>التالي</Button>"
-    },
-    {
-      "file": "src/components/customers/tabs/CustomerTabQuotations.tsx",
-      "line": 91,
-      "kind": "review",
-      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={qPage >= qTotalPages} onClick={() => setQPage(p => p + 1)}>التالي</Button>"
     },
     {
       "file": "src/pages/customers/CustomersPage.tsx",
@@ -40,12 +22,6 @@
     }
   ],
   "rows": [
-    {
-      "file": "src/components/customers/details/StatementOfAccount.tsx",
-      "line": 307,
-      "kind": "review",
-      "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"h-8 w-8\" disabled={currentPage >= totalPages} onClick={() => setCurrent"
-    },
     {
       "file": "src/components/customers/hero/HeroActions.tsx",
       "line": 73,
@@ -81,18 +57,6 @@
       "line": 266,
       "kind": "trigger",
       "snippet": "<Button variant=\"outline\" size=\"icon\" className=\"min-h-11 min-w-11 shrink-0\" aria-label={tooltips.moreActions}>"
-    },
-    {
-      "file": "src/components/customers/tabs/CustomerTabOrders.tsx",
-      "line": 82,
-      "kind": "review",
-      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={oPage >= oTotalPages} onClick={() => setOPage(p => p + 1)}>التالي</Button>"
-    },
-    {
-      "file": "src/components/customers/tabs/CustomerTabQuotations.tsx",
-      "line": 91,
-      "kind": "review",
-      "snippet": "<Button variant=\"outline\" size=\"sm\" disabled={qPage >= qTotalPages} onClick={() => setQPage(p => p + 1)}>التالي</Button>"
     },
     {
       "file": "src/components/customization/InlineCustomizer.tsx",

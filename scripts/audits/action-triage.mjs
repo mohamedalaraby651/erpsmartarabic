@@ -50,7 +50,8 @@ for (const file of walk(SRC)) {
     const chunk = lines.slice(i, i + 8).join(" ");
     const start = chunk.indexOf("<Button");
     const tag = chunk.slice(start, start + 400);
-    if (WIRED.test(tag)) return;
+    const head = tag.split(/<\/Button|\n/)[0].slice(0, 300);
+    if (WIRED.test(tag) || /onClick|asChild|type="submit"|type='submit'|form=/.test(head)) return;
     if (/^<Button[^>]*\btype="(reset|button)"/.test(tag) && /onClick/.test(chunk.slice(start, start + 600))) return;
 
     const before = lines.slice(Math.max(0, i - 4), i).join(" ");
