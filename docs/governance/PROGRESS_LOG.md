@@ -475,3 +475,14 @@ STOP — HUMAN REVIEW REQUIRED
 - Quality: tsgo 0 · build PASS · vitest 1619 passed/5 skipped · fitness active=33 pending=9 failures=0.
 - DELTA: PRE-TS-001 recurrence #12 contained (platform-owned file, annotations only). RISK-008 OPEN.
 - Evidence: `docs/governance/POSTF1_SCOPE_001_EXECUTION_RECORD.md`. NOT CERTIFIED.
+
+## POSTF1-VERIF-001 — Independent Verification (PASS, not certified)
+- Unit A: create_tenant_notification — prosecdef=true, search_path=public, tenant server-derived, membership-gated, authenticated INSERT=false, anon EXECUTE=false.
+- Unit B: `amount_paid` = 0 occurrences in src/; `paid_amount` used in dashboard hook + widget.
+- Quality: typecheck-app PASS (platform=2 PRE-TS-001, project=0); fitness active=33 pending=9 failures=0.
+
+## OPA-NAZRA-001 — Operational Product Audit (measurement-only)
+- 1065 files, 100 pages, 100 routes, 805 buttons (744 wired / 61 candidates), 180 forms, 537 confirm dialogs, 164 print surfaces, 61 RPC calls, 67 UI files with direct DB access, 0 empty handlers, 0 TODO markers.
+- Live browser pass over 13 core routes with a real session: no crash/blank; `/accounting` returns 404 (no parent route).
+- Backlog: P0=0, P1=3 (OPA-ACT-001, OPA-GAP-001, OPA-NAV-001), P2=4, P3=1.
+- PRE-TS-001 recurrence #13 contained in platform-owned previewAuthStorage.ts (annotations only).
