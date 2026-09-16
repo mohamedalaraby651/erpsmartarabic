@@ -39,6 +39,7 @@ export function usePaymentsList(
 export function useDeletePayment() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم حذف الدفعة' },
     mutationFn: async (id: string) => {
       const { deletePayment } = await import("@/lib/services/paymentService");
       await deletePayment(id);

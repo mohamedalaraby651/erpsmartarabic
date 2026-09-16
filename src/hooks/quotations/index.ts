@@ -32,6 +32,7 @@ export function usePipelineInvoices(enabled = true) {
 export function useSaveLegacyQuotation() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم حفظ عرض السعر' },
     mutationFn: (params: {
       id?: string | null;
       header: LegacyQuotationHeaderPayload;

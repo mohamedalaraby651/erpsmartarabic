@@ -145,6 +145,7 @@ export function useUserPreferences() {
 
   // Update preferences mutation
   const updateMutation = useMutation({
+    meta: { successMessage: 'تم حفظ التفضيلات' },
     mutationFn: async (updates: Partial<UserPreferences>) => {
       if (!user?.id) throw new Error('User not authenticated');
 

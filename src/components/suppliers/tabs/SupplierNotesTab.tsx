@@ -57,6 +57,7 @@ const SupplierNotesTab = ({ supplierId }: SupplierNotesTabProps) => {
   });
 
   const togglePinMutation = useMutation({
+    meta: { successMessage: 'تم تحديث تثبيت الملاحظة' },
     mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) =>
       supplierRepository.setNotePinned(id, pinned),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['supplier-notes', supplierId] }),

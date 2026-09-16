@@ -107,6 +107,7 @@ const ApprovalChainsPage = () => {
   });
 
   const toggleMutation = useMutation({
+    meta: { successMessage: 'تم تحديث حالة السلسلة' },
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       adminRepository.updateApprovalChain(id, { is_active }),
     onSuccess: () => {

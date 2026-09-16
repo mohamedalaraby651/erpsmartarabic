@@ -87,6 +87,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
   });
 
   const toggleMutation = useMutation({
+    meta: { successMessage: 'تم تحديث حالة التذكير' },
     mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
       customerRelationsRepo.updateReminder(id, { is_completed: completed, updated_at: new Date().toISOString() }),
     onSuccess: () => {

@@ -87,6 +87,7 @@ const TasksPage = () => {
   });
 
   const toggleTaskMutation = useMutation({
+    meta: { successMessage: 'تم تحديث حالة المهمة' },
     mutationFn: ({ id, is_completed }: { id: string; is_completed: boolean }) =>
       tasksRepository.toggleCompletion(id, is_completed),
     onSuccess: () => {

@@ -46,6 +46,7 @@ const WarehouseFormDialog = ({ open, onOpenChange, warehouse }: WarehouseFormDia
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
+    meta: { successMessage: 'تم حفظ المستودع' },
     mutationFn: async (params: { payload: Record<string, unknown>; isEditing: boolean }) => {
       if (params.isEditing && warehouse) {
         const { error } = await supabase

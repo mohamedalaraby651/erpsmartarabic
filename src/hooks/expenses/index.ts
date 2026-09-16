@@ -51,6 +51,7 @@ function invalidateExpenseCaches(qc: ReturnType<typeof useQueryClient>) {
 export function useCreateExpense() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم حفظ المصروف' },
     mutationFn: (input: ExpenseInput) => expenseRepository.create(input),
     onSuccess: () => invalidateExpenseCaches(qc),
   });
@@ -59,6 +60,7 @@ export function useCreateExpense() {
 export function useUpdateExpense() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم تحديث المصروف' },
     mutationFn: ({ id, input }: { id: string; input: ExpenseInput }) =>
       expenseRepository.update(id, input),
     onSuccess: () => invalidateExpenseCaches(qc),
@@ -85,6 +87,7 @@ function invalidateCategoryCaches(qc: ReturnType<typeof useQueryClient>) {
 export function useCreateExpenseCategory() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم إنشاء فئة المصروفات' },
     mutationFn: (input: Parameters<typeof expenseRepository.createCategory>[0]) =>
       expenseRepository.createCategory(input),
     onSuccess: () => invalidateCategoryCaches(qc),
@@ -94,6 +97,7 @@ export function useCreateExpenseCategory() {
 export function useUpdateExpenseCategory() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم تحديث فئة المصروفات' },
     mutationFn: (params: {
       id: string;
       input: Parameters<typeof expenseRepository.updateCategory>[1];
@@ -105,6 +109,7 @@ export function useUpdateExpenseCategory() {
 export function useDeleteExpenseCategory() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم حذف فئة المصروفات' },
     mutationFn: (id: string) => expenseRepository.deleteCategory(id),
     onSuccess: () => invalidateCategoryCaches(qc),
   });

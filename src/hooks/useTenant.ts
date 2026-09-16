@@ -69,6 +69,7 @@ export function useTenant(): UseTenantReturn {
 
   // Switch tenant mutation
   const switchTenantMutation = useMutation({
+    meta: { successMessage: 'تم تبديل الشركة' },
     mutationFn: switchTenant,
     onSuccess: () => {
       // Invalidate all tenant-related queries

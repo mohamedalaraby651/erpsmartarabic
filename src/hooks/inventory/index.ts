@@ -53,6 +53,7 @@ export function useInventoryLevels(filters: InventoryLevelFilters = {}) {
 export function useDeleteWarehouse() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم حذف المخزن' },
     mutationFn: (id: string) => inventoryRepository.deleteWarehouse(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["warehouses"] });

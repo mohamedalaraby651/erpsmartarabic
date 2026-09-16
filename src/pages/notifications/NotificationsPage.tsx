@@ -39,6 +39,7 @@ const NotificationsPage = () => {
   });
 
   const markAsReadMutation = useMutation({
+    meta: { silentSuccess: true },
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('notifications')

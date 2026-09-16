@@ -110,6 +110,7 @@ const SodRulesPage = () => {
   });
 
   const toggleMutation = useMutation({
+    meta: { successMessage: 'تم تحديث حالة القاعدة' },
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       adminRepository.updateSodRule(id, { is_active }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sod-rules'] }),

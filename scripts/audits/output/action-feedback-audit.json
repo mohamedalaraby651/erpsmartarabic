@@ -1,0 +1,30 @@
+{
+  "id": "OPA-UX-001",
+  "scope": "useMutation definitions across src (tests excluded)",
+  "generatedAt": "2026-09-16T18:42:00.041Z",
+  "filesScanned": 104,
+  "mutations": 176,
+  "errorFeedback": "global — MutationCache.onError in src/App.tsx",
+  "summary": {
+    "OK": 170,
+    "NO_SUCCESS": 3,
+    "SILENT": 3
+  },
+  "gaps": [
+    {
+      "file": "src/hooks/useMutationToast.ts",
+      "line": 27,
+      "verdict": "NO_SUCCESS"
+    },
+    {
+      "file": "src/hooks/useExportPdf.ts",
+      "line": 82,
+      "verdict": "NO_SUCCESS"
+    },
+    {
+      "file": "src/pages/inventory/InventoryPage.tsx",
+      "line": 51,
+      "verdict": "NO_SUCCESS"
+    }
+  ]
+}

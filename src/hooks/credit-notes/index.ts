@@ -38,6 +38,7 @@ export function useInvoiceItemReturnsSummary(invoiceId: string, enabled = true) 
 export function useCreateCreditNoteDraft() {
   const qc = useQueryClient();
   return useMutation({
+    meta: { successMessage: 'تم حفظ مسودة إشعار الدائن' },
     mutationFn: (input: CreateCreditNoteDraftInput) =>
       creditNoteRepository.createDraft(input),
     onSuccess: () => {

@@ -75,6 +75,7 @@ export function useDashboardSettings() {
       : localWidgets;
 
   const mutation = useMutation({
+    meta: { silentSuccess: true },
     mutationFn: async (newWidgets: WidgetConfig[]) => {
       if (!user?.id) throw new Error('No user');
 
