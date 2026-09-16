@@ -595,7 +595,11 @@ export function ColumnFilterHeader({
           aria-orientation="vertical"
           aria-label={`تغيير عرض عمود ${label}`}
           onPointerDown={startResize}
-          onDoubleClick={() => onAutoFit?.(resizeKey)}
+          onDoubleClick={() => {
+            // Auto-fit measures the real content of this column (COL-001).
+            if (cellRef.current && onResize) onResize(resizeKey, measureColumnWidth(cellRef.current));
+            else onAutoFit?.(resizeKey);
+          }}
           className="absolute inset-y-1 left-0 w-1.5 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-primary/40"
         />
       )}
