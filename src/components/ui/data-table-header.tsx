@@ -67,8 +67,10 @@ export function DataTableHeader({
   };
 
   return (
-    <div className={cn('flex items-center gap-1', className)}>
+    <TableHead className={cn('whitespace-nowrap', className)}>
+      <div className="flex items-center gap-1">
       <span className="font-medium">{label}</span>
+      
       
       {sortKey && onSort && (
         <Button
