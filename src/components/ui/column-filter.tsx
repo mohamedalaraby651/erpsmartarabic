@@ -142,6 +142,13 @@ export function describeFilter(
       : labels.join('، ');
   }
   if (f.kind === 'text') {
+    const picked = f.values ?? [];
+    if (picked.length > 0) {
+      const labels = picked.map((v) => options?.find((o) => o.value === v)?.label ?? v);
+      return labels.length > 2
+        ? `${labels.slice(0, 2).join('، ')} +${labels.length - 2}`
+        : labels.join('، ');
+    }
     const op = TEXT_OPERATORS.find((o) => o.value === f.operator)?.label ?? 'يحتوي على';
     return `${op} «${f.text}»`;
   }
