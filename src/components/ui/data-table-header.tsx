@@ -148,14 +148,16 @@ export function DataTableHeader({
 
               {filterType === 'select' && filterOptions && (
                 <Select
-                  value={(filterValue as string) || ''}
-                  onValueChange={(value) => onFilter(filterKey, value || undefined)}
+                  value={(filterValue as string) || ALL_FILTER_VALUE}
+                  onValueChange={(value) =>
+                    onFilter(filterKey, value === ALL_FILTER_VALUE ? undefined : value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="اختر..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">الكل</SelectItem>
+                    <SelectItem value={ALL_FILTER_VALUE}>الكل</SelectItem>
                     {filterOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
