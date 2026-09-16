@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-16T20:18:22.433Z",
+  "generatedAt": "2026-09-16T20:49:29.660Z",
   "totals": {
     "hexColor": 194,
     "rgbColor": 0,
     "hslColor": 5,
     "fontFamily": 10,
     "boxShadow": 9,
-    "arbitraryPx": 418
+    "arbitraryPx": 424
   },
   "findings": {
     "hexColor": [
@@ -468,6 +468,10 @@
         "count": 1
       },
       {
+        "file": "src/components/layout/AdaptiveShell.tsx",
+        "count": 2
+      },
+      {
         "file": "src/components/layout/AppHeader.tsx",
         "count": 1
       },
@@ -541,6 +545,10 @@
       },
       {
         "file": "src/components/payments/MultiInvoiceSettlement.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/components/platform/PlatformLayout.tsx",
         "count": 1
       },
       {
@@ -712,6 +720,10 @@
         "count": 1
       },
       {
+        "file": "src/components/table/TableViewOptions.tsx",
+        "count": 1
+      },
+      {
         "file": "src/components/table/VirtualizedMobileList.tsx",
         "count": 1
       },
@@ -721,7 +733,7 @@
       },
       {
         "file": "src/components/ui/column-filter.tsx",
-        "count": 1
+        "count": 2
       },
       {
         "file": "src/components/ui/command.tsx",
@@ -753,6 +765,10 @@
       },
       {
         "file": "src/components/ui-kit/UnifiedStatsDisplay.tsx",
+        "count": 1
+      },
+      {
+        "file": "src/hooks/useTableLayout.ts",
         "count": 1
       },
       {
