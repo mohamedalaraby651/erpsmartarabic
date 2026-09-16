@@ -449,63 +449,61 @@ const InvoicesPage = () => {
               none: 'bg-muted text-muted-foreground border-border',
             };
             return (
-              <Card className={list.selectedIds.size > 0 ? 'border-primary/40 bg-primary/5' : ''}>
-                <CardContent className="p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <Checkbox
-                      checked={allOnPageSelected}
-                      aria-label={allOnPageSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
-                      onCheckedChange={toggleAllOnPage}
-                      {...(someOnPageSelected && !allOnPageSelected ? { 'data-state': 'indeterminate' as const } : {})}
-                    />
-                    <Badge variant="outline" className={`font-bold ${stateBadgeClass[selectionState]}`}>
-                      {stateLabel[selectionState]}
-                    </Badge>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">المحدد:</span>
-                      <span className="font-bold text-primary">{list.selectedIds.size}</span>
-                      <span className="text-muted-foreground">من</span>
-                      <span className="font-medium">{list.totalCount}</span>
-                    </div>
-                    {list.selectedIds.size > 0 && (
-                      <div className="flex items-center gap-2 text-sm border-r pr-3 mr-1">
-                        <span className="text-muted-foreground">إجمالي المحدد:</span>
-                        <span className="font-bold text-success">{selectedTotal.toLocaleString()} ج.م</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" onClick={toggleAllOnPage} disabled={pageData.length === 0}>
-                      {allOnPageSelected ? 'إلغاء تحديد الصفحة' : 'تحديد الصفحة'}
+              <div
+                className="flex flex-col lg:flex-row flex-wrap items-start lg:items-center justify-between gap-3 rounded-lg border border-border/70 bg-card/95 p-3 shadow-sm backdrop-blur"
+                role="region"
+                aria-label="أدوات التحديد الجمعي للفواتير"
+                aria-live="polite"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  <Checkbox
+                    checked={allOnPageSelected}
+                    aria-label={allOnPageSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                    onCheckedChange={toggleAllOnPage}
+                    {...(someOnPageSelected && !allOnPageSelected ? { 'data-state': 'indeterminate' as const } : {})}
+                  />
+                  <Badge variant="outline" className={`font-bold ${stateBadgeClass[selectionState]}`}>
+                    {stateLabel[selectionState]}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    المحدد: <strong className="text-foreground">{list.selectedIds.size}</strong> من <span className="font-medium">{list.totalCount}</span>
+                  </span>
+                  {list.selectedIds.size > 0 && (
+                    <span className="flex items-center gap-2 border-r pr-3 text-sm text-muted-foreground">
+                      إجمالي المحدد: <strong className="text-success">{selectedTotal.toLocaleString()} ج.م</strong>
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={toggleAllOnPage} disabled={pageData.length === 0}>
+                    {allOnPageSelected ? 'إلغاء تحديد الصفحة' : 'تحديد الصفحة'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={list.selectAllFiltered}
+                    disabled={list.isSelectingAll || list.totalCount === 0}
+                    title={list.debouncedSearch ? 'تحديد كل الفواتير المطابقة للبحث' : 'تحديد كل الفواتير المعروضة'}
+                  >
+                    {list.isSelectingAll && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                    تحديد كل المعروض ({list.totalCount})
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={list.selectedIds.size > 0 ? 'default' : 'outline'}
+                    onClick={() => setBulkPreviewOpen(true)}
+                    disabled={list.isBulkPrinting || list.selectedIds.size === 0}
+                  >
+                    {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
+                    معاينة وطباعة PDF
+                  </Button>
+                  {list.selectedIds.size > 0 && (
+                    <Button size="sm" variant="ghost" onClick={list.clearSelection}>
+                      <X className="h-4 w-4 ml-1" />إلغاء التحديد
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={list.selectAllFiltered}
-                      disabled={list.isSelectingAll || list.totalCount === 0}
-                      title={list.debouncedSearch ? 'تحديد كل الفواتير المطابقة للبحث' : 'تحديد كل الفواتير المعروضة'}
-                    >
-                      {list.isSelectingAll
-                        ? <Loader2 className="h-4 w-4 ml-2 animate-spin" />
-                        : null}
-                      تحديد كل المعروض ({list.totalCount})
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setBulkPreviewOpen(true)}
-                      disabled={list.isBulkPrinting || list.selectedIds.size === 0}
-                    >
-                      {list.isBulkPrinting ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <FileText className="h-4 w-4 ml-2" />}
-                      معاينة وطباعة دفعية PDF
-                    </Button>
-                    {list.selectedIds.size > 0 && (
-                      <Button size="sm" variant="ghost" onClick={list.clearSelection}>
-                        <X className="h-4 w-4 ml-1" />إلغاء التحديد
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                </div>
+              </div>
             );
           })()}
           <Card>
