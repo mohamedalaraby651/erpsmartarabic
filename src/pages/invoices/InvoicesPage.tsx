@@ -220,24 +220,26 @@ const InvoicesPage = () => {
                 inputMode="search"
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-[52%] sm:max-w-[55%]">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-[45%] sm:max-w-[48%]">
               {statItems.map((stat, i) => (
-                <Button
-                  key={i}
-                  type="button"
-                  variant="outline"
-                  aria-pressed={isSummaryActive(stat.statuses)}
-                  onClick={() => applySummaryFilter(stat.statuses)}
-                  className="h-10 min-w-[116px] shrink-0 justify-start border-border/60 px-2 text-start shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
-                >
-                  <span className="flex w-full items-center gap-1.5">
-                    <span className={`rounded-md p-1 ${statToneClasses[stat.tone]}`}><stat.icon className="h-3 w-3" /></span>
-                    <div className="min-w-0 text-start">
-                      <p className="text-[13px] font-bold tabular-nums leading-tight">{stat.value}</p>
-                      <p className="text-[9px] text-muted-foreground leading-tight truncate">{stat.label}</p>
-                    </div>
-                  </span>
-                </Button>
+                <Tooltip key={i}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      aria-pressed={isSummaryActive(stat.statuses)}
+                      aria-label={stat.label}
+                      onClick={() => applySummaryFilter(stat.statuses)}
+                      className="h-10 min-w-[72px] shrink-0 justify-center border-border/60 px-2 shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span className={`rounded-md p-1 ${statToneClasses[stat.tone]}`}><stat.icon className="h-3.5 w-3.5" /></span>
+                        <span className="text-sm font-bold tabular-nums leading-none">{stat.value}</span>
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{stat.label}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
           </div>
