@@ -435,7 +435,7 @@ const CustomersPage = () => {
                 sortDirection={sortConfig.direction}
                 onSort={handleHeaderSort}
                 selectedIds={bulk.selectedIds}
-                onToggleSelect={(id) => bulk.toggleSelect(id)}
+                onToggleSelect={(id, checked) => bulk.toggleSelect(id, checked)}
                 isAllSelected={bulk.isAllSelected}
                 onToggleSelectAll={(checked) => bulk.toggleSelectAll(checked)}
                 onNavigate={handleNavigateToCustomer}
