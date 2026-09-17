@@ -34,7 +34,9 @@ export function useCustomerList(options: UseCustomerListOptions) {
 
   // Main list query
   const { data: queryResult, isLoading, isError, error, isFetching, refetch } = useQuery({
-    queryKey: ['customers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
+    // OPA-CUST-002: pageSize is part of the identity of a page result. Omitting it
+    // served a stale short page after the responsive page size changed, hiding rows.
+    queryKey: ['customers', ...filterKey, currentPage, pageSize, sortConfig.key, sortConfig.direction],
     placeholderData: keepPreviousData,
     queryFn: () => customerRepository.findAll(
       {
