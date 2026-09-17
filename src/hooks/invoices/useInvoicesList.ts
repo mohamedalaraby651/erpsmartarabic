@@ -135,6 +135,38 @@ export function useInvoicesList() {
   const customerFiltered = !!columnFilters.filters.customer_name;
   const invoiceSelect = customerFiltered ? '*, customers!inner(name)' : '*, customers(name)';
 
+  /**
+   * Select every invoice that matches the CURRENT search term AND the active
+   * column filters across all pages (IDs only, capped at 500). Must stay in sync
+   * with the list/count queries, otherwise bulk actions hit unfiltered rows.
+   */
+  const selectAllFiltered = useCallback(async () => {
+    setIsSelectingAll(true);
+    try {
+      let query = supabase
+        .from('invoices')
+        .select(customerFiltered ? 'id, customers!inner(name)' : 'id')
+        .limit(500);
+      if (globalSearchExpression) query = query.or(globalSearchExpression);
+      query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
+      const { data, error } = await query;
+      if (error) throw error;
+      const ids = ((data || []) as Array<{ id: string }>).map((r) => r.id);
+      setSelectedIds(new Set(ids));
+      if (ids.length === 500) {
+        toast({ title: 'تم تحديد أول 500 فاتورة فقط', description: 'استخدم البحث لتضييق النتائج', variant: 'default' });
+      } else {
+        toast({ title: `تم تحديد ${ids.length} فاتورة` });
+      }
+    } catch (e) {
+      logErrorSafely('InvoicesPage.selectAllFiltered', e);
+      toast({ title: 'فشل تحديد الفواتير', variant: 'destructive' });
+    } finally {
+      setIsSelectingAll(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalSearchExpression, filtersKey, customerFiltered, toast]);
+
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['invoices-count', debouncedSearch, filtersKey],
     queryFn: async () => {
