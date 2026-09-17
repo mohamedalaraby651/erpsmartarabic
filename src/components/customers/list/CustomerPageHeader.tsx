@@ -44,12 +44,14 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
       <div className="space-y-3">
         {/* Search-first: prominent search bar */}
         {onSearchChange && (
-          <CustomerSearchPreview
-            value={searchQuery || ''}
-            onChange={onSearchChange}
-            className="w-full"
-            mobileStyle
-          />
+          <div data-customers-search>
+            <CustomerSearchPreview
+              value={searchQuery || ''}
+              onChange={onSearchChange}
+              className="w-full"
+              mobileStyle
+            />
+          </div>
         )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
