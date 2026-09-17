@@ -123,6 +123,15 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
         </div>
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
+        {onSearchChange && (
+          <div data-customers-search className="hidden md:block">
+            <CustomerSearchPreview
+              value={searchQuery || ''}
+              onChange={onSearchChange}
+              className="w-56 lg:w-72"
+            />
+          </div>
+        )}
         <DropdownMenu>
           <TapTooltip content={tooltips.toolsMenu} side="bottom" autoCloseMs={1600}>
             <DropdownMenuTrigger asChild>
