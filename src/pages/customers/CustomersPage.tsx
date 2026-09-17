@@ -200,7 +200,9 @@ const CustomersPage = () => {
   // Keyboard ownership (OPA-CUST-001 / C2) — presentation only.
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const focusSearch = useCallback(() => {
-    const input = document.querySelector<HTMLInputElement>('#customers-search-region input');
+    const input =
+      document.querySelector<HTMLInputElement>('#customers-search-region input') ??
+      document.querySelector<HTMLInputElement>('[data-customers-search] input');
     input?.focus();
     input?.select();
   }, []);
