@@ -24,7 +24,6 @@ import { CustomerAlertsBanner } from "@/components/customers/alerts/CustomerAler
 import { CustomerAlertsMobileTrigger } from "@/components/customers/alerts/CustomerAlertsMobileTrigger";
 
 // Sub-components
-import { CustomerListRow } from "@/components/customers/list/CustomerListRow";
 import { CustomerMobileView } from "@/components/customers/list/CustomerMobileView";
 import { CustomerStatsBar } from "@/components/customers/list/CustomerStatsBar";
 import { CustomerFiltersBar } from "@/components/customers/filters/CustomerFiltersBar";
@@ -33,6 +32,7 @@ import { CustomerDialogManager, type DialogManagerHandle } from "@/components/cu
 import { CustomerPageHeader } from "@/components/customers/list/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/filters/CustomerFilterDrawer";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
+import { CustomerErrorState } from "@/components/customers/list/CustomerErrorState";
 import { CustomerQuickAddDialog } from "@/components/customers/dialogs/CustomerQuickAddDialog";
 import { CustomerExportDialog } from "@/components/customers/dialogs/CustomerExportDialog";
 import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedViews";
@@ -341,8 +341,32 @@ const CustomersPage = () => {
           />
         </div>
       )}
+      {/* Alert-type filter is applied to the pages already loaded (see STOP CONDITION). */}
+      {alertFilterType && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
+          <span className="text-xs text-muted-foreground">
+            تصفية حسب نوع التنبيه — تُطبَّق على النتائج المحمّلة حاليًا
+          </span>
+          <Button
+            variant="ghost" size="sm" className="h-8 text-xs"
+            onClick={() => setAlertFilterType(null)}
+          >
+            <X className="h-3.5 w-3.5 ml-1" aria-hidden />
+            إلغاء التصفية
+          </Button>
+        </div>
+      )}
+
+      {isMobile && list.isError && allCustomers.length === 0 && (
+        <CustomerErrorState
+          message={list.error?.message}
+          onRetry={() => { void list.refetch(); }}
+          isRetrying={list.isFetching}
+        />
+      )}
+
       {isMobile ? (
-        <div className="pb-fab-safe">
+        <div className={list.isError && allCustomers.length === 0 ? "hidden" : "pb-fab-safe"}>
           <CustomerMobileView
             data={allCustomers}
             isLoading={list.isLoading}
@@ -433,7 +457,13 @@ const CustomersPage = () => {
             </div>
           </div>
 
-          {list.isLoading && allCustomers.length === 0 ? (
+          {list.isError && allCustomers.length === 0 ? (
+            <CustomerErrorState
+              message={list.error?.message}
+              onRetry={() => { void list.refetch(); }}
+              isRetrying={list.isFetching}
+            />
+          ) : list.isLoading && allCustomers.length === 0 ? (
             <CustomerListSkeleton />
           ) : allCustomers.length === 0 ? (
             <CustomerEmptyState

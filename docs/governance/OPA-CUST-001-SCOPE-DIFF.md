@@ -28,3 +28,12 @@
 
 ## STOP CONDITIONS (halted, not worked around)
 1. Alert filtering across all pages requires a server-side query contract change → NOT executed
+
+## Batch 2 delta
+- In scope executed: list error state + retry, alert-filter transparency notice, sticky Customer 360
+  tab strip, unused import removal in the page
+- Still NOT executed: alert filtering across the full dataset (STOP CONDITION — needs a server-side
+  query contract change), Code / Sales-Representative / Category-name columns (DATA-GAPs),
+  Contacts / Addresses / Audit tabs (DATA-GAP)
+- `CustomerListRow.tsx` still present and unreferenced by the page; deletion deferred to a separate
+  cleanup batch to keep this batch's diff minimal

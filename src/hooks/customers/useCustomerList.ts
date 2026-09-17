@@ -33,7 +33,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
   const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays];
 
   // Main list query
-  const { data: queryResult, isLoading, refetch } = useQuery({
+  const { data: queryResult, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['customers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
     placeholderData: keepPreviousData,
     queryFn: () => customerRepository.findAll(
@@ -105,6 +105,9 @@ export function useCustomerList(options: UseCustomerListOptions) {
     customers,
     totalCount,
     isLoading,
+    isError,
+    error: error instanceof Error ? error : null,
+    isFetching,
     refetch,
     stats: stats || { total: 0, individuals: 0, companies: 0, vip: 0, totalBalance: 0, active: 0, inactive: 0, debtors: 0 },
     handleRowHover,
