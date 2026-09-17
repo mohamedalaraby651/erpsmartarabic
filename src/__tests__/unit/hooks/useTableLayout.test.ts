@@ -32,6 +32,7 @@ describe('table layout contract', () => {
       order: ['remaining', 'invoice_number'],
       density: 'compact',
       bodyHeight: 620,
+      summaryCollapsed: false,
     });
   });
 
@@ -43,6 +44,7 @@ describe('table layout contract', () => {
       order: [],
       density: 'medium',
       bodyHeight: 0,
+      summaryCollapsed: false,
     });
   });
 });
