@@ -357,8 +357,16 @@ const CustomersPage = () => {
         </div>
       )}
 
+      {isMobile && list.isError && allCustomers.length === 0 && (
+        <CustomerErrorState
+          message={list.error?.message}
+          onRetry={() => { void list.refetch(); }}
+          isRetrying={list.isFetching}
+        />
+      )}
+
       {isMobile ? (
-        <div className="pb-fab-safe">
+        <div className={list.isError && allCustomers.length === 0 ? "hidden" : "pb-fab-safe"}>
           <CustomerMobileView
             data={allCustomers}
             isLoading={list.isLoading}
