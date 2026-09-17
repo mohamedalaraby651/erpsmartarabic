@@ -48,7 +48,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
-  alertCountByCustomer, errorCustomerIds, hasActiveSearch, activeQuickFilter, onQuickFilter,
+  alertCountByCustomer, errorCustomerIds, hasActiveSearch, searchQuery, activeQuickFilter, onQuickFilter,
   selectedIds, onToggleSelect,
   showSummary = true, showSort = true,
 }: CustomerMobileViewProps) {
@@ -140,6 +140,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
               onDelete={canDelete ? onDelete : undefined}
               onNewInvoice={onNewInvoice}
               onNewPayment={onNewPayment}
+              searchQuery={searchQuery}
               alertCount={alertCountByCustomer?.get(customer.id)}
               hasErrorAlert={errorCustomerIds?.has(customer.id)}
               selectionMode={selectionMode}
