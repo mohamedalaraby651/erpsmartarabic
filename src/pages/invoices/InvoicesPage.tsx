@@ -207,41 +207,39 @@ const InvoicesPage = () => {
     const hasFilters = !!list.searchQuery;
     return (
       <PullToRefresh onRefresh={list.handleRefresh}>
-        <div className="space-y-5">
-          {/* 1. Search — primary action, top of view */}
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="بحث برقم الفاتورة أو اسم العميل..."
-              value={list.searchQuery}
-              onChange={(e) => list.setSearchQuery(e.target.value)}
-              className="pr-10 h-11"
-              inputMode="search"
-            />
-          </div>
-
-          {/* 2. Stats chips — secondary info, compact */}
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
-            {statItems.map((stat, i) => (
-              <Button
-                key={i}
-                type="button"
-                variant="outline"
-                aria-pressed={isSummaryActive(stat.statuses)}
-                onClick={() => applySummaryFilter(stat.statuses)}
-                className="h-auto min-w-[140px] shrink-0 justify-start border-border/60 p-0 text-start shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
-              >
-                <span className="w-full p-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className={`rounded-md p-1.5 ${statToneClasses[stat.tone]}`}><stat.icon className="h-3.5 w-3.5" /></span>
-                    <div className="min-w-0">
-                      <p className="text-base font-bold tabular-nums leading-tight">{stat.value}</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight truncate">{stat.label}</p>
+        <div className="space-y-4">
+          {/* Mobile search + stats share one horizontal band to save vertical space. */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="بحث..."
+                value={list.searchQuery}
+                onChange={(e) => list.setSearchQuery(e.target.value)}
+                className="pr-10 h-10"
+                inputMode="search"
+              />
+            </div>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-[45%] sm:max-w-[50%]">
+              {statItems.map((stat, i) => (
+                <Button
+                  key={i}
+                  type="button"
+                  variant="outline"
+                  aria-pressed={isSummaryActive(stat.statuses)}
+                  onClick={() => applySummaryFilter(stat.statuses)}
+                  className="h-10 min-w-[96px] shrink-0 justify-start border-border/60 px-2 text-start shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
+                >
+                  <span className="flex w-full items-center gap-1.5">
+                    <span className={`rounded-md p-1 ${statToneClasses[stat.tone]}`}><stat.icon className="h-3 w-3" /></span>
+                    <div className="min-w-0 text-start">
+                      <p className="text-sm font-bold tabular-nums leading-tight">{stat.value}</p>
+                      <p className="text-[10px] text-muted-foreground leading-tight truncate">{stat.label}</p>
                     </div>
-                  </div>
-                </span>
-              </Button>
-            ))}
+                  </span>
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* 3. Results */}
