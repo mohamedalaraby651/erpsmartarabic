@@ -485,6 +485,13 @@ const CustomersPage = () => {
         </div>
       )}
 
+      {/* Invariant: the bulk bar must never obscure a row or an action — reserve its space. */}
+      {bulk.hasSelection && <div aria-hidden className="h-24" />}
+
+      <ShortcutsHelp open={shortcutsOpen} onOpenChange={setShortcutsOpen} shortcuts={CUSTOMER_SHORTCUTS} />
+
+
+
       <CustomerFilterDrawer
         open={filters.filterDrawerOpen} onOpenChange={filters.setFilterDrawerOpen}
         activeFiltersCount={filters.activeFiltersCount}
