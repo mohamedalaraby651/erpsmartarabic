@@ -170,6 +170,19 @@ const CustomersPage = () => {
   // Bulk selection
   const bulk = useBulkSelection(allCustomers);
 
+  // OPA-CUST-002: never carry a selection across a filter/search/sort change —
+  // bulk actions must only ever target rows the user can currently see.
+  const clearSelection = bulk.clearSelection;
+  useEffect(() => {
+    clearSelection();
+  }, [
+    clearSelection,
+    filters.debouncedSearch, filters.typeFilter, filters.vipFilter,
+    filters.governorateFilter, filters.statusFilter, filters.categoryFilter,
+    filters.noCommDays, filters.inactiveDays,
+    sortConfig.key, sortConfig.direction, alertFilterType,
+  ]);
+
   const handleNavigateToCustomer = useCallback((customerId: string) => {
     storeCustomerNavIds(allCustomers.map(c => c.id));
     navigate(`/customers/${customerId}`);
