@@ -60,7 +60,12 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
   const { search, type, vip, governorate, status, category, noCommDays, inactiveDays } = filters;
   if (search) {
     const s = sanitizeSearch(search);
-    q = q.or(`name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,governorate.ilike.%${s}%`) as typeof q;
+    // OPA-CUST-001: search spans the identifying fields that already exist on the
+    // customers read model (no new columns, no new source of truth).
+    q = q.or(
+      `name.ilike.%${s}%,phone.ilike.%${s}%,phone2.ilike.%${s}%,email.ilike.%${s}%,` +
+      `tax_number.ilike.%${s}%,contact_person.ilike.%${s}%,city.ilike.%${s}%,governorate.ilike.%${s}%`
+    ) as typeof q;
   }
   if (type && type !== 'all') q = q.eq('customer_type', type) as typeof q;
   if (vip && vip !== 'all') {
