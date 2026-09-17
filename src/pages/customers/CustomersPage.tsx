@@ -362,10 +362,17 @@ const CustomersPage = () => {
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
             sortKey={sortConfig.key || 'created_at'}
-            onSortChange={(key) => setSortConfig({ key, direction: 'asc' })}
+            onSortChange={(key) =>
+              setSortConfig(
+                sortConfig.key === key && sortConfig.direction === 'asc'
+                  ? { key, direction: 'desc' }
+                  : { key, direction: 'asc' },
+              )
+            }
             alertCountByCustomer={alertCountByCustomer}
             errorCustomerIds={errorCustomerIds}
             hasActiveSearch={!!filters.debouncedSearch}
+            searchQuery={filters.debouncedSearch}
             activeQuickFilter={quickFilter}
             onQuickFilter={handleQuickFilter}
             selectedIds={bulk.selectedIds}
