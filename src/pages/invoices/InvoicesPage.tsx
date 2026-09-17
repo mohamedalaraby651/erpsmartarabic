@@ -34,8 +34,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useInvoicesList, type InvoiceWithCustomer } from "@/hooks/invoices/useInvoicesList";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useListShortcuts } from "@/hooks/useListShortcuts";
+import { useListShortcuts, isRowActivationTarget } from "@/hooks/useListShortcuts";
 import { ShortcutsHelp } from "@/components/shared/ShortcutsHelp";
+import { HighlightText } from "@/components/shared/HighlightText";
 import { InvoiceQuickView } from "@/components/invoices/InvoiceQuickView";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -283,10 +284,18 @@ const InvoicesPage = () => {
       const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
       switch (key) {
         case 'invoice_number':
-          return <EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink>;
+          return (
+            <EntityLink type="invoice" id={invoice.id}>
+              <HighlightText text={invoice.invoice_number} query={list.searchQuery} />
+            </EntityLink>
+          );
         case 'customer_name':
           return invoice.customers?.name
-            ? <EntityLink type="customer" id={invoice.customer_id}>{invoice.customers.name}</EntityLink>
+            ? (
+              <EntityLink type="customer" id={invoice.customer_id}>
+                <HighlightText text={invoice.customers.name} query={list.searchQuery} />
+              </EntityLink>
+            )
             : '-';
         case 'created_at':
           return new Date(invoice.created_at).toLocaleDateString('ar-EG');
@@ -362,7 +371,13 @@ const InvoicesPage = () => {
               {(list.sortedData as InvoiceWithCustomer[]).map((invoice) => {
                 const isSelected = list.selectedIds.has(invoice.id);
                 return (
-                  <TableRow key={invoice.id} data-state={isSelected ? 'selected' : undefined} className="cursor-pointer hover:bg-muted/50" onClick={() => setQuickInvoice(invoice)}>
+                  <TableRow
+                    key={invoice.id}
+                    data-state={isSelected ? 'selected' : undefined}
+                    className="cursor-pointer hover:bg-muted/50"
+                    // Row activation contract: interactive children keep their own behaviour.
+                    onClick={(e) => { if (isRowActivationTarget(e.target)) setQuickInvoice(invoice); }}
+                  >
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onCheckedChange={() => list.toggleSelect(invoice.id)} aria-label={`تحديد فاتورة ${invoice.invoice_number}`} />
                     </TableCell>
