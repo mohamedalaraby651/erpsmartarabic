@@ -50,3 +50,21 @@ Status: IMPLEMENTED / VERIFIED — NOT HUMAN ACCEPTED — NOT CERTIFIED
   - removed the now-unused `CustomerListRow` import (file itself retained)
 - `src/pages/customers/CustomerDetailsPage.tsx` — Customer 360 tab strip sticky while scrolling
 - `src/integrations/supabase/previewAuthStorage.ts` — build fix only (TS7011)
+
+## Batch 3 — OPA-CUST-002 defect fixes (2026-09-17)
+Reproduced defect: opening /customers at phone width (page size 12) then widening to
+desktop width (page size 20) left the list at 12 rows with "15 عميل — معروض 12" and
+"تم عرض جميع النتائج (12)" — 3 customers unreachable.
+
+### Fixed
+- `src/hooks/customers/useCustomerList.ts` — `pageSize` added to the query key
+  (a stale short page was being served after the responsive page size changed)
+- `src/hooks/customers/useInfiniteCustomers.ts` — reset accumulated pages on
+  `pageSize` / `isMobile` change; clear `isFetchingNextPage` even for an empty page
+- `src/pages/customers/CustomersPage.tsx` — live-region sort direction now matches
+  the data layer (default = descending); bulk selection cleared on any
+  search/filter/sort/alert-filter change
+- Removed unused `src/components/customers/list/CustomerListRow.tsx` (+ its export)
+
+### Unchanged
+No DB, RLS, permissions, repository contracts, financial or domain logic.
