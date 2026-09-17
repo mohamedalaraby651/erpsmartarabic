@@ -220,7 +220,7 @@ const InvoicesPage = () => {
                 inputMode="search"
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-[48%] sm:max-w-[52%]">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-[52%] sm:max-w-[55%]">
               {statItems.map((stat, i) => (
                 <Button
                   key={i}
@@ -228,7 +228,7 @@ const InvoicesPage = () => {
                   variant="outline"
                   aria-pressed={isSummaryActive(stat.statuses)}
                   onClick={() => applySummaryFilter(stat.statuses)}
-                  className="h-10 min-w-[108px] shrink-0 justify-start border-border/60 px-2 text-start shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
+                  className="h-10 min-w-[116px] shrink-0 justify-start border-border/60 px-2 text-start shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
                 >
                   <span className="flex w-full items-center gap-1.5">
                     <span className={`rounded-md p-1 ${statToneClasses[stat.tone]}`}><stat.icon className="h-3 w-3" /></span>
