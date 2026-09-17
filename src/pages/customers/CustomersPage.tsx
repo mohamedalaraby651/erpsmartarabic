@@ -112,6 +112,13 @@ const CustomersPage = () => {
   }, [filters]);
 
   const handleQuickFilter = useCallback((filterId: string | null) => {
+    // Quick filters replace the manual status/VIP/type filters — make that visible
+    // instead of resetting the user's own filters silently.
+    const hadManualFilters =
+      filters.statusFilter !== 'all' || filters.vipFilter !== 'all' || filters.typeFilter !== 'all';
+    if (filterId && hadManualFilters) {
+      toast.info('الفلتر السريع استبدل فلاتر الحالة والنوع وVIP اليدوية');
+    }
     setQuickFilter(filterId);
     resetAllQuickFilters();
     if (filterId === 'active') filters.setStatusFilter('active');
