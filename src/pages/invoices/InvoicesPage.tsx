@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Receipt, Printer, Eye, Calendar, CreditCard, CheckCircle, XCircle, Clock, Send, FileText, X, Loader2, ChevronDown, Keyboard } from "lucide-react";
+import { Plus, Search, Receipt, Printer, Eye, CreditCard, CheckCircle, XCircle, Clock, Send, FileText, X, Loader2, ChevronDown, Keyboard } from "lucide-react";
 import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
 import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
 import { InvoicePrintView } from "@/components/print/InvoicePrintView";
@@ -22,13 +22,8 @@ import { DENSITY_CLASS, useTableLayout } from "@/hooks/useTableLayout";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { DataCard } from "@/components/mobile/DataCard";
-import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ListStateRenderer } from "@/components/shared/ListStateRenderer";
-import { MobileListSkeleton, MobileStatSkeleton } from "@/components/mobile/MobileListSkeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useInvoicesList, type InvoiceWithCustomer } from "@/hooks/invoices/useInvoicesList";
@@ -136,26 +131,6 @@ const InvoicesPage = () => {
     list.clearSelection();
   }, [list]);
 
-  const renderMobileInvoiceItem = useCallback((invoice: InvoiceWithCustomer) => {
-    const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
-    return (
-      <DataCard
-        title={invoice.invoice_number}
-        subtitle={invoice.customers?.name || 'بدون عميل'}
-        badge={{ text: paymentStatusLabels[invoice.payment_status], variant: invoice.payment_status === 'paid' ? 'default' : invoice.payment_status === 'partial' ? 'secondary' : 'destructive' }}
-        icon={<Receipt className="h-5 w-5" />}
-        fields={[
-          { label: 'الإجمالي', value: `${Number(invoice.total_amount).toLocaleString()} ج.م` },
-          { label: 'المتبقي', value: `${remaining.toLocaleString()} ج.م`, icon: remaining > 0 ? <CreditCard className="h-4 w-4" /> : undefined },
-          { label: 'التاريخ', value: new Date(invoice.created_at).toLocaleDateString('ar-EG'), icon: <Calendar className="h-4 w-4" /> },
-        ]}
-        onClick={() => navigate(`/invoices/${invoice.id}`)}
-        onView={() => navigate(`/invoices/${invoice.id}`)}
-        onEdit={list.canEdit ? () => list.handleEdit(invoice as unknown as Invoice) : undefined}
-        onDelete={list.canDelete ? () => list.deleteMutation.mutate(invoice.id) : undefined}
-      />
-    );
-  }, [navigate, list.canEdit, list.canDelete, list.handleEdit, list.deleteMutation]);
 
   const builtInFinancialAccess = userRole === 'admin' || userRole === 'accountant';
   const canViewFinancialSummary = (customRole ? hasPermission('payments', 'view') : builtInFinancialAccess)
@@ -200,73 +175,6 @@ const InvoicesPage = () => {
     warning: 'text-warning bg-warning/10',
   };
 
-  const renderMobileView = () => {
-    if (list.isLoading && list.sortedData.length === 0) {
-      return <div className="space-y-5"><div className="h-11 rounded-md bg-muted animate-pulse" /><MobileStatSkeleton count={4} /><MobileListSkeleton count={5} variant="invoice" /></div>;
-    }
-    const hasFilters = !!list.searchQuery;
-    return (
-      <PullToRefresh onRefresh={list.handleRefresh}>
-        <div className="space-y-4">
-          {/* Mobile search + stats share one horizontal band to save vertical space. */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="بحث..."
-                value={list.searchQuery}
-                onChange={(e) => list.setSearchQuery(e.target.value)}
-                className="pr-10 h-10"
-                inputMode="search"
-              />
-            </div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-[45%] sm:max-w-[48%]">
-              {statItems.map((stat, i) => (
-                <Tooltip key={i}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      aria-pressed={isSummaryActive(stat.statuses)}
-                      aria-label={stat.label}
-                      onClick={() => applySummaryFilter(stat.statuses)}
-                      className="h-10 min-w-[72px] shrink-0 justify-center border-border/60 px-2 shadow-xs aria-pressed:border-primary aria-pressed:bg-primary/5"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <span className={`rounded-md p-1 ${statToneClasses[stat.tone]}`}><stat.icon className="h-3.5 w-3.5" /></span>
-                        <span className="text-sm font-bold tabular-nums leading-none">{stat.value}</span>
-                      </span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">{stat.label}</TooltipContent>
-                </Tooltip>
-              ))}
-            </div>
-          </div>
-
-          {/* 3. Results */}
-          <ListStateRenderer
-            data={list.sortedData}
-            isLoading={false}
-            error={list.error}
-            hasFilters={hasFilters}
-            onRetry={() => list.refetch()}
-            onClearFilters={() => list.setSearchQuery('')}
-            empty={{
-              icon: Receipt,
-              title: 'لا توجد فواتير',
-              description: 'ابدأ بإصدار فاتورتك الأولى لمتابعة المبيعات والتحصيل.',
-              action: { label: 'فاتورة جديدة', onClick: list.handleAdd, icon: Plus },
-            }}
-            skeletonVariant="invoice"
-          >
-            <VirtualizedMobileList data={list.sortedData as InvoiceWithCustomer[]} renderItem={renderMobileInvoiceItem} getItemKey={(inv) => inv.id} itemHeight={160} />
-            <ServerPagination currentPage={list.pagination.currentPage} totalPages={list.pagination.totalPages} totalCount={list.totalCount} pageSize={list.PAGE_SIZE} onPageChange={list.pagination.goToPage} hasNextPage={list.pagination.hasNextPage} hasPrevPage={list.pagination.hasPrevPage} />
-          </ListStateRenderer>
-        </div>
-      </PullToRefresh>
-    );
-  };
 
   const renderTableView = () => {
     if (list.isLoading) return <TableSkeleton rows={5} columns={9} />;
@@ -443,8 +351,8 @@ const InvoicesPage = () => {
         </Badge>
       </div>
 
-      {isMobile ? renderMobileView() : (
-        <>
+      {/* Unified layout: identical structure on mobile and desktop. */}
+      <>
           <section aria-label={canViewFinancialSummary ? 'الملخص المالي للفواتير' : 'ملخص متابعة الفواتير'}>
             <div className="mb-2 flex items-center justify-between gap-3">
               <button
@@ -654,7 +562,6 @@ const InvoicesPage = () => {
             <CardContent>{renderTableView()}</CardContent>
           </Card>
         </>
-      )}
 
       <InvoiceFormDialog open={list.dialogOpen} onOpenChange={(open) => { list.setDialogOpen(open); if (!open) list.setPrefillCustomerId(undefined); }} invoice={list.selectedInvoice} prefillCustomerId={list.prefillCustomerId} />
       <PaymentFormDialog
