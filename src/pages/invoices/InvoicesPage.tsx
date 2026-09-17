@@ -424,7 +424,10 @@ const InvoicesPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    // Bulk Action Bar invariant: while it is visible the page reserves the
+    // space it occupies, so it never obscures the last row, pagination or any
+    // actionable control.
+    <div className={`space-y-6 animate-fade-in ${list.selectedIds.size > 0 ? 'pb-28' : ''}`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
