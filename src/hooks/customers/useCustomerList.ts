@@ -33,7 +33,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
   const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays];
 
   // Main list query
-  const { data: queryResult, isLoading, refetch } = useQuery({
+  const { data: queryResult, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['customers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
     placeholderData: keepPreviousData,
     queryFn: () => customerRepository.findAll(
