@@ -19,6 +19,11 @@ export interface TableLayoutState {
   density: TableDensity;
   /** Max height of the scrollable table body in px; 0 = no limit. */
   bodyHeight: number;
+  /**
+   * Presentation-only: whether the screen's summary strip is collapsed.
+   * Business filters and query state are deliberately NOT stored here.
+   */
+  summaryCollapsed: boolean;
 }
 
 const DEFAULT_STATE: TableLayoutState = {
@@ -28,6 +33,7 @@ const DEFAULT_STATE: TableLayoutState = {
   order: [],
   density: 'medium',
   bodyHeight: 0,
+  summaryCollapsed: false,
 };
 
 export const DENSITY_CLASS: Record<TableDensity, string> = {
@@ -67,6 +73,7 @@ export function normalizeTableLayout(input: unknown, allColumnKeys: string[]): T
     order,
     density,
     bodyHeight: typeof value.bodyHeight === 'number' && value.bodyHeight >= 0 ? value.bodyHeight : 0,
+    summaryCollapsed: value.summaryCollapsed === true,
   };
 }
 
@@ -156,6 +163,10 @@ export function useTableLayout(section: string, allColumnKeys: string[]) {
     setState((s) => ({ ...s, bodyHeight }));
   }, []);
 
+  const setSummaryCollapsed = useCallback((summaryCollapsed: boolean) => {
+    setState((s) => ({ ...s, summaryCollapsed }));
+  }, []);
+
   const reset = useCallback(() => {
     try {
       window.localStorage.removeItem(legacyStorageKey(section, userId));
@@ -192,6 +203,7 @@ export function useTableLayout(section: string, allColumnKeys: string[]) {
     moveColumnTo,
     setDensity,
     setBodyHeight,
+    setSummaryCollapsed,
     reset,
   };
 }

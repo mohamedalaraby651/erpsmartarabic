@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,12 +34,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useInvoicesList, type InvoiceWithCustomer } from "@/hooks/invoices/useInvoicesList";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useListShortcuts } from "@/hooks/useListShortcuts";
+import { useListShortcuts, isRowActivationTarget } from "@/hooks/useListShortcuts";
 import { ShortcutsHelp } from "@/components/shared/ShortcutsHelp";
+import { HighlightText } from "@/components/shared/HighlightText";
 import { InvoiceQuickView } from "@/components/invoices/InvoiceQuickView";
 import type { Database } from "@/integrations/supabase/types";
 
-const SUMMARY_COLLAPSE_KEY = 'invoices:summary-strip';
+// Legacy standalone key from the ungated M1 execution; cleaned up on mount so
+// presentation preferences live only in the approved table-layout contract.
+const LEGACY_SUMMARY_KEY = 'invoices:summary-strip';
 
 const SHORTCUTS = [
   { keys: '/', description: 'الانتقال إلى حقل البحث' },
@@ -97,28 +101,27 @@ const InvoicesPage = () => {
   const [quickInvoice, setQuickInvoice] = useState<InvoiceWithCustomer | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  // Summary strip collapse state is a presentation preference, kept per browser.
-  const [summaryOpen, setSummaryOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem(SUMMARY_COLLAPSE_KEY) !== 'collapsed';
-  });
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(SUMMARY_COLLAPSE_KEY, summaryOpen ? 'expanded' : 'collapsed');
-  }, [summaryOpen]);
-  // Per-user table presentation (widths, density, visible columns, height).
+  // Per-user table presentation (widths, density, visible columns, height,
+  // summary collapse). Presentation preferences only — no business filters.
   const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
+  const summaryOpen = !layout.summaryCollapsed;
 
+  useEffect(() => {
+    try { window.localStorage.removeItem(LEGACY_SUMMARY_KEY); } catch { /* storage unavailable */ }
+  }, []);
+
+  // Escape closes the highest-priority transient UI first, then clears selection.
   const shortcutHandlers = useMemo(() => ({
     onFocusSearch: () => searchRef.current?.focus(),
     onNew: () => list.handleAdd(),
     onRefresh: () => list.handleRefresh(),
     onEscape: () => {
+      if (helpOpen) { setHelpOpen(false); return; }
       if (quickInvoice) { setQuickInvoice(null); return; }
       if (list.selectedIds.size > 0) list.clearSelection();
     },
     onToggleHelp: () => setHelpOpen((prev) => !prev),
-  }), [list, quickInvoice]);
+  }), [list, quickInvoice, helpOpen]);
   useListShortcuts(shortcutHandlers, !isMobile);
 
   // Invoices that match the current selection — used by the preview dialog.
@@ -281,10 +284,18 @@ const InvoicesPage = () => {
       const remaining = Number(invoice.total_amount) - Number(invoice.paid_amount || 0);
       switch (key) {
         case 'invoice_number':
-          return <EntityLink type="invoice" id={invoice.id}>{invoice.invoice_number}</EntityLink>;
+          return (
+            <EntityLink type="invoice" id={invoice.id}>
+              <HighlightText text={invoice.invoice_number} query={list.searchQuery} />
+            </EntityLink>
+          );
         case 'customer_name':
           return invoice.customers?.name
-            ? <EntityLink type="customer" id={invoice.customer_id}>{invoice.customers.name}</EntityLink>
+            ? (
+              <EntityLink type="customer" id={invoice.customer_id}>
+                <HighlightText text={invoice.customers.name} query={list.searchQuery} />
+              </EntityLink>
+            )
             : '-';
         case 'created_at':
           return new Date(invoice.created_at).toLocaleDateString('ar-EG');
@@ -360,7 +371,13 @@ const InvoicesPage = () => {
               {(list.sortedData as InvoiceWithCustomer[]).map((invoice) => {
                 const isSelected = list.selectedIds.has(invoice.id);
                 return (
-                  <TableRow key={invoice.id} data-state={isSelected ? 'selected' : undefined} className="cursor-pointer hover:bg-muted/50" onClick={() => setQuickInvoice(invoice)}>
+                  <TableRow
+                    key={invoice.id}
+                    data-state={isSelected ? 'selected' : undefined}
+                    className="cursor-pointer hover:bg-muted/50"
+                    // Row activation contract: interactive children keep their own behaviour.
+                    onClick={(e) => { if (isRowActivationTarget(e.target)) setQuickInvoice(invoice); }}
+                  >
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onCheckedChange={() => list.toggleSelect(invoice.id)} aria-label={`تحديد فاتورة ${invoice.invoice_number}`} />
                     </TableCell>
@@ -407,7 +424,10 @@ const InvoicesPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    // Bulk Action Bar invariant: while it is visible the page reserves the
+    // space it occupies, so it never obscures the last row, pagination or any
+    // actionable control.
+    <div className={`space-y-6 animate-fade-in ${list.selectedIds.size > 0 ? 'pb-28' : ''}`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
@@ -429,7 +449,7 @@ const InvoicesPage = () => {
             <div className="mb-2 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => setSummaryOpen((prev) => !prev)}
+                onClick={() => layout.setSummaryCollapsed(summaryOpen)}
                 aria-expanded={summaryOpen}
                 className="flex items-center gap-2 rounded-md px-1 py-1 text-sm font-medium hover:text-primary"
               >
