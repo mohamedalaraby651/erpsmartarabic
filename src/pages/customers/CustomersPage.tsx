@@ -252,8 +252,8 @@ const CustomersPage = () => {
         onExportAll={() => setExportDialogOpen(true)}
         totalCount={totalStatsCount}
         filteredCount={filteredCount !== totalStatsCount ? filteredCount : undefined}
-        searchQuery={isMobile ? filters.searchQuery : undefined}
-        onSearchChange={isMobile ? filters.setSearchQuery : undefined}
+        searchQuery={filters.searchQuery}
+        onSearchChange={filters.setSearchQuery}
         mobileTitleSlot={isMobile && totalAlerts > 0 ? (
           <CustomerAlertsMobileTrigger
             alertsByType={alertsByType}
