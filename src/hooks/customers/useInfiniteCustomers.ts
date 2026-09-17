@@ -67,7 +67,6 @@ export function useInfiniteCustomers({
           return updated;
         });
       }
-      setIsFetchingNextPage(false);
     }
   }, [isMobile, mobilePage, desktopPage]);
 
