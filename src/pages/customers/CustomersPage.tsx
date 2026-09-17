@@ -238,7 +238,8 @@ const CustomersPage = () => {
     if (list.isLoading) return '';
     const parts: string[] = [];
     const sortLabel = sortLabelMap[sortConfig.key] || sortLabelMap.created_at;
-    const dirLabel = sortConfig.direction === 'desc' ? 'تنازلي' : 'تصاعدي';
+    // Default (no explicit direction) resolves to descending in the data layer.
+    const dirLabel = sortConfig.direction === 'asc' ? 'تصاعدي' : 'تنازلي';
     parts.push(`تم ترتيب القائمة حسب ${sortLabel} ${dirLabel}.`);
     if (filters.activeFiltersCount > 0 || filters.debouncedSearch) {
       parts.push(`تم تطبيق ${filters.activeFiltersCount} فلتر، النتائج: ${filteredCount} عميل.`);
