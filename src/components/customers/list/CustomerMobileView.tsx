@@ -32,6 +32,8 @@ interface CustomerMobileViewProps {
   alertCountByCustomer?: Map<string, number>;
   errorCustomerIds?: Set<string>;
   hasActiveSearch?: boolean;
+  /** Visual-only highlight of the active search term. */
+  searchQuery?: string;
   activeQuickFilter?: string | null;
   onQuickFilter?: (id: string | null) => void;
   selectedIds?: Set<string>;

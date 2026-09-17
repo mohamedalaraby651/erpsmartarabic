@@ -3,6 +3,7 @@ import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar,
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
+import { HighlightText } from '@/components/shared/HighlightText';
 import { cn } from '@/lib/utils';
 import { vipColors, vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';
