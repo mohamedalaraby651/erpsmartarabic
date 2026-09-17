@@ -568,7 +568,6 @@ const InvoicesPage = () => {
             <CardContent>{renderTableView()}</CardContent>
           </Card>
         </>
-      )}
 
       <InvoiceFormDialog open={list.dialogOpen} onOpenChange={(open) => { list.setDialogOpen(open); if (!open) list.setPrefillCustomerId(undefined); }} invoice={list.selectedInvoice} prefillCustomerId={list.prefillCustomerId} />
       <PaymentFormDialog
