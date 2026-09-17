@@ -170,6 +170,19 @@ const CustomersPage = () => {
   // Bulk selection
   const bulk = useBulkSelection(allCustomers);
 
+  // OPA-CUST-002: never carry a selection across a filter/search/sort change —
+  // bulk actions must only ever target rows the user can currently see.
+  const clearSelection = bulk.clearSelection;
+  useEffect(() => {
+    clearSelection();
+  }, [
+    clearSelection,
+    filters.debouncedSearch, filters.typeFilter, filters.vipFilter,
+    filters.governorateFilter, filters.statusFilter, filters.categoryFilter,
+    filters.noCommDays, filters.inactiveDays,
+    sortConfig.key, sortConfig.direction, alertFilterType,
+  ]);
+
   const handleNavigateToCustomer = useCallback((customerId: string) => {
     storeCustomerNavIds(allCustomers.map(c => c.id));
     navigate(`/customers/${customerId}`);
@@ -238,7 +251,8 @@ const CustomersPage = () => {
     if (list.isLoading) return '';
     const parts: string[] = [];
     const sortLabel = sortLabelMap[sortConfig.key] || sortLabelMap.created_at;
-    const dirLabel = sortConfig.direction === 'desc' ? 'تنازلي' : 'تصاعدي';
+    // Default (no explicit direction) resolves to descending in the data layer.
+    const dirLabel = sortConfig.direction === 'asc' ? 'تصاعدي' : 'تنازلي';
     parts.push(`تم ترتيب القائمة حسب ${sortLabel} ${dirLabel}.`);
     if (filters.activeFiltersCount > 0 || filters.debouncedSearch) {
       parts.push(`تم تطبيق ${filters.activeFiltersCount} فلتر، النتائج: ${filteredCount} عميل.`);

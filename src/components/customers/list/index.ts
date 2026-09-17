@@ -1,4 +1,3 @@
-export { CustomerListRow } from './CustomerListRow';
 export { default as CustomerListCard } from './CustomerListCard';
 export { CustomerListSkeleton } from './CustomerListSkeleton';
 export { CustomerMobileView } from './CustomerMobileView';

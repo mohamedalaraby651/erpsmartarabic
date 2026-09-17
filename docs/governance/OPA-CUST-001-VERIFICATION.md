@@ -43,3 +43,24 @@ No certification, no human acceptance. Human Gate remains open.
 
 ## Not claimed
 No certification, no human acceptance.
+
+## Batch 3 verification (OPA-CUST-002, executed 2026-09-17 02:55–03:05 UTC)
+| Check | Result |
+|---|---|
+| `npx tsgo --noEmit -p tsconfig.app.json` | clean |
+| `npx vitest run src/` | 1634 passed / 5 skipped / 0 failed (161 files) |
+| `npx vite build` | success in 19.57s |
+| `npx eslint` (4 changed files) | 0 errors, 11 pre-existing warnings |
+
+### Runtime proof (Playwright, authenticated)
+- Before fix: 390px → widen to 964px produced 12 rows, "15 عميل — معروض 12",
+  "تم عرض جميع النتائج (15→12)"
+- After fix: same sequence produces 15 rows, no "معروض" mismatch,
+  "تم عرض جميع النتائج (15)", and returning to 390px re-renders cleanly
+- Live region now announces "تم ترتيب القائمة حسب تاريخ الإنشاء تنازلي" (matches data)
+- Data check: `select count(*) from customers` = 15 (14 active / 1 inactive / 9 debtors /
+  7 VIP / 7 companies / 8 individuals) — stats chips match exactly
+- No new console errors (only pre-existing CSP meta notice and React ref warnings)
+
+## Not claimed
+No certification, no human acceptance.
