@@ -151,7 +151,7 @@ export function useInvoicesList() {
       query = applyColumnFilters(query, columnFilters.filters, INVOICE_FILTER_COLUMNS);
       const { data, error } = await query;
       if (error) throw error;
-      const ids = ((data || []) as Array<{ id: string }>).map((r) => r.id);
+      const ids = ((data || []) as unknown as Array<{ id: string }>).map((r) => r.id);
       setSelectedIds(new Set(ids));
       if (ids.length === 500) {
         toast({ title: 'تم تحديد أول 500 فاتورة فقط', description: 'استخدم البحث لتضييق النتائج', variant: 'default' });
