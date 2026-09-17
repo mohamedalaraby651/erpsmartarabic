@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,9 @@ import { ShortcutsHelp } from "@/components/shared/ShortcutsHelp";
 import { InvoiceQuickView } from "@/components/invoices/InvoiceQuickView";
 import type { Database } from "@/integrations/supabase/types";
 
-const SUMMARY_COLLAPSE_KEY = 'invoices:summary-strip';
+// Legacy standalone key from the ungated M1 execution; cleaned up on mount so
+// presentation preferences live only in the approved table-layout contract.
+const LEGACY_SUMMARY_KEY = 'invoices:summary-strip';
 
 const SHORTCUTS = [
   { keys: '/', description: 'الانتقال إلى حقل البحث' },
@@ -101,7 +104,7 @@ const InvoicesPage = () => {
   // summary collapse). Presentation preferences only — no business filters.
   const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
   const summaryOpen = !layout.summaryCollapsed;
-  const setSummaryOpen = layout.setSummaryCollapsed;
+  
 
   const shortcutHandlers = useMemo(() => ({
     onFocusSearch: () => searchRef.current?.focus(),
@@ -423,7 +426,7 @@ const InvoicesPage = () => {
             <div className="mb-2 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => setSummaryOpen(summaryOpen)}
+                onClick={() => layout.setSummaryCollapsed(summaryOpen)}
                 aria-expanded={summaryOpen}
                 className="flex items-center gap-2 rounded-md px-1 py-1 text-sm font-medium hover:text-primary"
               >
