@@ -3,6 +3,7 @@ import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar,
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
+import { HighlightText } from '@/components/shared/HighlightText';
 import { cn } from '@/lib/utils';
 import { vipColors, vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';
@@ -31,6 +32,8 @@ interface CustomerListCardProps {
   selectionMode?: boolean;
   alertCount?: number;
   hasErrorAlert?: boolean;
+  /** Visual-only highlight of the active search term (no query semantics). */
+  searchQuery?: string;
 }
 
 const vipBorderAccent: Record<string, string> = {
@@ -65,6 +68,7 @@ const CustomerListCardInner = ({
   selectionMode,
   alertCount,
   hasErrorAlert,
+  searchQuery,
 }: CustomerListCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -301,7 +305,9 @@ const CustomerListCardInner = ({
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-sm truncate">{customer.name}</h3>
+                  <h3 className="font-bold text-sm truncate">
+                    <HighlightText text={customer.name} query={searchQuery} />
+                  </h3>
                   <span
                     className={cn(
                       'h-2 w-2 rounded-full shrink-0',

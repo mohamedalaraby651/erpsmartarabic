@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUpDown, Loader2, Trash2, Crown, X } from "lucide-react";
@@ -112,6 +113,13 @@ const CustomersPage = () => {
   }, [filters]);
 
   const handleQuickFilter = useCallback((filterId: string | null) => {
+    // Quick filters replace the manual status/VIP/type filters — make that visible
+    // instead of resetting the user's own filters silently.
+    const hadManualFilters =
+      filters.statusFilter !== 'all' || filters.vipFilter !== 'all' || filters.typeFilter !== 'all';
+    if (filterId && hadManualFilters) {
+      toast.info('الفلتر السريع استبدل فلاتر الحالة والنوع وVIP اليدوية');
+    }
     setQuickFilter(filterId);
     resetAllQuickFilters();
     if (filterId === 'active') filters.setStatusFilter('active');
@@ -354,10 +362,17 @@ const CustomersPage = () => {
             isFetchingNextPage={isFetchingNextPage}
             onLoadMore={handleLoadMore}
             sortKey={sortConfig.key || 'created_at'}
-            onSortChange={(key) => setSortConfig({ key, direction: 'asc' })}
+            onSortChange={(key) =>
+              setSortConfig(
+                sortConfig.key === key && sortConfig.direction === 'asc'
+                  ? { key, direction: 'desc' }
+                  : { key, direction: 'asc' },
+              )
+            }
             alertCountByCustomer={alertCountByCustomer}
             errorCustomerIds={errorCustomerIds}
             hasActiveSearch={!!filters.debouncedSearch}
+            searchQuery={filters.debouncedSearch}
             activeQuickFilter={quickFilter}
             onQuickFilter={handleQuickFilter}
             selectedIds={bulk.selectedIds}

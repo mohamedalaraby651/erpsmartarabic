@@ -55,3 +55,29 @@ None. No new UI→Supabase access, no business/financial logic in UI, no schema/
 - Customer 360 improvements deferred to a follow-up batch.
 - Column order/visibility remains device-local (localStorage), by design.
 - Keyboard row-to-row arrow navigation not added in this batch.
+
+---
+
+## Addendum — Behavioral corrections batch (same authorization)
+
+**Changed files (this addendum):**
+- `src/pages/customers/CustomersPage.tsx` — quick filter now announces that it replaces manual status/VIP/type filters (`toast.info`) instead of resetting them silently; mobile sort chips toggle asc/desc instead of always resetting to asc; `searchQuery` passed to the mobile view.
+- `src/components/customers/list/CustomerMobileView.tsx` — new `searchQuery` prop forwarded to cards.
+- `src/components/customers/list/CustomerListCard.tsx` — visual-only `HighlightText` on the customer name (parity with desktop table).
+- `src/integrations/supabase/previewAuthStorage.ts` — TS7011 build fix (async `setItem`/`removeItem`).
+- `.lovable/plan.md` — corrected from CANDIDATE/NOT AUTHORIZED to EXECUTED status.
+
+**Customer 360:** not rebuilt. Discovery confirmed it already provides `CustomerHeroHeader`, `CustomerFinancialSummary` (totals, outstanding, credit limit, DSO/CLV computed outside the UI) and 17 lazy tabs. Per the contract ("do not rebuild what exists"), no mutation was applied there.
+
+**Verification actually run (this addendum):**
+- `npx tsgo --noEmit -p tsconfig.app.json` → clean.
+- `npx vitest run src/` → 161 files passed, 1634 tests passed, 5 skipped, 0 failed.
+- `npx vite build` → built in 18.94s, 0 errors (pre-existing chunk-size warnings only).
+- `npx eslint` on the 5 touched customer files → 0 errors, 19 pre-existing warnings.
+- Runtime (Playwright): 1280px → 15 rows, search "م" → 17 highlights, 0 horizontal overflow; 360px → 15 cards, search narrows to 6, 0 horizontal overflow; no new console errors.
+
+**Known limitations:** mobile name highlight only renders when the match is in the name (phone/email/tax matches are not highlighted); alert-type filtering still applies to loaded pages only (server-side change = STOP CONDITION); `CustomerListRow` remains unused on desktop pending a separate cleanup batch.
+
+**Baseline commit at execution time:** `38d7e9d8c5b474fe06fc36d73f46d3039cc3f58e` (working-tree changes are committed by the platform after this turn).
+
+Status: IMPLEMENTED / VERIFIED — NOT HUMAN ACCEPTED — NOT CERTIFIED.
