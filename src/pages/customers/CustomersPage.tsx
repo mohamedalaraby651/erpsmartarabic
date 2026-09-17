@@ -32,6 +32,7 @@ import { CustomerDialogManager, type DialogManagerHandle } from "@/components/cu
 import { CustomerPageHeader } from "@/components/customers/list/CustomerPageHeader";
 import { CustomerFilterDrawer } from "@/components/customers/filters/CustomerFilterDrawer";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
+import { CustomerErrorState } from "@/components/customers/list/CustomerErrorState";
 import { CustomerQuickAddDialog } from "@/components/customers/dialogs/CustomerQuickAddDialog";
 import { CustomerExportDialog } from "@/components/customers/dialogs/CustomerExportDialog";
 import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedViews";
