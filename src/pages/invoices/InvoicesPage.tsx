@@ -97,17 +97,11 @@ const InvoicesPage = () => {
   const [quickInvoice, setQuickInvoice] = useState<InvoiceWithCustomer | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  // Summary strip collapse state is a presentation preference, kept per browser.
-  const [summaryOpen, setSummaryOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem(SUMMARY_COLLAPSE_KEY) !== 'collapsed';
-  });
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(SUMMARY_COLLAPSE_KEY, summaryOpen ? 'expanded' : 'collapsed');
-  }, [summaryOpen]);
-  // Per-user table presentation (widths, density, visible columns, height).
+  // Per-user table presentation (widths, density, visible columns, height,
+  // summary collapse). Presentation preferences only — no business filters.
   const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
+  const summaryOpen = !layout.summaryCollapsed;
+  const setSummaryOpen = layout.setSummaryCollapsed;
 
   const shortcutHandlers = useMemo(() => ({
     onFocusSearch: () => searchRef.current?.focus(),
