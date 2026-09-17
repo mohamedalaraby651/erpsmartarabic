@@ -24,7 +24,6 @@ import { CustomerAlertsBanner } from "@/components/customers/alerts/CustomerAler
 import { CustomerAlertsMobileTrigger } from "@/components/customers/alerts/CustomerAlertsMobileTrigger";
 
 // Sub-components
-import { CustomerListRow } from "@/components/customers/list/CustomerListRow";
 import { CustomerMobileView } from "@/components/customers/list/CustomerMobileView";
 import { CustomerStatsBar } from "@/components/customers/list/CustomerStatsBar";
 import { CustomerFiltersBar } from "@/components/customers/filters/CustomerFiltersBar";
