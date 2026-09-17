@@ -37,18 +37,22 @@ export function useInfiniteCustomers({
     }
   }, [hasNextPage, isFetchingNextPage, isMobile]);
 
-  // Reset on filter/sort change
+  // Reset on filter/sort change — and on page-size / breakpoint change, because
+  // accumulated pages were fetched with the previous page size (OPA-CUST-002).
   useEffect(() => {
     setMobilePage(1);
     setDesktopPage(1);
     setMobilePages([]);
     setDesktopPages([]);
+    setIsFetchingNextPage(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, resetDeps);
+  }, [...resetDeps, pageSize, isMobile]);
 
   /** Call after list query returns to accumulate page data */
   const feedPage = useCallback((customers: Customer[], count: number) => {
     setTotalCount(count);
+    // Always clear the in-flight flag, including for an empty page (OPA-CUST-002).
+    setIsFetchingNextPage(false);
     if (customers.length > 0) {
       if (isMobile) {
         setMobilePages(prev => {
