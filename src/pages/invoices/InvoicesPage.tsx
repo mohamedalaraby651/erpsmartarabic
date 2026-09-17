@@ -356,7 +356,8 @@ const InvoicesPage = () => {
         </Badge>
       </div>
 
-      {isMobile ? renderMobileView() : (
+      {/* Unified layout: identical structure on mobile and desktop. */}
+      <>
         <>
           <section aria-label={canViewFinancialSummary ? 'الملخص المالي للفواتير' : 'ملخص متابعة الفواتير'}>
             <div className="mb-2 flex items-center justify-between gap-3">
