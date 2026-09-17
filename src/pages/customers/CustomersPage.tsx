@@ -432,7 +432,13 @@ const CustomersPage = () => {
             </div>
           </div>
 
-          {list.isLoading && allCustomers.length === 0 ? (
+          {list.isError && allCustomers.length === 0 ? (
+            <CustomerErrorState
+              message={list.error?.message}
+              onRetry={() => { void list.refetch(); }}
+              isRetrying={list.isFetching}
+            />
+          ) : list.isLoading && allCustomers.length === 0 ? (
             <CustomerListSkeleton />
           ) : allCustomers.length === 0 ? (
             <CustomerEmptyState
