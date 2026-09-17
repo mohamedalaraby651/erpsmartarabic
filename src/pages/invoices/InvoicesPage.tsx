@@ -104,18 +104,23 @@ const InvoicesPage = () => {
   // summary collapse). Presentation preferences only — no business filters.
   const layout = useTableLayout('invoices', INVOICE_COLUMN_KEYS);
   const summaryOpen = !layout.summaryCollapsed;
-  
 
+  useEffect(() => {
+    try { window.localStorage.removeItem(LEGACY_SUMMARY_KEY); } catch { /* storage unavailable */ }
+  }, []);
+
+  // Escape closes the highest-priority transient UI first, then clears selection.
   const shortcutHandlers = useMemo(() => ({
     onFocusSearch: () => searchRef.current?.focus(),
     onNew: () => list.handleAdd(),
     onRefresh: () => list.handleRefresh(),
     onEscape: () => {
+      if (helpOpen) { setHelpOpen(false); return; }
       if (quickInvoice) { setQuickInvoice(null); return; }
       if (list.selectedIds.size > 0) list.clearSelection();
     },
     onToggleHelp: () => setHelpOpen((prev) => !prev),
-  }), [list, quickInvoice]);
+  }), [list, quickInvoice, helpOpen]);
   useListShortcuts(shortcutHandlers, !isMobile);
 
   // Invoices that match the current selection — used by the preview dialog.
