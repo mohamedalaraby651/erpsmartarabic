@@ -34,3 +34,19 @@ Status: IMPLEMENTED / VERIFIED — NOT HUMAN ACCEPTED — NOT CERTIFIED
 ## Removed
 - None. `CustomerListRow.tsx` is now redundant on desktop but deliberately retained for a separate
   cleanup batch (out of scope here).
+
+## Batch 2 (same authorization, 2026-09-17)
+### Added
+- `src/components/customers/list/CustomerErrorState.tsx` — explicit failure state for the customers
+  list (message + retry). Presentation only; no data access, no retry policy of its own.
+
+### Changed
+- `src/hooks/customers/useCustomerList.ts` — exposes `isError`, `error`, `isFetching` from the
+  existing query (no new query service, no contract change)
+- `src/pages/customers/CustomersPage.tsx` —
+  - desktop and mobile now render an error state with retry instead of an empty state on fetch failure
+  - alert-type filtering shows an explicit notice + "إلغاء التصفية" action, stating it applies to the
+    pages already loaded (the full-dataset variant remains a STOP CONDITION)
+  - removed the now-unused `CustomerListRow` import (file itself retained)
+- `src/pages/customers/CustomerDetailsPage.tsx` — Customer 360 tab strip sticky while scrolling
+- `src/integrations/supabase/previewAuthStorage.ts` — build fix only (TS7011)

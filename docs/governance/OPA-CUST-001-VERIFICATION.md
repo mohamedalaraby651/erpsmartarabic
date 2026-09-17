@@ -25,3 +25,21 @@ Date: 2026-09-17 (UTC)
 
 ## Not claimed
 No certification, no human acceptance. Human Gate remains open.
+
+## Batch 2 verification (executed 2026-09-17 02:41–02:45 UTC)
+| Check | Command | Result |
+|---|---|---|
+| Typecheck | `npx tsgo --noEmit -p tsconfig.app.json` | clean, exit 0 |
+| Tests | `npx vitest run src/` | 161 files passed / 1 skipped; 1634 passed / 5 skipped / 0 failed |
+| Build | `npx vite build` | success in 20.21s |
+| Lint (scoped) | `npx eslint CustomersPage.tsx CustomerErrorState.tsx useCustomerList.ts` | 0 errors, 11 warnings (all pre-existing categories: unused legacy imports, aria-label literal rule, exhaustive-deps) |
+
+### Runtime proof (Playwright, authenticated)
+- 1280px: 15 semantic rows, horizontal overflow 0
+- Failure path: aborting `**/rest/v1/customers*` renders exactly one `role="alert"` error state
+  reading "تعذّر تحميل قائمة العملاء …" with a retry control (previously an empty state was shown)
+- 360px: customer cards render, horizontal overflow 0, screenshot captured
+- Console errors (excluding pre-existing React ref warnings / CSP meta notice / aborted requests): none
+
+## Not claimed
+No certification, no human acceptance.
