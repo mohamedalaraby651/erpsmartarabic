@@ -423,7 +423,7 @@ const InvoicesPage = () => {
             <div className="mb-2 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => setSummaryOpen((prev) => !prev)}
+                onClick={() => setSummaryOpen(summaryOpen)}
                 aria-expanded={summaryOpen}
                 className="flex items-center gap-2 rounded-md px-1 py-1 text-sm font-medium hover:text-primary"
               >
