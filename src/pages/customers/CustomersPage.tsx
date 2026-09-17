@@ -340,6 +340,22 @@ const CustomersPage = () => {
           />
         </div>
       )}
+      {/* Alert-type filter is applied to the pages already loaded (see STOP CONDITION). */}
+      {alertFilterType && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
+          <span className="text-xs text-muted-foreground">
+            تصفية حسب نوع التنبيه — تُطبَّق على النتائج المحمّلة حاليًا
+          </span>
+          <Button
+            variant="ghost" size="sm" className="h-8 text-xs"
+            onClick={() => setAlertFilterType(null)}
+          >
+            <X className="h-3.5 w-3.5 ml-1" aria-hidden />
+            إلغاء التصفية
+          </Button>
+        </div>
+      )}
+
       {isMobile ? (
         <div className="pb-fab-safe">
           <CustomerMobileView
