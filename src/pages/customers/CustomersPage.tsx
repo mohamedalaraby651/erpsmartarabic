@@ -41,6 +41,18 @@ import { LiveRegion } from "@/components/shared/LiveRegion";
 import { useCustomerLayoutPrefs } from "@/hooks/customers/useCustomerLayoutPrefs";
 import { CustomerLayoutCustomizer } from "@/components/customers/list/CustomerLayoutCustomizer";
 import { CollapsedSummaryBar } from "@/components/customers/list/CollapsedSummaryBar";
+import { CustomerTable } from "@/components/customers/list/CustomerTable";
+import { useListShortcuts } from "@/hooks/useListShortcuts";
+import { ShortcutsHelp } from "@/components/shared/ShortcutsHelp";
+
+/** Presentation-only shortcut reference for the customers workspace. */
+const CUSTOMER_SHORTCUTS = [
+  { keys: '/', description: 'الانتقال إلى البحث' },
+  { keys: 'N', description: 'عميل جديد' },
+  { keys: 'R', description: 'تحديث القائمة' },
+  { keys: 'Esc', description: 'إغلاق النوافذ أو إلغاء التحديد' },
+  { keys: '؟', description: 'عرض الاختصارات' },
+];
 
 const CustomersPage = () => {
   const navigate = useNavigate();
@@ -74,7 +86,13 @@ const CustomersPage = () => {
   const canDelete = userRole === 'admin';
 
   const [sortConfig, setSortConfig] = usePersistentState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
+  /** Sort picker: selecting a field always starts from ascending order. */
   const requestSort = useCallback((key: string) => {
+    setSortConfig({ key, direction: 'asc' as const });
+  }, [setSortConfig]);
+
+  /** Column header: asc -> desc -> default. */
+  const handleHeaderSort = useCallback((key: string) => {
     setSortConfig((() => {
       const current = sortConfig;
       if (current.key === key) {
@@ -179,6 +197,28 @@ const CustomersPage = () => {
   const filteredCount = list.totalCount;
   const totalStatsCount = list.stats.total;
 
+  // Keyboard ownership (OPA-CUST-001 / C2) — presentation only.
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const focusSearch = useCallback(() => {
+    const input =
+      document.querySelector<HTMLInputElement>('#customers-search-region input') ??
+      document.querySelector<HTMLInputElement>('[data-customers-search] input');
+    input?.focus();
+    input?.select();
+  }, []);
+  const handleEscape = useCallback(() => {
+    if (shortcutsOpen) { setShortcutsOpen(false); return; }
+    if (filters.filterDrawerOpen) return; // the drawer closes itself first
+    if (bulk.hasSelection) bulk.clearSelection();
+  }, [shortcutsOpen, filters.filterDrawerOpen, bulk]);
+  useListShortcuts({
+    onFocusSearch: focusSearch,
+    onNew: canEdit ? handleAdd : undefined,
+    onRefresh: () => { void list.refetch(); },
+    onEscape: handleEscape,
+    onToggleHelp: () => setShortcutsOpen(o => !o),
+  });
+
   // Announce sort + filter changes for screen readers
   const sortLabelMap: Record<string, string> = {
     created_at: 'تاريخ الإنشاء',
@@ -214,8 +254,8 @@ const CustomersPage = () => {
         onExportAll={() => setExportDialogOpen(true)}
         totalCount={totalStatsCount}
         filteredCount={filteredCount !== totalStatsCount ? filteredCount : undefined}
-        searchQuery={isMobile ? filters.searchQuery : undefined}
-        onSearchChange={isMobile ? filters.setSearchQuery : undefined}
+        searchQuery={filters.searchQuery}
+        onSearchChange={filters.setSearchQuery}
         mobileTitleSlot={isMobile && totalAlerts > 0 ? (
           <CustomerAlertsMobileTrigger
             alertsByType={alertsByType}
@@ -278,18 +318,20 @@ const CustomersPage = () => {
       )}
 
       {(isMobile ? layout.isMobileVisible('filters') : layout.isDesktopVisible('filters')) && (
-        <CustomerFiltersBar
-          searchQuery={filters.searchQuery} onSearchChange={filters.setSearchQuery}
-          typeFilter={filters.typeFilter} onTypeChange={(v) => { filters.setTypeFilter(v); setQuickFilter(null); }}
-          vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
-          governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
-          statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
-          categoryFilter={filters.categoryFilter} onCategoryChange={(v) => { filters.setCategoryFilter(v); setQuickFilter(null); }}
-          governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
-          isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
-          onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
-          noCommDays={filters.noCommDays} inactiveDays={filters.inactiveDays}
-        />
+        <div id="customers-search-region" className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 py-2 -mx-1 px-1">
+          <CustomerFiltersBar
+            searchQuery={filters.searchQuery} onSearchChange={filters.setSearchQuery}
+            typeFilter={filters.typeFilter} onTypeChange={(v) => { filters.setTypeFilter(v); setQuickFilter(null); }}
+            vipFilter={filters.vipFilter} onVipChange={(v) => { filters.setVipFilter(v); setQuickFilter(null); }}
+            governorateFilter={filters.governorateFilter} onGovernorateChange={(v) => { filters.setGovernorateFilter(v); setQuickFilter(null); }}
+            statusFilter={filters.statusFilter} onStatusChange={(v) => { filters.setStatusFilter(v); setQuickFilter(null); }}
+            categoryFilter={filters.categoryFilter} onCategoryChange={(v) => { filters.setCategoryFilter(v); setQuickFilter(null); }}
+            governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
+            isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
+            onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
+            noCommDays={filters.noCommDays} inactiveDays={filters.inactiveDays}
+          />
+        </div>
       )}
       {isMobile ? (
         <div className="pb-fab-safe">
@@ -327,20 +369,20 @@ const CustomersPage = () => {
         </div>
       ) : (
         <div>
-          {/* Toolbar: sort + saved views + column settings */}
-          <div className="flex items-center justify-between mb-2">
+          {/* Toolbar: result count + saved views + column controls + sort */}
+          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">
+              {list.totalCount} عميل
+              {allCustomers.length !== list.totalCount ? ` — معروض ${allCustomers.length}` : ''}
+            </span>
             <div className="flex items-center gap-2">
-              {allCustomers.length > 0 && (
-                <Checkbox
-                  checked={bulk.isAllSelected}
-                  onCheckedChange={(checked) => bulk.toggleSelectAll(!!checked)}
-                  aria-label="تحديد الكل"
-                  className="h-4 w-4"
-                />
-              )}
-              <span className="text-xs text-muted-foreground">{list.totalCount} عميل</span>
-            </div>
-            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost" size="sm" className="h-9 text-xs"
+                onClick={() => setShortcutsOpen(true)}
+                aria-label="عرض اختصارات لوحة المفاتيح"
+              >
+                اختصارات
+              </Button>
               <CustomerSavedViews
                 currentFilters={{
                   type: filters.typeFilter,
@@ -386,25 +428,28 @@ const CustomersPage = () => {
               onImport={() => dialogRef.current?.openImport()}
             />
           ) : (
-            <div className="space-y-0.5">
-              {allCustomers.map((customer) => (
-                <CustomerListRow
-                  key={customer.id}
-                  customer={customer}
-                  visibleColumns={visibleColumns}
-                  onNavigate={handleNavigateToCustomer}
-                  onEdit={canEdit ? handleEdit : undefined}
-                  onNewInvoice={handleNewInvoice}
-                  onNewPayment={handleNewPayment}
-                  onWhatsApp={handleWhatsApp}
-                  onRowHover={list.handleRowHover}
-                  onRowLeave={list.handleRowLeave}
-                  alertCount={alertCountByCustomer.get(customer.id)}
-                  hasErrorAlert={errorCustomerIds.has(customer.id)}
-                  isSelected={bulk.selectedIds.has(customer.id)}
-                  onToggleSelect={bulk.toggleSelect}
-                />
-              ))}
+            <div>
+              <CustomerTable
+                customers={allCustomers}
+                visibleColumns={visibleColumns}
+                searchQuery={filters.debouncedSearch}
+                sortKey={sortConfig.key}
+                sortDirection={sortConfig.direction}
+                onSort={handleHeaderSort}
+                selectedIds={bulk.selectedIds}
+                onToggleSelect={(id, checked) => bulk.toggleSelect(id, checked)}
+                isAllSelected={bulk.isAllSelected}
+                onToggleSelectAll={(checked) => bulk.toggleSelectAll(checked)}
+                onNavigate={handleNavigateToCustomer}
+                onEdit={canEdit ? handleEdit : undefined}
+                onNewInvoice={handleNewInvoice}
+                onNewPayment={handleNewPayment}
+                onWhatsApp={handleWhatsApp}
+                onRowHover={list.handleRowHover}
+                onRowLeave={list.handleRowLeave}
+                alertCountByCustomer={alertCountByCustomer}
+                errorCustomerIds={errorCustomerIds}
+              />
 
               {/* Infinite scroll sentinel */}
               <div ref={desktopSentinelRef} className="h-10 flex items-center justify-center">
@@ -441,6 +486,13 @@ const CustomersPage = () => {
           </Button>
         </div>
       )}
+
+      {/* Invariant: the bulk bar must never obscure a row or an action — reserve its space. */}
+      {bulk.hasSelection && <div aria-hidden className="h-24" />}
+
+      <ShortcutsHelp open={shortcutsOpen} onOpenChange={setShortcutsOpen} shortcuts={CUSTOMER_SHORTCUTS} />
+
+
 
       <CustomerFilterDrawer
         open={filters.filterDrawerOpen} onOpenChange={filters.setFilterDrawerOpen}

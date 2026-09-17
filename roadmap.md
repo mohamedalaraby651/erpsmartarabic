@@ -51,3 +51,9 @@
 - [x] `OPA-INV-UX-001` M4 قياس أولي: أول صفوف ~1.95s، استقرار البحث ~1.6s، 25 صفًا/صفحة — لا مبرر قياسي لـvirtualization؛ لا تعديل Query Contract
 - [x] `OPA-INV-UX-001` M5 إثبات عرض: صفر تمرير أفقي عند 360px و1280px، نفس السجل والإجراءات
 - [ ] `OPA-INV-UX-001` Human Gates لكل مرحلة (M1–M5) — IMPLEMENTED/VERIFIED، NOT ACCEPTED؛ قرار التعميم منفصل بعد قبول OPA-UI-003
+
+## OPA-CUST-001 — Customers Workspace (Track A)
+- Status: IMPLEMENTED / VERIFIED — NOT HUMAN ACCEPTED.
+- Evidence: `docs/governance/OPA-CUST-001-EXECUTION-RECORD.md`.
+- Scope executed: customers list workspace UI (semantic table, column controls, search reach, shortcuts, selection invariant).
+- Deferred (needs a separate authorization): Customer 360 header/summary rework, retiring `CustomerListRow`, quick-filter reset behaviour, alert filtering across unloaded pages.
