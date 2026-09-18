@@ -30,7 +30,7 @@ const SORTABLE: Record<string, string> = {
   created_at: 'created_at',
 };
 
-const NUMERIC_COLUMNS = new Set(['balance', 'credit_limit', 'purchases', 'payment_ratio']);
+const NUMERIC_COLUMNS = new Set(['balance', 'credit_limit', 'purchases']);
 
 const vipPillStyle: Record<string, string> = {
   silver: 'bg-muted text-muted-foreground',
@@ -97,9 +97,13 @@ function CustomerTableInner({
             />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm truncate">
+                <button
+                  type="button"
+                  onClick={() => onNavigate(customer.id)}
+                  className="max-w-full truncate bg-transparent p-0 text-start text-sm font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
                   <HighlightText text={customer.name} query={searchQuery} />
-                </span>
+                </button>
                 {alertCount > 0 && (
                   <span
                     className="inline-flex items-center justify-center min-w-[16px] h-4 rounded-full bg-destructive/10 text-destructive text-[10px] font-bold px-1"
@@ -157,18 +161,6 @@ function CustomerTableInner({
         return <span className="text-xs tabular-nums">{creditLimit > 0 ? creditLimit.toLocaleString() : '—'}</span>;
       case 'purchases':
         return <span className="text-xs tabular-nums">{Number(customer.total_purchases_cached || 0).toLocaleString()}</span>;
-      case 'payment_ratio': {
-        const tp = Number(customer.total_purchases_cached || 0);
-        const ratio = tp > 0 ? Math.round(((tp - balance) / tp) * 100) : 100;
-        return (
-          <span className={cn(
-            'text-xs tabular-nums',
-            ratio >= 80 ? 'text-emerald-600 dark:text-emerald-400'
-              : ratio >= 50 ? 'text-amber-600 dark:text-amber-400'
-                : 'text-destructive',
-          )}>{ratio}%</span>
-        );
-      }
       case 'last_activity':
         return (
           <span className="text-[11px] text-muted-foreground whitespace-nowrap">
@@ -250,7 +242,7 @@ function CustomerTableInner({
                 onMouseEnter={() => onRowHover?.(customer.id)}
                 onMouseLeave={() => onRowLeave?.()}
                 className={cn(
-                  'cursor-pointer group',
+                   'h-14 cursor-pointer group',
                   customer.is_active === false && 'opacity-70',
                   errorCustomerIds?.has(customer.id) && 'bg-destructive/5',
                 )}
@@ -268,27 +260,27 @@ function CustomerTableInner({
                   </TableCell>
                 ))}
                 <TableCell className="py-2">
-                  <div className="flex items-center justify-end gap-0.5 opacity-60 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                   <div className="flex items-center justify-end gap-0.5 opacity-80 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     {onNewInvoice && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`فاتورة جديدة لـ${customer.name}`}
+                       <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={`فاتورة جديدة لـ${customer.name}`}
                         onClick={() => onNewInvoice(customer.id)}>
                         <FileText className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     {onNewPayment && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`تسجيل دفعة لـ${customer.name}`}
+                       <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={`تسجيل دفعة لـ${customer.name}`}
                         onClick={() => onNewPayment(customer.id)}>
                         <CreditCard className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     {customer.phone && onWhatsApp && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`واتساب ${customer.name}`}
+                       <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={`واتساب ${customer.name}`}
                         onClick={() => onWhatsApp(customer.phone!)}>
                         <MessageCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       </Button>
                     )}
                     {onEdit && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`تعديل ${customer.name}`}
+                       <Button variant="ghost" size="icon" className="h-9 w-9" aria-label={`تعديل ${customer.name}`}
                         onClick={() => onEdit(customer)}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>

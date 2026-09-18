@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from 'react';
-import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle, MessageSquare } from 'lucide-react';
+import { Phone, MapPin, Eye, FileText, CreditCard, ChevronDown, Crown, Calendar, Bell, ArrowDownCircle, ArrowUpCircle, MinusCircle, MessageSquare, MoreVertical } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
@@ -49,12 +49,6 @@ const vipPillStyle: Record<string, string> = {
   platinum: 'bg-primary/15 text-primary',
 };
 
-function getCreditBarColor(usage: number): string {
-  if (usage < 50) return 'bg-success';
-  if (usage < 80) return 'bg-warning';
-  return 'bg-destructive';
-}
-
 const CustomerListCardInner = ({
   customer,
   onNavigate,
@@ -79,10 +73,8 @@ const CustomerListCardInner = ({
 
   const balance = Number(customer.current_balance || 0);
   const creditLimit = Number(customer.credit_limit || 0);
-  const creditUsage = creditLimit > 0 ? Math.min((balance / creditLimit) * 100, 100) : 0;
   const totalPurchases = Number(customer.total_purchases_cached || 0);
   const invoiceCount = Number(customer.invoice_count_cached || 0);
-  const paymentRatio = totalPurchases > 0 ? Math.round(((totalPurchases - balance) / totalPurchases) * 100) : 100;
   const isActive = customer.is_active !== false;
   const balanceColor = getBalanceColor(balance, creditLimit);
 
@@ -241,35 +233,38 @@ const CustomerListCardInner = ({
     >
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <button
+          <Button
             ref={menuTriggerRef}
+            type="button"
+            variant="ghost"
+            size="icon"
             id={`${menuContentId}-trigger`}
             aria-controls={menuOpen ? menuContentId : undefined}
             aria-expanded={menuOpen}
             aria-haspopup="menu"
-            className="sr-only"
-            tabIndex={-1}
+            className="absolute end-1.5 top-1.5 z-20 h-11 w-11"
+            aria-label={`إجراءات ${customer.name}`}
           >
-            menu
-          </button>
+            <MoreVertical className="h-4 w-4" />
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent id={menuContentId} align="start" className="min-w-[180px]">
           <DropdownMenuItem onClick={() => onNavigate(customer.id)}>
-            <Eye className="h-4 w-4 ml-2" /> عرض التفاصيل
+            <Eye className="h-4 w-4 me-2" /> عرض التفاصيل
           </DropdownMenuItem>
           {onEdit && (
             <DropdownMenuItem onClick={() => onEdit(customer)}>
-              <FileText className="h-4 w-4 ml-2" /> تعديل
+              <FileText className="h-4 w-4 me-2" /> تعديل
             </DropdownMenuItem>
           )}
           {onNewInvoice && (
             <DropdownMenuItem onClick={() => onNewInvoice(customer.id)}>
-              <FileText className="h-4 w-4 ml-2" /> فاتورة جديدة
+              <FileText className="h-4 w-4 me-2" /> فاتورة جديدة
             </DropdownMenuItem>
           )}
           {onNewPayment && (
             <DropdownMenuItem onClick={() => onNewPayment(customer.id)}>
-              <CreditCard className="h-4 w-4 ml-2" /> دفعة جديدة
+              <CreditCard className="h-4 w-4 me-2" /> دفعة جديدة
             </DropdownMenuItem>
           )}
           {onDelete && (
@@ -281,7 +276,7 @@ const CustomerListCardInner = ({
       </DropdownMenu>
 
       <div
-        className="p-3.5 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+         className="p-3.5 pe-12 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
         {...longPressHandlers}
         role="button"
         tabIndex={0}
@@ -308,13 +303,14 @@ const CustomerListCardInner = ({
                   <h3 className="font-bold text-sm truncate">
                     <HighlightText text={customer.name} query={searchQuery} />
                   </h3>
-                  <span
+                   <span
                     className={cn(
-                      'h-2 w-2 rounded-full shrink-0',
-                      isActive ? 'bg-success' : 'bg-muted-foreground/40',
+                       'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                       isActive ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground',
                     )}
-                    aria-label={isActive ? 'نشط' : 'غير نشط'}
-                  />
+                   >
+                     {isActive ? 'نشط' : 'غير نشط'}
+                   </span>
                   {!hasErrorAlert && alertCount && alertCount > 0 && (
                     <span
                       className="inline-flex items-center gap-0.5 h-4 px-1.5 text-[10px] font-bold rounded-full bg-destructive/15 text-destructive shrink-0"
@@ -342,7 +338,7 @@ const CustomerListCardInner = ({
                 </div>
               </div>
               {/* Balance with semantic label */}
-              <div className="text-left shrink-0">
+               <div className="text-start shrink-0">
                 <div className="flex items-center gap-1 justify-end">
                   {balance > 0 ? (
                     <ArrowUpCircle className="h-3 w-3 text-destructive" aria-hidden />
@@ -380,24 +376,6 @@ const CustomerListCardInner = ({
           )} />
         </div>
 
-        {/* Credit usage bar with explicit label */}
-        {creditLimit > 0 && (
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
-              <span>استخدام الائتمان</span>
-              <span className="tabular-nums">
-                {Math.round(creditUsage)}% من {creditLimit.toLocaleString()} ج.م
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <div
-                className={cn('h-full rounded-full transition-all duration-500', getCreditBarColor(creditUsage))}
-                style={{ width: `${creditUsage}%` }}
-              />
-            </div>
-          </div>
-        )}
-
         {/* Expanded content */}
         <div
           id={expandedPanelId}
@@ -411,7 +389,7 @@ const CustomerListCardInner = ({
         >
           <div className="border-t border-border/40 pt-3 animate-fade-in space-y-3">
             {/* KPIs */}
-            <div className="grid grid-cols-3 gap-2">
+             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-xl bg-gradient-to-br from-destructive/5 to-destructive/10 dark:from-destructive/10 dark:to-destructive/20 p-3 text-center">
                 <p className={cn('text-base font-bold tabular-nums', balanceColor)}>{balance.toLocaleString()}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">مستحق</p>
@@ -419,15 +397,6 @@ const CustomerListCardInner = ({
               <div className="rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 p-3 text-center">
                 <p className="text-base font-bold tabular-nums">{totalPurchases.toLocaleString()}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">مشتريات</p>
-              </div>
-              <div className="rounded-xl bg-gradient-to-br from-success/5 to-success/10 p-3 text-center">
-                <p className={cn(
-                  'text-base font-bold tabular-nums',
-                  paymentRatio >= 80 ? 'text-success' : paymentRatio >= 50 ? 'text-warning' : 'text-destructive'
-                )}>
-                  {paymentRatio}%
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">نسبة السداد</p>
               </div>
             </div>
 

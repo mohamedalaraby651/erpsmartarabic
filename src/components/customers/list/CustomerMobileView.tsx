@@ -5,6 +5,7 @@ import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
 import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { tooltips, regions } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
 
@@ -94,21 +95,23 @@ export const CustomerMobileView = memo(function CustomerMobileView({
           ].map(({ key, label, Icon }) => {
             const active = (sortKey || 'created_at') === key;
             return (
-              <button
+              <Button
                 key={key}
                 type="button"
+                variant={active ? "default" : "outline"}
+                size="sm"
                 onClick={() => onSortChange(key)}
                 aria-pressed={active}
                 className={cn(
-                  'shrink-0 inline-flex items-center gap-1.5 min-h-11 px-3 rounded-full text-xs font-medium border transition-all',
+                  'shrink-0 gap-1.5 min-h-11 rounded-full text-xs font-medium',
                   active
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                    : 'bg-card text-muted-foreground border-border active:scale-95',
+                    ? 'shadow-sm'
+                    : 'text-muted-foreground active:scale-95',
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
-              </button>
+              </Button>
             );
           })}
           <span className="ms-auto text-[11px] text-muted-foreground tabular-nums shrink-0 self-center pe-1" aria-live="polite">
