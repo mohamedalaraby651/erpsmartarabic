@@ -58,26 +58,21 @@ interface CustomerColumnSettingsProps {
 
 export function CustomerColumnSettings({ visibleColumns, onChange }: CustomerColumnSettingsProps) {
   const toggleColumn = useCallback((key: string) => {
-    onChange((() => {
-      const prev = visibleColumns;
-      if (prev.includes(key)) {
-        if (prev.length <= 2) return prev;
-        return prev.filter(k => k !== key);
-      }
-      return [...prev, key];
-    })());
+    if (visibleColumns.includes(key)) {
+      if (visibleColumns.length <= 2) return;
+      onChange(visibleColumns.filter(k => k !== key));
+      return;
+    }
+    onChange([...visibleColumns, key]);
   }, [onChange, visibleColumns]);
 
   const move = useCallback((key: string, delta: -1 | 1) => {
-    onChange((() => {
-      const prev = visibleColumns;
-      const index = prev.indexOf(key);
-      const target = index + delta;
-      if (index === -1 || target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    })());
+    const index = visibleColumns.indexOf(key);
+    const target = index + delta;
+    if (index === -1 || target < 0 || target >= visibleColumns.length) return;
+    const next = [...visibleColumns];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
   }, [onChange, visibleColumns]);
 
   const reset = useCallback(() => onChange(defaultColumns()), [onChange]);

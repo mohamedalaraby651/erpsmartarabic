@@ -415,7 +415,6 @@ const CustomersPage = () => {
             onQuickFilter={handleQuickFilter}
             selectedIds={bulk.selectedIds}
             onToggleSelect={bulk.toggleSelect}
-            showSummary={layout.isMobileVisible('summary')}
             showSort={layout.isMobileVisible('sort')}
           />
           {/* FAB removed — global FABMenu (AppLayout) handles "عميل جديد" via pageContext='customers' */}
@@ -455,10 +454,10 @@ const CustomersPage = () => {
                   setQuickFilter(null);
                 }}
               />
-              <CustomerColumnSettings onChange={setVisibleColumns} />
+              <CustomerColumnSettings visibleColumns={visibleColumns} onChange={setVisibleColumns} />
               <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
                 <SelectTrigger className="w-40 h-9 text-xs">
-                  <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
+                  <ArrowUpDown className="h-3.5 w-3.5 me-1" />
                   <SelectValue placeholder="ترتيب حسب" />
                 </SelectTrigger>
                 <SelectContent>
