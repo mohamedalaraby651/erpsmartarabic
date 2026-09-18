@@ -59,12 +59,12 @@
 - Deferred (needs a separate authorization): Customer 360 header/summary rework, retiring `CustomerListRow`, quick-filter reset behaviour, alert filtering across unloaded pages.
 
 ## OPA-CUST-UX-002 — Customers UX remediation
-- [ ] M1 Correct customer stats mapping and remove presentation-derived financial indicators
-- [ ] M2 Simplify hierarchy, spacing, control sizing, RTL, and tablet behavior
-- [ ] M3 Improve table navigation, row actions, and bulk-selection scope
-- [ ] M4 Unify search/filter/column state and debounce URL search sync
-- [ ] M5 Align mobile cards, status, actions, and motion
-- [ ] M6 Improve Customer 360 presentation and dialog accessibility
-- [ ] M7 Verify types, tests, build, responsive runtime, and record evidence
+- [x] M1 Correct customer stats mapping and remove presentation-derived financial indicators — IMPLEMENTED; live `farms=0` reflects the current source classification, not a UI fallback
+- [x] M2 Simplify hierarchy, spacing, control sizing, RTL, and tablet behavior — IMPLEMENTED
+- [x] M3 Improve table navigation, row actions, and bulk-selection scope — IMPLEMENTED
+- [x] M4 Unify search/filter/column state and debounce URL search sync — IMPLEMENTED
+- [x] M5 Align mobile cards, status, actions, and motion — IMPLEMENTED
+- [x] M6 Improve Customer 360 presentation and dialog accessibility — IMPLEMENTED
+- [ ] M7 Verification — typecheck PASS; 1634 tests PASS / 5 skipped; scoped lint 0 errors; live 360/964/1280 PASS with no page overflow. Full build remains blocked by the pre-existing generated `previewAuthStorage.ts` TS7011 error; NOT HUMAN ACCEPTED / NOT CERTIFIED
 - [ ] STOP: Server-wide alert filtering needs a query contract authorization
 - [ ] STOP: Infinite-offset pagination after mutations needs a separate architecture decision
