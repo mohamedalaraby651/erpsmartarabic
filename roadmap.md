@@ -57,3 +57,14 @@
 - Evidence: `docs/governance/OPA-CUST-001-EXECUTION-RECORD.md`.
 - Scope executed: customers list workspace UI (semantic table, column controls, search reach, shortcuts, selection invariant).
 - Deferred (needs a separate authorization): Customer 360 header/summary rework, retiring `CustomerListRow`, quick-filter reset behaviour, alert filtering across unloaded pages.
+
+## OPA-CUST-UX-002 — Customers UX remediation
+- [ ] M1 Correct customer stats mapping and remove presentation-derived financial indicators
+- [ ] M2 Simplify hierarchy, spacing, control sizing, RTL, and tablet behavior
+- [ ] M3 Improve table navigation, row actions, and bulk-selection scope
+- [ ] M4 Unify search/filter/column state and debounce URL search sync
+- [ ] M5 Align mobile cards, status, actions, and motion
+- [ ] M6 Improve Customer 360 presentation and dialog accessibility
+- [ ] M7 Verify types, tests, build, responsive runtime, and record evidence
+- [ ] STOP: Server-wide alert filtering needs a query contract authorization
+- [ ] STOP: Infinite-offset pagination after mutations needs a separate architecture decision
