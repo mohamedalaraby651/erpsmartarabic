@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle,
+  ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogHeader, ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +85,7 @@ const CustomerAddressDialog = ({ open, onOpenChange, customerId, address }: Cust
       <ResponsiveDialogContent className="max-w-lg">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>{isEditing ? 'تعديل العنوان' : 'إضافة عنوان جديد'}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>سجّل عنوان العميل ومعلومات التوصيل المرتبطة به.</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
           <div>

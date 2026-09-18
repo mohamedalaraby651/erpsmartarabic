@@ -6,7 +6,6 @@ import { useCallback, useRef } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
-import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
 
 interface UseCustomerListOptions {
@@ -66,6 +65,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
         total: d.total || 0,
         individuals: d.individuals || 0,
         companies: d.companies || 0,
+        farms: d.farms || 0,
         vip: d.vip || 0,
         totalBalance: d.total_balance || 0,
         active: d.active || 0,
@@ -111,7 +111,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
     error: error instanceof Error ? error : null,
     isFetching,
     refetch,
-    stats: stats || { total: 0, individuals: 0, companies: 0, vip: 0, totalBalance: 0, active: 0, inactive: 0, debtors: 0 },
+    stats: stats || { total: 0, individuals: 0, companies: 0, farms: 0, vip: 0, totalBalance: 0, active: 0, inactive: 0, debtors: 0 },
     handleRowHover,
     handleRowLeave,
     filterKey,

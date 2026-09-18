@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { CreditCard, Target, TrendingUp, ArrowUpRight, ArrowDownRight, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,16 +45,6 @@ export const CustomerKPICards = memo(function CustomerKPICards({
 }: CustomerKPICardsProps) {
   const [drawerFilter, setDrawerFilter] = useState<KPIFilter | null>(null);
 
-  // Compute overdue invoices for the outstanding card badge
-  const overdueCount = useMemo(() => {
-    const now = Date.now();
-    return invoices.filter(inv => {
-      if (inv.payment_status === 'paid') return false;
-      const due = inv.due_date ? new Date(inv.due_date).getTime() : new Date(inv.created_at).getTime();
-      return due < now;
-    }).length;
-  }, [invoices]);
-
   // Hide "outstanding" card when it duplicates the current balance to avoid visual redundancy
   const balanceAndOutstandingMatch = Math.round(currentBalance) === Math.round(totalOutstanding) && totalOutstanding > 0;
 
@@ -75,9 +65,6 @@ export const CustomerKPICards = memo(function CustomerKPICards({
       value: totalOutstanding.toLocaleString(),
       icon: Target,
       tone: totalOutstanding > 0 ? 'warning' : 'success',
-      badge: overdueCount > 0
-        ? { label: `${overdueCount} متأخرة`, tone: 'destructive' }
-        : undefined,
     },
     {
       key: 'purchases',

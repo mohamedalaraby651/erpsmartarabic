@@ -10,9 +10,9 @@ interface CustomerFinancialSummaryProps {
   discountPercentage: number;
   paymentTermsDays: number;
   invoiceCount: number;
-  totalOutstanding?: number;
-  paymentRatio?: number;
-  avgInvoiceValue?: number;
+  totalOutstanding: number;
+  paymentRatio: number;
+  avgInvoiceValue: number;
   dso?: number | null;
   clv?: number;
 }
@@ -26,15 +26,12 @@ const CustomerFinancialSummary = ({
   paymentTermsDays,
   invoiceCount,
   totalOutstanding,
-  paymentRatio: paymentRatioProp,
-  avgInvoiceValue: avgInvoiceProp,
+  paymentRatio,
+  avgInvoiceValue: avgInvoice,
   dso,
   clv,
 }: CustomerFinancialSummaryProps) => {
-  // Use pre-calculated values if provided, otherwise fallback to local calc
-  const paymentRatio = paymentRatioProp ?? (totalPurchases > 0 ? (totalPayments / totalPurchases) * 100 : 0);
   const creditUsage = creditLimit > 0 ? (currentBalance / creditLimit) * 100 : 0;
-  const avgInvoice = avgInvoiceProp ?? (invoiceCount > 0 ? totalPurchases / invoiceCount : 0);
 
   const items = [
     {
@@ -54,9 +51,9 @@ const CustomerFinancialSummary = ({
     {
       icon: Wallet,
       label: 'المستحق',
-      value: `${(totalOutstanding ?? (totalPurchases - totalPayments)).toLocaleString()} ج.م`,
-      color: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'text-destructive' : 'text-success',
-      bgColor: (totalOutstanding ?? (totalPurchases - totalPayments)) > 0 ? 'bg-destructive/10' : 'bg-success/10',
+      value: `${totalOutstanding.toLocaleString()} ج.م`,
+      color: totalOutstanding > 0 ? 'text-destructive' : 'text-success',
+      bgColor: totalOutstanding > 0 ? 'bg-destructive/10' : 'bg-success/10',
     },
     {
       icon: CreditCard,

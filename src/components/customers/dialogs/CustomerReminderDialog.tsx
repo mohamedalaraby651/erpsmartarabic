@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Plus, Clock, Check, FileText, ArrowLeft, AlarmClock, CalendarClock, Pencil } from "lucide-react";
@@ -310,6 +310,7 @@ export default function CustomerReminderSection({ customerId }: CustomerReminder
         <ResponsiveDialogContent>
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>{isEditing ? 'تعديل التذكير' : 'إضافة تذكير جديد'}</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>حدّد موعد المتابعة والملاحظة التي ستظهر ضمن ملف العميل.</ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <div className="space-y-4">
             <div>

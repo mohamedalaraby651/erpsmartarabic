@@ -4,7 +4,6 @@ import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical, Chevr
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TapTooltip } from "@/components/ui/tap-tooltip";
 import { CustomerSearchPreview } from "@/components/customers/filters/CustomerSearchPreview";
 import { tooltips } from "@/lib/uiCopy";
@@ -20,7 +19,7 @@ interface CustomerPageHeaderProps {
   onExportAll: () => void;
   totalCount?: number;
   filteredCount?: number;
-  // Mobile search-first
+  // Mobile search-first; desktop search lives in the filter toolbar.
   searchQuery?: string;
   onSearchChange?: (v: string) => void;
   // Optional slot rendered next to the title (mobile) — e.g. alerts bell
@@ -65,36 +64,38 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
             <DropdownMenu>
               <TapTooltip content={tooltips.moreToolsDetailed} side="bottom" autoCloseMs={1600}>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    className="flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent transition-colors"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11"
                     aria-label={tooltips.moreTools}
                   >
                     <MoreVertical className="h-4.5 w-4.5" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
               </TapTooltip>
               <DropdownMenuContent align="end" className="w-64">
                 {canEdit && (
                   <DropdownMenuItem onClick={onAdd} className="flex-col items-start gap-0.5 py-2">
-                    <span className="flex items-center font-medium"><Plus className="h-4 w-4 ml-2" />إضافة عميل</span>
-                    <span className="text-[11px] text-muted-foreground pr-6">إضافة سريعة لعميل جديد</span>
+                    <span className="flex items-center font-medium"><Plus className="h-4 w-4 me-2" />إضافة عميل</span>
+                    <span className="text-[11px] text-muted-foreground ps-6">إضافة سريعة لعميل جديد</span>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={onImport} className="flex-col items-start gap-0.5 py-2">
-                  <span className="flex items-center font-medium"><Upload className="h-4 w-4 ml-2" />استيراد</span>
-                  <span className="text-[11px] text-muted-foreground pr-6">رفع ملف Excel أو CSV لعملاء متعددين</span>
+                  <span className="flex items-center font-medium"><Upload className="h-4 w-4 me-2" />استيراد</span>
+                  <span className="text-[11px] text-muted-foreground ps-6">رفع ملف Excel أو CSV لعملاء متعددين</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading} className="flex-col items-start gap-0.5 py-2">
-                  <span className="flex items-center font-medium"><Download className="h-4 w-4 ml-2" />تصدير</span>
-                  <span className="text-[11px] text-muted-foreground pr-6">تنزيل قائمة العملاء كملف Excel</span>
+                  <span className="flex items-center font-medium"><Download className="h-4 w-4 me-2" />تصدير</span>
+                  <span className="text-[11px] text-muted-foreground ps-6">تنزيل قائمة العملاء كملف Excel</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onDuplicates} className="flex-col items-start gap-0.5 py-2">
-                  <span className="flex items-center font-medium"><ScanSearch className="h-4 w-4 ml-2" />كشف المكررين</span>
-                  <span className="text-[11px] text-muted-foreground pr-6">البحث عن بيانات مكررة بين العملاء</span>
+                  <span className="flex items-center font-medium"><ScanSearch className="h-4 w-4 me-2" />كشف المكررين</span>
+                  <span className="text-[11px] text-muted-foreground ps-6">البحث عن بيانات مكررة بين العملاء</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onMerge} className="flex-col items-start gap-0.5 py-2">
-                  <span className="flex items-center font-medium"><Merge className="h-4 w-4 ml-2" />دمج</span>
-                  <span className="text-[11px] text-muted-foreground pr-6">دمج عميلين في سجل واحد</span>
+                  <span className="flex items-center font-medium"><Merge className="h-4 w-4 me-2" />دمج</span>
+                  <span className="text-[11px] text-muted-foreground ps-6">دمج عميلين في سجل واحد</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -123,42 +124,33 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
         </div>
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        {onSearchChange && (
-          <div data-customers-search className="hidden md:block">
-            <CustomerSearchPreview
-              value={searchQuery || ''}
-              onChange={onSearchChange}
-              className="w-56 lg:w-72"
-            />
-          </div>
-        )}
         <DropdownMenu>
           <TapTooltip content={tooltips.toolsMenu} side="bottom" autoCloseMs={1600}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                <MoreVertical className="h-4 w-4 ml-2" />أدوات
+                <MoreVertical className="h-4 w-4 me-2" />أدوات
               </Button>
             </DropdownMenuTrigger>
           </TapTooltip>
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuItem onClick={onExportAll} disabled={exportAllLoading} className="flex-col items-start gap-0.5 py-2">
               <span className="flex items-center font-medium">
-                {exportAllLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Download className="h-4 w-4 ml-2" />}
+                {exportAllLoading ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Download className="h-4 w-4 me-2" />}
                 تصدير متقدم
               </span>
-              <span className="text-[11px] text-muted-foreground pr-6">تخصيص الأعمدة والفلاتر قبل التصدير</span>
+              <span className="text-[11px] text-muted-foreground ps-6">تخصيص الأعمدة والفلاتر قبل التصدير</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onImport} className="flex-col items-start gap-0.5 py-2">
-              <span className="flex items-center font-medium"><Upload className="h-4 w-4 ml-2" />استيراد</span>
-              <span className="text-[11px] text-muted-foreground pr-6">رفع ملف Excel أو CSV لعملاء متعددين</span>
+              <span className="flex items-center font-medium"><Upload className="h-4 w-4 me-2" />استيراد</span>
+              <span className="text-[11px] text-muted-foreground ps-6">رفع ملف Excel أو CSV لعملاء متعددين</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDuplicates} className="flex-col items-start gap-0.5 py-2">
-              <span className="flex items-center font-medium"><ScanSearch className="h-4 w-4 ml-2" />كشف المكررين</span>
-              <span className="text-[11px] text-muted-foreground pr-6">البحث عن سجلات متشابهة بين العملاء</span>
+              <span className="flex items-center font-medium"><ScanSearch className="h-4 w-4 me-2" />كشف المكررين</span>
+              <span className="text-[11px] text-muted-foreground ps-6">البحث عن سجلات متشابهة بين العملاء</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onMerge} className="flex-col items-start gap-0.5 py-2">
-              <span className="flex items-center font-medium"><Merge className="h-4 w-4 ml-2" />دمج</span>
-              <span className="text-[11px] text-muted-foreground pr-6">دمج عميلين في سجل واحد مع نقل البيانات</span>
+              <span className="flex items-center font-medium"><Merge className="h-4 w-4 me-2" />دمج</span>
+              <span className="text-[11px] text-muted-foreground ps-6">دمج عميلين في سجل واحد مع نقل البيانات</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -166,7 +158,7 @@ export const CustomerPageHeader = memo(function CustomerPageHeader({
         {canEdit && (
           <TapTooltip content={tooltips.quickAddCustomer} side="bottom" autoCloseMs={1500}>
             <Button onClick={onAdd} className="flex-1 sm:flex-none">
-              <Plus className="h-4 w-4 ml-2" />إضافة عميل
+              <Plus className="h-4 w-4 me-2" />إضافة عميل
             </Button>
           </TapTooltip>
         )}

@@ -4,8 +4,8 @@ import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
 import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
-import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { tooltips, regions } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
 
@@ -31,15 +31,10 @@ interface CustomerMobileViewProps {
   onSortChange?: (key: string) => void;
   alertCountByCustomer?: Map<string, number>;
   errorCustomerIds?: Set<string>;
-  hasActiveSearch?: boolean;
   /** Visual-only highlight of the active search term. */
   searchQuery?: string;
-  activeQuickFilter?: string | null;
-  onQuickFilter?: (id: string | null) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string, checked: boolean) => void;
-  /** عرض شريط الملخص الذكي. الافتراضي true. */
-  showSummary?: boolean;
   /** عرض شريط الترتيب السريع. الافتراضي true. */
   showSort?: boolean;
 }
@@ -48,9 +43,9 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
-  alertCountByCustomer, errorCustomerIds, hasActiveSearch, searchQuery, activeQuickFilter, onQuickFilter,
+  alertCountByCustomer, errorCustomerIds, searchQuery,
   selectedIds, onToggleSelect,
-  showSummary = true, showSort = true,
+  showSort = true,
 }: CustomerMobileViewProps) {
   const observerRef = useRef<HTMLDivElement>(null);
   const selectionMode = !!(selectedIds && selectedIds.size > 0);
@@ -82,16 +77,6 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {/* شريط الملخص الذكي — مخفي عند البحث/الفلترة أو عند تعطيله من تخصيص العرض */}
-      {showSummary && (
-        <CustomerSummaryBar
-          customers={data}
-          hidden={hasActiveSearch || hasActiveFilters}
-          activeQuickFilter={activeQuickFilter}
-          onQuickFilter={onQuickFilter}
-        />
-      )}
-
       {/* Quick sort chips — single tap */}
       {showSort && onSortChange && (
         <div
@@ -107,21 +92,23 @@ export const CustomerMobileView = memo(function CustomerMobileView({
           ].map(({ key, label, Icon }) => {
             const active = (sortKey || 'created_at') === key;
             return (
-              <button
+              <Button
                 key={key}
                 type="button"
+                variant={active ? "default" : "outline"}
+                size="sm"
                 onClick={() => onSortChange(key)}
                 aria-pressed={active}
                 className={cn(
-                  'shrink-0 inline-flex items-center gap-1.5 h-9 min-h-9 px-3 rounded-full text-xs font-medium border transition-all',
+                  'shrink-0 gap-1.5 min-h-11 rounded-full text-xs font-medium',
                   active
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                    : 'bg-card text-muted-foreground border-border active:scale-95',
+                    ? 'shadow-sm'
+                    : 'text-muted-foreground active:scale-95',
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
-              </button>
+              </Button>
             );
           })}
           <span className="ms-auto text-[11px] text-muted-foreground tabular-nums shrink-0 self-center pe-1" aria-live="polite">
@@ -131,8 +118,8 @@ export const CustomerMobileView = memo(function CustomerMobileView({
       )}
 
       <div className="space-y-2.5" role="list" aria-label={regions.customerList}>
-        {data.map((customer, i) => (
-          <div key={customer.id} role="listitem" className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
+        {data.map((customer) => (
+          <div key={customer.id} role="listitem">
             <CustomerListCard
               customer={customer}
               onNavigate={onNavigate}

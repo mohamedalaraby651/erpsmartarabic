@@ -7,6 +7,7 @@ import { FilterChips } from "@/components/filters/FilterChips";
 import { vipLabels, typeLabels } from "@/lib/customerConstants";
 import { customerRepository } from "@/application/queries/customers";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface CustomerFiltersBarProps {
   searchQuery: string;
@@ -64,17 +65,19 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <button
+          <Button
             onClick={onOpenDrawer}
             type="button"
+            variant={activeFiltersCount > 0 ? "default" : "outline"}
+            size="icon"
             aria-label={activeFiltersCount > 0 ? `الفلاتر المتقدمة (${activeFiltersCount} نشط)` : 'فتح الفلاتر المتقدمة'}
             aria-haspopup="dialog"
             aria-expanded={false}
             className={cn(
-              'relative flex items-center justify-center h-11 w-11 rounded-xl border transition-all duration-200 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+              'relative h-11 w-11 shrink-0',
               activeFiltersCount > 0
-                ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
-                : 'bg-card text-muted-foreground border-border hover:bg-accent',
+                ? 'shadow-md shadow-primary/20'
+                : 'text-muted-foreground',
             )}
           >
             <SlidersHorizontal className="h-4.5 w-4.5" aria-hidden="true" />
@@ -86,7 +89,7 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
                 {activeFiltersCount}
               </span>
             )}
-          </button>
+          </Button>
         </div>
         {activeChipIds.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -105,8 +108,8 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
   // Desktop: integrated row without Card wrapper
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <CustomerSearchPreview value={searchQuery} onChange={onSearchChange} className="max-w-sm" />
+      <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+        <CustomerSearchPreview value={searchQuery} onChange={onSearchChange} className="min-w-64 max-w-sm basis-64 grow lg:grow-0" />
         <Select value={typeFilter} onValueChange={onTypeChange}>
           <SelectTrigger className="w-36 h-9 text-xs"><SelectValue placeholder="نوع العميل" /></SelectTrigger>
           <SelectContent>
@@ -155,17 +158,14 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
             <SelectItem value="debtors">مدين</SelectItem>
           </SelectContent>
         </Select>
-        <button
+        <Button
           onClick={onOpenDrawer}
           type="button"
           aria-label={activeFiltersCount > 0 ? `فلاتر متقدمة (${activeFiltersCount} نشط)` : 'فلاتر متقدمة'}
           aria-haspopup="dialog"
-          className={cn(
-            'flex items-center gap-1.5 px-3 h-9 rounded-lg border text-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
-            activeFiltersCount > 0
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-card text-muted-foreground border-border hover:bg-accent',
-          )}
+          variant={activeFiltersCount > 0 ? "default" : "outline"}
+          size="sm"
+          className="gap-1.5 text-xs"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
           متقدم
@@ -177,7 +177,7 @@ export const CustomerFiltersBar = memo(function CustomerFiltersBar({
               {activeFiltersCount}
             </span>
           )}
-        </button>
+        </Button>
       </div>
       {activeChipIds.length > 0 && (
         <div className="flex flex-wrap gap-2">

@@ -69,11 +69,6 @@ const Body = ({ layout, isMobile }: { layout: UseCustomerLayoutPrefs; isMobile: 
               onChange={(v) => setMobileSection("filters", v)}
             />
             <Row
-              label="الملخص الذكي" hint="إجمالي المستحق وفئات سريعة."
-              checked={prefs.mobile.summary}
-              onChange={(v) => setMobileSection("summary", v)}
-            />
-            <Row
               label="الترتيب السريع" hint="الأحدث، آخر نشاط، الأعلى مديونية، VIP."
               checked={prefs.mobile.sort}
               onChange={(v) => setMobileSection("sort", v)}
@@ -115,7 +110,7 @@ export const CustomerLayoutCustomizer = memo(function CustomerLayoutCustomizer({
 }: Props) {
   const triggerEl = trigger ?? (
     <Button variant="outline" size="sm" aria-label={tooltips.customizeView}>
-      <Eye className="h-4 w-4 ml-2" />
+      <Eye className="h-4 w-4 me-2" />
       تخصيص العرض
     </Button>
   );

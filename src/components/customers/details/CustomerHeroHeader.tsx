@@ -1,5 +1,4 @@
 import React, { memo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { HeroNavigation } from "@/components/customers/hero/HeroNavigation";
 import { HeroIdentity } from "@/components/customers/hero/HeroIdentity";
 import { HeroActions } from "@/components/customers/hero/HeroActions";
@@ -61,8 +60,7 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
         hasNext={hasNext}
       />
 
-      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-primary/5 via-background to-primary/10">
-        <CardContent className="p-6">
+      <section className="border-y border-border bg-muted/20 py-6" aria-label="ملخص العميل">
           <div className="flex flex-col lg:flex-row gap-6">
             <HeroIdentity
               customer={customer}
@@ -88,7 +86,7 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
           </div>
 
           {/* KPI Cards */}
-          <div className="mt-4 mb-4">
+          <div className="my-4">
             <CustomerKPICards
               currentBalance={currentBalance}
               balanceIsDebit={balanceIsDebit}
@@ -100,8 +98,7 @@ export const CustomerHeroHeader = memo(function CustomerHeroHeader({
           </div>
 
           <CustomerQuickHistory invoices={invoices} payments={payments} />
-        </CardContent>
-      </Card>
+      </section>
     </>
   );
 });

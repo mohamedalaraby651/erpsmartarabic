@@ -6,7 +6,7 @@ const STORAGE_KEY = "customers:layout-prefs:v1";
 /** Key inside `user_preferences.table_settings` jsonb. */
 const DB_SETTINGS_KEY = "customers_layout";
 
-export type MobileSection = "stats" | "filters" | "summary" | "sort";
+export type MobileSection = "stats" | "filters" | "sort";
 export type DesktopSection = "stats" | "alerts" | "filters";
 
 export interface CustomerLayoutPrefs {
@@ -18,7 +18,7 @@ export interface CustomerLayoutPrefs {
 }
 
 const DEFAULTS: CustomerLayoutPrefs = {
-  mobile: { stats: true, filters: true, summary: true, sort: true },
+  mobile: { stats: true, filters: true, sort: true },
   desktop: { stats: true, alerts: true, filters: true },
   compact: false,
   updatedAt: new Date(0).toISOString(),

@@ -30,7 +30,6 @@ export const ALL_COLUMNS: ColumnDef[] = [
   { key: 'contact_person', label: 'مسؤول التواصل', defaultVisible: false },
   { key: 'credit_limit', label: 'حد الائتمان', defaultVisible: false },
   { key: 'purchases', label: 'المشتريات', defaultVisible: false },
-  { key: 'payment_ratio', label: 'نسبة السداد', defaultVisible: false },
   { key: 'created_at', label: 'تاريخ الإضافة', defaultVisible: false },
 ];
 
@@ -53,39 +52,30 @@ function loadColumns(): string[] {
 }
 
 interface CustomerColumnSettingsProps {
-  onChange?: (columns: string[]) => void;
+  visibleColumns: string[];
+  onChange: (columns: string[]) => void;
 }
 
-export function CustomerColumnSettings({ onChange }: CustomerColumnSettingsProps) {
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(loadColumns);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(visibleColumns));
-    onChange?.(visibleColumns);
-  }, [visibleColumns, onChange]);
-
+export function CustomerColumnSettings({ visibleColumns, onChange }: CustomerColumnSettingsProps) {
   const toggleColumn = useCallback((key: string) => {
-    setVisibleColumns(prev => {
-      if (prev.includes(key)) {
-        if (prev.length <= 2) return prev;
-        return prev.filter(k => k !== key);
-      }
-      return [...prev, key];
-    });
-  }, []);
+    if (visibleColumns.includes(key)) {
+      if (visibleColumns.length <= 2) return;
+      onChange(visibleColumns.filter(k => k !== key));
+      return;
+    }
+    onChange([...visibleColumns, key]);
+  }, [onChange, visibleColumns]);
 
   const move = useCallback((key: string, delta: -1 | 1) => {
-    setVisibleColumns(prev => {
-      const index = prev.indexOf(key);
-      const target = index + delta;
-      if (index === -1 || target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-  }, []);
+    const index = visibleColumns.indexOf(key);
+    const target = index + delta;
+    if (index === -1 || target < 0 || target >= visibleColumns.length) return;
+    const next = [...visibleColumns];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }, [onChange, visibleColumns]);
 
-  const reset = useCallback(() => setVisibleColumns(defaultColumns()), []);
+  const reset = useCallback(() => onChange(defaultColumns()), [onChange]);
 
   const hidden = ALL_COLUMNS.filter(c => !visibleColumns.includes(c.key));
   const labelOf = (key: string) => ALL_COLUMNS.find(c => c.key === key)?.label ?? key;
@@ -101,7 +91,7 @@ export function CustomerColumnSettings({ onChange }: CustomerColumnSettingsProps
       <PopoverContent className="w-64 p-3" align="end">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-medium text-muted-foreground">الأعمدة الظاهرة (بالترتيب)</p>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px] gap-1" onClick={reset}>
+          <Button variant="ghost" size="sm" className="text-[11px] gap-1" onClick={reset}>
             <RotateCcw className="h-3 w-3" />
             الافتراضي
           </Button>
@@ -117,7 +107,7 @@ export function CustomerColumnSettings({ onChange }: CustomerColumnSettingsProps
               />
               <span className="flex-1 text-sm truncate">{labelOf(key)}</span>
               <Button
-                variant="ghost" size="icon" className="h-7 w-7"
+                variant="ghost" size="icon" className="h-9 w-9"
                 disabled={i === 0}
                 onClick={() => move(key, -1)}
                 aria-label={`تحريك ${labelOf(key)} لأعلى`}
@@ -125,7 +115,7 @@ export function CustomerColumnSettings({ onChange }: CustomerColumnSettingsProps
                 <ChevronUp className="h-3.5 w-3.5" />
               </Button>
               <Button
-                variant="ghost" size="icon" className="h-7 w-7"
+                variant="ghost" size="icon" className="h-9 w-9"
                 disabled={i === visibleColumns.length - 1}
                 onClick={() => move(key, 1)}
                 aria-label={`تحريك ${labelOf(key)} لأسفل`}
@@ -163,5 +153,8 @@ export function CustomerColumnSettings({ onChange }: CustomerColumnSettingsProps
 
 export function useVisibleColumns() {
   const [columns, setColumns] = useState<string[]>(loadColumns);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
+  }, [columns]);
   return { visibleColumns: columns, setVisibleColumns: setColumns };
 }

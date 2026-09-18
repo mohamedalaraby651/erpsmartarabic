@@ -1,10 +1,9 @@
 import { useState, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Loader2, FileSpreadsheet, FileText, FileDown } from "lucide-react";
 import { toast } from "sonner";
 
@@ -91,6 +90,7 @@ export function CustomerExportDialog({ open, onOpenChange, onExport, totalCount,
             <Download className="h-5 w-5" />
             تصدير العملاء
           </DialogTitle>
+          <DialogDescription>اختر صيغة الملف ونطاق النتائج والبيانات التي تريد تضمينها.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">

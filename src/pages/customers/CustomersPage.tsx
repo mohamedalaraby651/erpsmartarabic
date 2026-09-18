@@ -409,13 +409,9 @@ const CustomersPage = () => {
             }
             alertCountByCustomer={alertCountByCustomer}
             errorCustomerIds={errorCustomerIds}
-            hasActiveSearch={!!filters.debouncedSearch}
             searchQuery={filters.debouncedSearch}
-            activeQuickFilter={quickFilter}
-            onQuickFilter={handleQuickFilter}
             selectedIds={bulk.selectedIds}
             onToggleSelect={bulk.toggleSelect}
-            showSummary={layout.isMobileVisible('summary')}
             showSort={layout.isMobileVisible('sort')}
           />
           {/* FAB removed — global FABMenu (AppLayout) handles "عميل جديد" via pageContext='customers' */}
@@ -455,10 +451,10 @@ const CustomersPage = () => {
                   setQuickFilter(null);
                 }}
               />
-              <CustomerColumnSettings onChange={setVisibleColumns} />
+              <CustomerColumnSettings visibleColumns={visibleColumns} onChange={setVisibleColumns} />
               <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
                 <SelectTrigger className="w-40 h-9 text-xs">
-                  <ArrowUpDown className="h-3.5 w-3.5 ml-1" />
+                  <ArrowUpDown className="h-3.5 w-3.5 me-1" />
                   <SelectValue placeholder="ترتيب حسب" />
                 </SelectTrigger>
                 <SelectContent>
@@ -533,12 +529,14 @@ const CustomersPage = () => {
           role="toolbar"
           aria-label="إجراءات على العملاء المحددين"
         >
-          <span className="text-sm font-medium tabular-nums">{bulk.selectedIds.size} محدد</span>
+          <span className="text-sm font-medium tabular-nums whitespace-nowrap">
+            {bulk.selectedIds.size} محدد من {allCustomers.length} معروض ({list.totalCount} نتيجة)
+          </span>
           <Button size="sm" variant="destructive" onClick={() => dialogRef.current?.openBulkDelete()}>
-            <Trash2 className="h-3.5 w-3.5 ml-1" /> حذف
+            <Trash2 className="h-3.5 w-3.5 me-1" /> حذف
           </Button>
           <Button size="sm" variant="outline" onClick={() => dialogRef.current?.openBulkVip()}>
-            <Crown className="h-3.5 w-3.5 ml-1" /> VIP
+            <Crown className="h-3.5 w-3.5 me-1" /> VIP
           </Button>
           <Button size="sm" variant="ghost" onClick={bulk.clearSelection} aria-label="إلغاء التحديد">
             <X className="h-3.5 w-3.5" />

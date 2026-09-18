@@ -68,7 +68,8 @@ export const CustomerStatsBar = memo(function CustomerStatsBar({ stats, isMobile
               key={chip.id ?? 'all'}
               onClick={() => onFilterChange?.(chip.id === null ? null : (activeFilter === chip.id ? null : chip.id))}
               className={cn(
-                'shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all duration-200',
+                'shrink-0 flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium border transition-all duration-200',
+                isMobile ? 'min-h-11' : 'h-9',
                 isActive
                   ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                   : 'bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground',
