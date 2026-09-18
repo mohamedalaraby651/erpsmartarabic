@@ -115,6 +115,13 @@ export function useCustomerFilters() {
     setSearchParams(params, { replace: true });
   }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays, setSearchParams]);
 
+  // Keep typing responsive: the URL follows the same settled value used by the query.
+  useEffect(() => {
+    syncToUrl({ q: debouncedSearch });
+    // Search is the only value intentionally delayed here; other filters sync immediately.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
   const updateFilter = useCallback((key: string, value: string) => {
     const setters: Record<string, (v: string) => void> = {
       type: setTypeFilter, vip: setVipFilter, gov: setGovernorateFilter, status: setStatusFilter,
@@ -181,7 +188,7 @@ export function useCustomerFilters() {
   );
 
   return {
-    searchQuery, setSearchQuery: (v: string) => { setSearchQuery(v); syncToUrl({ q: v }); },
+    searchQuery, setSearchQuery,
     debouncedSearch,
     typeFilter, setTypeFilter: (v: string) => updateFilter('type', v),
     vipFilter, setVipFilter: (v: string) => updateFilter('vip', v),

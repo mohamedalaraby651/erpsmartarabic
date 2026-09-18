@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { customerRepository } from "@/application/queries/customers";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -275,6 +275,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
         >
           <DialogHeader>
             <DialogTitle>{isEditing ? 'تعديل العميل' : 'إضافة عميل جديد'}</DialogTitle>
+            <DialogDescription>أدخل بيانات العميل الأساسية ووسائل التواصل والمعلومات التجارية المصرح بها.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
             {duplicateWarning}

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +65,7 @@ export function CustomerQuickAddDialog({ open, onOpenChange, onOpenAdvanced }: C
       <ResponsiveDialogContent className="sm:max-w-md">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>إضافة عميل سريع</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>أدخل البيانات الأساسية الآن، ويمكنك استكمال بقية البيانات لاحقًا.</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -121,13 +122,13 @@ export function CustomerQuickAddDialog({ open, onOpenChange, onOpenAdvanced }: C
                 onClick={() => { onOpenChange(false); onOpenAdvanced(); }}
               >
                 إضافة متقدمة
-                <ArrowLeft className="h-3 w-3 mr-1" />
+                <ArrowLeft className="h-3 w-3 ms-1" />
               </Button>
             )}
             <div className="flex gap-2 flex-1 justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
               <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+                {mutation.isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
                 إضافة
               </Button>
             </div>

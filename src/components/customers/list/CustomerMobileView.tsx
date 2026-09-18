@@ -4,7 +4,6 @@ import CustomerListCard from "@/components/customers/list/CustomerListCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { CustomerEmptyState } from "@/components/customers/list/CustomerEmptyState";
 import { CustomerMobileSkeleton } from "@/components/customers/list/CustomerMobileSkeleton";
-import { CustomerSummaryBar } from "@/components/customers/list/CustomerSummaryBar";
 import { cn } from "@/lib/utils";
 import { tooltips, regions } from "@/lib/uiCopy";
 import type { Customer } from "@/lib/customerConstants";
@@ -38,8 +37,6 @@ interface CustomerMobileViewProps {
   onQuickFilter?: (id: string | null) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string, checked: boolean) => void;
-  /** عرض شريط الملخص الذكي. الافتراضي true. */
-  showSummary?: boolean;
   /** عرض شريط الترتيب السريع. الافتراضي true. */
   showSort?: boolean;
 }
@@ -50,7 +47,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
   alertCountByCustomer, errorCustomerIds, hasActiveSearch, searchQuery, activeQuickFilter, onQuickFilter,
   selectedIds, onToggleSelect,
-  showSummary = true, showSort = true,
+  showSort = true,
 }: CustomerMobileViewProps) {
   const observerRef = useRef<HTMLDivElement>(null);
   const selectionMode = !!(selectedIds && selectedIds.size > 0);
@@ -82,16 +79,6 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
   return (
     <PullToRefresh onRefresh={onRefresh}>
-      {/* شريط الملخص الذكي — مخفي عند البحث/الفلترة أو عند تعطيله من تخصيص العرض */}
-      {showSummary && (
-        <CustomerSummaryBar
-          customers={data}
-          hidden={hasActiveSearch || hasActiveFilters}
-          activeQuickFilter={activeQuickFilter}
-          onQuickFilter={onQuickFilter}
-        />
-      )}
-
       {/* Quick sort chips — single tap */}
       {showSort && onSortChange && (
         <div
@@ -113,7 +100,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
                 onClick={() => onSortChange(key)}
                 aria-pressed={active}
                 className={cn(
-                  'shrink-0 inline-flex items-center gap-1.5 h-9 min-h-9 px-3 rounded-full text-xs font-medium border transition-all',
+                  'shrink-0 inline-flex items-center gap-1.5 min-h-11 px-3 rounded-full text-xs font-medium border transition-all',
                   active
                     ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                     : 'bg-card text-muted-foreground border-border active:scale-95',
@@ -132,7 +119,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
 
       <div className="space-y-2.5" role="list" aria-label={regions.customerList}>
         {data.map((customer, i) => (
-          <div key={customer.id} role="listitem" className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
+          <div key={customer.id} role="listitem">
             <CustomerListCard
               customer={customer}
               onNavigate={onNavigate}

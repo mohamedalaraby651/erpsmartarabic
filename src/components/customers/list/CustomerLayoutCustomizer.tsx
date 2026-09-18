@@ -69,11 +69,6 @@ const Body = ({ layout, isMobile }: { layout: UseCustomerLayoutPrefs; isMobile: 
               onChange={(v) => setMobileSection("filters", v)}
             />
             <Row
-              label="الملخص الذكي" hint="إجمالي المستحق وفئات سريعة."
-              checked={prefs.mobile.summary}
-              onChange={(v) => setMobileSection("summary", v)}
-            />
-            <Row
               label="الترتيب السريع" hint="الأحدث، آخر نشاط، الأعلى مديونية، VIP."
               checked={prefs.mobile.sort}
               onChange={(v) => setMobileSection("sort", v)}
