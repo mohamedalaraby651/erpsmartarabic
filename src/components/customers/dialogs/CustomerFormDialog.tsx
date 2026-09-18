@@ -179,7 +179,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
       const sanitize = (val: string | undefined | null) =>
-        val?.trim().replace(/[\u200E\u200F\u061C\u200B\u200C\u200D\uFEFF\u202A-\u202E\u2066-\u2069]/g, '') || null;
+        val?.trim().replace(/[\u061C\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '') || null;
 
       const payload: Database['public']['Tables']['customers']['Insert'] = {
         name: sanitize(data.name) || data.name.trim(),
