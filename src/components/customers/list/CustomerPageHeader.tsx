@@ -4,7 +4,6 @@ import { Plus, Upload, Merge, ScanSearch, Download, Loader2, MoreVertical, Chevr
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TapTooltip } from "@/components/ui/tap-tooltip";
 import { CustomerSearchPreview } from "@/components/customers/filters/CustomerSearchPreview";
 import { tooltips } from "@/lib/uiCopy";

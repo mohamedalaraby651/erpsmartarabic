@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import CustomerAvatar from '@/components/customers/shared/CustomerAvatar';
 import { HighlightText } from '@/components/shared/HighlightText';
 import { cn } from '@/lib/utils';
-import { vipColors, vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
+import { vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants';
 import type { Customer } from '@/lib/customerConstants';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useCustomerSwipeActions } from '@/hooks/customers/useCustomerSwipeActions';
@@ -110,13 +110,6 @@ const CustomerListCardInner = ({
   const triggerCall = useCallback(() => {
     if (customer.phone) window.location.href = `tel:${customer.phone}`;
   }, [customer.phone]);
-  const triggerWhatsApp = useCallback(() => {
-    if (customer.phone) {
-      const num = customer.phone.replace(/\D/g, '');
-      window.open(`https://wa.me/${num}`, '_blank');
-    }
-  }, [customer.phone]);
-
   const swipe = useCustomerSwipeActions({
     enabled: swipeEnabled,
     onSwipeLeftRevealed: () => {
@@ -506,7 +499,7 @@ function QuickActionsMenu({ customerId, expanded, onNavigate, onNewInvoice, onNe
             onFocus={() => setActiveIdx(idx)}
             onClick={(e) => { e.stopPropagation(); it.onSelect(); }}
           >
-            <Icon className="h-4 w-4 ml-1.5" /> {it.label}
+            <Icon className="h-4 w-4 me-1.5" /> {it.label}
           </Button>
         );
       })}

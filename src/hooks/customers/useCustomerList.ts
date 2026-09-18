@@ -6,7 +6,6 @@ import { useCallback, useRef } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
-import type { Customer } from "@/lib/customerConstants";
 import type { SortConfig } from "@/hooks/useTableSort";
 
 interface UseCustomerListOptions {

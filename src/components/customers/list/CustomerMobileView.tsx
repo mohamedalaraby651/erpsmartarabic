@@ -31,11 +31,8 @@ interface CustomerMobileViewProps {
   onSortChange?: (key: string) => void;
   alertCountByCustomer?: Map<string, number>;
   errorCustomerIds?: Set<string>;
-  hasActiveSearch?: boolean;
   /** Visual-only highlight of the active search term. */
   searchQuery?: string;
-  activeQuickFilter?: string | null;
-  onQuickFilter?: (id: string | null) => void;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string, checked: boolean) => void;
   /** عرض شريط الترتيب السريع. الافتراضي true. */
@@ -46,7 +43,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
   data, isLoading, canEdit, canDelete, onNavigate, onEdit, onDelete, onRefresh,
   hasActiveFilters, onClearFilters, onAdd, onImport, onNewInvoice, onNewPayment,
   hasNextPage, isFetchingNextPage, onLoadMore, sortKey, onSortChange,
-  alertCountByCustomer, errorCustomerIds, hasActiveSearch, searchQuery, activeQuickFilter, onQuickFilter,
+  alertCountByCustomer, errorCustomerIds, searchQuery,
   selectedIds, onToggleSelect,
   showSort = true,
 }: CustomerMobileViewProps) {
@@ -121,7 +118,7 @@ export const CustomerMobileView = memo(function CustomerMobileView({
       )}
 
       <div className="space-y-2.5" role="list" aria-label={regions.customerList}>
-        {data.map((customer, i) => (
+        {data.map((customer) => (
           <div key={customer.id} role="listitem">
             <CustomerListCard
               customer={customer}

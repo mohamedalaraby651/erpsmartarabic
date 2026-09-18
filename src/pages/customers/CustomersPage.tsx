@@ -409,10 +409,7 @@ const CustomersPage = () => {
             }
             alertCountByCustomer={alertCountByCustomer}
             errorCustomerIds={errorCustomerIds}
-            hasActiveSearch={!!filters.debouncedSearch}
             searchQuery={filters.debouncedSearch}
-            activeQuickFilter={quickFilter}
-            onQuickFilter={handleQuickFilter}
             selectedIds={bulk.selectedIds}
             onToggleSelect={bulk.toggleSelect}
             showSort={layout.isMobileVisible('sort')}
