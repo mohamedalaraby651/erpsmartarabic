@@ -219,7 +219,7 @@ const CustomerListCardInner = ({
 
     <Card
       className={cn(
-        'relative z-10 bg-card overflow-hidden border-s-[3px] transition-transform duration-200 active:scale-[0.98] shadow-sm',
+        'relative z-10 bg-card overflow-hidden border-s-[3px] transition-transform duration-200 motion-reduce:transition-none active:scale-[0.98] motion-reduce:active:scale-100 shadow-sm',
         vipBorderAccent[customer.vip_level] || vipBorderAccent.regular,
         !isActive && 'opacity-60',
         isSelected && 'ring-2 ring-primary bg-primary/5',
@@ -383,7 +383,7 @@ const CustomerListCardInner = ({
           aria-label={`تفاصيل ${customer.name}`}
           aria-hidden={!expanded}
           className={cn(
-            'overflow-hidden transition-all duration-300 ease-in-out',
+             'overflow-hidden transition-all duration-300 ease-in-out motion-reduce:transition-none',
             expanded ? 'max-h-[350px] opacity-100 mt-3' : 'max-h-0 opacity-0',
           )}
         >
@@ -406,7 +406,7 @@ const CustomerListCardInner = ({
                 <Calendar className="h-3 w-3 shrink-0" />
                 <span>آخر نشاط: {new Date(customer.last_activity_at || customer.last_transaction_date!).toLocaleDateString('ar-EG')}</span>
                 {invoiceCount > 0 && (
-                  <span className="mr-auto flex items-center gap-1">
+                   <span className="ms-auto flex items-center gap-1">
                     <FileText className="h-3 w-3" />
                     {invoiceCount} فاتورة
                   </span>

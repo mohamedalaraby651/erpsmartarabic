@@ -110,7 +110,7 @@ export const CustomerLayoutCustomizer = memo(function CustomerLayoutCustomizer({
 }: Props) {
   const triggerEl = trigger ?? (
     <Button variant="outline" size="sm" aria-label={tooltips.customizeView}>
-      <Eye className="h-4 w-4 ml-2" />
+      <Eye className="h-4 w-4 me-2" />
       تخصيص العرض
     </Button>
   );
