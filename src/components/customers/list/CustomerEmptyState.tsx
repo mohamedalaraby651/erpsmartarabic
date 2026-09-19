@@ -18,11 +18,11 @@ export function CustomerEmptyState({ hasActiveFilters, onClearFilters, onAdd, on
         </div>
         <h3 className="text-lg font-semibold mb-1">لا توجد نتائج</h3>
         <p className="text-sm text-muted-foreground mb-4 max-w-xs">
-          لا يوجد عملاء يطابقون الفلاتر المحددة. جرّب تعديل الفلاتر.
+          لم نجد عملاء مطابقين. جرّب البحث بجزء أقل من الاسم أو إزالة بعض الفلاتر.
         </p>
         {onClearFilters && (
           <Button variant="outline" onClick={onClearFilters}>
-            إزالة الفلاتر
+            مسح البحث والفلاتر
           </Button>
         )}
       </div>

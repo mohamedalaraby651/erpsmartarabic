@@ -7,6 +7,7 @@ export const CUSTOMER_FILTER_COLUMNS: Record<string, string> = {
   vip: 'vip_level',
   phone: 'phone',
   governorate: 'governorate',
+  city: 'city',
   balance: 'current_balance',
   last_activity: 'last_activity_at',
   status: 'is_active',

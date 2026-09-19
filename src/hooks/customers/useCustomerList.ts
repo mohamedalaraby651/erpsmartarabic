@@ -2,7 +2,7 @@
  * Customer List Hook — Read-only queries + prefetch (CQRS: Query side)
  */
 
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
@@ -81,6 +81,20 @@ export function useCustomerList(options: UseCustomerListOptions) {
     refetchOnWindowFocus: false,
   });
 
+  const { data: filterOptionRows = [], isLoading: areFilterOptionsLoading } = useQuery({
+    queryKey: ['customer-filter-options'],
+    queryFn: () => customerRepository.listFilterOptions(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+  const filterOptions = useMemo(() => ({
+    name: Array.from(new Set(filterOptionRows.map((row) => row.name).filter(Boolean)))
+      .map((name) => ({ value: name, label: name })),
+    city: Array.from(new Set(filterOptionRows.map((row) => row.city).filter((city): city is string => Boolean(city))))
+      .sort((a, b) => a.localeCompare(b, 'ar'))
+      .map((city) => ({ value: city, label: city })),
+  }), [filterOptionRows]);
+
   // Prefetch on hover
   const prefetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -116,6 +130,8 @@ export function useCustomerList(options: UseCustomerListOptions) {
     isFetching,
     refetch,
     stats: stats || { total: 0, individuals: 0, companies: 0, farms: 0, vip: 0, totalBalance: 0, active: 0, inactive: 0, debtors: 0 },
+    filterOptions,
+    areFilterOptionsLoading,
     handleRowHover,
     handleRowLeave,
     filterKey,

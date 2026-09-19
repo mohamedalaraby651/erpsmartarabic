@@ -36,6 +36,17 @@ describe('applyCustomerColumnFilters', () => {
     expect(query.lte).toHaveBeenCalledWith('created_at', '2026-09-19T23:59:59.999');
   });
 
+  it('applies selected customer names and cities as OR sets', () => {
+    const query = queryMock();
+    applyCustomerColumnFilters(query, {
+      name: { kind: 'text', values: ['محمد أحمد', 'شركة النور'] },
+      city: { kind: 'options', values: ['القاهرة', 'الجيزة'] },
+    });
+
+    expect(query.in).toHaveBeenCalledWith('name', ['محمد أحمد', 'شركة النور']);
+    expect(query.in).toHaveBeenCalledWith('city', ['القاهرة', 'الجيزة']);
+  });
+
   it('ignores unknown presentation keys', () => {
     const query = queryMock();
     applyCustomerColumnFilters(query, { unknown: { kind: 'text', text: 'x' } });
