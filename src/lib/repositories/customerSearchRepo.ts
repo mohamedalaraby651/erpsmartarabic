@@ -39,7 +39,7 @@ export const customerSearchRepo = {
     const { data, error } = await supabase
       .from('customers')
       .select('id, name, phone, governorate, customer_type, image_url, current_balance, vip_level')
-      .or(`name.ilike.%${s}%,phone.ilike.%${s}%`)
+      .or(`name.ilike.%${s}%,phone.ilike.%${s}%,phone2.ilike.%${s}%,email.ilike.%${s}%,tax_number.ilike.%${s}%`)
       .limit(5);
     if (error) throw error;
     return (data || []) as Customer[];

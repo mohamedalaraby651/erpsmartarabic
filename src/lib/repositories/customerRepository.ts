@@ -313,6 +313,17 @@ export const customerRepository = {
     return (data || []) as Array<Pick<Customer, 'id' | 'name'>>;
   },
 
+  /** Bounded values for customer table filter pickers; existing RLS remains authoritative. */
+  async listFilterOptions(limit = 500): Promise<Array<Pick<Customer, 'id' | 'name' | 'city'>>> {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, name, city')
+      .order('name')
+      .limit(limit);
+    if (error) throw error;
+    return (data || []) as Array<Pick<Customer, 'id' | 'name' | 'city'>>;
+  },
+
   // ============================================
   // Customer Notes (quick-note insert from alerts/details)
   // ============================================

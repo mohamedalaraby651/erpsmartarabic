@@ -28,6 +28,7 @@ export const CUSTOMER_TABLE_COLUMNS: CustomerTableColumn[] = [
     defaultVisible: true,
     options: egyptGovernorates.map((value) => ({ value, label: value })),
   },
+  { key: 'city', label: 'المدينة', kind: 'options', defaultVisible: false },
   { key: 'balance', label: 'الرصيد', kind: 'number', defaultVisible: true, sortKey: 'current_balance', numeric: true },
   { key: 'last_activity', label: 'آخر نشاط', kind: 'date', defaultVisible: true, sortKey: 'last_activity_at' },
   {
