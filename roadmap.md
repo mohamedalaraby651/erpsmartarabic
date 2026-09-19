@@ -78,7 +78,11 @@
 - [ ] STOP conditions retained: loaded-row-only bulk selection, server-wide alert filtering, and offset pagination after mutations
 
 ## OPA-CUST-UI-005 — Integrated table header and advanced discovery
-- [ ] Integrate customer summary filters into the table header according to their filtering role
-- [ ] Improve customer search and filters with invoice-pattern consistency and customer-name multi-select
-- [ ] Define the authorized rollout scope for reusable search/filter behavior beyond the customers table
-- [ ] Verify usability, RTL, accessibility, responsiveness, query consistency, and performance without DB/security changes
+- [ ] Batch A — Table Intelligence: integrated header, command search, adaptive column filters, customer-name multi-select, active-filter chips, query consistency, responsive/loading/empty/error states
+- [ ] Batch A Gate — typecheck/tests/build + live RTL/accessibility/responsive/query evidence; HUMAN ACCEPTANCE required before Batch B
+- [ ] Batch B — Productivity: existing Saved Views/preferences reuse, deep linking/restoration, keyboard navigation, compact row actions, bounded cancellable prefetch, mobile workspace
+- [ ] Batch B Gate — workflow/time/interaction evidence and HUMAN ACCEPTANCE required before Batch C
+- [ ] Batch C — Customer 360: authoritative health snapshot, existing sales/payment/balance/activity read models only; STOP if metric authority is absent
+- [ ] Establish customers as the Reference Implementation for the Nazra Enterprise Data Workspace pattern; no rollout to other tables in this scope
+- [ ] Performance Gate — profile before any virtualization decision; server pagination remains authoritative
+- [ ] Smart Freeze — no DB/RLS/migrations/permissions/roles or new frontend financial/business calculations
