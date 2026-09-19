@@ -7,6 +7,7 @@ import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-quer
 import { customerRepository } from "@/lib/repositories/customerRepository";
 import { customerSearchRepo } from "@/lib/repositories/customerSearchRepo";
 import type { SortConfig } from "@/hooks/useTableSort";
+import type { ColumnFilters } from '@/components/ui/column-filter';
 
 interface UseCustomerListOptions {
   debouncedSearch: string;
@@ -20,16 +21,18 @@ interface UseCustomerListOptions {
   currentPage: number;
   pageSize: number;
   sortConfig: SortConfig;
+  columnFilters?: ColumnFilters;
 }
 
 export function useCustomerList(options: UseCustomerListOptions) {
   const queryClient = useQueryClient();
   const {
     debouncedSearch, typeFilter, vipFilter, governorateFilter,
-    statusFilter, categoryFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig,
+    statusFilter, categoryFilter, noCommDays, inactiveDays, currentPage, pageSize, sortConfig, columnFilters = {},
   } = options;
 
-  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays];
+  const columnFiltersKey = JSON.stringify(columnFilters);
+  const filterKey = [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays, columnFiltersKey];
 
   // Main list query
   const { data: queryResult, isLoading, isError, error, isFetching, refetch } = useQuery({
@@ -47,6 +50,7 @@ export function useCustomerList(options: UseCustomerListOptions) {
         category: categoryFilter,
         noCommDays,
         inactiveDays,
+        columnFilters,
       },
       { key: sortConfig.key || 'created_at', direction: sortConfig.direction },
       { page: currentPage, pageSize }

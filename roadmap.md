@@ -68,3 +68,11 @@
 - [ ] M7 Verification — typecheck PASS; 1634 tests PASS / 5 skipped; scoped lint 0 errors; live 360/964/1280 PASS with no page overflow. Full build remains blocked by the pre-existing generated `previewAuthStorage.ts` TS7011 error; NOT HUMAN ACCEPTED / NOT CERTIFIED
 - [ ] STOP: Server-wide alert filtering needs a query contract authorization
 - [ ] STOP: Infinite-offset pagination after mutations needs a separate architecture decision
+
+## OPA-CUST-UI-004 — Customer table header and filters
+- [x] Unified customer column contract with invoice-style sort/filter headers — IMPLEMENTED
+- [x] Server-applied text/options/date/number column filters with active-filter chips — IMPLEMENTED
+- [x] Unified toolbar, column visibility/order, density, height, resize, auto-fit, and legacy preference migration — IMPLEMENTED
+- [x] Verification: typecheck PASS; 1637 tests PASS / 5 skipped; scoped lint 0 errors; production build PASS
+- [ ] Live multi-viewport browser evidence was blocked by missing Chromium host libraries; NOT HUMAN ACCEPTED / NOT CERTIFIED
+- [ ] STOP conditions retained: loaded-row-only bulk selection, server-wide alert filtering, and offset pagination after mutations

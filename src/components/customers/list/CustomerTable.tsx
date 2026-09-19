@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, Crown, MessageCircle, FileText, CreditCard, Edit2 } from 'lucide-react';
+import { Crown, MessageCircle, FileText, CreditCard, Edit2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,7 +11,10 @@ import { vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants'
 import type { Customer } from '@/lib/customerConstants';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { ALL_COLUMNS } from './CustomerColumnSettings';
+import { ColumnFilterHeader, type ColumnFilters } from '@/components/ui/column-filter';
+import { DENSITY_CLASS, type TableLayout } from '@/hooks/useTableLayout';
+import { DataTableHeader } from '@/components/ui/data-table-header';
+import { CUSTOMER_TABLE_COLUMNS } from './customerTableColumns';
 
 /**
  * Customers workspace table (OPA-CUST-001).
@@ -19,16 +22,6 @@ import { ALL_COLUMNS } from './CustomerColumnSettings';
  * Presentation only: it renders the customer read model handed to it, emits
  * intents upwards and owns no query, financial or domain behaviour.
  */
-
-/** Column key -> sortable database column already supported by the repository. */
-const SORTABLE: Record<string, string> = {
-  name: 'name',
-  balance: 'current_balance',
-  credit_limit: 'credit_limit',
-  last_activity: 'last_activity_at',
-  purchases: 'total_purchases_cached',
-  created_at: 'created_at',
-};
 
 const NUMERIC_COLUMNS = new Set(['balance', 'credit_limit', 'purchases']);
 
@@ -40,7 +33,9 @@ const vipPillStyle: Record<string, string> = {
 
 export interface CustomerTableProps {
   customers: Customer[];
-  visibleColumns: string[];
+  layout: TableLayout;
+  columnFilters: ColumnFilters;
+  onColumnFilterChange: (key: string, filter: ColumnFilters[string] | undefined) => void;
   searchQuery?: string;
   sortKey: string;
   sortDirection: 'asc' | 'desc' | null;
@@ -60,23 +55,16 @@ export interface CustomerTableProps {
   errorCustomerIds?: Set<string>;
 }
 
-const labelOf = (key: string) => ALL_COLUMNS.find(c => c.key === key)?.label ?? key;
-
 function CustomerTableInner({
-  customers, visibleColumns, searchQuery,
+  customers, layout, columnFilters, onColumnFilterChange, searchQuery,
   sortKey, sortDirection, onSort,
   selectedIds, onToggleSelect, isAllSelected, onToggleSelectAll,
   onNavigate, onEdit, onNewInvoice, onNewPayment, onWhatsApp,
   onRowHover, onRowLeave, alertCountByCustomer, errorCustomerIds,
 }: CustomerTableProps) {
-  const cols = visibleColumns.length ? visibleColumns : ['name', 'balance', 'status'];
-
-  const ariaSort = (key: string): 'ascending' | 'descending' | 'none' | undefined => {
-    const dbCol = SORTABLE[key];
-    if (!dbCol) return undefined;
-    if (sortKey !== dbCol || !sortDirection) return 'none';
-    return sortDirection === 'asc' ? 'ascending' : 'descending';
-  };
+  const columns = layout.visibleKeys
+    .map((key) => CUSTOMER_TABLE_COLUMNS.find((column) => column.key === key))
+    .filter((column): column is (typeof CUSTOMER_TABLE_COLUMNS)[number] => Boolean(column));
 
   const renderCell = (customer: Customer, key: string) => {
     const balance = Number(customer.current_balance || 0);
@@ -193,10 +181,13 @@ function CustomerTableInner({
   };
 
   return (
-    <div className="rounded-lg border border-border overflow-x-auto">
-      <Table>
+    <div
+      className="w-full overflow-auto rounded-md border border-border"
+      style={layout.bodyHeight ? { maxHeight: layout.bodyHeight } : undefined}
+    >
+      <Table className={DENSITY_CLASS[layout.density]}>
         <caption className="sr-only">قائمة العملاء</caption>
-        <TableHeader className="sticky top-0 z-10 bg-card">
+        <TableHeader className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_hsl(var(--border))]">
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
@@ -205,30 +196,25 @@ function CustomerTableInner({
                 aria-label="تحديد كل العملاء المعروضين"
               />
             </TableHead>
-            {cols.map(key => {
-              const dbCol = SORTABLE[key];
-              return (
-                <TableHead
-                  key={key}
-                  aria-sort={ariaSort(key)}
-                  className={cn('whitespace-nowrap', NUMERIC_COLUMNS.has(key) && 'text-end')}
-                >
-                  {dbCol ? (
-                    <button
-                      type="button"
-                      onClick={() => onSort(dbCol)}
-                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
-                    >
-                      {labelOf(key)}
-                      {sortKey === dbCol && sortDirection === 'asc' && <ArrowUp className="h-3 w-3" aria-hidden />}
-                      {sortKey === dbCol && sortDirection === 'desc' && <ArrowDown className="h-3 w-3" aria-hidden />}
-                      {(sortKey !== dbCol || !sortDirection) && <ChevronsUpDown className="h-3 w-3 opacity-50" aria-hidden />}
-                    </button>
-                  ) : labelOf(key)}
-                </TableHead>
-              );
-            })}
-            <TableHead className="w-28 text-end">إجراءات</TableHead>
+            {columns.map((column) => (
+              <ColumnFilterHeader
+                key={column.key}
+                label={column.label}
+                sortKey={column.sortKey}
+                sortConfig={sortDirection ? { key: sortKey, direction: sortDirection } : undefined}
+                onSort={column.sortKey ? onSort : undefined}
+                filterKey={column.filterable === false ? undefined : column.key}
+                filterKind={column.kind}
+                options={column.options}
+                value={columnFilters[column.key]}
+                onChange={onColumnFilterChange}
+                width={layout.widths[column.key]}
+                onResize={layout.setWidth}
+                onAutoFit={layout.autoFitWidth}
+                className={column.numeric ? 'text-end' : undefined}
+              />
+            ))}
+            <DataTableHeader label="إجراءات" className="w-40 text-end" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -254,9 +240,9 @@ function CustomerTableInner({
                     aria-label={`تحديد ${customer.name}`}
                   />
                 </TableCell>
-                {cols.map(key => (
-                  <TableCell key={key} className={cn('py-2', NUMERIC_COLUMNS.has(key) && 'text-end')}>
-                    {renderCell(customer, key)}
+                {columns.map(column => (
+                  <TableCell key={column.key} className={cn('py-2', NUMERIC_COLUMNS.has(column.key) && 'text-end')}>
+                    {renderCell(customer, column.key)}
                   </TableCell>
                 ))}
                 <TableCell className="py-2">

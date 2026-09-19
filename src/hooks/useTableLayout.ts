@@ -36,6 +36,11 @@ const DEFAULT_STATE: TableLayoutState = {
   summaryCollapsed: false,
 };
 
+interface TableLayoutOptions {
+  defaultVisibleKeys?: readonly string[];
+  legacyVisibleStorageKey?: string;
+}
+
 export const DENSITY_CLASS: Record<TableDensity, string> = {
   comfortable: '[&_td]:py-4 [&_th]:h-12 text-sm',
   medium: '[&_td]:py-2.5 [&_th]:h-11 text-sm',
@@ -77,27 +82,47 @@ export function normalizeTableLayout(input: unknown, allColumnKeys: string[]): T
   };
 }
 
-function read(section: string, userId: string, allColumnKeys: string[]): TableLayoutState {
-  if (typeof window === 'undefined') return DEFAULT_STATE;
+function defaultState(allColumnKeys: string[], defaultVisibleKeys?: readonly string[]): TableLayoutState {
+  const visible = new Set(defaultVisibleKeys ?? allColumnKeys);
+  return { ...DEFAULT_STATE, hidden: allColumnKeys.filter((key) => !visible.has(key)) };
+}
+
+function read(
+  section: string,
+  userId: string,
+  allColumnKeys: string[],
+  options: TableLayoutOptions,
+): TableLayoutState {
+  const fallback = defaultState(allColumnKeys, options.defaultVisibleKeys);
+  if (typeof window === 'undefined') return fallback;
   try {
     const raw = window.localStorage.getItem(tableLayoutStorageKey(section, userId))
       ?? window.localStorage.getItem(legacyStorageKey(section, userId));
-    if (!raw) return DEFAULT_STATE;
+    if (!raw && options.legacyVisibleStorageKey) {
+      const legacyVisible = JSON.parse(window.localStorage.getItem(options.legacyVisibleStorageKey) ?? 'null');
+      if (Array.isArray(legacyVisible)) {
+        const visible = new Set(legacyVisible.filter((key): key is string => typeof key === 'string'));
+        return { ...fallback, hidden: allColumnKeys.filter((key) => !visible.has(key)) };
+      }
+    }
+    if (!raw) return fallback;
     return normalizeTableLayout(JSON.parse(raw), allColumnKeys);
   } catch {
-    return DEFAULT_STATE;
+    return fallback;
   }
 }
 
-export function useTableLayout(section: string, allColumnKeys: string[]) {
+export function useTableLayout(section: string, allColumnKeys: string[], options: TableLayoutOptions = {}) {
   const { user } = useAuth();
   const userId = user?.id ?? 'anonymous';
-  const [state, setState] = useState<TableLayoutState>(() => read(section, userId, allColumnKeys));
+  const defaultVisibleKeys = options.defaultVisibleKeys;
+  const legacyVisibleStorageKey = options.legacyVisibleStorageKey;
+  const [state, setState] = useState<TableLayoutState>(() => read(section, userId, allColumnKeys, options));
 
   // Switching account must not inherit the previous user's layout.
   useEffect(() => {
-    setState(read(section, userId, allColumnKeys));
-  }, [section, userId, allColumnKeys]);
+    setState(read(section, userId, allColumnKeys, { defaultVisibleKeys, legacyVisibleStorageKey }));
+  }, [section, userId, allColumnKeys, defaultVisibleKeys, legacyVisibleStorageKey]);
 
   useEffect(() => {
     try {
@@ -173,8 +198,8 @@ export function useTableLayout(section: string, allColumnKeys: string[]) {
     } catch {
       /* storage may be unavailable */
     }
-    setState(DEFAULT_STATE);
-  }, [section, userId]);
+    setState(defaultState(allColumnKeys, defaultVisibleKeys));
+  }, [allColumnKeys, defaultVisibleKeys, section, userId]);
 
   /** Column keys in the user's order, hidden ones removed. */
   const visibleKeys = useMemo(() => {

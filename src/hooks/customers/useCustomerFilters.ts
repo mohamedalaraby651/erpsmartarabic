@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useColumnFilters } from '@/hooks/useColumnFilters';
+import type { ColumnFilter } from '@/components/ui/column-filter';
 
 const STORAGE_KEY = "lov_customers_filters_v1";
 
@@ -44,6 +46,15 @@ export function useCustomerFilters() {
   const [noCommDays, setNoCommDays] = useState(searchParams.get('noComm') || initial.noComm || "");
   const [inactiveDays, setInactiveDays] = useState(searchParams.get('inactive') || initial.inactive || "");
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const columnFilters = useColumnFilters();
+  const {
+    filters: activeColumnFilters,
+    setFilter: setActiveColumnFilter,
+    removeFilter: removeActiveColumnFilter,
+    clearFilters: clearActiveColumnFilters,
+    replaceFilters: replaceActiveColumnFilters,
+    activeCount: activeColumnFilterCount,
+  } = columnFilters;
 
   // Temporary filter state for mobile drawer
   const [tempType, setTempType] = useState("all");
@@ -127,9 +138,14 @@ export function useCustomerFilters() {
       type: setTypeFilter, vip: setVipFilter, gov: setGovernorateFilter, status: setStatusFilter,
       cat: setCategoryFilter, noComm: setNoCommDays, inactive: setInactiveDays,
     };
+    const columnKeyByLegacyKey: Record<string, string> = {
+      type: 'type', vip: 'vip', gov: 'governorate', status: 'status',
+    };
+    const columnKey = columnKeyByLegacyKey[key];
+    if (columnKey) removeActiveColumnFilter(columnKey);
     setters[key]?.(value);
     syncToUrl({ [key]: value });
-  }, [syncToUrl]);
+  }, [removeActiveColumnFilter, syncToUrl]);
 
   const clearFilter = useCallback((key: string) => {
     updateFilter(key, 'all');
@@ -146,7 +162,24 @@ export function useCustomerFilters() {
     setInactiveDays('');
     setSearchParams({}, { replace: true });
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-  }, [setSearchParams]);
+    clearActiveColumnFilters();
+  }, [clearActiveColumnFilters, setSearchParams]);
+
+  const setColumnFilter = useCallback((key: string, filter: ColumnFilter | undefined) => {
+    if (key === 'type') setTypeFilter('all');
+    if (key === 'vip') setVipFilter('all');
+    if (key === 'governorate') setGovernorateFilter('all');
+    if (key === 'status') setStatusFilter('all');
+    setActiveColumnFilter(key, filter);
+    if (['type', 'vip', 'governorate', 'status'].includes(key)) {
+      syncToUrl({
+        ...(key === 'type' ? { type: 'all' } : {}),
+        ...(key === 'vip' ? { vip: 'all' } : {}),
+        ...(key === 'governorate' ? { gov: 'all' } : {}),
+        ...(key === 'status' ? { status: 'all' } : {}),
+      });
+    }
+  }, [setActiveColumnFilter, syncToUrl]);
 
   const openDrawerWithCurrentValues = useCallback(() => {
     setTempType(typeFilter);
@@ -197,7 +230,16 @@ export function useCustomerFilters() {
     categoryFilter, setCategoryFilter: (v: string) => updateFilter('cat', v),
     noCommDays, setNoCommDays: (v: string) => updateFilter('noComm', v),
     inactiveDays, setInactiveDays: (v: string) => updateFilter('inactive', v),
-    clearFilter, clearAllFilters, activeFiltersCount,
+    clearFilter, clearAllFilters,
+    activeFiltersCount: activeFiltersCount + activeColumnFilterCount,
+    columnFilters: {
+      filters: activeColumnFilters,
+      setFilter: setColumnFilter,
+      removeFilter: removeActiveColumnFilter,
+      clearFilters: clearActiveColumnFilters,
+      replaceFilters: replaceActiveColumnFilters,
+      activeCount: activeColumnFilterCount,
+    },
     // Drawer
     filterDrawerOpen, setFilterDrawerOpen,
     tempType, setTempType, tempVip, setTempVip,
