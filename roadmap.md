@@ -76,3 +76,9 @@
 - [x] Verification: typecheck PASS; 1637 tests PASS / 5 skipped; scoped lint 0 errors; production build PASS
 - [ ] Live multi-viewport browser evidence was blocked by missing Chromium host libraries; NOT HUMAN ACCEPTED / NOT CERTIFIED
 - [ ] STOP conditions retained: loaded-row-only bulk selection, server-wide alert filtering, and offset pagination after mutations
+
+## OPA-CUST-UI-005 — Integrated table header and advanced discovery
+- [ ] Integrate customer summary filters into the table header according to their filtering role
+- [ ] Improve customer search and filters with invoice-pattern consistency and customer-name multi-select
+- [ ] Define the authorized rollout scope for reusable search/filter behavior beyond the customers table
+- [ ] Verify usability, RTL, accessibility, responsiveness, query consistency, and performance without DB/security changes
