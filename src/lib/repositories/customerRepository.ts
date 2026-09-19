@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { customerWriteSchema } from "@/lib/validations";
 import { sanitizeSearch } from "@/lib/utils/sanitize";
+import type { ColumnFilters } from '@/components/ui/column-filter';
+import { applyCustomerColumnFilters } from '@/lib/filters/customerColumnFilters';
 
 type Customer = Database['public']['Tables']['customers']['Row'];
 type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
@@ -29,6 +31,7 @@ export interface CustomerFilters {
   category?: string;
   noCommDays?: string;
   inactiveDays?: string;
+  columnFilters?: ColumnFilters;
 }
 
 export interface CustomerSort {
@@ -57,7 +60,7 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
   filters: CustomerFilters
 ): T {
   let q = query;
-  const { search, type, vip, governorate, status, category, noCommDays, inactiveDays } = filters;
+  const { search, type, vip, governorate, status, category, noCommDays, inactiveDays, columnFilters } = filters;
   if (search) {
     const s = sanitizeSearch(search);
     // OPA-CUST-001: search spans the identifying fields that already exist on the
@@ -94,6 +97,7 @@ function applyFilters<T extends { or: (...args: any[]) => any; eq: (...args: any
     cutoff.setDate(cutoff.getDate() - Number(inactiveDays));
     q = q.or(`last_activity_at.is.null,last_activity_at.lte.${cutoff.toISOString()}`) as typeof q;
   }
+  if (columnFilters) q = applyCustomerColumnFilters(q, columnFilters);
   return q;
 }
 

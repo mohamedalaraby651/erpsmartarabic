@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
 import {
   savedViewsRepository,
   type SavedViewSection,
@@ -40,6 +39,7 @@ interface ActiveFiltersBarProps {
   section: SavedViewSection;
   /** Number of rows matching the current filters, shown as context. */
   resultCount?: number;
+  enableSavedSets?: boolean;
 }
 
 export function ActiveFiltersBar({
@@ -50,9 +50,9 @@ export function ActiveFiltersBar({
   onApplySet,
   section,
   resultCount,
+  enableSavedSets = true,
 }: ActiveFiltersBarProps) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [saveOpen, setSaveOpen] = useState(false);
@@ -62,7 +62,7 @@ export function ActiveFiltersBar({
   const { data: savedSets = [] } = useQuery({
     queryKey: ['column-filter-sets', section, user?.id],
     queryFn: () => savedViewsRepository.list<ColumnFilters>(section, user!.id),
-    enabled: !!user?.id,
+    enabled: enableSavedSets && !!user?.id,
   });
 
   const saveMutation = useMutation({
@@ -130,7 +130,7 @@ export function ActiveFiltersBar({
           </Button>
         )}
 
-        {hasFilters && user?.id && (
+        {enableSavedSets && hasFilters && user?.id && (
           <Popover open={saveOpen} onOpenChange={setSaveOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
@@ -157,7 +157,7 @@ export function ActiveFiltersBar({
           </Popover>
         )}
 
-        {savedSets.length > 0 && (
+        {enableSavedSets && savedSets.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">

@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUpDown, Loader2, Trash2, Crown, X } from "lucide-react";
+import { Keyboard, Loader2, SlidersHorizontal, Trash2, Crown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
-import { useNavigationState } from "@/hooks/useNavigationState";
 import { usePersistentState } from "@/hooks/usePersistentState";
 import { useCustomerFilters } from "@/hooks/customers";
 import { useCustomerList } from "@/hooks/customers/useCustomerList";
@@ -36,7 +33,6 @@ import { CustomerErrorState } from "@/components/customers/list/CustomerErrorSta
 import { CustomerQuickAddDialog } from "@/components/customers/dialogs/CustomerQuickAddDialog";
 import { CustomerExportDialog } from "@/components/customers/dialogs/CustomerExportDialog";
 import { CustomerSavedViews } from "@/components/customers/list/CustomerSavedViews";
-import { CustomerColumnSettings, useVisibleColumns } from "@/components/customers/list/CustomerColumnSettings";
 import { egyptGovernorates } from "@/lib/egyptLocations";
 import { LiveRegion } from "@/components/shared/LiveRegion";
 import { useCustomerLayoutPrefs } from "@/hooks/customers/useCustomerLayoutPrefs";
@@ -45,6 +41,18 @@ import { CollapsedSummaryBar } from "@/components/customers/list/CollapsedSummar
 import { CustomerTable } from "@/components/customers/list/CustomerTable";
 import { useListShortcuts } from "@/hooks/useListShortcuts";
 import { ShortcutsHelp } from "@/components/shared/ShortcutsHelp";
+import { DataTableToolbar } from '@/components/table/DataTableToolbar';
+import { ActiveFiltersBar } from '@/components/table/ActiveFiltersBar';
+import { TableViewOptions } from '@/components/table/TableViewOptions';
+import { useTableLayout } from '@/hooks/useTableLayout';
+import { CustomerSearchPreview } from '@/components/customers/filters/CustomerSearchPreview';
+import {
+  CUSTOMER_COLUMN_KEYS,
+  CUSTOMER_COLUMN_LABELS,
+  CUSTOMER_DEFAULT_COLUMNS,
+  CUSTOMER_FILTER_META,
+} from '@/components/customers/list/customerTableColumns';
+import type { ColumnFilters } from '@/components/ui/column-filter';
 
 /** Presentation-only shortcut reference for the customers workspace. */
 const CUSTOMER_SHORTCUTS = [
@@ -65,12 +73,14 @@ const CustomersPage = () => {
   const dialogRef = useRef<DialogManagerHandle>(null);
 
   const filters = useCustomerFilters();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
-  // Column visibility
-  const { visibleColumns, setVisibleColumns } = useVisibleColumns();
+  const tableLayoutOptions = useMemo(() => ({
+    defaultVisibleKeys: CUSTOMER_DEFAULT_COLUMNS,
+    legacyVisibleStorageKey: 'customer-visible-columns',
+  }), []);
+  const tableLayout = useTableLayout('customers', CUSTOMER_COLUMN_KEYS, tableLayoutOptions);
 
   // Layout preferences (show/hide sections above the list — persisted per device)
   const layout = useCustomerLayoutPrefs();
@@ -87,11 +97,6 @@ const CustomersPage = () => {
   const canDelete = userRole === 'admin';
 
   const [sortConfig, setSortConfig] = usePersistentState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
-  /** Sort picker: selecting a field always starts from ascending order. */
-  const requestSort = useCallback((key: string) => {
-    setSortConfig({ key, direction: 'asc' as const });
-  }, [setSortConfig]);
-
   /** Column header: asc -> desc -> default. */
   const handleHeaderSort = useCallback((key: string) => {
     setSortConfig((() => {
@@ -139,7 +144,7 @@ const CustomersPage = () => {
   } = useInfiniteCustomers({
     pageSize,
     isMobile,
-    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.categoryFilter, filters.noCommDays, filters.inactiveDays, sortConfig.key, sortConfig.direction],
+    resetDeps: [filters.debouncedSearch, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.categoryFilter, filters.noCommDays, filters.inactiveDays, JSON.stringify(filters.columnFilters.filters), sortConfig.key, sortConfig.direction],
   });
 
   const list = useCustomerList({
@@ -148,8 +153,50 @@ const CustomersPage = () => {
     governorateFilter: filters.governorateFilter, statusFilter: filters.statusFilter,
     categoryFilter: filters.categoryFilter,
     noCommDays: filters.noCommDays, inactiveDays: filters.inactiveDays,
+    columnFilters: filters.columnFilters.filters,
     currentPage, pageSize, sortConfig,
   });
+
+  const displayedFilters = useMemo<ColumnFilters>(() => ({
+    ...filters.columnFilters.filters,
+    ...(filters.typeFilter !== 'all' ? { type: { kind: 'options', values: [filters.typeFilter] } } : {}),
+    ...(filters.vipFilter !== 'all' ? {
+      vip: {
+        kind: 'options',
+        values: filters.vipFilter === 'non-regular' ? ['silver', 'gold', 'platinum'] : [filters.vipFilter],
+      },
+    } : {}),
+    ...(filters.governorateFilter !== 'all' ? { governorate: { kind: 'options', values: [filters.governorateFilter] } } : {}),
+    ...(filters.statusFilter !== 'all' ? {
+      [filters.statusFilter === 'debtors' ? 'balance' : 'status']:
+        filters.statusFilter === 'debtors'
+          ? { kind: 'number', operator: 'gt', from: '0' }
+          : { kind: 'options', values: [filters.statusFilter === 'active' ? 'true' : 'false'] },
+    } : {}),
+    ...(filters.categoryFilter !== 'all' ? { category: { kind: 'text', text: filters.categoryFilter, operator: 'equals' } } : {}),
+    ...(filters.noCommDays ? { noComm: { kind: 'number', operator: 'gt', from: filters.noCommDays } } : {}),
+    ...(filters.inactiveDays ? { inactive: { kind: 'number', operator: 'gt', from: filters.inactiveDays } } : {}),
+  }), [filters.columnFilters.filters, filters.typeFilter, filters.vipFilter, filters.governorateFilter, filters.statusFilter, filters.categoryFilter, filters.noCommDays, filters.inactiveDays]);
+
+  const displayedFilterMeta = useMemo(() => ({
+    ...CUSTOMER_FILTER_META,
+    category: { label: 'الفئة' },
+    noComm: { label: 'بدون تواصل منذ (أيام)' },
+    inactive: { label: 'بدون نشاط منذ (أيام)' },
+  }), []);
+
+  const removeDisplayedFilter = useCallback((key: string) => {
+    if (filters.columnFilters.filters[key]) {
+      filters.columnFilters.removeFilter(key);
+      return;
+    }
+    const legacyKey: Record<string, string> = {
+      type: 'type', vip: 'vip', governorate: 'gov', status: 'status', balance: 'status',
+      category: 'cat', noComm: 'noComm', inactive: 'inactive',
+    };
+    const target = legacyKey[key];
+    if (target) filters.clearFilter(target);
+  }, [filters]);
 
   // Feed page data into the infinite scroll accumulator
   useEffect(() => {
@@ -180,6 +227,7 @@ const CustomersPage = () => {
     filters.debouncedSearch, filters.typeFilter, filters.vipFilter,
     filters.governorateFilter, filters.statusFilter, filters.categoryFilter,
     filters.noCommDays, filters.inactiveDays,
+    filters.columnFilters.filters,
     sortConfig.key, sortConfig.direction, alertFilterType,
   ]);
 
@@ -193,8 +241,7 @@ const CustomersPage = () => {
   const handleAddAdvanced = useCallback(() => { dialogRef.current?.openAdd(); }, []);
   const handleDeleteRequest = useCallback((id: string) => { dialogRef.current?.confirmDelete(id); }, []);
   const handleDeleteConfirm = useCallback((id: string) => {
-    setDeletingId(id);
-    mutations.deleteMutation.mutate(id, { onSettled: () => setDeletingId(null) });
+    mutations.deleteMutation.mutate(id);
   }, [mutations.deleteMutation]);
   const handleNewInvoice = useCallback((customerId: string) => { navigate('/invoices', { state: { prefillCustomerId: customerId } }); }, [navigate]);
   const handleWhatsApp = useCallback((phone: string) => { window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank'); }, []);
@@ -339,7 +386,7 @@ const CustomersPage = () => {
         />
       )}
 
-      {(isMobile ? layout.isMobileVisible('filters') : layout.isDesktopVisible('filters')) && (
+      {isMobile && layout.isMobileVisible('filters') && (
         <div id="customers-search-region" className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 py-2 -mx-1 px-1">
           <CustomerFiltersBar
             searchQuery={filters.searchQuery} onSearchChange={filters.setSearchQuery}
@@ -418,20 +465,33 @@ const CustomersPage = () => {
         </div>
       ) : (
         <div>
-          {/* Toolbar: result count + saved views + column controls + sort */}
-          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground">
-              {list.totalCount} عميل
-              {allCustomers.length !== list.totalCount ? ` — معروض ${allCustomers.length}` : ''}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost" size="sm" className="h-9 text-xs"
-                onClick={() => setShortcutsOpen(true)}
-                aria-label="عرض اختصارات لوحة المفاتيح"
-              >
-                اختصارات
-              </Button>
+          {layout.isDesktopVisible('filters') && (
+            <div id="customers-search-region" className="sticky top-0 z-20 mb-3 bg-background/95 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+              <DataTableToolbar
+                search={(
+                  <CustomerSearchPreview
+                    value={filters.searchQuery}
+                    onChange={filters.setSearchQuery}
+                    className="min-w-64 max-w-xl"
+                  />
+                )}
+                controls={(
+                  <>
+                    <Button
+                      type="button"
+                      variant={filters.activeFiltersCount > filters.columnFilters.activeCount ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-9 gap-1.5"
+                      onClick={filters.openDrawerWithCurrentValues}
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                      متقدم
+                    </Button>
+                    <TableViewOptions layout={tableLayout} columns={CUSTOMER_COLUMN_LABELS} />
+                  </>
+                )}
+                actions={(
+                  <>
               <CustomerSavedViews
                 currentFilters={{
                   type: filters.typeFilter,
@@ -451,21 +511,38 @@ const CustomersPage = () => {
                   setQuickFilter(null);
                 }}
               />
-              <CustomerColumnSettings visibleColumns={visibleColumns} onChange={setVisibleColumns} />
-              <Select value={sortConfig.key || 'created_at'} onValueChange={requestSort}>
-                <SelectTrigger className="w-40 h-9 text-xs">
-                  <ArrowUpDown className="h-3.5 w-3.5 me-1" />
-                  <SelectValue placeholder="ترتيب حسب" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="created_at">تاريخ الإنشاء</SelectItem>
-                  <SelectItem value="name">الاسم</SelectItem>
-                  <SelectItem value="current_balance">الرصيد</SelectItem>
-                  <SelectItem value="last_activity_at">آخر نشاط</SelectItem>
-                </SelectContent>
-              </Select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => setShortcutsOpen(true)}
+                      aria-label="عرض اختصارات لوحة المفاتيح"
+                    >
+                      <Keyboard className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+                status={(
+                  <div className="space-y-2">
+                    <ActiveFiltersBar
+                      section="customers"
+                      filters={displayedFilters}
+                      columns={displayedFilterMeta}
+                      resultCount={list.totalCount}
+                      onRemove={removeDisplayedFilter}
+                      onClearAll={filters.clearAllFilters}
+                      onApplySet={filters.columnFilters.replaceFilters}
+                      enableSavedSets={false}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {list.totalCount} عميل
+                      {allCustomers.length !== list.totalCount ? ` — معروض ${allCustomers.length}` : ''}
+                    </p>
+                  </div>
+                )}
+              />
             </div>
-          </div>
+          )}
 
           {list.isError && allCustomers.length === 0 ? (
             <CustomerErrorState
@@ -486,7 +563,9 @@ const CustomersPage = () => {
             <div>
               <CustomerTable
                 customers={allCustomers}
-                visibleColumns={visibleColumns}
+                layout={tableLayout}
+                columnFilters={filters.columnFilters.filters}
+                onColumnFilterChange={filters.columnFilters.setFilter}
                 searchQuery={filters.debouncedSearch}
                 sortKey={sortConfig.key}
                 sortDirection={sortConfig.direction}
