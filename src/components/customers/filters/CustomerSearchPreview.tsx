@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X, Phone, MapPin } from "lucide-react";
+import { Search, X, Phone, MapPin, Loader2 } from "lucide-react";
 import CustomerAvatar from "@/components/customers/shared/CustomerAvatar";
 import { cn } from "@/lib/utils";
 import { customerSearchRepo } from "@/application/queries/customer-search";
@@ -14,16 +14,17 @@ interface CustomerSearchPreviewProps {
   onChange: (value: string) => void;
   className?: string;
   mobileStyle?: boolean;
+  isFetching?: boolean;
 }
 
-export function CustomerSearchPreview({ value, onChange, className, mobileStyle }: CustomerSearchPreviewProps) {
+export function CustomerSearchPreview({ value, onChange, className, mobileStyle, isFetching = false }: CustomerSearchPreviewProps) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debouncedSearch = useDebounce(value, 350);
 
-  const { data: results = [] } = useQuery({
+  const { data: results = [], isFetching: isPreviewFetching } = useQuery({
     queryKey: ['customer-search-preview', debouncedSearch],
     queryFn: () => customerSearchRepo.searchPreview(debouncedSearch),
     enabled: !!debouncedSearch && debouncedSearch.length >= 2,
@@ -41,6 +42,16 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
   useEffect(() => { setHighlightedIndex(-1); }, [results]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (isOpen) setIsOpen(false);
+      else onChange('');
+      return;
+    }
+    if (e.key === 'Enter' && (!isOpen || highlightedIndex < 0)) {
+      setIsOpen(false);
+      return;
+    }
     if (!isOpen || results.length === 0) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -50,12 +61,12 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
       setHighlightedIndex(prev => (prev <= 0 ? results.length - 1 : prev - 1));
     } else if (e.key === 'Enter' && highlightedIndex >= 0) {
       e.preventDefault();
-      navigate(`/customers/${results[highlightedIndex].id}`);
-      setIsOpen(false);
-    } else if (e.key === 'Escape') {
+      const selected = results[highlightedIndex];
+      if (!selected) return;
+      navigate(`/customers/${selected.id}`);
       setIsOpen(false);
     }
-  }, [isOpen, results, highlightedIndex, navigate]);
+  }, [isOpen, results, highlightedIndex, navigate, onChange]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -75,32 +86,48 @@ export function CustomerSearchPreview({ value, onChange, className, mobileStyle 
         mobileStyle ? "text-muted-foreground/60" : "text-muted-foreground",
       )} />
       <Input
-        placeholder="بحث بالاسم، الهاتف، المحافظة..."
+        placeholder="ابحث بالاسم، الهاتف، البريد أو الرقم الضريبي..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onKeyDown={handleKeyDown}
+        aria-label="البحث في العملاء"
+        aria-controls={isOpen ? 'customer-search-suggestions' : undefined}
+        aria-expanded={isOpen}
+        aria-autocomplete="list"
         className={cn(
           "pr-10 pl-10",
           mobileStyle && "h-11 rounded-xl bg-muted/50 border-transparent shadow-inner focus-visible:bg-background focus-visible:border-input",
         )}
       />
+      {(isFetching || isPreviewFetching) && (
+        <Loader2 className="absolute left-10 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" aria-label="جارٍ تحديث النتائج" />
+      )}
       {value && (
         <Button
           variant="ghost"
           size="icon"
           className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8"
           onClick={() => onChange('')}
+          aria-label="مسح البحث"
         >
           <X className="h-4 w-4" />
         </Button>
       )}
 
       {isOpen && (
-        <div className="absolute top-full mt-1 inset-x-0 z-50 bg-popover border rounded-xl shadow-lg overflow-hidden" role="listbox">
+        <div id="customer-search-suggestions" className="absolute top-full mt-1 inset-x-0 z-50 bg-popover border rounded-xl shadow-lg overflow-hidden" role="listbox" aria-label="اقتراحات العملاء">
           {results.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
-              لا توجد نتائج مطابقة
+              <p>لم نجد عملاء مطابقين.</p>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                onMouseDown={(event) => { event.preventDefault(); onChange(''); setIsOpen(false); }}
+              >
+                مسح البحث
+              </Button>
             </div>
           ) : (
             results.map((customer, index) => (

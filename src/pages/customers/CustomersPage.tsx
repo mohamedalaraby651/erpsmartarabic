@@ -180,10 +180,12 @@ const CustomersPage = () => {
 
   const displayedFilterMeta = useMemo(() => ({
     ...CUSTOMER_FILTER_META,
+    name: { ...CUSTOMER_FILTER_META.name, options: list.filterOptions.name },
+    city: { ...CUSTOMER_FILTER_META.city, options: list.filterOptions.city },
     category: { label: 'الفئة' },
     noComm: { label: 'بدون تواصل منذ (أيام)' },
     inactive: { label: 'بدون نشاط منذ (أيام)' },
-  }), []);
+  }), [list.filterOptions.city, list.filterOptions.name]);
 
   const removeDisplayedFilter = useCallback((key: string) => {
     if (filters.columnFilters.filters[key]) {
@@ -372,7 +374,7 @@ const CustomersPage = () => {
         />
       )}
 
-      {(isMobile ? layout.isMobileVisible('stats') : layout.isDesktopVisible('stats')) && (
+      {isMobile && layout.isMobileVisible('stats') && (
         <CustomerStatsBar stats={list.stats} isMobile={isMobile} activeFilter={quickFilter} onFilterChange={handleQuickFilter} />
       )}
 
@@ -472,6 +474,7 @@ const CustomersPage = () => {
                   <CustomerSearchPreview
                     value={filters.searchQuery}
                     onChange={filters.setSearchQuery}
+                    isFetching={list.isFetching}
                     className="min-w-64 max-w-xl"
                   />
                 )}
@@ -583,6 +586,16 @@ const CustomersPage = () => {
                 onRowLeave={list.handleRowLeave}
                 alertCountByCustomer={alertCountByCustomer}
                 errorCustomerIds={errorCustomerIds}
+                filterOptions={list.filterOptions}
+                filterOptionsLoading={list.areFilterOptionsLoading}
+                headerTools={layout.isDesktopVisible('stats') ? (
+                  <CustomerStatsBar
+                    stats={list.stats}
+                    isMobile={false}
+                    activeFilter={quickFilter}
+                    onFilterChange={handleQuickFilter}
+                  />
+                ) : undefined}
               />
 
               {/* Infinite scroll sentinel */}

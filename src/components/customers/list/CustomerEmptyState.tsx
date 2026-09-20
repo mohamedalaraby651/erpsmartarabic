@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Plus, FileSpreadsheet, FileText, TrendingUp } from 'lucide-react';
+import { Users, Plus, FileSpreadsheet, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CustomerEmptyStateProps {

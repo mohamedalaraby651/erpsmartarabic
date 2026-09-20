@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type ReactNode } from 'react';
 import { Crown, MessageCircle, FileText, CreditCard, Edit2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { vipLabels, typeLabels, getBalanceColor } from '@/lib/customerConstants'
 import type { Customer } from '@/lib/customerConstants';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { ColumnFilterHeader, type ColumnFilters } from '@/components/ui/column-filter';
+import { ColumnFilterHeader, type ColumnFilters, type FilterOption } from '@/components/ui/column-filter';
 import { DENSITY_CLASS, type TableLayout } from '@/hooks/useTableLayout';
 import { DataTableHeader } from '@/components/ui/data-table-header';
 import { CUSTOMER_TABLE_COLUMNS } from './customerTableColumns';
@@ -53,6 +53,9 @@ export interface CustomerTableProps {
   onRowLeave?: () => void;
   alertCountByCustomer?: Map<string, number>;
   errorCustomerIds?: Set<string>;
+  headerTools?: ReactNode;
+  filterOptions?: Partial<Record<string, FilterOption[]>>;
+  filterOptionsLoading?: boolean;
 }
 
 function CustomerTableInner({
@@ -61,6 +64,7 @@ function CustomerTableInner({
   selectedIds, onToggleSelect, isAllSelected, onToggleSelectAll,
   onNavigate, onEdit, onNewInvoice, onNewPayment, onWhatsApp,
   onRowHover, onRowLeave, alertCountByCustomer, errorCustomerIds,
+  headerTools, filterOptions = {}, filterOptionsLoading = false,
 }: CustomerTableProps) {
   const columns = layout.visibleKeys
     .map((key) => CUSTOMER_TABLE_COLUMNS.find((column) => column.key === key))
@@ -139,6 +143,10 @@ function CustomerTableInner({
         return customer.governorate
           ? <span className="text-xs">{customer.governorate}</span>
           : <span className="text-muted-foreground">—</span>;
+      case 'city':
+        return customer.city
+          ? <span className="text-xs">{customer.city}</span>
+          : <span className="text-muted-foreground">—</span>;
       case 'balance':
         return (
           <span className={cn('font-bold text-sm tabular-nums', getBalanceColor(balance, creditLimit))}>
@@ -188,6 +196,13 @@ function CustomerTableInner({
       <Table className={DENSITY_CLASS[layout.density]}>
         <caption className="sr-only">قائمة العملاء</caption>
         <TableHeader className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_hsl(var(--border))]">
+          {headerTools && (
+            <TableRow className="hover:bg-card">
+              <TableHead colSpan={columns.length + 2} className="h-auto border-b bg-muted/30 px-3 py-2">
+                {headerTools}
+              </TableHead>
+            </TableRow>
+          )}
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
@@ -205,7 +220,8 @@ function CustomerTableInner({
                 onSort={column.sortKey ? onSort : undefined}
                 filterKey={column.filterable === false ? undefined : column.key}
                 filterKind={column.kind}
-                options={column.options}
+                options={filterOptions[column.key] ?? column.options}
+                optionsLoading={filterOptionsLoading && (column.key === 'name' || column.key === 'city')}
                 value={columnFilters[column.key]}
                 onChange={onColumnFilterChange}
                 width={layout.widths[column.key]}

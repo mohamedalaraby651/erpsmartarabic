@@ -78,8 +78,10 @@
 - [ ] STOP conditions retained: loaded-row-only bulk selection, server-wide alert filtering, and offset pagination after mutations
 
 ## OPA-CUST-UI-005 — Integrated table header and advanced discovery
-- [ ] Batch A — Table Intelligence: integrated header, command search, adaptive column filters, customer-name multi-select, active-filter chips, query consistency, responsive/loading/empty/error states
-- [ ] Batch A Gate — typecheck/tests/build + live RTL/accessibility/responsive/query evidence; HUMAN ACCEPTANCE required before Batch B
+- [x] G0 — baseline and contract discovery recorded; customer code and sales representative are DEFERRED because the read contract does not expose them
+- [x] Batch A — Table Intelligence: stats integrated into the desktop/tablet table header, expanded command-like search, adaptive column filters, bounded customer-name/city multi-select, active-filter chips, query consistency, and zero-result recovery — IMPLEMENTED
+- [x] Batch A verification — scoped lint 0 errors; 4 filter tests PASS; live 360/768/964/1280 RTL checks show no horizontal overflow, no page errors, `/` search focus PASS, 15 desktop/tablet rows, and customer-name picker with 13 checkbox options — VERIFIED
+- [ ] Batch A Gate — full typecheck/build remains blocked by pre-existing TS7011 in protected generated `previewAuthStorage.ts`; HUMAN ACCEPTANCE required before Batch B; NOT CERTIFIED
 - [ ] Batch B — Productivity: existing Saved Views/preferences reuse, deep linking/restoration, keyboard navigation, compact row actions, bounded cancellable prefetch, mobile workspace
 - [ ] Batch B Gate — workflow/time/interaction evidence and HUMAN ACCEPTANCE required before Batch C
 - [ ] Batch C — Customer 360: authoritative health snapshot, existing sales/payment/balance/activity read models only; STOP if metric authority is absent
