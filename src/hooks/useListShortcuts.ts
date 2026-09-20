@@ -16,8 +16,6 @@ import { useEffect } from "react";
 export interface ListShortcutHandlers {
   /** `/` — focus the search field. */
   onFocusSearch?: () => void;
-  /** `Ctrl/Cmd + K` — focus the command search field. */
-  onCommandSearch?: () => void;
   /** `n` — create a new record. */
   onNew?: () => void;
   /** `r` — refresh the current view. */
@@ -69,13 +67,6 @@ export function useListShortcuts(handlers: ListShortcutHandlers, enabled = true)
   useEffect(() => {
     if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'k') {
-        if (!isGuardedTarget(event.target) && !hasOpenOverlay() && handlers.onCommandSearch) {
-          event.preventDefault();
-          handlers.onCommandSearch();
-        }
-        return;
-      }
       if (event.ctrlKey || event.metaKey || event.altKey) return;
 
       // Escape: the caller decides the priority order (overlay first).

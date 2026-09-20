@@ -57,7 +57,6 @@ import type { ColumnFilters } from '@/components/ui/column-filter';
 /** Presentation-only shortcut reference for the customers workspace. */
 const CUSTOMER_SHORTCUTS = [
   { keys: '/', description: 'الانتقال إلى البحث' },
-  { keys: 'Ctrl/⌘ K', description: 'فتح بحث العملاء' },
   { keys: 'N', description: 'عميل جديد' },
   { keys: 'R', description: 'تحديث القائمة' },
   { keys: 'Esc', description: 'إغلاق النوافذ أو إلغاء التحديد' },
@@ -284,7 +283,6 @@ const CustomersPage = () => {
   }, [shortcutsOpen, filters.filterDrawerOpen, bulk]);
   useListShortcuts({
     onFocusSearch: focusSearch,
-    onCommandSearch: focusSearch,
     onNew: canEdit ? handleAdd : undefined,
     onRefresh: () => { void list.refetch(); },
     onEscape: handleEscape,
