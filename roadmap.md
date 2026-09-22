@@ -77,14 +77,15 @@
 - [ ] Live multi-viewport browser evidence was blocked by missing Chromium host libraries; NOT HUMAN ACCEPTED / NOT CERTIFIED
 - [ ] STOP conditions retained: loaded-row-only bulk selection, server-wide alert filtering, and offset pagination after mutations
 
-## OPA-CUST-UI-005 — Integrated table header and advanced discovery
-- [x] G0 — baseline and contract discovery recorded; customer code and sales representative are DEFERRED because the read contract does not expose them
-- [x] Batch A — Table Intelligence: stats integrated into the desktop/tablet table header, expanded command-like search, adaptive column filters, bounded customer-name/city multi-select, active-filter chips, query consistency, and zero-result recovery — IMPLEMENTED
-- [x] Batch A verification — scoped lint 0 errors; 4 filter tests PASS; live 360/768/964/1280 RTL checks show no horizontal overflow, no page errors, `/` search focus PASS, 15 desktop/tablet rows, and customer-name picker with 13 checkbox options — VERIFIED
-- [ ] Batch A Gate — full typecheck/build remains blocked by pre-existing TS7011 in protected generated `previewAuthStorage.ts`; HUMAN ACCEPTANCE required before Batch B; NOT CERTIFIED
-- [ ] Batch B — Productivity: existing Saved Views/preferences reuse, deep linking/restoration, keyboard navigation, compact row actions, bounded cancellable prefetch, mobile workspace
-- [ ] Batch B Gate — workflow/time/interaction evidence and HUMAN ACCEPTANCE required before Batch C
-- [ ] Batch C — Customer 360: authoritative health snapshot, existing sales/payment/balance/activity read models only; STOP if metric authority is absent
-- [ ] Establish customers as the Reference Implementation for the Nazra Enterprise Data Workspace pattern; no rollout to other tables in this scope
-- [ ] Performance Gate — profile before any virtualization decision; server pagination remains authoritative
-- [ ] Smart Freeze — no DB/RLS/migrations/permissions/roles or new frontend financial/business calculations
+## OPA-CUST-UI-005 — Customer Workspace Reference Implementation
+- [x] G0 — baseline and contracts recorded; unsupported customer code and sales representative deferred
+- [x] Batch A — integrated stats header, advanced search, adaptive filters, multi-name/city, active filters, and recovery states — IMPLEMENTED + VERIFIED
+- [ ] G1 — rerun typecheck, full tests, build, scoped lint, live RTL matrix, and performance baseline; blocker: pending execution
+- [ ] Gate A — HUMAN ACCEPTANCE required before Batch B; blocker: independent human decision
+- [ ] Batch B1–B3 — versioned workspace state, complete Saved Views with legacy fallback, safe URL deep links, and return-context restoration; blocker: Gate A
+- [ ] Batch B4–B7 — unified preferences, desktop row keyboard navigation, compact permission-gated actions, mobile review, and bounded prefetch; blocker: Gate A
+- [ ] Gate B — workflow/performance/accessibility evidence plus HUMAN ACCEPTANCE; blocker: Batch B completion
+- [ ] Batch C — authority matrix and Customer 360 presentation hardening using existing read models only; blocker: Gate B
+- [ ] Reference contract — document and regression-test the customer workspace pattern without rolling it out elsewhere; blocker: Batch C
+- [ ] Performance decision — measure first; virtualization needs a separate architectural decision
+- [ ] STOP — no DB/RLS/migrations/permissions/roles, new financial calculations, server-wide selection/alert filtering, or pagination redesign
