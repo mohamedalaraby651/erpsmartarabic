@@ -77,15 +77,14 @@
 - [ ] Live multi-viewport browser evidence was blocked by missing Chromium host libraries; NOT HUMAN ACCEPTED / NOT CERTIFIED
 - [ ] STOP conditions retained: loaded-row-only bulk selection, server-wide alert filtering, and offset pagination after mutations
 
-## OPA-CUST-UI-005 — Customer Workspace Reference Implementation
-- [x] G0 — baseline and contracts recorded; unsupported customer code and sales representative deferred
-- [x] Batch A — integrated stats header, advanced search, adaptive filters, multi-name/city, active filters, and recovery states — IMPLEMENTED + VERIFIED
-- [ ] G1 — rerun typecheck, full tests, build, scoped lint, live RTL matrix, and performance baseline; blocker: pending execution
-- [ ] Gate A — HUMAN ACCEPTANCE required before Batch B; blocker: independent human decision
-- [ ] Batch B1–B3 — versioned workspace state, complete Saved Views with legacy fallback, safe URL deep links, and return-context restoration; blocker: Gate A
-- [ ] Batch B4–B7 — unified preferences, desktop row keyboard navigation, compact permission-gated actions, mobile review, and bounded prefetch; blocker: Gate A
-- [ ] Gate B — workflow/performance/accessibility evidence plus HUMAN ACCEPTANCE; blocker: Batch B completion
-- [ ] Batch C — authority matrix and Customer 360 presentation hardening using existing read models only; blocker: Gate B
-- [ ] Reference contract — document and regression-test the customer workspace pattern without rolling it out elsewhere; blocker: Batch C
-- [ ] Performance decision — measure first; virtualization needs a separate architectural decision
-- [ ] STOP — no DB/RLS/migrations/permissions/roles, new financial calculations, server-wide selection/alert filtering, or pagination redesign
+## OPA-CUST-UI-005 v2.0 — Customer Workspace Execution Contract (approved 2026-09-24)
+- [x] G0 + Batch A — IMPLEMENTED + VERIFIED (prior)
+- [x] G1 — IMPLEMENTED + VERIFIED (docs/governance/OPA_CUST_UI_005_G1_RECORD.md); typecheck blocked only by protected generated TS7011 — separate platform unit; HUMAN ACCEPTANCE pending
+- [ ] B0 — CustomerWorkspaceStateV1 pure contract; blocker: G1 gate
+- [ ] B1 — Saved Views identity/dirty + URL + return context; blocker: B0 gate
+- [ ] B2 — keyboard ownership + action contract + mobile; blocker: B1 gate
+- [ ] B3 — prefetch KPIs vs baseline; blocker: B2 gate
+- [ ] C0 — Customer 360 authority matrix; blocker: B1 gate
+- [ ] C1 — Customer 360 UI-only (no client aggregation); blocker: C0 acceptance
+- [ ] Final Gate + Regression Contract; blocker: human acceptance
+- [x] Answer user: project-level suggestions based on current state
