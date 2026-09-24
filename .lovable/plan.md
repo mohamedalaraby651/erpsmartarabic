@@ -1,105 +1,111 @@
-# OPA-CUST-UI-005 — إكمال Customer Workspace باحتراف
+# OPA-CUST-UI-005 v2.0 — عقد التنفيذ النهائي لمساحة عمل العملاء
 
-## الهدف وحدود التنفيذ
-إكمال صفحة العملاء كمساحة عمل تشغيلية مرجعية: بحث وفلاتر وعروض محفوظة، عودة للسياق، تنقل بالكيبورد، إجراءات أقل ازدحامًا، وتجربة هاتف واضحة؛ ثم تحسين Customer 360 من مصادر موثوقة موجودة فقط.
+الحالة: CANDIDATE حتى الاعتماد. بعد الموافقة: AUTHORIZED لوحدة G1 فقط، وكل وحدة تالية تحتاج بوابتها الخاصة.
 
-- العملاء فقط؛ لا تعميم تلقائي على أي جدول آخر.
-- Smart Freeze فعال: لا DB/RLS/migrations/permissions/roles، ولا تغيير منطق مالي أو مخزون أو انتقالات.
-- المسار الإلزامي: Page → hook/query service → repository → database. لا وصول بيانات جديد من UI.
-- لا select-all لكل نتائج الخادم، ولا تغيير offset pagination، ولا حقول `customer_code`/مندوب مبيعات دون عقد قائم.
-- كل دفعة تُفصل إلى `IMPLEMENTED` ثم `VERIFIED`. الاعتماد البشري والتصديق مستقلان، ولا self-certification.
+## الحدود الثابتة (دون تغيير)
+- العملاء فقط. لا تعميم تلقائي. لا إعادة فتح F1 ولا فتح F2 تحت اسم UX.
+- ممنوع: DB وRLS وmigrations وpermissions/roles وSQL/RPC جديد وقيم مالية جديدة وتغيير pagination وselect-all على مستوى الخادم وcustomer_code ومندوب المبيعات والوصول المباشر للبيانات من الواجهة.
+- المسار: Page → hook/query service → repository → read model قائم.
+- الحالات: IMPLEMENTED ← VERIFIED ← HUMAN ACCEPTED ← CERTIFIED. Lovable لا يعتمد عمله بنفسه.
+- الأخطاء خارج النطاق: record → classify → defer.
 
-## الوضع المثبت قبل التنفيذ
-- Batch A منفذة ومتحقق منها حيًا عند 360/768/964/1280، لكن Gate A البشرية لم تُغلق.
-- Saved Views الحالية تحفظ جزءًا من الفلاتر فقط؛ البحث والترتيب وفلاتر الأعمدة لا تُستعاد.
-- URL يحفظ الفلاتر القديمة والبحث، لكنه لا يحفظ ترتيب الجدول أو فلاتر الأعمدة أو العرض النشط.
-- تفضيلات الأعمدة/العرض/الكثافة موجودة ومقسمة حسب المستخدم، مع مسار ترحيل قديم.
-- سطح المكتب يكدّس حتى أربعة أزرار في الصف ولا يملك تنقل صفوف بالأسهم؛ الهاتف يملك قائمة إجراءات جيدة وأهداف لمس 44px.
-- prefetch مؤخر ويُلغي المؤقت، لكنه لا يدعم focus ولا يوقف الطلب بعد بدئه.
-- Customer 360 يملك مصادر authoritative قائمة: ملخص مالي، أعمار ديون، كشف حساب، وHealth Score عبر read models/RPCs موجودة.
+## تسلسل الوحدات
+```text
+G1
+ |
+B0 -> B1 --+--> B2 -> B3 --+
+           |               +--> Final Gate
+           +--> C0 -> C1 --+
+```
+C0/C1 يعملان بالتوازي مع B2/B3، لكن C1 لا يدخل مرحلة القبول قبل اعتماد C0.
 
-## G1 — إغلاق البوابة التقنية للدفعة A
-1. إعادة تشغيل typecheck والاختبارات الكاملة وproduction build وscoped lint دون تعديل الملفات المولدة المحمية.
-2. إعادة التحقق الحي لحالات: البحث، multi-name/multi-city، الفلاتر النشطة، المسح، الخطأ، الصفر، والتحميل عند 360/768/964/1280 RTL.
-3. قياس baseline: عدد الطلبات، زمن استقرار البحث/الفلتر، أول صف، وعدد عناصر DOM؛ لا virtualization دون فشل ميزانية موثقة.
-4. إن بقي TS7011 في ملف مولد، يسجل blocker مستقل ولا يُخلط مع إصلاحات العملاء.
+## قالب كل وحدة
+SCOPE / FILES / ALLOWED / FORBIDDEN / INVARIANTS / ACCEPTANCE / TESTS / EVIDENCE / STOP.
 
-**Gate G1:** أدلة تقنية محدثة ثم قرار Human Acceptance مستقل. إن لم تُقبل الدفعة A يتوقف الانتقال إلى B.
+---
 
-## Batch B — Productivity
+## G1 — الإغلاق التقني للدفعة A
+- ALLOWED: تشغيل التحقق فقط، وإصلاح أي regression في ملفات العملاء.
+- TESTS: typecheck، كامل الاختبارات، scoped lint، build، وفحص حي RTL عند 360/768/964/1280.
+- EVIDENCE: baseline لعدد الطلبات، زمن استقرار البحث والفلاتر، زمن أول صف، وعدد عناصر DOM.
+- STOP: فشل TS7011 في ملف المصادقة المولّد يُسجل blocker منفصلًا ولا يُصلح هنا.
 
-### B1. عقد حالة واحد وآمن
-- إنشاء عقد versioned في طبقة العملاء يجمع: البحث، الفلاتر العامة، فلاتر الأعمدة، الترتيب، والعرض النشط.
-- whitelist صارمة للقيم والمفاتيح، حدود طول، وتطبيع آمن؛ fallback لعروض Saved Views القديمة بلا migration.
-- إبقاء حالة البيانات منفصلة عن تفضيلات العرض: لا حفظ أسماء/صفوف العملاء محليًا.
-- إزالة التضارب البصري بين quick filters والعرض المحفوظ؛ تطبيق أي View يحدّث الحالة كاملة ويزيل المؤشر القديم.
+## B0 — عقد حالة مساحة العمل
+- SCOPE: ملف contract جديد بدوال pure فقط.
+```text
+CustomerWorkspaceStateV1 { version, search, filters, columnFilters, sort, activeViewId, display }
+parse() -> normalize() -> validate() -> serialize()
+```
+- INVARIANTS: لا `JSON.parse` داخل الصفحة. whitelist للمفاتيح والقيم، حد للطول، والحقل غير الصالح يُحذف وحده وتبقى الحقول الصالحة.
+- أولوية الحالة الابتدائية: URL صالح ← Saved View النشط ← تفضيلات المستخدم ← الافتراضي. URL غير صالح لا يكسر الصفحة.
+- فصل `display` (الكثافة والأعمدة) عن حالة البيانات. لا تخزين لصفوف العملاء.
+- TESTS: وحدات لكل دالة، payloads قديمة، قيم خاطئة، payload كبير، round-trip.
+- ACCEPTANCE: لا تغيير سلوكي ظاهر في الصفحة.
 
-### B2. Saved Views كاملة
-- حفظ وتطبيق وحذف وإعادة تسمية العرض عبر جدول JSON القائم فقط.
-- إضافة Presets واضحة: الكل، النشطون، غير النشطين، VIP، والمدينون باستخدام نفس دلالات الفلاتر الحالية فقط.
-- منع الاسم الفارغ/المكرر، وإظهار loading/error/success، مع حفظ search/sort/column filters فعليًا.
-- لا إضافة preset «آخر تعامل قديم» قبل تثبيت دلالته الحالية واختباره مع الاستعلام القائم.
+## B1 — Saved Views وURL والعودة للسياق
+- Saved Views عبر جدول JSON القائم: حفظ، تطبيق، إعادة تسمية، حذف، ومنع الاسم الفارغ أو المكرر.
+- View Identity: `activeViewId + activeViewSnapshot + currentState`. أي تعديل بعد التطبيق يجعل `isDirty = true` ويظهر مثلًا «المدينون • معدّل» مع خيار «حفظ التعديل» أو «حفظ كعرض جديد».
+- Presets: الكل، النشطون، غير النشطين، VIP، المدينون، بنفس دلالات الفلاتر الحالية.
+- Adapter للعروض القديمة دون migration.
+- URL قصير versioned يحافظ على المعاملات غير الخاصة بالعملاء، ولا يتحدث مع كل حرف.
+- العودة من التفاصيل: استعادة الحالة وموضع الصف المحمّل. لا إعادة بناء صفحات غير محمّلة.
+- STOP: إذا كان حفظ تفضيل يحتاج عمودًا أو جدولًا جديدًا.
 
-### B3. Deep Link والعودة للسياق
-- تمثيل البحث والفلاتر والترتيب والعرض النشط في URL بصيغة قصيرة versioned، مع إبقاء query params غير التابعة للعملاء.
-- URL أولًا، ثم Saved View/تفضيل المستخدم fallback، ثم defaults؛ منع حلقات المزامنة والتحديث مع كل حرف.
-- عند فتح التفاصيل والعودة: استعادة الحالة وموضع/anchor الصف قدر الإمكان عبر session navigation؛ لا تغيير pagination ولا إعادة بناء صفحات غير محملة.
+## B2 — لوحة المفاتيح والإجراءات والهاتف
+**Keyboard ownership**
+```text
+input/textarea/contenteditable -> المتصفح يملك الأسهم
+combobox/listbox/menu          -> المكوّن يملك الأسهم
+dialog/popover                 -> الحوار يملك التنقل
+table body                     -> التنقل بين الصفوف
+```
+- roving tabindex: الضغط على Tab يدخل الجدول مرة واحدة دون المرور على كل صف.
+- المفاتيح: ↑ ↓ Home End Enter Space Escape Shift+F10. يبقى `/` للبحث، و`Ctrl/Cmd+K` يبقى للنظام العام.
+- Live region لعدد النتائج وعدد المحدد.
 
-### B4. تفضيلات العرض
-- الإبقاء على الأعمدة/الترتيب/العرض/الكثافة/ارتفاع الجدول في العقد الحالي المرتبط بالمستخدم.
-- نقل آخر sort وآخر View إلى عقد تفضيلات versioned فقط إن أمكن عبر JSON القائم، مع legacy adapter وReset موحد.
-- حجم الصفحة يبقى responsive الحالي؛ لا يضاف اختيار مزيف ما دام infinite pagination هو العقد الفعلي.
+**Action Contract** — لكل إجراء: Visibility → Permission → Handler → مسار repository قائم → Success → Error → Invalidation → Return context.
 
-### B5. Keyboard-first وAccessibility
-- إضافة roving focus لصفوف سطح المكتب: ↑/↓ للتنقل، Enter للفتح، Space لتحديد الصف، مع عدم اعتراض الكتابة أو القوائم والحوارات.
-- الإبقاء على `/` للبحث لأن `Ctrl/Cmd+K` محجوز لاختصار النظام العام؛ لا استيلاء صامت عليه.
-- إعلان عدد النتائج وعدد المحدد عبر live region، وترتيب Tab واضح، وfocus ظاهر، وأهداف لمس لا تقل عن 44px.
-- اختبارات RTL للاتجاهات، القوائم داخل viewport، Escape، Shift+F10، وkeyboard ownership.
+| الإجراء | المسار | القيد |
+|---|---|---|
+| فتح العميل | الاسم → التفاصيل → رجوع يستعيد الحالة | — |
+| فاتورة | المزيد → مسار الفاتورة القائم | لا mutation مالي جديد |
+| دفعة | المزيد → مسار الدفع القائم | لا سلطة دفع جديدة |
+| كشف حساب | المزيد → قسم الكشف القائم | يحفظ سياق العميل |
+| تعديل / واتساب | المزيد | حسب الصلاحية فقط |
 
-### B6. إجراءات الصف والهاتف
-- سطح المكتب: اسم العميل/فتح كإجراء أساسي، وقائمة «المزيد» موحدة بدل أربعة أزرار؛ تعديل/فاتورة/دفعة/واتساب/كشف حساب تظهر فقط مع صلاحية ومسار عامل قائم.
-- إعادة استخدام نمط قائمة الهاتف، وعدم إنشاء مسار مالي جديد. كشف الحساب يفتح القسم/المسار الموجود فقط.
-- الحفاظ على swipe/long-press في الهاتف، ومراجعة القياسات والنصوص والحالات الطويلة دون تغيير الدلالات.
+- سطح المكتب: الاسم هو الإجراء الأساسي، والباقي في قائمة «المزيد» واحدة. الهاتف: يبقى السحب والضغط المطوّل، وأهداف لمس لا تقل عن 44px.
 
-### B7. Prefetch مضبوط
-- hover وfocus بتأخير مناسب، dedupe عبر query cache، وإلغاء المؤقت عند المغادرة/blur.
-- تمرير AbortSignal وإلغاء الطلب الجاري عندما يدعمه المسار الحالي؛ وإلا يقتصر التنفيذ على delayed/deduped prefetch مع توثيق القيد.
-- لا prefetch على اللمس، وقياس fan-out قبل/بعد.
+## B3 — Prefetch والأداء
+- hover/focus بتأخير، إلغاء عند المغادرة، dedupe عبر الكاش، AbortSignal إذا كان المسار يدعمه، ولا prefetch على اللمس.
+- KPI مقارنة بالـbaseline: requests/session، الطلبات المكررة، الطلبات الملغاة، cache hit/miss، وزمن فتح التفاصيل.
+- ACCEPTANCE: يُرفض B3 إذا زادت حركة الشبكة دون فائدة قابلة للقياس.
+- virtualization: قرار معماري مستقل بعد القياس فقط.
 
-### اختبارات وبوابة B
-- Unit: normalize/serialize/legacy Saved Views، URL sanitization، presets، row keyboard reducer، permission visibility.
-- Integration: حفظ/إعادة تسمية/تطبيق/حذف View، deep link، الرجوع من التفاصيل، وحفظ الترتيب.
-- Live: رحلات البحث والتصفية والفتح والعودة والفاتورة/الدفعة القائمة، keyboard-only، 360/768/964/1280، RTL، وعدم overflow.
-- Performance: مقارنة الطلبات والزمن والـDOM مع baseline.
+## C0 — مصفوفة مصادر Customer 360
+Deliverable وثيقة تحتوي على:
 
-**Gate B:** `typecheck + full/focused tests + lint + build + live evidence` ثم Human Acceptance قبل C.
+| القيمة | المصدر | الدقة | Null | Error | Stale | Tenant |
+|---|---|---|---|---|---|---|
+| الرصيد | financial summary | منزلتان | صريح | صريح | صريح | يُثبت |
+| المتأخرات | aging | منزلتان | صريح | صريح | صريح | يُثبت |
+| آخر نشاط | صف العميل | حسب المصدر | صريح | صريح | صريح | يُثبت |
+| كشف الحساب | statement | حسب المصدر | N/A | صريح | N/A | يُثبت |
+| Health Score | health score | حسب المصدر | صريح | صريح | صريح | يُثبت |
 
-## Batch C — Customer 360 الموثوق
+- كل قيمة تُطابق بعينات فعلية. أي قيمة بلا مصدر موثوق تنتقل إلى STOP.
 
-### C1. تثبيت authority قبل العرض
-- إعداد مصفوفة لكل قيمة: المصدر، precision، null/error/loading، صلاحية العرض، وحد tenant.
-- المسموح فقط: customer row، financial summary، aging، statement، health score الموجودة حاليًا.
-- منع أي حساب جديد لـDSO/CLV/overdue/health داخل الواجهة، وعدم إعادة تفعيل `CustomerSummaryBar` بتجميع الصفوف المحملة.
+## C1 — واجهة Customer 360 (عرض فقط)
+- **HARD CONSTRAINT:** ممنوع اشتقاق أي قيمة مالية من صفوف العملاء المحمّلة، أو من صفوف الفواتير والمدفوعات الموجودة في الواجهة، أو من التجميع في المتصفح، أو من cache جزئي، أو من السجلات الظاهرة بسبب pagination. المصدر الوحيد المسموح هو read model أو RPC موثوق وقائم.
+- لا إعادة تفعيل `CustomerSummaryBar`. الشارات المحسوبة محليًا في التفاصيل تُسجل في المصفوفة: إما تُربط بمصدر موثوق أو تُصنّف deferred.
+- حالات null/stale/error موحدة، ولا تُعرض null كصفر. تُزال ضوضاء الأيقونات لقارئ الشاشة.
 
-### C2. تحسين الواجهة دون تغيير الأرقام
-- ترتيب النظرة العامة حول: الحالة، الرصيد، آخر نشاط، الملخص المالي الموثوق، والتنبيهات القائمة.
-- توحيد empty/null/stale/error states؛ عدم عرض null كصفر موثوق.
-- ربط إجراءات القائمة بـCustomer 360 والأقسام القائمة مع الحفاظ على سياق الرجوع.
-- إزالة ضوضاء قارئ الشاشة للأيقونات، وتصحيح أهداف اللمس والعناوين ووصف الحالات.
+## Final Gate وEvidence Pack
+- لكل وحدة: diff scope، نتائج الاختبارات، لقطات شاشة للمقاسات، قياسات قبل وبعد، والمصفوفة، ثم قرار بشري.
+- مخرج نهائي: Customer Workspace Regression Contract يضم State وSaved Views وURL وToolbar وKeyboard وAction وReturn Context وPerformance وAccessibility. هو عقد للتجارب القادمة، وليس نسخًا للملفات.
 
-### اختبارات وبوابة C
-- مطابقة القيم المعروضة بعينات فعلية مع read models القائمة، بما فيها null/error/stale ودقة منزلتين.
-- تحقق صلاحيات العرض، RTL، الهاتف، lazy sections، الرجوع، وعدم إنشاء طلبات مكررة.
+## Roadmap (يُحدَّث عند بدء التنفيذ)
+- تُستبدل قائمة OPA-CUST-UI-005 في roadmap بالوحدات: G1، B0، B1، B2، B3، C0، C1، Final Gate، Regression Contract، مع ذكر blocker كل وحدة.
 
-**Gate C:** VERIFIED تقنيًا ثم مراجعة بشرية مستقلة؛ الحالة تبقى NOT CERTIFIED حتى اعتماد خارجي.
-
-## Reference Implementation والأداء
-- توثيق عقد Enterprise Data Workspace المستخلص من العملاء: state، filters، saved views، keyboard، actions، mobile، states، performance، permissions.
-- إضافة regression checks قابلة للقياس داخل نطاق العملاء فقط.
-- قرار virtualization مستقل بعد القياس فقط؛ server-side pagination يبقى authoritative.
-
-## STOP / DEFERRED
-- `customer_code` ومندوب المبيعات: DEFERRED لغياب عقد القراءة.
-- server-wide select-all وserver-wide alert filtering وتغيير offset pagination: تفويض معماري مستقل.
-- أي metric أو statement جديد يحتاج SQL/RPC/schema/RLS: STOP.
-- تعديل ملف auth مولد لمعالجة فشل أدوات المشروع: وحدة platform مستقلة، لا يدمج هنا.
+## Technical details
+- الملفات المسموحة: `src/pages/customers/*` و`src/components/customers/**` و`src/hooks/customers/*` وملف contract جديد تحت `src/lib/customers/` ومستودع `savedViewsRepository` بإضافة `rename` فقط، و`customerSearchRepo` لتمرير AbortSignal فقط، والاختبارات، و`docs/governance/OPA_CUST_UI_005_*`.
+- ممنوع: `supabase/**`، ملفات integrations المولّدة، مستودعات المالية/المخزون، والصلاحيات.
