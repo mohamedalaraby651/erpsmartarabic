@@ -189,20 +189,22 @@ function CustomerTableInner({
   };
 
   return (
+    <div className="w-full overflow-hidden rounded-md border border-border">
+      {/* G1 fix: the stats strip is the table's header band but must not scroll
+          horizontally with wide column sets — it stays pinned to the visible width. */}
+      {headerTools && (
+        <div className="border-b border-border bg-muted/30 px-3 py-2" role="group" aria-label="تصفية سريعة لقائمة العملاء">
+          {headerTools}
+        </div>
+      )}
     <div
-      className="w-full overflow-auto rounded-md border border-border"
+      className="w-full overflow-auto"
       style={layout.bodyHeight ? { maxHeight: layout.bodyHeight } : undefined}
     >
       <Table className={DENSITY_CLASS[layout.density]}>
         <caption className="sr-only">قائمة العملاء</caption>
         <TableHeader className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_hsl(var(--border))]">
-          {headerTools && (
-            <TableRow className="hover:bg-card">
-              <TableHead colSpan={columns.length + 2} className="h-auto border-b bg-muted/30 px-3 py-2">
-                {headerTools}
-              </TableHead>
-            </TableRow>
-          )}
+
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
@@ -294,6 +296,7 @@ function CustomerTableInner({
           })}
         </TableBody>
       </Table>
+    </div>
     </div>
   );
 }
