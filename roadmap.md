@@ -79,7 +79,7 @@
 
 ## OPA-CUST-UI-005 v2.0 — Customer Workspace Execution Contract (approved 2026-09-24)
 - [x] G0 + Batch A — IMPLEMENTED + VERIFIED (prior)
-- [x] G1 — IMPLEMENTED + VERIFIED (docs/governance/OPA_CUST_UI_005_G1_RECORD.md); typecheck blocked only by protected generated TS7011 — separate platform unit; HUMAN ACCEPTANCE pending
+- [x] G1 — IMPLEMENTED + VERIFIED (docs/governance/OPA_CUST_UI_005_G1_RECORD.md); full typecheck PASS after one-line return-type annotation in generated previewAuthStorage.ts (recurrence, will return on regeneration); HUMAN ACCEPTANCE pending
 - [ ] B0 — CustomerWorkspaceStateV1 pure contract; blocker: G1 gate
 - [ ] B1 — Saved Views identity/dirty + URL + return context; blocker: B0 gate
 - [ ] B2 — keyboard ownership + action contract + mobile; blocker: B1 gate

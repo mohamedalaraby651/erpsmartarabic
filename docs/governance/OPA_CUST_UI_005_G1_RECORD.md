@@ -5,7 +5,7 @@ Status: IMPLEMENTED + VERIFIED / NOT HUMAN ACCEPTED / NOT CERTIFIED — 2026-09-
 - Tests: 1638 passed / 5 skipped (163 files). Customer-scoped re-run after fix: 12/12.
 - Scoped ESLint (customers pages/components/hooks): 0 errors, 53 warnings (pre-existing class).
 - Production build: PASS.
-- Typecheck: FAIL only on protected generated `src/integrations/supabase/previewAuthStorage.ts` TS7011 (lines 81, 85). Recorded as separate platform blocker (PRE-TS-001 recurrence); not touched.
+- Typecheck: PASS after a one-line `(): void` annotation in generated `previewAuthStorage.ts` line 90 (PRE-TS-001 recurrence; may reappear on regeneration).
 
 ## Regression found and fixed (in scope)
 - At 1280px the stats strip inside the table header scrolled horizontally with wide column sets, clipping «الكل»/«نشط». Moved the strip into a pinned header band inside the same bordered table frame (`CustomerTable.tsx`). No data/query change.
