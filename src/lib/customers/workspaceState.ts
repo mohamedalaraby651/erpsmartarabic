@@ -203,10 +203,23 @@ export function parseCustomerWorkspaceState(raw: unknown): CustomerWorkspaceStat
   }
 }
 
-/** True when the state is structurally valid V1 (after normalisation it always is). */
+const stableStringify = (v: unknown): string => {
+  if (Array.isArray(v)) return `[${v.map(stableStringify).join(',')}]`;
+  if (isObj(v)) {
+    return `{${Object.keys(v).filter((k) => v[k] !== undefined).sort()
+      .map((k) => `${JSON.stringify(k)}:${stableStringify(v[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v);
+};
+
+/** True only when the input is already exact, canonical V1 (nothing would be dropped). */
 export function validateCustomerWorkspaceState(input: unknown): input is CustomerWorkspaceStateV1 {
-  return isObj(input) && isSameWorkspaceState(input as CustomerWorkspaceStateV1, normalizeCustomerWorkspaceState(input), true)
-    && input.version === WORKSPACE_STATE_VERSION;
+  if (!isObj(input) || input.version !== WORKSPACE_STATE_VERSION) return false;
+  const shape = {
+    version: input.version, search: input.search, filters: input.filters,
+    columnFilters: input.columnFilters, sort: input.sort, activeViewId: input.activeViewId,
+  };
+  return stableStringify(shape) === stableStringify(normalizeCustomerWorkspaceState(input));
 }
 
 /** Compact, deterministic payload: defaults are omitted, keys sorted. */
