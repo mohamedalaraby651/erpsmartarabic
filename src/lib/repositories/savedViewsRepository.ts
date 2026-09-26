@@ -55,4 +55,16 @@ export const savedViewsRepository = {
   async remove(id: string): Promise<void> {
     await unwrap(supabase.from("user_saved_views").delete().eq("id", id));
   },
+
+  /** OPA-CUST-UI-005 B1 — rename and/or replace the JSON payload of an existing view. */
+  async update<F = Record<string, unknown>>(
+    id: string,
+    patch: { name?: string; filters?: F },
+  ): Promise<void> {
+    const row: Record<string, unknown> = {};
+    if (patch.name !== undefined) row.name = patch.name;
+    if (patch.filters !== undefined) row.filters = patch.filters;
+    if (!Object.keys(row).length) return;
+    await unwrap(supabase.from("user_saved_views").update(row as never).eq("id", id));
+  },
 };
