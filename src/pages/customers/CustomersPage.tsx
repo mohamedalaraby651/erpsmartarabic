@@ -53,6 +53,10 @@ import {
   CUSTOMER_FILTER_META,
 } from '@/components/customers/list/customerTableColumns';
 import type { ColumnFilters } from '@/components/ui/column-filter';
+import {
+  URL_KEYS, decodeSortParam, encodeSortParam, normalizeCustomerWorkspaceState, normalizeViewId,
+  type CustomerWorkspaceStateV1,
+} from '@/lib/customers/workspaceState';
 
 /** Presentation-only shortcut reference for the customers workspace. */
 const CUSTOMER_SHORTCUTS = [
@@ -97,6 +101,26 @@ const CustomersPage = () => {
   const canDelete = userRole === 'admin';
 
   const [sortConfig, setSortConfig] = usePersistentState<{ key: string; direction: 'asc' | 'desc' | null }>('customers_sort', { key: '', direction: null });
+  // B1 — URL sort wins over the persisted preference on first render (validated).
+  const urlSortAppliedRef = useRef(false);
+  useEffect(() => {
+    if (urlSortAppliedRef.current) return;
+    urlSortAppliedRef.current = true;
+    const fromUrl = decodeSortParam(filters.searchParams.get(URL_KEYS.sort));
+    if (fromUrl && (fromUrl.key !== sortConfig.key || fromUrl.direction !== sortConfig.direction)) setSortConfig(fromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [activeViewId, setActiveViewId] = useState<string | null>(() => normalizeViewId(filters.searchParams.get(URL_KEYS.view)));
+  // Keep sort + active view in the shareable URL without touching other params.
+  const { patchUrl } = filters;
+  useEffect(() => {
+    if (!urlSortAppliedRef.current) return;
+    const sortParam = encodeSortParam(sortConfig);
+    patchUrl((next) => {
+      if (sortParam) next.set(URL_KEYS.sort, sortParam); else next.delete(URL_KEYS.sort);
+      if (activeViewId) next.set(URL_KEYS.view, activeViewId); else next.delete(URL_KEYS.view);
+    });
+  }, [sortConfig, activeViewId, patchUrl]);
   /** Column header: asc -> desc -> default. */
   const handleHeaderSort = useCallback((key: string) => {
     setSortConfig((() => {
@@ -135,6 +159,20 @@ const CustomersPage = () => {
     else if (filterId === 'debtors') filters.setStatusFilter('debtors');
     else if (filterId === 'farms') filters.setTypeFilter('farm');
   }, [filters, resetAllQuickFilters]);
+
+  const workspaceState = useMemo<CustomerWorkspaceStateV1>(() => normalizeCustomerWorkspaceState({
+    version: 1,
+    ...filters.snapshot,
+    sort: sortConfig,
+    activeViewId: null,
+  }), [filters.snapshot, sortConfig]);
+
+  const handleApplyView = useCallback((state: CustomerWorkspaceStateV1, viewId: string) => {
+    filters.applyState(state);
+    setSortConfig(state.sort);
+    setQuickFilter(null);
+    setActiveViewId(viewId);
+  }, [filters, setSortConfig, setQuickFilter]);
 
   const pageSize = isMobile ? 12 : 20;
 
@@ -496,23 +534,10 @@ const CustomersPage = () => {
                 actions={(
                   <>
               <CustomerSavedViews
-                currentFilters={{
-                  type: filters.typeFilter,
-                  vip: filters.vipFilter,
-                  governorate: filters.governorateFilter,
-                  status: filters.statusFilter,
-                  noCommDays: filters.noCommDays,
-                  inactiveDays: filters.inactiveDays,
-                }}
-                onApplyView={(viewFilters) => {
-                  filters.setTypeFilter(viewFilters.type);
-                  filters.setVipFilter(viewFilters.vip);
-                  filters.setGovernorateFilter(viewFilters.governorate);
-                  filters.setStatusFilter(viewFilters.status);
-                  filters.setNoCommDays(viewFilters.noCommDays);
-                  filters.setInactiveDays(viewFilters.inactiveDays);
-                  setQuickFilter(null);
-                }}
+                currentState={workspaceState}
+                activeViewId={activeViewId}
+                onActiveViewChange={setActiveViewId}
+                onApplyView={handleApplyView}
               />
                     <Button
                       variant="ghost"
