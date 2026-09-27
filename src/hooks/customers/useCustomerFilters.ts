@@ -55,7 +55,6 @@ export function useCustomerFilters() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const urlHas = (k: string) => searchParams.has(k);
 
   const [searchQuery, setSearchQuery] = useState(initial.q);
   const [typeFilter, setTypeFilter] = useState(initial.type);
