@@ -112,17 +112,15 @@ const CustomersPage = () => {
   }, []);
   const [activeViewId, setActiveViewId] = useState<string | null>(() => normalizeViewId(filters.searchParams.get(URL_KEYS.view)));
   // Keep sort + active view in the shareable URL without touching other params.
-  const { setSearchParams: setUrlParams } = filters;
+  const { patchUrl } = filters;
   useEffect(() => {
     if (!urlSortAppliedRef.current) return;
     const sortParam = encodeSortParam(sortConfig);
-    setUrlParams((prev) => {
-      const next = new URLSearchParams(prev);
+    patchUrl((next) => {
       if (sortParam) next.set(URL_KEYS.sort, sortParam); else next.delete(URL_KEYS.sort);
       if (activeViewId) next.set(URL_KEYS.view, activeViewId); else next.delete(URL_KEYS.view);
-      return next.toString() === prev.toString() ? prev : next;
-    }, { replace: true });
-  }, [sortConfig, activeViewId, setUrlParams]);
+    });
+  }, [sortConfig, activeViewId, patchUrl]);
   /** Column header: asc -> desc -> default. */
   const handleHeaderSort = useCallback((key: string) => {
     setSortConfig((() => {

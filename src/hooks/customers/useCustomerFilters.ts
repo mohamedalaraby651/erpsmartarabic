@@ -66,6 +66,24 @@ export function useCustomerFilters() {
   const [inactiveDays, setInactiveDays] = useState(initial.inactive);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const columnFilters = useColumnFilters(initial.cf);
+
+  // B1 — single batched URL writer. Router functional updaters read the params of
+  // the current render, so several writes in one tick overwrote each other. All
+  // workspace URL writes are merged here and flushed once per microtask.
+  const pendingUrlRef = useRef<URLSearchParams | null>(null);
+  const patchUrl = useCallback((mutate: (params: URLSearchParams) => void) => {
+    const base = pendingUrlRef.current ?? new URLSearchParams(window.location.search);
+    mutate(base);
+    if (pendingUrlRef.current) { pendingUrlRef.current = base; return; }
+    pendingUrlRef.current = base;
+    queueMicrotask(() => {
+      const next = pendingUrlRef.current;
+      pendingUrlRef.current = null;
+      if (next && next.toString() !== window.location.search.replace(/^\?/, '')) {
+        setSearchParams(next, { replace: true });
+      }
+    });
+  }, [setSearchParams]);
   const {
     filters: activeColumnFilters,
     setFilter: setActiveColumnFilter,
@@ -104,12 +122,10 @@ export function useCustomerFilters() {
   // Column filters are part of the shareable URL (validated, size-capped).
   useEffect(() => {
     const encoded = encodeColumnFiltersParam(activeColumnFilters);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
+    patchUrl((next) => {
       if (encoded) next.set(URL_KEYS.columnFilters, encoded); else next.delete(URL_KEYS.columnFilters);
-      return next.toString() === prev.toString() ? prev : next;
-    }, { replace: true });
-  }, [activeColumnFilters, setSearchParams]);
+    });
+  }, [activeColumnFilters, patchUrl]);
 
   // Sync filters to URL
   const syncToUrl = useCallback((overrides: Record<string, string> = {}) => {
@@ -133,13 +149,11 @@ export function useCustomerFilters() {
     if (vals.noComm) params.noComm = vals.noComm;
     if (vals.inactive) params.inactive = vals.inactive;
     // Merge: keep sort/view/cf and any non-customer params intact.
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
+    patchUrl((next) => {
       OWNED_KEYS.forEach((k) => next.delete(k));
       Object.entries(params).forEach(([k, v]) => next.set(k, v));
-      return next.toString() === prev.toString() ? prev : next;
-    }, { replace: true });
-  }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays, setSearchParams]);
+    });
+  }, [searchQuery, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays, patchUrl]);
 
   // Keep typing responsive: the URL follows the same settled value used by the query.
   useEffect(() => {
@@ -175,14 +189,12 @@ export function useCustomerFilters() {
     setCategoryFilter('all');
     setNoCommDays('');
     setInactiveDays('');
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
+    patchUrl((next) => {
       [...OWNED_KEYS, URL_KEYS.columnFilters, URL_KEYS.view].forEach((k) => next.delete(k));
-      return next;
-    }, { replace: true });
+    });
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     clearActiveColumnFilters();
-  }, [clearActiveColumnFilters, setSearchParams]);
+  }, [clearActiveColumnFilters, patchUrl]);
 
   const setColumnFilter = useCallback((key: string, filter: ColumnFilter | undefined) => {
     if (key === 'type') setTypeFilter('all');
@@ -296,6 +308,6 @@ export function useCustomerFilters() {
     tempNoCommDays, setTempNoCommDays, tempInactiveDays, setTempInactiveDays,
     openDrawerWithCurrentValues, applyDrawerFilters, resetDrawerFilters,
     // URL
-    searchParams, setSearchParams,
+    searchParams, setSearchParams, patchUrl,
   };
 }
