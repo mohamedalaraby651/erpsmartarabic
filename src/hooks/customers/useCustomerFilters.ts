@@ -251,6 +251,16 @@ export function useCustomerFilters() {
     });
   }, [replaceActiveColumnFilters, syncToUrl]);
 
+  /** Query-relevant snapshot (settled search) for saved views / dirty checks. */
+  const snapshot = useMemo(() => ({
+    search: debouncedSearch,
+    filters: {
+      type: typeFilter, vip: vipFilter, governorate: governorateFilter, status: statusFilter,
+      category: categoryFilter, noCommDays, inactiveDays,
+    },
+    columnFilters: activeColumnFilters,
+  }), [debouncedSearch, typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter, noCommDays, inactiveDays, activeColumnFilters]);
+
   const activeFiltersCount = useMemo(
     () => [typeFilter, vipFilter, governorateFilter, statusFilter, categoryFilter].filter(f => f !== 'all').length
       + (noCommDays ? 1 : 0) + (inactiveDays ? 1 : 0),
@@ -268,15 +278,7 @@ export function useCustomerFilters() {
     noCommDays, setNoCommDays: (v: string) => updateFilter('noComm', v),
     inactiveDays, setInactiveDays: (v: string) => updateFilter('inactive', v),
     clearFilter, clearAllFilters, applyState,
-    /** Query-relevant snapshot (uses the settled search) for saved views / dirty checks. */
-    snapshot: {
-      search: debouncedSearch,
-      filters: {
-        type: typeFilter, vip: vipFilter, governorate: governorateFilter, status: statusFilter,
-        category: categoryFilter, noCommDays, inactiveDays,
-      },
-      columnFilters: activeColumnFilters,
-    },
+    snapshot,
     activeFiltersCount: activeFiltersCount + activeColumnFilterCount,
     columnFilters: {
       filters: activeColumnFilters,
