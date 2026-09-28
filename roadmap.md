@@ -80,8 +80,9 @@
 ## OPA-CUST-UI-005 v2.0 — Customer Workspace Execution Contract (approved 2026-09-24)
 - [x] G0 + Batch A — IMPLEMENTED + VERIFIED (prior)
 - [x] G1 — IMPLEMENTED + VERIFIED (docs/governance/OPA_CUST_UI_005_G1_RECORD.md); full typecheck PASS after one-line return-type annotation in generated previewAuthStorage.ts (recurrence, will return on regeneration); HUMAN ACCEPTANCE pending
-- [ ] B0 — CustomerWorkspaceStateV1 pure contract; blocker: G1 gate
-- [ ] B1 — Saved Views identity/dirty + URL + return context; blocker: B0 gate
+- [x] B0 — CustomerWorkspaceStateV1 pure contract (parse/normalize/validate/serialize, legacy adapter, URL codecs, presets) + 10 unit tests — IMPLEMENTED + VERIFIED
+- [x] B1 — full-state Saved Views (presets, rename, duplicate/empty guard, dirty «معدّل», save/save-as/undo), URL sort/cf/view, batched URL writer — IMPLEMENTED; live re-check after batching fix pending (backend was unreachable)
+- [ ] B1 return-context scroll/anchor restoration after opening a customer; blocker: B1 live re-check
 - [ ] B2 — keyboard ownership + action contract + mobile; blocker: B1 gate
 - [ ] B3 — prefetch KPIs vs baseline; blocker: B2 gate
 - [ ] C0 — Customer 360 authority matrix; blocker: B1 gate
