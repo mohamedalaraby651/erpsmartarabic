@@ -93,7 +93,7 @@ const CustomersPage = () => {
     const action = filters.searchParams.get('action');
     if (action === 'new' || action === 'create') {
       dialogRef.current?.openAdd();
-      filters.setSearchParams({}, { replace: true });
+      filters.patchUrl((next) => next.delete('action'));
     }
   }, [filters.searchParams, filters.setSearchParams]);
 
