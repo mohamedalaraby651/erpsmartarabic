@@ -153,6 +153,89 @@ export function Navigate({ to, replace, state }: { to: string; replace?: boolean
 
 export const Outlet = TSOutlet;
 
-// ---------- NavLink (minimal) ----------
+// ---------- matchPath / useMatch (react-router v6 semantics, subset) ----------
 
-export const NavLink = Link;
+export type PathPattern = { path: string; end?: boolean; caseSensitive?: boolean };
+export type PathMatch = { params: Record<string, string | undefined>; pathname: string; pattern: PathPattern };
+
+function compilePath(path: string, end: boolean, caseSensitive: boolean): { re: RegExp; keys: string[] } {
+  const keys: string[] = [];
+  let source =
+    "^" +
+    path
+      .replace(/\/*\*?$/, "")
+      .replace(/^\/*/, "/")
+      .replace(/[\\.*+^${}|()[\]]/g, "\\$&")
+      .replace(/\/:([\w-]+)(\?)?/g, (_m, key: string, optional?: string) => {
+        keys.push(key);
+        return optional ? "(?:/([^\\/]+))?" : "/([^\\/]+)";
+      });
+  if (path.endsWith("*")) {
+    keys.push("*");
+    source += path === "*" || path === "/*" ? "(.*)$" : "(?:\\/(.+)|\\/*)$";
+  } else if (end) {
+    source += "\\/*$";
+  } else if (path !== "" && path !== "/") {
+    source += "(?:(?=\\/|$))";
+  }
+  return { re: new RegExp(source, caseSensitive ? undefined : "i"), keys };
+}
+
+export function matchPath(pattern: PathPattern | string, pathname: string): PathMatch | null {
+  const p: PathPattern = typeof pattern === "string" ? { path: pattern, end: true } : pattern;
+  const { re, keys } = compilePath(p.path, p.end ?? true, p.caseSensitive ?? false);
+  const m = pathname.match(re);
+  if (!m) return null;
+  const params: Record<string, string | undefined> = {};
+  keys.forEach((k, i) => {
+    const v = m[i + 1];
+    params[k] = v === undefined ? undefined : decodeURIComponent(v);
+  });
+  return { params, pathname: m[0] ?? pathname, pattern: p };
+}
+
+export function useMatch(pattern: PathPattern | string): PathMatch | null {
+  const { pathname } = useLocation();
+  const key = typeof pattern === "string" ? pattern : `${pattern.path}|${pattern.end}|${pattern.caseSensitive}`;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => matchPath(pattern, pathname), [key, pathname]);
+}
+
+// ---------- NavLink (active-state aware) ----------
+
+type NavLinkRenderProps = { isActive: boolean; isPending: boolean; isTransitioning: boolean };
+
+export type NavLinkProps = Omit<LinkProps, "className" | "style" | "children"> & {
+  end?: boolean;
+  caseSensitive?: boolean;
+  className?: string | ((props: NavLinkRenderProps) => string | undefined);
+  style?: React.CSSProperties | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
+  children?: ReactNode | ((props: NavLinkRenderProps) => ReactNode);
+};
+
+export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavLink(
+  { to, end = false, caseSensitive = false, className, style, children, ...rest },
+  ref,
+) {
+  const { pathname } = useLocation();
+  const target = parseTo(to).pathname;
+  const isActive =
+    target !== "." &&
+    matchPath({ path: target, end, caseSensitive }, pathname) !== null;
+  const state: NavLinkRenderProps = { isActive, isPending: false, isTransitioning: false };
+  const resolvedClassName = typeof className === "function" ? className(state) : className;
+  const resolvedStyle = typeof style === "function" ? style(state) : style;
+  const resolvedChildren = typeof children === "function" ? children(state) : children;
+  return (
+    <Link
+      ref={ref}
+      to={to}
+      aria-current={isActive ? "page" : undefined}
+      {...(resolvedClassName !== undefined && { className: resolvedClassName })}
+      {...(resolvedStyle !== undefined && { style: resolvedStyle })}
+      {...(rest as Record<string, unknown>)}
+    >
+      {resolvedChildren}
+    </Link>
+  );
+});
