@@ -241,7 +241,7 @@ fi
 SECTION "10. TypeScript typecheck / فحص الأنواع"
 # ────────────────────────────────────────────────────────────────────────────
 if command -v bunx >/dev/null; then
-  if bunx tsc --noEmit -p tsconfig.app.json >/tmp/tsc.log 2>&1; then
+  if bunx tsc --noEmit -p tsconfig.json >/tmp/tsc.log 2>&1; then
     ok "tsc --noEmit passed"
   else
     ERRS=$(grep -c "error TS" /tmp/tsc.log || echo 0)
