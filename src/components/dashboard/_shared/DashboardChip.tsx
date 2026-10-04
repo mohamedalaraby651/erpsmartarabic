@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, type LucideIcon } from 'lucide-react';
 import { prefetchByPath } from '@/lib/prefetch';

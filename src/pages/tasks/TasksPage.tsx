@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 import { tasksRepository, type TaskRow } from "@/application/queries/tasks";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";

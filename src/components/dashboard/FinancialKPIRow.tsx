@@ -13,7 +13,7 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { prefetchByPath } from '@/lib/prefetch';
 import { DashboardChip } from './_shared/DashboardChip';
 

@@ -11,7 +11,7 @@ import { useQuickActionSize } from '@/hooks/useQuickActionSize';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { tooltips } from '@/lib/uiCopy';
 import { allQuickActions, roleLabels, type QuickAction } from '@/config/dashboard.config';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { WidgetContainer } from '@/components/dashboard/WidgetContainer';
 import { useDashboardSettings } from '@/hooks/useDashboardSettings';
 import { WidgetConfig } from '@/components/dashboard/DraggableWidget';

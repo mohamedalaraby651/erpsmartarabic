@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useColumnFilters } from '@/hooks/useColumnFilters';
 import type { ColumnFilter, ColumnFilters } from '@/components/ui/column-filter';

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, X, Users, Package, FileText, ShoppingCart, Truck, Receipt, ClipboardList, BarChart3, Wallet, Warehouse } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from '@/lib/router-compat';
 import { haptics } from '@/lib/haptics';
 
 interface FABAction {

@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Eye, CreditCard, Share2, Undo2, Printer } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { useLongPress } from "@/hooks/useLongPress";
 import { haptics } from "@/lib/haptics";
 import { cn } from "@/lib/utils";

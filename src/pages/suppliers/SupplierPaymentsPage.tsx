@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from '@/lib/router-compat';
 import { supplierPaymentRepository } from '@/application/queries/supplier-payments';
 import { listActiveSuppliersForSelect } from '@/application/queries/suppliers';
 import { format } from 'date-fns';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AlertOctagon, TrendingUp, UserMinus, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { SupplierAlertType, SupplierAlert } from '@/hooks/suppliers/useSupplierAlerts';

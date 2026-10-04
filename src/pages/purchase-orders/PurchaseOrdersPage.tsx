@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "@/lib/router-compat";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ServerPagination } from "@/components/shared/ServerPagination";

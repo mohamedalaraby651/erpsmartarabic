@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { legacyQuotationsRepository } from "@/application/queries/quotations";
 import { verifyPermissionOnServer } from "@/lib/api/secureOperations";

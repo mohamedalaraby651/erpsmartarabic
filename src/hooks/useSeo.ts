@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation, matchPath } from 'react-router-dom';
+import { useLocation, matchPath } from '@/lib/router-compat';
 
 const SITE_ORIGIN = 'https://erpsmartarabic1.lovable.app';
 /**

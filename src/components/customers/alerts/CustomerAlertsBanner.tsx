@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, AlertOctagon, Clock, TrendingUp, CalendarClock, Crown, TrendingDown, UserMinus, UserPlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useDismissedAlerts } from '@/hooks/useAlertSettings';

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
 import { invoiceRepository } from '@/lib/repositories/invoiceRepository';
 import { salesOrderRepository } from '@/lib/repositories/salesOrderRepository';
