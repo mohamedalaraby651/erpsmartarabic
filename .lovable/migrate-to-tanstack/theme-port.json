@@ -1,0 +1,15 @@
+{
+  "customizations": [
+    { "token": "HSL color tokens (:root/.dark/high-contrast)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "semantic color utilities (border-strong, primary-soft, success, warning, info, surface-*, sidebar-*, chart-*)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "breakpoints xs/tablet/3xl", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "radius scale sm/md/lg/xl/2xl", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "shadow scale xs..xl/focus + DEFAULT", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "easing out-soft/in-out-soft", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "accordion keyframes/animations", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "container (center, 2rem, 1600px)", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "font-sans Cairo", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "base layer, custom utilities and keyframes", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "motion.css import", "source": "src/index.css", "reappliedIn": "src/styles.css" }
+  ]
+}
