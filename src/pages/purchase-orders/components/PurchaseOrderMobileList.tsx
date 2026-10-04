@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { ClipboardList, Plus, Calendar } from "lucide-react";
 import { DataCard } from "@/components/mobile/DataCard";
 import { EmptyState } from "@/components/shared/EmptyState";

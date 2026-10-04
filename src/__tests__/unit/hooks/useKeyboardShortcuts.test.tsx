@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from '@/lib/router-compat';
 import React from 'react';
 
-// Mock react-router-dom
+// Mock @/lib/router-compat
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+vi.mock('@/lib/router-compat', async () => {
+  const actual = await vi.importActual('@/lib/router-compat');
   return {
     ...actual,
     useNavigate: () => mockNavigate,

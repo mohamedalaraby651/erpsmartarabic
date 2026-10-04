@@ -1,5 +1,5 @@
 import { memo, useMemo, useState, useEffect, forwardRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/lib/router-compat';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
 import { useSidebarCounts, type SidebarCounts } from '@/hooks/useSidebarCounts';

@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 import { useEffect } from "react";
 import { Home, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";

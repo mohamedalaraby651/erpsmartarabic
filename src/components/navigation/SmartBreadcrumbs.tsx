@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from '@/lib/router-compat';
 import { ChevronLeft, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {

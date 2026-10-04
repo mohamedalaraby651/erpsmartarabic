@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supplierRelationsRepo } from '@/application/queries/supplier-relations';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, CreditCard } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 
 interface SupplierQuickHistoryProps {
   supplierId: string;

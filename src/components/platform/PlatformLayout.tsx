@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from '@/lib/router-compat';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
 import PlatformSidebar from './PlatformSidebar';

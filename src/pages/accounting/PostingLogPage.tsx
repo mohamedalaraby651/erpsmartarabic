@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { BookOpen, AlertCircle, CheckCircle2, MinusCircle, Wand2 } from "lucide-react";
 import { usePostingLog, useEnsureLogisticsAccounts } from "@/hooks/accounting";
 

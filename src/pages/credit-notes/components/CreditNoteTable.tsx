@@ -5,7 +5,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { CheckCircle2, XCircle, Loader2, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import type { CreditNoteWithRelations } from '../types';
 
 const statusLabels: Record<string, string> = {

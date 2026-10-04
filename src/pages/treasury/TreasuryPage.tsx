@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from '@/lib/router-compat';
 import PageHeader from '@/components/navigation/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Plus, Wallet, ArrowUpCircle, ArrowDownCircle, RefreshCw, Building2 } from 'lucide-react';
 import { CashRegisterFormDialog } from '@/components/treasury/CashRegisterFormDialog';
 import { CashTransactionDialog } from '@/components/treasury/CashTransactionDialog';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import {
   useCashRegisters,
   useTreasuryBalances,

@@ -8,7 +8,7 @@ import {
   useConvertInvoiceToDelivery,
 } from "@/hooks/sales-cycle/useQuotes";
 import { usePipelineOrders, usePipelineInvoices } from "@/hooks/quotations";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { ListErrorState } from "@/components/shared/ListErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
 

@@ -5,7 +5,7 @@
  * later wave. Enforced by `check-no-new-adaptiveshell-imports.mjs`.
  */
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import AppSidebar from './AppSidebar';

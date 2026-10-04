@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ServerPagination } from "@/components/shared/ServerPagination";
