@@ -6,7 +6,7 @@ import { PageLoader } from "@/components/layout/PageLoader";
 // DEV-only surface (Classic App.tsx gated it on import.meta.env.DEV).
 const IntegrationHarnessPage = lazy(() => import("@/ui/__integration__/harness/IntegrationHarnessPage"));
 
-export const Route = createFileRoute("/[__integration__]/ux1e")({
+export const Route = createFileRoute("/__integration__/ux1e")({
   component: DevOnlyPage,
 });
 
