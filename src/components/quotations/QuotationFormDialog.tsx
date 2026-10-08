@@ -171,7 +171,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         <Label>العميل *</Label>
         <Select value={watch('customer_id')} onValueChange={(v) => setValue('customer_id', v)}>
           <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
-          <SelectContent>{customers.map((c: { id: string; name: string }) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+          <SelectContent>{customers.map((c: { id: string | null; name: string | null }) => <SelectItem key={c.id ?? ''} value={c.id ?? ''}>{c.name}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div><Label htmlFor="valid_until">صالح حتى</Label><Input id="valid_until" type="date" {...register('valid_until')} /></div>

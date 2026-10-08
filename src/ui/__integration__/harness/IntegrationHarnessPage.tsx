@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 /**
  * Integration Harness Page — UX-1E (dev-only).
  *

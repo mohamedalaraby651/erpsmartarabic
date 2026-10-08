@@ -216,7 +216,7 @@ const ExportTemplatesPage = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {formatIcons[template.format]}
+                          {template.format ? formatIcons[template.format] : null}
                           <span className="uppercase text-xs">{template.format}</span>
                         </div>
                       </TableCell>
@@ -237,7 +237,7 @@ const ExportTemplatesPage = () => {
                               toggleDefaultMutation.mutate({
                                 id: template.id,
                                 section: template.section,
-                                isDefault: template.is_default,
+                                isDefault: template.is_default ?? false,
                               })
                             }
                             disabled={toggleDefaultMutation.isPending}

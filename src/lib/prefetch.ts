@@ -17,7 +17,7 @@
  * single hover usually warms an entire domain (e.g. all sales pages).
  */
 
-type RouteImport = () => Promise<{ default: React.ComponentType<unknown> }>;
+type RouteImport = () => Promise<unknown>;
 
 // Map of route names to their dynamic imports. Keep keys in sync with
 // `pathToRoute` below — they form the only public API surface.

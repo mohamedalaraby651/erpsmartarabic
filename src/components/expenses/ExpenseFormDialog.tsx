@@ -49,13 +49,13 @@ type FormData = z.infer<typeof formSchema>;
 
 interface Expense {
   id: string;
-  category_id?: string;
+  category_id?: string | null;
   amount: number;
   payment_method: string;
-  register_id?: string;
+  register_id?: string | null;
   expense_date: string;
-  description?: string;
-  supplier_id?: string;
+  description?: string | null;
+  supplier_id?: string | null;
 }
 
 interface ExpenseFormDialogProps {

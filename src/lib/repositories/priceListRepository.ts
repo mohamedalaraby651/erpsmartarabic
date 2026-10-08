@@ -79,7 +79,7 @@ export const priceListRepository = {
       name: input.name,
       description: input.description ?? null,
       is_default: input.is_default ?? false,
-      tenant_id,
+      tenant_id: tenant_id ?? undefined,
     });
     if (error) throw mapRepoError(error, "تعذّر إنشاء قائمة الأسعار.");
   },
@@ -109,7 +109,7 @@ export const priceListRepository = {
       price: round2(Number(input.price) || 0),
       min_quantity: Math.max(1, Math.floor(Number(input.min_quantity ?? 1))),
       discount_percentage: round2(Number(input.discount_percentage ?? 0)),
-      tenant_id,
+      tenant_id: tenant_id ?? undefined,
     });
     if (error) throw mapRepoError(error, "تعذّر إضافة المنتج للقائمة (قد يكون مكرراً).");
   },

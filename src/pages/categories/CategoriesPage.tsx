@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";

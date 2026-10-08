@@ -89,10 +89,10 @@ export default function PermissionsPage() {
       const permMap: Record<string, Record<string, boolean>> = {};
       data?.forEach(p => {
         permMap[p.section] = {
-          can_view: p.can_view,
-          can_create: p.can_create,
-          can_edit: p.can_edit,
-          can_delete: p.can_delete,
+          can_view: p.can_view ?? false,
+          can_create: p.can_create ?? false,
+          can_edit: p.can_edit ?? false,
+          can_delete: p.can_delete ?? false,
         };
       });
       setPermissions(permMap);
@@ -158,7 +158,7 @@ export default function PermissionsPage() {
       const data = await adminRepository.listRolePermissions(sourceRoleId);
       const permMap: Record<string, Record<string, boolean>> = {};
       data.forEach(p => {
-        permMap[p.section] = { can_view: p.can_view, can_create: p.can_create, can_edit: p.can_edit, can_delete: p.can_delete };
+        permMap[p.section] = { can_view: p.can_view ?? false, can_create: p.can_create ?? false, can_edit: p.can_edit ?? false, can_delete: p.can_delete ?? false };
       });
       setPermissions(permMap);
       toast.success('تم نسخ الصلاحيات - اضغط حفظ لتطبيقها');
@@ -209,7 +209,7 @@ export default function PermissionsPage() {
                     <div className="flex items-center gap-2">
                       <div
                         className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: role.color }}
+                        style={{ backgroundColor: role.color ?? undefined }}
                       />
                       {role.name}
                     </div>

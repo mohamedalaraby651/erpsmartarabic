@@ -100,7 +100,7 @@ export const attendanceRepository = {
     const { error } = await supabase.from("attendance_records").insert({
       employee_id: employeeId,
       check_in: new Date().toISOString(),
-      tenant_id,
+      tenant_id: tenant_id ?? undefined,
       created_by: createdBy ?? null,
     });
     if (error) throw mapRepoError(error, "تعذّر تسجيل الحضور.");
@@ -122,7 +122,7 @@ export const attendanceRepository = {
       start_date: input.start_date,
       end_date: input.end_date,
       reason: input.reason ?? null,
-      tenant_id,
+      tenant_id: tenant_id ?? undefined,
     });
     if (error) throw mapRepoError(error, "تعذّر تقديم طلب الإجازة.");
   },

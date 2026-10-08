@@ -341,7 +341,7 @@ export default function CustomizationsPage() {
                       </TableCell>
                       <TableCell>
                         <Switch
-                          checked={field.is_visible}
+                          checked={field.is_visible ?? false}
                           onCheckedChange={(checked) => toggleVisibility(field.name, checked)}
                         />
                       </TableCell>

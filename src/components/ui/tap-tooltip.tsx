@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 interface TapTooltipProps {
   content: React.ReactNode;
-  children: React.ReactElement;
+  children: React.ReactElement<Record<string, unknown>>;
   side?: "top" | "bottom" | "left" | "right";
   align?: "start" | "center" | "end";
   /** Auto-close delay after tap-open (ms). 0 = stay until outside tap. */

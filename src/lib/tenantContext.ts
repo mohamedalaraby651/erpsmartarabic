@@ -218,7 +218,7 @@ export async function addUserToTenant(
  */
 export async function isUserInTenant(tenantId: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('is_tenant_member', {
-    _user_id: (await supabase.auth.getUser()).data.user?.id,
+    _user_id: (await supabase.auth.getUser()).data.user?.id ?? '',
     _tenant_id: tenantId,
   });
 

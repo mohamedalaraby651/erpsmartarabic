@@ -15,7 +15,7 @@ type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'] & {
   suppliers: { name: string } | null;
 };
 
-type SortConfig = { key: string; direction: 'asc' | 'desc' } | null;
+import type { SortConfig } from '@/hooks/useTableSort';
 type AnyFilterValue = string | string[] | { min?: unknown; max?: unknown } | undefined;
 
 interface PurchaseOrderTableProps {

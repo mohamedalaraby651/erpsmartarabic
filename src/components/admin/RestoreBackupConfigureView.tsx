@@ -30,7 +30,7 @@ interface FileBuckets {
 }
 
 interface Props {
-  fileInputRef: RefObject<HTMLInputElement>;
+  fileInputRef: RefObject<HTMLInputElement | null>;
   file: File | null;
   isParsing: boolean;
   isRestoring: boolean;

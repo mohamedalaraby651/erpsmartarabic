@@ -19,7 +19,7 @@ interface UseFormDraftOptions<T> {
 export function useFormDraft<T>({ key, data, enabled = true, interval = 5000 }: UseFormDraftOptions<T>) {
   const [hasDraft, setHasDraft] = useState(false);
   const [draftData, setDraftData] = useState<T | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const storageKey = `draft_${key}`;
 
   // Check for existing draft on mount

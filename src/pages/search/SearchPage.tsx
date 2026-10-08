@@ -90,9 +90,9 @@ export default function SearchPage() {
 
       customers?.forEach(c => {
         searchResults.push({
-          id: c.id,
+          id: c.id ?? '',
           type: 'customer',
-          title: c.name,
+          title: c.name ?? '',
           subtitle: c.phone || c.email || undefined,
           href: `/customers/${c.id}`,
         });

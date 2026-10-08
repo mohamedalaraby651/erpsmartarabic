@@ -9,7 +9,7 @@ interface UseIntersectionObserverOptions {
 
 export function useIntersectionObserver(
   options: UseIntersectionObserverOptions = {}
-): [React.RefObject<HTMLDivElement>, boolean] {
+): [React.RefObject<HTMLDivElement | null>, boolean] {
   const {
     threshold = 0,
     root = null,
@@ -52,7 +52,7 @@ export function useIntersectionObserver(
 export function useLazyLoad<T>(
   loader: () => Promise<T>,
   options?: UseIntersectionObserverOptions
-): [React.RefObject<HTMLDivElement>, T | null, boolean] {
+): [React.RefObject<HTMLDivElement | null>, T | null, boolean] {
   const [ref, isVisible] = useIntersectionObserver({
     ...options,
     freezeOnceVisible: true,

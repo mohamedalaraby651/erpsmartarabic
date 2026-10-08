@@ -105,8 +105,8 @@ export function ExportWithTemplateButton({
       if (template) {
         setSelectedColumns(template.columns as string[]);
         setSelectedFormat(template.format as ExportFormat);
-        setIncludeLogo(template.include_logo);
-        setIncludeCompanyInfo(template.include_company_info);
+        setIncludeLogo(template.include_logo ?? false);
+        setIncludeCompanyInfo(template.include_company_info ?? false);
       }
     }
   }, [selectedTemplateId, templates]);

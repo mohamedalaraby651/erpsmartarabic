@@ -51,7 +51,7 @@ const WarehouseFormDialog = ({ open, onOpenChange, warehouse }: WarehouseFormDia
       if (params.isEditing && warehouse) {
         const { error } = await supabase
           .from("warehouses")
-          .update(params.payload)
+          .update(params.payload as never)
           .eq("id", warehouse.id);
         if (error) throw error;
       } else {

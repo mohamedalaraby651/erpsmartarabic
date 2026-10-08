@@ -14,7 +14,7 @@ type EntityType =
 
 interface EntityLinkProps {
   type: EntityType;
-  id: string;
+  id: string | null | undefined;
   children: React.ReactNode;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
@@ -34,6 +34,7 @@ const entityRoutes: Record<EntityType, string> = {
 
 export const EntityLink = ({ type, id, children, className, onClick }: EntityLinkProps) => {
   const basePath = entityRoutes[type];
+  if (!id) return <span className={className}>{children}</span>;
   const to = `${basePath}/${id}`;
 
   return (

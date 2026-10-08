@@ -32,7 +32,7 @@ export interface SaveInvoiceInput {
  */
 export async function saveInvoiceWithItems(input: SaveInvoiceInput): Promise<string> {
   const { data, error } = await supabase.rpc('save_invoice_with_items', {
-    p_id: input.id ?? null,
+    p_id: (input.id ?? null) as string, // RPC treats null as "create new"
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     p_header: input.header as any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

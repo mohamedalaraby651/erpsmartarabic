@@ -26,10 +26,10 @@ interface JournalDetailDialogProps {
     id: string;
     journal_number: string;
     journal_date: string;
-    description: string;
-    is_posted: boolean;
-    total_debit: number;
-    total_credit: number;
+    description: string | null;
+    is_posted: boolean | null;
+    total_debit: number | null;
+    total_credit: number | null;
   } | null;
 }
 

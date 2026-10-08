@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 /**
  * Harness route registration — UX-1E (dev-only).
  *

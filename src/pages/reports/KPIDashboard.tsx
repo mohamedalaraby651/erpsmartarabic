@@ -94,7 +94,7 @@ const KPIDashboard = () => {
     return months.map(month => {
       const monthInvoices = invoices.filter(i => i.created_at >= month.start && i.created_at <= month.end);
       const monthPayments = payments.filter(p => p.created_at >= month.start && p.created_at <= month.end);
-      const monthExpenses = expenses.filter(e => e.created_at >= month.start && e.created_at <= month.end);
+      const monthExpenses = expenses.filter(e => e.created_at != null && e.created_at >= month.start && e.created_at <= month.end);
       const monthItems = invoiceItems.filter(item => item.created_at >= month.start && item.created_at <= month.end);
 
       const revenue = monthInvoices.reduce((s, i) => s + Number(i.total_amount), 0);
