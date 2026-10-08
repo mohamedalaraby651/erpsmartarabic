@@ -42,7 +42,7 @@ export const notificationsRepository = {
       title: row.title,
       message: row.message,
       notification_type: row.type,
-      link: row.link ?? null,
+      link: row.link ?? undefined,
     });
     if (error) throw error;
     return data as string;

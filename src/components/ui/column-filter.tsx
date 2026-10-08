@@ -167,7 +167,7 @@ export interface ColumnFilterHeaderProps {
   className?: string;
   /** Sorting */
   sortKey?: string;
-  sortConfig?: SortConfig;
+  sortConfig?: SortConfig | { key: string | null; direction: 'asc' | 'desc' | null };
   onSort?: (key: string) => void;
   /** Filtering */
   filterKey?: string;
@@ -263,7 +263,7 @@ export function ColumnFilterHeader({
   const active = isFilterActive(value);
   const pickedCount = value?.values?.length ?? 0;
   const activeCount = pickedCount > 0 ? pickedCount : active ? 1 : 0;
-  const sorted = sortKey && sortConfig?.key === sortKey;
+  const sorted = sortKey && sortConfig?.key === sortKey && sortConfig?.direction != null;
   const ariaSort = sorted ? (sortConfig?.direction === 'asc' ? 'ascending' : 'descending') : 'none';
   const SortIcon = sorted ? (sortConfig?.direction === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
 

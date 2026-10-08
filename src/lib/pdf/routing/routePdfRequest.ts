@@ -117,21 +117,21 @@ export async function routePdfRequest(
     try {
       await tryV2(docType, data, resolvedConfig);
       const durationMs = stop();
-      logPdfSuccess({ docType, engine: 'html2pdf', durationMs, ...{ engine: 'v2' as never } });
+      logPdfSuccess({ docType, durationMs, engine: 'v2' as never });
       return { engine: 'v2', fellBack: false, durationMs, appliedProfile };
     } catch (error) {
       const v2Duration = stop();
-      logPdfFailure({ docType, engine: 'html2pdf', durationMs: v2Duration, error, ...{ engine: 'v2' as never } });
+      logPdfFailure({ docType, durationMs: v2Duration, error, engine: 'v2' as never });
       // Safe fallback to legacy (does not consume profile yet).
       const stopV1 = startTimer(docType);
       try {
         await callLegacy(docType, data);
         const durationMs = stopV1();
-        logPdfSuccess({ docType, engine: 'jspdf', durationMs, ...{ engine: 'v1' as never } });
+        logPdfSuccess({ docType, durationMs, engine: 'v1' as never });
         return { engine: 'v1', fellBack: true, durationMs, appliedProfile: false };
       } catch (fallbackError) {
         const durationMs = stopV1();
-        logPdfFailure({ docType, engine: 'jspdf', durationMs, error: fallbackError, ...{ engine: 'v1' as never } });
+        logPdfFailure({ docType, durationMs, error: fallbackError, engine: 'v1' as never });
         throw fallbackError;
       }
     }
@@ -141,11 +141,11 @@ export async function routePdfRequest(
   try {
     await callLegacy(docType, data);
     const durationMs = stop();
-    logPdfSuccess({ docType, engine: 'jspdf', durationMs, ...{ engine: 'v1' as never } });
+    logPdfSuccess({ docType, durationMs, engine: 'v1' as never });
     return { engine: 'v1', fellBack: false, durationMs, appliedProfile: false };
   } catch (error) {
     const durationMs = stop();
-    logPdfFailure({ docType, engine: 'jspdf', durationMs, error, ...{ engine: 'v1' as never } });
+    logPdfFailure({ docType, durationMs, error, engine: 'v1' as never });
     throw error;
   }
 }

@@ -51,7 +51,7 @@ export const CustomerTabNotes = memo(function CustomerTabNotes({ customerId }: C
           customer_id: customerId,
           user_id: user.id,
           content,
-          tenant_id: (await supabase.rpc('get_current_tenant')).data,
+          tenant_id: (await supabase.rpc('get_current_tenant')).data ?? undefined,
         });
       if (error) throw error;
     },

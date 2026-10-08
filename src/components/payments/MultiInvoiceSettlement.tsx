@@ -98,7 +98,7 @@ export default function MultiInvoiceSettlement({ open, onOpenChange, onSuccess, 
           payment_method: paymentMethod as 'cash' | 'bank_transfer' | 'credit' | 'advance_payment' | 'installment',
           payment_number: '',
           created_by: user?.id,
-          tenant_id: tenantData,
+          tenant_id: tenantData ?? undefined,
         });
         if (error) throw error;
       }
@@ -142,7 +142,7 @@ export default function MultiInvoiceSettlement({ open, onOpenChange, onSuccess, 
               <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
               <SelectContent>
                 {customers.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id ?? ''} value={c.id ?? ''}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

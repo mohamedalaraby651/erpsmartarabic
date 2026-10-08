@@ -143,7 +143,7 @@ export const quotationRepository = {
 
     // Atomic single-transaction save (Phase 2 RPC).
     const { data: newId, error } = await supabase.rpc('save_quotation_with_items', {
-      p_id: null,
+      p_id: null as unknown as string, // RPC treats null as "create new"
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       p_header: header as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -191,7 +191,7 @@ export const quotationRepository = {
   ): Promise<string> {
     const { data, error } = await supabase.rpc("convert_invoice_to_delivery", {
       p_invoice_id: invoiceId,
-      p_warehouse_id: warehouseId,
+      p_warehouse_id: warehouseId ?? undefined,
     });
     if (error) throw mapRepoError(error, "فشل إنشاء إذن التسليم.");
     return data as string;

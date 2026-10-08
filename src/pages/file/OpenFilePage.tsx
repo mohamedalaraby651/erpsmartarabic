@@ -36,8 +36,9 @@ export default function OpenFilePage() {
       }
 
       // Check for files passed via location state
-      if (location.state?.files) {
-        await handleFiles(location.state.files);
+      const stateFiles = (location.state as { files?: File[] } | null)?.files;
+      if (stateFiles) {
+        await handleFiles(stateFiles);
         setInitialized(true);
         return;
       }

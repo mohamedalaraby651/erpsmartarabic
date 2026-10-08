@@ -17,7 +17,7 @@ import {
   type UseFormReturn,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ZodType } from "zod";
+import type { ZodType, ZodTypeDef } from "zod";
 
 export interface UseFormDialogOptions<
   TValues extends FieldValues,
@@ -25,7 +25,7 @@ export interface UseFormDialogOptions<
   TPayload = unknown,
 > {
   /** Zod schema for validation. Required — no inline rules allowed. */
-  schema: ZodType<TValues>;
+  schema: ZodType<TValues, ZodTypeDef, unknown>;
   /** The entity being edited; `null`/`undefined` means create mode. */
   entity: TEntity | null | undefined;
   /** Map an entity (or `null`) to RHF form values. Called on init and on entity change. */

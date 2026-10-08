@@ -59,7 +59,7 @@ export function InventoryStockTab({ stock, isLoading, searchTerm, onSearchChange
                 key={item.id}
                 title={item.product?.name || "منتج غير معروف"}
                 subtitle={`${item.warehouse?.name || ""} ${item.variant?.name ? `• ${item.variant.name}` : ""}`}
-                avatar={item.product?.image_url}
+                avatar={item.product?.image_url ?? undefined}
                 avatarFallback={item.product?.name?.charAt(0) || "م"}
                 badge={isLowStock ? { text: "نقص مخزون", variant: "destructive" } : { text: "متوفر", variant: "default" }}
                 fields={[

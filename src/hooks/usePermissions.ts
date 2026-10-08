@@ -102,10 +102,10 @@ export function usePermissions() {
     if (!permission) return false;
     
     switch (action) {
-      case 'view': return permission.can_view;
-      case 'create': return permission.can_create;
-      case 'edit': return permission.can_edit;
-      case 'delete': return permission.can_delete;
+      case 'view': return permission.can_view ?? false;
+      case 'create': return permission.can_create ?? false;
+      case 'edit': return permission.can_edit ?? false;
+      case 'delete': return permission.can_delete ?? false;
       default: return false;
     }
   };

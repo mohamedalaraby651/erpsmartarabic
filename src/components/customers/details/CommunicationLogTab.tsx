@@ -123,7 +123,7 @@ const CommunicationLogTab = ({ customerId }: CommunicationLogTabProps) => {
                                   <Icon className="h-3 w-3" />
                                 </div>
                                 <Badge variant="outline" className="text-[10px] h-5">{config.label}</Badge>
-                                {comm.subject && <span className="font-medium text-sm">{comm.subject as string}</span>}
+                                {typeof comm.subject === 'string' && comm.subject && <span className="font-medium text-sm">{comm.subject as string}</span>}
                                 <span className="text-xs text-muted-foreground mr-auto">
                                   {new Date(comm.communication_date).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}
                                 </span>

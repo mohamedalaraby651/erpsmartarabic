@@ -24,7 +24,7 @@ interface CustomerStatsBarProps {
     debtors?: number;
   };
   isMobile: boolean;
-  activeFilter?: string;
+  activeFilter?: string | null | undefined;
   onFilterChange?: (filterId: string | null) => void;
 }
 

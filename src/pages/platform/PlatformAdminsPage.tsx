@@ -94,7 +94,7 @@ export default function PlatformAdminsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(admin.created_at).toLocaleDateString('ar-EG')}
+                    {(admin.created_at ? new Date(admin.created_at).toLocaleDateString('ar-EG') : '—')}
                   </TableCell>
                 </TableRow>
               ))}

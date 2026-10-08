@@ -122,7 +122,7 @@ export const goodsReceiptRepository = {
   async cancel(id: string, reason?: string) {
     const { data, error } = await supabase.rpc("cancel_goods_receipt", {
       p_id: id,
-      _reason: reason ?? null,
+      _reason: reason ?? undefined,
     });
     if (error) throw mapRepoError(error, "فشل الإلغاء.");
     const res = data as { success: boolean; error?: string };
@@ -241,7 +241,7 @@ export const deliveryNoteRepository = {
   async cancel(id: string, reason?: string) {
     const { data, error } = await supabase.rpc("cancel_delivery_note", {
       p_id: id,
-      _reason: reason ?? null,
+      _reason: reason ?? undefined,
     });
     if (error) throw mapRepoError(error, "فشل الإلغاء.");
     const res = data as { success: boolean; error?: string };

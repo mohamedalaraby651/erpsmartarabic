@@ -297,7 +297,7 @@ const ApprovalChainsPage = () => {
               <Input
                 type="number"
                 value={form.escalation_hours || ''}
-                onChange={(e) => setForm({ ...form, escalation_hours: Number(e.target.value) || null })}
+                onChange={(e) => setForm({ ...form, escalation_hours: Number(e.target.value) || 24 })}
                 min={1}
                 placeholder="اختياري"
               />

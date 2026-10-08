@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { useState } from "react";
 import { useChartOfAccounts } from "@/hooks/accounting";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

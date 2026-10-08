@@ -119,6 +119,12 @@ export function useUserPreferences() {
     // ثم تطبيق إعدادات قاعدة البيانات (الأولوية الأعلى)
     ...(dbPreferences ? {
       ...dbPreferences,
+      theme: dbPreferences.theme ?? localStoragePrefs.theme,
+      primary_color: dbPreferences.primary_color ?? localStoragePrefs.primary_color,
+      accent_color: dbPreferences.accent_color ?? localStoragePrefs.accent_color,
+      font_family: dbPreferences.font_family ?? localStoragePrefs.font_family,
+      font_size: dbPreferences.font_size ?? localStoragePrefs.font_size,
+      sidebar_compact: dbPreferences.sidebar_compact ?? localStoragePrefs.sidebar_compact,
       sidebar_order: parseJsonArray(dbPreferences.sidebar_order),
       favorite_pages: parseJsonArray(dbPreferences.favorite_pages),
       collapsed_sections: parseJsonArray(dbPreferences.collapsed_sections),

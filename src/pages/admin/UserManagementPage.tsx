@@ -273,7 +273,7 @@ export default function UserManagementPage() {
                               {customRoles?.map(r => (
                                 <SelectItem key={r.id} value={r.id}>
                                   <div className="flex items-center gap-2">
-                                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: r.color }} />
+                                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: r.color ?? undefined }} />
                                     {r.name}
                                   </div>
                                 </SelectItem>
@@ -335,7 +335,7 @@ export default function UserManagementPage() {
                     <TableRow key={role.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <span className="h-2.5 w-2.5 rounded-full" style={{ background: role.color }} />
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ background: role.color ?? undefined }} />
                           <span className="font-medium">{role.name}</span>
                         </div>
                       </TableCell>
@@ -382,7 +382,7 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-function PermCell({ perm }: { perm?: { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean } }) {
+function PermCell({ perm }: { perm?: { can_view: boolean | null; can_create: boolean | null; can_edit: boolean | null; can_delete: boolean | null } | undefined }) {
   if (!perm) return <span className="text-muted-foreground text-xs">—</span>;
   const flags = [
     { k: 'V', on: perm.can_view },

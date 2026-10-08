@@ -63,7 +63,7 @@ export default function PlatformReportsPage() {
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(log.created_at).toLocaleString('ar-EG')}
+                  {(log.created_at ? new Date(log.created_at).toLocaleString('ar-EG') : '—')}
                 </span>
               </div>
             ))}

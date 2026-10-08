@@ -10,22 +10,22 @@ import { cn } from '@/lib/utils';
 interface Task {
   id: string;
   title: string;
-  priority: string;
+  priority: string | null;
   due_date: string | null;
-  is_completed: boolean;
+  is_completed: boolean | null;
 }
 
 interface TasksWidgetProps {
   tasks: Task[] | undefined;
 }
 
-const priorityTone = (p: string): AccentTone =>
+const priorityTone = (p: string | null): AccentTone =>
   p === 'high' ? 'destructive' : p === 'medium' ? 'warning' : 'success';
 
-const priorityLabel = (p: string) =>
+const priorityLabel = (p: string | null) =>
   p === 'high' ? 'عاجل' : p === 'medium' ? 'متوسط' : 'منخفض';
 
-const priorityBadge = (p: string): 'destructive' | 'secondary' | 'default' =>
+const priorityBadge = (p: string | null): 'destructive' | 'secondary' | 'default' =>
   p === 'high' ? 'destructive' : 'secondary';
 
 export const TasksWidget = memo(function TasksWidget({ tasks }: TasksWidgetProps) {

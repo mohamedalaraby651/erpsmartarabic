@@ -175,7 +175,7 @@ const RoleLimitsPage = () => {
                       <div className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: role.color }}
+                          style={{ backgroundColor: role.color ?? undefined }}
                         />
                         {role.name}
                       </div>
@@ -338,7 +338,7 @@ const RoleLimitsPage = () => {
                           <div className="flex items-center gap-2">
                             <div
                               className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: limit.custom_roles?.color }}
+                              style={{ backgroundColor: limit.custom_roles?.color ?? undefined }}
                             />
                             {limit.custom_roles?.name || '-'}
                           </div>
