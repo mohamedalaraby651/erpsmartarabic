@@ -1,0 +1,17 @@
+{"functions": [
+  {"name": "approve-expense", "classification": "internal-only", "signal": "1 src/ call site; financial state transition under the project's Smart Freeze (no silent changes to financial logic); service-role writes; cannot be verified live while the backend is paused", "outcome": "left"},
+  {"name": "approve-invoice", "classification": "internal-only", "signal": "1 src/ call site; financial state transition under Smart Freeze; service-role writes; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "create-journal", "classification": "internal-only", "signal": "2 src/ call sites; double-entry posting under Smart Freeze; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "event-dispatcher", "classification": "unknown", "signal": "no src/ call sites; batch runs tracked in supabase/migrations (dispatcher batches) — caller is external/scheduled; URL is load-bearing", "outcome": "left"},
+  {"name": "export-customers", "classification": "unknown", "signal": "no src/ call sites and no signature signal — default to external", "outcome": "left"},
+  {"name": "log-event", "classification": "internal-only", "signal": "2 src/ call sites (invoke + raw /functions/v1/log-event beacon from runtimeTelemetry); service-role insert; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "mcp", "classification": "MCP server", "signal": "createSupabaseHandler MCP handler, name 'mcp'", "outcome": "left"},
+  {"name": "og-image", "classification": "custom response", "signal": "returns a generated image; URL is emitted into og:image meta and fetched by external social crawlers — fixed URL", "outcome": "left"},
+  {"name": "process-payment", "classification": "internal-only", "signal": "2 src/ call sites; payment posting under Smart Freeze; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "render-pdf", "classification": "internal-only", "signal": "1 src/ call site (useEnqueuePdfExport); not verifiable while backend is paused", "outcome": "left"},
+  {"name": "restore-backup", "classification": "internal-only", "signal": "1 src/ call site; destructive data restore under Smart Freeze; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "rollback-restore", "classification": "internal-only", "signal": "1 src/ call site; destructive data rollback under Smart Freeze; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "stock-movement", "classification": "internal-only", "signal": "1 src/ call site; inventory state transition under Smart Freeze; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "validate-invoice", "classification": "internal-only", "signal": "1 src/ call site; financial validation under Smart Freeze; not verifiable while backend is paused", "outcome": "left"},
+  {"name": "verify-totp", "classification": "internal-only", "signal": "1 src/ call site; two-factor sign-in check (HMAC/TOTP) with service-role secret table access; security-sensitive, not verifiable while backend is paused", "outcome": "left"}
+]}
