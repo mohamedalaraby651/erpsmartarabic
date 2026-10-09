@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { useLocation, useNavigate, Link } from '@/lib/router-compat';
 import { ChevronLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
