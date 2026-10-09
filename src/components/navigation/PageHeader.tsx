@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { useLocation, useNavigate, Link } from '@/lib/router-compat';
 import { ChevronLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -58,20 +59,22 @@ export default function PageHeader({
         <Breadcrumb>
           <BreadcrumbList>
             {breadcrumbItems.map((item, index) => (
-              <BreadcrumbItem key={item.path}>
-                {item.isLast ? (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                ) : (
-                  <>
+              <Fragment key={item.path}>
+                <BreadcrumbItem>
+                  {item.isLast ? (
+                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  ) : (
                     <BreadcrumbLink asChild>
                       <Link to={item.path}>{item.label}</Link>
                     </BreadcrumbLink>
-                    <BreadcrumbSeparator>
-                      <ChevronLeft className="h-4 w-4" />
-                    </BreadcrumbSeparator>
-                  </>
+                  )}
+                </BreadcrumbItem>
+                {!item.isLast && (
+                  <BreadcrumbSeparator>
+                    <ChevronLeft className="h-4 w-4" />
+                  </BreadcrumbSeparator>
                 )}
-              </BreadcrumbItem>
+              </Fragment>
             ))}
           </BreadcrumbList>
         </Breadcrumb>

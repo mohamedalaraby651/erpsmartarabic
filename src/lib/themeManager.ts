@@ -75,7 +75,7 @@ export function applyTheme(config: Partial<ThemeConfig>) {
     const hsl = hexToHsl(config.primaryColor);
     root.style.setProperty('--primary', `${hsl.h} ${hsl.s}% ${hsl.l}%`);
     // Generate foreground color based on lightness
-    const foregroundL = hsl.l > 50 ? 10 : 98;
+    const foregroundL = hsl.l > 65 ? 10 : 98;
     root.style.setProperty('--primary-foreground', `${hsl.h} ${hsl.s}% ${foregroundL}%`);
   }
 
@@ -83,7 +83,7 @@ export function applyTheme(config: Partial<ThemeConfig>) {
   if (config.accentColor) {
     const hsl = hexToHsl(config.accentColor);
     root.style.setProperty('--accent', `${hsl.h} ${hsl.s}% ${hsl.l}%`);
-    const foregroundL = hsl.l > 50 ? 10 : 98;
+    const foregroundL = hsl.l > 65 ? 10 : 98;
     root.style.setProperty('--accent-foreground', `${hsl.h} ${hsl.s}% ${foregroundL}%`);
   }
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import { useLocation, Link } from '@/lib/router-compat';
 import { ChevronLeft, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -125,11 +125,11 @@ export function SmartBreadcrumbs({ className, maxItems = 4 }: SmartBreadcrumbsPr
         </BreadcrumbItem>
 
         {breadcrumbs.map((item, index) => (
-          <BreadcrumbItem key={index}>
-            <BreadcrumbSeparator>
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </BreadcrumbSeparator>
-            
+          <Fragment key={index}>
+          <BreadcrumbSeparator>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </BreadcrumbSeparator>
+          <BreadcrumbItem>
             {item.isLast ? (
               <BreadcrumbPage className="font-medium text-foreground max-w-[150px] truncate">
                 {item.label}
@@ -147,6 +147,7 @@ export function SmartBreadcrumbs({ className, maxItems = 4 }: SmartBreadcrumbsPr
               </BreadcrumbLink>
             )}
           </BreadcrumbItem>
+          </Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>

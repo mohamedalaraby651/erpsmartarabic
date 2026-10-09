@@ -61,11 +61,17 @@ export default function UserManagementPage() {
         .from('user_roles')
         .select(`
           id, user_id, role, custom_role_id,
-          custom_roles ( id, name, color ),
-          profiles:user_id ( id, full_name, avatar_url, phone, is_active )
+          custom_roles ( id, name, color )
         `);
       if (error) throw error;
-      return (data ?? []) as unknown as UserRow[];
+      // user_roles.user_id has no FK to profiles, so join in the client.
+      const ids = [...new Set((data ?? []).map((r) => r.user_id))];
+      const { data: profs, error: pErr } = ids.length
+        ? await supabase.from('profiles').select('id, full_name, avatar_url, phone, is_active').in('id', ids)
+        : { data: [], error: null };
+      if (pErr) throw pErr;
+      const byId = new Map((profs ?? []).map((p) => [p.id, p]));
+      return (data ?? []).map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null })) as unknown as UserRow[];
     },
   });
 
@@ -229,10 +235,10 @@ export default function UserManagementPage() {
                               <AvatarFallback className="bg-primary/10 text-primary text-sm">{initials}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium flex items-center gap-2">
+                              <div className="font-medium flex items-center gap-2">
                                 {p?.full_name || 'غير محدد'}
                                 {isMe && <Badge variant="outline" className="text-xs">أنت</Badge>}
-                              </p>
+                              </div>
                               <p className="text-xs text-muted-foreground">{u.user_id.slice(0, 8)}...</p>
                             </div>
                           </div>

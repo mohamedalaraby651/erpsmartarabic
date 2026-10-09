@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useChartOfAccounts } from "@/hooks/accounting";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,9 +137,8 @@ const ChartOfAccountsPage = () => {
     const isExpanded = expandedAccounts.has(account.id);
 
     return (
-      <>
+      <Fragment key={account.id}>
         <TableRow
-          key={account.id}
           className="cursor-pointer hover:bg-muted/50"
           onClick={() => hasChildren && toggleExpand(account.id)}
         >
@@ -216,7 +215,7 @@ const ChartOfAccountsPage = () => {
           </TableCell>
         </TableRow>
         {isExpanded && children.map((child) => renderAccountRow(child, level + 1))}
-      </>
+      </Fragment>
     );
   };
 
