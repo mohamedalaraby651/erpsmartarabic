@@ -63,17 +63,18 @@ export default function UsersPage() {
             id,
             name,
             color
-          ),
-          profiles:user_id (
-            id,
-            full_name,
-            avatar_url,
-            phone
           )
         `);
       
       if (error) throw error;
-      return userRoles;
+      // user_roles.user_id has no FK to profiles, so join in the client.
+      const ids = [...new Set((userRoles ?? []).map((r) => r.user_id))];
+      const { data: profs, error: pErr } = ids.length
+        ? await supabase.from('profiles').select('id, full_name, avatar_url, phone').in('id', ids)
+        : { data: [], error: null };
+      if (pErr) throw pErr;
+      const byId = new Map((profs ?? []).map((p) => [p.id, p]));
+      return (userRoles ?? []).map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
   });
 
