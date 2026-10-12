@@ -111,6 +111,12 @@ const CustomersPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [activeViewId, setActiveViewId] = useState<string | null>(() => normalizeViewId(filters.searchParams.get(URL_KEYS.view)));
+  // Clearing all filters also detaches the active saved view, so it can't be
+  // overwritten with an empty state via "حفظ التعديل".
+  const handleClearAll = useCallback(() => {
+    filters.clearAllFilters();
+    setActiveViewId(null);
+  }, [filters]);
   // Keep sort + active view in the shareable URL without touching other params.
   const { patchUrl } = filters;
   useEffect(() => {
@@ -437,7 +443,7 @@ const CustomersPage = () => {
             categoryFilter={filters.categoryFilter} onCategoryChange={(v) => { filters.setCategoryFilter(v); setQuickFilter(null); }}
             governorates={egyptGovernorates} activeFiltersCount={filters.activeFiltersCount}
             isMobile={isMobile} onOpenDrawer={filters.openDrawerWithCurrentValues}
-            onClearFilter={filters.clearFilter} onClearAll={filters.clearAllFilters}
+            onClearFilter={filters.clearFilter} onClearAll={handleClearAll}
             noCommDays={filters.noCommDays} inactiveDays={filters.inactiveDays}
           />
         </div>
@@ -478,7 +484,7 @@ const CustomersPage = () => {
             onDelete={handleDeleteRequest}
             onRefresh={handleRefresh}
             hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch}
-            onClearFilters={filters.clearAllFilters}
+            onClearFilters={handleClearAll}
             onAdd={canEdit ? handleAdd : undefined}
             onImport={() => dialogRef.current?.openImport()}
             onNewInvoice={handleNewInvoice}
@@ -505,6 +511,16 @@ const CustomersPage = () => {
         </div>
       ) : (
         <div>
+          {!layout.isDesktopVisible('filters') && (
+            <div id="customers-search-region" className="sticky top-0 z-20 mb-3 bg-background/95 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+              <CustomerSearchPreview
+                value={filters.searchQuery}
+                onChange={filters.setSearchQuery}
+                isFetching={list.isFetching}
+                className="min-w-64 max-w-xl"
+              />
+            </div>
+          )}
           {layout.isDesktopVisible('filters') && (
             <div id="customers-search-region" className="sticky top-0 z-20 mb-3 bg-background/95 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
               <DataTableToolbar
@@ -558,7 +574,7 @@ const CustomersPage = () => {
                       columns={displayedFilterMeta}
                       resultCount={list.totalCount}
                       onRemove={removeDisplayedFilter}
-                      onClearAll={filters.clearAllFilters}
+                      onClearAll={handleClearAll}
                       onApplySet={filters.columnFilters.replaceFilters}
                       enableSavedSets={false}
                     />
@@ -583,7 +599,7 @@ const CustomersPage = () => {
           ) : allCustomers.length === 0 ? (
             <CustomerEmptyState
               hasActiveFilters={filters.activeFiltersCount > 0 || !!filters.debouncedSearch}
-              onClearFilters={filters.clearAllFilters}
+              onClearFilters={handleClearAll}
               onAdd={canEdit ? handleAdd : undefined}
               onImport={() => dialogRef.current?.openImport()}
             />
