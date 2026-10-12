@@ -389,6 +389,12 @@ export const adminNavItems: NavItem[] = [
     roles: ['admin'],
   },
   {
+    title: 'المعرفة الهندسية',
+    icon: BookOpen,
+    href: '/admin/knowledge',
+    roles: ['admin'],
+  },
+  {
     title: 'قواعد فصل المهام',
     icon: AlertTriangle,
     href: '/admin/sod-rules',
@@ -434,6 +440,8 @@ export const routeLabels: Record<string, string> = {
   '/admin/export-templates': 'قوالب التصدير',
   '/admin/approval-chains': 'سلسلة الموافقات',
   '/admin/metrics': 'مقاييس الأداء',
+  '/admin/knowledge': 'المعرفة الهندسية',
+  '/admin/knowledge/integrity': 'سلامة الروابط',
   '/admin/sod-rules': 'قواعد فصل المهام',
   '/admin/tenants': 'إدارة الشركات',
   '/approvals': 'طلبات الموافقة',

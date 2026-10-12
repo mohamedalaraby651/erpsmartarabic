@@ -89,3 +89,9 @@
 - [ ] C1 — Customer 360 UI-only (no client aggregation); blocker: C0 acceptance
 - [ ] Final Gate + Regression Contract; blocker: human acceptance
 - [x] Answer user: project-level suggestions based on current state
+
+## Nazra Knowledge OS (OPA-KOS-001)
+- [x] Phase 1 — read-only knowledge browser over repo docs (admin)
+- [ ] Phase 2 — Evidence registry, Change Impact, Skills guide; blocker: Phase 1 human acceptance
+- [ ] Phase 3 — Safe import/export; blocker: Phase 2 acceptance
+- [ ] Phase 4 — Persistent storage + approval governance (DB/RLS design); blocker: explicit Smart Freeze approval
