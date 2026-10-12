@@ -109,6 +109,10 @@ import { Route as PlatformTenantsIndexRouteImport } from './routes/platform/tena
 import { Route as PlatformTenantsIdRouteImport } from './routes/platform/tenants/$id'
 import { Route as AppAdminDispatcherBatchesIndexRouteImport } from './routes/_app/admin/dispatcher-batches/index'
 import { Route as AppAdminDispatcherBatchesCorrelationIdRouteImport } from './routes/_app/admin/dispatcher-batches/$correlationId'
+import { Route as AppAdminKnowledgeIndexRouteImport } from './routes/_app/admin/knowledge/index'
+import { Route as AppAdminKnowledgeKindRouteImport } from './routes/_app/admin/knowledge/$kind'
+import { Route as AppAdminKnowledgeIntegrityRouteImport } from './routes/_app/admin/knowledge/integrity'
+import { Route as AppAdminKnowledgeDocSplatRouteImport } from './routes/_app/admin/knowledge/doc/$'
 
 const Char91indexChar93Route = Char91indexChar93RouteImport.update({
   id: '/index',
@@ -615,6 +619,28 @@ const AppAdminDispatcherBatchesCorrelationIdRoute =
     path: '/dispatcher-batches/$correlationId',
     getParentRoute: () => AppAdminRoute,
   } as any)
+const AppAdminKnowledgeIndexRoute = AppAdminKnowledgeIndexRouteImport.update({
+  id: '/knowledge/',
+  path: '/knowledge/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminKnowledgeKindRoute = AppAdminKnowledgeKindRouteImport.update({
+  id: '/knowledge/$kind',
+  path: '/knowledge/$kind',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminKnowledgeIntegrityRoute =
+  AppAdminKnowledgeIntegrityRouteImport.update({
+    id: '/knowledge/integrity',
+    path: '/knowledge/integrity',
+    getParentRoute: () => AppAdminRoute,
+  } as any)
+const AppAdminKnowledgeDocSplatRoute =
+  AppAdminKnowledgeDocSplatRouteImport.update({
+    id: '/knowledge/doc/$',
+    path: '/knowledge/doc/$',
+    getParentRoute: () => AppAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -715,7 +741,11 @@ export interface FileRoutesByFullPath {
   '/treasury/': typeof AppTreasuryIndexRoute
   '/platform/tenants/': typeof PlatformTenantsIndexRoute
   '/admin/dispatcher-batches/$correlationId': typeof AppAdminDispatcherBatchesCorrelationIdRoute
+  '/admin/knowledge/$kind': typeof AppAdminKnowledgeKindRoute
+  '/admin/knowledge/integrity': typeof AppAdminKnowledgeIntegrityRoute
   '/admin/dispatcher-batches/': typeof AppAdminDispatcherBatchesIndexRoute
+  '/admin/knowledge/': typeof AppAdminKnowledgeIndexRoute
+  '/admin/knowledge/doc/$': typeof AppAdminKnowledgeDocSplatRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -815,7 +845,11 @@ export interface FileRoutesByTo {
   '/treasury': typeof AppTreasuryIndexRoute
   '/platform/tenants': typeof PlatformTenantsIndexRoute
   '/admin/dispatcher-batches/$correlationId': typeof AppAdminDispatcherBatchesCorrelationIdRoute
+  '/admin/knowledge/$kind': typeof AppAdminKnowledgeKindRoute
+  '/admin/knowledge/integrity': typeof AppAdminKnowledgeIntegrityRoute
   '/admin/dispatcher-batches': typeof AppAdminDispatcherBatchesIndexRoute
+  '/admin/knowledge': typeof AppAdminKnowledgeIndexRoute
+  '/admin/knowledge/doc/$': typeof AppAdminKnowledgeDocSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -918,7 +952,11 @@ export interface FileRoutesById {
   '/_app/treasury/': typeof AppTreasuryIndexRoute
   '/platform/tenants/': typeof PlatformTenantsIndexRoute
   '/_app/admin/dispatcher-batches/$correlationId': typeof AppAdminDispatcherBatchesCorrelationIdRoute
+  '/_app/admin/knowledge/$kind': typeof AppAdminKnowledgeKindRoute
+  '/_app/admin/knowledge/integrity': typeof AppAdminKnowledgeIntegrityRoute
   '/_app/admin/dispatcher-batches/': typeof AppAdminDispatcherBatchesIndexRoute
+  '/_app/admin/knowledge/': typeof AppAdminKnowledgeIndexRoute
+  '/_app/admin/knowledge/doc/$': typeof AppAdminKnowledgeDocSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1021,7 +1059,11 @@ export interface FileRouteTypes {
     | '/treasury/'
     | '/platform/tenants/'
     | '/admin/dispatcher-batches/$correlationId'
+    | '/admin/knowledge/$kind'
+    | '/admin/knowledge/integrity'
     | '/admin/dispatcher-batches/'
+    | '/admin/knowledge/'
+    | '/admin/knowledge/doc/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -1121,7 +1163,11 @@ export interface FileRouteTypes {
     | '/treasury'
     | '/platform/tenants'
     | '/admin/dispatcher-batches/$correlationId'
+    | '/admin/knowledge/$kind'
+    | '/admin/knowledge/integrity'
     | '/admin/dispatcher-batches'
+    | '/admin/knowledge'
+    | '/admin/knowledge/doc/$'
   id:
     | '__root__'
     | '/_app'
@@ -1223,7 +1269,11 @@ export interface FileRouteTypes {
     | '/_app/treasury/'
     | '/platform/tenants/'
     | '/_app/admin/dispatcher-batches/$correlationId'
+    | '/_app/admin/knowledge/$kind'
+    | '/_app/admin/knowledge/integrity'
     | '/_app/admin/dispatcher-batches/'
+    | '/_app/admin/knowledge/'
+    | '/_app/admin/knowledge/doc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1944,6 +1994,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminDispatcherBatchesCorrelationIdRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/admin/knowledge/': {
+      id: '/_app/admin/knowledge/'
+      path: '/knowledge'
+      fullPath: '/admin/knowledge/'
+      preLoaderRoute: typeof AppAdminKnowledgeIndexRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/knowledge/$kind': {
+      id: '/_app/admin/knowledge/$kind'
+      path: '/knowledge/$kind'
+      fullPath: '/admin/knowledge/$kind'
+      preLoaderRoute: typeof AppAdminKnowledgeKindRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/knowledge/integrity': {
+      id: '/_app/admin/knowledge/integrity'
+      path: '/knowledge/integrity'
+      fullPath: '/admin/knowledge/integrity'
+      preLoaderRoute: typeof AppAdminKnowledgeIntegrityRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/admin/knowledge/doc/$': {
+      id: '/_app/admin/knowledge/doc/$'
+      path: '/knowledge/doc/$'
+      fullPath: '/admin/knowledge/doc/$'
+      preLoaderRoute: typeof AppAdminKnowledgeDocSplatRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
   }
 }
 
@@ -1965,7 +2043,11 @@ interface AppAdminRouteChildren {
   AppAdminUserManagementRoute: typeof AppAdminUserManagementRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
   AppAdminDispatcherBatchesCorrelationIdRoute: typeof AppAdminDispatcherBatchesCorrelationIdRoute
+  AppAdminKnowledgeKindRoute: typeof AppAdminKnowledgeKindRoute
+  AppAdminKnowledgeIntegrityRoute: typeof AppAdminKnowledgeIntegrityRoute
   AppAdminDispatcherBatchesIndexRoute: typeof AppAdminDispatcherBatchesIndexRoute
+  AppAdminKnowledgeIndexRoute: typeof AppAdminKnowledgeIndexRoute
+  AppAdminKnowledgeDocSplatRoute: typeof AppAdminKnowledgeDocSplatRoute
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
@@ -1987,7 +2069,11 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminUsersRoute: AppAdminUsersRoute,
   AppAdminDispatcherBatchesCorrelationIdRoute:
     AppAdminDispatcherBatchesCorrelationIdRoute,
+  AppAdminKnowledgeKindRoute: AppAdminKnowledgeKindRoute,
+  AppAdminKnowledgeIntegrityRoute: AppAdminKnowledgeIntegrityRoute,
   AppAdminDispatcherBatchesIndexRoute: AppAdminDispatcherBatchesIndexRoute,
+  AppAdminKnowledgeIndexRoute: AppAdminKnowledgeIndexRoute,
+  AppAdminKnowledgeDocSplatRoute: AppAdminKnowledgeDocSplatRoute,
 }
 
 const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
