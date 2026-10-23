@@ -4,6 +4,7 @@ export const knowledgeHome = '/admin/knowledge';
 export const knowledgeListHref = (kind: KnowledgeKind) => `/admin/knowledge/${kind}`;
 export const knowledgeDocHref = (path: string) => `/admin/knowledge/doc/${path}`;
 export const knowledgeIntegrityHref = '/admin/knowledge/integrity';
+export const knowledgeMatrixHref = '/admin/knowledge/matrix';
 
 export function makeResolvers(index: KnowledgeIndex | undefined) {
   const byId = new Map<string, string>();

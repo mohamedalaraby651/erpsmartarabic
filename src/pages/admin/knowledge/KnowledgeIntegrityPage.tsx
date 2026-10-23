@@ -13,6 +13,8 @@ const TYPE_LABELS: Record<IntegrityIssue['type'], string> = {
   unresolved_reference: 'إشارة غير محلولة',
   index_drift: 'انحراف فهرس ADR',
   unparsed_status: 'حالة غير قابلة للقراءة',
+  executed_without_evidence: 'تنفيذ دون دليل مذكور',
+  superseded_without_successor: 'مستبدل دون ذكر البديل',
 };
 
 export default function KnowledgeIntegrityPage() {
