@@ -1,7 +1,7 @@
 import { Link } from '@/lib/router-compat';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { KIND_LABELS, backlinksFor } from '@/domain/knowledge';
-import { useKnowledgeIndex } from '@/hooks/knowledge/useKnowledgeIndex';
+import { KIND_LABELS, backlinksFor, IMPACT_MAX_DEPTH, type ImpactNode } from '@/domain/knowledge';
+import { useKnowledgeImpact, useKnowledgeIndex } from '@/hooks/knowledge/useKnowledgeIndex';
 import { KnowledgeError, KnowledgeLoading, KnowledgeShell } from '@/components/knowledge/KnowledgeShell';
 import { StatusTriad } from '@/components/knowledge/StatusTriad';
 import { MarkdownView } from '@/components/knowledge/MarkdownView';
@@ -10,6 +10,7 @@ import { knowledgeDocHref, knowledgeListHref, makeResolvers } from '@/components
 export default function KnowledgeDetailPage({ path }: { path: string }) {
   const { data, isLoading, error } = useKnowledgeIndex();
   const record = data?.records.find((r) => r.path === path) ?? null;
+  const impact = useKnowledgeImpact(record);
 
   if (isLoading) return <KnowledgeShell title="سجل"><KnowledgeLoading /></KnowledgeShell>;
   if (error || !data) return <KnowledgeShell title="سجل"><KnowledgeError message={error?.message} /></KnowledgeShell>;
@@ -85,9 +86,46 @@ export default function KnowledgeDetailPage({ path }: { path: string }) {
               </ul>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">الأدلة المذكورة ({record.evidence.length})</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              <p role="note" className="rounded border border-dashed p-2 text-xs text-muted-foreground">ذكر الدليل لا يعني أنه متحقق منه.</p>
+              <ul className="space-y-1.5 text-xs">
+                {record.evidence.map((e) => (
+                  <li key={e.path} className="flex flex-col gap-0.5">
+                    <span className="break-all font-mono" dir="ltr">{e.path}</span>
+                    <span className={e.exists ? 'text-success' : 'text-destructive'}>{e.exists ? 'موجود في المستودع' : 'مذكور لكنه غير موجود'}</span>
+                  </li>
+                ))}
+                {record.evidence.length === 0 && <li className="text-muted-foreground">لا يذكر المستند أي ملف دليل</li>}
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">تحليل الأثر</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-xs text-muted-foreground">السجلات التي تشير إلى هذا السجل صراحةً، حتى {IMPACT_MAX_DEPTH} مستويات.</p>
+              {impact.length ? <ImpactList nodes={impact} /> : <p className="text-xs text-muted-foreground">لا يعتمد عليه أي سجل</p>}
+            </CardContent>
+          </Card>
           <Link to={knowledgeListHref(record.kind)} className="inline-block text-sm text-primary underline">العودة إلى {KIND_LABELS[record.kind]}</Link>
         </aside>
       </div>
     </KnowledgeShell>
+  );
+}
+
+function ImpactList({ nodes }: { nodes: ImpactNode[] }) {
+  return (
+    <ul className="space-y-1 border-s ps-2 text-xs">
+      {nodes.map((n) => (
+        <li key={`${n.depth}-${n.record.path}`}>
+          <Link to={knowledgeDocHref(n.record.path)} className="hover:underline">{n.record.title}</Link>
+          {n.cycle && <span className="ms-1 text-warning">(دوران — توقف)</span>}
+          {n.children.length > 0 && <div className="mt-1"><ImpactList nodes={n.children} /></div>}
+        </li>
+      ))}
+    </ul>
   );
 }
