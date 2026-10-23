@@ -4,6 +4,7 @@
  * YAML front matter is honoured only when the file starts with "---".
  * Anything that can't be read stays unknown — values are never invented.
  */
+import { extractEvidence } from './evidence';
 import type {
   ApprovalStatus, ExecutionStatus, KnowledgeKind, KnowledgeRecord, KnowledgeSourceFile,
   KnowledgeStatus, VerificationStatus,
@@ -166,5 +167,6 @@ export function parseRecord(file: KnowledgeSourceFile): KnowledgeRecord | null {
     references: parseReferences(file.content, id),
     fileLinks: parseFileLinks(file.content, file.path),
     body: file.content,
+    evidence: extractEvidence(file.content),
   };
 }

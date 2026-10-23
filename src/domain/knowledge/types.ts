@@ -38,12 +38,24 @@ export interface KnowledgeRecord {
   /** Repo-relative paths of linked .md files. */
   fileLinks: string[];
   body: string;
+  /** Evidence paths mentioned in the body. `exists` is null until resolved by the index. */
+  evidence: EvidenceRef[];
+}
+
+export type EvidenceKind = 'audit_output' | 'execution_record' | 'test' | 'report';
+
+export interface EvidenceRef {
+  path: string;
+  kind: EvidenceKind;
+  /** true = file present in repo, false = mentioned but missing, null = not resolved. */
+  exists: boolean | null;
 }
 
 export type IntegritySeverity = 'error' | 'warning';
 
 export interface IntegrityIssue {
-  type: 'duplicate_id' | 'broken_file_link' | 'unresolved_reference' | 'index_drift' | 'unparsed_status';
+  type: 'duplicate_id' | 'broken_file_link' | 'unresolved_reference' | 'index_drift' | 'unparsed_status'
+    | 'executed_without_evidence' | 'superseded_without_successor';
   severity: IntegritySeverity;
   recordId: string | null;
   path: string | null;
