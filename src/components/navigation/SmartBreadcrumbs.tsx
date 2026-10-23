@@ -10,6 +10,8 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from '@/components/ui/breadcrumb';
+import { isKnowledgePath, knowledgeBreadcrumbs } from '@/domain/knowledge/breadcrumbs';
+import { useKnowledgeIndex } from '@/hooks/knowledge/useKnowledgeIndex';
 
 // Route to Arabic label mapping
 const routeLabels: Record<string, string> = {
@@ -58,12 +60,18 @@ interface SmartBreadcrumbsProps {
 
 export function SmartBreadcrumbs({ className, maxItems = 4 }: SmartBreadcrumbsProps) {
   const location = useLocation();
+  const onKnowledge = isKnowledgePath(location.pathname);
+  const { data: knowledge } = useKnowledgeIndex(onKnowledge);
 
   const breadcrumbs = useMemo(() => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
     
     // Build breadcrumb items
-    const items: Array<{ label: string; href: string; isLast: boolean }> = [];
+    let items: Array<{ label: string; href: string; isLast: boolean }> = [];
+    if (onKnowledge) {
+      items = knowledgeBreadcrumbs(location.pathname, (p) => knowledge?.records.find((r) => r.path === p)?.title ?? null);
+      pathSegments.length = 0;
+    }
     
     let currentPath = '';
     pathSegments.forEach((segment, index) => {
@@ -96,7 +104,7 @@ export function SmartBreadcrumbs({ className, maxItems = 4 }: SmartBreadcrumbsPr
     }
 
     return items;
-  }, [location.pathname, maxItems]);
+  }, [location.pathname, maxItems, onKnowledge, knowledge]);
 
   // Hide on specific pages
   if (hideBreadcrumbsOn.includes(location.pathname)) {

@@ -92,6 +92,10 @@
 
 ## Nazra Knowledge OS (OPA-KOS-001)
 - [x] Phase 1 — read-only knowledge browser over repo docs (admin)
-- [ ] Phase 2 — Evidence registry, Change Impact, Skills guide; blocker: Phase 1 human acceptance
+- [x] OPA-KOS-002 A — Phase 1 closure (breadcrumbs, LTR lines, guard test, titles, empty state)
+- [x] OPA-KOS-002 B — Phase 2 read-only: evidence mentions, impact tree, status matrix, 2 new warnings
+- [ ] OPA-KOS-002 human acceptance; blocker: user review
+- [ ] Skills guide (remaining Phase 2 idea); blocker: not in OPA-KOS-002 scope
+- [ ] Legacy test failures (~167, post-migration, unrelated to knowledge); blocker: separate task, not fixed here
 - [ ] Phase 3 — Safe import/export; blocker: Phase 2 acceptance
 - [ ] Phase 4 — Persistent storage + approval governance (DB/RLS design); blocker: explicit Smart Freeze approval

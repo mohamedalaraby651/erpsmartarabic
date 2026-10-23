@@ -112,6 +112,7 @@ import { Route as AppAdminDispatcherBatchesCorrelationIdRouteImport } from './ro
 import { Route as AppAdminKnowledgeIndexRouteImport } from './routes/_app/admin/knowledge/index'
 import { Route as AppAdminKnowledgeKindRouteImport } from './routes/_app/admin/knowledge/$kind'
 import { Route as AppAdminKnowledgeIntegrityRouteImport } from './routes/_app/admin/knowledge/integrity'
+import { Route as AppAdminKnowledgeMatrixRouteImport } from './routes/_app/admin/knowledge/matrix'
 import { Route as AppAdminKnowledgeDocSplatRouteImport } from './routes/_app/admin/knowledge/doc/$'
 
 const Char91indexChar93Route = Char91indexChar93RouteImport.update({
@@ -635,6 +636,11 @@ const AppAdminKnowledgeIntegrityRoute =
     path: '/knowledge/integrity',
     getParentRoute: () => AppAdminRoute,
   } as any)
+const AppAdminKnowledgeMatrixRoute = AppAdminKnowledgeMatrixRouteImport.update({
+  id: '/knowledge/matrix',
+  path: '/knowledge/matrix',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminKnowledgeDocSplatRoute =
   AppAdminKnowledgeDocSplatRouteImport.update({
     id: '/knowledge/doc/$',
@@ -743,6 +749,7 @@ export interface FileRoutesByFullPath {
   '/admin/dispatcher-batches/$correlationId': typeof AppAdminDispatcherBatchesCorrelationIdRoute
   '/admin/knowledge/$kind': typeof AppAdminKnowledgeKindRoute
   '/admin/knowledge/integrity': typeof AppAdminKnowledgeIntegrityRoute
+  '/admin/knowledge/matrix': typeof AppAdminKnowledgeMatrixRoute
   '/admin/dispatcher-batches/': typeof AppAdminDispatcherBatchesIndexRoute
   '/admin/knowledge/': typeof AppAdminKnowledgeIndexRoute
   '/admin/knowledge/doc/$': typeof AppAdminKnowledgeDocSplatRoute
@@ -847,6 +854,7 @@ export interface FileRoutesByTo {
   '/admin/dispatcher-batches/$correlationId': typeof AppAdminDispatcherBatchesCorrelationIdRoute
   '/admin/knowledge/$kind': typeof AppAdminKnowledgeKindRoute
   '/admin/knowledge/integrity': typeof AppAdminKnowledgeIntegrityRoute
+  '/admin/knowledge/matrix': typeof AppAdminKnowledgeMatrixRoute
   '/admin/dispatcher-batches': typeof AppAdminDispatcherBatchesIndexRoute
   '/admin/knowledge': typeof AppAdminKnowledgeIndexRoute
   '/admin/knowledge/doc/$': typeof AppAdminKnowledgeDocSplatRoute
@@ -954,6 +962,7 @@ export interface FileRoutesById {
   '/_app/admin/dispatcher-batches/$correlationId': typeof AppAdminDispatcherBatchesCorrelationIdRoute
   '/_app/admin/knowledge/$kind': typeof AppAdminKnowledgeKindRoute
   '/_app/admin/knowledge/integrity': typeof AppAdminKnowledgeIntegrityRoute
+  '/_app/admin/knowledge/matrix': typeof AppAdminKnowledgeMatrixRoute
   '/_app/admin/dispatcher-batches/': typeof AppAdminDispatcherBatchesIndexRoute
   '/_app/admin/knowledge/': typeof AppAdminKnowledgeIndexRoute
   '/_app/admin/knowledge/doc/$': typeof AppAdminKnowledgeDocSplatRoute
@@ -1061,6 +1070,7 @@ export interface FileRouteTypes {
     | '/admin/dispatcher-batches/$correlationId'
     | '/admin/knowledge/$kind'
     | '/admin/knowledge/integrity'
+    | '/admin/knowledge/matrix'
     | '/admin/dispatcher-batches/'
     | '/admin/knowledge/'
     | '/admin/knowledge/doc/$'
@@ -1165,6 +1175,7 @@ export interface FileRouteTypes {
     | '/admin/dispatcher-batches/$correlationId'
     | '/admin/knowledge/$kind'
     | '/admin/knowledge/integrity'
+    | '/admin/knowledge/matrix'
     | '/admin/dispatcher-batches'
     | '/admin/knowledge'
     | '/admin/knowledge/doc/$'
@@ -1271,6 +1282,7 @@ export interface FileRouteTypes {
     | '/_app/admin/dispatcher-batches/$correlationId'
     | '/_app/admin/knowledge/$kind'
     | '/_app/admin/knowledge/integrity'
+    | '/_app/admin/knowledge/matrix'
     | '/_app/admin/dispatcher-batches/'
     | '/_app/admin/knowledge/'
     | '/_app/admin/knowledge/doc/$'
@@ -2015,6 +2027,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminKnowledgeIntegrityRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/admin/knowledge/matrix': {
+      id: '/_app/admin/knowledge/matrix'
+      path: '/knowledge/matrix'
+      fullPath: '/admin/knowledge/matrix'
+      preLoaderRoute: typeof AppAdminKnowledgeMatrixRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/_app/admin/knowledge/doc/$': {
       id: '/_app/admin/knowledge/doc/$'
       path: '/knowledge/doc/$'
@@ -2045,6 +2064,7 @@ interface AppAdminRouteChildren {
   AppAdminDispatcherBatchesCorrelationIdRoute: typeof AppAdminDispatcherBatchesCorrelationIdRoute
   AppAdminKnowledgeKindRoute: typeof AppAdminKnowledgeKindRoute
   AppAdminKnowledgeIntegrityRoute: typeof AppAdminKnowledgeIntegrityRoute
+  AppAdminKnowledgeMatrixRoute: typeof AppAdminKnowledgeMatrixRoute
   AppAdminDispatcherBatchesIndexRoute: typeof AppAdminDispatcherBatchesIndexRoute
   AppAdminKnowledgeIndexRoute: typeof AppAdminKnowledgeIndexRoute
   AppAdminKnowledgeDocSplatRoute: typeof AppAdminKnowledgeDocSplatRoute
@@ -2071,6 +2091,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
     AppAdminDispatcherBatchesCorrelationIdRoute,
   AppAdminKnowledgeKindRoute: AppAdminKnowledgeKindRoute,
   AppAdminKnowledgeIntegrityRoute: AppAdminKnowledgeIntegrityRoute,
+  AppAdminKnowledgeMatrixRoute: AppAdminKnowledgeMatrixRoute,
   AppAdminDispatcherBatchesIndexRoute: AppAdminDispatcherBatchesIndexRoute,
   AppAdminKnowledgeIndexRoute: AppAdminKnowledgeIndexRoute,
   AppAdminKnowledgeDocSplatRoute: AppAdminKnowledgeDocSplatRoute,

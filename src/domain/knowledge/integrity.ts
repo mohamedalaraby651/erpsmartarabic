@@ -3,18 +3,21 @@
  * Detection only — nothing is repaired or rewritten.
  */
 import { parseRecord } from './parse';
+import { isSecurityPath, resolveEvidence } from './evidence';
 import type { IntegrityIssue, KnowledgeIndex, KnowledgeRecord, KnowledgeSourceFile } from './types';
 
 const INDEX_FILES = new Set(['INDEX.md', 'README.md', 'TEMPLATE.md']);
 
-export function buildKnowledgeIndex(files: KnowledgeSourceFile[]): KnowledgeIndex {
+export function buildKnowledgeIndex(inputFiles: KnowledgeSourceFile[], evidencePaths: readonly string[] = []): KnowledgeIndex {
+  const files = inputFiles.filter((f) => !isSecurityPath(f.path));
   const allPaths = new Set(files.map((f) => f.path));
+  const repoPaths = new Set([...allPaths, ...evidencePaths.filter((p) => !isSecurityPath(p))]);
   const records: KnowledgeRecord[] = [];
   for (const f of files) {
     const name = f.path.split('/').pop() ?? '';
     if (f.path.startsWith('docs/adr/') && INDEX_FILES.has(name)) continue;
     const r = parseRecord(f);
-    if (r) records.push(r);
+    if (r) records.push({ ...r, evidence: resolveEvidence(r.evidence, repoPaths) });
   }
   records.sort((a, b) => a.id.localeCompare(b.id) || a.path.localeCompare(b.path));
 
@@ -51,6 +54,15 @@ export function buildKnowledgeIndex(files: KnowledgeSourceFile[]): KnowledgeInde
     }
   }
 
+  for (const r of records) {
+    if (r.status.execution === 'executed' && r.evidence.length === 0) {
+      issues.push({ type: 'executed_without_evidence', severity: 'warning', recordId: r.id, path: r.path, detail: 'الحالة في المصدر تذكر التنفيذ دون ذكر أي ملف دليل' });
+    }
+    if (r.status.approval === 'superseded' && !hasSuccessorRef(r.status.raw, r.id)) {
+      issues.push({ type: 'superseded_without_successor', severity: 'warning', recordId: r.id, path: r.path, detail: 'السجل موسوم كمستبدل ولا يذكر السجل الذي حلّ محله' });
+    }
+  }
+
   // ADR index drift: ADR files not listed in docs/adr/INDEX.md
   const indexFile = files.find((f) => f.path === 'docs/adr/INDEX.md');
   if (indexFile) {
@@ -75,4 +87,10 @@ export function buildKnowledgeIndex(files: KnowledgeSourceFile[]): KnowledgeInde
 /** Records that reference the given id or link to its file (backlinks). */
 export function backlinksFor(index: KnowledgeIndex, record: KnowledgeRecord): KnowledgeRecord[] {
   return index.records.filter((r) => r !== record && (r.references.includes(record.id) || r.fileLinks.includes(record.path)));
+}
+
+/** A superseded record names its successor as an ADR/RISK id in its status text. */
+export function hasSuccessorRef(statusRaw: string | null, selfId: string): boolean {
+  if (!statusRaw) return false;
+  return [...statusRaw.matchAll(/\b(ADR-\d{4}|RISK-\d{3})\b/g)].some((m) => m[1] !== selfId);
 }

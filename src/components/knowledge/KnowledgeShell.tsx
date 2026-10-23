@@ -3,7 +3,7 @@ import { BookMarked, ShieldAlert } from 'lucide-react';
 import { Link, useLocation } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { KIND_LABELS, KNOWLEDGE_KINDS } from '@/domain/knowledge';
-import { knowledgeHome, knowledgeIntegrityHref, knowledgeListHref } from './knowledgeLinks';
+import { knowledgeHome, knowledgeIntegrityHref, knowledgeListHref, knowledgeMatrixHref } from './knowledgeLinks';
 
 /** Page frame + section tabs for the knowledge module. */
 export function KnowledgeShell({ title, description, children, actions }: { title: string; description?: string; children: ReactNode; actions?: ReactNode }) {
@@ -11,6 +11,7 @@ export function KnowledgeShell({ title, description, children, actions }: { titl
   const tabs = [
     { href: knowledgeHome, label: 'الرئيسية' },
     ...KNOWLEDGE_KINDS.map((k) => ({ href: knowledgeListHref(k), label: KIND_LABELS[k] })),
+    { href: knowledgeMatrixHref, label: 'مصفوفة الحالات' },
     { href: knowledgeIntegrityHref, label: 'سلامة الروابط' },
   ];
   return (
@@ -59,4 +60,15 @@ export function KnowledgeLoading() {
 
 export function KnowledgeError({ message }: { message?: string }) {
   return <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">تعذّر تحميل المستندات{message ? `: ${message}` : ''}</div>;
+}
+
+/** Zero-result state with a reset action that restores default search/filters. */
+export function KnowledgeNoResults({ onReset }: { onReset: () => void }) {
+  return (
+    <div role="status" className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-10 text-center">
+      <p className="text-sm font-medium">لا توجد سجلات مطابقة للبحث أو الفلاتر الحالية.</p>
+      <p className="text-xs text-muted-foreground">جرّب كلمة أخرى أو امسح الفلاتر لعرض كل السجلات.</p>
+      <button type="button" onClick={onReset} className="inline-flex min-h-11 items-center rounded-md border bg-background px-4 text-sm hover:bg-muted">مسح البحث والفلاتر</button>
+    </div>
+  );
 }

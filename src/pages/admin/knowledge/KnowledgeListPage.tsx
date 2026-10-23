@@ -8,13 +8,13 @@ import {
   APPROVAL_LABELS, EXECUTION_LABELS, KIND_LABELS, VERIFICATION_LABELS, type KnowledgeKind,
 } from '@/domain/knowledge';
 import { useKnowledgeIndex } from '@/hooks/knowledge/useKnowledgeIndex';
-import { KnowledgeError, KnowledgeLoading, KnowledgeShell } from '@/components/knowledge/KnowledgeShell';
+import { KnowledgeError, KnowledgeLoading, KnowledgeNoResults, KnowledgeShell } from '@/components/knowledge/KnowledgeShell';
 import { StatusTriad } from '@/components/knowledge/StatusTriad';
 import { knowledgeDocHref } from '@/components/knowledge/knowledgeLinks';
 
 type SortKey = 'id' | 'date_desc' | 'title';
 
-function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: Record<string, string> }) {
+export function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: Record<string, string> }) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="h-9 w-full sm:w-44" aria-label={label}><SelectValue /></SelectTrigger>
@@ -33,6 +33,8 @@ export default function KnowledgeListPage({ kind }: { kind: KnowledgeKind }) {
   const [verif, setVerif] = useState('all');
   const [appr, setAppr] = useState('all');
   const [sort, setSort] = useState<SortKey>('id');
+
+  const resetFilters = () => { setQ(''); setExec('all'); setVerif('all'); setAppr('all'); setSort('id'); };
 
   const issueIds = useMemo(() => new Set((data?.issues ?? []).filter((i) => i.severity === 'error').map((i) => i.recordId)), [data]);
 
@@ -72,6 +74,7 @@ export default function KnowledgeListPage({ kind }: { kind: KnowledgeKind }) {
           <p className="text-xs text-muted-foreground" aria-live="polite">{rows.length} سجلًا</p>
 
           {/* Mobile cards */}
+          {rows.length > 0 && <>
           <ul className="space-y-2 md:hidden">
             {rows.map((r) => (
               <li key={r.path} className="rounded-lg border bg-card p-3">
@@ -110,7 +113,8 @@ export default function KnowledgeListPage({ kind }: { kind: KnowledgeKind }) {
               </TableBody>
             </Table>
           </div>
-          {rows.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">لا توجد سجلات مطابقة.</p>}
+          </>}
+          {rows.length === 0 && <KnowledgeNoResults onReset={resetFilters} />}
         </>
       )}
     </KnowledgeShell>
