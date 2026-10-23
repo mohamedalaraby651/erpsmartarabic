@@ -27,3 +27,25 @@ export async function loadKnowledgeSources(): Promise<KnowledgeSourceFile[]> {
   );
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }
+
+/**
+ * Evidence path registry — keys only. The loader functions are never called,
+ * so evidence file contents are never fetched or shown. `?raw` keeps Vite
+ * from evaluating code files as modules. docs/security/** is never matched.
+ */
+const evidenceKeys = import.meta.glob(
+  [
+    '/scripts/audits/output/**/*.{json,md,txt,csv}',
+    '/docs/governance/*.md',
+    '/docs/audit-reports/*.md',
+    '/docs/qa/*.md',
+    '/e2e/**/*.ts',
+    '/src/**/*.{test,spec}.{ts,tsx}',
+    '!/docs/security/**',
+  ],
+  { query: '?raw', import: 'default' },
+);
+
+export function evidencePaths(): string[] {
+  return Object.keys(evidenceKeys).map((k) => k.replace(/^\//, '')).filter((p) => !/(^|\/)security\//i.test(p)).sort();
+}

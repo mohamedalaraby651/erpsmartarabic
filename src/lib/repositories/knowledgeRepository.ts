@@ -3,10 +3,10 @@
  * No backend access, no writes.
  */
 import { buildKnowledgeIndex, type KnowledgeIndex } from '@/domain/knowledge';
-import { loadKnowledgeSources } from '@/lib/knowledge/sources';
+import { evidencePaths, loadKnowledgeSources } from '@/lib/knowledge/sources';
 
 export const knowledgeRepository = {
   async loadIndex(): Promise<KnowledgeIndex> {
-    return buildKnowledgeIndex(await loadKnowledgeSources());
+    return buildKnowledgeIndex(await loadKnowledgeSources(), evidencePaths());
   },
 };

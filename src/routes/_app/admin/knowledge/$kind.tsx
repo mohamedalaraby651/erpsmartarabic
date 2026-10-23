@@ -4,6 +4,12 @@ import { isKnowledgeKind } from "@/domain/knowledge/labels";
 import { KnowledgeShell } from "@/components/knowledge/KnowledgeShell";
 
 export const Route = createFileRoute("/_app/admin/knowledge/$kind")({
+  head: () => ({
+    meta: [
+      { title: "سجلات المعرفة الهندسية | نظرة" },
+      { name: "description", content: "قائمة سجلات قسم من أقسام المعرفة الهندسية مع البحث والتصفية حسب الحالة." },
+    ],
+  }),
   component: KnowledgeListRoute,
 });
 
