@@ -169,7 +169,7 @@ describe('Data Flow Integration Tests / اختبارات تكامل تدفق ا�
         expect(screen.getByTestId('success')).toBeInTheDocument();
       });
 
-      expect(mutationFn).toHaveBeenCalledWith({ name: 'New Item' });
+      expect(mutationFn.mock.calls[0][0]).toEqual({ name: 'New Item' });
       expect(onSuccess).toHaveBeenCalled();
     });
 
