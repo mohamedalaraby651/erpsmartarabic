@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BrowserRouter } from '@/lib/router-compat';
+import { BrowserRouter } from '@/test/router-shim';
 import { ReactNode, useState } from 'react';
 
 // Create test wrapper
@@ -169,7 +169,7 @@ describe('Data Flow Integration Tests / اختبارات تكامل تدفق ا�
         expect(screen.getByTestId('success')).toBeInTheDocument();
       });
 
-      expect(mutationFn).toHaveBeenCalledWith({ name: 'New Item' });
+      expect(mutationFn.mock.calls[0][0]).toEqual({ name: 'New Item' });
       expect(onSuccess).toHaveBeenCalled();
     });
 

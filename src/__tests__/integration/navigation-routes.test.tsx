@@ -8,7 +8,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter, MemoryRouter, Routes, Route, useLocation, useNavigate } from '@/lib/router-compat';
+import { useLocation, useNavigate } from '@/lib/router-compat';
+import { BrowserRouter, MemoryRouter, Routes, Route } from '@/test/router-shim';
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
