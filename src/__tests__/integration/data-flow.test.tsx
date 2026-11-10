@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BrowserRouter } from '@/lib/router-compat';
+import { BrowserRouter } from '@/test/router-shim';
 import { ReactNode, useState } from 'react';
 
 // Create test wrapper

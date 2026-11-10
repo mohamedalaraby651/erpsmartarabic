@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from '@/lib/router-compat';
+import { BrowserRouter } from '@/test/router-shim';
 import { ReactNode } from 'react';
 
 // Use vi.hoisted to create mock functions that can be referenced in vi.mock

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { BrowserRouter } from '@/lib/router-compat';
+import { BrowserRouter } from '@/test/router-shim';
 import React from 'react';
 
 // Mock @/lib/router-compat
