@@ -36,3 +36,19 @@ function createMockStorage(): Storage {
 }
 Object.defineProperty(window, "localStorage", { configurable: true, value: createMockStorage() });
 Object.defineProperty(window, "sessionStorage", { configurable: true, value: createMockStorage() });
+
+// jsdom lacks PointerEvent; Radix menus open on pointerdown with button === 0.
+if (typeof window.PointerEvent === "undefined") {
+  class PointerEventPolyfill extends MouseEvent {
+    pointerId: number; pointerType: string;
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+      this.pointerType = init.pointerType ?? "mouse";
+    }
+  }
+  (window as unknown as { PointerEvent: unknown }).PointerEvent = PointerEventPolyfill;
+}
+for (const m of ["hasPointerCapture", "setPointerCapture", "releasePointerCapture", "scrollIntoView"] as const) {
+  if (!(m in Element.prototype)) (Element.prototype as unknown as Record<string, unknown>)[m] = () => false;
+}

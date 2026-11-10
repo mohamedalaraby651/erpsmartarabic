@@ -103,8 +103,8 @@ const setViewport = (width: number, height: number) => {
 // Open the dropdown menu reliably (Radix uses portal)
 const openMenu = async () => {
   const trigger = screen.getByRole('button', { name: /تصدير/ });
-  trigger.focus();
-  fireEvent.keyDown(trigger, { key: 'Enter' });
+  fireEvent.pointerDown(trigger, { button: 0, pointerType: 'mouse' });
+  fireEvent.click(trigger);
   await waitFor(() => {
     expect(screen.getByText('Excel (.xlsx)')).toBeInTheDocument();
   });
