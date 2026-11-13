@@ -57,6 +57,13 @@
       "when": 1789583846778,
       "tag": "0007_fin_obs_001_reconcile_invoice_paid_amounts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794584076352,
+      "tag": "0008_restrict_restore_snapshots_and_logos_to_admin",
+      "breakpoints": true
     }
   ]
 }
