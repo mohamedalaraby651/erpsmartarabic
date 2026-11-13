@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
+import { getStorageUrl } from '@/lib/storageUrl';
 import { loadArabicFont, ARABIC_FONT_NAME, reshapeArabicText, toVisualOrder, sanitizeBidiText, loadImageAsBase64 } from './arabicFont';
 import type { PdfFontKey } from './arabicFont';
 
@@ -39,7 +40,13 @@ export async function getCompanySettings(): Promise<CompanySettings | null> {
     return null;
   }
   
-  return data as unknown as CompanySettings;
+  const company = data as unknown as CompanySettings;
+  // الشعار مخزَّن كمسار تخزين (أو رابط موقّع قديم)؛ نوقّعه هنا حتى يكون صالحًا عند الطباعة
+  if (company?.logo_url) {
+    const signed = await getStorageUrl('logos', company.logo_url);
+    if (signed) company.logo_url = signed;
+  }
+  return company;
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {

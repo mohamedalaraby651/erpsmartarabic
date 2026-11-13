@@ -96,6 +96,37 @@
 - [x] OPA-KOS-002 B — Phase 2 read-only: evidence mentions, impact tree, status matrix, 2 new warnings
 - [ ] OPA-KOS-002 human acceptance; blocker: user review
 - [ ] Skills guide (remaining Phase 2 idea); blocker: not in OPA-KOS-002 scope
-- [ ] Legacy test failures (~167, post-migration, unrelated to knowledge); blocker: separate task, not fixed here
+- [x] Legacy test failures (~167, post-migration, unrelated to knowledge) — CLOSED by OPA-COMPLETE-001 المرحلة 1
 - [ ] Phase 3 — Safe import/export; blocker: Phase 2 acceptance
 - [ ] Phase 4 — Persistent storage + approval governance (DB/RLS design); blocker: explicit Smart Freeze approval
+
+## Post-migration completion (OPA-COMPLETE-001)
+- [x] المرحلة 1 — تصفير الاختبارات الفاشلة: `src/test/router-shim.tsx` + محاكاة localStorage/sessionStorage + PointerEvent/pointer-capture shims في `src/test/setup.ts` + استعادة `src/test/utils.tsx` وmocks. `bunx vitest run` → 1682 passed / 5 skipped / 0 failed. IMPLEMENTED + VERIFIED
+- [x] اكتشاف وإصلاح خلل حقيقي: `src/lib/router-compat.tsx` كان يضاعف `?` في search فيكسر قراءة الفلاتر من الرابط — IMPLEMENTED + VERIFIED
+- [x] المرحلة 2 — فحص توافق Edge (لا `fs`/`path`/`crypto`/`Buffer` في كود الخادم) + حجب الإدارة بحساب مبيعات (يرى «غير مصرّح بالوصول») — VERIFIED
+- [x] نشر النسخة المنقولة للإنتاج بطلب المستخدم (رابط متوقع: `https://erpsmartarabic1.lovable.app`) — طلب النشر مُجدول؛ لم يُتحقق من الوصول بعد
+- [x] التحقق من الرابط الحي بعد اكتمال النشر: `https://erpsmartarabic1.lovable.app` → HTTP 200، وحزمة التطبيق الحيّة (`/assets/index-DTQG4oey.js`) تحتوي كود النسخة الجديدة («المعرفة الهندسية» ×5، «مصفوفة الحالات»، `KnowledgeShell`)
+- [x] تصفير الاختبارات القديمة: سطر «Legacy test failures (~167…)» أعلاه صار مغلقًا
+- [ ] OPA-COMPLETE-001 المرحلة 4 — إغلاق: تحديث سجلات المعرفة + تقرير نهائي يفصل منفذ/موثّق/بانتظار قبول
+
+## Storage hardening (مفوض من المستخدم 2026-11-13)
+- [x] تقييد `restore-snapshots` و`logos` على المديرين فقط — استثناء صريح من Smart Freeze بطلب المستخدم. migration `0008_restrict_restore_snapshots_and_logos_to_admin`
+  - `restore-snapshots`: حُذفت قاعدتا `no direct write/delete` (كانتا `AND false` أي رفضًا صريحًا لا يمنح شيئًا؛ الرفض الافتراضي لـRLS هو الحارس الفعلي) وأصبحت القراءة للمدير فقط بدل مدير/مالك tenant. التدفق الفعلي للنسخ والاسترجاع يمر بخدمة الخلفية فلا يتأثر.
+  - `logos`: الرفع/التبديل/الحذف بقيا للمدير فقط. القراءة: أُغلق ثقب الكائنات الجذرية التي كان يقرأها أي مستخدم من أي tenant؛ صارت مربوطة بالرافع أو المدير أو نطاق الـtenant.
+- [x] إعادة فحص الأمان بعد التقييد: لا ملاحظات (كانت 3 تحذيرات)
+- [x] إثبات الاتجاهين: المدير يوقّع رابط شعار جذري (HTTP 200) ويسرد `restore-snapshots` (HTTP 200)؛ مستخدم المبيعات `sales@test.com` لا يوقّع الشعار الجذري (HTTP 400 / `not_found`) ولا يسرد شيئًا في `restore-snapshots` ولا في `logos` (`[]`)
+- [ ] معلّق معروف: `company_settings.logo_url` مخزَّن كـرابط موقّع منتهي (HTTP 400) والشعاران الفعليان جذريّان بلا مجلد tenant — إصلاحه نقلُ ملفات إلى مجلد الـtenant وحفظ المسار لا الرابط؛ قرار منفصل
+
+## OPA-PRN-001 — الطباعة والتصدير العربي الموحد (المسار التالي المفوض)
+- [x] J0 جرد: اكتمل. 4 قوالب طباعة (فاتورة/عرض سعر/أمر بيع/أمر شراء) + كشف حسابات بـPDF فقط؛ محرّكا PDF متوازيان (jsPDF قديم + HTML v2) مع canary يغطي 4 أنواع فقط؛ 11 مسار تصدير بتكرار صريح في BOM/الخط/الشعار/الأرقام
+- [x] J0-ملاحظة سابقة: الشعار في المستندات المطبوعة معطوب فعليًا — `company_settings.logo_url` يحفظ رابطًا موقّعًا منتهي الصلاحية (HTTP 400) بدل المسار، والشعاران المخزّنان في `logos` جذريّان بلا مجلد tenant فلا يقرأهما غير المدير بعد التقييد. الإصلاح: حفظ المسار + إعادة التوقيع عند العرض + نقل الملفات لمجلد الـtenant
+- [x] P1 سلامة العلامة في المستندات المطبوعة: `LogoUpload` يحفظ المسار الدائم بدل الرابط الموقّع؛ `getCompanySettings()` يوقّع الشعار لكل عملية طباعة PDF؛ `useBrandingLogo` يوقّعه في معاينة الطباعة بالمتصفح؛ ملفات الشعار نُسخت إلى مجلد الـtenant و`company_settings.logo_url` صار مسارًا دائمًا
+- [x] P1 إثبات حي: معاينة طباعة الفاتورة تعرض الشعار (صورة محمّلة 3464px) واسم الشركة الحقيقي «شركه اولاد الشيخ» للمدير ولمستخدم المبيعات `sales@test.com` معًا
+- [x] P1 تنظيف: حُذفت 4 صفوف `company_settings` أُنشئت بالخطأ أثناء التصحيح (كلها «شركتي»، أُنشئت 15:39) وبقي صف الشركة الحقيقي الوحيد
+- [!] ملاحظة معمارية: `PATCH` بلا فلتر على `company_settings` أنشأ صفوفًا بدل تحديثها — أي كتابة على هذه الجدول يجب أن تكون بفلتر `id` صريح
+- [ ] P2 ما ينقص المستند المطبوع: العملة من إعدادات الشركة بدل `ج.م` الثابتة، والمدفوع/المتبقي في طباعة الفاتورة وأمر الشراء، وعنوان التسليم في طباعة أمر البيع
+- [ ] P3 صحة التصدير: حلّ الأعمدة المتداخلة (`customers.name`) في تصدير القالب، خط عربي في PDF دليل العملاء، وتصدير المستخدمين يحترم الفلاتر الحالية
+- [ ] J1 عقد موحّد: طبقة rendering واحدة (RTL + أرقام + عملة) بلا منطق مالي جديد
+- [ ] J2 توحيد المخرجات: PDF/CSV/Excel عبر مسار واحد
+- [ ] J3 بوابات: typecheck + اختبارات + إثبات حي عند 1280 و390
+- [ ] Human Gate — قبول المستخدم
