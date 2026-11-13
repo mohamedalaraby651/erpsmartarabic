@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { extractStoragePath } from '@/lib/storageUrl';
+import { useBrandingLogo } from '@/hooks/useBrandingLogo';
 import { toast } from 'sonner';
 import { logErrorSafely } from '@/lib/errorHandler';
 
@@ -17,7 +19,10 @@ const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentLogoUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // المخزن مسار دائم داخل bucket خاص؛ نوقّعه للعرض الحالي فقط
+  const { logoUrl: resolvedCurrent } = useBrandingLogo(currentLogoUrl);
+  const shownUrl = previewUrl ?? resolvedCurrent;
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -74,24 +79,16 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
         throw uploadError;
       }
 
-      // Bucket is private — return a signed URL for immediate display.
-      // The stored path itself can be re-signed on demand later.
-      const { data: signed, error: signErr } = await supabase.storage
-        .from('logos')
-        .createSignedUrl(fileName, 60 * 60);
-
-      if (signErr || !signed?.signedUrl) {
-        throw signErr ?? new Error('Failed to create signed URL');
-      }
-
-      onUpload(signed.signedUrl);
+      // Bucket خاص والروابط الموقّعة تنتهي صلاحيتها، لذا يُحفظ المسار الدائم
+      // ويُوقَّع عند كل عرض (useBrandingLogo / getStorageUrl).
+      onUpload(fileName);
       toast.success('تم رفع الشعار بنجاح');
     } catch (error: unknown) {
       if (import.meta.env.DEV) {
         console.error('Upload error:', error);
       }
       toast.error('فشل رفع الشعار');
-      setPreviewUrl(currentLogoUrl || null);
+      setPreviewUrl(null);
     } finally {
       setUploading(false);
     }
@@ -114,17 +111,15 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
   };
 
   const handleRemove = async () => {
-    if (previewUrl && previewUrl.includes('logos')) {
+    const storedPath = extractStoragePath(currentLogoUrl || previewUrl || '', 'logos');
+    if (storedPath) {
       try {
-        const urlParts = previewUrl.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        
-        await supabase.storage.from('logos').remove([fileName]);
+        await supabase.storage.from('logos').remove([storedPath]);
       } catch (error) {
         logErrorSafely('LogoUpload', error);
       }
     }
-    
+
     setPreviewUrl(null);
     onRemove?.();
   };
@@ -142,10 +137,10 @@ export function LogoUpload({ currentLogoUrl, onUpload, onRemove }: LogoUploadPro
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        {previewUrl ? (
+        {shownUrl ? (
           <div className="relative">
             <img
-              src={previewUrl}
+              src={shownUrl}
               alt="الشعار"
               className="max-h-32 mx-auto rounded-lg object-contain"
             />
