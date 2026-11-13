@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { settingsRepository } from "@/application/queries/settings";
 import { AVAILABLE_FONTS } from "@/lib/arabicFont";
 import type { PdfFontKey } from "@/lib/arabicFont";
+import { useBrandingLogo } from "@/hooks/useBrandingLogo";
 
 interface PrintTemplateProps {
   companyName: string;
@@ -63,6 +64,9 @@ export function PrintTemplate(props: PrintTemplateProps) {
   const fontKey: PdfFontKey = (settings?.pdf_font as PdfFontKey) || 'cairo';
   const fontConfig = AVAILABLE_FONTS.find(f => f.key === fontKey) || AVAILABLE_FONTS[0];
   const fontFamily = `'${fontConfig.displayName}', 'Segoe UI', Tahoma, Arial, sans-serif`;
+
+  // Storage reads are private: re-sign the stored logo path for this render
+  const { logoUrl: brandLogoUrl } = useBrandingLogo(logoUrl);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("ar-EG", {
@@ -195,8 +199,8 @@ export function PrintTemplate(props: PrintTemplateProps) {
         marginBottom: '1.5rem',
       }}>
         <div style={{ flex: 1 }}>
-          {logoUrl && (
-            <img src={logoUrl} alt="Logo" style={{ height: '4rem', marginBottom: '0.5rem' }} />
+          {brandLogoUrl && (
+            <img src={brandLogoUrl} alt="Logo" style={{ height: '4rem', marginBottom: '0.5rem' }} />
           )}
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: brandColor, margin: 0 }}>{companyName}</h1>
           {companyAddress && <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '2px 0' }}>{companyAddress}</p>}
