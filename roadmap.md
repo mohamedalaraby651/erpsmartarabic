@@ -96,6 +96,26 @@
 - [x] OPA-KOS-002 B — Phase 2 read-only: evidence mentions, impact tree, status matrix, 2 new warnings
 - [ ] OPA-KOS-002 human acceptance; blocker: user review
 - [ ] Skills guide (remaining Phase 2 idea); blocker: not in OPA-KOS-002 scope
-- [ ] Legacy test failures (~167, post-migration, unrelated to knowledge); blocker: separate task, not fixed here
+- [x] Legacy test failures (~167, post-migration, unrelated to knowledge) — CLOSED by OPA-COMPLETE-001 المرحلة 1
 - [ ] Phase 3 — Safe import/export; blocker: Phase 2 acceptance
 - [ ] Phase 4 — Persistent storage + approval governance (DB/RLS design); blocker: explicit Smart Freeze approval
+
+## Post-migration completion (OPA-COMPLETE-001)
+- [x] المرحلة 1 — تصفير الاختبارات الفاشلة: `src/test/router-shim.tsx` + محاكاة localStorage/sessionStorage + PointerEvent/pointer-capture shims في `src/test/setup.ts` + استعادة `src/test/utils.tsx` وmocks. `bunx vitest run` → 1682 passed / 5 skipped / 0 failed. IMPLEMENTED + VERIFIED
+- [x] اكتشاف وإصلاح خلل حقيقي: `src/lib/router-compat.tsx` كان يضاعف `?` في search فيكسر قراءة الفلاتر من الرابط — IMPLEMENTED + VERIFIED
+- [x] المرحلة 2 — فحص توافق Edge (لا `fs`/`path`/`crypto`/`Buffer` في كود الخادم) + حجب الإدارة بحساب مبيعات (يرى «غير مصرّح بالوصول») — VERIFIED
+- [x] نشر النسخة المنقولة للإنتاج بطلب المستخدم (رابط متوقع: `https://erpsmartarabic1.lovable.app`) — طلب النشر مُجدول؛ لم يُتحقق من الوصول بعد
+- [ ] التحقق من الرابط الحي بعد اكتمال النشر — blocker: اكتمال النشر
+- [x] تصفير الاختبارات القديمة: سطر «Legacy test failures (~167…)» أعلاه صار مغلقًا
+- [ ] OPA-COMPLETE-001 المرحلة 4 — إغلاق: تحديث سجلات المعرفة + تقرير نهائي يفصل منفذ/موثّق/بانتظار قبول
+
+## Storage hardening (مفوض من المستخدم 2026-11-13)
+- [ ] تقييد `restore-snapshots` و`logos` على المديرين فقط — استثناء صريح من Smart Freeze بطلب المستخدم. 3 تحذيرات أمان: كتابة غير مربوطة بالمالك، قراءة حرة في logos، حذف حر في restore-snapshots. blocker: لا يوجد حتى الآن — مفوض
+- [ ] إعادة فحص الأمان بعد التقييد للتأكد من زوال التحذيرات الثلاثة
+
+## OPA-PRN-001 — الطباعة والتصدير العربي الموحد (المسار التالي المفوض)
+- [ ] J0 جرد: كل شاشات الطباعة والتصدير الحالية ومصادر بياناتها وعقودها
+- [ ] J1 عقد موحّد: طبقة rendering واحدة (RTL + أرقام + عملة) بلا منطق مالي جديد
+- [ ] J2 توحيد المخرجات: PDF/CSV/Excel عبر مسار واحد
+- [ ] J3 بوابات: typecheck + اختبارات + إثبات حي عند 1280 و390
+- [ ] Human Gate — قبول المستخدم
