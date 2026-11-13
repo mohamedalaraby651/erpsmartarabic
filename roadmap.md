@@ -130,3 +130,7 @@
 - [ ] J2 توحيد المخرجات: PDF/CSV/Excel عبر مسار واحد
 - [ ] J3 بوابات: typecheck + اختبارات + إثبات حي عند 1280 و390
 - [ ] Human Gate — قبول المستخدم
+
+## PRB-BASELINE-001 — Requirements-to-Repository Traceability
+- [x] ربط كل متطلب في PRB-NAZRA-001 بوحدة/شاشة/Workflow، تصنيفه (موجود/جزئي/مفقود/غير متحقق/يحتاج قرارًا) مع الأدلة، الفجوات الحرجة، وExecution Queue. جرد فقط بلا تغيير DB أو منطق.
+- [ ] الخطوة التالية من Execution Queue: VERIFY-001 ثم قرارات OD-03/04/05/09 (بانتظار المستخدم)
