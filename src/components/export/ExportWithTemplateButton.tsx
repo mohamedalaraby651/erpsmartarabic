@@ -1,3 +1,4 @@
+import { exportWorkspaceExcel, nestedExportValue } from "@/lib/exports/workspaceExcel";
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -124,7 +125,7 @@ export function ExportWithTemplateButton({
 
     setIsExporting(true);
     try {
-      const exportColumns = columns.filter((c) => selectedColumns.includes(c.key));
+      const exportColumns = selectedColumns.flatMap(key => { const column = columns.find(c => c.key === key); return column ? [column] : []; });
       const filename = `${sectionLabel}_${new Date().toISOString().split('T')[0]}`;
 
       switch (selectedFormat) {
@@ -139,11 +140,11 @@ export function ExportWithTemplateButton({
           break;
 
         case 'excel':
-          exportToExcel(data, exportColumns, filename);
+          await exportWorkspaceExcel(data, exportColumns, sectionLabel, filename);
           break;
 
         case 'csv':
-          exportToCSV(data, exportColumns, filename);
+          await exportToCSV(data, exportColumns, filename);
           break;
 
         case 'json':
@@ -161,33 +162,11 @@ export function ExportWithTemplateButton({
     }
   };
 
-  const exportToExcel = async (data: any[], cols: Column[], filename: string) => {
-    const exportData = data.map((row) => {
-      const newRow: Record<string, any> = {};
-      cols.forEach((col) => {
-        newRow[col.label] = row[col.key];
-      });
-      return newRow;
-    });
-
-    const XLSX = await import('xlsx');
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'البيانات');
-
-    const colWidths = cols.map((col) => ({
-      wch: Math.max(col.label.length, 15),
-    }));
-    worksheet['!cols'] = colWidths;
-
-    XLSX.writeFile(workbook, `${filename}.xlsx`);
-  };
-
   const exportToCSV = async (data: any[], cols: Column[], filename: string) => {
     const exportData = data.map((row) => {
       const newRow: Record<string, any> = {};
       cols.forEach((col) => {
-        newRow[col.label] = row[col.key];
+        newRow[col.label] = nestedExportValue(row, col.key);
       });
       return newRow;
     });
@@ -209,7 +188,7 @@ export function ExportWithTemplateButton({
     const exportData = data.map((row) => {
       const newRow: Record<string, any> = {};
       cols.forEach((col) => {
-        newRow[col.key] = row[col.key];
+        newRow[col.key] = nestedExportValue(row, col.key);
       });
       return newRow;
     });

@@ -1,3 +1,4 @@
+import { exportWorkspaceExcel } from "@/lib/exports/workspaceExcel";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -230,6 +231,8 @@ const SuppliersPage = () => {
         includeCompanyInfo: true,
         includeLogo: true,
       });
+    } else if (options.format !== 'csv') {
+      await exportWorkspaceExcel(data, options.columns.map(key => ({ key, label: LABEL_MAP[key] || key })), 'قائمة الموردين', 'suppliers');
     } else {
       const XLSX = await import('xlsx');
       const ws = XLSX.utils.json_to_sheet(data.map(row => {
