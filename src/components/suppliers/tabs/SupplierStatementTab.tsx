@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Printer, Filter, Loader2, FileText } from 'lucide-react';
 import { generateStatementPdf } from '@/lib/statementPdfGenerator';
 import { useToast } from '@/hooks/use-toast';
+import { statementBalances } from '@/lib/finance/statementPresentation';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SupplierStatementTabProps {
   supplierId: string;
@@ -27,6 +29,7 @@ interface StatementEntry {
 
 const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTabProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
@@ -42,7 +45,7 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
 
   const totalDebit = entries.reduce((s, e) => s + Number(e.debit), 0);
   const totalCredit = entries.reduce((s, e) => s + Number(e.credit), 0);
-  const finalBalance = entries.length > 0 ? Number(entries[entries.length - 1].running_balance) : 0;
+  const { opening: openingBalance, closing: finalBalance } = statementBalances(entries);
 
   const handlePrint = async () => {
     setIsPrinting(true);
@@ -57,7 +60,8 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
         partyAddress: supplier?.address,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
-        openingBalance: 0,
+        openingBalance,
+        printedBy: typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim() ? user.user_metadata.full_name : user?.email,
         entries,
       });
       toast({ title: 'تم تصدير كشف الحساب' });

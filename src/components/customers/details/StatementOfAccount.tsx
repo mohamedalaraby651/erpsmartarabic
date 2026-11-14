@@ -11,6 +11,8 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { generateStatementPdf } from "@/lib/statementPdfGenerator";
 import { toast } from "sonner";
 import { customerRepository } from "@/application/queries/customers";
+import { statementBalances } from '@/lib/finance/statementPresentation';
+import { useAuth } from '@/hooks/useAuth';
 
 interface StatementOfAccountProps {
   customerName: string;
@@ -30,6 +32,7 @@ interface StatementRow {
 const PAGE_SIZE = 20;
 
 const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProps) => {
+  const { user } = useAuth();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [isPrinting, setIsPrinting] = useState(false);
@@ -55,7 +58,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
 
   const totalDebit = useMemo(() => statementData.reduce((sum, e) => sum + e.debit, 0), [statementData]);
   const totalCredit = useMemo(() => statementData.reduce((sum, e) => sum + e.credit, 0), [statementData]);
-  const finalBalance = totalDebit - totalCredit;
+  const { opening: openingBalance, closing: finalBalance } = statementBalances(statementData);
 
   const handlePrint = async () => {
     setIsPrinting(true);
@@ -73,7 +76,8 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
         partyAddress: address || null,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
-        openingBalance: 0,
+        openingBalance,
+        printedBy: typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim() ? user.user_metadata.full_name : user?.email,
         entries: statementData,
       });
       toast.success('تم تصدير كشف الحساب بنجاح');

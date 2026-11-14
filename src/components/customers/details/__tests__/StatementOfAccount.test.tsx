@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@/test/utils';
 import StatementOfAccount from '../StatementOfAccount';
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { user_metadata: { full_name: 'المستخدم' } } }) }));
 
 // Capture rpc calls
 const rpcMock = vi.fn();

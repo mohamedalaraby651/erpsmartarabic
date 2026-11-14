@@ -16,6 +16,7 @@ import {
   type PdfFontKey,
 } from './arabicFont';
 import { getCompanySettings } from './pdfGenerator';
+import { formatStatementNumber } from './finance/statementPresentation';
 
 export interface StatementEntry {
   entry_date: string;
@@ -37,6 +38,7 @@ export interface StatementPdfOptions {
   dateTo?: string;
   openingBalance?: number;
   entries: StatementEntry[];
+  printedBy?: string;
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -79,7 +81,7 @@ function p(text: string, hasFont: boolean): string {
 }
 
 function fmtNumber(n: number): string {
-  return Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return formatStatementNumber(n);
 }
 
 function fmtDateAr(dateStr: string): string {
@@ -100,8 +102,8 @@ export async function generateStatementPdf(options: StatementPdfOptions): Promis
 
   const company = await getCompanySettings();
   const primary = company?.primary_color ? hexToRgb(company.primary_color) : { r: 37, g: 99, b: 235 };
-  const fontKey = (company?.pdf_font as PdfFontKey) || 'amiri';
-  const currency = company?.currency || 'ج.م';
+  const fontKey = (company?.pdf_font as PdfFontKey) || 'cairo';
+  const currency = 'ج.م';
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const hasFont = await setupFont(doc, fontKey);
@@ -199,7 +201,7 @@ export async function generateStatementPdf(options: StatementPdfOptions): Promis
   // ===== Opening balance row + table =====
   const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
   const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
-  const closingBalance = openingBalance + totalDebit - totalCredit;
+  const closingBalance = entries.length ? Number(entries[entries.length - 1].running_balance) : openingBalance;
 
   const tableHead = [[
     tx('التاريخ'),
@@ -266,24 +268,6 @@ export async function generateStatementPdf(options: StatementPdfOptions): Promis
       4: { halign: 'center', cellWidth: 30 },
       5: { halign: 'center', cellWidth: 35, fontStyle: 'bold' },
     },
-    didDrawPage: (data) => {
-      // Footer
-      const pageCount = doc.getNumberOfPages();
-      doc.setFont(fontName);
-      doc.setFontSize(8);
-      doc.setTextColor(130, 130, 130);
-      doc.text(
-        tx(`صفحة ${data.pageNumber} من ${pageCount}`),
-        pageWidth / 2, pageHeight - 6, { align: 'center' }
-      );
-      if (company) {
-        doc.text(tx(company.company_name), pageWidth - margin, pageHeight - 6, { align: 'right' });
-      }
-      doc.text(
-        tx(new Date().toLocaleDateString('ar-EG')),
-        margin, pageHeight - 6, { align: 'left' }
-      );
-    },
     margin: { left: margin, right: margin, bottom: 22 },
   });
 
@@ -310,12 +294,12 @@ export async function generateStatementPdf(options: StatementPdfOptions): Promis
   doc.text(`${fmtNumber(openingBalance)} ${tx(currency)}`, boxX + 4, sy + 6, { align: 'left' });
 
   doc.text(tx('إجمالي مدين:'), boxX + boxW - 4, sy + 12, { align: 'right' });
-  doc.setTextColor(200, 50, 50);
+  doc.setTextColor(60, 60, 60);
   doc.text(`${fmtNumber(totalDebit)} ${tx(currency)}`, boxX + 4, sy + 12, { align: 'left' });
 
   doc.setTextColor(80, 80, 80);
   doc.text(tx('إجمالي دائن:'), boxX + boxW - 4, sy + 18, { align: 'right' });
-  doc.setTextColor(40, 150, 80);
+  doc.setTextColor(60, 60, 60);
   doc.text(`${fmtNumber(totalCredit)} ${tx(currency)}`, boxX + 4, sy + 18, { align: 'left' });
 
   // Closing balance — bold + colored
@@ -325,16 +309,22 @@ export async function generateStatementPdf(options: StatementPdfOptions): Promis
   doc.setFontSize(11);
   doc.setTextColor(primary.r, primary.g, primary.b);
   doc.text(tx('الرصيد الختامي:'), boxX + boxW - 4, sy + 27, { align: 'right' });
-  const closingColor = closingBalance > 0 ? { r: 200, g: 50, b: 50 } : { r: 40, g: 150, b: 80 };
-  doc.setTextColor(closingColor.r, closingColor.g, closingColor.b);
+  doc.setTextColor(60, 60, 60);
   doc.text(`${fmtNumber(closingBalance)} ${tx(currency)}`, boxX + 4, sy + 27, { align: 'left' });
 
-  // Signature line
-  doc.setTextColor(100, 100, 100);
-  doc.setFontSize(8);
-  doc.setDrawColor(180, 180, 180);
-  doc.line(margin, sy + 22, margin + 60, sy + 22);
-  doc.text(tx('التوقيع والختم'), margin + 30, sy + 27, { align: 'center' });
+  // Render after pagination is final so every page, including summary-only pages,
+  // carries the correct page count, print timestamp and current user's name.
+  const pageCount = doc.getNumberOfPages();
+  const printedAt = new Date().toLocaleString('ar-EG');
+  for (let page = 1; page <= pageCount; page++) {
+    doc.setPage(page);
+    doc.setFont(fontName);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(tx(`صفحة ${page} من ${pageCount}`), pageWidth / 2, pageHeight - 6, { align: 'center' });
+    if (options.printedBy) doc.text(tx(options.printedBy), pageWidth - margin, pageHeight - 6, { align: 'right' });
+    doc.text(tx(printedAt), margin, pageHeight - 6, { align: 'left' });
+  }
 
   // Save
   const safeName = partyName.replace(/[^\u0600-\u06FFa-zA-Z0-9]+/g, '_').slice(0, 40);
