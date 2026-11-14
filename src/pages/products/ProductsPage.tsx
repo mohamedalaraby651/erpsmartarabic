@@ -1,3 +1,9 @@
+import { WorkspaceTable, type WorkspaceColumn } from "@/components/table/WorkspaceTable";
+import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { useTableLayout } from "@/hooks/useTableLayout";
+import { MobileExpandableCard } from "@/components/ui/data/MobileExpandableCard";
+import { LoadMoreFooter } from "@/components/ui/data/LoadMoreFooter";
+import { Amount } from "@/components/shared/amount/Amount";
 import { useCallback } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
@@ -13,7 +19,6 @@ import { ExportWithTemplateButton } from "@/components/export/ExportWithTemplate
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { DataTableActions } from "@/components/ui/data-table-actions";
 import { useResponsiveView } from "@/hooks/useResponsiveView";
-import { VirtualizedList } from "@/components/table/VirtualizedList";
 import { DataCard } from "@/components/mobile/DataCard";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { MobileListSkeleton } from "@/components/mobile/MobileListSkeleton";
@@ -25,7 +30,10 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { useProductsList, type Product } from "@/hooks/products/useProductsList";
 
+const COLUMN_KEYS = ['name', 'category', 'price', 'stock', 'status', 'actions'];
+
 const ProductsPage = () => {
+  const layout = useTableLayout('products', COLUMN_KEYS);
   const navigate = useNavigate();
   const { isMobile } = useResponsiveView();
   const list = useProductsList();
@@ -34,22 +42,12 @@ const ProductsPage = () => {
     const stock = list.getProductStock(product.id);
     const isLowStock = stock <= (product.min_stock || 0);
     return (
-      <DataCard
-        key={product.id}
-        title={product.name}
-        subtitle={product.sku ? `كود: ${product.sku}` : list.getCategoryName(product.category_id)}
-        avatar={product.image_url || undefined}
-        avatarFallback={product.name.slice(0, 2)}
-        icon={<Package className="h-5 w-5" />}
-        badge={isLowStock ? { text: 'مخزون منخفض', variant: 'destructive' } : undefined}
-        fields={[
-          { label: 'السعر', value: `${Number(product.selling_price).toLocaleString()} ج.م` },
-          { label: 'المخزون', value: stock.toString(), icon: isLowStock ? <AlertTriangle className="h-3 w-3" /> : undefined },
-        ]}
-        onClick={() => navigate(`/products/${product.id}`)}
-        onView={() => navigate(`/products/${product.id}`)}
-        onEdit={list.canEdit ? () => list.handleEdit(product) : undefined}
-        onDelete={list.canDelete ? () => list.handleDelete(product.id) : undefined}
+      <MobileExpandableCard key={product.id}
+        title={<Button variant="link" className="h-auto min-h-11 whitespace-normal px-0 text-start" onClick={() => navigate(`/products/${product.id}`)}>{product.name}</Button>}
+        amount={<Amount value={Number(product.selling_price)} />}
+        status={isLowStock ? <Badge variant="destructive">مخزون منخفض</Badge> : <Badge variant={product.is_active ? 'default' : 'secondary'}>{product.is_active ? 'نشط' : 'غير نشط'}</Badge>}
+        details={[{ label: 'الكود', value: product.sku || '-' }, { label: 'التصنيف', value: list.getCategoryName(product.category_id) }, { label: 'المخزون', value: stock }]}
+        actions={<DataTableActions onView={() => navigate(`/products/${product.id}`)} onEdit={() => list.handleEdit(product)} onDelete={() => list.handleDelete(product.id)} canEdit={list.canEdit} canDelete={list.canDelete} isDeleting={list.deletingId === product.id} />}
       />
     );
   }, [navigate, list.canEdit, list.canDelete, list.handleEdit, list.handleDelete, list.getProductStock, list.getCategoryName]);
@@ -74,73 +72,26 @@ const ProductsPage = () => {
           skeletonVariant="product"
           skeletonCount={6}
         >
-          {list.sortedData.length > 50 ? (
-            <VirtualizedList data={list.sortedData} renderItem={renderProductCard} getItemKey={(p) => p.id} itemHeight={140} maxHeight={window.innerHeight - 280} gap={12} className="px-1" />
-          ) : (
-            <div className="space-y-3">{list.sortedData.map(renderProductCard)}</div>
-          )}
+          <div className="space-y-3">{list.sortedData.map(renderProductCard)}</div>
         </ListStateRenderer>
       </PullToRefresh>
     );
   };
 
+  const columns: WorkspaceColumn<Product>[] = [
+    { key: 'name', label: 'المنتج', onSort: () => list.requestSort('name'), sortDirection: list.sortConfig.key === 'name' ? list.sortConfig.direction : null, render: product => <div className="flex items-center gap-2">{product.image_url && <img src={product.image_url} alt={product.name} className="h-10 w-10 rounded-md object-cover" />}<div><Button variant="link" className="h-auto min-h-11 whitespace-normal px-0 text-start" onClick={() => navigate(`/products/${product.id}`)}>{product.name}</Button><div className="text-xs text-muted-foreground">{product.sku || '-'}</div></div></div> },
+    { key: 'category', label: 'التصنيف', render: product => list.getCategoryName(product.category_id) },
+    { key: 'price', label: 'سعر البيع', onSort: () => list.requestSort('selling_price'), sortDirection: list.sortConfig.key === 'selling_price' ? list.sortConfig.direction : null, render: product => <Amount value={Number(product.selling_price)} /> },
+    { key: 'stock', label: 'المخزون', render: product => <span className={list.getProductStock(product.id) <= (product.min_stock || 0) ? 'text-warning font-bold' : 'tabular-nums'}>{list.getProductStock(product.id)}</span> },
+    { key: 'status', label: 'الحالة', render: product => <Badge variant={product.is_active ? 'default' : 'secondary'}>{product.is_active ? 'نشط' : 'غير نشط'}</Badge> },
+    { key: 'actions', label: 'إجراءات', render: product => <DataTableActions onView={() => navigate(`/products/${product.id}`)} onEdit={() => list.handleEdit(product)} onDelete={() => list.handleDelete(product.id)} canEdit={list.canEdit} canDelete={list.canDelete} isDeleting={list.deletingId === product.id} /> },
+  ];
+
   const renderTableView = () => {
     if (list.isLoading) return <TableSkeleton rows={5} columns={7} />;
     if (list.error) return <ListErrorState error={list.error} onRetry={() => list.refetch()} />;
     if (list.sortedData.length === 0) return <EmptyState icon={Package} title="لا توجد منتجات" description="ابدأ بإضافة منتجك الأول" action={list.canEdit ? { label: 'إضافة منتج جديد', onClick: list.handleAdd, icon: Plus } : undefined} />;
-    return (
-      <div className="w-full">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <DataTableHeader label="المنتج" sortKey="name" sortConfig={list.sortConfig} onSort={list.requestSort} />
-              <TableHead>الكود</TableHead>
-              <TableHead>التصنيف</TableHead>
-              <DataTableHeader label="سعر البيع" sortKey="selling_price" sortConfig={list.sortConfig} onSort={list.requestSort} />
-              <TableHead>المخزون</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="text-left">إجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {list.sortedData.map((product) => {
-              const stock = list.getProductStock(product.id);
-              const isLowStock = stock <= (product.min_stock || 0);
-              return (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
-                      ) : (
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center"><Package className="h-5 w-5 text-muted-foreground" /></div>
-                      )}
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        {product.description && <p className="text-sm text-muted-foreground line-clamp-1">{product.description}</p>}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell><code className="text-sm bg-muted px-2 py-1 rounded">{product.sku || '-'}</code></TableCell>
-                  <TableCell>{list.getCategoryName(product.category_id)}</TableCell>
-                  <TableCell><span className="font-bold">{Number(product.selling_price).toLocaleString()} ج.م</span></TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className={isLowStock ? 'text-destructive font-bold' : ''}>{stock}</span>
-                      {isLowStock && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                    </div>
-                  </TableCell>
-                  <TableCell><Badge variant={product.is_active ? "default" : "secondary"}>{product.is_active ? "نشط" : "غير نشط"}</Badge></TableCell>
-                  <TableCell>
-                    <DataTableActions onView={() => navigate(`/products/${product.id}`)} onEdit={() => list.handleEdit(product)} onDelete={() => list.handleDelete(product.id)} canEdit={list.canEdit} canDelete={list.canDelete} isDeleting={list.deletingId === product.id} deleteDescription="سيتم حذف المنتج. هذا الإجراء لا يمكن التراجع عنه." />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    );
+    return <WorkspaceTable rows={list.sortedData} columns={columns} layout={layout} />;
   };
 
   return (
@@ -234,12 +185,12 @@ const ProductsPage = () => {
             </div>
           </CardContent></Card>
 
-          <Card><CardHeader><CardTitle>قائمة المنتجات ({list.sortedData.length})</CardTitle></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
+          <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>قائمة المنتجات ({list.sortedData.length})</CardTitle><TableViewOptions layout={layout} columns={columns} /></CardHeader><CardContent>{renderTableView()}</CardContent></Card>
         </>
       )}
 
 
-      <ServerPagination currentPage={list.pagination.currentPage} totalPages={list.pagination.totalPages} totalCount={list.totalCount} pageSize={list.PAGE_SIZE} onPageChange={list.pagination.goToPage} hasNextPage={list.pagination.hasNextPage} hasPrevPage={list.pagination.hasPrevPage} />
+      <LoadMoreFooter shown={list.products.length} total={list.totalCount} hasMore={list.products.length < list.totalCount} loading={list.isFetching} onLoadMore={list.loadMore} />
       <ProductFormDialog open={list.dialogOpen} onOpenChange={list.setDialogOpen} product={list.selectedProduct} />
       <ProductImportDialog open={list.importDialogOpen} onOpenChange={list.setImportDialogOpen} />
     </div>

@@ -15,12 +15,13 @@ type Supplier = Database['public']['Tables']['suppliers']['Row'];
 interface UseSupplierMutationsOptions {
   filterKey: (string | undefined)[];
   currentPage: number;
+  pageSize?: number;
   sortConfig: SortConfig;
 }
 
 export function useSupplierMutations(options: UseSupplierMutationsOptions) {
   const queryClient = useQueryClient();
-  const { filterKey, currentPage, sortConfig } = options;
+  const { filterKey, currentPage, sortConfig, pageSize = 25 } = options;
 
   const deleteMutation = useMutation({
     mutationFn: async (deleteId: string) => {
@@ -30,7 +31,7 @@ export function useSupplierMutations(options: UseSupplierMutationsOptions) {
     },
     onMutate: async (deleteId: string) => {
       await queryClient.cancelQueries({ queryKey: ['suppliers'] });
-      const qk = ['suppliers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction];
+      const qk = ['suppliers', ...filterKey, currentPage, pageSize, sortConfig.key, sortConfig.direction];
       const prev = queryClient.getQueryData(qk);
       queryClient.setQueryData(qk, (old: { data: Supplier[]; count: number } | undefined) => {
         if (!old) return old;
@@ -38,7 +39,7 @@ export function useSupplierMutations(options: UseSupplierMutationsOptions) {
       });
       return { prev, qk };
     },
-    onSuccess: () => toast.success('تم حذف المورد بنجاح'),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['suppliers'] }); toast.success('تم حذف المورد بنجاح'); },
     onError: (err, _id, context) => {
       if (context?.prev) queryClient.setQueryData(context.qk, context.prev);
       toast.error(err instanceof Error ? err.message : 'فشل حذف المورد');

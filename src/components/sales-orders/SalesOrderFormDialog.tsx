@@ -1,3 +1,6 @@
+import { useDocumentFormExperience } from "@/hooks/forms/useDocumentFormExperience";
+import { DraftRestoreBanner } from "@/components/shared/forms/DraftRestoreBanner";
+import { UnsavedChangesDialog } from "@/components/shared/forms/UnsavedChangesDialog";
 /**
  * SalesOrderFormDialog — Phase 1B Tier 2 (Batch 2).
  *
@@ -103,6 +106,7 @@ const SalesOrderFormDialog = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [baselineItems, setBaselineItems] = useState('[]');
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers", "select"],
@@ -203,11 +207,15 @@ const SalesOrderFormDialog = ({
           queryKey: ["sales-order-items", order.id],
         });
       }
+      experience.clearDraft();
       toast.onSuccess();
       onOpenChange(false);
     },
     onError: toast.onError,
   });
+
+  const experience = useDocumentFormExperience({ form, lines: items, restoreLines: setItems, documentKey: `sales_order_${order?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: JSON.stringify(items) !== baselineItems });
+  const draftBanner = experience.hasDraft ? <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} /> : null;
 
   // Sync line items when entity changes (external state — outside the hook contract).
   useEffect(() => {
@@ -217,29 +225,30 @@ const SalesOrderFormDialog = ({
         .listItems(order.id)
         .then((rows) => {
           if (cancelled) return;
-          setItems(
-            rows.map((i) => ({
+          const loadedItems = rows.map((i) => ({
               product_id: i.product_id,
               product_name: i.products?.name || "",
               quantity: Number(i.quantity),
               unit_price: Number(i.unit_price),
               discount_percentage: Number(i.discount_percentage) || 0,
               total_price: Number(i.total_price),
-            })),
-          );
+            }));
+          setItems(loadedItems);
+          setBaselineItems(JSON.stringify(loadedItems));
         })
         .catch(() => {
           /* swallow — items remain empty */
         });
     } else {
       setItems([]);
+      setBaselineItems('[]');
     }
     wizard.reset();
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order]);
+  }, [order, open]);
 
   const addItem = () =>
     setItems([
@@ -383,6 +392,7 @@ const SalesOrderFormDialog = ({
 
   const Step1 = (
     <div className="space-y-4">
+      {draftBanner}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>العميل *</Label>
@@ -470,19 +480,19 @@ const SalesOrderFormDialog = ({
   ];
 
   const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={experience.onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "تعديل أمر البيع" : "أمر بيع جديد"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={e => { e.preventDefault(); void experience.save(); }} className="space-y-6">
           {Step1}
           {ItemsTable}
           {Step3}
           <FormDialogFooter
             isEditing={isEditing}
             isSubmitting={isSubmitting}
-            onCancel={() => onOpenChange(false)}
+            onCancel={experience.requestClose}
             submitLabel={isEditing ? "تحديث" : "إنشاء"}
           />
         </form>
@@ -493,20 +503,20 @@ const SalesOrderFormDialog = ({
   const mobileForm = (
     <FullScreenForm
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={experience.onOpenChange}
       title={isEditing ? "تعديل أمر البيع" : "أمر بيع جديد"}
       steps={wizardSteps}
       activeStep={wizard.currentStep}
       onNext={wizard.nextStep}
       onPrev={wizard.prevStep}
-      onSubmit={submit}
+      onSubmit={experience.save}
       progress={wizard.progress}
       isSubmitting={isSubmitting}
       submitLabel={isEditing ? "تحديث" : "إنشاء"}
     />
   );
 
-  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
+  return <><AdaptiveContainer desktop={desktopForm} mobile={mobileForm} /><UnsavedChangesDialog open={experience.confirmOpen} onOpenChange={experience.setConfirmOpen} onConfirm={experience.confirmLeave} /></>;
 };
 
 export default SalesOrderFormDialog;

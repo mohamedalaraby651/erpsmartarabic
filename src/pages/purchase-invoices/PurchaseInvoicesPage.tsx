@@ -1,4 +1,13 @@
-import { useState } from "react";
+import { WorkspaceTable, type WorkspaceColumn } from "@/components/table/WorkspaceTable";
+import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { useTableLayout } from "@/hooks/useTableLayout";
+import { MobileExpandableCard } from "@/components/ui/data/MobileExpandableCard";
+import { LoadMoreFooter } from "@/components/ui/data/LoadMoreFooter";
+import { Amount, KpiAmount } from "@/components/shared/amount/Amount";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useDebounce } from "@/hooks/useDebounce";
+import type { PurchaseInvoiceRow } from "@/hooks/logistics/usePurchaseInvoices";
+import { useState, useEffect } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,13 +23,33 @@ import { PurchaseInvoiceDialog } from "@/components/logistics/LogisticsDialogs";
 import { ListErrorState } from "@/components/shared/ListErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
 
+const COLUMN_KEYS = ['number', 'supplier', 'order', 'date', 'amount', 'status', 'matching', 'actions'];
+
 export default function PurchaseInvoicesPage() {
   const navigate = useNavigate();
+  const layout = useTableLayout('purchase-invoices', COLUMN_KEYS);
+  const isMobile = useIsMobile();
+  const [visibleCount, setVisibleCount] = useState(25);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+  useEffect(() => { setVisibleCount(25); }, [debouncedSearch]);
   const [open, setOpen] = useState(false);
-  const { data: rows = [], isLoading, error, refetch } = usePurchaseInvoicesList(search);
+  const { data: rows = [], isLoading, error, refetch } = usePurchaseInvoicesList(debouncedSearch);
   const create = useCreatePurchaseInvoice();
   const post = usePostPurchaseInvoice();
+
+  const visibleRows = rows.slice(0, visibleCount);
+  const renderActions = (row: PurchaseInvoiceRow) => row.status === 'draft' ? <Button size="sm" variant="ghost" className="min-h-11 text-success" onClick={() => post.mutate(row.id)} disabled={post.isPending}><CheckCircle2 className="h-4 w-4 ms-1" />ترحيل</Button> : null;
+  const columns: WorkspaceColumn<PurchaseInvoiceRow>[] = [
+    { key: 'number', label: 'الرقم', render: row => <Button variant="link" className="min-h-11 px-0" onClick={() => navigate(`/purchase-invoices/${row.id}`)}>{row.invoice_number}</Button> },
+    { key: 'supplier', label: 'المورد', render: row => row.suppliers?.name || '-' },
+    { key: 'order', label: 'أمر الشراء', render: row => row.purchase_orders?.order_number || '-' },
+    { key: 'date', label: 'التاريخ', render: row => row.invoice_date },
+    { key: 'amount', label: 'الإجمالي', render: row => <Amount value={Number(row.total_amount)} /> },
+    { key: 'status', label: 'الحالة', render: row => <PurchaseInvoiceStatusBadge status={row.status} /> },
+    { key: 'matching', label: 'المطابقة', render: row => <MatchingStatusBadge status={row.matching_status} /> },
+    { key: 'actions', label: 'إجراءات', render: renderActions },
+  ];
 
   const totalDue = rows
     .filter(r => r.status === "posted" && r.payment_status !== "paid")
@@ -45,7 +74,7 @@ export default function PurchaseInvoicesPage() {
         <Card className="p-4"><div className="text-xs text-muted-foreground">الإجمالي</div><div className="text-2xl font-bold">{rows.length}</div></Card>
         <Card className="p-4"><div className="text-xs text-muted-foreground">مسودات</div><div className="text-2xl font-bold text-warning">{rows.filter(r => r.status === "draft").length}</div></Card>
         <Card className="p-4"><div className="text-xs text-muted-foreground">تتطلب موافقة</div><div className="text-2xl font-bold text-destructive">{rows.filter(r => r.approval_required && r.status === "posted").length}</div></Card>
-        <Card className="p-4"><div className="text-xs text-muted-foreground">إجمالي المستحق</div><div className="text-2xl font-bold">{totalDue.toLocaleString()}</div></Card>
+        <Card className="p-4"><div className="text-xs text-muted-foreground">إجمالي المستحق</div><div className="text-2xl font-bold"><KpiAmount value={totalDue} /></div></Card>
       </div>
 
       <Card className="p-4">
@@ -75,46 +104,11 @@ export default function PurchaseInvoicesPage() {
             />
           )
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-muted-foreground border-b">
-                <tr className="text-right">
-                  <th className="p-2">الرقم</th><th className="p-2">المورد</th>
-                  <th className="p-2">أمر الشراء</th><th className="p-2">التاريخ</th>
-                  <th className="p-2">الإجمالي</th><th className="p-2">الحالة</th>
-                  <th className="p-2">المطابقة</th><th className="p-2">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(r => (
-                  <tr key={r.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/purchase-invoices/${r.id}`)}>
-                    <td className="p-2 font-mono">{r.invoice_number}</td>
-                    <td className="p-2">{r.suppliers?.name ?? "—"}</td>
-                    <td className="p-2 text-xs text-muted-foreground">{r.purchase_orders?.order_number ?? "—"}</td>
-                    <td className="p-2 text-xs">{r.invoice_date}</td>
-                    <td className="p-2 font-semibold">{Number(r.total_amount).toLocaleString()}</td>
-                    <td className="p-2"><PurchaseInvoiceStatusBadge status={r.status} /></td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-1">
-                        <MatchingStatusBadge status={r.matching_status} />
-                        {r.approval_required && <span className="text-xs text-destructive">⚠</span>}
-                      </div>
-                    </td>
-                    <td className="p-2" onClick={(e) => e.stopPropagation()}>
-                      {r.status === "draft" && (
-                        <Button size="sm" variant="ghost" className="text-success h-8 px-2"
-                          onClick={() => post.mutate(r.id)} disabled={post.isPending}>
-                          <CheckCircle2 className="h-4 w-4 ml-1" /> ترحيل
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          isMobile ? <div className="space-y-3">{visibleRows.map(row => <MobileExpandableCard key={row.id} title={columns[0].render(row)} amount={<Amount value={Number(row.total_amount)} />} status={<PurchaseInvoiceStatusBadge status={row.status} />} details={[{ label: 'المورد', value: row.suppliers?.name || '-' }, { label: 'أمر الشراء', value: row.purchase_orders?.order_number || '-' }, { label: 'التاريخ', value: row.invoice_date }, { label: 'المطابقة', value: <MatchingStatusBadge status={row.matching_status} /> }]} actions={renderActions(row)} />)}</div> : <><div className="mb-3 flex justify-end"><TableViewOptions layout={layout} columns={columns} /></div><WorkspaceTable rows={visibleRows} columns={columns} layout={layout} /></>
         )}
       </Card>
+
+      {!isLoading && !error && <LoadMoreFooter shown={visibleRows.length} total={rows.length} hasMore={visibleRows.length < rows.length} onLoadMore={() => setVisibleCount(count => count + 25)} />}
 
       <PurchaseInvoiceDialog open={open} onOpenChange={setOpen} loading={create.isPending}
         onSubmit={async (draft) => { await create.mutateAsync(draft); }} />

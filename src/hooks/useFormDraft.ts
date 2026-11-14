@@ -9,6 +9,8 @@ interface UseFormDraftOptions<T> {
   data: T;
   /** Enable/disable auto-save (default: true) */
   enabled?: boolean;
+  /** Read an existing draft even while the current form is pristine. */
+  autoSave?: boolean;
   /** Save interval in ms (default: 5000) */
   interval?: number;
 }
@@ -18,7 +20,7 @@ interface UseFormDraftOptions<T> {
  * On mount, checks for an existing draft and exposes it for restoration.
  * Call `clearDraft()` on successful submit.
  */
-export function useFormDraft<T>({ key, data, enabled = true, interval = 5000 }: UseFormDraftOptions<T>) {
+export function useFormDraft<T>({ key, data, enabled = true, autoSave = true, interval = 5000 }: UseFormDraftOptions<T>) {
   const [hasDraft, setHasDraft] = useState(false);
   const [draftData, setDraftData] = useState<T | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -26,13 +28,15 @@ export function useFormDraft<T>({ key, data, enabled = true, interval = 5000 }: 
 
   // Check for existing draft on mount
   useEffect(() => {
+    setHasDraft(false);
+    setDraftData(null);
     if (!enabled) return;
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved) as { data: T; savedAt: number };
         // Drafts are kept for 7 days (PRB-NAZRA-002)
-        if (Date.now() - parsed.savedAt < DRAFT_TTL_MS) {
+        if (Number.isFinite(parsed.savedAt) && Date.now() - parsed.savedAt >= 0 && Date.now() - parsed.savedAt < DRAFT_TTL_MS) {
           setDraftData(parsed.data);
           setHasDraft(true);
         } else {
@@ -46,7 +50,7 @@ export function useFormDraft<T>({ key, data, enabled = true, interval = 5000 }: 
 
   // Auto-save at interval
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !autoSave || hasDraft) return;
     timerRef.current = setInterval(() => {
       try {
         localStorage.setItem(storageKey, JSON.stringify({ data, savedAt: Date.now() }));
@@ -57,10 +61,10 @@ export function useFormDraft<T>({ key, data, enabled = true, interval = 5000 }: 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [data, storageKey, enabled, interval]);
+  }, [data, storageKey, enabled, autoSave, hasDraft, interval]);
 
   const clearDraft = useCallback(() => {
-    localStorage.removeItem(storageKey);
+    try { localStorage.removeItem(storageKey); } catch { /* unavailable storage */ }
     setHasDraft(false);
     setDraftData(null);
   }, [storageKey]);

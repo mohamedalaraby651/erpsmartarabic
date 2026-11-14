@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "@/lib/router-compat";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { productRepository } from "@/lib/repositories/productRepository";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -60,14 +60,17 @@ export function useProductsList() {
   });
 
   const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [debouncedSearch, categoryFilter]);
 
-  const { data: products = [], isLoading, refetch, error } = useQuery({
-    queryKey: ['products', debouncedSearch, categoryFilter, pagination.currentPage],
+  const { data: products = [], isLoading, isFetching, refetch, error } = useQuery({
+    queryKey: ['products', debouncedSearch, categoryFilter, visibleCount],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const result = await productRepository.findAll(
         repoFilters,
         { key: 'created_at', direction: 'desc' },
-        { page: pagination.currentPage, pageSize: PAGE_SIZE },
+        { page: 1, pageSize: visibleCount },
       );
       return result.data;
     },
@@ -133,6 +136,6 @@ export function useProductsList() {
     canEdit, canDelete, products, isLoading, error: error as Error | null, refetch, sortedData, sortConfig, requestSort,
     filters, setFilter, deleteMutation, handleEdit, handleAdd, handleDelete, handleRefresh,
     stats, categories, getProductStock, getCategoryName,
-    pagination, totalCount, PAGE_SIZE,
+    pagination, totalCount, PAGE_SIZE, isFetching, loadMore: () => setVisibleCount(count => count + PAGE_SIZE),
   };
 }

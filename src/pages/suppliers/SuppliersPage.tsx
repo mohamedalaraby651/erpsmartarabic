@@ -1,3 +1,4 @@
+import { exportWorkspaceExcel } from "@/lib/exports/workspaceExcel";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,13 +6,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/shared/PageWrapper";
-import { ServerPagination } from "@/components/shared/ServerPagination";
+import { LoadMoreFooter } from "@/components/ui/data/LoadMoreFooter";
+import { WorkspaceTable, type WorkspaceColumn } from "@/components/table/WorkspaceTable";
+import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { useTableLayout } from "@/hooks/useTableLayout";
+import { Amount } from "@/components/shared/amount/Amount";
+import { Badge } from "@/components/ui/badge";
+import { ListStateRenderer } from "@/components/shared/ListStateRenderer";
 import { ChartErrorBoundary } from "@/components/shared/ChartErrorBoundary";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
 
 import { SupplierPageHeader } from "@/components/suppliers/list/SupplierPageHeader";
 import { SupplierStatsBar } from "@/components/suppliers/list/SupplierStatsBar";
-import { SupplierListRow } from "@/components/suppliers/list/SupplierListRow";
 import { SupplierMobileView } from "@/components/suppliers/list/SupplierMobileView";
 import SupplierSavedViews from "@/components/suppliers/list/SupplierSavedViews";
 import { SupplierFiltersBar } from "@/components/suppliers/filters/SupplierFiltersBar";
@@ -33,12 +38,14 @@ import type { Database } from "@/integrations/supabase/types";
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 
 const PAGE_SIZE = 25;
+const COLUMN_KEYS = ['name', 'phone', 'governorate', 'balance', 'status', 'actions'];
 
 const SuppliersPage = () => {
   const navigate = useNavigate();
   const { userRole } = useAuth();
   const isMobile = useIsMobile();
   const { sortConfig, requestSort } = useTableSort([]);
+  const layout = useTableLayout('suppliers', COLUMN_KEYS);
 
   const filters = useSupplierFilters();
   const {
@@ -91,24 +98,24 @@ const SuppliersPage = () => {
     }
   }, [setStatusFilter, setCategoryFilter]);
 
-  const { suppliers, totalCount, isLoading, error, refetch, filterKey } = useSupplierList({
+  const { suppliers, totalCount, isLoading, isFetching, error, refetch, filterKey } = useSupplierList({
     debouncedSearch,
     governorateFilter,
     categoryFilter,
     statusFilter,
-    currentPage,
-    pageSize: PAGE_SIZE,
+    currentPage: 1,
+    pageSize: PAGE_SIZE * currentPage,
     sortConfig,
   });
 
   const { deleteMutation, bulkDeleteMutation, bulkStatusMutation } = useSupplierMutations({
-    filterKey, currentPage, sortConfig,
+    filterKey, currentPage: 1, pageSize: PAGE_SIZE * currentPage, sortConfig,
   });
 
   const { alertsByType, totalAlerts } = useSupplierAlerts(suppliers);
 
   const bulk = useBulkSelection(suppliers);
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
 
   const handleAdd = useCallback(() => {
     navigate('/suppliers?action=new');
@@ -224,6 +231,8 @@ const SuppliersPage = () => {
         includeCompanyInfo: true,
         includeLogo: true,
       });
+    } else if (options.format !== 'csv') {
+      await exportWorkspaceExcel(data, options.columns.map(key => ({ key, label: LABEL_MAP[key] || key })), 'قائمة الموردين', 'suppliers');
     } else {
       const XLSX = await import('xlsx');
       const ws = XLSX.utils.json_to_sheet(data.map(row => {
@@ -238,6 +247,15 @@ const SuppliersPage = () => {
       XLSX.writeFile(wb, `suppliers.${options.format === 'csv' ? 'csv' : 'xlsx'}`);
     }
   }, [suppliers]);
+
+  const columns: WorkspaceColumn<Supplier>[] = [
+    { key: 'name', onSort: () => requestSort('name'), sortDirection: sortConfig.key === 'name' ? sortConfig.direction : null, label: 'المورد', render: supplier => <Button variant="link" className="h-auto min-h-11 whitespace-normal px-0 text-start" onClick={() => handleRowClick(supplier)}>{supplier.name}</Button> },
+    { key: 'phone', label: 'الهاتف', render: supplier => supplier.phone || '-' },
+    { key: 'governorate', label: 'المحافظة', render: supplier => supplier.governorate || '-' },
+    { key: 'balance', onSort: () => requestSort('current_balance'), sortDirection: sortConfig.key === 'current_balance' ? sortConfig.direction : null, label: 'الرصيد', render: supplier => <Amount value={supplier.current_balance} /> },
+    { key: 'status', label: 'الحالة', render: supplier => <Badge variant={supplier.is_active ? 'default' : 'secondary'}>{supplier.is_active ? 'نشط' : 'غير نشط'}</Badge> },
+    { key: 'actions', label: 'إجراءات', render: supplier => <div className="flex gap-1">{canEdit && <Button variant="outline" size="sm" className="min-h-11" onClick={() => handleEdit(supplier)}>تعديل</Button>}<Button variant="ghost" size="sm" className="min-h-11" onClick={() => navigate(`/suppliers/${supplier.id}?tab=payments`)}>السندات</Button></div> },
+  ];
 
   return (
     <PageWrapper title="إدارة الموردين">
@@ -334,50 +352,18 @@ const SuppliersPage = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>قائمة الموردين ({totalCount})</CardTitle>
+                <TableViewOptions layout={layout} columns={columns} />
               </CardHeader>
               <CardContent>
-                {isLoading ? <TableSkeleton rows={5} columns={8} /> : (
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-3 px-3 py-2 text-xs text-muted-foreground font-medium border-b">
-                      <Checkbox checked={bulk.isAllSelected} onCheckedChange={(checked) => bulk.toggleSelectAll(!!checked)} className="shrink-0" />
-                      <span className="flex-1">المورد</span>
-                      <span className="hidden lg:block w-24">الهاتف</span>
-                      <span className="hidden xl:block w-24">المحافظة</span>
-                      <span className="w-24 text-left">الرصيد</span>
-                      <span className="w-20"></span>
-                    </div>
-                    {suppliers.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">لا يوجد موردين</div>
-                    ) : (
-                      suppliers.map(supplier => (
-                        <SupplierListRow
-                          key={supplier.id}
-                          supplier={supplier}
-                          onNavigate={() => handleRowClick(supplier)}
-                          onEdit={canEdit ? handleEdit : undefined}
-                          onNewOrder={(id) => navigate('/purchase-orders', { state: { prefillSupplierId: id } })}
-                          onNewPayment={(id) => navigate(`/suppliers/${id}?tab=payments`)}
-                          isSelected={bulk.selectedIds.has(supplier.id)}
-                          onToggleSelect={bulk.toggleSelect}
-                        />
-                      ))
-                    )}
-                  </div>
-                )}
+                <ListStateRenderer data={suppliers} isLoading={isLoading} error={error} hasFilters={activeFiltersCount > 0 || !!debouncedSearch} onRetry={() => refetch()} onClearFilters={() => { handleClearAllFilters(); setSearchQuery(''); }} empty={{ icon: Plus, title: 'لا يوجد موردين', description: 'ابدأ بإضافة مورد جديد', action: { label: 'مورد جديد', onClick: handleAdd, icon: Plus } }}>
+                  <WorkspaceTable rows={suppliers} columns={columns} layout={layout} selection={{ header: <Checkbox checked={bulk.isAllSelected} onCheckedChange={checked => bulk.toggleSelectAll(!!checked)} aria-label="تحديد الموردين المعروضين" />, render: supplier => <Checkbox checked={bulk.selectedIds.has(supplier.id)} onCheckedChange={() => bulk.toggleSelect(supplier.id, !bulk.selectedIds.has(supplier.id))} aria-label={`تحديد ${supplier.name}`} /> }} />
+                </ListStateRenderer>
               </CardContent>
             </Card>
           </>
         )}
 
-        <ServerPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={PAGE_SIZE}
-          onPageChange={setCurrentPage}
-          hasNextPage={currentPage < totalPages}
-          hasPrevPage={currentPage > 1}
-        />
+        <LoadMoreFooter shown={suppliers.length} total={totalCount} hasMore={suppliers.length < totalCount} loading={isFetching} onLoadMore={() => setCurrentPage(page => page + 1)} />
 
         <SupplierFilterDrawer
           open={filterDrawerOpen}

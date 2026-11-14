@@ -42,6 +42,16 @@ function applySearch<Q extends { or: (filter: string) => Q }>(q: Q, search?: str
 }
 
 export const paymentRepository = {
+  async listActiveCustomers() {
+    const { data, error } = await supabase.from('customers_safe').select('id, name, phone, current_balance, credit_limit').eq('is_active', true).order('name');
+    if (error) throw mapRepoError(error);
+    return data ?? [];
+  },
+  async listUnpaidInvoices(customerId: string) {
+    const { data, error } = await supabase.from('invoices').select('*').eq('customer_id', customerId).neq('payment_status', 'paid').order('created_at', { ascending: false });
+    if (error) throw mapRepoError(error);
+    return data ?? [];
+  },
   async list({ filters, page = 1, pageSize = 25 }: PaymentListParams): Promise<PaymentListResult> {
     const range = buildRange({ page, pageSize })!;
     let q = supabase

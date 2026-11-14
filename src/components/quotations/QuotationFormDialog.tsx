@@ -1,3 +1,6 @@
+import { useDocumentFormExperience } from "@/hooks/forms/useDocumentFormExperience";
+import { DraftRestoreBanner } from "@/components/shared/forms/DraftRestoreBanner";
+import { UnsavedChangesDialog } from "@/components/shared/forms/UnsavedChangesDialog";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -59,6 +62,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const queryClient = useQueryClient();
   const [lastSavedId, setLastSavedId] = useState<string | null>(quotation?.id ?? null);
   const [printOpen, setPrintOpen] = useState(false);
+  const [baselineItems, setBaselineItems] = useState('[]');
   const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
@@ -74,7 +78,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const {
     items, subtotal, totalAfterDiscount: _totalAfterDiscount, taxAmount, grandTotal,
     vatEnabled, setVatEnabled, discountAmount, setDiscountAmount,
-    addItem, updateItem, removeItem, loadItems, resetItems, validate,
+    addItem, updateItem, removeItem, loadItems, resetItems, validate, setItems,
   } = useQuotationItems({ products });
 
   const isEditingEntity = !!quotation;
@@ -132,11 +136,12 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
 
       // 5. SUBMIT
       const savedId = isEditing
-        ? await legacyQuotationsRepository.updateWithItems(quotation!.id, header, itemsPayload)
+        ? await legacyQuotationsRepository.updateWithItems(quotation?.id ?? '', header, itemsPayload)
         : (await legacyQuotationsRepository.create(header, itemsPayload)).id;
       setLastSavedId(savedId ?? quotation?.id ?? null);
     },
     onSuccess: () => {
+      experience.clearDraft();
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       form.reset(form.getValues(), { keepValues: true });
       toastHandlers.onSuccess();
@@ -148,6 +153,8 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     },
   });
 
+  const experience = useDocumentFormExperience({ form, lines: { items, discountAmount, vatEnabled }, restoreLines: saved => { setItems(saved.items); setDiscountAmount(saved.discountAmount); setVatEnabled(saved.vatEnabled); }, documentKey: `quotation_${quotation?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: JSON.stringify(items) !== baselineItems || discountAmount !== Number(quotation?.discount_amount || 0) || vatEnabled !== (Number(quotation?.tax_amount || 0) > 0) });
+  const draftBanner = experience.hasDraft ? <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} /> : null;
   const { register, setValue, watch, formState: { isDirty } } = form;
 
   const wizard = useFormWizard({ totalSteps: 3 });
@@ -157,13 +164,14 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     if (quotation) {
       setDiscountAmount(Number(quotation.discount_amount) || 0);
       setVatEnabled(Number(quotation.tax_amount) > 0);
-      loadItems(quotation.id);
+      void loadItems(quotation.id).then(loaded => setBaselineItems(JSON.stringify(loaded)));
     } else {
       resetItems();
+      setBaselineItems('[]');
     }
     wizard.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quotation]);
+  }, [quotation, open]);
 
   const Step1 = (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -232,19 +240,20 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   );
 
   const wizardSteps = [
-    { title: 'بيانات العميل', content: Step1 },
+    { title: 'بيانات العميل', content: <>{draftBanner}{Step1}</> },
     { title: 'المنتجات', content: Step2 },
     { title: 'المجاميع', content: Step3 },
   ];
 
   const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={experience.onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEditing ? 'تعديل عرض السعر' : 'عرض سعر جديد'}</DialogTitle></DialogHeader>
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={event => { event.preventDefault(); void experience.save(); }} className="space-y-6">
+          {draftBanner}
           {Step1}{Step2}{Step3}
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+            <Button type="button" variant="outline" onClick={experience.requestClose}>إلغاء</Button>
             <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إنشاء'}</Button>
           </div>
         </form>
@@ -253,14 +262,15 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   );
 
   const mobileForm = (
-    <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل عرض السعر' : 'عرض سعر جديد'}
+    <FullScreenForm open={open} onOpenChange={experience.onOpenChange} title={isEditing ? 'تعديل عرض السعر' : 'عرض سعر جديد'}
       steps={wizardSteps} activeStep={wizard.currentStep} onNext={wizard.nextStep} onPrev={wizard.prevStep}
-      onSubmit={submit} progress={wizard.progress} isSubmitting={isSubmitting} submitLabel={isEditing ? 'تحديث' : 'إنشاء'} />
+      onSubmit={experience.save} progress={wizard.progress} isSubmitting={isSubmitting} submitLabel={isEditing ? 'تحديث' : 'إنشاء'} />
   );
 
   return (
     <>
       <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />
+      <UnsavedChangesDialog open={experience.confirmOpen} onOpenChange={experience.setConfirmOpen} onConfirm={experience.confirmLeave} />
       {lastSavedId && (
         <QuotationPrintView
           quotationId={lastSavedId}

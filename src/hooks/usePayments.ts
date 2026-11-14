@@ -4,7 +4,7 @@
  * لا يُسمح لأي مكوّن UI باستيراد supabase مباشرة للوصول إلى المدفوعات.
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   paymentRepository,
   type PaymentFilters,
@@ -13,8 +13,8 @@ import {
 
 const KEYS = {
   all: ["payments"] as const,
-  list: (filters: PaymentFilters, page: number) =>
-    ["payments", "list", filters, page] as const,
+  list: (filters: PaymentFilters, page: number, pageSize: number) =>
+    ["payments", "list", filters, page, pageSize] as const,
   count: (filters: PaymentFilters) => ["payments", "count", filters] as const,
 };
 
@@ -25,13 +25,22 @@ export function usePaymentsCount(filters: PaymentFilters) {
   });
 }
 
+export function usePaymentCustomers(open: boolean) {
+  return useQuery({ queryKey: ['payment-customers'], queryFn: () => paymentRepository.listActiveCustomers(), enabled: open });
+}
+
+export function usePaymentInvoices(customerId: string, open: boolean) {
+  return useQuery({ queryKey: ['customer-unpaid-invoices', customerId], queryFn: () => paymentRepository.listUnpaidInvoices(customerId), enabled: open && !!customerId });
+}
+
 export function usePaymentsList(
   filters: PaymentFilters,
   page: number,
   pageSize: number,
 ) {
   return useQuery<PaymentListResult>({
-    queryKey: KEYS.list(filters, page),
+    queryKey: KEYS.list(filters, page, pageSize),
+    placeholderData: keepPreviousData,
     queryFn: () => paymentRepository.list({ filters, page, pageSize }),
   });
 }
