@@ -5,6 +5,7 @@ import { settingsRepository } from "@/application/queries/settings";
 import { AVAILABLE_FONTS } from "@/lib/arabicFont";
 import type { PdfFontKey } from "@/lib/arabicFont";
 import { useBrandingLogo } from "@/hooks/useBrandingLogo";
+import { formatEGP } from '@/lib/format/money';
 
 interface PrintTemplateProps {
   companyName: string;
@@ -68,12 +69,7 @@ export function PrintTemplate(props: PrintTemplateProps) {
   // Storage reads are private: re-sign the stored logo path for this render
   const { logoUrl: brandLogoUrl } = useBrandingLogo(logoUrl);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("ar-EG", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount) + " ج.م";
-  };
+  const formatCurrency = (amount: number) => formatEGP(amount);
 
   const formatDate = (dateString: string) => {
     try {

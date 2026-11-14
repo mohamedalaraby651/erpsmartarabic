@@ -21,10 +21,10 @@ describe('roundCurrency', () => {
 });
 
 describe('formatCurrency', () => {
-  it('formats SAR with 2 decimals by default', () => {
+  it('formats EGP with 2 decimals by default', () => {
     const out = formatCurrency(1234.5);
     expect(out).toMatch(/1,234\.50/);
-    expect(out).toMatch(/SAR/i);
+    expect(out).toMatch(/EGP/i);
   });
   it('omits symbol when requested', () => {
     expect(formatCurrency(50, { withSymbol: false })).toBe('50.00');

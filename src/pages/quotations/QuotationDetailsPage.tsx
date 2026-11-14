@@ -38,6 +38,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 import { useSeo } from "@/hooks/useSeo";
 import { buildOgImageUrl } from "@/lib/seo/ogImage";
+import { formatEGP } from '@/lib/format/money';
 
 type Quotation = Database['public']['Tables']['quotations']['Row'];
 type Customer = Database['public']['Tables']['customers']['Row'];
@@ -83,11 +84,11 @@ const QuotationDetailsPage = () => {
     quotation
       ? {
           title: `عرض سعر ${qNumber} - ${qCustomerName || 'نظرة'}`,
-          description: `تفاصيل عرض السعر ${qNumber}${qCustomerName ? ` للعميل ${qCustomerName}` : ''} بقيمة ${qTotal.toLocaleString('ar')} ر.س.`,
+          description: `تفاصيل عرض السعر ${qNumber}${qCustomerName ? ` للعميل ${qCustomerName}` : ''} بقيمة ${formatEGP(qTotal)}.`,
           image: buildOgImageUrl({
             title: `عرض سعر ${qNumber}`,
             subtitle: qCustomerName || 'نظرة',
-            meta: `${qTotal.toLocaleString('ar')} ر.س`,
+            meta: `${formatEGP(qTotal)}`,
             variant: 'quote',
           }),
           noindex: true,

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { TrendingUp, TrendingDown, DollarSign, Minus, ArrowDown, ArrowUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatEGP } from '@/lib/format/money';
 
 interface IncomeStatementReportProps {
   startDate: Date;
@@ -106,9 +107,7 @@ export function IncomeStatementReport({ startDate, endDate }: IncomeStatementRep
 
   if (!incomeStatement) return null;
 
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('ar-EG', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  };
+  const formatCurrency = (amount: number) => formatEGP(amount, { withSymbol: false });
 
   const LineItem = ({ label, amount, isSubtotal = false, isTotal = false, isPositive = true }: {
     label: string;
