@@ -13,6 +13,6 @@ describe('workspace export data integrity', () => {
     const book = XLSX.read(bytes, { type: 'array' });
     expect(book.Sheets['البيانات'].A8.v).toBe(125.25);
     const zip = XLSX.CFB.read(bytes, { type: 'buffer' });
-    expect(Array.from(XLSX.CFB.find(zip, 'xl/media/company-logo.png').content)).toEqual(Array.from(logo));
+    expect(Array.from(XLSX.CFB.find(zip, '/xl/media/company-logo.png').content)).toEqual(Array.from(logo));
   });
 });
