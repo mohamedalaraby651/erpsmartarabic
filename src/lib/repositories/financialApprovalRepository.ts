@@ -12,7 +12,7 @@ export const financialApprovalRepository = {
     return data ?? [];
   },
   async resolve(id: string, approve: boolean, reason?: string) {
-    const { error } = await supabase.rpc('resolve_period_reopen', { _request_id: id, _approve: approve, _reason: reason ?? null });
+    const { error } = await supabase.rpc('resolve_period_reopen', { _request_id: id, _approve: approve, _reason: reason });
     if (error) throw mapRepoError(error, 'تعذّر البت في طلب فتح الفترة.');
   },
 };
