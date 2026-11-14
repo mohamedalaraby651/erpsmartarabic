@@ -38,6 +38,7 @@
 
 ## Track C — PRB-NAZRA-002 Execution (by priority)
 ### Current execution — approved remaining-work plan (2026-11-14)
+- [ ] Next continuation: goods-receipt, delivery-note and purchase-invoice draft/close/save experience; preserve existing posting rules and validate local restore on desktop/mobile.
 - [x] Continuation: purchase-order and expense local drafts, guarded close and save shortcut; 7 focused tests passed, authenticated desktop restore checks and mobile form inspection passed. Full suite: 1720 passed / 5 skipped. Evidence: `docs/governance/PRB_FORM_CONTINUATION_2026-11-14.md`.
 - [x] Shared configurable RTL tables + suppliers/payments/expenses/products/purchase-invoices integration and mobile expandable cards; live populated checks on four lists, purchase invoices empty-state only. Supplier load-more 25→27, sticky header and layout reload persistence verified.
 - [x] Form experience integrated in payments, journals, sales orders and quotations; seven-day draft safeguards and duplicate-submit lock. Payment draft restore, close protection, Ctrl+S validation verified live without financial writes.
