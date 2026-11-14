@@ -38,6 +38,7 @@
 
 ## Track C — PRB-NAZRA-002 Execution (by priority)
 ### Current execution — approved remaining-work plan (2026-11-14)
+- [x] Expense approval denial recovery: preserve workflow code from HTTP 403 response, show Arabic refusal as a handled result rather than throwing a mutation/runtime error. Permissions unchanged. Reproduced 403 via browser interception on populated authenticated desktop/mobile; page remained visible, no page errors. Two regressions + full suite 1727 passed / 5 skipped; latest build OK.
 - [x] Next continuation: goods-receipt, delivery-note and purchase-invoice draft/close/save experience; real product/quantity/notes restored in authenticated desktop/mobile checks, no posting performed. Five regression tests passed; full suite 1725 passed / 5 skipped. Evidence: `docs/governance/PRB_LOGISTICS_FORM_CONTINUATION_2026-11-14.md`.
 - [x] Continuation: purchase-order and expense local drafts, guarded close and save shortcut; 7 focused tests passed, authenticated desktop restore checks and mobile form inspection passed. Full suite: 1720 passed / 5 skipped. Evidence: `docs/governance/PRB_FORM_CONTINUATION_2026-11-14.md`.
 - [x] Shared configurable RTL tables + suppliers/payments/expenses/products/purchase-invoices integration and mobile expandable cards; live populated checks on four lists, purchase invoices empty-state only. Supplier load-more 25→27, sticky header and layout reload persistence verified.
