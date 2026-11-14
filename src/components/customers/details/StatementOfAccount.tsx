@@ -32,7 +32,7 @@ interface StatementRow {
 const PAGE_SIZE = 20;
 
 const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProps) => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [isPrinting, setIsPrinting] = useState(false);
@@ -77,7 +77,7 @@ const StatementOfAccount = ({ customerName, customerId }: StatementOfAccountProp
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         openingBalance,
-        printedBy: profile?.full_name || undefined,
+        printedBy: typeof user?.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : undefined,
         entries: statementData,
       });
       toast.success('تم تصدير كشف الحساب بنجاح');
