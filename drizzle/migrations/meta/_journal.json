@@ -64,6 +64,13 @@
       "when": 1794584076352,
       "tag": "0008_restrict_restore_snapshots_and_logos_to_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794617283941,
+      "tag": "0009_financial_period_reopen_approval",
+      "breakpoints": true
     }
   ]
 }

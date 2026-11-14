@@ -49,10 +49,11 @@ export function useCreateFiscalPeriod() {
 export function useOpenFiscalPeriod() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => fiscalPeriodRepository.openPeriod(id),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => fiscalPeriodRepository.openPeriod(id, reason),
     onSuccess: () => {
       invalidate(qc);
-      toast.success("تم فتح الفترة المالية");
+      qc.invalidateQueries({ queryKey: ['approval-records'] });
+      toast.success("تم إرسال طلب فتح الفترة للمدير");
     },
     onError: (err) => {
       logErrorSafely("useOpenFiscalPeriod", err);

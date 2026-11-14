@@ -23,6 +23,7 @@ import type { ApprovalRecord, ApprovalStatusFilter } from '@/lib/repositories/ap
 import { ListErrorState } from '@/components/shared/ListErrorState';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useListState } from '@/hooks/useListState';
+import { PeriodReopenRequests } from '@/components/accounting/PeriodReopenRequests';
 
 const statusLabels: Record<string, string> = {
   pending: 'معلقة',
@@ -32,10 +33,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  pending: 'bg-amber-500/10 text-amber-600',
-  approved: 'bg-emerald-500/10 text-emerald-600',
+  pending: 'bg-warning/10 text-warning',
+  approved: 'bg-success/10 text-success',
   rejected: 'bg-destructive/10 text-destructive',
-  escalated: 'bg-blue-500/10 text-blue-600',
+  escalated: 'bg-info/10 text-info',
 };
 
 const entityLabels: Record<string, string> = {
@@ -43,10 +44,11 @@ const entityLabels: Record<string, string> = {
   expense: 'مصروف',
   purchase_order: 'أمر شراء',
   journal: 'قيد يومي',
+  reopen_period: 'فتح فترة مقفلة',
 };
 
 const ApprovalsPage = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [activeTab, setActiveTab] = useState<ApprovalStatusFilter>('pending');
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -67,7 +69,7 @@ const ApprovalsPage = () => {
 
   const handleApprove = (recordId: string) => {
     executeMutation.mutate(
-      { recordId, action: 'approve', userId: user?.id },
+      { recordId, action: 'approve', userId: user?.id, requestSource: records.find((r) => r.id === recordId)?.request_source },
       {
         onSuccess: () => toast.success('تمت الموافقة بنجاح'),
         onError: (err: unknown) =>
@@ -78,7 +80,7 @@ const ApprovalsPage = () => {
 
   const handleReject = (recordId: string, reason: string) => {
     executeMutation.mutate(
-      { recordId, action: 'reject', rejectionReason: reason },
+      { recordId, action: 'reject', rejectionReason: reason, requestSource: records.find((r) => r.id === recordId)?.request_source },
       {
         onSuccess: () => {
           toast.success('تم رفض الطلب');
@@ -136,9 +138,10 @@ const ApprovalsPage = () => {
                   {record.rejection_reason}
                 </div>
               )}
+              {record.request_reason && <p className="text-sm mt-2">سبب الطلب: {record.request_reason}</p>}
             </div>
           </div>
-          {record.status === 'pending' && (
+          {record.status === 'pending' && (record.request_source !== 'financial' || userRole === 'admin') && (
             <div className="flex gap-2 shrink-0">
               <Button
                 size="sm"
@@ -182,6 +185,7 @@ const ApprovalsPage = () => {
         )}
       </div>
 
+      <PeriodReopenRequests />
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ApprovalStatusFilter)}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="pending" className="gap-1">
