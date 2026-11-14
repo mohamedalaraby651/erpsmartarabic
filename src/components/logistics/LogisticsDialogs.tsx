@@ -144,7 +144,7 @@ export function GoodsReceiptDialog({ open, onOpenChange, onSubmit, loading }: Ba
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </form>
-        <DialogFooter className="sticky bottom-0 bg-background border-t min-h-16">
+        <DialogFooter className="bg-background border-t min-h-16 mt-4">
           <Button variant="outline" className="min-h-11" disabled={busy} onClick={experience.requestClose}>إلغاء</Button>
           <Button className="min-h-11" onClick={() => void experience.save()} disabled={busy || !supplier_id || !warehouse_id || items.length === 0}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "جارٍ الحفظ…" : "حفظ كمسودة"}
@@ -240,7 +240,7 @@ export function DeliveryNoteDialog({ open, onOpenChange, onSubmit, loading }: Ba
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </form>
-        <DialogFooter className="sticky bottom-0 bg-background border-t min-h-16">
+        <DialogFooter className="bg-background border-t min-h-16 mt-4">
           <Button variant="outline" className="min-h-11" disabled={busy} onClick={experience.requestClose}>إلغاء</Button>
           <Button className="min-h-11" onClick={() => void experience.save()} disabled={busy || !customer_id || !warehouse_id || items.length === 0}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "جارٍ الحفظ…" : "حفظ كمسودة"}
@@ -357,7 +357,7 @@ export function PurchaseInvoiceDialog({ open, onOpenChange, onSubmit, loading }:
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </form>
-        <DialogFooter className="sticky bottom-0 bg-background border-t min-h-16">
+        <DialogFooter className="bg-background border-t min-h-16 mt-4">
           <Button variant="outline" className="min-h-11" disabled={busy} onClick={experience.requestClose}>إلغاء</Button>
           <Button className="min-h-11" onClick={() => void experience.save()} disabled={busy || !supplier_id || items.length === 0}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "جارٍ الحفظ…" : "حفظ كمسودة"}
