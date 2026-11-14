@@ -38,12 +38,13 @@
 
 ## Track C — PRB-NAZRA-002 Execution (by priority)
 ### Current execution — approved remaining-work plan (2026-11-14)
-- [ ] Shared configurable RTL tables + supplier/payment/expense integration and mobile expandable cards.
-- [ ] Remaining document form shortcuts, leave protection, draft recovery and validation focus.
-- [ ] Financial reversal, discount/overdraft exceptions and rounding ledger; approval and backup confirmation recorded, requires integrity verification.
-- [ ] Official Excel header and print context integration.
-- [ ] Remaining reports/statements/audit and mobile end-to-end checks.
-- [ ] Final tests and evidence; no completion claims for unverified tasks.
+- [x] Shared configurable RTL tables + suppliers/payments/expenses/products/purchase-invoices integration and mobile expandable cards; live populated checks on four lists, purchase invoices empty-state only. Supplier load-more 25→27, sticky header and layout reload persistence verified.
+- [x] Form experience integrated in payments, journals, sales orders and quotations; seven-day draft safeguards and duplicate-submit lock. Payment draft restore, close protection, Ctrl+S validation verified live without financial writes.
+- [ ] Remaining document forms (purchase orders, expenses, credit notes, logistics), report/statements/audit generalization and mobile action coverage: not completed in this execution.
+- [ ] Financial reversal, discount/overdraft exceptions and rounding ledger; approval/backup confirmed, but DELETE-based payment flow must not be reused. Pending additive tenant-scoped atomic RPC implementation and integrity verification, not a new approval request.
+- [x] Shared Excel export with company title/logo, extraction date and nested selected-column values; real payments workbook download/logo verified. Print-context completion remains open.
+- [ ] Remaining print contexts and report/statements/audit end-to-end checks: not executed.
+- [x] Current verification: 1717 tests passed / 5 skipped; 35 focused tests after final form changes; latest build OK. Evidence: `docs/governance/PRB_REMAINING_WORK_EXECUTION_2026-11-14.md`.
 
 مرجع: `docs/requirements/PRB-NAZRA-002_Interview-Decisions-Knowledge-Base.md`. كل دفعة مستقلة بقبول.
 - [x] C1 أساسيات العرض (منخفض المخاطر): قواعد الجنيه (فاصل آلاف، سالب بناقص، صفر "-"، مختصر KPI) + اختبارات، تأكيد الخروج، Toast أسفل اليسار 3ث، أشرطة تمرير رفيعة
