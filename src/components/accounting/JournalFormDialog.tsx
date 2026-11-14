@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useDocumentFormExperience } from "@/hooks/forms/useDocumentFormExperience";
+import { DraftRestoreBanner } from "@/components/shared/forms/DraftRestoreBanner";
+import { UnsavedChangesDialog } from "@/components/shared/forms/UnsavedChangesDialog";
+import { useState, useMemo } from "react";
 import { z } from "zod";
 import {
   useActiveAccounts,
@@ -93,7 +96,7 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
 
   // Entity identity flips when the dialog opens, so re-opening resets the
   // header through the hook's entity-change effect.
-  const entity = open ? { open } : null;
+  const entity = useMemo(() => open ? { open } : null, [open]);
 
   const { form, isSubmitting, submit } = useFormDialog<JournalFormData, typeof entity>({
     schema: journalFormSchema,
@@ -134,6 +137,9 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
     },
   });
 
+  const experience = useDocumentFormExperience({ form, lines: entries, restoreLines: setEntries, documentKey: 'journal_new', open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: entries.some(e => !!e.account_id || !!e.memo || e.debit_amount !== 0 || e.credit_amount !== 0) });
+  const draftBanner = experience.hasDraft ? <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} /> : null;
+
   const { register, formState: { errors } } = form;
 
   const addEntry = () => {
@@ -165,13 +171,15 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open} onOpenChange={experience.onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>قيد يومية جديد</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={e => { e.preventDefault(); void experience.save(); }} className="space-y-6">
+          {draftBanner}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="journal_date">التاريخ *</Label>
@@ -281,8 +289,8 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
             </Badge>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="sticky bottom-0 z-20 border-t bg-background py-3">
+            <Button type="button" variant="outline" className="min-h-11" onClick={experience.requestClose}>
               إلغاء
             </Button>
             <Button type="submit" className="min-h-11" disabled={isSubmitting || !isBalanced || !hasAmount}>
@@ -292,6 +300,8 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
         </form>
       </DialogContent>
     </Dialog>
+    <UnsavedChangesDialog open={experience.confirmOpen} onOpenChange={experience.setConfirmOpen} onConfirm={experience.confirmLeave} />
+    </>
   );
 };
 
