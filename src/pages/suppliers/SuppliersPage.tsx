@@ -249,10 +249,10 @@ const SuppliersPage = () => {
   }, [suppliers]);
 
   const columns: WorkspaceColumn<Supplier>[] = [
-    { key: 'name', label: 'المورد', render: supplier => <Button variant="link" className="h-auto min-h-11 whitespace-normal px-0 text-start" onClick={() => handleRowClick(supplier)}>{supplier.name}</Button> },
+    { key: 'name', onSort: () => requestSort('name'), sortDirection: sortConfig.key === 'name' ? sortConfig.direction : null, label: 'المورد', render: supplier => <Button variant="link" className="h-auto min-h-11 whitespace-normal px-0 text-start" onClick={() => handleRowClick(supplier)}>{supplier.name}</Button> },
     { key: 'phone', label: 'الهاتف', render: supplier => supplier.phone || '-' },
     { key: 'governorate', label: 'المحافظة', render: supplier => supplier.governorate || '-' },
-    { key: 'balance', label: 'الرصيد', render: supplier => <Amount value={supplier.current_balance} /> },
+    { key: 'balance', onSort: () => requestSort('current_balance'), sortDirection: sortConfig.key === 'current_balance' ? sortConfig.direction : null, label: 'الرصيد', render: supplier => <Amount value={supplier.current_balance} /> },
     { key: 'status', label: 'الحالة', render: supplier => <Badge variant={supplier.is_active ? 'default' : 'secondary'}>{supplier.is_active ? 'نشط' : 'غير نشط'}</Badge> },
     { key: 'actions', label: 'إجراءات', render: supplier => <div className="flex gap-1">{canEdit && <Button variant="outline" size="sm" className="min-h-11" onClick={() => handleEdit(supplier)}>تعديل</Button>}<Button variant="ghost" size="sm" className="min-h-11" onClick={() => navigate(`/suppliers/${supplier.id}?tab=payments`)}>السندات</Button></div> },
   ];

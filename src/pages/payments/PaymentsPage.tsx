@@ -154,11 +154,11 @@ const PaymentsPage = () => {
     actions={actions(payment)}
   />;
   const columns: WorkspaceColumn<PaymentWithRelations>[] = [
-    { key: 'payment_number', label: 'رقم الدفعة', render: p => p.payment_number },
+    { key: 'payment_number', onSort: () => requestSort('payment_number'), sortDirection: sortConfig.key === 'payment_number' ? sortConfig.direction : null, label: 'رقم الدفعة', render: p => p.payment_number },
     { key: 'customer', label: 'العميل', render: p => p.customers?.name ? <EntityLink type="customer" id={p.customer_id}>{p.customers.name}</EntityLink> : '-' },
     { key: 'invoice', label: 'الفاتورة', render: p => p.invoices?.invoice_number ? <EntityLink type="invoice" id={p.invoice_id}>{p.invoices.invoice_number}</EntityLink> : '-' },
-    { key: 'date', label: 'التاريخ', render: p => new Date(p.payment_date).toLocaleDateString('ar-EG') },
-    { key: 'amount', label: 'المبلغ', render: p => <Amount value={Number(p.amount)} /> },
+    { key: 'date', onSort: () => requestSort('payment_date'), sortDirection: sortConfig.key === 'payment_date' ? sortConfig.direction : null, label: 'التاريخ', render: p => new Date(p.payment_date).toLocaleDateString('ar-EG') },
+    { key: 'amount', onSort: () => requestSort('amount'), sortDirection: sortConfig.key === 'amount' ? sortConfig.direction : null, label: 'المبلغ', render: p => <Amount value={Number(p.amount)} /> },
     { key: 'method', label: 'طريقة الدفع', render: p => <Badge variant="outline">{paymentMethodLabels[p.payment_method] || p.payment_method}</Badge> },
     { key: 'reference', label: 'المرجع', render: p => p.reference_number || '-' },
     { key: 'actions', label: 'إجراءات', render: actions },
@@ -178,10 +178,10 @@ const PaymentsPage = () => {
               sectionLabel="المدفوعات"
               data={sortedData}
               columns={[
-                { key: 'payment_number', label: 'رقم الدفعة' },
+                { key: 'payment_number', onSort: () => requestSort('payment_number'), sortDirection: sortConfig.key === 'payment_number' ? sortConfig.direction : null, label: 'رقم الدفعة' },
                 { key: 'customers.name', label: 'العميل' },
                 { key: 'invoices.invoice_number', label: 'الفاتورة' },
-                { key: 'amount', label: 'المبلغ' },
+                { key: 'amount', onSort: () => requestSort('amount'), sortDirection: sortConfig.key === 'amount' ? sortConfig.direction : null, label: 'المبلغ' },
                 { key: 'payment_method', label: 'طريقة الدفع' },
                 { key: 'payment_date', label: 'التاريخ' },
               ]}
@@ -219,7 +219,7 @@ const PaymentsPage = () => {
                 <Wallet className="h-5 w-5 text-success" />
               </div>
               <div>
-                <p className="text-2xl font-bold"><KpiAmount value={stats.totalAmount} /></p>
+                <p className="text-xl font-bold"><KpiAmount value={stats.totalAmount} /></p>
                 <p className="text-sm text-muted-foreground">إجمالي المبلغ</p>
               </div>
             </div>
@@ -234,7 +234,7 @@ const PaymentsPage = () => {
                     <Banknote className="h-5 w-5 text-info" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold"><KpiAmount value={stats.cash} /></p>
+                    <p className="text-xl font-bold"><KpiAmount value={stats.cash} /></p>
                     <p className="text-sm text-muted-foreground">نقدي (ج.م)</p>
                   </div>
                 </div>
@@ -247,7 +247,7 @@ const PaymentsPage = () => {
                     <CreditCard className="h-5 w-5 text-warning" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold"><KpiAmount value={stats.bank} /></p>
+                    <p className="text-xl font-bold"><KpiAmount value={stats.bank} /></p>
                     <p className="text-sm text-muted-foreground">تحويل بنكي</p>
                   </div>
                 </div>
