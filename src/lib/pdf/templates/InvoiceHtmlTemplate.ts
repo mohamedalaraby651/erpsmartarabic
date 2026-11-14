@@ -36,6 +36,11 @@ export interface InvoiceHtmlData {
   discountRate?: number;
   currency?: string;
   notes?: string;
+  /** Customer balance before this invoice; when set, prints previous + final balance (decision 219). */
+  previousBalance?: number;
+  /** Simple footer: print timestamp + user (decisions 236, 342). */
+  printedAt?: string;
+  printedBy?: string;
 }
 
 function esc(s: unknown): string {
@@ -149,7 +154,16 @@ export function renderInvoiceHtml(data: InvoiceHtmlData): string {
     </tbody>
   </table>
 
+  ${data.previousBalance !== undefined ? `
+  <table class="totals balances">
+    <tbody>
+      <tr><th>الرصيد السابق</th><td class="num">${fmtNum(data.previousBalance)} ${currency}</td></tr>
+      <tr class="grand"><th>الرصيد النهائي المستحق</th><td class="num">${fmtNum(r2(data.previousBalance + totals.total))} ${currency}</td></tr>
+    </tbody>
+  </table>` : ''}
+
   ${data.notes ? `<footer class="notes"><h4>ملاحظات</h4><p>${esc(data.notes)}</p></footer>` : ''}
+  ${data.printedAt || data.printedBy ? `<div class="print-footer">${data.printedBy ? `طُبع بواسطة: ${esc(data.printedBy)}` : ''}${data.printedAt ? ` — <span class="num">${esc(data.printedAt)}</span>` : ''}</div>` : ''}
 </section>`;
 }
 
@@ -172,6 +186,8 @@ table.totals th { background: #f1f1f2; text-align: right; }
 table.totals tr.grand th, table.totals tr.grand td { background: #111; color: #ffffff; font-weight: 700; }
 .notes { margin-top: 18px; padding: 10px; border: 1px dashed #bbb; }
 .notes h4 { margin: 0 0 6px; font-size: 13px; }
+.print-footer { margin-top: 18px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 10px; color: #555; text-align: center; }
+table.totals.balances { margin-top: 8px; }
 ${WATERMARK_IMAGE_BASE_CSS}
 .invoice > * { position: relative; z-index: 1; }
 `;
