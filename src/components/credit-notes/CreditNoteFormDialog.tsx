@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   useInvoicesForCreditNote,
   useInvoiceItemsForCredit,
@@ -9,6 +9,12 @@ import { useQuery } from '@tanstack/react-query';
 import { creditNoteRepository } from '@/application/queries/credit-notes';
 import { mapRepoError } from '@/lib/repositories/_base';
 import { useAuth } from '@/hooks/useAuth';
+import { z } from 'zod';
+import { useFormDialog } from '@/hooks/useFormDialog';
+import { useDocumentFormExperience } from '@/hooks/forms/useDocumentFormExperience';
+import { DraftRestoreBanner } from '@/components/shared/forms/DraftRestoreBanner';
+import { UnsavedChangesDialog } from '@/components/shared/forms/UnsavedChangesDialog';
+import { readReturnSelection, reconcileReturnSelection, type ReturnSelection } from '@/lib/credit-notes/draftSelection';
 import {
   ResponsiveDialog as Dialog,
   ResponsiveDialogContent as DialogContent,
@@ -40,15 +46,6 @@ interface Props {
   prefillCustomerId?: string;
 }
 
-interface InvoiceItemRow {
-  id: string;
-  product_id: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  products?: { name: string; sku?: string | null } | null;
-}
-
 interface ReturnLine {
   invoice_item_id: string;
   product_id: string;
@@ -70,18 +67,44 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, prefillCustomerId }: Props) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [customerId, setCustomerId] = useState('');
-  const [invoiceId, setInvoiceId] = useState('');
-  const [reason, setReason] = useState('');
   const [lines, setLines] = useState<ReturnLine[]>([]);
-
-  // Apply prefill on open
-  useEffect(() => {
-    if (open && prefillCustomerId) {
-      setCustomerId(prefillCustomerId);
-      setInvoiceId('');
-    }
-  }, [open, prefillCustomerId]);
+  const [restoring, setRestoring] = useState(false);
+  const restorationGeneration = useRef(0);
+  const initializedInvoice = useRef('');
+  const selection = useRef<ReturnSelection[]>([]);
+  const createDraftMutation = useCreateCreditNoteDraft();
+  const { form, submit, isSubmitting, reset: resetHeader } = useFormDialog({
+    schema: z.object({ customerId: z.string().min(1, 'اختر العميل'), invoiceId: z.string().min(1, 'اختر الفاتورة'), reason: z.string() }),
+    entity: prefillCustomerId || null,
+    toValues: () => ({ customerId: prefillCustomerId || '', invoiceId: '', reason: '' }),
+    toPayload: values => values,
+    mutationFn: async () => { await submitDraft(); },
+    onSuccess: () => {
+      toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
+      experience.clearDraft(); resetForm(); onOpenChange(false); onSuccess();
+    },
+    onError: (err: unknown) => {
+      const mapped = mapRepoError(err, 'حدث خطأ غير متوقع');
+      const raw = mapped.message;
+      const description = parseDbOverdraw(raw, { resolveProduct: itemId => {
+        const line = lines.find(item => item.invoice_item_id === itemId);
+        return line ? { name: line.product_name, sku: line.product_sku } : undefined;
+      } }) ?? raw;
+      toast({ title: 'خطأ في إنشاء إشعار الإرجاع', description, variant: 'destructive' });
+    },
+  });
+  const customerId = form.watch('customerId');
+  const invoiceId = form.watch('invoiceId');
+  const reason = form.watch('reason');
+  const setCustomerId = (value: string) => form.setValue('customerId', value, { shouldDirty: true, shouldValidate: true });
+  const setInvoiceId = (value: string) => {
+    restorationGeneration.current += 1;
+    selection.current = [];
+    initializedInvoice.current = '';
+    setLines([]);
+    form.setValue('invoiceId', value, { shouldDirty: true, shouldValidate: true });
+  };
+  const setReason = (value: string) => form.setValue('reason', value, { shouldDirty: true });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['credit-customers-select'],
@@ -89,37 +112,48 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
     enabled: open,
   });
 
-  const { data: invoices = [] } = useInvoicesForCreditNote(customerId, open);
+  const { data: invoices = [], refetch: refetchInvoices, isFetching: fetchingInvoices, isError: invoicesError } = useInvoicesForCreditNote(customerId, open);
 
-  const { data: invoiceItems = [], isLoading: loadingItems } = useInvoiceItemsForCredit(invoiceId, open);
+  const { data: invoiceItems = [], isFetching: loadingItems, isError: itemsError, refetch: refetchItems } = useInvoiceItemsForCredit(invoiceId, open);
 
-  const { data: returnsMap = {} } = useInvoiceItemReturnsSummary(invoiceId, open);
+  const { data: returnsMap, isFetching: loadingReturns, isError: returnsError, refetch: refetchReturns } = useInvoiceItemReturnsSummary(invoiceId, open);
 
-  // Build return-lines whenever invoice items / returns summary change
+  const readsBusy = fetchingInvoices || loadingItems || loadingReturns || restoring;
+  const readsFailed = invoicesError || itemsError || returnsError;
+  const busy = isSubmitting || createDraftMutation.isPending || restoring;
+  const intent = useMemo(() => lines.map(line => ({ invoice_item_id: line.invoice_item_id, selected: line.selected, requested_qty: Number.isFinite(line.requested_qty) ? line.requested_qty : 0 })), [lines]);
+  const applyFresh = (items: Parameters<typeof reconcileReturnSelection>[0], summary: Parameters<typeof reconcileReturnSelection>[1], choices: ReturnSelection[]) =>
+    reconcileReturnSelection(items, summary, choices).map(line => {
+      const error = line.selected ? validateQty(line, line.requested_qty) : undefined;
+      return { ...line, error, return_qty: error ? 0 : line.requested_qty };
+    });
+
   useEffect(() => {
-    if (!invoiceItems.length) { setLines([]); return; }
-    setLines(invoiceItems.map((it) => {
-      const summary = returnsMap[it.id];
-      const confirmed = summary?.confirmed ?? 0;
-      const draftReserved = summary?.draft ?? 0;
-      const returnable = summary?.remaining ?? Math.max(0, Number(it.quantity) - confirmed);
-      return {
-        invoice_item_id: it.id,
-        product_id: it.product_id,
-        product_name: it.products?.name ?? '—',
-        product_sku: it.products?.sku ?? undefined,
-        unit_price: Number(it.unit_price),
-        original_qty: Number(it.quantity),
-        already_returned: confirmed,
-        draft_reserved: draftReserved,
-        returnable,
-        selected: false,
-        return_qty: returnable,
-        requested_qty: returnable,
-        error: undefined as string | undefined,
-      };
-    }));
-  }, [invoiceItems, returnsMap]);
+    if (!open || !invoiceId || readsBusy || readsFailed || !returnsMap) return;
+    if (initializedInvoice.current !== invoiceId) selection.current = [];
+    setLines(applyFresh(invoiceItems, returnsMap, selection.current));
+    initializedInvoice.current = invoiceId;
+  }, [open, invoiceId, invoiceItems, returnsMap, readsBusy, readsFailed]);
+
+  const experience = useDocumentFormExperience({
+    form, lines: intent, documentKey: `credit_note_new:${prefillCustomerId || 'all'}`,
+    open, busy, submit,
+    linesDirty: lines.some(line => line.selected),
+    close: () => { resetForm(); onOpenChange(false); },
+    restoreLines: async saved => {
+      const generation = ++restorationGeneration.current;
+      const wantedInvoice = form.getValues('invoiceId');
+      const choices = readReturnSelection(saved);
+      initializedInvoice.current = wantedInvoice;
+      selection.current = choices;
+      setLines([]);
+      setRestoring(true);
+      // Let the query hooks subscribe to the restored identifiers before refetch.
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      if (generation !== restorationGeneration.current) { setRestoring(false); return; }
+      setRestoring(false);
+    },
+  });
 
   const totalAmount = useMemo(
     () => round2(lines.filter(l => l.selected && !l.error).reduce((s, l) => s + l.unit_price * l.return_qty, 0)),
@@ -131,7 +165,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
   const hasSelection = selectedLines.some(l => l.return_qty > 0);
   const hasErrors = linesWithErrors.length > 0;
 
-  const validateQty = (line: ReturnLine, requested: number): string | undefined => {
+  function validateQty(line: Pick<ReturnLine, 'returnable' | 'product_name' | 'product_sku' | 'original_qty' | 'already_returned'>, requested: number): string | undefined {
     if (Number.isNaN(requested)) return formatInvalidQty('nan');
     if (requested < 0) return formatInvalidQty('negative');
     if (line.returnable === 0) return formatInvalidQty('none-available');
@@ -150,117 +184,76 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
     return undefined;
   };
 
-  const updateLine = (id: string, patch: Partial<ReturnLine>) =>
-    setLines(prev => prev.map(l => {
-      if (l.invoice_item_id !== id) return l;
-      const merged = { ...l, ...patch };
-      if ('requested_qty' in patch || 'selected' in patch) {
-        const requested = Number(merged.requested_qty);
-        const err = merged.selected ? validateQty(merged, requested) : undefined;
-        merged.error = err;
-        merged.return_qty = err ? 0 : requested;
-      }
+  const updateLine = (id: string, patch: Partial<ReturnLine>) => setLines(prev => {
+    const next = prev.map(line => {
+      if (line.invoice_item_id !== id) return line;
+      const merged = { ...line, ...patch };
+      merged.error = merged.selected ? validateQty(merged, Number(merged.requested_qty)) : undefined;
+      merged.return_qty = merged.error ? 0 : Number(merged.requested_qty);
       return merged;
-    }));
+    });
+    selection.current = next.map(line => ({ invoice_item_id: line.invoice_item_id, selected: line.selected, requested_qty: line.requested_qty }));
+    return next;
+  });
 
-  const createDraftMutation = useCreateCreditNoteDraft();
-
-  const submitDraft = () => {
-    const selected = lines.filter(l => l.selected && l.return_qty > 0 && !l.error);
-    if (linesWithErrors.length > 0) {
-      const first = linesWithErrors[0];
-      toast({
-        title: 'خطأ في إنشاء إشعار الإرجاع',
-        description: `${first.product_name}: ${first.error}`,
-        variant: 'destructive',
-      });
-      return;
+  const submitDraft = async () => {
+    if (readsBusy || readsFailed) throw new Error('انتظر اكتمال تحميل بيانات الفاتورة');
+    const [currentInvoices, currentItems, currentReturns] = await Promise.all([refetchInvoices(), refetchItems(), refetchReturns()]);
+    if (currentInvoices.error || currentItems.error || currentReturns.error || !currentItems.data || !currentReturns.data) {
+      throw new Error('تعذر التحقق من كميات الإرجاع الحالية؛ حاول مرة أخرى');
     }
-    if (selected.length === 0) {
-      toast({
-        title: 'خطأ في إنشاء إشعار الإرجاع',
-        description: 'اختر بنداً واحداً على الأقل بكمية صالحة',
-        variant: 'destructive',
-      });
-      return;
+    if (!currentInvoices.data?.some(invoice => invoice.id === invoiceId)) throw new Error('الفاتورة لم تعد متاحة لهذا العميل');
+    const fresh = applyFresh(currentItems.data, currentReturns.data, selection.current);
+    setLines(fresh);
+    const invalid = fresh.find(line => line.selected && line.error);
+    if (invalid) {
+      requestAnimationFrame(() => document.getElementById(`return-qty-${invalid.invoice_item_id}`)?.focus());
+      throw new Error(`${invalid.product_name}: ${invalid.error}`);
     }
-
-    createDraftMutation.mutate(
-      {
-        invoiceId,
-        customerId,
-        reason: reason || null,
-        totalAmount,
-        userId: user?.id ?? null,
-        items: selected.map(l => ({
-          invoice_item_id: l.invoice_item_id,
-          product_id: l.product_id,
-          quantity: l.return_qty,
-          unit_price: l.unit_price,
-        })),
-      },
-      {
-        onSuccess: () => {
-          toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
-          resetForm();
-          onOpenChange(false);
-          onSuccess();
-        },
-        onError: (err: unknown) => {
-          const mapped = mapRepoError(err, 'حدث خطأ غير متوقع');
-          const raw: string = (mapped as Error)?.message ?? 'حدث خطأ غير متوقع';
-          const description = parseDbOverdraw(raw, {
-            resolveProduct: (itemId) => {
-              const l = lines.find(x => x.invoice_item_id === itemId);
-              return l ? { name: l.product_name, sku: l.product_sku } : undefined;
-            },
-          }) ?? raw;
-          toast({
-            title: 'خطأ في إنشاء إشعار الإرجاع',
-            description,
-            variant: 'destructive',
-          });
-        },
-      },
-    );
-  };
-
-  const createMutation = {
-    mutate: submitDraft,
-    isPending: createDraftMutation.isPending,
+    const selected = fresh.filter(line => line.selected && line.return_qty > 0 && !line.error);
+    if (!selected.length) throw new Error('اختر بنداً واحداً على الأقل بكمية صالحة');
+    await createDraftMutation.mutateAsync({
+      invoiceId, customerId, reason: reason || null,
+      totalAmount: round2(selected.reduce((sum, line) => sum + line.unit_price * line.return_qty, 0)),
+      userId: user?.id ?? null,
+      items: selected.map(line => ({ invoice_item_id: line.invoice_item_id, product_id: line.product_id, quantity: line.return_qty, unit_price: line.unit_price })),
+    });
   };
 
   const resetForm = () => {
-    setCustomerId('');
-    setInvoiceId('');
-    setReason('');
-    setLines([]);
+    restorationGeneration.current += 1;
+    initializedInvoice.current = '';
+    selection.current = [];
+    resetHeader(); setLines([]);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open} onOpenChange={experience.onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>إشعار إرجاع جديد</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
+          {experience.hasDraft && <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} />
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <Label>العميل *</Label>
               <Select value={customerId} onValueChange={(v) => { setCustomerId(v); setInvoiceId(''); }}>
-                <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
+                <SelectTrigger aria-label="العميل" aria-invalid={!!form.formState.errors.customerId} disabled={busy}><SelectValue placeholder="اختر العميل" /></SelectTrigger>
                 <SelectContent>
                   {customers.map((c: any) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {form.formState.errors.customerId && <p role="alert" className="text-sm text-destructive">{form.formState.errors.customerId.message}</p>}
             </div>
             <div>
               <Label>الفاتورة *</Label>
               <Select value={invoiceId} onValueChange={setInvoiceId} disabled={!customerId}>
-                <SelectTrigger><SelectValue placeholder="اختر الفاتورة" /></SelectTrigger>
+                <SelectTrigger aria-label="الفاتورة" aria-invalid={!!form.formState.errors.invoiceId} disabled={busy}><SelectValue placeholder="اختر الفاتورة" /></SelectTrigger>
                 <SelectContent>
                   {invoices.map((inv: any) => (
                     <SelectItem key={inv.id} value={inv.id}>
@@ -269,6 +262,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
                   ))}
                 </SelectContent>
               </Select>
+              {form.formState.errors.invoiceId && <p role="alert" className="text-sm text-destructive">{form.formState.errors.invoiceId.message}</p>}
             </div>
           </div>
 
@@ -279,11 +273,13 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
                 بنود الفاتورة ({lines.length})
               </div>
 
-              {loadingItems ? (
+              {readsBusy ? (
                 <div className="p-6 text-center text-muted-foreground text-sm">
                   <Loader2 className="h-5 w-5 animate-spin inline ml-2" />
                   جارِ التحميل…
                 </div>
+              ) : readsFailed ? (
+                <div role="alert" className="p-3 text-destructive text-sm">تعذر تحميل بيانات الفاتورة؛ أعد فتح المستند للمحاولة مجددًا.</div>
               ) : lines.length === 0 ? (
                 <div className="p-6 text-center text-muted-foreground text-sm">لا توجد بنود</div>
               ) : (
@@ -294,9 +290,9 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
                       <div key={l.invoice_item_id} className="p-3 flex items-start gap-3">
                         <Checkbox
                           checked={l.selected}
-                          disabled={disabled}
+                          disabled={disabled || readsBusy || busy}
                           onCheckedChange={(v) => updateLine(l.invoice_item_id, { selected: !!v })}
-                          className="mt-1"
+                          aria-label={`اختيار ${l.product_name}`} className="mt-1"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -328,7 +324,10 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
                                 <Label className="text-xs">كمية الإرجاع:</Label>
                                 <Input
                                   type="number"
-                                  className={`h-8 w-24 ${l.error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                                  id={`return-qty-${l.invoice_item_id}`}
+                                  aria-label={`كمية إرجاع ${l.product_name}`}
+                                  disabled={busy || readsBusy}
+                                  className={`min-h-11 w-24 ${l.error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                                   value={l.requested_qty}
                                   min={0}
                                   step="0.01"
@@ -387,6 +386,8 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
             <Label>سبب الإرجاع</Label>
             <Textarea
               value={reason}
+              aria-label="سبب الإرجاع"
+              disabled={busy}
               onChange={(e) => setReason(e.target.value)}
               placeholder="أدخل سبب الإرجاع…"
               rows={2}
@@ -420,16 +421,19 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button variant="outline" className="min-h-11" disabled={busy} onClick={experience.requestClose}>إلغاء</Button>
           <Button
-            onClick={() => createMutation.mutate()}
-            disabled={!customerId || !invoiceId || !hasSelection || hasErrors || createMutation.isPending}
+            className="min-h-11"
+            onClick={() => void experience.save()}
+            disabled={busy || readsBusy || readsFailed}
           >
-            {createMutation.isPending && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
-            إنشاء إشعار إرجاع
+            {busy && <Loader2 className="h-4 w-4 ml-2 animate-spin" />}
+            {busy ? 'جارٍ الحفظ…' : 'إنشاء إشعار إرجاع'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <UnsavedChangesDialog open={experience.confirmOpen} onOpenChange={experience.setConfirmOpen} onConfirm={experience.confirmLeave} />
+    </>
   );
 }
