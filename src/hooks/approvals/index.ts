@@ -25,6 +25,7 @@ export function useExecuteApprovalAction() {
       approvalRepository.executeApprovalAction(params),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["approval-records"] });
+      qc.invalidateQueries({ queryKey: ["fiscal-periods"] });
     },
   });
 }

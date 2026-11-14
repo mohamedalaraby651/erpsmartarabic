@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { mapRepoError } from "./_base";
+import { financialApprovalRepository } from './financialApprovalRepository';
 
 export interface ApprovalRecord {
   id: string;
@@ -17,6 +18,8 @@ export interface ApprovalRecord {
   escalated_at: string | null;
   created_at: string;
   updated_at: string;
+  request_source?: 'financial';
+  request_reason?: string;
 }
 
 export type ApprovalStatusFilter =
@@ -36,6 +39,7 @@ export interface ExecuteApprovalParams {
   action: "approve" | "reject";
   userId?: string;
   rejectionReason?: string;
+  requestSource?: 'financial';
 }
 
 export const approvalRepository = {
@@ -53,7 +57,17 @@ export const approvalRepository = {
 
     const { data, error } = await q;
     if (error) throw mapRepoError(error, "تعذّر تحميل طلبات الاعتماد.");
-    return (data ?? []) as ApprovalRecord[];
+    const financial = (await financialApprovalRepository.list())
+      .filter((r) => !filters.status || filters.status === 'all' || r.status === filters.status)
+      .filter(() => !filters.entityType || filters.entityType === 'reopen_period')
+      .map((r): ApprovalRecord => ({
+        id: r.id, entity_type: r.request_type, entity_id: r.entity_id, status: r.status,
+        current_level: 1, approved_by: r.resolved_by && r.status === 'approved' ? [r.resolved_by] : [],
+        rejection_reason: r.status === 'rejected' ? r.resolution_reason : null,
+        escalated_at: null, created_at: r.created_at, updated_at: r.resolved_at ?? r.created_at,
+        request_source: 'financial', request_reason: r.reason,
+      }));
+    return [...(data ?? []) as ApprovalRecord[], ...financial].sort((a, b) => b.created_at.localeCompare(a.created_at));
   },
 
   async getById(id: string): Promise<ApprovalRecord> {
@@ -67,6 +81,10 @@ export const approvalRepository = {
   },
 
   async executeApprovalAction(params: ExecuteApprovalParams): Promise<void> {
+    if (params.requestSource === 'financial') {
+      await financialApprovalRepository.resolve(params.recordId, params.action === 'approve', params.rejectionReason);
+      return;
+    }
     if (params.action === "approve") {
       const current = await this.getById(params.recordId);
       const approvedBy = [

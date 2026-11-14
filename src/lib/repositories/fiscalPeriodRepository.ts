@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { mapRepoError, unwrap } from "./_base";
+import { financialApprovalRepository } from './financialApprovalRepository';
 
 type T = Database["public"]["Tables"];
 export type FiscalPeriodRow = T["fiscal_periods"]["Row"];
@@ -41,12 +42,8 @@ export const fiscalPeriodRepository = {
     return data;
   },
 
-  async openPeriod(id: string): Promise<void> {
-    const { error } = await supabase
-      .from("fiscal_periods")
-      .update({ is_closed: false, closed_at: null, closed_by: null })
-      .eq("id", id);
-    if (error) throw mapRepoError(error, "تعذّر فتح الفترة المالية.");
+  async openPeriod(id: string, reason: string): Promise<void> {
+    await financialApprovalRepository.requestPeriodReopen(id, reason);
   },
 
   async closePeriod(id: string): Promise<void> {
