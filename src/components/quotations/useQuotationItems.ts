@@ -50,16 +50,19 @@ export function useQuotationItems({
         total_price: number;
         products: { name: string } | null;
       };
-      setItems((data as unknown as LoadedItem[]).map((item) => ({
+      const loaded = (data as unknown as LoadedItem[]).map((item) => ({
         product_id: item.product_id,
         product_name: item.products?.name || '',
         quantity: Number(item.quantity),
         unit_price: r2(Number(item.unit_price)),
         discount_percentage: r2(Number(item.discount_percentage) || 0),
         total_price: r2(Number(item.total_price)),
-      })));
+      }));
+      setItems(loaded);
+      return loaded;
     } catch {
       setItems([]);
+      return [];
     }
   }, []);
 

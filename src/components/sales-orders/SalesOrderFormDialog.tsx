@@ -106,6 +106,7 @@ const SalesOrderFormDialog = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [baselineItems, setBaselineItems] = useState('[]');
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers", "select"],
@@ -213,7 +214,7 @@ const SalesOrderFormDialog = ({
     onError: toast.onError,
   });
 
-  const experience = useDocumentFormExperience({ form, lines: items, restoreLines: setItems, documentKey: `sales_order_${order?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: !order && items.length > 0 });
+  const experience = useDocumentFormExperience({ form, lines: items, restoreLines: setItems, documentKey: `sales_order_${order?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: JSON.stringify(items) !== baselineItems });
   const draftBanner = experience.hasDraft ? <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} /> : null;
 
   // Sync line items when entity changes (external state — outside the hook contract).
@@ -224,22 +225,23 @@ const SalesOrderFormDialog = ({
         .listItems(order.id)
         .then((rows) => {
           if (cancelled) return;
-          setItems(
-            rows.map((i) => ({
+          const loadedItems = rows.map((i) => ({
               product_id: i.product_id,
               product_name: i.products?.name || "",
               quantity: Number(i.quantity),
               unit_price: Number(i.unit_price),
               discount_percentage: Number(i.discount_percentage) || 0,
               total_price: Number(i.total_price),
-            })),
-          );
+            }));
+          setItems(loadedItems);
+          setBaselineItems(JSON.stringify(loadedItems));
         })
         .catch(() => {
           /* swallow — items remain empty */
         });
     } else {
       setItems([]);
+      setBaselineItems('[]');
     }
     wizard.reset();
     return () => {

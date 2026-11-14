@@ -62,6 +62,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const queryClient = useQueryClient();
   const [lastSavedId, setLastSavedId] = useState<string | null>(quotation?.id ?? null);
   const [printOpen, setPrintOpen] = useState(false);
+  const [baselineItems, setBaselineItems] = useState('[]');
   const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
@@ -152,7 +153,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     },
   });
 
-  const experience = useDocumentFormExperience({ form, lines: { items, discountAmount, vatEnabled }, restoreLines: saved => { setItems(saved.items); setDiscountAmount(saved.discountAmount); setVatEnabled(saved.vatEnabled); }, documentKey: `quotation_${quotation?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: !quotation && (items.length > 0 || discountAmount !== 0 || vatEnabled) });
+  const experience = useDocumentFormExperience({ form, lines: { items, discountAmount, vatEnabled }, restoreLines: saved => { setItems(saved.items); setDiscountAmount(saved.discountAmount); setVatEnabled(saved.vatEnabled); }, documentKey: `quotation_${quotation?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: JSON.stringify(items) !== baselineItems || discountAmount !== Number(quotation?.discount_amount || 0) || vatEnabled !== (Number(quotation?.tax_amount || 0) > 0) });
   const draftBanner = experience.hasDraft ? <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} /> : null;
   const { register, setValue, watch, formState: { isDirty } } = form;
 
@@ -163,9 +164,10 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     if (quotation) {
       setDiscountAmount(Number(quotation.discount_amount) || 0);
       setVatEnabled(Number(quotation.tax_amount) > 0);
-      loadItems(quotation.id);
+      void loadItems(quotation.id).then(loaded => setBaselineItems(JSON.stringify(loaded)));
     } else {
       resetItems();
+      setBaselineItems('[]');
     }
     wizard.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
