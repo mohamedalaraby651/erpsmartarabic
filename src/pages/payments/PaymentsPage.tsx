@@ -3,7 +3,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "@/lib/router-compat";
 import { useServerPagination } from "@/hooks/useServerPagination";
 import { useDebounce } from "@/hooks/useDebounce";
-import { ServerPagination } from "@/components/shared/ServerPagination";
+import { LoadMoreFooter } from "@/components/ui/data/LoadMoreFooter";
+import { WorkspaceTable, type WorkspaceColumn } from "@/components/table/WorkspaceTable";
+import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { useTableLayout } from "@/hooks/useTableLayout";
+import { MobileExpandableCard } from "@/components/ui/data/MobileExpandableCard";
+import { Amount, KpiAmount } from "@/components/shared/amount/Amount";
+import { ListErrorState } from "@/components/shared/ListErrorState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,8 +54,11 @@ const paymentMethodLabels: Record<string, string> = {
 };
 
 const PAGE_SIZE = 25;
+const COLUMN_KEYS = ['payment_number', 'customer', 'invoice', 'date', 'amount', 'method', 'reference', 'actions'];
 
 const PaymentsPage = () => {
+  const layout = useTableLayout('payments', COLUMN_KEYS);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -77,13 +86,15 @@ const PaymentsPage = () => {
   // Count
   const { data: totalCount = 0 } = usePaymentsCount(paymentFilters);
 
-  const pagination = useServerPagination({ pageSize: PAGE_SIZE, totalCount });
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [debouncedSearch]);
 
   const {
     data: listResult,
     isLoading,
+    isFetching,
+    error,
     refetch,
-  } = usePaymentsList(paymentFilters, pagination.currentPage, PAGE_SIZE);
+  } = usePaymentsList(paymentFilters, 1, visibleCount);
   const payments = listResult?.data ?? [];
 
   const deleteMutation = useDeletePayment();
@@ -133,21 +144,25 @@ const PaymentsPage = () => {
   };
 
   // Mobile Payment Card
-  const renderPaymentCard = (payment: PaymentWithRelations) => (
-    <DataCard
-      key={payment.id}
-      title={payment.customers?.name || "عميل غير معروف"}
-      subtitle={`#${payment.payment_number}`}
-      icon={<Wallet className="h-5 w-5" />}
-      badge={{ text: paymentMethodLabels[payment.payment_method] || payment.payment_method, variant: "outline" }}
-      fields={([
-        { label: "المبلغ", value: <span className="font-bold text-success">{Number(payment.amount).toLocaleString()} ج.م</span> },
-        { label: "التاريخ", value: new Date(payment.payment_date).toLocaleDateString('ar-EG'), icon: <Calendar className="h-3 w-3" /> },
-        payment.invoices?.invoice_number ? { label: "الفاتورة", value: payment.invoices.invoice_number } : null,
-      ] as const).filter(Boolean) as Array<{ label: string; value: string | number | React.ReactNode; icon?: React.ReactNode }>}
-      onDelete={canDelete ? () => handleDelete(payment.id) : undefined}
-    />
-  );
+  const actions = (payment: PaymentWithRelations) => <DataTableActions onDelete={() => handleDelete(payment.id)} canEdit={false} canDelete={canDelete} deleteDescription="سيتم تطبيق قواعد إلغاء الدفعة المعتمدة." />;
+  const renderPaymentCard = (payment: PaymentWithRelations) => <MobileExpandableCard
+    key={payment.id}
+    title={payment.customers?.name ? <EntityLink type="customer" id={payment.customer_id}>{payment.customers.name}</EntityLink> : payment.payment_number}
+    amount={<Amount value={Number(payment.amount)} />}
+    status={<Badge variant="outline">{paymentMethodLabels[payment.payment_method] || payment.payment_method}</Badge>}
+    details={[{ label: 'رقم الدفعة', value: payment.payment_number }, { label: 'التاريخ', value: new Date(payment.payment_date).toLocaleDateString('ar-EG') }, { label: 'الفاتورة', value: payment.invoices?.invoice_number || '-' }, { label: 'المرجع', value: payment.reference_number || '-' }]}
+    actions={actions(payment)}
+  />;
+  const columns: WorkspaceColumn<PaymentWithRelations>[] = [
+    { key: 'payment_number', label: 'رقم الدفعة', render: p => p.payment_number },
+    { key: 'customer', label: 'العميل', render: p => p.customers?.name ? <EntityLink type="customer" id={p.customer_id}>{p.customers.name}</EntityLink> : '-' },
+    { key: 'invoice', label: 'الفاتورة', render: p => p.invoices?.invoice_number ? <EntityLink type="invoice" id={p.invoice_id}>{p.invoices.invoice_number}</EntityLink> : '-' },
+    { key: 'date', label: 'التاريخ', render: p => new Date(p.payment_date).toLocaleDateString('ar-EG') },
+    { key: 'amount', label: 'المبلغ', render: p => <Amount value={Number(p.amount)} /> },
+    { key: 'method', label: 'طريقة الدفع', render: p => <Badge variant="outline">{paymentMethodLabels[p.payment_method] || p.payment_method}</Badge> },
+    { key: 'reference', label: 'المرجع', render: p => p.reference_number || '-' },
+    { key: 'actions', label: 'إجراءات', render: actions },
+  ];
 
   const pageContent = (
     <div className="space-y-6 animate-fade-in">
@@ -204,7 +219,7 @@ const PaymentsPage = () => {
                 <Wallet className="h-5 w-5 text-success" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.totalAmount.toLocaleString()}</p>
+                <p className="text-2xl font-bold"><KpiAmount value={stats.totalAmount} /></p>
                 <p className="text-sm text-muted-foreground">إجمالي المبلغ</p>
               </div>
             </div>
@@ -219,7 +234,7 @@ const PaymentsPage = () => {
                     <Banknote className="h-5 w-5 text-info" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.cash.toLocaleString()}</p>
+                    <p className="text-2xl font-bold"><KpiAmount value={stats.cash} /></p>
                     <p className="text-sm text-muted-foreground">نقدي (ج.م)</p>
                   </div>
                 </div>
@@ -232,7 +247,7 @@ const PaymentsPage = () => {
                     <CreditCard className="h-5 w-5 text-warning" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{stats.bank.toLocaleString()}</p>
+                    <p className="text-2xl font-bold"><KpiAmount value={stats.bank} /></p>
                     <p className="text-sm text-muted-foreground">تحويل بنكي</p>
                   </div>
                 </div>
@@ -266,7 +281,7 @@ const PaymentsPage = () => {
             </CardContent>
           </Card>
         )
-      ) : sortedData.length === 0 ? (
+      ) : error ? <ListErrorState error={error} onRetry={() => refetch()} /> : sortedData.length === 0 ? (
         <EmptyState
           icon={Wallet}
           title="لا توجد مدفوعات"
@@ -282,112 +297,15 @@ const PaymentsPage = () => {
         </div>
       ) : (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle>سجل المدفوعات</CardTitle>
+            <TableViewOptions layout={layout} columns={columns} />
           </CardHeader>
-          <CardContent>
-            <div className="w-full">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <DataTableHeader
-                      label="رقم الدفعة"
-                      sortKey="payment_number"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader label="العميل" />
-                    <DataTableHeader label="الفاتورة" />
-                    <DataTableHeader
-                      label="التاريخ"
-                      sortKey="payment_date"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader
-                      label="المبلغ"
-                      sortKey="amount"
-                      sortConfig={sortConfig}
-                      onSort={requestSort}
-                    />
-                    <DataTableHeader
-                      label="طريقة الدفع"
-                      filterKey="payment_method"
-                      filterType="select"
-                      filterOptions={[
-                        { value: 'cash', label: 'نقدي' },
-                        { value: 'bank_transfer', label: 'تحويل بنكي' },
-                        { value: 'credit', label: 'آجل' },
-                      ]}
-                      filterValue={filters.payment_method as string}
-                      onFilter={setFilter}
-                    />
-                    <DataTableHeader label="المرجع" />
-                    <DataTableHeader label="إجراءات" className="text-left" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(sortedData as PaymentWithRelations[]).map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">
-                          {payment.payment_number}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        {payment.customers?.name ? (
-                          <EntityLink type="customer" id={payment.customer_id}>
-                            {payment.customers.name}
-                          </EntityLink>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {payment.invoices?.invoice_number ? (
-                          <EntityLink type="invoice" id={payment.invoice_id}>
-                            {payment.invoices.invoice_number}
-                          </EntityLink>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(payment.payment_date).toLocaleDateString('ar-EG')}
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-bold text-success">
-                          {Number(payment.amount).toLocaleString()} ج.م
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {paymentMethodLabels[payment.payment_method] || payment.payment_method}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{payment.reference_number || '-'}</TableCell>
-                      <TableCell>
-                        <DataTableActions
-                          onDelete={() => handleDelete(payment.id)}
-                          canEdit={false}
-                          canDelete={canDelete}
-                          deleteDescription="سيتم حذف هذه الدفعة نهائياً."
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
+          <CardContent><WorkspaceTable rows={sortedData as PaymentWithRelations[]} columns={columns} layout={layout} /></CardContent>
         </Card>
       )}
 
-      <ServerPagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={totalCount}
-        pageSize={PAGE_SIZE}
-        onPageChange={pagination.goToPage}
-        hasNextPage={pagination.hasNextPage}
-        hasPrevPage={pagination.hasPrevPage}
-      />
+      <LoadMoreFooter shown={payments.length} total={totalCount} hasMore={payments.length < totalCount} loading={isFetching} onLoadMore={() => setVisibleCount(count => count + PAGE_SIZE)} />
 
       <PaymentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <MultiInvoiceSettlement
