@@ -57,15 +57,15 @@ const CASES: SandboxCase[] = [
   {
     id: 'currency-punct',
     label: 'عملات وترقيم',
-    description: '١٬٥٠٠٫٥٠ ر.س — EGP 12,345.67 — -450.00 د.ك',
+    description: '١٬٥٠٠٫٥٠ ج.م — EGP 12,345.67 — -450.00 د.ك',
     data: {
       invoiceNumber: 'INV-2026-003',
       issueDate: '2026-05-25',
-      currency: 'SAR',
+      currency: 'EGP',
       company: baseCompany,
       customer: { name: 'مؤسسة الأرقام التجارية' },
       items: [
-        { description: 'بند 1٬500٫50 ر.س', quantity: 1, unitPrice: 1500.5 },
+        { description: 'بند 1٬500٫50 ج.م', quantity: 1, unitPrice: 1500.5 },
         { description: 'EGP 12,345.67 line', quantity: 3, unitPrice: 12345.67 },
         { description: 'قيد دائن -450.00 د.ك', quantity: 1, unitPrice: 450 },
       ],
