@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from '@/lib/router-compat';
 import { prefetchByPath } from '@/lib/prefetch';
 import { DashboardChip } from './_shared/DashboardChip';
+import { formatCompactEGP, formatEGP } from '@/lib/format/money';
 
 export interface FinancialKPIData {
   todayRevenue: number;
@@ -37,6 +38,8 @@ interface FinancialKPIRowProps {
 interface KpiCard {
   label: string;
   value: string;
+  /** exact amount shown on hover for compact money values */
+  exact?: string;
   icon: LucideIcon;
   tone: 'primary' | 'success' | 'warning' | 'destructive' | 'info';
   href?: string;
@@ -44,7 +47,7 @@ interface KpiCard {
 }
 
 const fmtCurrency = (n: number) =>
-  `${new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 0 }).format(Math.round(n))} ج.م`;
+  formatCompactEGP(n);
 
 const toneClasses: Record<KpiCard['tone'], { ring: string; icon: string; bg: string }> = {
   primary: { ring: 'border-primary/20', icon: 'text-primary', bg: 'bg-primary/10' },
@@ -84,7 +87,7 @@ const KpiCardView = memo(function KpiCardView({ card }: { card: KpiCard }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] sm:text-xs text-muted-foreground truncate leading-tight">{card.label}</p>
-          <p className="text-sm sm:text-xl font-bold mt-0.5 truncate tabular-nums leading-tight">{card.value}</p>
+          <p data-amount={card.exact !== undefined ? "" : undefined} title={card.exact} dir={card.exact ? "ltr" : undefined} className="text-sm sm:text-xl font-bold mt-0.5 truncate tabular-nums leading-tight">{card.value}</p>
           {card.hint && (
             <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5 truncate leading-tight">{card.hint}</p>
           )}
@@ -123,6 +126,7 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     {
       label: 'إيرادات اليوم',
       value: fmtCurrency(data.todayRevenue),
+      exact: formatEGP(data.todayRevenue),
       icon: TrendingUp,
       tone: 'primary',
       href: '/invoices',
@@ -130,6 +134,7 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     {
       label: 'إيرادات الشهر',
       value: fmtCurrency(data.mtdRevenue),
+      exact: formatEGP(data.mtdRevenue),
       icon: Banknote,
       tone: 'success',
       href: '/reports',
@@ -145,6 +150,7 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     {
       label: 'مستحقات العملاء',
       value: fmtCurrency(data.outstandingAR),
+      exact: formatEGP(data.outstandingAR),
       icon: Wallet,
       tone: 'info',
       href: '/invoices?filter=unpaid',
@@ -152,6 +158,7 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     {
       label: 'متأخرات',
       value: fmtCurrency(data.overdueAR),
+      exact: formatEGP(data.overdueAR),
       icon: AlertTriangle,
       tone: data.overdueAR > 0 ? 'destructive' : 'success',
       href: '/invoices?filter=overdue',
@@ -168,6 +175,7 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     {
       label: 'رصيد الخزينة',
       value: fmtCurrency(data.cashBalance),
+      exact: formatEGP(data.cashBalance),
       icon: Wallet,
       tone: 'success',
       href: '/treasury',
