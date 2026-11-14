@@ -19,7 +19,9 @@ describe('document draft retention', () => {
     const { result } = renderHook(() => useFormDraft({ key: 'existing', data: { amount: 0 } }));
     act(() => vi.advanceTimersByTime(10000));
     expect(JSON.parse(localStorage.getItem('draft_existing') || '{}').data.amount).toBe(125);
-    expect(result.current.restoreDraft()).toEqual({ amount: 125 });
+    let restored: unknown;
+    act(() => { restored = result.current.restoreDraft(); });
+    expect(restored).toEqual({ amount: 125 });
   });
   it('reads but does not save a pristine form', () => {
     renderHook(() => useFormDraft({ key: 'pristine', data: { amount: 0 }, autoSave: false }));

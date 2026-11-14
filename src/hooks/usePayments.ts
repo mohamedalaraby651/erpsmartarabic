@@ -4,7 +4,7 @@
  * لا يُسمح لأي مكوّن UI باستيراد supabase مباشرة للوصول إلى المدفوعات.
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   paymentRepository,
   type PaymentFilters,
@@ -25,6 +25,14 @@ export function usePaymentsCount(filters: PaymentFilters) {
   });
 }
 
+export function usePaymentCustomers(open: boolean) {
+  return useQuery({ queryKey: ['payment-customers'], queryFn: () => paymentRepository.listActiveCustomers(), enabled: open });
+}
+
+export function usePaymentInvoices(customerId: string, open: boolean) {
+  return useQuery({ queryKey: ['customer-unpaid-invoices', customerId], queryFn: () => paymentRepository.listUnpaidInvoices(customerId), enabled: open && !!customerId });
+}
+
 export function usePaymentsList(
   filters: PaymentFilters,
   page: number,
@@ -32,6 +40,7 @@ export function usePaymentsList(
 ) {
   return useQuery<PaymentListResult>({
     queryKey: KEYS.list(filters, page, pageSize),
+    placeholderData: keepPreviousData,
     queryFn: () => paymentRepository.list({ filters, page, pageSize }),
   });
 }

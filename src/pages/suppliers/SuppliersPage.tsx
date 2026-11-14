@@ -109,7 +109,7 @@ const SuppliersPage = () => {
   });
 
   const { deleteMutation, bulkDeleteMutation, bulkStatusMutation } = useSupplierMutations({
-    filterKey, currentPage, sortConfig,
+    filterKey, currentPage: 1, pageSize: PAGE_SIZE * currentPage, sortConfig,
   });
 
   const { alertsByType, totalAlerts } = useSupplierAlerts(suppliers);
