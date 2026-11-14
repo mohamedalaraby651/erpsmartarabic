@@ -127,6 +127,7 @@ const JournalFormDialog = ({ open, onOpenChange }: JournalFormDialogProps) => {
       });
     },
     onSuccess: () => {
+      experience.clearDraft();
       toast.onSuccess();
       setEntries(emptyEntries());
       onOpenChange(false);

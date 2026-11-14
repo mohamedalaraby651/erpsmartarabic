@@ -178,10 +178,10 @@ const PaymentsPage = () => {
               sectionLabel="المدفوعات"
               data={sortedData}
               columns={[
-                { key: 'payment_number', onSort: () => requestSort('payment_number'), sortDirection: sortConfig.key === 'payment_number' ? sortConfig.direction : null, label: 'رقم الدفعة' },
+                { key: 'payment_number', label: 'رقم الدفعة' },
                 { key: 'customers.name', label: 'العميل' },
                 { key: 'invoices.invoice_number', label: 'الفاتورة' },
-                { key: 'amount', onSort: () => requestSort('amount'), sortDirection: sortConfig.key === 'amount' ? sortConfig.direction : null, label: 'المبلغ' },
+                { key: 'amount', label: 'المبلغ' },
                 { key: 'payment_method', label: 'طريقة الدفع' },
                 { key: 'payment_date', label: 'التاريخ' },
               ]}
