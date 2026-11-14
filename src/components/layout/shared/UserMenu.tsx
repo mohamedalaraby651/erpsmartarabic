@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
+import { SignOutConfirmDialog } from '@/components/layout/shared/SignOutConfirmDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,6 +33,7 @@ interface UserMenuProps {
 export function UserMenu({ compact = false, className }: UserMenuProps) {
   const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -42,6 +45,7 @@ export function UserMenu({ compact = false, className }: UserMenuProps) {
     : user?.email?.slice(0, 2).toUpperCase() || 'U';
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
@@ -84,12 +88,14 @@ export function UserMenu({ compact = false, className }: UserMenuProps) {
           الإعدادات
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
+        <DropdownMenuItem onClick={() => setConfirmOpen(true)} className="text-destructive focus:text-destructive cursor-pointer">
           <LogOut className="ml-2 h-4 w-4" />
           تسجيل الخروج
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <SignOutConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} onConfirm={handleSignOut} />
+    </>
   );
 }
 

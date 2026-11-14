@@ -1,6 +1,7 @@
 import { useState, memo, useMemo } from 'react';
 import { useLocation, useNavigate } from '@/lib/router-compat';
 import { useAuth } from '@/hooks/useAuth';
+import { SignOutConfirmDialog } from '@/components/layout/shared/SignOutConfirmDialog';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
 import { useSidebarSearch } from '@/hooks/useSidebarSearch';
 import { useSidebarSettings } from '@/hooks/useSidebarSettings';
@@ -43,6 +44,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
   const { signOut, userRole } = useAuth();
   const { favorites, removeFavorite, isFavorite, toggleFavorite, reorderFavorites } = useFavoritePages();
   const { settings, updateSectionOrder, resetSettings } = useSidebarSettings();
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
   const [openSections, setOpenSections] = useState<string[]>(['sales', 'inventory']);
 
   // Order sections based on saved settings
@@ -365,7 +367,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
                     variant="ghost"
                     size="icon"
                     className="w-full h-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={handleSignOut}
+                    onClick={() => setSignOutConfirmOpen(true)}
                   >
                     <LogOut className="h-4 w-4" />
                   </Button>
@@ -376,7 +378,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={handleSignOut}
+                onClick={() => setSignOutConfirmOpen(true)}
               >
                 <LogOut className="h-4 w-4" />
                 <span>تسجيل الخروج</span>
@@ -385,6 +387,7 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
           </div>
         </div>
       </aside>
+      <SignOutConfirmDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen} onConfirm={handleSignOut} />
     </TooltipProvider>
   );
 }
