@@ -93,10 +93,13 @@ export function useFormDialog<
   }, [entity]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const submit = useCallback(
     (e?: React.BaseSyntheticEvent) =>
       form.handleSubmit(async (values) => {
+        if (submittingRef.current) return;
+        submittingRef.current = true;
         setIsSubmitting(true);
         try {
           const payload = toPayload(values);
@@ -106,6 +109,7 @@ export function useFormDialog<
           onError?.(error);
         } finally {
           setIsSubmitting(false);
+          submittingRef.current = false;
           onSettled?.();
         }
       })(e),
