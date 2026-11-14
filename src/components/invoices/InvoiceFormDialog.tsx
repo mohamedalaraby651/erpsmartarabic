@@ -18,6 +18,12 @@ import { productRepository } from "@/application/queries/products";
 import { queryKeys } from "@/lib/queryKeys";
 import { useInvoiceItems } from "./useInvoiceItems";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { useSaveShortcut } from "@/hooks/forms/useSaveShortcut";
+import { useUnsavedChangesGuard } from "@/hooks/forms/useUnsavedChangesGuard";
+import { scrollToFirstError } from "@/lib/forms/scrollToFirstError";
+import { DraftRestoreBanner } from "@/components/shared/forms/DraftRestoreBanner";
+import { UnsavedChangesDialog } from "@/components/shared/forms/UnsavedChangesDialog";
+import { StickyTotalsBar } from "@/components/shared/forms/StickyTotalsBar";
 import InvoiceFormHeader from "./InvoiceFormHeader";
 import { InvoiceItemsTable } from "./InvoiceItemsTable";
 import { InvoiceTotalsSection } from "./InvoiceTotalsSection";
@@ -174,17 +180,26 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
     enabled: !isEditing,
   });
 
-  // Draft restore (independent from entity-driven reset)
-  useEffect(() => {
-    if (hasDraft && !isEditing && open) {
-      const draft = restoreDraft();
-      if (draft) {
-        sonnerToast.success('تم استعادة المسودة', { description: 'تم استرجاع البيانات المحفوظة تلقائياً' });
-        form.reset(draft);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasDraft, isEditing, open]);
+  // Draft restore: user chooses via banner (decision 345)
+  const showDraftBanner = hasDraft && !isEditing && open;
+  const handleRestoreDraft = () => {
+    const draft = restoreDraft();
+    if (draft) form.reset(draft);
+  };
+
+  // Leave-protection, Ctrl+S, jump to first error (decisions 287, 340, 353)
+  const formRef = useRef<HTMLFormElement>(null);
+  const guard = useUnsavedChangesGuard(open && (isDirty || items.length > 0) && !isSubmitting && !lastSavedSaved(), () => onOpenChange(false));
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    void submit(e as React.FormEvent).finally?.(() => undefined);
+    setTimeout(() => {
+      const n = scrollToFirstError(formRef.current ?? document);
+      if (n > 0) sonnerToast.error(`يوجد ${n} حقل يحتاج إلى استكمال`);
+    }, 50);
+  };
+  useSaveShortcut(() => formRef.current?.requestSubmit(), open && !isSubmitting);
+  function lastSavedSaved() { return Boolean(lastSavedId) && !isDirty; }
 
   // Items state sync (external — line items intentionally outside useFormDialog per Batch 2 rule)
   useEffect(() => {
@@ -240,12 +255,13 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   ];
 
   const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : guard.requestClose())}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'تعديل الفاتورة' : 'فاتورة جديدة'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+          {showDraftBanner && <DraftRestoreBanner onRestore={handleRestoreDraft} onDiscard={clearDraft} />}
           {Step1Header}
           {Step2Items}
           <InvoiceTotalsSection subtotal={subtotal} total={total} register={register} />
@@ -254,8 +270,9 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
           </div>
           <div className="flex justify-between items-center gap-2">
             {printButton}
-            <InvoiceValidation isValidating={isValidating} isPending={isSubmitting} isEditing={isEditing} onCancel={() => onOpenChange(false)} />
+            <InvoiceValidation isValidating={isValidating} isPending={isSubmitting} isEditing={isEditing} onCancel={guard.requestClose} />
           </div>
+          <StickyTotalsBar total={total} remaining={total} />
         </form>
       </DialogContent>
     </Dialog>
@@ -276,6 +293,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   return (
     <>
       <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />
+      <UnsavedChangesDialog open={guard.confirmOpen} onOpenChange={guard.setConfirmOpen} onConfirm={guard.confirmLeave} />
       {lastSavedId && (
         <InvoicePrintView
           invoiceId={lastSavedId}

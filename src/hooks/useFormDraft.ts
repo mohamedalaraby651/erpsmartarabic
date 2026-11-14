@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+export const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 interface UseFormDraftOptions<T> {
   /** Unique key for this form (e.g. 'invoice_new' or 'customer_abc123') */
   key: string;
@@ -29,8 +31,8 @@ export function useFormDraft<T>({ key, data, enabled = true, interval = 5000 }: 
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved) as { data: T; savedAt: number };
-        // Only restore drafts less than 24h old
-        if (Date.now() - parsed.savedAt < 24 * 60 * 60 * 1000) {
+        // Drafts are kept for 7 days (PRB-NAZRA-002)
+        if (Date.now() - parsed.savedAt < DRAFT_TTL_MS) {
           setDraftData(parsed.data);
           setHasDraft(true);
         } else {
