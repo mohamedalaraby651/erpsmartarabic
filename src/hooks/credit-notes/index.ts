@@ -14,6 +14,8 @@ export function useInvoicesForCreditNote(customerId: string, enabled = true) {
     queryFn: () => creditNoteRepository.listInvoicesForCustomer(customerId),
     enabled: enabled && !!customerId,
     ...queryPresets.operational,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
@@ -23,6 +25,8 @@ export function useInvoiceItemsForCredit(invoiceId: string, enabled = true) {
     queryFn: () => creditNoteRepository.listInvoiceItemsWithProducts(invoiceId),
     enabled: enabled && !!invoiceId,
     ...queryPresets.operational,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
@@ -32,6 +36,8 @@ export function useInvoiceItemReturnsSummary(invoiceId: string, enabled = true) 
     queryFn: () => creditNoteRepository.getReturnsSummary(invoiceId),
     enabled: enabled && !!invoiceId,
     ...queryPresets.operational,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
