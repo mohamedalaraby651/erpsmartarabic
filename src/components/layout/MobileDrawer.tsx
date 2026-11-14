@@ -1,6 +1,7 @@
 import { memo, useMemo, useState, useEffect, forwardRef } from 'react';
 import { useLocation, useNavigate } from '@/lib/router-compat';
 import { useAuth } from '@/hooks/useAuth';
+import { SignOutConfirmDialog } from '@/components/layout/shared/SignOutConfirmDialog';
 import { useFavoritePages } from '@/hooks/useFavoritePages';
 import { useSidebarCounts, type SidebarCounts } from '@/hooks/useSidebarCounts';
 import { cn } from '@/lib/utils';
@@ -151,6 +152,7 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
   const { signOut, userRole } = useAuth();
   const { favorites, isFavorite, toggleFavorite, removeFavorite } = useFavoritePages();
   const { data: counts } = useSidebarCounts(open);
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
 
@@ -477,13 +479,14 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
           <Button
             variant="ghost"
             className="w-full h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleSignOut}
+            onClick={() => setSignOutConfirmOpen(true)}
           >
             <LogOut className="h-3.5 w-3.5 ml-1.5" />
             تسجيل الخروج
           </Button>
         </div>
       </SheetContent>
+      <SignOutConfirmDialog open={signOutConfirmOpen} onOpenChange={setSignOutConfirmOpen} onConfirm={handleSignOut} />
     </Sheet>
   );
 });
