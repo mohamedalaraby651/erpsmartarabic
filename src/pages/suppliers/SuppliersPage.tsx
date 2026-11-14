@@ -352,8 +352,8 @@ const SuppliersPage = () => {
                 <TableViewOptions layout={layout} columns={columns} />
               </CardHeader>
               <CardContent>
-                <ListStateRenderer data={suppliers} isLoading={isLoading} error={error} hasFilters={activeFiltersCount > 0 || !!debouncedSearch} onRetry={() => refetch()} onClearFilters={() => { handleClearAllFilters(); setSearchQuery(''); }} empty={{ title: 'لا يوجد موردين', description: 'ابدأ بإضافة مورد جديد', action: { label: 'مورد جديد', onClick: handleAdd, icon: Plus } }}>
-                  <WorkspaceTable rows={suppliers} columns={columns} layout={layout} selection={{ header: <Checkbox checked={bulk.isAllSelected} onCheckedChange={checked => bulk.toggleSelectAll(!!checked)} aria-label="تحديد الموردين المعروضين" />, render: supplier => <Checkbox checked={bulk.selectedIds.has(supplier.id)} onCheckedChange={() => bulk.toggleSelect(supplier.id)} aria-label={`تحديد ${supplier.name}`} /> }} />
+                <ListStateRenderer data={suppliers} isLoading={isLoading} error={error} hasFilters={activeFiltersCount > 0 || !!debouncedSearch} onRetry={() => refetch()} onClearFilters={() => { handleClearAllFilters(); setSearchQuery(''); }} empty={{ icon: Plus, title: 'لا يوجد موردين', description: 'ابدأ بإضافة مورد جديد', action: { label: 'مورد جديد', onClick: handleAdd, icon: Plus } }}>
+                  <WorkspaceTable rows={suppliers} columns={columns} layout={layout} selection={{ header: <Checkbox checked={bulk.isAllSelected} onCheckedChange={checked => bulk.toggleSelectAll(!!checked)} aria-label="تحديد الموردين المعروضين" />, render: supplier => <Checkbox checked={bulk.selectedIds.has(supplier.id)} onCheckedChange={() => bulk.toggleSelect(supplier.id, !bulk.selectedIds.has(supplier.id))} aria-label={`تحديد ${supplier.name}`} /> }} />
                 </ListStateRenderer>
               </CardContent>
             </Card>

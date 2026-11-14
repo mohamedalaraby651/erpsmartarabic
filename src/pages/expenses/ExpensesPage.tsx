@@ -1,3 +1,9 @@
+import { WorkspaceTable, type WorkspaceColumn } from "@/components/table/WorkspaceTable";
+import { TableViewOptions } from "@/components/table/TableViewOptions";
+import { useTableLayout } from "@/hooks/useTableLayout";
+import { MobileExpandableCard } from "@/components/ui/data/MobileExpandableCard";
+import { Amount, KpiAmount } from "@/components/shared/amount/Amount";
+import { LoadMoreFooter } from "@/components/ui/data/LoadMoreFooter";
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from '@/lib/router-compat';
@@ -86,11 +92,16 @@ const paymentMethodLabels: Record<string, string> = {
   card: 'بطاقة',
 };
 
+const COLUMN_KEYS = ['number', 'category', 'description', 'amount', 'method', 'date', 'status', 'actions'];
+
 export default function ExpensesPage() {
+  const layout = useTableLayout('expenses', COLUMN_KEYS);
+  const [visibleCount, setVisibleCount] = useState(25);
   const [searchParams, setSearchParams] = useSearchParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  useEffect(() => { setVisibleCount(25); }, [statusFilter]);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -191,6 +202,22 @@ export default function ExpensesPage() {
     await refetch();
   };
 
+  const visibleExpenses = (expenses || []).slice(0, visibleCount);
+  const renderActions = (expense: Expense) => expense.status === 'pending' ? <div className="flex gap-1">
+    <Button size="icon" variant="ghost" className="h-11 w-11 text-success" aria-label="اعتماد المصروف" title="اعتماد المصروف" onClick={() => handleApprove(expense.id)} disabled={approveMutation.isPending}><CheckCircle className="h-4 w-4" /></Button>
+    <Button size="icon" variant="ghost" className="h-11 w-11 text-destructive" aria-label="رفض المصروف" title="رفض المصروف" onClick={() => handleRejectClick(expense.id)} disabled={approveMutation.isPending}><XCircle className="h-4 w-4" /></Button>
+  </div> : null;
+  const columns: WorkspaceColumn<Expense>[] = [
+    { key: 'number', label: 'رقم المصروف', render: expense => <Button variant="link" className="min-h-11 px-0" onClick={() => handleEdit(expense)}>{expense.expense_number}</Button> },
+    { key: 'category', label: 'التصنيف', render: expense => expense.category?.name || '-' },
+    { key: 'description', label: 'الوصف', render: expense => expense.description || '-' },
+    { key: 'amount', label: 'المبلغ', render: expense => <Amount value={Number(expense.amount)} /> },
+    { key: 'method', label: 'طريقة الدفع', render: expense => paymentMethodLabels[expense.payment_method] },
+    { key: 'date', label: 'التاريخ', render: expense => format(new Date(expense.expense_date), 'dd/MM/yyyy') },
+    { key: 'status', label: 'الحالة', render: expense => <Badge variant={statusColors[expense.status]}>{statusLabels[expense.status]}</Badge> },
+    { key: 'actions', label: 'إجراءات', render: renderActions },
+  ];
+
   const content = (
     <div className="space-y-6">
       <PageHeader
@@ -214,7 +241,7 @@ export default function ExpensesPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">معلقة ({stats?.pendingCount || 0})</p>
-                <p className="text-xl font-bold">{(stats?.pending || 0).toLocaleString()} ج.م</p>
+                <p className="text-xl font-bold"><KpiAmount value={stats?.pending || 0} /></p>
               </div>
             </div>
           </CardContent>
@@ -228,7 +255,7 @@ export default function ExpensesPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">معتمدة</p>
-                <p className="text-xl font-bold text-success">{(stats?.approved || 0).toLocaleString()} ج.م</p>
+                <p className="text-xl font-bold text-success"><KpiAmount value={stats?.approved || 0} /></p>
               </div>
             </div>
           </CardContent>
@@ -242,7 +269,7 @@ export default function ExpensesPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">إجمالي المعتمد</p>
-                <p className="text-xl font-bold">{(stats?.approved || 0).toLocaleString()} ج.م</p>
+                <p className="text-xl font-bold"><KpiAmount value={stats?.approved || 0} /></p>
               </div>
             </div>
           </CardContent>
@@ -282,88 +309,17 @@ export default function ExpensesPage() {
           }
         />
       ) : isMobile ? (
-        <div className="space-y-3">
-          {expenses?.map((expense) => (
-            <DataCard
-              key={expense.id}
-              title={expense.description || expense.category?.name || 'مصروف'}
-              subtitle={format(new Date(expense.expense_date), 'dd MMM yyyy', { locale: ar })}
-              badge={{
-                text: statusLabels[expense.status],
-                variant: statusColors[expense.status],
-              }}
-              fields={[
-                { label: 'الرقم', value: expense.expense_number },
-                { label: 'المبلغ', value: `${Number(expense.amount).toLocaleString()} ج.م` },
-                { label: 'الدفع', value: paymentMethodLabels[expense.payment_method] },
-              ]}
-              onClick={() => handleEdit(expense)}
-            />
-          ))}
-        </div>
+        <div className="space-y-3">{visibleExpenses.map(expense => <MobileExpandableCard key={expense.id}
+          title={<Button variant="link" className="min-h-11 h-auto whitespace-normal px-0 text-start" onClick={() => handleEdit(expense)}>{expense.description || expense.category?.name || expense.expense_number}</Button>}
+          amount={<Amount value={Number(expense.amount)} />}
+          status={<Badge variant={statusColors[expense.status]}>{statusLabels[expense.status]}</Badge>}
+          details={[{ label: 'الرقم', value: expense.expense_number }, { label: 'التاريخ', value: format(new Date(expense.expense_date), 'dd/MM/yyyy') }, { label: 'الدفع', value: paymentMethodLabels[expense.payment_method] }]}
+          actions={renderActions(expense)} />)}</div>
       ) : (
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>رقم المصروف</TableHead>
-                <TableHead>التصنيف</TableHead>
-                <TableHead>الوصف</TableHead>
-                <TableHead>المبلغ</TableHead>
-                <TableHead>طريقة الدفع</TableHead>
-                <TableHead>التاريخ</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead>إجراءات</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {expenses?.map((expense) => (
-                <TableRow key={expense.id}>
-                  <TableCell className="font-mono">{expense.expense_number}</TableCell>
-                  <TableCell>{expense.category?.name || '-'}</TableCell>
-                  <TableCell>{expense.description || '-'}</TableCell>
-                  <TableCell>{Number(expense.amount).toLocaleString()} ج.م</TableCell>
-                  <TableCell>{paymentMethodLabels[expense.payment_method]}</TableCell>
-                  <TableCell>{format(new Date(expense.expense_date), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusColors[expense.status]}>
-                      {statusLabels[expense.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {expense.status === 'pending' && (
-                      <div className="flex gap-1">
-                        <Button 
-                          size="icon" 
-                          variant="ghost"
-                          className="h-8 w-8 text-success"
-                          onClick={() => handleApprove(expense.id)}
-                          disabled={approveMutation.isPending}
-                        >
-                          {approveMutation.isPending ? (
-                            <ShieldCheck className="h-4 w-4 animate-pulse" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="ghost"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => handleRejectClick(expense.id)}
-                          disabled={approveMutation.isPending}
-                        >
-                          <XCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
+        <div className="space-y-3"><div className="flex justify-end"><TableViewOptions layout={layout} columns={columns} /></div><WorkspaceTable rows={visibleExpenses} columns={columns} layout={layout} /></div>
       )}
+      {!isLoading && !error && <LoadMoreFooter shown={visibleExpenses.length} total={expenses?.length || 0} hasMore={visibleExpenses.length < (expenses?.length || 0)} onLoadMore={() => setVisibleCount(count => count + 25)} />}
+
 
       <ExpenseFormDialog
         open={isDialogOpen}
