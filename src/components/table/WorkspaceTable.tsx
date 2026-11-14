@@ -2,12 +2,16 @@ import type { ReactNode } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { DENSITY_CLASS, type TableLayout } from '@/hooks/useTableLayout';
+import { Button } from '@/components/ui/button';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 
 export interface WorkspaceColumn<T> {
   key: string;
   label: string;
   render: (row: T) => ReactNode;
   header?: ReactNode;
+  onSort?: () => void;
+  sortDirection?: 'asc' | 'desc' | null;
 }
 
 /** Presentation only: data, actions and query scope remain owned by the page. */
@@ -31,7 +35,7 @@ export function WorkspaceTable<T extends { id: string }>({ rows, columns, layout
         <TableHeader className="sticky top-0 z-20 bg-card">
           <TableRow>
             {selection && <TableHead className="w-11">{selection.header}</TableHead>}
-            {visible.map((column, index) => <TableHead key={column.key} className={pinned(index, column.key)}>{column.header ?? column.label}</TableHead>)}
+            {visible.map((column, index) => <TableHead key={column.key} className={pinned(index, column.key)}>{column.onSort ? <Button variant="ghost" size="sm" className="gap-1 px-0" onClick={column.onSort}>{column.label}{column.sortDirection === 'asc' && <ArrowUp className="h-3 w-3" />}{column.sortDirection === 'desc' && <ArrowDown className="h-3 w-3" />}</Button> : column.header ?? column.label}</TableHead>)}
           </TableRow>
         </TableHeader>
         <TableBody>
