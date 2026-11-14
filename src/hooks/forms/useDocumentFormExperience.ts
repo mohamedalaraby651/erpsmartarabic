@@ -31,15 +31,17 @@ export function useDocumentFormExperience<T extends FieldValues, L>({ form, line
   const guard = useUnsavedChangesGuard(open && (form.formState.isDirty || linesDirty), close);
   const save = async () => {
     if (busy) return;
-    await submit();
-    if (!form.formState.isValid) {
+    const valid = await form.trigger(undefined, { shouldFocus: false });
+    if (!valid) {
       requestAnimationFrame(() => {
         const dialog = document.querySelector<HTMLElement>('[role="dialog"][data-state="open"]');
         const invalid = dialog?.querySelector<HTMLElement>('[aria-invalid="true"]');
         invalid?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         invalid?.focus({ preventScroll: true });
       });
+      return;
     }
+    await submit();
   };
   useSaveShortcut(() => { if (!guard.confirmOpen) void save(); }, open && !busy && !guard.confirmOpen);
   return {

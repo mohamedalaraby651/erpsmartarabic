@@ -62,10 +62,10 @@ async function logoPng(url: string): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-export async function exportWorkspaceExcel(data: readonly unknown[], columns: readonly ExportColumn[], title: string, filename: string) {
+export async function exportWorkspaceExcel(data: readonly unknown[], columns: readonly ExportColumn[], title: string, filename: string, options: { includeLogo?: boolean; includeCompanyInfo?: boolean } = {}) {
   const company = await getCompanySettings();
-  const logo = company?.logo_url ? await logoPng(company.logo_url) : undefined;
-  const bytes = await createWorkspaceWorkbook({ data, columns, title, companyName: company?.company_name, logo });
+  const logo = options.includeLogo !== false && company?.logo_url ? await logoPng(company.logo_url) : undefined;
+  const bytes = await createWorkspaceWorkbook({ data, columns, title, companyName: options.includeCompanyInfo === false ? undefined : company?.company_name, logo });
   const blob = new Blob([new Uint8Array(bytes)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

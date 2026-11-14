@@ -140,7 +140,7 @@ export function ExportWithTemplateButton({
           break;
 
         case 'excel':
-          await exportWorkspaceExcel(data, exportColumns, sectionLabel, filename);
+          await exportWorkspaceExcel(data, exportColumns, sectionLabel, filename, { includeLogo, includeCompanyInfo });
           break;
 
         case 'csv':
@@ -304,7 +304,7 @@ export function ExportWithTemplateButton({
             </div>
 
             {/* PDF Options */}
-            {selectedFormat === 'pdf' && (
+            {(selectedFormat === 'pdf' || selectedFormat === 'excel') && (
               <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Checkbox

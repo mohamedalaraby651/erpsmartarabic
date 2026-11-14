@@ -31,7 +31,7 @@ export function WorkspaceTable<T extends { id: string }>({ rows, columns, layout
   );
   return (
     <div className="max-w-full overflow-auto" style={{ maxHeight: layout.bodyHeight || undefined }}>
-      <Table className={cn('min-w-max', DENSITY_CLASS[layout.density])}>
+      <Table containerClassName="overflow-visible" className={cn('min-w-max', DENSITY_CLASS[layout.density])}>
         <TableHeader className="sticky top-0 z-20 bg-card">
           <TableRow>
             {selection && <TableHead className="w-11">{selection.header}</TableHead>}

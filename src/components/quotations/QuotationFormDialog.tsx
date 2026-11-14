@@ -169,7 +169,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     }
     wizard.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quotation]);
+  }, [quotation, open]);
 
   const Step1 = (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
