@@ -1,6 +1,9 @@
 import { memo, useCallback } from "react";
-import { DataCard } from "@/components/mobile/DataCard";
-import { VirtualizedMobileList } from "@/components/table/VirtualizedMobileList";
+import { MobileExpandableCard } from "@/components/ui/data/MobileExpandableCard";
+import { Amount } from "@/components/shared/amount/Amount";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DataTableActions } from "@/components/ui/data-table-actions";
 import { ListStateRenderer } from "@/components/shared/ListStateRenderer";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { Building2, Phone, MapPin, Users, Plus } from "lucide-react";
@@ -29,20 +32,16 @@ export const SupplierMobileView = memo(function SupplierMobileView({
   hasFilters, onClearFilters, canEdit, canDelete,
 }: SupplierMobileViewProps) {
   const renderItem = useCallback((supplier: Supplier) => (
-    <DataCard
-      title={supplier.name}
-      subtitle={supplier.contact_person || 'بدون جهة اتصال'}
-      badge={{ text: supplier.is_active ? 'نشط' : 'غير نشط', variant: supplier.is_active ? 'default' : 'secondary' }}
-      icon={<Building2 className="h-5 w-5" />}
-      fields={[
-        { label: 'الهاتف', value: supplier.phone || '-', icon: <Phone className="h-4 w-4" /> },
-        { label: 'المحافظة', value: supplier.governorate || '-', icon: <MapPin className="h-4 w-4" /> },
-        { label: 'الرصيد', value: `${(supplier.current_balance || 0).toLocaleString()} ج.م` },
+    <MobileExpandableCard
+      title={<Button variant="link" className="min-h-11 h-auto whitespace-normal px-0 text-start" onClick={() => onRowClick(supplier)}>{supplier.name}</Button>}
+      amount={<Amount value={supplier.current_balance} />}
+      status={<Badge variant={supplier.is_active ? 'default' : 'secondary'}>{supplier.is_active ? 'نشط' : 'غير نشط'}</Badge>}
+      details={[
+        { label: 'جهة الاتصال', value: supplier.contact_person || '-' },
+        { label: 'الهاتف', value: supplier.phone || '-' },
+        { label: 'المحافظة', value: supplier.governorate || '-' },
       ]}
-      onClick={() => onRowClick(supplier)}
-      onView={() => onRowClick(supplier)}
-      onEdit={canEdit && onEdit ? () => onEdit(supplier) : undefined}
-      onDelete={canDelete && onDelete ? () => onDelete(supplier.id) : undefined}
+      actions={<DataTableActions onEdit={canEdit && onEdit ? () => onEdit(supplier) : undefined} onDelete={canDelete && onDelete ? () => onDelete(supplier.id) : undefined} canEdit={canEdit} canDelete={canDelete} />}
     />
   ), [onRowClick, canEdit, canDelete, onEdit, onDelete]);
 
@@ -63,11 +62,7 @@ export const SupplierMobileView = memo(function SupplierMobileView({
         }}
         skeletonCount={5}
       >
-        {suppliers.length > 50 ? (
-          <VirtualizedMobileList data={suppliers} renderItem={renderItem} getItemKey={(s: Supplier) => s.id} itemHeight={150} />
-        ) : (
-          <div className="space-y-3">{suppliers.map(s => <div key={s.id}>{renderItem(s)}</div>)}</div>
-        )}
+        <div className="space-y-3">{suppliers.map(s => <div key={s.id}>{renderItem(s)}</div>)}</div>
       </ListStateRenderer>
     </PullToRefresh>
   );

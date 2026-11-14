@@ -24,8 +24,8 @@ export function useSupplierList(options: UseSupplierListOptions) {
 
   const filterKey = [debouncedSearch, governorateFilter, categoryFilter, statusFilter];
 
-  const { data: queryResult, isLoading, refetch, error } = useQuery({
-    queryKey: ['suppliers', ...filterKey, currentPage, sortConfig.key, sortConfig.direction],
+  const { data: queryResult, isLoading, isFetching, refetch, error } = useQuery({
+    queryKey: ['suppliers', ...filterKey, currentPage, pageSize, sortConfig.key, sortConfig.direction],
     placeholderData: keepPreviousData,
     queryFn: () => supplierRepository.findAll(
       {
@@ -46,6 +46,7 @@ export function useSupplierList(options: UseSupplierListOptions) {
     suppliers,
     totalCount,
     isLoading,
+    isFetching,
     error: error as Error | null,
     refetch,
     filterKey,
