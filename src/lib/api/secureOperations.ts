@@ -168,6 +168,17 @@ export async function approveExpense(
     });
 
     if (error) {
+      // Non-2xx responses carry the workflow code in the response body,
+      // not in `data`. Preserve expected denials instead of losing them.
+      const context: unknown = typeof error === 'object' && error !== null && 'context' in error
+        ? error.context : undefined;
+      if (context instanceof Response) {
+        let body: unknown;
+        try { body = await context.clone().json(); } catch { /* non-JSON response */ }
+        const code = typeof body === 'object' && body !== null && 'code' in body && typeof body.code === 'string'
+          ? body.code : context.status === 403 ? 'NO_PERMISSION' : context.status === 401 ? 'UNAUTHORIZED' : undefined;
+        if (code) return { success: false, code, error: getErrorMessage(code) };
+      }
       logErrorSafely('secureOperations.approveExpense', error);
       return {
         success: false,

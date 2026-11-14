@@ -145,13 +145,13 @@ export default function ExpensesPage() {
         rejection_reason,
       });
 
-      if (!result.success) {
-        throw new Error(getErrorMessage(result.code || 'APPROVAL_ERROR'));
-      }
-
       return result;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
+      if (!result.success) {
+        toast({ title: 'تعذر معالجة المصروف', description: getErrorMessage(result.code || 'APPROVAL_ERROR'), variant: 'destructive' });
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['expenses-stats'] });
       toast({ 

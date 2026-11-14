@@ -177,6 +177,21 @@ describe('Edge Function Security', () => {
   });
 
   describe('approveExpense', () => {
+    it('preserves NO_PERMISSION from a 403 response without throwing or logging a runtime error', async () => {
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockInvoke.mockResolvedValueOnce({ data: null, error: Object.assign(new Error('Edge function returned 403'), { context: new Response(JSON.stringify({ success: false, error: 'Only admins and accountants can approve expenses', code: 'NO_PERMISSION' }), { status: 403 }) }) });
+      try {
+        const result = await approveExpense({ expense_id: 'exp-123', action: 'approve' });
+        expect(result).toEqual({ success: false, code: 'NO_PERMISSION', error: 'ليس لديك صلاحية للقيام بهذا الإجراء' });
+        expect(log).not.toHaveBeenCalled();
+      } finally { log.mockRestore(); }
+    });
+    it('handles a non-JSON forbidden rejection without bypassing the refusal', async () => {
+      mockInvoke.mockResolvedValueOnce({ data: null, error: Object.assign(new Error('Forbidden'), { context: new Response('Forbidden', { status: 403 }) }) });
+      const result = await approveExpense({ expense_id: 'exp-123', action: 'reject', rejection_reason: 'مراجعة' });
+      expect(result.success).toBe(false);
+      expect(result.code).toBe('NO_PERMISSION');
+    });
     it('should call approve-expense edge function for approval', async () => {
       mockInvoke.mockResolvedValueOnce({
         data: { 

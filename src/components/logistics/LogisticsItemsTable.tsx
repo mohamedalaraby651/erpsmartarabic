@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { productRepository } from "@/application/queries/products";
 import { queryKeys } from "@/lib/queryKeys";
@@ -36,13 +35,7 @@ interface Props {
 }
 
 export default function LogisticsItemsTable({ value, onChange, columns, newRow }: Props) {
-  const [rows, setRows] = useState<ItemRow[]>(value);
-
-  // Sync rows -> parent
-  useEffect(() => {
-    onChange(rows);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]);
+  const rows = value;
 
   const { data: products = [] } = useQuery({
     queryKey: [...queryKeys.products.lists(), 'light'] as const,
@@ -55,22 +48,22 @@ export default function LogisticsItemsTable({ value, onChange, columns, newRow }
       if (c.default !== undefined) base[c.key] = c.default;
       else if (c.type === "number") base[c.key] = 0;
     });
-    setRows((r) => [...r, { ...base, ...(newRow?.() || {}) }]);
+    onChange([...rows, { ...base, ...(newRow?.() || {}) }]);
   };
 
   const updateRow = (idx: number, patch: Partial<ItemRow>) => {
-    setRows((r) => r.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
+    onChange(rows.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
   };
 
   const removeRow = (idx: number) => {
-    setRows((r) => r.filter((_, i) => i !== idx));
+    onChange(rows.filter((_, i) => i !== idx));
   };
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label>البنود ({rows.length})</Label>
-        <Button type="button" size="sm" variant="outline" onClick={addRow}>
+        <Button type="button" size="sm" variant="outline" className="min-h-11" onClick={addRow}>
           <Plus className="h-4 w-4 ml-1" />
           إضافة بند
         </Button>
@@ -85,10 +78,7 @@ export default function LogisticsItemsTable({ value, onChange, columns, newRow }
           {rows.map((row, idx) => (
             <div
               key={idx}
-              className="grid gap-2 p-3 border rounded-md bg-muted/20"
-              style={{
-                gridTemplateColumns: `2fr ${columns.map(() => "1fr").join(" ")} auto`,
-              }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 p-3 border rounded-md bg-muted/20"
             >
               <Select
                 value={row.product_id}
@@ -105,7 +95,7 @@ export default function LogisticsItemsTable({ value, onChange, columns, newRow }
                   });
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-label={`المنتج ${idx + 1}`} className="min-h-11">
                   <SelectValue placeholder="اختر المنتج" />
                 </SelectTrigger>
                 <SelectContent>
@@ -124,6 +114,8 @@ export default function LogisticsItemsTable({ value, onChange, columns, newRow }
                   step={col.step}
                   min={col.min}
                   placeholder={col.label}
+                  aria-label={`${col.label} ${idx + 1}`}
+                  className="min-h-11"
                   value={row[col.key] ?? ""}
                   onChange={(e) =>
                     updateRow(idx, {
@@ -139,7 +131,8 @@ export default function LogisticsItemsTable({ value, onChange, columns, newRow }
                 size="icon"
                 variant="ghost"
                 onClick={() => removeRow(idx)}
-                className="text-destructive hover:bg-destructive/10"
+                aria-label={`حذف البند ${idx + 1}`}
+                className="min-h-11 min-w-11 text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
