@@ -10,6 +10,7 @@ import { useTenant } from '@/hooks/useTenant';
 import { GlobalSearchTrigger } from './shared/GlobalSearchTrigger';
 import { NotificationsBell } from './shared/NotificationsBell';
 import { UserMenu } from './shared/UserMenu';
+import { BalancePrivacyToggle } from '@/components/shared/amount/BalancePrivacyToggle';
 
 interface MobileHeaderProps {
   onMenuOpen?: () => void;
@@ -108,6 +109,7 @@ export default function MobileHeader({ onMenuOpen }: MobileHeaderProps) {
           <Layers className="h-3.5 w-3.5 text-white" />
         </div>
 
+        <BalancePrivacyToggle />
         <UserMenu compact />
       </div>
     </header>
