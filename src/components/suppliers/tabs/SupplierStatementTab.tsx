@@ -61,7 +61,7 @@ const SupplierStatementTab = ({ supplierId, supplierName }: SupplierStatementTab
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         openingBalance,
-        printedBy: typeof user?.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : undefined,
+        printedBy: typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim() ? user.user_metadata.full_name : user?.email,
         entries,
       });
       toast({ title: 'تم تصدير كشف الحساب' });
