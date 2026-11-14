@@ -4,7 +4,8 @@ export const MAX_TABS = 10;
 const KEY = 'nazra:workspace-tabs';
 
 export function openTab(tabs: WorkspaceTab[], tab: WorkspaceTab): WorkspaceTab[] {
-  const i = tabs.findIndex((t) => t.path === tab.path);
+  const base = (p: string) => p.split('?')[0];
+  const i = tabs.findIndex((t) => base(t.path) === base(tab.path));
   if (i >= 0) return tabs.map((t, k) => (k === i ? tab : t));
   const next = [...tabs, tab];
   return next.length > MAX_TABS ? next.slice(next.length - MAX_TABS) : next;

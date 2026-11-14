@@ -25,8 +25,7 @@ export function WorkspaceTabsBar() {
   useEffect(() => {
     const path = current + (location.search ?? '');
     setTabs((prev) => {
-      const without = prev.filter((t) => t.path.split('?')[0] !== current);
-      const next = openTab(without.length === prev.length ? prev : [...without], { path, label: labelFor(current) });
+      const next = openTab(prev, { path, label: labelFor(current) });
       saveTabs(next);
       return next;
     });
