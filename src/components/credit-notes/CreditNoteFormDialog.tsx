@@ -236,7 +236,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
         </DialogHeader>
 
         <div className="space-y-4">
-          {experience.hasDraft && <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} />
+          {experience.hasDraft && <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} />}
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <Label>العميل *</Label>
