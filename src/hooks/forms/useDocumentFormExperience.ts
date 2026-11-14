@@ -29,10 +29,23 @@ export function useDocumentFormExperience<T extends FieldValues, L>({ form, line
     autoSave: form.formState.isDirty || linesDirty,
   });
   const guard = useUnsavedChangesGuard(open && (form.formState.isDirty || linesDirty), close);
-  useSaveShortcut(() => { if (!busy && !guard.confirmOpen) void submit(); }, open && !busy && !guard.confirmOpen);
+  const save = async () => {
+    if (busy) return;
+    await submit();
+    if (!form.formState.isValid) {
+      requestAnimationFrame(() => {
+        const dialog = document.querySelector<HTMLElement>('[role="dialog"][data-state="open"]');
+        const invalid = dialog?.querySelector<HTMLElement>('[aria-invalid="true"]');
+        invalid?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        invalid?.focus({ preventScroll: true });
+      });
+    }
+  };
+  useSaveShortcut(() => { if (!guard.confirmOpen) void save(); }, open && !busy && !guard.confirmOpen);
   return {
     ...guard,
     ...draft,
+    save,
     onOpenChange: (next: boolean) => { if (!next && !busy) guard.requestClose(); },
     restore: () => {
       const saved = draft.restoreDraft();

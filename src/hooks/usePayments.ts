@@ -13,8 +13,8 @@ import {
 
 const KEYS = {
   all: ["payments"] as const,
-  list: (filters: PaymentFilters, page: number) =>
-    ["payments", "list", filters, page] as const,
+  list: (filters: PaymentFilters, page: number, pageSize: number) =>
+    ["payments", "list", filters, page, pageSize] as const,
   count: (filters: PaymentFilters) => ["payments", "count", filters] as const,
 };
 
@@ -31,7 +31,7 @@ export function usePaymentsList(
   pageSize: number,
 ) {
   return useQuery<PaymentListResult>({
-    queryKey: KEYS.list(filters, page),
+    queryKey: KEYS.list(filters, page, pageSize),
     queryFn: () => paymentRepository.list({ filters, page, pageSize }),
   });
 }
