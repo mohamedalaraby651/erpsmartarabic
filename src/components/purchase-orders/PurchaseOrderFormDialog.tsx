@@ -45,6 +45,9 @@ import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
 import { useFormDialog } from "@/hooks/useFormDialog";
+import { useDocumentFormExperience } from "@/hooks/forms/useDocumentFormExperience";
+import { DraftRestoreBanner } from "@/components/shared/forms/DraftRestoreBanner";
+import { UnsavedChangesDialog } from "@/components/shared/forms/UnsavedChangesDialog";
 import FormDialogFooter from "@/components/shared/FormDialogFooter";
 import FormFieldError from "@/components/shared/FormFieldError";
 import { listActiveSuppliersForSelect } from "@/application/queries/suppliers";
@@ -101,6 +104,7 @@ const PurchaseOrderFormDialog = ({
 }: PurchaseOrderFormDialogProps) => {
   const { user } = useAuth();
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [baselineItems, setBaselineItems] = useState("[]");
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers", "active-select"],
@@ -176,8 +180,18 @@ const PurchaseOrderFormDialog = ({
       }
     },
     // Toasts + cache invalidations are handled inside the create/update hooks.
-    onSuccess: () => onOpenChange(false),
+    onSuccess: () => { experience.clearDraft(); onOpenChange(false); },
   });
+
+  const experience = useDocumentFormExperience({
+    form, lines: items, restoreLines: setItems,
+    documentKey: `purchase_order_${order?.id ?? 'new'}`,
+    open, busy: isSubmitting, submit, close: () => onOpenChange(false),
+    linesDirty: JSON.stringify(items) !== baselineItems,
+    onInvalid: () => wizard.goToStep(0),
+  });
+  const draftBanner = experience.hasDraft
+    ? <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} /> : null;
 
   // Sync line items when entity changes (external state — outside the hook contract).
   useEffect(() => {
@@ -187,28 +201,29 @@ const PurchaseOrderFormDialog = ({
         .listItems(order.id)
         .then((rows) => {
           if (cancelled) return;
-          setItems(
-            rows.map((i) => ({
+          const loaded = rows.map((i) => ({
               product_id: i.product_id,
               product_name: i.products?.name || "",
               quantity: Number(i.quantity),
               unit_price: Number(i.unit_price),
               total_price: Number(i.total_price),
-            })),
-          );
+            }));
+          setItems(loaded);
+          setBaselineItems(JSON.stringify(loaded));
         })
         .catch(() => {
           /* swallow — items remain empty */
         });
     } else {
       setItems([]);
+      setBaselineItems("[]");
     }
     wizard.reset();
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order]);
+  }, [order, open]);
 
   const addItem = () =>
     setItems([
@@ -331,10 +346,10 @@ const PurchaseOrderFormDialog = ({
         <Select
           value={form.watch("supplier_id")}
           onValueChange={(v) =>
-            form.setValue("supplier_id", v, { shouldValidate: true })
+            form.setValue("supplier_id", v, { shouldValidate: true, shouldDirty: true })
           }
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="المورد" aria-invalid={!!form.formState.errors.supplier_id}>
             <SelectValue placeholder="اختر المورد" />
           </SelectTrigger>
           <SelectContent>
@@ -389,27 +404,28 @@ const PurchaseOrderFormDialog = ({
   );
 
   const wizardSteps = [
-    { title: "بيانات المورد", content: Step1 },
+    { title: "بيانات المورد", content: <>{draftBanner}{Step1}</> },
     { title: "المنتجات", content: ItemsTable },
     { title: "المجاميع", content: Step3 },
   ];
 
   const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={experience.onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "تعديل أمر الشراء" : "أمر شراء جديد"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={event => { event.preventDefault(); void experience.save(); }} className="space-y-6">
+          {draftBanner}
           {Step1}
           {ItemsTable}
           {Step3}
           <FormDialogFooter
             isEditing={isEditing}
             isSubmitting={isSubmitting}
-            onCancel={() => onOpenChange(false)}
+            onCancel={experience.requestClose}
             submitLabel={isEditing ? "تحديث" : "إنشاء"}
           />
         </form>
@@ -420,20 +436,20 @@ const PurchaseOrderFormDialog = ({
   const mobileForm = (
     <FullScreenForm
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={experience.onOpenChange}
       title={isEditing ? "تعديل أمر الشراء" : "أمر شراء جديد"}
       steps={wizardSteps}
       activeStep={wizard.currentStep}
       onNext={wizard.nextStep}
       onPrev={wizard.prevStep}
-      onSubmit={submit}
+      onSubmit={experience.save}
       progress={wizard.progress}
       isSubmitting={isSubmitting}
       submitLabel={isEditing ? "تحديث" : "إنشاء"}
     />
   );
 
-  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
+  return <><AdaptiveContainer desktop={desktopForm} mobile={mobileForm} /><UnsavedChangesDialog open={experience.confirmOpen} onOpenChange={experience.setConfirmOpen} onConfirm={experience.confirmLeave} /></>;
 };
 
 export default PurchaseOrderFormDialog;
