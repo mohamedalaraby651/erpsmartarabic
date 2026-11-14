@@ -17,6 +17,8 @@ import { customerRepository } from "@/application/queries/customers";
 import { productRepository } from "@/application/queries/products";
 import { queryKeys } from "@/lib/queryKeys";
 import { useInvoiceItems } from "./useInvoiceItems";
+import { findBelowCostLines, type BelowCostLine } from "@/lib/pricing/belowCost";
+import { BelowCostConfirmDialog } from "./BelowCostConfirmDialog";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { useSaveShortcut } from "@/hooks/forms/useSaveShortcut";
 import { useUnsavedChangesGuard } from "@/hooks/forms/useUnsavedChangesGuard";
@@ -191,8 +193,19 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const formRef = useRef<HTMLFormElement>(null);
   const hasUnsaved = open && !isSubmitting && (isDirty || (items.length > 0 && !lastSavedId));
   const guard = useUnsavedChangesGuard(hasUnsaved, () => onOpenChange(false));
-  const handleSubmit = async (e?: React.FormEvent) => {
+  // Decision 356: orange warning + confirmation before selling below cost
+  const belowCostConfirmed = useRef(false);
+  const [belowCost, setBelowCost] = useState<BelowCostLine[] | null>(null);
+  const gatedSubmit = async (e?: React.FormEvent) => {
+    if (!belowCostConfirmed.current) {
+      const lines = findBelowCostLines(items, products);
+      if (lines.length > 0) { e?.preventDefault(); setBelowCost(lines); return; }
+    }
+    belowCostConfirmed.current = false;
     await submit(e);
+  };
+  const handleSubmit = async (e?: React.FormEvent) => {
+    await gatedSubmit(e);
     const n = scrollToFirstError(formRef.current ?? document);
     if (n > 0) sonnerToast.error(`يوجد ${n} حقل يحتاج إلى استكمال`);
   };
@@ -281,7 +294,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
       title={isEditing ? 'تعديل الفاتورة' : 'فاتورة جديدة'}
       steps={wizardSteps} activeStep={wizard.currentStep}
       onNext={wizard.nextStep} onPrev={wizard.prevStep}
-      onSubmit={submit} progress={wizard.progress}
+      onSubmit={gatedSubmit} progress={wizard.progress}
       isSubmitting={isSubmitting || isValidating}
       submitLabel={isEditing ? 'تحديث' : 'إنشاء'}
     />
@@ -290,6 +303,15 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   return (
     <>
       <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />
+      <BelowCostConfirmDialog
+        lines={belowCost}
+        onCancel={() => setBelowCost(null)}
+        onConfirm={() => {
+          setBelowCost(null);
+          belowCostConfirmed.current = true;
+          if (formRef.current) formRef.current.requestSubmit(); else void gatedSubmit();
+        }}
+      />
       <UnsavedChangesDialog open={guard.confirmOpen} onOpenChange={guard.setConfirmOpen} onConfirm={guard.confirmLeave} />
       {lastSavedId && (
         <InvoicePrintView
