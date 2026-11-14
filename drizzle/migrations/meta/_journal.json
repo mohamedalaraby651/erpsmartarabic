@@ -71,6 +71,13 @@
       "when": 1794617283941,
       "tag": "0009_financial_period_reopen_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794618145874,
+      "tag": "0010_scope_logo_reads_to_tenant",
+      "breakpoints": true
     }
   ]
 }
