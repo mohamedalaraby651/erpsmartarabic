@@ -37,6 +37,14 @@
 - [ ] معالجة المخاطر المفتوحة RISK-007 / RISK-008 / PRE-EXT-001
 
 ## Track C — PRB-NAZRA-002 Execution (by priority)
+### Current execution — approved remaining-work plan (2026-11-14)
+- [ ] Shared configurable RTL tables + supplier/payment/expense integration and mobile expandable cards.
+- [ ] Remaining document form shortcuts, leave protection, draft recovery and validation focus.
+- [ ] Financial reversal, discount/overdraft exceptions and rounding ledger; approval and backup confirmation recorded, requires integrity verification.
+- [ ] Official Excel header and print context integration.
+- [ ] Remaining reports/statements/audit and mobile end-to-end checks.
+- [ ] Final tests and evidence; no completion claims for unverified tasks.
+
 مرجع: `docs/requirements/PRB-NAZRA-002_Interview-Decisions-Knowledge-Base.md`. كل دفعة مستقلة بقبول.
 - [x] C1 أساسيات العرض (منخفض المخاطر): قواعد الجنيه (فاصل آلاف، سالب بناقص، صفر "-"، مختصر KPI) + اختبارات، تأكيد الخروج، Toast أسفل اليسار 3ث، أشرطة تمرير رفيعة
 - [x] C2 (partial) جنيه في التقارير/الطباعة/صفحات التفاصيل/جدول الفواتير/بطاقات المؤشرات + زر إخفاء الأرصدة. متبقٍ: باقي الجداول وبطاقات الملخص. تعميم تنسيق المبالغ على الجداول وبطاقات KPI (استبدال المنسقات القديمة؛ PDF ما زال على SAR — يحتاج تحويل لـ EGP)
