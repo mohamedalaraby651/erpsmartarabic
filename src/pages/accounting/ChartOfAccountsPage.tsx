@@ -1,6 +1,6 @@
 import { searchAccountTree } from '@/lib/accounting/accountTreeSearch';
 import type { JSX } from 'react';
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useChartOfAccounts } from "@/hooks/accounting";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
