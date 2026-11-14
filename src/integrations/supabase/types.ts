@@ -195,6 +195,51 @@ export type Database = {
           },
         ]
       }
+      approval_requests: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          entity_id: string
+          id: string
+          reason: string
+          request_type: string
+          requested_by: string
+          resolution_reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          entity_id: string
+          id?: string
+          reason: string
+          request_type?: string
+          requested_by: string
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          entity_id?: string
+          id?: string
+          reason?: string
+          request_type?: string
+          requested_by?: string
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       attachments: {
         Row: {
           category: string | null
@@ -7294,6 +7339,14 @@ export type Database = {
       refresh_customer_stats_mv: { Args: never; Returns: undefined }
       refresh_enterprise_mvs: { Args: never; Returns: undefined }
       refresh_mv_dashboard_counts: { Args: never; Returns: undefined }
+      request_period_reopen: {
+        Args: { _period_id: string; _reason: string }
+        Returns: string
+      }
+      resolve_period_reopen: {
+        Args: { _approve: boolean; _reason?: string; _request_id: string }
+        Returns: undefined
+      }
       resolve_posting_account: {
         Args: { _posting_key: string; _tenant_id: string }
         Returns: string
