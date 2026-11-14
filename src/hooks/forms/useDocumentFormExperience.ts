@@ -7,7 +7,7 @@ import { useSaveShortcut } from './useSaveShortcut';
 import { useUnsavedChangesGuard } from './useUnsavedChangesGuard';
 
 /** Local drafts are scoped by tenant, user and document; never grant posting authority. */
-export function useDocumentFormExperience<T extends FieldValues, L>({ form, lines, restoreLines, documentKey, open, busy, submit, close, linesDirty = false }: {
+export function useDocumentFormExperience<T extends FieldValues, L>({ form, lines, restoreLines, documentKey, open, busy, submit, close, linesDirty = false, onInvalid }: {
   form: UseFormReturn<T>;
   lines: L;
   restoreLines: (lines: L) => void;
@@ -17,6 +17,8 @@ export function useDocumentFormExperience<T extends FieldValues, L>({ form, line
   submit: () => Promise<void>;
   close: () => void;
   linesDirty?: boolean;
+  /** Reveal the wizard step before focusing its invalid field. */
+  onInvalid?: () => void;
 }) {
   const { user } = useAuth();
   const { tenantId } = useTenant();
@@ -33,12 +35,13 @@ export function useDocumentFormExperience<T extends FieldValues, L>({ form, line
     if (busy) return;
     const valid = await form.trigger(undefined, { shouldFocus: false });
     if (!valid) {
-      requestAnimationFrame(() => {
+      onInvalid?.();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         const dialog = document.querySelector<HTMLElement>('[role="dialog"][data-state="open"]');
         const invalid = dialog?.querySelector<HTMLElement>('[aria-invalid="true"]');
         invalid?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         invalid?.focus({ preventScroll: true });
-      });
+      }));
       return;
     }
     await submit();

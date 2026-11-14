@@ -34,6 +34,10 @@ import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormDialog } from '@/hooks/useFormDialog';
 import { useMutationToast } from '@/hooks/useMutationToast';
+import { useDocumentFormExperience } from '@/hooks/forms/useDocumentFormExperience';
+import { DraftRestoreBanner } from '@/components/shared/forms/DraftRestoreBanner';
+import { UnsavedChangesDialog } from '@/components/shared/forms/UnsavedChangesDialog';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   category_id: z.string().optional(),
@@ -140,17 +144,25 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
       }
     },
     onSuccess: () => {
+      experience.clearDraft();
       toast.onSuccess();
       onOpenChange(false);
     },
     onError: handleError,
   });
 
+  const experience = useDocumentFormExperience({
+    form, lines: null, restoreLines: () => {},
+    documentKey: `expense_${expense?.id ?? 'new'}`,
+    open, busy: isSubmitting, submit, close: () => onOpenChange(false),
+  });
+
   const paymentMethod = form.watch('payment_method');
 
   const formContent = (
     <Form {...form}>
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={event => { event.preventDefault(); void experience.save(); }} className="space-y-4">
+        {experience.hasDraft && <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} />}
         <FormField control={form.control} name="category_id" render={({ field }) => (<FormItem><FormLabel>التصنيف</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="اختر التصنيف" /></SelectTrigger></FormControl><SelectContent>{categories?.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />
         <FormField control={form.control} name="amount" render={({ field }) => (<FormItem><FormLabel>المبلغ *</FormLabel><FormControl><Input type="number" placeholder="0" {...field} /></FormControl><FormMessage /></FormItem>)} />
         <FormField control={form.control} name="payment_method" render={({ field }) => (<FormItem><FormLabel>طريقة الدفع *</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="cash">نقدي</SelectItem><SelectItem value="bank">تحويل بنكي</SelectItem><SelectItem value="card">بطاقة</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
@@ -164,33 +176,35 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
 
   const mobileFooter = (
     <div className="flex gap-2">
-      <Button className="flex-1 min-h-11" disabled={isSubmitting} onClick={() => submit()}>
+      <Button className="flex-1 min-h-11" disabled={isSubmitting} onClick={() => void experience.save()}>
+        {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
         {isSubmitting ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
       </Button>
-      <Button type="button" variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>إلغاء</Button>
+      <Button type="button" variant="outline" className="min-h-11" disabled={isSubmitting} onClick={experience.requestClose}>إلغاء</Button>
     </div>
   );
 
   const desktopForm = (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={experience.onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEditing ? 'تعديل المصروف' : 'مصروف جديد'}</DialogTitle></DialogHeader>
         {formContent}
         <div className="flex gap-2 pt-4">
-          <Button className="flex-1 min-h-11" disabled={isSubmitting} onClick={() => submit()}>
+          <Button className="flex-1 min-h-11" disabled={isSubmitting} onClick={() => void experience.save()}>
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isSubmitting ? 'جاري الحفظ...' : isEditing ? 'تحديث' : 'إضافة'}
           </Button>
-          <Button type="button" variant="outline" className="min-h-11" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button type="button" variant="outline" className="min-h-11" disabled={isSubmitting} onClick={experience.requestClose}>إلغاء</Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 
   const mobileForm = (
-    <FullScreenForm open={open} onOpenChange={onOpenChange} title={isEditing ? 'تعديل المصروف' : 'مصروف جديد'} footer={mobileFooter}>
+    <FullScreenForm open={open} onOpenChange={experience.onOpenChange} title={isEditing ? 'تعديل المصروف' : 'مصروف جديد'} footer={mobileFooter}>
       {formContent}
     </FullScreenForm>
   );
 
-  return <AdaptiveContainer desktop={desktopForm} mobile={mobileForm} />;
+  return <><AdaptiveContainer desktop={desktopForm} mobile={mobileForm} /><UnsavedChangesDialog open={experience.confirmOpen} onOpenChange={experience.setConfirmOpen} onConfirm={experience.confirmLeave} /></>;
 }

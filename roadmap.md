@@ -38,9 +38,10 @@
 
 ## Track C — PRB-NAZRA-002 Execution (by priority)
 ### Current execution — approved remaining-work plan (2026-11-14)
+- [x] Continuation: purchase-order and expense local drafts, guarded close and save shortcut; 7 focused tests passed, authenticated desktop restore checks and mobile form inspection passed. Full suite: 1720 passed / 5 skipped. Evidence: `docs/governance/PRB_FORM_CONTINUATION_2026-11-14.md`.
 - [x] Shared configurable RTL tables + suppliers/payments/expenses/products/purchase-invoices integration and mobile expandable cards; live populated checks on four lists, purchase invoices empty-state only. Supplier load-more 25→27, sticky header and layout reload persistence verified.
 - [x] Form experience integrated in payments, journals, sales orders and quotations; seven-day draft safeguards and duplicate-submit lock. Payment draft restore, close protection, Ctrl+S validation verified live without financial writes.
-- [ ] Remaining document forms (purchase orders, expenses, credit notes, logistics), report/statements/audit generalization and mobile action coverage: not completed in this execution.
+- [ ] Remaining document forms (credit notes, logistics), report/statements/audit generalization and mobile action coverage: not completed. Purchase orders and expenses completed in the continuation above.
 - [ ] Financial reversal, discount/overdraft exceptions and rounding ledger; approval/backup confirmed, but DELETE-based payment flow must not be reused. Pending additive tenant-scoped atomic RPC implementation and integrity verification, not a new approval request.
 - [x] Shared Excel export with company title/logo, extraction date and nested selected-column values; real payments workbook download/logo verified. Print-context completion remains open.
 - [ ] Remaining print contexts and report/statements/audit end-to-end checks: not executed.
