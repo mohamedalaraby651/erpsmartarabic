@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   ResponsiveDialog as Dialog,
@@ -189,17 +189,14 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
 
   // Leave-protection, Ctrl+S, jump to first error (decisions 287, 340, 353)
   const formRef = useRef<HTMLFormElement>(null);
-  const guard = useUnsavedChangesGuard(open && (isDirty || items.length > 0) && !isSubmitting && !lastSavedSaved(), () => onOpenChange(false));
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    void submit(e as React.FormEvent).finally?.(() => undefined);
-    setTimeout(() => {
-      const n = scrollToFirstError(formRef.current ?? document);
-      if (n > 0) sonnerToast.error(`يوجد ${n} حقل يحتاج إلى استكمال`);
-    }, 50);
+  const hasUnsaved = open && !isSubmitting && (isDirty || (items.length > 0 && !lastSavedId));
+  const guard = useUnsavedChangesGuard(hasUnsaved, () => onOpenChange(false));
+  const handleSubmit = async (e?: React.FormEvent) => {
+    await submit(e);
+    const n = scrollToFirstError(formRef.current ?? document);
+    if (n > 0) sonnerToast.error(`يوجد ${n} حقل يحتاج إلى استكمال`);
   };
   useSaveShortcut(() => formRef.current?.requestSubmit(), open && !isSubmitting);
-  function lastSavedSaved() { return Boolean(lastSavedId) && !isDirty; }
 
   // Items state sync (external — line items intentionally outside useFormDialog per Batch 2 rule)
   useEffect(() => {
