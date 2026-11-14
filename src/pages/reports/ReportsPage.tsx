@@ -26,12 +26,15 @@ import { GeographicReport } from "@/components/reports/GeographicReport";
 import { InactiveCustomersReport } from "@/components/reports/InactiveCustomersReport";
 import { CashFlowReport } from "@/components/reports/CashFlowReport";
 import { formatEGP } from '@/lib/format/money';
+import { QuickPeriodChips } from '@/components/ui/data/QuickPeriodChips';
+import type { QuickPeriod } from '@/lib/dates/quickPeriods';
 
 export default function ReportsPage() {
   const isMobile = useIsMobile();
   const [period, setPeriod] = useState("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
+  const [quick, setQuick] = useState<QuickPeriod | null>(null);
 
   // OPA-JRN-001 / RPT-001: keep the range stable across renders. Recreating
   // `new Date()` on every render changed the query keys continuously and the
@@ -84,7 +87,7 @@ export default function ReportsPage() {
       <PageHeader title="التقارير والتحليلات" description="نظرة شاملة على أداء الأعمال" showBack />
 
       <div className="flex flex-wrap items-center gap-4">
-        <Select value={period} onValueChange={(value) => { setPeriod(value); setCustomFrom(undefined); setCustomTo(undefined); }}>
+        <Select value={period} onValueChange={(value) => { setPeriod(value); setQuick(null); setCustomFrom(undefined); setCustomTo(undefined); }}>
           <SelectTrigger className={isMobile ? "w-full" : "w-40"}><SelectValue placeholder="الفترة" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="7">آخر 7 أيام</SelectItem>
@@ -93,9 +96,17 @@ export default function ReportsPage() {
             <SelectItem value="365">آخر سنة</SelectItem>
           </SelectContent>
         </Select>
+        <QuickPeriodChips
+          active={quick}
+          onSelect={({ from, to }, p) => {
+            setQuick(p);
+            setCustomFrom(new Date(`${from}T00:00:00`));
+            setCustomTo(new Date(`${to}T23:59:59`));
+          }}
+        />
         {!isMobile && (
           <>
-            <DateRangePicker from={customFrom} to={customTo} onSelect={(from, to) => { setCustomFrom(from); setCustomTo(to); }} />
+            <DateRangePicker from={customFrom} to={customTo} onSelect={(from, to) => { setQuick(null); setCustomFrom(from); setCustomTo(to); }} />
             <ExportButton data={salesExportData} filename="تقرير_المبيعات" headers={{ date: 'التاريخ', amount: 'المبلغ', status: 'الحالة' }} />
           </>
         )}
