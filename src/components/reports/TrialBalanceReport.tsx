@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Scale, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { formatEGP } from '@/lib/format/money';
 
 interface TrialBalanceReportProps {
   asOfDate: Date;
@@ -126,9 +127,7 @@ export function TrialBalanceReport({ asOfDate }: TrialBalanceReportProps) {
     );
   }
 
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
+  const formatCurrency = (amount: number) => formatEGP(amount, { withSymbol: false });
 
   return (
     <div className="space-y-6">

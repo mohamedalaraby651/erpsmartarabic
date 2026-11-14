@@ -6,6 +6,7 @@ import QuickActions from '@/components/navigation/QuickActions';
 import OfflineIndicator from '@/components/offline/OfflineIndicator';
 import { SmartBreadcrumbs } from '@/components/navigation/SmartBreadcrumbs';
 import { UserMenu } from './shared/UserMenu';
+import { BalancePrivacyToggle } from '@/components/shared/amount/BalancePrivacyToggle';
 import { NotificationsBell } from './shared/NotificationsBell';
 import { GlobalSearchTrigger } from './shared/GlobalSearchTrigger';
 
@@ -31,6 +32,7 @@ export default function AppHeader() {
           )}
 
           <OfflineIndicator />
+          <BalancePrivacyToggle />
           <QuickActions />
           <AdminMenu />
           <NotificationsBell variant="desktop" count={3} />

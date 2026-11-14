@@ -35,6 +35,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useInvoiceDetails } from "@/hooks/invoices/useInvoiceDetails";
 import { useSeo } from "@/hooks/useSeo";
 import { buildOgImageUrl } from "@/lib/seo/ogImage";
+import { formatEGP } from '@/lib/format/money';
 
 const paymentStatusLabels: Record<string, string> = {
   pending: "غير مدفوع", partial: "جزئي", paid: "مدفوع", overdue: "متأخر",
@@ -86,11 +87,11 @@ const InvoiceDetailsPage = () => {
     invoice
       ? {
           title: `فاتورة ${invoiceNumber} - ${customerName || 'نظرة'}`,
-          description: `تفاصيل الفاتورة ${invoiceNumber}${customerName ? ` للعميل ${customerName}` : ''} بقيمة ${totalAmount.toLocaleString('ar')} ر.س.`,
+          description: `تفاصيل الفاتورة ${invoiceNumber}${customerName ? ` للعميل ${customerName}` : ''} بقيمة ${formatEGP(totalAmount)}.`,
           image: buildOgImageUrl({
             title: `فاتورة ${invoiceNumber}`,
             subtitle: customerName || 'نظرة',
-            meta: `${totalAmount.toLocaleString('ar')} ر.س`,
+            meta: `${formatEGP(totalAmount)}`,
             variant: 'invoice',
           }),
           noindex: true,

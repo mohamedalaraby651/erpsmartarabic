@@ -3,7 +3,7 @@ import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle,
 } from "@/components/ui/drawer";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { FileText, CreditCard, Target, TrendingUp } from "lucide-react";
@@ -11,6 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import type { KPIFilter } from "./types";
 import type { Database } from "@/integrations/supabase/types";
+import { ResponsiveSheetContent } from '@/components/shared/ResponsiveSheetContent';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'];
 type Payment = Database['public']['Tables']['payments']['Row'];
@@ -170,7 +171,7 @@ export const CustomerTimelineDrawer = memo(function CustomerTimelineDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[400px] sm:w-[450px]">
+      <ResponsiveSheetContent side="left" className="w-[400px] sm:w-[450px]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Icon className="h-5 w-5" />
@@ -178,7 +179,7 @@ export const CustomerTimelineDrawer = memo(function CustomerTimelineDrawer({
           </SheetTitle>
         </SheetHeader>
         <div className="mt-4">{content}</div>
-      </SheetContent>
+      </ResponsiveSheetContent>
     </Sheet>
   );
 });

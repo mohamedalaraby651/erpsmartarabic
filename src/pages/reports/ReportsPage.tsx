@@ -25,6 +25,7 @@ import { IncomeStatementReport } from "@/components/reports/IncomeStatementRepor
 import { GeographicReport } from "@/components/reports/GeographicReport";
 import { InactiveCustomersReport } from "@/components/reports/InactiveCustomersReport";
 import { CashFlowReport } from "@/components/reports/CashFlowReport";
+import { formatEGP } from '@/lib/format/money';
 
 export default function ReportsPage() {
   const isMobile = useIsMobile();
@@ -48,8 +49,7 @@ export default function ReportsPage() {
     salesTrend, collectionTrend, salesData,
   } = useReportsData(startDate, endDate);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("ar-EG", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount) + " ج.م";
+  const formatCurrency = (amount: number) => formatEGP(amount);
 
   const salesExportData = salesData?.map((s) => ({
     date: format(new Date(s.created_at), 'yyyy-MM-dd'),

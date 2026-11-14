@@ -76,6 +76,9 @@ export async function printInvoiceHtmlPdf(
   //  - Company name/tax: enrich from branding when missing
   const enriched: InvoiceHtmlData = {
     ...data,
+    previousBalance: raw.previousBalance ?? data.previousBalance,
+    printedBy: raw.printedBy ?? data.printedBy,
+    printedAt: raw.printedAt ?? data.printedAt ?? new Date().toLocaleString('en-GB', { hour12: false }),
     company: {
       ...data.company,
       logoUrl: data.company.logoUrl ?? config.header?.logoUrl,

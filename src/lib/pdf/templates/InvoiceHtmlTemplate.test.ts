@@ -71,4 +71,14 @@ describe('InvoiceHtmlTemplate', () => {
     expect(INVOICE_HTML_CSS).toContain('.invoice');
     expect(INVOICE_HTML_CSS).toContain('table.totals');
   });
+
+  it('prints previous and final balance when previousBalance is given', () => {
+    const html = renderInvoiceHtml({ ...sample, previousBalance: 1000 });
+    const { total } = computeInvoiceTotals(sample);
+    expect(html).toContain('الرصيد السابق');
+    expect(html).toContain((Math.round((1000 + total) * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 }));
+  });
+  it('omits balances block when previousBalance is not given', () => {
+    expect(renderInvoiceHtml(sample)).not.toContain('الرصيد السابق');
+  });
 });

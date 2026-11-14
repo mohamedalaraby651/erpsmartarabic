@@ -23,6 +23,7 @@ import { DataTableActions } from "@/components/ui/data-table-actions";
 import { EntityLink } from "@/components/shared/EntityLink";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Amount } from "@/components/shared/amount/Amount";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { ServerPagination } from "@/components/shared/ServerPagination";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -208,11 +209,11 @@ const InvoicesPage = () => {
         case 'created_at':
           return new Date(invoice.created_at).toLocaleDateString('ar-EG');
         case 'total_amount':
-          return <span className="font-bold tabular-nums">{Number(invoice.total_amount).toLocaleString()} ج.م</span>;
+          return <Amount value={Number(invoice.total_amount)} className="font-bold" />;
         case 'paid_amount':
-          return <span className="tabular-nums text-success">{Number(invoice.paid_amount || 0).toLocaleString()} ج.م</span>;
+          return <Amount value={Number(invoice.paid_amount || 0)} />;
         case 'remaining':
-          return <span className={`tabular-nums ${remaining > 0 ? 'text-destructive' : ''}`}>{remaining.toLocaleString()} ج.م</span>;
+          return <Amount value={remaining} />;
         case 'payment_status':
           return <Badge className={`${paymentStatusColors[invoice.payment_status]} whitespace-nowrap`}>{paymentStatusLabels[invoice.payment_status]}</Badge>;
         case 'approval_status': {

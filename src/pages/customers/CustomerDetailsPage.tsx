@@ -73,6 +73,7 @@ const CustomerSalesPipeline = lazy(() => import("@/components/customers/details/
 
 import MobileDetailSection from "@/components/mobile/MobileDetailSection";
 import { MobileListSkeleton } from "@/components/customers/mobile/MobileListSkeleton";
+import { formatEGP } from '@/lib/format/money';
 
 const tabIcons: Record<string, React.ElementType> = {
   'basic-info': MapPin, notes: StickyNote, attachments: Paperclip, reminders: Bell,
@@ -548,13 +549,13 @@ const CustomerDetailsPage = () => {
       ? {
           title: `العميل ${seoCustomer.name} - نظرة`,
           description: `ملف العميل ${seoCustomer.name}${
-            seoBalance ? ` — الرصيد الحالي ${Number(seoBalance).toLocaleString('ar')} ر.س` : ''
+            seoBalance ? ` — الرصيد الحالي ${formatEGP(Number(seoBalance))}` : ''
           }.`,
           image: buildOgImageUrl({
             title: seoCustomer.name,
             subtitle: 'ملف العميل',
             meta: seoBalance
-              ? `الرصيد: ${Number(seoBalance).toLocaleString('ar')} ر.س`
+              ? `الرصيد: ${formatEGP(Number(seoBalance))}`
               : undefined,
             variant: 'customer',
           }),

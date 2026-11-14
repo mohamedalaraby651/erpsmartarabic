@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { supplierRelationsRepo } from '@/application/queries/supplier-relations';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, CreditCard, Wallet, TrendingUp } from 'lucide-react';
 import { useNavigate } from '@/lib/router-compat';
+import { ResponsiveSheetContent } from '@/components/shared/ResponsiveSheetContent';
 
 interface SupplierTimelineDrawerProps {
   supplierId: string;
@@ -58,7 +59,7 @@ const SupplierTimelineDrawer = ({ supplierId, type, open, onClose }: SupplierTim
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="left" className="w-full sm:w-[400px]" dir="rtl">
+      <ResponsiveSheetContent side="left" className="w-full sm:w-[400px]" dir="rtl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2"><Icon className="h-5 w-5" />{config?.label}</SheetTitle>
         </SheetHeader>
@@ -86,7 +87,7 @@ const SupplierTimelineDrawer = ({ supplierId, type, open, onClose }: SupplierTim
             ))
           )}
         </div>
-      </SheetContent>
+      </ResponsiveSheetContent>
     </Sheet>
   );
 };

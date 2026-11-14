@@ -438,6 +438,22 @@
     scroll-behavior: smooth;
   }
   
+  /* Balance privacy mask (decision 321) */
+  .balances-hidden [data-amount] {
+    position: relative;
+    color: transparent !important;
+    user-select: none;
+  }
+  .balances-hidden [data-amount]::after {
+    content: '••••';
+    position: absolute;
+    inset: 0;
+    color: hsl(var(--muted-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* Slim scrollbars (PRB-NAZRA-002 decision 328) */
   * {
     scrollbar-width: thin;

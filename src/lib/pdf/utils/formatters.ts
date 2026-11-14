@@ -4,13 +4,13 @@
  * Rationale:
  *  - Arabic UI uses Western (Latin) digits across the app for parity with
  *    accounting exports — we do NOT switch to Eastern Arabic digits.
- *  - Currency defaults to SAR with 2 decimals (matches Financial Precision standard).
+ *  - Currency defaults to EGP (Egypt-only product) with 2 decimals (matches Financial Precision standard).
  *  - All numeric helpers go through `roundCurrency` to enforce the
  *    project-wide rounding rule: Math.round(value * 100) / 100.
  */
 
 export const DEFAULT_LOCALE = 'en-US';
-export const DEFAULT_CURRENCY = 'SAR';
+export const DEFAULT_CURRENCY = 'EGP';
 
 export function roundCurrency(value: number): number {
   if (!Number.isFinite(value)) return 0;

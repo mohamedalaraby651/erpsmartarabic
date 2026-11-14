@@ -40,6 +40,7 @@ import { useSupplierDetail, useSupplierNavigation } from "@/hooks/suppliers";
 import { useAuth } from "@/hooks/useAuth";
 import { useSeo } from "@/hooks/useSeo";
 import { buildOgImageUrl } from "@/lib/seo/ogImage";
+import { formatEGP } from '@/lib/format/money';
 
 // Lazy-loaded tabs
 const SupplierInfoTab = lazy(() => import("@/components/suppliers/SupplierInfoTab"));
@@ -97,13 +98,13 @@ const SupplierDetailsPage = () => {
       ? {
           title: `المورد ${supplier.name} - نظرة`,
           description: `ملف المورد ${supplier.name}${
-            currentBalance ? ` — الرصيد الحالي ${Number(currentBalance).toLocaleString('ar')} ر.س` : ''
+            currentBalance ? ` — الرصيد الحالي ${formatEGP(Number(currentBalance))}` : ''
           }.`,
           image: buildOgImageUrl({
             title: supplier.name,
             subtitle: 'ملف المورد',
             meta: currentBalance
-              ? `الرصيد: ${Number(currentBalance).toLocaleString('ar')} ر.س`
+              ? `الرصيد: ${formatEGP(Number(currentBalance))}`
               : undefined,
             variant: 'supplier',
           }),
