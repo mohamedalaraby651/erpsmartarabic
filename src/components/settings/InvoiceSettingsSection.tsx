@@ -141,7 +141,7 @@ export function InvoiceSettingsSection({ onDataChange }: InvoiceSettingsSectionP
           <div className="p-4 border rounded-lg space-y-3">
             <Label className="block">أمثلة على العملات الشائعة</Label>
             <div className="flex flex-wrap gap-2">
-              {['ج.م', 'ر.س', 'د.إ', 'د.ك', 'ر.ق', 'ر.ع', 'د.ب', '$', '€', '£'].map((curr) => (
+              {['ج.م'].map((curr) => (
                 <Button
                   key={curr}
                   variant={currency === curr ? 'default' : 'outline'}
