@@ -3,7 +3,7 @@ import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle,
 } from "@/components/ui/drawer";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { FileText, CreditCard, Target, TrendingUp } from "lucide-react";

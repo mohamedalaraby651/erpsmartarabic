@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supplierRelationsRepo } from '@/application/queries/supplier-relations';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, CreditCard, Wallet, TrendingUp } from 'lucide-react';
 import { useNavigate } from '@/lib/router-compat';
