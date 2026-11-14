@@ -1,5 +1,6 @@
+import { searchAccountTree } from '@/lib/accounting/accountTreeSearch';
 import type { JSX } from 'react';
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useChartOfAccounts } from "@/hooks/accounting";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,12 +86,8 @@ const ChartOfAccountsPage = () => {
 
 
 
-  const filteredAccounts = accounts.filter(
-    (a) =>
-      a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.code.includes(searchQuery) ||
-      (a.name_en && a.name_en.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const treeSearch = useMemo(() => searchAccountTree(accounts, searchQuery), [accounts, searchQuery]);
+  const filteredAccounts = treeSearch ? accounts.filter((a) => treeSearch.visible.has(a.id)) : accounts;
 
   const rootAccounts = filteredAccounts.filter((a) => !a.parent_id);
 
@@ -134,12 +131,14 @@ const ChartOfAccountsPage = () => {
   const renderAccountRow = (account: Account, level: number = 0): JSX.Element => {
     const children = getChildren(account.id);
     const hasChildren = children.length > 0;
-    const isExpanded = expandedAccounts.has(account.id);
+    const isExpanded = expandedAccounts.has(account.id) || !!treeSearch?.expand.has(account.id);
+    const isMatch = !!treeSearch?.matches.has(account.id);
 
     return (
       <Fragment key={account.id}>
         <TableRow
-          className="cursor-pointer hover:bg-muted/50"
+          className={`cursor-pointer hover:bg-muted/50 ${isMatch ? "bg-warning/15 ring-1 ring-inset ring-warning/50" : ""}`}
+          data-match={isMatch || undefined}
           onClick={() => hasChildren && toggleExpand(account.id)}
         >
           <TableCell>
