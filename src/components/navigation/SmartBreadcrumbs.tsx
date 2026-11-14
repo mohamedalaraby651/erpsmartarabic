@@ -14,7 +14,7 @@ import { isKnowledgePath, knowledgeBreadcrumbs } from '@/domain/knowledge/breadc
 import { useKnowledgeIndex } from '@/hooks/knowledge/useKnowledgeIndex';
 
 // Route to Arabic label mapping
-const routeLabels: Record<string, string> = {
+export const routeLabels: Record<string, string> = {
   '': 'الرئيسية',
   'customers': 'العملاء',
   'products': 'المنتجات',

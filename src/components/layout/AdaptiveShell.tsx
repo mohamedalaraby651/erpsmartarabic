@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import AppSidebar from './AppSidebar';
 import AppHeader from './AppHeader';
+import { WorkspaceTabsBar } from '@/components/navigation/WorkspaceTabsBar';
 import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
 import MobileDrawer from './MobileDrawer';
@@ -91,6 +92,7 @@ export function AdaptiveShell({
         >
           <div className="hidden lg:block">
             <AppHeader />
+            <WorkspaceTabsBar />
           </div>
 
           <main className="container-wide p-2.5 lg:p-6">
