@@ -5,4 +5,5 @@
 - Shared WorkspaceTable renders page-owned column contracts and persisted layouts only; it never queries, filters or grants actions, keeping table modernization independent of financial authority.
 - Document form experience composes the existing form lifecycle and tenant/user-scoped local drafts; local persistence never represents an approved financial operation.
 - Logistics item editors are controlled by the document's line state; restoring or resetting a document must immediately update visible rows without a second local copy.
+- Credit-note local drafts persist only header and item-selection intent; restoration and submission reload invoice references and quantities because stored values cannot establish return authority.
 - Workspace Excel exports reuse the installed spreadsheet package and page-selected column contracts, preserving numerical values without a new runtime dependency.

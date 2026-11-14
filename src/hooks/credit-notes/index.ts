@@ -52,3 +52,13 @@ export function useCreateCreditNoteDraft() {
     },
   });
 }
+
+/** Restoration invalidates cached authority; the UI must wait for fresh reads. */
+export function useRefreshCreditNoteReferences() {
+  const qc = useQueryClient();
+  return (customerId: string, invoiceId: string) => Promise.all([
+    qc.invalidateQueries({ queryKey: ['invoices-for-credit', customerId], exact: true }),
+    qc.invalidateQueries({ queryKey: ['invoice-items-for-credit', invoiceId], exact: true }),
+    qc.invalidateQueries({ queryKey: ['invoice-item-returns-summary', invoiceId], exact: true }),
+  ]);
+}

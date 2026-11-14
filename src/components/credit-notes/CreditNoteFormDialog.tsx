@@ -4,6 +4,7 @@ import {
   useInvoiceItemsForCredit,
   useInvoiceItemReturnsSummary,
   useCreateCreditNoteDraft,
+  useRefreshCreditNoteReferences,
 } from '@/hooks/credit-notes';
 import { useQuery } from '@tanstack/react-query';
 import { creditNoteRepository } from '@/application/queries/credit-notes';
@@ -72,6 +73,7 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
   const restorationGeneration = useRef(0);
   const initializedInvoice = useRef('');
   const selection = useRef<ReturnSelection[]>([]);
+  const refreshReferences = useRefreshCreditNoteReferences();
   const createDraftMutation = useCreateCreditNoteDraft();
   const { form, submit, isSubmitting, reset: resetHeader } = useFormDialog({
     schema: z.object({ customerId: z.string().min(1, 'اختر العميل'), invoiceId: z.string().min(1, 'اختر الفاتورة'), reason: z.string() }),
@@ -143,14 +145,16 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
     restoreLines: async saved => {
       const generation = ++restorationGeneration.current;
       const wantedInvoice = form.getValues('invoiceId');
+      const wantedCustomer = form.getValues('customerId');
       const choices = readReturnSelection(saved);
       initializedInvoice.current = wantedInvoice;
       selection.current = choices;
       setLines([]);
       setRestoring(true);
-      // Let the query hooks subscribe to the restored identifiers before refetch.
+      // Let the query hooks subscribe before invalidating even a same-invoice cache.
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
       if (generation !== restorationGeneration.current) { setRestoring(false); return; }
+      await refreshReferences(wantedCustomer, wantedInvoice);
       setRestoring(false);
     },
   });
