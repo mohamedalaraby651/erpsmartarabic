@@ -3,7 +3,7 @@
 ## Selected monitoring fixes — 2026-11-25
 - [x] Saved quotation dirty checkpoint/local draft recurrence: complete line/discount/VAT checkpoint after success, clean close and no draft recreation; three regression tests and real authenticated create/read-back/close/reopen check.
 - [x] Company settings invoice-header logo resolution: existing branding hook resolves stored paths, pending requests do not render bare paths; two regression tests and loaded real logo verified on desktop/mobile.
-- [ ] Related invoice local-draft recurrence found by code audit; outside the two selected findings, awaiting separate user scope decision. Evidence: `docs/governance/MONITORING_SELECTED_FIXES_2026-11-25.md`.
+- [x] Scope decision: user selected “Keep current scope” on 2026-11-25; related invoice local-draft recurrence remains unchanged and outside this request. Evidence: `docs/governance/MONITORING_SELECTED_FIXES_2026-11-25.md`.
 
 الفلسفة المعتمدة: **Build the product while hardening the platform** — مسارا Product Continuity وArchitecture Evolution يعملان بالتوازي.
 
