@@ -62,7 +62,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
   const queryClient = useQueryClient();
   const [lastSavedId, setLastSavedId] = useState<string | null>(quotation?.id ?? null);
   const [printOpen, setPrintOpen] = useState(false);
-  const [baselineItems, setBaselineItems] = useState('[]');
+  const [baselineLines, setBaselineLines] = useState(JSON.stringify({ items: [], discountAmount: 0, vatEnabled: false }));
   const { profile: pdfProfile } = useLivePreviewProfile();
 
   const { data: customers = [] } = useQuery({
@@ -80,6 +80,9 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     vatEnabled, setVatEnabled, discountAmount, setDiscountAmount,
     addItem, updateItem, removeItem, loadItems, resetItems, validate, setItems,
   } = useQuotationItems({ products });
+
+  const lines = { items, discountAmount, vatEnabled };
+  const linesDirty = JSON.stringify(lines) !== baselineLines;
 
   const isEditingEntity = !!quotation;
   const toastHandlers = useMutationToast({
@@ -141,6 +144,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
       setLastSavedId(savedId ?? quotation?.id ?? null);
     },
     onSuccess: () => {
+      setBaselineLines(JSON.stringify(lines));
       experience.clearDraft();
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
       form.reset(form.getValues(), { keepValues: true });
@@ -153,7 +157,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     },
   });
 
-  const experience = useDocumentFormExperience({ form, lines: { items, discountAmount, vatEnabled }, restoreLines: saved => { setItems(saved.items); setDiscountAmount(saved.discountAmount); setVatEnabled(saved.vatEnabled); }, documentKey: `quotation_${quotation?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty: JSON.stringify(items) !== baselineItems || discountAmount !== Number(quotation?.discount_amount || 0) || vatEnabled !== (Number(quotation?.tax_amount || 0) > 0) });
+  const experience = useDocumentFormExperience({ form, lines, restoreLines: saved => { setItems(saved.items); setDiscountAmount(saved.discountAmount); setVatEnabled(saved.vatEnabled); }, documentKey: `quotation_${quotation?.id ?? 'new'}`, open, busy: isSubmitting, submit, close: () => onOpenChange(false), linesDirty });
   const draftBanner = experience.hasDraft ? <DraftRestoreBanner onRestore={experience.restore} onDiscard={experience.clearDraft} /> : null;
   const { register, setValue, watch, formState: { isDirty } } = form;
 
@@ -164,10 +168,10 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     if (quotation) {
       setDiscountAmount(Number(quotation.discount_amount) || 0);
       setVatEnabled(Number(quotation.tax_amount) > 0);
-      void loadItems(quotation.id).then(loaded => setBaselineItems(JSON.stringify(loaded)));
+      void loadItems(quotation.id).then(loaded => setBaselineLines(JSON.stringify({ items: loaded, discountAmount: Number(quotation.discount_amount) || 0, vatEnabled: Number(quotation.tax_amount) > 0 })));
     } else {
       resetItems();
-      setBaselineItems('[]');
+      setBaselineLines(JSON.stringify({ items: [], discountAmount: 0, vatEnabled: false }));
     }
     wizard.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,7 +200,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     </div>
   );
 
-  const canPrint = Boolean(lastSavedId) && !isDirty && !isSubmitting;
+  const canPrint = Boolean(lastSavedId) && !isDirty && !linesDirty && !isSubmitting;
   const printButton = (
     <Button
       type="button"

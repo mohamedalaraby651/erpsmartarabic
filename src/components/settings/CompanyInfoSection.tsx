@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { LogoUpload } from '@/components/shared/LogoUpload';
+import { useBrandingLogo } from '@/hooks/useBrandingLogo';
 import { Building2, Save, Loader2 } from 'lucide-react';
 
 interface CompanySettings {
@@ -45,6 +46,7 @@ export function CompanyInfoSection({ onDataChange }: CompanyInfoSectionProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CompanySettings>(defaultSettings);
+  const { logoUrl, isPending: logoPending } = useBrandingLogo(formData.logo_url);
 
   // Fetch settings
   const { data: settings, isLoading } = useQuery({
@@ -281,9 +283,9 @@ export function CompanyInfoSection({ onDataChange }: CompanyInfoSectionProps) {
             <div className="bg-background border rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  {formData.logo_url ? (
+                  {logoUrl && !logoPending ? (
                     <img 
-                      src={formData.logo_url} 
+                      src={logoUrl} 
                       alt="Logo" 
                       className="h-12 w-12 object-contain rounded"
                     />
