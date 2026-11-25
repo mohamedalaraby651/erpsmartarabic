@@ -1,5 +1,12 @@
 # Roadmap
 
+## Selected security fixes — 2026-11-25
+- [x] Journal isolation: pre-write dimension validation and database guard; six regressions, authenticated invalid-reference rejection and legitimate new draft line save/read-back/cleanup verified.
+- [x] Customer balance helper: signed-in/anonymous execution revoked; trusted processing preserved. Live authenticated denial and grants verified; no balances changed.
+- [ ] Supplier balance helper: active browser supplier-payment flow depends on it; needs approved atomic payment replacement before revocation.
+- [ ] Restrict restore fields and prevent cross-company identifier takeover; contextual restore changes require confirmation.
+- [x] Verified both bounded fixes; 173 security tests passed, latest build OK. Only these two findings marked fixed; remaining three await contextual approval.
+
 ## Selected monitoring fixes — 2026-11-25
 - [x] Saved quotation dirty checkpoint/local draft recurrence: complete line/discount/VAT checkpoint after success, clean close and no draft recreation; three regression tests and real authenticated create/read-back/close/reopen check.
 - [x] Company settings invoice-header logo resolution: existing branding hook resolves stored paths, pending requests do not render bare paths; two regression tests and loaded real logo verified on desktop/mobile.

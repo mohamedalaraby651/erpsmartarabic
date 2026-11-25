@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { checkIdempotency, getCorrelationId, getIdempotencyKey } from '../_shared/idempotency.ts';
+import { validateJournalDimensions } from '../_shared/journalDimensions.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -221,6 +222,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    const validDimensions = await validateJournalDimensions(entries, async (table, ids) => {
+      const { data, error } = await supabaseAdmin.from(table)
+        .select('id').eq('tenant_id', tenantId).in('id', ids);
+      if (error) throw error;
+      return (data ?? []).map(row => row.id as string);
+    });
+    if (!validDimensions) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'أحد مراكز التكلفة أو المشاريع أو الأقسام غير متاح في الشركة الحالية', code: 'INVALID_DIMENSIONS' }),
+        { status: 400, headers: respHeaders }
+      );
+    }
+
     // Create journal
     const { data: journal, error: journalError } = await supabaseAdmin
       .from('journals')
@@ -244,6 +258,7 @@ Deno.serve(async (req) => {
 
     // Create journal entries
     const entriesData = entries.map((entry, index) => ({
+      tenant_id: tenantId,
       journal_id: journal.id,
       account_id: entry.account_id,
       line_number: index + 1,
