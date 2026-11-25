@@ -85,6 +85,20 @@
       "when": 1795638257866,
       "tag": "0011_restrict_customer_balance_helper_and_journal_dimensions",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795639760631,
+      "tag": "0012_secure_supplier_payments_and_restore_authority",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795639788787,
+      "tag": "0013_fix_supplier_payment_membership_check",
+      "breakpoints": true
     }
   ]
 }

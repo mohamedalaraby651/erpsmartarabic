@@ -47,36 +47,21 @@ export interface RecordSupplierPaymentData {
 }
 
 /**
- * Record a payment to a supplier:
- * 1. Insert into supplier_payments
- * 2. Atomically update supplier balance via RPC
+ * Record a supplier payment through the tenant-scoped atomic payment operation.
  */
-export async function recordSupplierPayment(data: RecordSupplierPaymentData): Promise<void> {
+export async function recordSupplierPayment(data: RecordSupplierPaymentData): Promise<string> {
   if (!data.supplierId) throw new Error('يجب اختيار المورد');
-  if (data.amount <= 0) throw new Error('يرجى إدخال مبلغ صحيح');
+  if (!Number.isFinite(data.amount) || data.amount <= 0) throw new Error('يرجى إدخال مبلغ صحيح');
 
-  const paymentNumber = `SP-${Date.now().toString().slice(-8)}`;
-
-  const { error: paymentError } = await supabase
-    .from('supplier_payments')
-    .insert({
-      payment_number: paymentNumber,
-      supplier_id: data.supplierId,
-      amount: data.amount,
-      payment_method: data.paymentMethod,
-      payment_date: data.paymentDate,
-      reference_number: data.referenceNumber || null,
-      notes: data.notes || null,
-      created_by: data.createdBy || null,
-    });
-
-  if (paymentError) throw paymentError;
-
-  // Atomic balance update — avoids race conditions
-  const { error: updateError } = await (supabase.rpc as Function)('atomic_supplier_balance_update', {
+  const params = {
     _supplier_id: data.supplierId,
-    _amount: data.amount,
-  });
-
-  if (updateError) throw updateError;
+    _amount: Math.round(data.amount * 100) / 100,
+    _payment_method: data.paymentMethod,
+    _payment_date: data.paymentDate,
+    ...(data.referenceNumber ? { _reference_number: data.referenceNumber } : {}),
+    ...(data.notes ? { _notes: data.notes } : {}),
+  };
+  const { data: paymentId, error } = await supabase.rpc('record_supplier_payment', params);
+  if (error) throw error;
+  return paymentId;
 }

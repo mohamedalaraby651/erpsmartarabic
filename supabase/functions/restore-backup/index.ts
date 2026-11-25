@@ -29,6 +29,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkIdempotency, getIdempotencyKey, getCorrelationId } from "../_shared/idempotency.ts";
+import {
+  foreignIdIssues,
+  referenceIssues,
+  referenceValues,
+  sanitizeRestoreRows,
+  type RestoreColumn,
+  type RestoreReference,
+  type RestoreRow,
+  type RestoreValidationIssue,
+} from "../_shared/restoreValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -317,6 +327,70 @@ serve(async (req) => {
       );
     }
 
+    const cappedData: Record<string, RestoreRow[]> = {};
+    const truncatedByTable: Record<string, number> = {};
+    for (const table of tables) {
+      const allRows = data[table];
+      if (!Array.isArray(allRows)) {
+        cappedData[table] = allRows as unknown as RestoreRow[];
+        continue;
+      }
+      const cap = body.row_limits?.[table];
+      const isCapped = typeof cap === "number" && Number.isInteger(cap) && cap >= 0 && cap < allRows.length;
+      cappedData[table] = isCapped ? allRows.slice(0, cap) : allRows;
+      truncatedByTable[table] = isCapped ? allRows.length - cappedData[table].length : 0;
+    }
+
+    const [{ data: columns, error: columnsErr }, { data: references, error: referencesErr }] = await Promise.all([
+      supabaseAdmin.rpc("restore_table_contract", { _tables: tables }),
+      supabaseAdmin.rpc("restore_reference_contract", { _tables: tables }),
+    ]);
+    if (columnsErr || referencesErr) throw new Error("Restore contract unavailable");
+    const { sanitized: sanitizedByTable, issues } = sanitizeRestoreRows(cappedData, tables, tenantId, (columns ?? []) as RestoreColumn[]);
+    const tenantReferences = ((references ?? []) as RestoreReference[]).filter((reference) => reference.target_has_tenant);
+    const neededReferences = referenceValues(sanitizedByTable, tenantReferences);
+    const availableReferences = new Map<string, Set<string>>();
+    for (const [key, valuesSet] of neededReferences) {
+      const [targetTable, targetColumn] = key.split(".");
+      const values = [...valuesSet];
+      const found = new Set<string>();
+      for (let i = 0; i < values.length; i += 500) {
+        const { data: matches, error } = await supabaseAdmin.from(targetTable).select(targetColumn).eq("tenant_id", tenantId).in(targetColumn, values.slice(i, i + 500));
+        if (error) throw new Error("Reference validation unavailable");
+        for (const match of matches ?? []) found.add(String((match as unknown as Record<string, unknown>)[targetColumn]));
+      }
+      availableReferences.set(key, found);
+    }
+    issues.push(...referenceIssues(sanitizedByTable, tenantReferences, availableReferences));
+
+    const existingIds: Record<string, Array<{ id: string; tenant_id: string }>> = {};
+    for (const table of tables) {
+      const ids = [...new Set(sanitizedByTable[table].map((row) => row.id).filter((id): id is string => typeof id === "string"))];
+      existingIds[table] = [];
+      for (let i = 0; i < ids.length; i += 500) {
+        const { data: existing, error } = await supabaseAdmin.from(table).select("id, tenant_id").in("id", ids.slice(i, i + 500));
+        if (error) throw new Error("Ownership validation unavailable");
+        existingIds[table].push(...((existing ?? []) as Array<{ id: string; tenant_id: string }>));
+      }
+    }
+    issues.push(...foreignIdIssues(sanitizedByTable, existingIds, tenantId));
+    if (issues.length > 0) {
+      return jsonResponse({
+        success: false,
+        code: "RESTORE_VALIDATION_FAILED",
+        error: "تم رفض النسخة قبل أي تعديل لأن بعض البيانات غير مسموح بها أو تخص شركة أخرى",
+        tenant_id: tenantId,
+        total_inserted: 0,
+        total_errors: issues.length,
+        total_rejected_foreign_tenant: issues.filter((issue) => issue.message.includes("شركة أخرى")).length,
+        results: tables.map((table) => {
+          const tableIssues = issues.filter((issue) => issue.table === table);
+          const messages = [...new Set(tableIssues.slice(0, 20).map((issue: RestoreValidationIssue) => `صف ${issue.row}${issue.field ? ` / ${issue.field}` : ""}: ${issue.message}`))];
+          return { table, inserted: 0, skipped: 0, errors: tableIssues.length, rejected_foreign_tenant: tableIssues.filter((issue) => issue.message.includes("شركة أخرى")).length, truncated: truncatedByTable[table] ?? 0, is_sensitive: SENSITIVE_TABLES.has(table), error_messages: messages, error_sample: messages[0] };
+        }),
+      });
+    }
+
     // ────────────────────────────────────────────────────────────────
     // SNAPSHOT (auto-backup) — capture current rows of every selected
     // table BEFORE any write. Stored as one JSON blob in private bucket.
@@ -380,68 +454,16 @@ serve(async (req) => {
     const results: TableResult[] = [];
 
     for (const table of tables) {
-      const allRows = Array.isArray(data[table]) ? data[table] : [];
-      const cap = body.row_limits?.[table];
-      const isCapped = typeof cap === "number" && cap >= 0 && cap < allRows.length;
-      const rows = isCapped ? allRows.slice(0, cap) : allRows;
+      const sanitized = sanitizedByTable[table] ?? [];
       const result: TableResult = {
         table,
         inserted: 0,
         skipped: 0,
         errors: 0,
         rejected_foreign_tenant: 0,
-        truncated: isCapped ? allRows.length - rows.length : 0,
+        truncated: truncatedByTable[table] ?? 0,
         is_sensitive: SENSITIVE_TABLES.has(table),
       };
-
-      // Tenant-scope enforcement (defense in depth):
-      //   - If a row has NO tenant_id, we accept it and stamp the caller's tenant.
-      //   - If a row has the SAME tenant_id, we accept it (re-stamp anyway).
-      //   - If a row has a DIFFERENT tenant_id, we REJECT it. Cross-tenant
-      //     payloads are treated as injection attempts.
-      const foreignTenantSet = new Set<string>();
-      const sanitized: Record<string, unknown>[] = [];
-      for (const row of rows) {
-        const incomingTenant =
-          row && typeof row === "object" && "tenant_id" in row
-            ? (row as Record<string, unknown>).tenant_id
-            : null;
-
-        if (
-          incomingTenant !== null &&
-          incomingTenant !== undefined &&
-          incomingTenant !== "" &&
-          incomingTenant !== tenantId
-        ) {
-          result.rejected_foreign_tenant += 1;
-          if (typeof incomingTenant === "string") {
-            foreignTenantSet.add(incomingTenant);
-          } else {
-            foreignTenantSet.add(String(incomingTenant));
-          }
-          continue;
-        }
-
-        const copy: Record<string, unknown> = { ...(row as Record<string, unknown>) };
-        // Remove server-managed columns that shouldn't be carried over.
-        delete copy.created_at;
-        delete copy.updated_at;
-        // Stamp the caller's tenant — guarantees rows can only land in this tenant.
-        copy.tenant_id = tenantId;
-        sanitized.push(copy);
-      }
-
-      if (foreignTenantSet.size > 0) {
-        result.foreign_tenant_ids = Array.from(foreignTenantSet);
-        const sample = `تم رفض ${result.rejected_foreign_tenant} صف ينتمي لمستأجر آخر (${result.foreign_tenant_ids.slice(0, 3).join(", ")}${result.foreign_tenant_ids.length > 3 ? "…" : ""})`;
-        result.error_messages = [sample];
-        result.error_sample = sample;
-        console.warn(
-          `[restore-backup] cross-tenant rows rejected for ${table}:`,
-          result.rejected_foreign_tenant,
-          Array.from(foreignTenantSet),
-        );
-      }
 
       try {
         if (mode === "replace") {

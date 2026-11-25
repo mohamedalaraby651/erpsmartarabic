@@ -3,9 +3,9 @@
 ## Selected security fixes — 2026-11-25
 - [x] Journal isolation: pre-write dimension validation and database guard; six regressions, authenticated invalid-reference rejection and legitimate new draft line save/read-back/cleanup verified.
 - [x] Customer balance helper: signed-in/anonymous execution revoked; trusted processing preserved. Live authenticated denial and grants verified; no balances changed.
-- [ ] Supplier balance helper: active browser supplier-payment flow depends on it; needs approved atomic payment replacement before revocation.
-- [ ] Restrict restore fields and prevent cross-company identifier takeover; contextual restore changes require confirmation.
-- [x] Verified both bounded fixes; 173 security tests passed, latest build OK. Only these two findings marked fixed; remaining three await contextual approval.
+- [x] Supplier payments now use one authorized atomic operation; direct browser balance adjustment revoked. Temporary payment verified: amount 12.35, balance 100→87.65, then removed.
+- [x] Restore validates approved fields, types, same-company references and existing ownership before snapshot/writes; database blocks company reassignment. Unsafe live payload rejected with no change.
+- [x] Verification: 182 security/supplier tests plus focused regressions, edge checks, latest build OK. Only selected findings updated.
 
 ## Selected monitoring fixes — 2026-11-25
 - [x] Saved quotation dirty checkpoint/local draft recurrence: complete line/discount/VAT checkpoint after success, clean close and no draft recreation; three regression tests and real authenticated create/read-back/close/reopen check.

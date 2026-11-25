@@ -7336,6 +7336,17 @@ export type Database = {
         Args: { _event_type: string; _latency_ms?: number; _success: boolean }
         Returns: undefined
       }
+      record_supplier_payment: {
+        Args: {
+          _amount: number
+          _notes?: string
+          _payment_date: string
+          _payment_method: Database["public"]["Enums"]["payment_method"]
+          _reference_number?: string
+          _supplier_id: string
+        }
+        Returns: string
+      }
       refresh_customer_stats_mv: { Args: never; Returns: undefined }
       refresh_enterprise_mvs: { Args: never; Returns: undefined }
       refresh_mv_dashboard_counts: { Args: never; Returns: undefined }
@@ -7350,6 +7361,25 @@ export type Database = {
       resolve_posting_account: {
         Args: { _posting_key: string; _tenant_id: string }
         Returns: string
+      }
+      restore_reference_contract: {
+        Args: { _tables: string[] }
+        Returns: {
+          column_name: string
+          table_name: string
+          target_column: string
+          target_has_tenant: boolean
+          target_table: string
+        }[]
+      }
+      restore_table_contract: {
+        Args: { _tables: string[] }
+        Returns: {
+          column_name: string
+          data_type: string
+          is_required: boolean
+          table_name: string
+        }[]
       }
       reverse_journal_for_credit_note: {
         Args: { _credit_note_id: string }

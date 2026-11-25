@@ -103,7 +103,7 @@ export const treasuryRepository = {
   },
 
   /** Thin wrapper — delegates to the atomic supplier-payment service. */
-  async createSupplierPayment(input: RecordSupplierPaymentData): Promise<void> {
+  async createSupplierPayment(input: RecordSupplierPaymentData): Promise<string> {
     return recordSupplierPayment(input);
   },
 

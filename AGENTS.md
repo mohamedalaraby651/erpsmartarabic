@@ -8,3 +8,5 @@
 - Credit-note local drafts persist only header and item-selection intent; restoration and submission reload invoice references and quantities because stored values cannot establish return authority.
 - Workspace Excel exports reuse the installed spreadsheet package and page-selected column contracts, preserving numerical values without a new runtime dependency.
 - Journal dimension validation resolves every supplied reference within the server-derived tenant before writes and a database guard enforces the same rule on sibling write paths, preventing cross-company accounting links.
+- Supplier payments and balance effects use one tenant-scoped database operation; browser callers never adjust supplier balances directly.
+- Backup restore validates the full payload against database-derived approved fields, same-company references and existing ownership before snapshots or writes; database triggers block company reassignment.

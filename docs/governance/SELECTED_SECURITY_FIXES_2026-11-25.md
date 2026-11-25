@@ -27,4 +27,12 @@ Scope: five user-selected deep-scan findings only. No other finding changed or i
 - Latest preview build OK. No existing balances, posted journals or settled documents changed.
 
 ## Pending
-Three selected findings remain active: supplier balance bypass and two backup restore vulnerabilities. Need approval for atomic supplier-payment replacement and stricter restore contract; no claim they are fixed.
+None in selected scope after approved continuation.
+
+## Approved continuation
+- Supplier dialog and treasury callers use one database operation that checks company, active supplier and existing create permission, records payment and updates balance atomically. Direct helper execution removed from signed-in/anonymous users.
+- Backup restore derives approved fields from restorable tables, ignores only server-managed metadata, rejects unapproved fields, invalid values, required omissions, unavailable references and foreign-owned identifiers before snapshot or deletion.
+- Database trigger prevents restorable records moving between companies, covering upsert races.
+- Rollback path remains same-company snapshot replay with inserts.
+- Live: direct supplier helper denied; temporary supplier payment saved/read back with correct balance, then temporary records removed; unsafe restore rejected and target remained unchanged.
+- Cross-company identifier rejection verified by regression; no second live company account used.
