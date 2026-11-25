@@ -285,7 +285,7 @@ export function CompanyInfoSection({ onDataChange }: CompanyInfoSectionProps) {
                 <div className="flex items-center gap-3">
                   {logoUrl && !logoPending ? (
                     <img 
-                      src={logoUrl} 
+                      src={logoUrl}
                       alt="Logo" 
                       className="h-12 w-12 object-contain rounded"
                     />
