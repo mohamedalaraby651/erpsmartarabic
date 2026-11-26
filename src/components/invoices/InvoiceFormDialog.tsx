@@ -126,7 +126,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
             total_amount: total,
             items: items.map(it => ({ product_id: it.product_id, quantity: it.quantity, unit_price: it.unit_price })),
           });
-          if (!validation.valid) throw new Error(getErrorMessage(validation.code || 'VALIDATION_ERROR'));
+          if (!validation.valid) throw new Error(getErrorMessage(validation.code || '', validation.error || 'فشل التحقق من الفاتورة'));
         } finally {
           setIsValidating(false);
         }

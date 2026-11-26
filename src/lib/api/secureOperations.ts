@@ -85,6 +85,16 @@ export async function validateInvoice(
 
     if (error) {
       logErrorSafely('secureOperations.validateInvoice', error);
+      // Non-2xx responses carry { code, error } in the body, not in `data`.
+      const body = await readFunctionErrorBody(error);
+      if (body) {
+        return {
+          valid: false,
+          code: body.code || 'VALIDATION_ERROR',
+          error: getErrorMessage(body.code || '', body.error || `فشل التحقق من الفاتورة (HTTP ${body.status})`),
+          ...(body.details ? { details: body.details } : {}),
+        };
+      }
       return {
         valid: false,
         error: getSafeErrorMessage(error) || 'فشل التحقق من الفاتورة',
@@ -97,7 +107,7 @@ export async function validateInvoice(
     logErrorSafely('secureOperations.validateInvoice.unexpected', err);
     return {
       valid: false,
-      error: 'خطأ غير متوقع أثناء التحقق',
+      error: err instanceof Error && err.message ? `تعذر التحقق من الفاتورة: ${err.message}` : 'خطأ غير متوقع أثناء التحقق',
       code: 'UNEXPECTED_ERROR'
     };
   }
@@ -325,7 +335,29 @@ export async function verifyFinancialLimit(
 /**
  * Get user-friendly error message based on error code
  */
-export function getErrorMessage(code: string): string {
+/**
+ * Read the JSON body of a non-2xx edge-function response ({ code, error, details }).
+ * Returns null when the error has no HTTP response (e.g. network failure).
+ */
+export async function readFunctionErrorBody(
+  error: unknown,
+): Promise<{ status: number; code?: string; error?: string; details?: Record<string, unknown> } | null> {
+  const context: unknown = typeof error === 'object' && error !== null && 'context' in error
+    ? (error as { context: unknown }).context : undefined;
+  if (!(context instanceof Response)) return null;
+  let body: Record<string, unknown> = {};
+  try { body = (await context.clone().json()) as Record<string, unknown>; } catch { /* non-JSON */ }
+  const code = typeof body.code === 'string' ? body.code
+    : context.status === 401 ? 'UNAUTHORIZED' : context.status === 403 ? 'NO_PERMISSION' : undefined;
+  return {
+    status: context.status,
+    ...(code ? { code } : {}),
+    ...(typeof body.error === 'string' ? { error: body.error } : {}),
+    ...(typeof body.details === 'object' && body.details ? { details: body.details as Record<string, unknown> } : {}),
+  };
+}
+
+export function getErrorMessage(code: string, fallback?: string): string {
   const messages: Record<string, string> = {
     'UNAUTHORIZED': 'يجب تسجيل الدخول للقيام بهذا الإجراء',
     'INVALID_TOKEN': 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً',
@@ -344,7 +376,13 @@ export function getErrorMessage(code: string): string {
     'MISSING_REASON': 'يجب إدخال سبب الرفض',
     'MISSING_WAREHOUSE': 'يجب تحديد المستودع',
     'INTERNAL_ERROR': 'حدث خطأ داخلي، يرجى المحاولة لاحقاً',
+    'RATE_LIMITED': 'تم تجاوز حد الطلبات المسموح، حاول لاحقاً',
+    'NO_TENANT': 'حسابك غير مرتبط بشركة',
+    'PRODUCTS_NOT_FOUND': 'بعض المنتجات غير موجودة في شركتك',
+    'PERMISSION_ERROR': 'تعذر التحقق من الصلاحيات',
+    'LIMIT_ERROR': 'تعذر التحقق من الحد المالي',
+    'PRODUCTS_ERROR': 'تعذر التحقق من المنتجات',
   };
 
-  return messages[code] || 'حدث خطأ غير متوقع';
+  return messages[code] || fallback || 'حدث خطأ غير متوقع';
 }
