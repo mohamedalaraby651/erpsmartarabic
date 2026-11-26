@@ -244,6 +244,7 @@ serve(async (req) => {
     const { data: movement, error: movementError } = await supabaseAdmin
       .from('stock_movements')
       .insert({
+        tenant_id: tenantId,
         product_id: movementData.product_id,
         variant_id: movementData.variant_id || null,
         movement_type: movementData.movement_type,

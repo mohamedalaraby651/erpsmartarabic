@@ -135,6 +135,10 @@ export async function processPayment(
 
     if (error) {
       logErrorSafely('secureOperations.processPayment', error);
+      const body = await readFunctionErrorBody(error);
+      if (body?.error) {
+        return { success: false, error: body.error, code: body.code || 'PAYMENT_ERROR' };
+      }
       return {
         success: false,
         error: getSafeErrorMessage(error) || 'فشل معالجة الدفعة',

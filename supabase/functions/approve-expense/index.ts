@@ -233,6 +233,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('cash_transactions')
           .insert({
+            tenant_id: tenantId,
             register_id: expense.register_id,
             transaction_type: 'withdrawal',
             amount: -expense.amount,

@@ -71,7 +71,12 @@ const InvoiceApprovalDialog = ({
         headers: buildRequestHeaders({ idempotencyKey: newIdempotencyKey() }),
       });
 
-      if (error) throw error;
+      if (error) {
+        const { readFunctionErrorBody } = await import("@/lib/api/secureOperations");
+        const body = await readFunctionErrorBody(error);
+        if (body?.error) throw new Error(body.error);
+        throw error;
+      }
       if (!data.success) throw new Error(data.error);
       return data;
     },
@@ -87,7 +92,10 @@ const InvoiceApprovalDialog = ({
       logErrorSafely('InvoiceApprovalDialog.approvalMutation', error);
       toast({
         title: "خطأ في معالجة الموافقة",
-        description: getSafeErrorMessage(error),
+        description:
+          error instanceof Error && /[\u0600-\u06FF]/.test(error.message)
+            ? error.message
+            : getSafeErrorMessage(error),
         variant: "destructive",
       });
     },

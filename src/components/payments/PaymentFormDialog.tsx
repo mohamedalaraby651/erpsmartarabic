@@ -104,7 +104,7 @@ const PaymentFormDialog = ({ open, onOpenChange, prefillCustomerId, prefillInvoi
         notes: data.notes?.trim() || undefined,
       });
       if (!result.success) {
-        throw new Error(getErrorMessage(result.code || 'PAYMENT_ERROR'));
+        throw new Error(getErrorMessage(result.code || 'PAYMENT_ERROR', result.error));
       }
     },
     onSuccess: () => {

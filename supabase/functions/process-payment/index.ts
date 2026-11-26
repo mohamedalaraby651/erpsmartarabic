@@ -212,6 +212,7 @@ serve(async (req) => {
     const { data: payment, error: paymentError } = await supabaseAdmin
       .from('payments')
       .insert({
+        tenant_id: tenantId,
         customer_id: paymentData.customer_id,
         invoice_id: paymentData.invoice_id || null,
         amount: paymentData.amount,
