@@ -28,6 +28,9 @@ import { CashFlowReport } from "@/components/reports/CashFlowReport";
 import { formatEGP } from '@/lib/format/money';
 import { QuickPeriodChips } from '@/components/ui/data/QuickPeriodChips';
 import type { QuickPeriod } from '@/lib/dates/quickPeriods';
+import { getQuickPeriodRange } from '@/lib/dates/quickPeriods';
+import { Button } from '@/components/ui/button';
+import { CalendarX2 } from 'lucide-react';
 
 export default function ReportsPage() {
   const isMobile = useIsMobile();
@@ -53,6 +56,14 @@ export default function ReportsPage() {
   } = useReportsData(startDate, endDate);
 
   const formatCurrency = (amount: number) => formatEGP(amount);
+  const isEmptyRange = invoiceCount === 0 && totalSales === 0;
+  const widenTo90 = () => { setQuick(null); setCustomFrom(undefined); setCustomTo(undefined); setPeriod('90'); };
+  const widenToYear = () => {
+    const { from, to } = getQuickPeriodRange('year');
+    setQuick('year');
+    setCustomFrom(new Date(`${from}T00:00:00`));
+    setCustomTo(new Date(`${to}T23:59:59`));
+  };
 
   const salesExportData = salesData?.map((s) => ({
     date: format(new Date(s.created_at), 'yyyy-MM-dd'),
@@ -112,8 +123,22 @@ export default function ReportsPage() {
         )}
       </div>
 
+      {isEmptyRange && (
+        <Card data-testid="reports-empty-range" className="border-dashed">
+          <CardContent className="py-8 flex flex-col items-center gap-3 text-center">
+            <CalendarX2 className="h-10 w-10 text-muted-foreground" />
+            <p className="text-base font-semibold">لا توجد بيانات في هذه الفترة</p>
+            <p className="text-sm text-muted-foreground">جرّب توسيع الفترة لعرض المبيعات والتحصيل.</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {period !== '90' || customFrom ? <Button variant="outline" className="min-h-11" onClick={widenTo90}>آخر 90 يوم</Button> : null}
+              {quick !== 'year' && <Button variant="outline" className="min-h-11" onClick={widenToYear}>هذه السنة</Button>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
-      {isMobile ? (
+      {isEmptyRange ? null : isMobile ? (
         <div className="grid grid-cols-2 gap-3">
           <Card><CardContent className="p-3"><div className="flex items-center gap-2"><div className="p-1.5 rounded-lg bg-primary/10"><DollarSign className="h-4 w-4 text-primary" /></div><div><p className="text-lg font-bold">{formatCurrency(totalSales)}</p><p className="text-xs text-muted-foreground">إجمالي المبيعات</p><TrendIndicator value={salesTrend} /></div></div></CardContent></Card>
           <Card><CardContent className="p-3"><div className="flex items-center gap-2"><div className="p-1.5 rounded-lg bg-success/10"><TrendingUp className="h-4 w-4 text-success" /></div><div><p className="text-lg font-bold text-success">{formatCurrency(paidAmount)}</p><p className="text-xs text-muted-foreground">المحصل</p><TrendIndicator value={collectionTrend} /></div></div></CardContent></Card>

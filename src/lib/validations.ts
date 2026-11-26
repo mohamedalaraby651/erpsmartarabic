@@ -4,7 +4,9 @@ import { z } from "zod";
 const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
 const optionalString = z.string().max(500).optional().or(z.literal(''));
 const optionalEmail = z.string().email('البريد الإلكتروني غير صالح').max(255).optional().or(z.literal(''));
-const optionalPhone = z.string().regex(phoneRegex, 'رقم الهاتف غير صالح').max(20).optional().or(z.literal(''));
+export const PHONE_INVALID_MESSAGE = 'رقم الهاتف غير صالح — استخدم أرقامًا فقط، مثل 01012345678 أو ‎+201012345678';
+export const isValidPhone = (v: string | null | undefined) => !v || (v.length <= 20 && phoneRegex.test(v));
+const optionalPhone = z.string().regex(phoneRegex, PHONE_INVALID_MESSAGE).max(20, PHONE_INVALID_MESSAGE).max(20).optional().or(z.literal(''));
 
 // Customer validation schema
 export const customerSchema = z.object({

@@ -13,6 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { PHONE_INVALID_MESSAGE } from "@/lib/validations";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import { customerSchema, type CustomerFormData } from "@/lib/validations";
 import { verifyPermissionOnServer, verifyFinancialLimit } from "@/lib/api/secureOperations";
@@ -81,7 +82,7 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     defaultValues,
   });
 
-  const { reset, handleSubmit, watch, trigger, formState: { isDirty } } = methods;
+  const { reset, handleSubmit, watch, trigger, setError, formState: { isDirty } } = methods;
 
   const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
   const pendingCloseRef = useRef(false);
@@ -212,6 +213,11 @@ const CustomerFormDialog = ({ open, onOpenChange, customer }: CustomerFormDialog
     },
     onError: (error) => {
       logErrorSafely('CustomerFormDialog', error);
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.includes('رقم الهاتف') || /phone/i.test(msg)) {
+        setError('phone', { type: 'server', message: PHONE_INVALID_MESSAGE }, { shouldFocus: true });
+        return;
+      }
       toast({ title: "حدث خطأ", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });

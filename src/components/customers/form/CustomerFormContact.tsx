@@ -12,7 +12,7 @@ interface Props {
 }
 
 function CustomerFormContact({ showCompanyFields = false, idPrefix = "" }: Props) {
-  const { register } = useFormContext<CustomerFormData>();
+  const { register, formState: { errors } } = useFormContext<CustomerFormData>();
   const p = idPrefix ? `${idPrefix}_` : "";
 
   return (
@@ -20,11 +20,13 @@ function CustomerFormContact({ showCompanyFields = false, idPrefix = "" }: Props
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor={`${p}phone`}>الهاتف</Label>
-          <Input id={`${p}phone`} {...register('phone')} placeholder="رقم الهاتف" />
+          <Input id={`${p}phone`} aria-invalid={!!errors.phone} {...register('phone')} placeholder="رقم الهاتف" />
+          {errors.phone && <p role="alert" className="text-sm text-destructive mt-1">{errors.phone.message || 'رقم الهاتف غير صالح'}</p>}
         </div>
         <div>
           <Label htmlFor={`${p}phone2`}>هاتف إضافي</Label>
-          <Input id={`${p}phone2`} {...register('phone2')} placeholder="رقم هاتف إضافي" />
+          <Input id={`${p}phone2`} aria-invalid={!!errors.phone2} {...register('phone2')} placeholder="رقم هاتف إضافي" />
+          {errors.phone2 && <p role="alert" className="text-sm text-destructive mt-1">{errors.phone2.message || 'رقم الهاتف غير صالح'}</p>}
         </div>
         <div>
           <Label htmlFor={`${p}email`}>البريد الإلكتروني</Label>

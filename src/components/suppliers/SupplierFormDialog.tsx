@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { PHONE_INVALID_MESSAGE, isValidPhone } from "@/lib/validations";
 import { getSafeErrorMessage, logErrorSafely } from "@/lib/errorHandler";
 import ImageUpload from "@/components/shared/ImageUpload";
 import { User, Phone, Building2, CreditCard, MapPin, DollarSign } from "lucide-react";
@@ -191,8 +192,8 @@ const SupplierFormDialog = ({ open, onOpenChange, supplier }: SupplierFormDialog
       <SectionHeader icon={Phone} title="معلومات الاتصال" color="text-info" />
       <div><Label>جهة الاتصال</Label><Input {...register('contact_person')} placeholder="اسم المسؤول" /></div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><Label>الهاتف</Label><Input {...register('phone')} placeholder="رقم الهاتف" /></div>
-        <div><Label>هاتف إضافي</Label><Input {...register('phone2')} placeholder="رقم هاتف إضافي" /></div>
+        <div><Label>الهاتف</Label><Input aria-invalid={!!errors.phone} {...register('phone', { validate: (v) => isValidPhone(v?.trim()) || PHONE_INVALID_MESSAGE })} placeholder="رقم الهاتف" />{errors.phone && <p role="alert" className="text-sm text-destructive mt-1">{errors.phone.message}</p>}</div>
+        <div><Label>هاتف إضافي</Label><Input aria-invalid={!!errors.phone2} {...register('phone2', { validate: (v) => isValidPhone(v?.trim()) || PHONE_INVALID_MESSAGE })} placeholder="رقم هاتف إضافي" />{errors.phone2 && <p role="alert" className="text-sm text-destructive mt-1">{errors.phone2.message}</p>}</div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div><Label>البريد الإلكتروني</Label><Input type="email" {...register('email')} placeholder="البريد الإلكتروني" /></div>
