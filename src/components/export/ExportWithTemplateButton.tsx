@@ -1,3 +1,4 @@
+import { neutralizeCsvCell } from '@/lib/exports/csvSafety';
 import { exportWorkspaceExcel, nestedExportValue } from "@/lib/exports/workspaceExcel";
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -166,7 +167,7 @@ export function ExportWithTemplateButton({
     const exportData = data.map((row) => {
       const newRow: Record<string, any> = {};
       cols.forEach((col) => {
-        newRow[col.label] = nestedExportValue(row, col.key);
+        newRow[col.label] = neutralizeCsvCell(nestedExportValue(row, col.key));
       });
       return newRow;
     });

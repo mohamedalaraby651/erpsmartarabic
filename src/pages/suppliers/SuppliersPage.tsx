@@ -1,3 +1,4 @@
+import { neutralizeCsvCell } from '@/lib/exports/csvSafety';
 import { exportWorkspaceExcel } from "@/lib/exports/workspaceExcel";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "@/lib/router-compat";
@@ -238,7 +239,7 @@ const SuppliersPage = () => {
       const ws = XLSX.utils.json_to_sheet(data.map(row => {
         const labeled: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(row)) {
-          labeled[LABEL_MAP[k] || k] = v;
+          labeled[LABEL_MAP[k] || k] = neutralizeCsvCell(v);
         }
         return labeled;
       }));

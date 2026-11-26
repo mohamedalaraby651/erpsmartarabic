@@ -1,3 +1,4 @@
+import { attachmentObjectPath, getAttachmentSignedUrl } from '@/lib/storage/attachmentUrl';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -107,7 +108,8 @@ export function AttachmentsList({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      // Replace stored references with fresh short-lived links for display.
+      return Promise.all((data ?? []).map(async (a) => ({ ...a, file_url: await getAttachmentSignedUrl(a.file_url, 600) || a.file_url })));
     },
     enabled: !!entityId,
   });
@@ -160,9 +162,9 @@ export function AttachmentsList({
       if (!attachment) throw new Error('Attachment not found');
 
       // Delete from storage
-      const urlPath = attachment.file_url.split('/documents/')[1]?.split('?')[0];
+      const urlPath = attachmentObjectPath(attachment.file_url);
       if (urlPath) {
-        await supabase.storage.from('documents').remove([decodeURIComponent(urlPath)]);
+        await supabase.storage.from('documents').remove([urlPath]);
       }
 
       // Delete from database

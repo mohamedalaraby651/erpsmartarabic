@@ -162,12 +162,8 @@ export function FileUpload({
 
       if (storageError) throw storageError;
 
-      // Get signed URL for private bucket
-      const { data: urlData } = await supabase.storage
-        .from('documents')
-        .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year
-
-      const fileUrl = urlData?.signedUrl || '';
+      // Store only the object path; short-lived links are issued when viewing.
+      const fileUrl = fileName;
 
       // Save to attachments table
       const { data: attachmentData, error: attachmentError } = await supabase

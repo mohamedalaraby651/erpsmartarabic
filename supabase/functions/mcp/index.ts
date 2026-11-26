@@ -33,7 +33,7 @@ var list_customers_default = defineTool({
     let q = supabase.from("customers").select("id,name,phone,email,city,current_balance,credit_limit,is_active,last_transaction_date").order("last_activity_at", { ascending: false, nullsFirst: false }).limit(limit);
     if (only_active) q = q.eq("is_active", true);
     if (search && search.length > 0) {
-      const s = `%${search}%`;
+      const s = `%${search.replace(/[,()."\\:*%]/g, " ").trim()}%`;
       q = q.or(`name.ilike.${s},phone.ilike.${s},email.ilike.${s}`);
     }
     const { data, error } = await q;
@@ -104,7 +104,7 @@ var search_products_default = defineTool3({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const supabase = supabaseForUser3(ctx);
-    const s = `%${search}%`;
+    const s = `%${search.replace(/[,()."\\:*%]/g, " ").trim()}%`;
     const { data, error } = await supabase.from("products").select("*").or(`name.ilike.${s},sku.ilike.${s}`).limit(limit);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {

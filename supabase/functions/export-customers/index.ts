@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
 
     const csvContent = BOM + [
       csvHeaders.join(','),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/^([=+\-@\t\r])/, "'$1").replace(/"/g, '""')}"`).join(','))
     ].join('\n')
 
     const fileName = `customers_export_${new Date().toISOString().slice(0, 10)}.csv`

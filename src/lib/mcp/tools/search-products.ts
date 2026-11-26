@@ -23,7 +23,7 @@ export default defineTool({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const supabase = supabaseForUser(ctx);
-    const s = `%${search}%`;
+    const s = `%${search.replace(/[,()."\\:*%]/g, " ").trim()}%`;
     const { data, error } = await supabase
       .from("products")
       .select("*")

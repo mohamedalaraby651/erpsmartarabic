@@ -99,6 +99,13 @@
       "when": 1795639788787,
       "tag": "0013_fix_supplier_payment_membership_check",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795681149979,
+      "tag": "0014_security_caller_binding_and_guards",
+      "breakpoints": true
     }
   ]
 }

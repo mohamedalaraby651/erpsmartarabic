@@ -31,7 +31,7 @@ export default defineTool({
       .limit(limit);
     if (only_active) q = q.eq("is_active", true);
     if (search && search.length > 0) {
-      const s = `%${search}%`;
+      const s = `%${search.replace(/[,()."\\:*%]/g, " ").trim()}%`;
       q = q.or(`name.ilike.${s},phone.ilike.${s},email.ilike.${s}`);
     }
     const { data, error } = await q;

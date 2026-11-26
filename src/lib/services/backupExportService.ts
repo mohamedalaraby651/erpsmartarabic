@@ -1,3 +1,4 @@
+import { neutralizeCsvCell } from '@/lib/exports/csvSafety';
 /**
  * Backup Export Service — pure formatters extracted from BackupPage.
  *
@@ -58,8 +59,9 @@ export function exportBackupToCsv(data: BackupData, tables: TableLabel[]): void 
     const headers = Object.keys(tableData[0]).join(',');
     csvContent += headers + '\n';
     for (const row of tableData) {
-      const values = Object.values(row).map((v) => {
-        if (v === null) return '';
+      const values = Object.values(row).map((raw) => {
+        if (raw === null) return '';
+        const v = neutralizeCsvCell(raw);
         if (typeof v === 'string' && (v.includes(',') || v.includes('"') || v.includes('\n'))) {
           return `"${v.replace(/"/g, '""')}"`;
         }

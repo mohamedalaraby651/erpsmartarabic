@@ -91,23 +91,11 @@ serve(async (req) => {
       .select("*")
       .eq("id", snapshotId)
       .maybeSingle();
-    if (snapErr || !snap) {
-      return jsonResponse(
-        { success: false, error: "النسخة الاحتياطية غير موجودة", code: "NOT_FOUND" },
-        404,
-      );
-    }
-
-    if (snap.status !== "active") {
-      return jsonResponse(
-        {
-          success: false,
-          error: `لا يمكن التراجع — حالة النسخة: ${snap.status}`,
-          code: "INVALID_STATUS",
-        },
-        400,
-      );
-    }
+    const notFound = () => jsonResponse(
+      { success: false, error: "النسخة الاحتياطية غير موجودة", code: "NOT_FOUND" },
+      404,
+    );
+    if (snapErr || !snap) return notFound();
 
     // Authorization: Admin OR Owner of the snapshot's tenant.
     const { data: isAdminData } = await supabaseAuth.rpc("has_role", {
@@ -126,10 +114,19 @@ serve(async (req) => {
         .maybeSingle();
       isOwner = ut?.role === "owner";
     }
-    if (!isAdmin && !isOwner) {
+    const { data: currentTenant } = await supabaseAuth.rpc("get_current_tenant");
+    const adminOfSnapshotTenant = isAdmin && currentTenant === snap.tenant_id;
+    // Same response for missing and unauthorized snapshots so existence/status is not disclosed.
+    if (!adminOfSnapshotTenant && !isOwner) return notFound();
+
+    if (snap.status !== "active") {
       return jsonResponse(
-        { success: false, error: "لا تملك صلاحية التراجع", code: "NO_PERMISSION" },
-        403,
+        {
+          success: false,
+          error: `لا يمكن التراجع — حالة النسخة: ${snap.status}`,
+          code: "INVALID_STATUS",
+        },
+        400,
       );
     }
 

@@ -1,3 +1,4 @@
+import { neutralizeCsvCell } from '@/lib/exports/csvSafety';
 import { useCallback } from 'react';
 import { verifyPermissionOnServer } from '@/lib/api/secureOperations';
 import type { Customer } from '@/lib/customerConstants';
@@ -106,7 +107,7 @@ function exportAsCsv(data: Record<string, unknown>[], cols: string[]) {
   data.forEach(row => {
     csvRows.push(headers.map(h => {
       const val = row[h];
-      const str = val == null ? '' : String(val);
+      const str = val == null ? '' : String(neutralizeCsvCell(val));
       return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
     }).join(','));
   });

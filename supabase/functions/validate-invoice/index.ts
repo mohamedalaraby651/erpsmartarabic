@@ -201,26 +201,13 @@ serve(async (req) => {
 
         // A limit of 0/null means "no limit".
         if (creditPortion > 0 && creditLimit > 0 && newBalance > creditLimit) {
-          console.log('[validate-invoice] Customer credit limit exceeded:', {
-            customer: customer.name,
-            current_balance: currentBalance,
-            credit_limit: creditLimit,
-            requested: invoiceData.total_amount,
-            new_balance: newBalance
-          });
+          console.log('[validate-invoice] Customer credit limit exceeded');
 
           return new Response(
             JSON.stringify({ 
               valid: false,
               error: 'Customer credit limit exceeded',
-              code: 'CREDIT_LIMIT_EXCEEDED',
-              details: {
-                customer_name: customer.name,
-                current_balance: currentBalance,
-                credit_limit: creditLimit,
-                requested_amount: invoiceData.total_amount,
-                would_be_balance: newBalance
-              }
+              code: 'CREDIT_LIMIT_EXCEEDED'
             }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );

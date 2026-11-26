@@ -162,6 +162,23 @@ serve(async (req) => {
       );
     }
 
+    // Every supplied warehouse must belong to the caller's company.
+    const warehouseIds = [movementData.from_warehouse_id, movementData.to_warehouse_id].filter(Boolean) as string[];
+    if (warehouseIds.length > 0) {
+      const { data: ownWarehouses } = await supabaseAdmin
+        .from('warehouses')
+        .select('id')
+        .in('id', warehouseIds)
+        .eq('tenant_id', tenantId);
+      const ownIds = new Set((ownWarehouses ?? []).map((w: { id: string }) => w.id));
+      if (!warehouseIds.every((id) => ownIds.has(id))) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Warehouse not found', code: 'WAREHOUSE_NOT_FOUND' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Idempotency guard (prevents duplicate stock movement on retry)
     const idemKey = getIdempotencyKey(req);
     const correlationId = getCorrelationId(req);
