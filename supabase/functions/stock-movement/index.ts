@@ -135,7 +135,7 @@ serve(async (req) => {
 
     // 1. Check permission
     console.log('[stock-movement] Checking permission...');
-    const { data: hasPermission } = await supabaseAdmin.rpc('check_section_permission', {
+    const { data: hasPermission } = await supabaseAuth.rpc('check_section_permission', {
       _user_id: userId,
       _section: 'inventory',
       _action: 'edit'
