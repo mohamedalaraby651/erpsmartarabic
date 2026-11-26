@@ -29,7 +29,20 @@ interface Props {
   profile: DocumentRenderProfile;
   /** الارتفاع المستهدف للحاوية بالبكسل. القيمة الفعلية تعتمد على ResizeObserver. */
   height?: number;
+  /** Real document data; when omitted the panel shows sample rows (settings preview). */
+  document?: PreviewDocument;
 }
+
+export interface PreviewDocument {
+  title: string;
+  /** null → not generated yet */
+  number: string | null;
+  companyName?: string | null;
+  lines: Array<{ name: string; quantity: number; unitPrice: number; total: number }>;
+  total: number;
+}
+
+const fmt = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
 
 function resolveDims(p: DocumentRenderProfile) {
   const base = PAPER_DIMENSIONS_MM[p.layout.pageSize] ?? PAPER_DIMENSIONS_MM.A4;
@@ -50,7 +63,7 @@ function watermarkOffsets(pos: WatermarkPosition): { top: string; left: string; 
   }
 }
 
-function LivePreviewPanelInner({ profile, height = 560 }: Props) {
+function LivePreviewPanelInner({ profile, height = 560, document: doc }: Props) {
   const deferred = useDeferredValue(profile);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [box, setBox] = useState({ w: 0, h: height });
@@ -248,7 +261,7 @@ function LivePreviewPanelInner({ profile, height = 560 }: Props) {
                   )}
                   <div>
                     <div style={{ fontWeight: 700, color: deferred.branding.primaryColor, fontSize: `${14 * scale}px` }}>
-                      {deferred.branding.companyName || 'اسم الشركة'}
+                      {doc?.companyName || deferred.branding.companyName || 'اسم الشركة'}
                     </div>
                     {deferred.branding.taxNumber && (
                       <div style={{ fontSize: `${8 * scale}px`, opacity: 0.7 }}>
@@ -267,7 +280,7 @@ function LivePreviewPanelInner({ profile, height = 560 }: Props) {
                     fontSize: `${10 * scale}px`,
                   }}
                 >
-                  فاتورة #2026-0001
+                  {doc ? `${doc.title} #${doc.number ?? 'سيتم التوليد عند الحفظ'}` : 'فاتورة #2026-0001'}
                 </div>
               </div>
 
@@ -286,17 +299,37 @@ function LivePreviewPanelInner({ profile, height = 560 }: Props) {
                 >
                   <span>الصنف</span><span>الكمية</span><span>السعر</span><span>الإجمالي</span>
                 </div>
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    style={{
+                {doc ? (
+                  <>
+                    {doc.lines.length === 0 && (
+                      <div style={{ padding: `${4 * scale}px`, opacity: 0.6 }}>لا توجد أصناف بعد</div>
+                    )}
+                    {doc.lines.map((l, i) => (
+                      <div key={i} style={{
                       display: 'grid',
                       gridTemplateColumns: '2fr 1fr 1fr 1fr',
                       gap: `${4 * scale}px`,
                       padding: `${3 * scale}px ${4 * scale}px`,
                       borderBottom: '1px solid #eee',
-                    }}
-                  >
+                    }}>
+                        <span>{l.name || '—'}</span>
+                        <span>{l.quantity}</span>
+                        <span>{fmt(l.unitPrice)}</span>
+                        <span>{fmt(l.total)}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, padding: `${4 * scale}px`, marginTop: `${4 * scale}px` }}>
+                      <span>الإجمالي</span><span>{fmt(doc.total)}</span>
+                    </div>
+                  </>
+                ) : [1, 2, 3, 4].map((i) => (
+                  <div key={i} style={{
+                      display: 'grid',
+                      gridTemplateColumns: '2fr 1fr 1fr 1fr',
+                      gap: `${4 * scale}px`,
+                      padding: `${3 * scale}px ${4 * scale}px`,
+                      borderBottom: '1px solid #eee',
+                    }}>
                     <span>صنف تجريبي {i}</span>
                     <span>{i}</span>
                     <span>{(i * 100).toFixed(2)}</span>

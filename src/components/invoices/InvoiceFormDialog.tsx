@@ -14,6 +14,7 @@ import { invoiceFormSchema, invoiceItemSchema, type InvoiceFormData } from "@/li
 import { validateInvoice, getErrorMessage } from "@/lib/api/secureOperations";
 import { saveInvoiceWithItems } from "@/lib/services/invoiceService";
 import { customerRepository } from "@/application/queries/customers";
+import { settingsRepository } from "@/lib/repositories/settingsRepository";
 import { productRepository } from "@/application/queries/products";
 import { queryKeys } from "@/lib/queryKeys";
 import { useInvoiceItems } from "./useInvoiceItems";
@@ -70,6 +71,11 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const { data: products = [] } = useQuery({
     queryKey: queryKeys.products.list({ active: true }),
     queryFn: () => productRepository.findActive(),
+  });
+
+  const { data: companySettings } = useQuery({
+    queryKey: ["company-settings"],
+    queryFn: () => settingsRepository.getCompany(),
   });
 
   const { items, subtotal, addItem, updateItem, removeItem, loadItems, resetItems } = useInvoiceItems(products);
@@ -224,6 +230,14 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
   const taxAmount = watch('tax_amount') || 0;
   const total = subtotal - discountAmount + taxAmount;
 
+  const previewDoc = {
+    title: 'فاتورة',
+    number: invoice?.invoice_number ?? null,
+    companyName: companySettings?.company_name ?? null,
+    lines: items.filter(it => it.product_id).map(it => ({ name: it.product_name, quantity: it.quantity, unitPrice: it.unit_price, total: it.total_price })),
+    total,
+  };
+
   // ─── Wizard steps ────
   const Step1Header = (
     <InvoiceFormHeader customers={customers} watch={watch} setValue={setValue} register={register} errors={errors} />
@@ -250,7 +264,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
     <div className="space-y-6">
       <InvoiceTotalsSection subtotal={subtotal} total={total} register={register} />
       <div className="hidden lg:block">
-        <LivePreviewPanel profile={pdfProfile} height={420} />
+        <LivePreviewPanel profile={pdfProfile} height={420} document={previewDoc} />
       </div>
       <div className="flex justify-between items-center gap-2">
         {printButton}
@@ -277,7 +291,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
           {Step2Items}
           <InvoiceTotalsSection subtotal={subtotal} total={total} register={register} />
           <div className="hidden lg:block">
-            <LivePreviewPanel profile={pdfProfile} height={420} />
+            <LivePreviewPanel profile={pdfProfile} height={420} document={previewDoc} />
           </div>
           <div className="flex justify-between items-center gap-2">
             {printButton}

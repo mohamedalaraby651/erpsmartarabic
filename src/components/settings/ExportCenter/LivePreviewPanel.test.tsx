@@ -49,3 +49,16 @@ describe('LivePreviewPanel', () => {
     expect(screen.getByText(/تعذّر عرض المعاينة/)).toBeInTheDocument();
   });
 });
+
+describe('LivePreviewPanel with a real document', () => {
+  it('shows the real company, pending number and form lines instead of samples', () => {
+    const profile = createDefaultProfile('global');
+    // @ts-expect-error jsdom polyfill that reports a real size so the page renders
+    globalThis.ResizeObserver = class { constructor(private cb: (e: unknown[]) => void) {} observe() { this.cb([{ contentRect: { width: 600, height: 800 } }]); } unobserve() {} disconnect() {} };
+    render(withQueryClient(<LivePreviewPanel profile={profile} height={400} document={{ title: 'فاتورة', number: null, companyName: 'شركة الاختبار', lines: [{ name: 'سماد', quantity: 2, unitPrice: 125, total: 250 }], total: 250 }} />));
+    expect(screen.getByText('شركة الاختبار')).toBeTruthy();
+    expect(screen.getByText('فاتورة #سيتم التوليد عند الحفظ')).toBeTruthy();
+    expect(screen.getByText('سماد')).toBeTruthy();
+    expect(screen.queryByText(/صنف تجريبي/)).toBeNull();
+  });
+});
