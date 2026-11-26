@@ -25,7 +25,7 @@ export interface FinancialKPIData {
   overdueAR: number;
   cashBalance: number;
   pendingApprovals: number;
-  dsoDays: number;
+  dsoDays: number | null;
   grossMarginValue: number;
   grossMarginPct: number;
 }
@@ -87,7 +87,7 @@ const KpiCardView = memo(function KpiCardView({ card }: { card: KpiCard }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] sm:text-xs text-muted-foreground truncate leading-tight">{card.label}</p>
-          <p data-amount={card.exact !== undefined ? "" : undefined} title={card.exact} dir={card.exact ? "ltr" : undefined} className="text-sm sm:text-xl font-bold mt-0.5 truncate tabular-nums leading-tight">{card.value}</p>
+          <p data-amount={card.exact !== undefined ? "" : undefined} title={card.exact} dir={card.exact && card.value !== '—' ? "ltr" : undefined} className="text-sm sm:text-xl font-bold mt-0.5 truncate tabular-nums leading-tight">{card.value}</p>
           {card.hint && (
             <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5 truncate leading-tight">{card.hint}</p>
           )}
@@ -166,9 +166,10 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     },
     {
       label: 'DSO (متوسط التحصيل)',
-      value: `${data.dsoDays} يوم`,
+      value: data.dsoDays == null ? '—' : `${data.dsoDays} يوم`,
+      ...(data.dsoDays == null ? { exact: 'لا توجد مبيعات كافية في آخر 90 يوم لحساب متوسط التحصيل' } : {}),
       icon: Hourglass,
-      tone: data.dsoDays <= 30 ? 'success' : data.dsoDays <= 60 ? 'warning' : 'destructive',
+      tone: data.dsoDays == null ? 'info' : data.dsoDays <= 30 ? 'success' : data.dsoDays <= 60 ? 'warning' : 'destructive',
       href: '/reports',
       hint: 'آخر 90 يوم',
     },

@@ -21,6 +21,7 @@ import { referenceRepository } from "@/application/queries/reference";
 import type { Database } from "@/integrations/supabase/types";
 import { useQuotationItems } from "@/components/quotations/useQuotationItems";
 import { QuotationItemsTable } from "@/components/quotations/QuotationItemsTable";
+import { settingsRepository } from "@/lib/repositories/settingsRepository";
 import { LivePreviewPanel } from "@/components/settings/ExportCenter/LivePreviewPanel";
 import { useLivePreviewProfile } from "@/components/settings/ExportCenter/useLivePreviewProfile";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
@@ -67,6 +68,18 @@ export default function QuoteNewPage() {
     setDiscountAmount,
     validate,
   } = useQuotationItems({ products });
+
+  const { data: companySettings } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: () => settingsRepository.getCompany(),
+  });
+  const previewDoc = {
+    title: 'عرض سعر',
+    number: null,
+    companyName: companySettings?.company_name ?? null,
+    lines: items.filter(it => it.product_id).map(it => ({ name: it.product_name, quantity: it.quantity, unitPrice: it.unit_price, total: it.total_price })),
+    total: grandTotal,
+  };
 
   const submit = async () => {
     if (!customerId) {
@@ -168,7 +181,7 @@ export default function QuoteNewPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
           <div className="hidden lg:block">
-            <LivePreviewPanel profile={pdfProfile} height={420} />
+            <LivePreviewPanel profile={pdfProfile} height={420} document={previewDoc} />
           </div>
           <div className="space-y-3 bg-muted p-4 rounded-lg">
             <div className="flex justify-between">

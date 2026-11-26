@@ -29,6 +29,7 @@ import { useQuotationItems } from "./useQuotationItems";
 import { AdaptiveContainer } from "@/components/mobile/AdaptiveContainer";
 import { FullScreenForm } from "@/components/mobile/FullScreenForm";
 import { useFormWizard } from "@/hooks/useFormWizard";
+import { settingsRepository } from "@/lib/repositories/settingsRepository";
 import { LivePreviewPanel } from "@/components/settings/ExportCenter/LivePreviewPanel";
 import { useLivePreviewProfile } from "@/components/settings/ExportCenter/useLivePreviewProfile";
 import { QuotationPrintView } from "@/components/print/QuotationPrintView";
@@ -80,6 +81,18 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
     vatEnabled, setVatEnabled, discountAmount, setDiscountAmount,
     addItem, updateItem, removeItem, loadItems, resetItems, validate, setItems,
   } = useQuotationItems({ products });
+
+  const { data: companySettings } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: () => settingsRepository.getCompany(),
+  });
+  const previewDoc = {
+    title: 'عرض سعر',
+    number: quotation?.quotation_number ?? null,
+    companyName: companySettings?.company_name ?? null,
+    lines: items.filter(it => it.product_id).map(it => ({ name: it.product_name, quantity: it.quantity, unitPrice: it.unit_price, total: it.total_price })),
+    total: grandTotal,
+  };
 
   const lines = { items, discountAmount, vatEnabled };
   const linesDirty = JSON.stringify(lines) !== baselineLines;
@@ -237,7 +250,7 @@ const QuotationFormDialog = ({ open, onOpenChange, quotation }: QuotationFormDia
         </div>
       </div>
       <div className="hidden lg:block">
-        <LivePreviewPanel profile={pdfProfile} height={420} />
+        <LivePreviewPanel profile={pdfProfile} height={420} document={previewDoc} />
       </div>
       <div className="flex justify-start">{printButton}</div>
     </div>

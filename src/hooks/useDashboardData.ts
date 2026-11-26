@@ -6,6 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { markPhase } from '@/lib/bootMarks';
+import { normalizeDso } from '@/lib/dashboard/dso';
 
 // ============================================
 // Types
@@ -26,7 +27,8 @@ export interface FinancialKPIs {
   overdueAR: number;
   cashBalance: number;
   pendingApprovals: number;
-  dsoDays: number;
+  /** null = not enough sales in the period to compute a meaningful DSO */
+  dsoDays: number | null;
   grossMarginValue: number;
   grossMarginPct: number;
 }
@@ -115,7 +117,7 @@ export function useDashboardData() {
         overdueAR: Number(overview.overdue_ar ?? 0),
         cashBalance: Number(overview.cash_balance ?? 0),
         pendingApprovals: Number(overview.pending_approvals ?? 0),
-        dsoDays: Number(overview.dso_days ?? 0),
+        dsoDays: normalizeDso(overview.dso_days),
         grossMarginValue: Number(overview.gross_margin_value ?? 0),
         grossMarginPct: Number(overview.gross_margin_pct ?? 0),
       }
