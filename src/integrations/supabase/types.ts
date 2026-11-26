@@ -6932,10 +6932,15 @@ export type Database = {
         Args: { _active: boolean; _user_id: string }
         Returns: boolean
       }
-      atomic_customer_balance_update: {
-        Args: { _amount: number; _customer_id: string }
-        Returns: undefined
-      }
+      atomic_customer_balance_update:
+        | {
+            Args: { _amount: number; _customer_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: { _amount: number; _customer_id: string; _tenant_id: string }
+            Returns: undefined
+          }
       atomic_supplier_balance_update: {
         Args: { _amount: number; _supplier_id: string }
         Returns: undefined

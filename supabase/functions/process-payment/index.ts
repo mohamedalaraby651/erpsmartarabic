@@ -239,6 +239,7 @@ serve(async (req) => {
     const { error: balanceError } = await supabaseAdmin.rpc('atomic_customer_balance_update', {
       _customer_id: paymentData.customer_id,
       _amount: paymentData.amount,
+      _tenant_id: tenantId,
     });
 
     if (balanceError) {

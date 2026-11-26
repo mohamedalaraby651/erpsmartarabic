@@ -120,6 +120,13 @@
       "when": 1795724267601,
       "tag": "0016_event_tenant_from_row",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795724757050,
+      "tag": "0017_fix_posting_period_and_payment_balance",
+      "breakpoints": true
     }
   ]
 }
