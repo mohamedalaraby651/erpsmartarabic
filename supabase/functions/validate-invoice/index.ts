@@ -9,6 +9,7 @@ const corsHeaders = {
 interface InvoiceData {
   customer_id: string;
   total_amount: number;
+  payment_method?: string;
   items?: Array<{
     product_id: string;
     quantity: number;
@@ -194,9 +195,12 @@ serve(async (req) => {
       if (customer) {
         const currentBalance = customer.current_balance || 0;
         const creditLimit = customer.credit_limit || 0;
-        const newBalance = currentBalance + invoiceData.total_amount;
+        // Only the on-credit part counts toward the limit; cash is settled immediately.
+        const creditPortion = invoiceData.payment_method === 'cash' ? 0 : invoiceData.total_amount;
+        const newBalance = currentBalance + creditPortion;
 
-        if (creditLimit > 0 && newBalance > creditLimit) {
+        // A limit of 0/null means "no limit".
+        if (creditPortion > 0 && creditLimit > 0 && newBalance > creditLimit) {
           console.log('[validate-invoice] Customer credit limit exceeded:', {
             customer: customer.name,
             current_balance: currentBalance,

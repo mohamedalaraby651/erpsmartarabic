@@ -124,6 +124,7 @@ const InvoiceFormDialog = ({ open, onOpenChange, invoice, prefillCustomerId }: I
           const validation = await validateInvoice({
             customer_id: data.customer_id,
             total_amount: total,
+            payment_method: data.payment_method,
             items: items.map(it => ({ product_id: it.product_id, quantity: it.quantity, unit_price: it.unit_price })),
           });
           if (!validation.valid) throw new Error(getErrorMessage(validation.code || '', validation.error || 'فشل التحقق من الفاتورة'));

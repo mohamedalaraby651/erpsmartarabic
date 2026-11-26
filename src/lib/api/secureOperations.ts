@@ -32,6 +32,7 @@ export interface OperationResult<T> {
 export interface InvoiceValidationData {
   customer_id: string;
   total_amount: number;
+  payment_method?: string;
   items?: Array<{
     product_id: string;
     quantity: number;
