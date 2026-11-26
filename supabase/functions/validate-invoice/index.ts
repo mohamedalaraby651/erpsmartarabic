@@ -106,7 +106,9 @@ serve(async (req) => {
 
     // 1. Check permission using DB function
     console.log('[validate-invoice] Checking section permission...');
-    const { data: hasPermission, error: permError } = await supabaseAdmin.rpc('check_section_permission', {
+    const { data: hasPermission, error: permError } = // Run as the caller: these checks resolve the company via auth.uid(),
+    // which is NULL under the service role (admins were wrongly denied).
+    await supabaseAuth.rpc('check_section_permission', {
       _user_id: userId,
       _section: 'invoices',
       _action: 'create'
@@ -130,7 +132,7 @@ serve(async (req) => {
 
     // 2. Check financial limit
     console.log('[validate-invoice] Checking financial limit...');
-    const { data: withinLimit, error: limitError } = await supabaseAdmin.rpc('check_financial_limit', {
+    const { data: withinLimit, error: limitError } = await supabaseAuth.rpc('check_financial_limit', {
       _user_id: userId,
       _limit_type: 'invoice',
       _value: invoiceData.total_amount
