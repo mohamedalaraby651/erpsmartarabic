@@ -1,3 +1,4 @@
+import { sanitizeNextPath } from '@/lib/auth/nextPath';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from '@/lib/router-compat';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,7 +21,7 @@ export default function Auth() {
   // return the user to the URL they came from. Only accept same-origin
   // relative paths.
   const rawNext = searchParams.get('next');
-  const safeNext = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && rawNext !== '/' ? rawNext : '/dashboard';
+  const safeNext = sanitizeNextPath(rawNext);
 
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

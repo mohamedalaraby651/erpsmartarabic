@@ -166,7 +166,7 @@ export const FinancialKPIRow = memo(function FinancialKPIRow({
     },
     {
       label: 'DSO (متوسط التحصيل)',
-      value: data.dsoDays == null ? '—' : `${data.dsoDays} يوم`,
+      value: data.dsoDays == null ? '—' : `${Math.round(data.dsoDays)} يوم`,
       ...(data.dsoDays == null ? { exact: 'لا توجد مبيعات كافية في آخر 90 يوم لحساب متوسط التحصيل' } : {}),
       icon: Hourglass,
       tone: data.dsoDays == null ? 'info' : data.dsoDays <= 30 ? 'success' : data.dsoDays <= 60 ? 'warning' : 'destructive',

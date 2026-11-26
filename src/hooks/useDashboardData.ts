@@ -6,7 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { markPhase } from '@/lib/bootMarks';
-import { normalizeDso } from '@/lib/dashboard/dso';
+import { computeDso, DSO_PERIOD_DAYS } from '@/lib/dashboard/dso';
 
 // ============================================
 // Types
@@ -69,7 +69,16 @@ export function useDashboardData() {
       const { data, error } = await supabase.rpc('get_dashboard_overview');
       if (error) throw error;
       markPhase('first_rpc_done');
-      return data as {
+      const since = new Date(Date.now() - DSO_PERIOD_DAYS * 86400000).toISOString();
+      const { data: periodRows, error: salesError } = await supabase
+        .from('invoices')
+        .select('total_amount')
+        .gte('created_at', since)
+        .neq('status', 'cancelled');
+      if (salesError) throw salesError;
+      const periodSales = Math.round((periodRows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0) * 100) / 100;
+      return { ...(data as object), period_sales_90: periodSales } as {
+        period_sales_90: number;
         customers_count: number;
         products_count: number;
         invoices_count: number;
@@ -117,7 +126,7 @@ export function useDashboardData() {
         overdueAR: Number(overview.overdue_ar ?? 0),
         cashBalance: Number(overview.cash_balance ?? 0),
         pendingApprovals: Number(overview.pending_approvals ?? 0),
-        dsoDays: normalizeDso(overview.dso_days),
+        dsoDays: computeDso({ openReceivables: Number(overview.outstanding_ar ?? 0), periodSales: overview.period_sales_90, periodDays: DSO_PERIOD_DAYS }),
         grossMarginValue: Number(overview.gross_margin_value ?? 0),
         grossMarginPct: Number(overview.gross_margin_pct ?? 0),
       }
