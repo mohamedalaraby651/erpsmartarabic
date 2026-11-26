@@ -1,6 +1,4 @@
-# Plan: Public landing page at "/" and dashboard at "/dashboard"
-
-Task 2 has not been described yet; it will be added to this plan when received.
+# Plan: Public landing page, /dashboard move, and CI workflow
 
 ## What you will see
 - Signed-out visitors opening "/" see the existing Arabic landing page (hero, features, sign-in/sign-up button to /auth).
@@ -22,7 +20,16 @@ Task 2 has not been described yet; it will be added to this plan when received.
 4. Check
    - Playwright: signed-out "/" shows landing, "/dashboard" and "/customers" go to /auth; signed-in "/" goes to /dashboard, sidebar home link active; no repeated navigation.
    - Run existing navigation/breadcrumb tests, update ones that expect "/" as home.
+5. Redirect decision test
+   - Small pure helper `src/lib/auth/homeRedirect.ts`: given (loading, signedIn, path) returns "wait" | "landing" | "/dashboard" | "/auth?next=...". Used by "/" and AppLayout.
+   - Vitest file next to it: signed-in on "/" -> /dashboard; signed-out on "/" -> landing; signed-out on /dashboard -> /auth with next; loading -> wait (no redirect); signed-in on /dashboard -> stays.
+
+## Task 2: CI
+- Add only `.github/workflows/ci.yml`, triggered on push and pull_request.
+- Steps: checkout, setup Bun, `bun install --frozen-lockfile`, `bun run lint`, `bunx tsc --noEmit` type check, `bun run test`.
+- No repository settings, secrets or other workflow changes.
 
 ## Technical notes
-- Frontend only; no database, roles or security changes.
+- Frontend only; no database, RLS, roles, edge functions, security scan or publishing.
+- Everything built in one batch.
 - Client-side guard approach kept (AppLayout `useAuth` + `_app` `ssr: false`).
