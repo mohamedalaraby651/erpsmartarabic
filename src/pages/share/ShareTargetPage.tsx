@@ -216,7 +216,7 @@ export default function ShareTargetPage() {
 
         {/* Cancel */}
         <div className="text-center">
-          <Button variant="ghost" onClick={() => navigate('/')}>
+          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
             إلغاء والعودة للرئيسية
           </Button>
         </div>

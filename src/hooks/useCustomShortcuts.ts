@@ -15,7 +15,7 @@ export interface ShortcutDefinition {
 // الاختصارات الافتراضية
 export const defaultShortcuts: ShortcutDefinition[] = [
   // التنقل
-  { id: 'nav-home', key: '1', altKey: true, description: 'الرئيسية', action: '/', category: 'navigation', enabled: true },
+  { id: 'nav-home', key: '1', altKey: true, description: 'الرئيسية', action: '/dashboard', category: 'navigation', enabled: true },
   { id: 'nav-customers', key: '2', altKey: true, description: 'العملاء', action: '/customers', category: 'navigation', enabled: true },
   { id: 'nav-products', key: '3', altKey: true, description: 'المنتجات', action: '/products', category: 'navigation', enabled: true },
   { id: 'nav-invoices', key: '4', altKey: true, description: 'الفواتير', action: '/invoices', category: 'navigation', enabled: true },

@@ -20,7 +20,7 @@ const quickNavItems: NavItem[] = [
   {
     title: 'الرئيسية',
     icon: LayoutDashboard,
-    href: '/',
+    href: '/dashboard',
     color: 'text-primary',
     bgColor: 'bg-primary/15',
     activeColor: 'shadow-primary/20',

@@ -89,7 +89,7 @@ describe('useKeyboardShortcuts', () => {
       window.dispatchEvent(event);
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
   });
 
   it('should navigate to customers on Alt+2', async () => {

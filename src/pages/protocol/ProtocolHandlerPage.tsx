@@ -111,7 +111,7 @@ export default function ProtocolHandlerPage() {
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
             <p className="text-lg font-medium mb-2">خطأ في معالجة الرابط</p>
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={() => navigate('/')}>العودة للرئيسية</Button>
+            <Button onClick={() => navigate('/dashboard')}>العودة للرئيسية</Button>
           </CardContent>
         </Card>
       </div>

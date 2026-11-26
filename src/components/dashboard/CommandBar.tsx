@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 const items = [
-  { label: 'لوحة التحكم', href: '/', icon: LayoutDashboard, group: 'تنقّل' },
+  { label: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard, group: 'تنقّل' },
   { label: 'العملاء', href: '/customers', icon: Users, group: 'تنقّل' },
   { label: 'الموردون', href: '/suppliers', icon: Truck, group: 'تنقّل' },
   { label: 'المنتجات', href: '/products', icon: Package, group: 'تنقّل' },

@@ -51,7 +51,7 @@ export const routeLabels: Record<string, string> = {
 };
 
 // Pages that should hide breadcrumbs
-const hideBreadcrumbsOn = ['/', '/auth'];
+const hideBreadcrumbsOn = ['/', '/dashboard', '/auth'];
 
 interface SmartBreadcrumbsProps {
   className?: string;
@@ -123,7 +123,7 @@ export function SmartBreadcrumbs({ className, maxItems = 4 }: SmartBreadcrumbsPr
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
             <Link 
-              to="/" 
+              to="/dashboard" 
               className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <Home className="h-3.5 w-3.5" />

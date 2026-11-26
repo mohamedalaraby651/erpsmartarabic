@@ -56,7 +56,7 @@ export class AppErrorBoundary extends Component<Props, State> {
   };
 
   handleGoHome = (): void => {
-    window.location.href = '/';
+    window.location.href = '/dashboard';
   };
 
   handleRetry = (): void => {

@@ -14,7 +14,7 @@ export default function ForbiddenPage() {
         <p className="text-muted-foreground mb-6">
           ليس لديك الصلاحيات اللازمة لعرض هذه الصفحة. تواصل مع مسؤول النظام إن كنت تعتقد أن هذا خطأ.
         </p>
-        <Button onClick={() => navigate('/')} variant="default">
+        <Button onClick={() => navigate('/dashboard')} variant="default">
           <ArrowRight className="ml-2 h-4 w-4" />
           العودة إلى لوحة القيادة
         </Button>

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Dashboard from "@/pages/Dashboard";
 
-export const Route = createFileRoute("/_app/")({
+export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [
     { title: 'لوحة الإدارة | نظرة' },
     { name: 'description', content: 'لوحة نظرة لمتابعة المبيعات والتحصيل والمخزون والحسابات.' },

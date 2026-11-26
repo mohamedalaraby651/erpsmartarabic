@@ -42,7 +42,7 @@ export default function PlatformLayout() {
             هذه المنطقة مخصصة لمسؤولي المنصة فقط. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع مالك المنصة.
           </p>
           <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => navigate('/')}>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>
               العودة للنظام
             </Button>
             <Button variant="outline" onClick={() => navigate('/platform/auth')}>

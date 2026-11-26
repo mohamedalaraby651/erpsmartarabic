@@ -218,13 +218,13 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={isItemActive('/') ? 'secondary' : 'ghost'}
+                      variant={isItemActive('/dashboard') ? 'secondary' : 'ghost'}
                       size="icon"
                       className={cn(
                         'w-full h-10',
-                        isItemActive('/') && 'bg-primary/10 text-primary hover:bg-primary/15'
+                        isItemActive('/dashboard') && 'bg-primary/10 text-primary hover:bg-primary/15'
                       )}
-                      onClick={() => handleNavigation('/')}
+                      onClick={() => handleNavigation('/dashboard')}
                     >
                       <LayoutDashboard className="h-5 w-5" />
                     </Button>
@@ -233,12 +233,12 @@ function AppSidebar({ collapsed, onToggle, isDark, onThemeToggle }: AppSidebarPr
                 </Tooltip>
               ) : (
                 <Button
-                  variant={isItemActive('/') ? 'secondary' : 'ghost'}
+                  variant={isItemActive('/dashboard') ? 'secondary' : 'ghost'}
                   className={cn(
                     'w-full justify-start gap-3 h-10',
-                    isItemActive('/') && 'bg-primary/10 text-primary hover:bg-primary/15'
+                    isItemActive('/dashboard') && 'bg-primary/10 text-primary hover:bg-primary/15'
                   )}
-                  onClick={() => handleNavigation('/')}
+                  onClick={() => handleNavigation('/dashboard')}
                 >
                   <LayoutDashboard className="h-5 w-5" />
                   <span>لوحة التحكم</span>

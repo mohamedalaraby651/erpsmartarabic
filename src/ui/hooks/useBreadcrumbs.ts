@@ -41,7 +41,7 @@ export function useBreadcrumbs(): readonly Breadcrumb[] {
     }
     const root: Breadcrumb = active
       ? { label: active.name, to: active.basePath }
-      : { label: "Home", to: "/" };
+      : { label: "Home", to: "/dashboard" };
     const fromNav = active
       ? walkNavForPath(active.navigation, pathname, [root])
       : null;

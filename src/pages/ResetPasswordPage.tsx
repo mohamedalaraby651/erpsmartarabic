@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
       return;
     }
     toast.success('تم تحديث كلمة المرور بنجاح');
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (

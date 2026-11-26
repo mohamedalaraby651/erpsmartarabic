@@ -6,6 +6,7 @@ import AppInitSkeleton from '@/components/shared/AppInitSkeleton';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { PlatformShell } from '@/platform/shell';
+import { decideRedirect } from '@/lib/auth/homeRedirect';
 
 export default function AppLayout() {
   const { user, loading, initError, retryInit } = useAuth();
@@ -29,10 +30,11 @@ export default function AppLayout() {
       window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
+    if (initError) return;
+    const path = window.location.pathname + window.location.search;
+    const decision = decideRedirect({ loading, signedIn: !!user, path });
+    if (decision.kind === 'redirect') navigate(decision.to, { replace: true });
+  }, [user, loading, initError, navigate]);
 
   if (initError) {
     return (

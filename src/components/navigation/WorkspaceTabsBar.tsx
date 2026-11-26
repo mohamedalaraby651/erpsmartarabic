@@ -34,7 +34,7 @@ export function WorkspaceTabsBar() {
   const close = (path: string) => {
     const next = closeTab(tabs, path);
     setTabs(next); saveTabs(next);
-    if (path.split('?')[0] === current) navigate(next.length ? next[next.length - 1].path : '/');
+    if (path.split('?')[0] === current) navigate(next.length ? next[next.length - 1].path : '/dashboard');
   };
 
   if (tabs.length < 2) return null;

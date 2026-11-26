@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Char91indexChar93RouteImport } from './routes/[index]'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -17,13 +18,13 @@ import { Route as LandingRouteImport } from './routes/landing'
 import { Route as PlatformRouteImport } from './routes/platform'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as Char91__integration__Char93Ux1eRouteImport } from './routes/[__integration__]/ux1e'
-import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppApprovalsRouteImport } from './routes/_app/approvals'
 import { Route as AppAttachmentsRouteImport } from './routes/_app/attachments'
 import { Route as AppAttendanceRouteImport } from './routes/_app/attendance'
 import { Route as AppCategoriesRouteImport } from './routes/_app/categories'
 import { Route as AppCollectionsRouteImport } from './routes/_app/collections'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppExpenseCategoriesRouteImport } from './routes/_app/expense-categories'
 import { Route as AppExpensesRouteImport } from './routes/_app/expenses'
 import { Route as AppInstallRouteImport } from './routes/_app/install'
@@ -120,6 +121,11 @@ const Char91indexChar93Route = Char91indexChar93RouteImport.update({
   path: '/index',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -155,11 +161,6 @@ const Char91__integration__Char93Ux1eRoute =
     path: '/__integration__/ux1e',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -188,6 +189,11 @@ const AppCategoriesRoute = AppCategoriesRouteImport.update({
 const AppCollectionsRoute = AppCollectionsRouteImport.update({
   id: '/collections',
   path: '/collections',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
 const AppExpenseCategoriesRoute = AppExpenseCategoriesRouteImport.update({
@@ -649,7 +655,7 @@ const AppAdminKnowledgeDocSplatRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/index': typeof Char91indexChar93Route
@@ -663,6 +669,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AppAttendanceRoute
   '/categories': typeof AppCategoriesRoute
   '/collections': typeof AppCollectionsRoute
+  '/dashboard': typeof AppDashboardRoute
   '/expense-categories': typeof AppExpenseCategoriesRoute
   '/expenses': typeof AppExpensesRoute
   '/install': typeof AppInstallRoute
@@ -755,6 +762,7 @@ export interface FileRoutesByFullPath {
   '/admin/knowledge/doc/$': typeof AppAdminKnowledgeDocSplatRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/index': typeof Char91indexChar93Route
@@ -767,6 +775,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AppAttendanceRoute
   '/categories': typeof AppCategoriesRoute
   '/collections': typeof AppCollectionsRoute
+  '/dashboard': typeof AppDashboardRoute
   '/expense-categories': typeof AppExpenseCategoriesRoute
   '/expenses': typeof AppExpensesRoute
   '/install': typeof AppInstallRoute
@@ -792,7 +801,6 @@ export interface FileRoutesByTo {
   '/platform/reports': typeof PlatformReportsRoute
   '/platform/settings': typeof PlatformSettingsRoute
   '/platform/auth': typeof PlatformAuthRoute
-  '/': typeof AppIndexRoute
   '/platform': typeof PlatformIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/accounting/chart-of-accounts': typeof AppAccountingChartOfAccountsRoute
@@ -861,6 +869,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -875,6 +884,7 @@ export interface FileRoutesById {
   '/_app/attendance': typeof AppAttendanceRoute
   '/_app/categories': typeof AppCategoriesRoute
   '/_app/collections': typeof AppCollectionsRoute
+  '/_app/dashboard': typeof AppDashboardRoute
   '/_app/expense-categories': typeof AppExpenseCategoriesRoute
   '/_app/expenses': typeof AppExpensesRoute
   '/_app/install': typeof AppInstallRoute
@@ -900,7 +910,6 @@ export interface FileRoutesById {
   '/platform/reports': typeof PlatformReportsRoute
   '/platform/settings': typeof PlatformSettingsRoute
   '/platform_/auth': typeof PlatformAuthRoute
-  '/_app/': typeof AppIndexRoute
   '/platform/': typeof PlatformIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_app/accounting/chart-of-accounts': typeof AppAccountingChartOfAccountsRoute
@@ -984,6 +993,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/categories'
     | '/collections'
+    | '/dashboard'
     | '/expense-categories'
     | '/expenses'
     | '/install'
@@ -1076,6 +1086,7 @@ export interface FileRouteTypes {
     | '/admin/knowledge/doc/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
     | '/forgot-password'
     | '/index'
@@ -1088,6 +1099,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/categories'
     | '/collections'
+    | '/dashboard'
     | '/expense-categories'
     | '/expenses'
     | '/install'
@@ -1113,7 +1125,6 @@ export interface FileRouteTypes {
     | '/platform/reports'
     | '/platform/settings'
     | '/platform/auth'
-    | '/'
     | '/platform'
     | '/.lovable/oauth/consent'
     | '/accounting/chart-of-accounts'
@@ -1181,6 +1192,7 @@ export interface FileRouteTypes {
     | '/admin/knowledge/doc/$'
   id:
     | '__root__'
+    | '/'
     | '/_app'
     | '/auth'
     | '/forgot-password'
@@ -1195,6 +1207,7 @@ export interface FileRouteTypes {
     | '/_app/attendance'
     | '/_app/categories'
     | '/_app/collections'
+    | '/_app/dashboard'
     | '/_app/expense-categories'
     | '/_app/expenses'
     | '/_app/install'
@@ -1220,7 +1233,6 @@ export interface FileRouteTypes {
     | '/platform/reports'
     | '/platform/settings'
     | '/platform_/auth'
-    | '/_app/'
     | '/platform/'
     | '/.lovable/oauth/consent'
     | '/_app/accounting/chart-of-accounts'
@@ -1289,6 +1301,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -1311,6 +1324,13 @@ declare module '@tanstack/react-router' {
       path: '/index'
       fullPath: '/index'
       preLoaderRoute: typeof Char91indexChar93RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -1362,13 +1382,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91__integration__Char93Ux1eRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/': {
-      id: '/_app/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -1409,6 +1422,13 @@ declare module '@tanstack/react-router' {
       path: '/collections'
       fullPath: '/collections'
       preLoaderRoute: typeof AppCollectionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/expense-categories': {
@@ -2108,6 +2128,7 @@ interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppCategoriesRoute: typeof AppCategoriesRoute
   AppCollectionsRoute: typeof AppCollectionsRoute
+  AppDashboardRoute: typeof AppDashboardRoute
   AppExpenseCategoriesRoute: typeof AppExpenseCategoriesRoute
   AppExpensesRoute: typeof AppExpensesRoute
   AppInstallRoute: typeof AppInstallRoute
@@ -2125,7 +2146,6 @@ interface AppRouteChildren {
   AppSupplierPaymentsRoute: typeof AppSupplierPaymentsRoute
   AppSyncRoute: typeof AppSyncRoute
   AppTasksRoute: typeof AppTasksRoute
-  AppIndexRoute: typeof AppIndexRoute
   AppAccountingChartOfAccountsRoute: typeof AppAccountingChartOfAccountsRoute
   AppAccountingJournalsRoute: typeof AppAccountingJournalsRoute
   AppAccountingPostingLogRoute: typeof AppAccountingPostingLogRoute
@@ -2173,6 +2193,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAttendanceRoute: AppAttendanceRoute,
   AppCategoriesRoute: AppCategoriesRoute,
   AppCollectionsRoute: AppCollectionsRoute,
+  AppDashboardRoute: AppDashboardRoute,
   AppExpenseCategoriesRoute: AppExpenseCategoriesRoute,
   AppExpensesRoute: AppExpensesRoute,
   AppInstallRoute: AppInstallRoute,
@@ -2190,7 +2211,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSupplierPaymentsRoute: AppSupplierPaymentsRoute,
   AppSyncRoute: AppSyncRoute,
   AppTasksRoute: AppTasksRoute,
-  AppIndexRoute: AppIndexRoute,
   AppAccountingChartOfAccountsRoute: AppAccountingChartOfAccountsRoute,
   AppAccountingJournalsRoute: AppAccountingJournalsRoute,
   AppAccountingPostingLogRoute: AppAccountingPostingLogRoute,
@@ -2258,6 +2278,7 @@ const PlatformRouteWithChildren = PlatformRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

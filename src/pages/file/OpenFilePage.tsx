@@ -81,7 +81,7 @@ export default function OpenFilePage() {
   const handleCancel = () => {
     clearFiles();
     clearLaunchParams();
-    navigate('/');
+    navigate('/dashboard');
   };
 
   if (isProcessing || !initialized) {

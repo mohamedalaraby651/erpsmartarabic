@@ -42,10 +42,10 @@ export default function PageHeader({
   });
 
   // Add home if not on root
-  if (location.pathname !== '/') {
+  if (location.pathname !== '/dashboard') {
     breadcrumbItems.unshift({
       label: 'الرئيسية',
-      path: '/',
+      path: '/dashboard',
       isLast: false,
     });
   }

@@ -344,12 +344,12 @@ const MobileDrawer = forwardRef<HTMLDivElement, MobileDrawerProps>(function Mobi
             {/* Dashboard */}
             {!searchQuery && (
               <Button
-                variant={isActive('/') ? 'secondary' : 'ghost'}
+                variant={isActive('/dashboard') ? 'secondary' : 'ghost'}
                 className={cn(
                   'w-full justify-start gap-3 h-11',
-                  isActive('/') && 'bg-primary/10 text-primary'
+                  isActive('/dashboard') && 'bg-primary/10 text-primary'
                 )}
-                onClick={() => handleNavigation('/')}
+                onClick={() => handleNavigation('/dashboard')}
               >
                 <LayoutDashboard className="h-5 w-5" />
                 لوحة التحكم
