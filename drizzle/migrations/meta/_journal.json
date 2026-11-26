@@ -127,6 +127,13 @@
       "when": 1795724757050,
       "tag": "0017_fix_posting_period_and_payment_balance",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795725295169,
+      "tag": "0018_post_document_atomic_post_after_totals",
+      "breakpoints": true
     }
   ]
 }
