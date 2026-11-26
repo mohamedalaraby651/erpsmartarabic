@@ -21,7 +21,10 @@ export default function Auth() {
   // return the user to the URL they came from. Only accept same-origin
   // relative paths.
   const rawNext = searchParams.get('next');
-  const safeNext = sanitizeNextPath(rawNext);
+  // Frozen at first render: after a successful sign-in navigates away, this
+  // page re-renders on the new URL (without `next`) before unmounting, and a
+  // recomputed value would send the user to /dashboard instead.
+  const [safeNext] = useState(() => sanitizeNextPath(rawNext));
 
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
