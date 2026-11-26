@@ -7071,15 +7071,26 @@ export type Database = {
       }
       current_tenant: { Args: never; Returns: string }
       decrypt_totp_secret: { Args: { _user_id: string }; Returns: string }
-      emit_event: {
-        Args: {
-          _aggregate_id: string
-          _aggregate_type: string
-          _event_type: string
-          _payload?: Json
-        }
-        Returns: string
-      }
+      emit_event:
+        | {
+            Args: {
+              _aggregate_id: string
+              _aggregate_type: string
+              _event_type: string
+              _payload?: Json
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _aggregate_id: string
+              _aggregate_type: string
+              _event_type: string
+              _payload: Json
+              _tenant_id: string
+            }
+            Returns: string
+          }
       ensure_credit_note_posting_accounts: { Args: never; Returns: Json }
       ensure_logistics_posting_accounts: { Args: never; Returns: Json }
       find_duplicate_customers: {

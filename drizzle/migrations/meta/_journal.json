@@ -113,6 +113,13 @@
       "when": 1795697813238,
       "tag": "0015_fix_new_user_role_tenant",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795724267601,
+      "tag": "0016_event_tenant_from_row",
+      "breakpoints": true
     }
   ]
 }
