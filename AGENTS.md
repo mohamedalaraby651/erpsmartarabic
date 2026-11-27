@@ -11,4 +11,6 @@
 - Supplier payments and balance effects use one tenant-scoped database operation; browser callers never adjust supplier balances directly.
 - Backup restore validates the full payload against database-derived approved fields, same-company references and existing ownership before snapshots or writes; database triggers block company reassignment.
 - Bulk customer obligation validation derives the caller's tenant and checks delete permission inside the RPC before returning any records; execute grants alone must never expose cross-company obligations.
-- Attachment preview/download resolves stored paths through the shared private-storage signing helper at action time; saved URLs are not permanent access authority.
+- Attachment preview/download resolves stored paths through the shared private-storage signing helper at action time; saved URLs are not permanent access authority.- Customer profile (v19) desktop layout lives in src/components/customers/profile and reads through useCustomerProfileV19 sharing useCustomerDetail cache keys; mobile view stays separate to avoid regressions.
+- Payment promises and customer contacts are tenant-scoped tables without delete grants; promises end by status change so collection history is never lost.
+- Customer profile figures (outstanding, credit use = outstanding ÷ credit limit, aging) come from src/lib/customers/profileMetrics.ts so UI and tests share one formula.
