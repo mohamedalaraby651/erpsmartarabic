@@ -69,8 +69,8 @@ export function CustomerProfileDesktop({ customer, customerId, detail, tab, onTa
       <div className="flex flex-col items-start gap-3 lg:flex-row">
         <div className="w-full min-w-0 flex-1 space-y-3">
           <section className="rounded-xl border border-border bg-card p-3 shadow-xs print-card">
-          <Tabs value={activeTab} onValueChange={onTabChange}>
-            <div className="flex flex-nowrap items-center justify-between gap-2 rounded-xl bg-muted/60 p-1 no-print">
+          <Tabs dir="rtl" value={activeTab} onValueChange={onTabChange}>
+            <div dir="rtl" className="flex flex-nowrap items-center justify-between gap-2 rounded-xl bg-muted/60 p-1 no-print">
               <TabsList className="h-auto min-w-0 shrink flex-nowrap justify-start gap-1 overflow-x-auto bg-transparent p-0 [scrollbar-width:none]">
                 {PROFILE_TABS.map((t) => { const I = TAB_ICON[t]!; const c = counts[t]; return (
                   <TabsTrigger key={t} value={t} className="shrink-0 gap-1 whitespace-nowrap rounded-lg border border-transparent px-2.5 py-1 text-xs font-semibold text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xs">

@@ -40,7 +40,7 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
   const btn = "inline-flex h-7 items-center gap-1 rounded-full border border-border bg-card px-2.5 text-[11.5px] font-bold hover:bg-muted";
 
   return (
-    <div className="space-y-3 bg-primary/[0.03] p-3">
+    <div dir="rtl" className="space-y-3 bg-primary/[0.03] p-3">
       <div role="tablist" aria-label="تفاصيل الفاتورة" className="flex gap-5 border-b border-border px-2 no-print">
         {tabs.map((t) => (
           <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
@@ -74,11 +74,11 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
             <h4 className="flex items-center gap-2 text-[15px] font-bold"><TintedIcon icon={FileText} tone="primary" />بيانات الفاتورة</h4>
             <button type="button" onClick={openInvoice} aria-label="تعديل الفاتورة" className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted no-print"><Pencil className="h-3.5 w-3.5" /></button>
           </div>
-          <dl className="grid grid-cols-3 gap-x-4 text-[13px]">
+          <dl dir="rtl" className="grid grid-cols-[minmax(max-content,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] gap-x-4 text-[13px]">
             {[['رقم الفاتورة', invoice.invoice_number], ['التاريخ', fmtDate(invoice.created_at)], ['الاستحقاق', fmtDate(invoice.due_date)],
               ['طريقة الدفع', days !== null && days > 0 ? `آجل · ${days} يوم` : 'نقدي'], ['المخزن', warehouse ?? '—'], ['الحالة', STATUS_AR[payStatus] ?? payStatus]].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between gap-2 border-b border-border px-1 py-2.5 [&:nth-last-child(-n+3)]:border-0">
-                <dt className="text-muted-foreground">{k}</dt><dd className="font-bold">{v}</dd>
+                <dt className="text-muted-foreground">{k}</dt><dd className="whitespace-nowrap font-bold">{v}</dd>
               </div>
             ))}
           </dl>
@@ -99,7 +99,7 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
       </div>
 
       <div className="sticky bottom-2 z-10 rounded-xl border border-border bg-card p-2.5 shadow-md no-print">
-        <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&>*]:shrink-0 [&>*]:whitespace-nowrap">
+        <div dir="rtl" className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&>*]:shrink-0 [&>*]:whitespace-nowrap">
           <span className="text-xs font-bold text-muted-foreground">{invoice.invoice_number}</span>
           {remaining > 0 && <button type="button" onClick={onPay} className="h-7 rounded-full bg-success px-3 text-[11.5px] font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة</button>}
           <button type="button" className={btn} onClick={openInvoice}><Printer className="h-3.5 w-3.5" />طباعة</button>
@@ -118,7 +118,7 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">شريط إجراءات ثابت أثناء التمرير</p>
+        <p className="mt-1.5 text-start text-[11px] text-muted-foreground">شريط إجراءات ثابت أثناء التمرير</p>
       </div>
     </div>
   );
