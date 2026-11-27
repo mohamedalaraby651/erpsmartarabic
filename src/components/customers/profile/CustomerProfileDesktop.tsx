@@ -2,7 +2,10 @@ import { lazy, Suspense, useCallback, useState } from "react";
 import { flushSync } from "react-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Printer, Pencil, ChevronDown, ChevronUp } from "lucide-react";
+import { Printer, Pencil, List, Activity, CreditCard, FileText, Target } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useNavigate } from "@/lib/router-compat";
+import { CustomerNotesSection, CustomerAttachmentsSection } from "./CustomerBottomSections";
 import { useCustomerProfileV19 } from "@/hooks/customers/useCustomerProfileV19";
 import type { useCustomerDetail } from "@/hooks/customers";
 import type { Customer } from "@/lib/customerConstants";
@@ -17,12 +20,11 @@ import "./CustomerProfilePrint.css";
 const StatementOfAccount = lazy(() => import("@/components/customers/details/StatementOfAccount"));
 const CustomerTabActivity = lazy(() => import("@/components/customers/tabs/CustomerTabActivity").then((m) => ({ default: m.CustomerTabActivity })));
 const CustomerTabPayments = lazy(() => import("@/components/customers/tabs/CustomerTabPayments").then((m) => ({ default: m.CustomerTabPayments })));
-const CustomerTabNotes = lazy(() => import("@/components/customers/tabs/CustomerTabNotes").then((m) => ({ default: m.CustomerTabNotes })));
-const CustomerTabAttachments = lazy(() => import("@/components/customers/tabs/CustomerTabAttachments").then((m) => ({ default: m.CustomerTabAttachments })));
 const CustomerAgingReport = lazy(() => import("@/components/customers/details/CustomerAgingReport"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/dialogs/CustomerReminderDialog"));
 
 export const PROFILE_TABS = ['statement', 'activity', 'purchases', 'payments', 'collection'] as const;
+const TAB_ICON: Record<string, LucideIcon> = { statement: List, activity: Activity, purchases: FileText, payments: CreditCard, collection: Target };
 const TAB_AR: Record<string, string> = { statement: 'كشف حساب', activity: 'سجل النشاط', purchases: 'المشتريات', payments: 'المدفوعات', collection: 'مركز التحصيل' };
 
 interface Props {
@@ -36,11 +38,12 @@ export function CustomerProfileDesktop({ customer, customerId, detail, tab, onTa
   const [printing, setPrinting] = useState(false);
   const [promiseOpen, setPromiseOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
-  const [bottomOpen, setBottomOpen] = useState({ notes: true, attachments: true });
-  const [sideW, setSideW] = useState('lg:w-80');
+  const navigate = useNavigate();
+  const [sideW, setSideW] = useState('lg:w-[22rem]');
   const onWidth = useCallback((w: string) => setSideW(w), []);
   const m = profile.metrics;
   const remind = () => openWhatsApp(customer.phone, reminderText(customer.name, m.outstanding));
+  const counts: Record<string, number | undefined> = { activity: detail.activities?.length, payments: profile.payments.length, purchases: profile.invoices.length + profile.creditNotes.length + profile.salesOrders.length };
   const activeTab = (PROFILE_TABS as readonly string[]).includes(tab) ? tab : 'purchases';
 
   const printPage = () => {
@@ -51,57 +54,55 @@ export function CustomerProfileDesktop({ customer, customerId, detail, tab, onTa
   };
 
   return (
-    <div className="customer-profile-v19 space-y-4" dir="rtl">
-      <div className="flex justify-end no-print">
-        <Button variant="outline" onClick={printPage}><Printer className="h-4 w-4" />طباعة الصفحة PDF</Button>
+    <div className="customer-profile-v19 space-y-3 rounded-2xl bg-muted/50 p-4 text-[13px]" dir="rtl">
+      <div className="flex items-center justify-between gap-3 no-print">
+        <nav aria-label="مسار التنقل" className="text-sm text-muted-foreground">
+          <button type="button" onClick={() => navigate('/customers')} className="hover:text-foreground">العملاء</button> / <b className="text-foreground">{customer.name}</b>
+        </nav>
+        <Button variant="outline" onClick={printPage} className="h-9 rounded-lg border-2 border-primary bg-card font-bold text-primary hover:bg-primary/5 hover:text-primary"><Printer className="h-4 w-4" />طباعة الصفحة PDF</Button>
       </div>
-      <CustomerProfileCard customer={customer} hasOverdue={m.overdueAmount > 0} forceOpen={printing}
-        onEdit={onEdit} onPay={() => onPay()} onPromise={() => setPromiseOpen(true)} onNewInvoice={onNewInvoice} onWhatsApp={onWhatsApp} />
       <CustomerSummaryBanner name={customer.name} phone={customer.phone} outstanding={m.outstanding} openCount={m.openCount}
         oldestOverdueDays={m.oldestOverdueDays} lastPayment={profile.lastPayment} />
+      <CustomerProfileCard customer={customer} hasOverdue={m.overdueAmount > 0} forceOpen={printing}
+        onEdit={onEdit} onPay={() => onPay()} onPromise={() => setPromiseOpen(true)} onNewInvoice={onNewInvoice} onWhatsApp={onWhatsApp} />
 
-      <div className="flex flex-col gap-4 lg:flex-row">
-        <div className="min-w-0 flex-1 space-y-4">
+      <div className="flex flex-col items-start gap-3 lg:flex-row">
+        <div className="w-full min-w-0 flex-1 space-y-3">
+          <section className="rounded-xl border border-border bg-card p-3 shadow-xs print-card">
           <Tabs value={activeTab} onValueChange={onTabChange}>
-            <div className="flex items-center justify-between gap-2 no-print">
-              <TabsList className="h-auto flex-wrap">
-                {PROFILE_TABS.map((t) => <TabsTrigger key={t} value={t}>{TAB_AR[t]}</TabsTrigger>)}
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-muted/60 p-1 no-print">
+              <TabsList className="h-auto flex-wrap gap-1 bg-transparent p-0">
+                {PROFILE_TABS.map((t) => { const I = TAB_ICON[t]!; const c = counts[t]; return (
+                  <TabsTrigger key={t} value={t} className="gap-1.5 rounded-lg border border-transparent px-3.5 py-1.5 text-[13px] font-semibold text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xs">
+                    <I className="h-3.5 w-3.5" />{TAB_AR[t]}{c !== undefined && c > 0 ? ` (${c})` : ''}
+                  </TabsTrigger>); })}
               </TabsList>
-              <Button variant="ghost" size="sm" onClick={onEdit}><Pencil className="h-4 w-4" />تعديل</Button>
+              <Button variant="outline" size="sm" className="h-8 rounded-lg bg-card font-bold" onClick={onEdit}><Pencil className="h-3.5 w-3.5" />تعديل</Button>
             </div>
             <Suspense fallback={<div className="h-40 animate-pulse rounded-lg bg-muted" />}>
-              <TabsContent value="statement" className="mt-4"><StatementOfAccount customerName={customer.name} customerId={customerId} /></TabsContent>
-              <TabsContent value="activity" className="mt-4"><CustomerTabActivity activities={detail.activities} /></TabsContent>
-              <TabsContent value="purchases" className="mt-4" forceMount={printing ? true : undefined}>
+              <TabsContent value="statement" className="mt-3"><StatementOfAccount customerName={customer.name} customerId={customerId} /></TabsContent>
+              <TabsContent value="activity" className="mt-3"><CustomerTabActivity activities={detail.activities} /></TabsContent>
+              <TabsContent value="purchases" className="mt-3" forceMount={printing ? true : undefined}>
                 <CustomerPurchasesTab profile={profile} customerName={customer.name} customerPhone={customer.phone} onPay={onPay}
                   onPrintStatement={() => onTabChange('statement')} forceOpen={printing} />
               </TabsContent>
-              <TabsContent value="payments" className="mt-4">
+              <TabsContent value="payments" className="mt-3">
                 <CustomerTabPayments payments={detail.payments} customerId={customerId} paginatedData={detail.paginatedPayments} currentPage={detail.paymentPage} pageSize={detail.paymentPageSize} onPageChange={detail.goToPaymentPage} />
               </TabsContent>
-              <TabsContent value="collection" className="mt-4 space-y-4">
+              <TabsContent value="collection" className="mt-3 space-y-3">
                 <CustomerAgingReport customerId={customerId} />
                 <CustomerReminderSection customerId={customerId} />
               </TabsContent>
             </Suspense>
           </Tabs>
-
-          <Suspense fallback={null}>
-            {(['notes', 'attachments'] as const).map((k) => (
-              <section key={k} className="rounded-xl border bg-card print-card">
-                <button type="button" className="flex w-full items-center justify-between p-3 font-semibold" aria-expanded={bottomOpen[k] || printing}
-                  onClick={() => setBottomOpen((s) => ({ ...s, [k]: !s[k] }))}>
-                  {k === 'notes' ? 'الملاحظات' : 'المرفقات'}
-                  {bottomOpen[k] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </button>
-                {(bottomOpen[k] || printing) && <div className="border-t p-3">{k === 'notes' ? <CustomerTabNotes customerId={customerId} /> : <CustomerTabAttachments customerId={customerId} />}</div>}
-              </section>
-            ))}
-          </Suspense>
+          </section>
+          <CustomerNotesSection customerId={customerId} forceOpen={printing} />
+          <CustomerAttachmentsSection customerId={customerId} forceOpen={printing} />
         </div>
-        <div className={cn("w-full shrink-0", sideW)}>
+        <div className={cn("w-full shrink-0 lg:sticky lg:top-4", sideW)}>
           <CustomerProfileSidebar profile={profile} customerName={customer.name} creditLimit={Number(customer.credit_limit ?? 0)}
-            forceOpen={printing} onWidth={onWidth} onAddPromise={() => setPromiseOpen(true)} onAddContact={() => setContactOpen(true)} onRemind={remind} />
+            forceOpen={printing} onWidth={onWidth} onAddPromise={() => setPromiseOpen(true)} onAddContact={() => setContactOpen(true)} onRemind={remind}
+            onViewPayments={() => onTabChange('payments')} onEditPayment={() => onTabChange('payments')} />
         </div>
       </div>
 

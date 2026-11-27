@@ -8,7 +8,23 @@ export interface InvoiceLine {
   id: string; quantity: number; unit_price: number; discount_percentage: number | null; total_price: number; product_name: string;
 }
 
+export type CustomerAttachment = Database['public']['Tables']['attachments']['Row'];
+
 export const customerProfileRepository = {
+  /** Same shape and order as the notes tab, so both share the ['customer-notes', id] cache. */
+  async listNotes(customerId: string) {
+    const { data, error } = await supabase.from('customer_notes').select('*')
+      .eq('customer_id', customerId).order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  },
+  /** Same query as AttachmentsList, shared via ['attachments', type, id]. */
+  async listAttachments(entityType: string, entityId: string): Promise<CustomerAttachment[]> {
+    const { data, error } = await supabase.from('attachments').select('*')
+      .eq('entity_type', entityType).eq('entity_id', entityId).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  },
   async listContacts(customerId: string): Promise<CustomerContact[]> {
     const { data, error } = await supabase.from('customer_contacts').select('*')
       .eq('customer_id', customerId).order('is_primary', { ascending: false }).order('created_at');
