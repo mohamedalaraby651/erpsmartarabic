@@ -1,0 +1,10 @@
+@media print {
+  @page { size: A4; margin: 10mm; }
+  body { font-family: 'Cairo', sans-serif; direction: rtl; }
+  body * { visibility: hidden; }
+  .customer-profile-v19, .customer-profile-v19 * { visibility: visible; }
+  .customer-profile-v19 { position: absolute; inset: 0 0 auto 0; width: 100%; }
+  .customer-profile-v19 .no-print { display: none !important; }
+  .customer-profile-v19 .print-card { break-inside: avoid; }
+  .customer-profile-v19 .sticky { position: static !important; }
+}

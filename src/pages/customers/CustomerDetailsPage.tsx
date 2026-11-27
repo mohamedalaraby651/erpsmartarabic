@@ -19,7 +19,7 @@ import { useSeo } from "@/hooks/useSeo";
 import { buildOgImageUrl } from "@/lib/seo/ogImage";
 import { useAnnouncer } from "@/hooks/useAnnouncer";
 import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
-import { CustomerHeroHeader } from "@/components/customers/details/CustomerHeroHeader";
+import { CustomerProfileDesktop } from "@/components/customers/profile/CustomerProfileDesktop";
 import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
 import { CustomerPinnedNote } from "@/components/customers/details/CustomerPinnedNote";
 import { CustomerKPICards } from "@/components/customers/details/CustomerKPICards";
@@ -588,18 +588,6 @@ const CustomerDetailsPage = () => {
     writeParams(tab, tabToSection(tab));
   };
 
-  /* ─── Desktop tab announcement ─── */
-  const { message: desktopLiveMessage, announce: announceDesktop } = useAnnouncer({ dedupWindow: 3000, debounceMs: 150 });
-  useEffect(() => {
-    let tabLabel: string | undefined;
-    for (const group of tabGroups) {
-      const tab = group.tabs.find(t => t.value === detail.activeTab);
-      if (tab) { tabLabel = tab.label; break; }
-    }
-    if (tabLabel) {
-      announceDesktop(`تم فتح تبويب ${tabLabel}`);
-    }
-  }, [detail.activeTab, announceDesktop]);
 
   const setMobileSection = (s: MobileSectionId) => {
     setMobileSectionState(s);
@@ -656,48 +644,6 @@ const CustomerDetailsPage = () => {
         backTo="/customers"
       />
 
-      <div className="hidden md:block">
-        <CustomerHeroHeader
-          customer={customer} customerId={id!}
-          invoices={detail.invoices} payments={detail.payments}
-          onBack={() => navigate('/customers')} onEdit={() => setEditDialogOpen(true)}
-          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-          onStatement={() => handleTabChange('statement')}
-          onWhatsApp={handleWhatsApp}
-          onImageUpdate={(url) => detail.updateImageMutation.mutate(url)}
-          onPrev={goPrev} onNext={goNext} hasPrev={!!prevId} hasNext={!!nextId}
-          currentBalance={detail.currentBalance} balanceIsDebit={detail.balanceIsDebit}
-          creditLimit={detail.creditLimit} creditUsagePercent={detail.creditUsagePercent}
-           totalPurchases={detail.totalPurchases} totalOutstanding={detail.totalOutstanding}
-           paymentRatio={detail.paymentRatio} invoiceCount={detail.invoiceCount} dso={detail.dso}
-          onNewPayment={() => navigate('/payments', { state: { prefillCustomerId: id } })}
-          onNewQuotation={() => navigate('/quotations', { state: { prefillCustomerId: id } })}
-          onNewOrder={() => navigate('/sales-orders', { state: { prefillCustomerId: id } })}
-          onNewCreditNote={() => setCreditNoteDialogOpen(true)}
-          onToggleActive={handleToggleActive} onChangeVip={handleChangeVip}
-        />
-      </div>
-
-      {/* Desktop only — alerts/health/pinned-note عند أعلى الصفحة */}
-      {!isMobile && (
-        <>
-          <div className="flex items-center gap-3 flex-wrap">
-            <CustomerSmartAlerts
-              currentBalance={detail.currentBalance} creditLimit={detail.creditLimit}
-              invoices={detail.invoices} lastPurchaseDate={detail.lastPurchaseDate}
-              lastCommunicationAt={customer.last_communication_at}
-              onEditCreditLimit={() => setEditDialogOpen(true)}
-              onSendReminder={() => handleTabChange('reminders')}
-              onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
-              onContact={handleWhatsApp}
-              persistKey={id}
-            />
-            <CustomerHealthBadge customerId={id!} />
-          </div>
-          <CustomerPinnedNote customerId={id!} onViewAllNotes={() => handleTabChange('notes')} />
-        </>
-      )}
-
       {isMobile ? (
         <MobileCustomerView
           customer={customer}
@@ -740,73 +686,14 @@ const CustomerDetailsPage = () => {
           }
         />
       ) : (
-        <Tabs value={detail.activeTab} onValueChange={handleTabChange} className="w-full">
-          <LiveRegion message={desktopLiveMessage} />
-          <ScrollArea className="w-full sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-            <TabsList className="flex w-max h-auto gap-1 bg-muted/50 p-1">
-              {tabGroups.map((group, gi) => (
-                <div key={group.id} className="flex items-center">
-                  {gi > 0 && <div className="w-px h-6 bg-border mx-1" />}
-                  {group.tabs.map((tab) => {
-                    const Icon = tabIcons[tab.value] || Activity;
-                    return (
-                      <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5 whitespace-nowrap text-xs px-2.5">
-                        <Icon className="h-3.5 w-3.5" />{tab.label}
-                      </TabsTrigger>
-                    );
-                  })}
-                </div>
-              ))}
-            </TabsList>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-
-          <Suspense fallback={<TabSkeleton />}>
-            <TabsContent value="basic-info" className="mt-6">
-              <CustomerTabBasicInfo customer={customer} addresses={detail.addresses} onAddAddress={() => { setSelectedAddress(null); setAddressDialogOpen(true); }} onEditAddress={(a) => { setSelectedAddress(a); setAddressDialogOpen(true); }} onDeleteAddress={(aid) => detail.deleteAddressMutation.mutate(aid)} onWhatsApp={handleWhatsApp} />
-            </TabsContent>
-            <TabsContent value="notes" className="mt-6"><CustomerTabNotes customerId={id!} /></TabsContent>
-            <TabsContent value="reminders" className="mt-6"><CustomerReminderSection customerId={id!} /></TabsContent>
-            <TabsContent value="invoices" className="mt-6"><CustomerTabInvoices invoices={detail.invoices} customerId={id!} totalPaymentsFromLedger={detail.totalPayments} onQuickPay={handleQuickPay} creditNotes={detail.creditNotes} currentBalance={detail.currentBalance} onViewAllReturns={() => handleTabChange('credit-notes')} paginatedData={detail.paginatedInvoices} currentPage={detail.invoicePage} pageSize={detail.invoicePageSize} onPageChange={detail.goToInvoicePage} /></TabsContent>
-            <TabsContent value="quotations" className="mt-6"><CustomerTabQuotations quotations={detail.quotations} /></TabsContent>
-            <TabsContent value="orders" className="mt-6"><CustomerTabOrders salesOrders={detail.salesOrders} /></TabsContent>
-            <TabsContent value="payments" className="mt-6"><CustomerTabPayments payments={detail.payments} customerId={id!} paginatedData={detail.paginatedPayments} currentPage={detail.paymentPage} pageSize={detail.paymentPageSize} onPageChange={detail.goToPaymentPage} /></TabsContent>
-            <TabsContent value="credit-notes" className="mt-6"><CustomerTabCreditNotes creditNotes={detail.creditNotes} /></TabsContent>
-            <TabsContent value="financial" className="mt-6 space-y-4">
-              <Suspense fallback={<TabSkeleton />}>
-                <CustomerSalesPipeline quotations={detail.quotations} salesOrders={detail.salesOrders} invoices={detail.invoices} />
-              </Suspense>
-              <CustomerFinancialSummary totalPurchases={detail.totalPurchases} totalPayments={detail.totalPayments} currentBalance={detail.currentBalance} creditLimit={detail.creditLimit} discountPercentage={Number(customer.discount_percentage || 0)} paymentTermsDays={Number(customer.payment_terms_days || 0)} invoiceCount={detail.invoiceCount} totalOutstanding={detail.totalOutstanding} paymentRatio={detail.paymentRatio} avgInvoiceValue={detail.avgInvoiceValue} dso={detail.dso} clv={detail.clv} />
-            </TabsContent>
-            <TabsContent value="statement" className="mt-6">
-              <StatementOfAccount customerName={customer.name} customerId={id!} />
-            </TabsContent>
-            <TabsContent value="aging" className="mt-6"><CustomerAgingReport customerId={id!} /></TabsContent>
-            <TabsContent value="communications" className="mt-6"><CommunicationLogTab customerId={id!} /></TabsContent>
-            <TabsContent value="analytics" className="mt-6 space-y-4">
-              <ChartErrorBoundary title="المشتريات والمدفوعات">
-                <CustomerPurchaseChart monthlyData={detail.chartData?.monthly_data} />
-              </ChartErrorBoundary>
-              <LazyOnVisible minHeight={300} placeholder={<ChartSkeleton variant="donut" height={260} />}>
-                <ChartErrorBoundary title="أعمار الديون">
-                  <AgingDonutChart customerId={id!} />
-                </ChartErrorBoundary>
-              </LazyOnVisible>
-              <LazyOnVisible minHeight={300} placeholder={<ChartSkeleton variant="line" height={260} />}>
-                <ChartErrorBoundary title="التدفق المالي">
-                  <CashFlowLineChart monthlyData={detail.chartData?.monthly_data} />
-                </ChartErrorBoundary>
-              </LazyOnVisible>
-              <LazyOnVisible minHeight={300} placeholder={<ChartSkeleton variant="bars" height={260} />}>
-                <ChartErrorBoundary title="المنتجات">
-                  <TopProductsChart topProducts={detail.chartData?.top_products} />
-                </ChartErrorBoundary>
-              </LazyOnVisible>
-            </TabsContent>
-            <TabsContent value="activity" className="mt-6"><CustomerTabActivity activities={detail.activities} /></TabsContent>
-            <TabsContent value="attachments" className="mt-6"><CustomerTabAttachments customerId={id!} /></TabsContent>
-          </Suspense>
-        </Tabs>
+        <CustomerProfileDesktop
+          customer={customer} customerId={id!} detail={detail}
+          tab={detail.activeTab} onTabChange={handleTabChange}
+          onEdit={() => setEditDialogOpen(true)}
+          onPay={(invoiceId) => invoiceId ? handleQuickPay(invoiceId) : navigate('/payments', { state: { prefillCustomerId: id } })}
+          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+          onWhatsApp={handleWhatsApp}
+        />
       )}
 
       <CustomerFormDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} customer={customer} />

@@ -141,6 +141,13 @@
       "when": 1795748438147,
       "tag": "0019_restore_scoped_customer_bulk_validation",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795796902577,
+      "tag": "0020_customer_profile_v19_additive",
+      "breakpoints": true
     }
   ]
 }
