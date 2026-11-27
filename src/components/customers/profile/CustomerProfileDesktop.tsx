@@ -70,14 +70,14 @@ export function CustomerProfileDesktop({ customer, customerId, detail, tab, onTa
         <div className="w-full min-w-0 flex-1 space-y-3">
           <section className="rounded-xl border border-border bg-card p-3 shadow-xs print-card">
           <Tabs value={activeTab} onValueChange={onTabChange}>
-            <div className="flex items-center justify-between gap-2 rounded-xl bg-muted/60 p-1 no-print">
-              <TabsList className="h-auto flex-wrap gap-1 bg-transparent p-0">
+            <div className="flex flex-nowrap items-center justify-between gap-2 rounded-xl bg-muted/60 p-1 no-print">
+              <TabsList className="h-auto min-w-0 shrink flex-nowrap justify-start gap-1 overflow-x-auto bg-transparent p-0 [scrollbar-width:none]">
                 {PROFILE_TABS.map((t) => { const I = TAB_ICON[t]!; const c = counts[t]; return (
-                  <TabsTrigger key={t} value={t} className="gap-1.5 rounded-lg border border-transparent px-3.5 py-1.5 text-[13px] font-semibold text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xs">
+                  <TabsTrigger key={t} value={t} className="shrink-0 gap-1 whitespace-nowrap rounded-lg border border-transparent px-2.5 py-1 text-xs font-semibold text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-xs">
                     <I className="h-3.5 w-3.5" />{TAB_AR[t]}{c !== undefined && c > 0 ? ` (${c})` : ''}
                   </TabsTrigger>); })}
               </TabsList>
-              <Button variant="outline" size="sm" className="h-8 rounded-lg bg-card font-bold" onClick={onEdit}><Pencil className="h-3.5 w-3.5" />تعديل</Button>
+              <Button variant="outline" size="sm" className="ms-auto h-8 shrink-0 rounded-lg bg-card font-bold" onClick={onEdit}><Pencil className="h-3.5 w-3.5" />تعديل</Button>
             </div>
             <Suspense fallback={<div className="h-40 animate-pulse rounded-lg bg-muted" />}>
               <TabsContent value="statement" className="mt-3"><StatementOfAccount customerName={customer.name} customerId={customerId} /></TabsContent>

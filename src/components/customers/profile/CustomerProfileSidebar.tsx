@@ -130,11 +130,6 @@ export function CustomerProfileSidebar({ profile, customerName, creditLimit, for
 
       <Card id="balance" closed={isClosed('balance')} toggle={toggle}>
         <div className="flex items-center justify-between gap-3">
-          <ul className="flex-1 space-y-2 text-[13px]">
-            <li className="flex justify-between gap-2"><span>• مدفوع</span><b className="text-success">{formatEGP(m.paid)}</b></li>
-            <li className="flex justify-between gap-2"><span>• متبقي</span><b className="text-destructive">{formatEGP(m.outstanding)}</b></li>
-            <li className="flex justify-between gap-2"><span>• إجمالي التعامل</span><b className="text-primary">{formatEGP(m.totalDealings)}</b></li>
-          </ul>
           <div className="relative shrink-0">
             <Donut paid={m.paid} overdue={m.overdueAmount} pending={pending} />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center leading-tight">
@@ -143,6 +138,11 @@ export function CustomerProfileSidebar({ profile, customerName, creditLimit, for
               {m.overdueAmount > 0 && <span className="text-[10px] font-semibold text-destructive">منه {formatEGP(m.overdueAmount)} متأخر</span>}
             </div>
           </div>
+          <ul className="flex-1 space-y-2 text-[13px]">
+            <li className="flex justify-between gap-2"><span>• مدفوع</span><b className="text-success">{formatEGP(m.paid)}</b></li>
+            <li className="flex justify-between gap-2"><span>• متبقي</span><b className="text-destructive">{formatEGP(m.outstanding)}</b></li>
+            <li className="flex justify-between gap-2"><span>• إجمالي التعامل</span><b className="text-primary">{formatEGP(m.totalDealings)}</b></li>
+          </ul>
         </div>
         <div className="mt-3 space-y-2 text-[11px] text-muted-foreground">
           {profile.creditUse === null ? <p>لا يوجد حد ائتماني محدد</p> : (

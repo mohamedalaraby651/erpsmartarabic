@@ -37,7 +37,7 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
     { id: 'attachments', label: 'المرفقات' },
   ] as const;
   const th = "p-2 text-start text-xs font-semibold text-muted-foreground";
-  const btn = "inline-flex h-8 items-center gap-1 rounded-full border border-border bg-card px-3 text-xs font-bold hover:bg-muted";
+  const btn = "inline-flex h-7 items-center gap-1 rounded-full border border-border bg-card px-2.5 text-[11.5px] font-bold hover:bg-muted";
 
   return (
     <div className="space-y-3 bg-primary/[0.03] p-3">
@@ -74,15 +74,15 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
             <h4 className="flex items-center gap-2 text-[15px] font-bold"><TintedIcon icon={FileText} tone="primary" />بيانات الفاتورة</h4>
             <button type="button" onClick={openInvoice} aria-label="تعديل الفاتورة" className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted no-print"><Pencil className="h-3.5 w-3.5" /></button>
           </div>
-          <dl className="grid grid-cols-2 text-[13px]">
+          <dl className="grid grid-cols-3 gap-x-4 text-[13px]">
             {[['رقم الفاتورة', invoice.invoice_number], ['التاريخ', fmtDate(invoice.created_at)], ['الاستحقاق', fmtDate(invoice.due_date)],
               ['طريقة الدفع', days !== null && days > 0 ? `آجل · ${days} يوم` : 'نقدي'], ['المخزن', warehouse ?? '—'], ['الحالة', STATUS_AR[payStatus] ?? payStatus]].map(([k, v]) => (
-              <div key={k} className="flex items-center justify-between gap-2 border-b border-border px-1 py-2.5 odd:me-4 [&:nth-last-child(-n+2)]:border-0">
+              <div key={k} className="flex items-center justify-between gap-2 border-b border-border px-1 py-2.5 [&:nth-last-child(-n+3)]:border-0">
                 <dt className="text-muted-foreground">{k}</dt><dd className="font-bold">{v}</dd>
               </div>
             ))}
           </dl>
-          <p className="mt-2 rounded-lg border border-border px-3 py-2 text-xs"><b className="text-primary">ملاحظات الفاتورة</b> <span className="ms-2">{invoice.notes || '—'}</span></p>
+          <p className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs"><b className="text-primary">ملاحظات الفاتورة</b> <span className="ms-2">{invoice.notes || '—'}</span></p>
         </section>
 
         <section className="h-fit rounded-xl border border-border bg-card p-3 text-[13px] print-card">
@@ -99,9 +99,9 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
       </div>
 
       <div className="sticky bottom-2 z-10 rounded-xl border border-border bg-card p-2.5 shadow-md no-print">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&>*]:shrink-0 [&>*]:whitespace-nowrap">
           <span className="text-xs font-bold text-muted-foreground">{invoice.invoice_number}</span>
-          {remaining > 0 && <button type="button" onClick={onPay} className="h-8 rounded-full bg-success px-4 text-xs font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة</button>}
+          {remaining > 0 && <button type="button" onClick={onPay} className="h-7 rounded-full bg-success px-3 text-[11.5px] font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة</button>}
           <button type="button" className={btn} onClick={openInvoice}><Printer className="h-3.5 w-3.5" />طباعة</button>
           <button type="button" className={btn} onClick={openInvoice}><Pencil className="h-3.5 w-3.5" />تعديل الفاتورة</button>
           <button type="button" className={btn} onClick={() => navigate('/credit-notes', { state: { prefillInvoiceId: invoice.id } })}>مرتجع جزئي</button>
