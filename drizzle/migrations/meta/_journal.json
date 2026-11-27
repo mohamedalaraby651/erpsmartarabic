@@ -134,6 +134,13 @@
       "when": 1795725295169,
       "tag": "0018_post_document_atomic_post_after_totals",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795748438147,
+      "tag": "0019_restore_scoped_customer_bulk_validation",
+      "breakpoints": true
     }
   ]
 }

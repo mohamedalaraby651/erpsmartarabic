@@ -108,8 +108,8 @@ export function AttachmentsList({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Replace stored references with fresh short-lived links for display.
-      return Promise.all((data ?? []).map(async (a) => ({ ...a, file_url: await getAttachmentSignedUrl(a.file_url, 600) || a.file_url })));
+      // Preserve paths; resolve fresh links when the user opens a file.
+      return data ?? [];
     },
     enabled: !!entityId,
   });
@@ -189,7 +189,10 @@ export function AttachmentsList({
 
   const handleDownload = async (url: string, fileName: string) => {
     try {
-      const response = await fetch(url);
+      const signedUrl = await getAttachmentSignedUrl(url);
+      if (!signedUrl) throw new Error('Attachment unavailable');
+      const response = await fetch(signedUrl);
+      if (!response.ok) throw new Error('Attachment download failed');
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -204,12 +207,21 @@ export function AttachmentsList({
     }
   };
 
-  const handlePreview = (url: string, fileName: string, fileType: string) => {
-    if (fileType === 'image') {
-      setPreviewUrl(url);
-      setPreviewName(fileName);
-    } else {
-      window.open(url, '_blank');
+  const handlePreview = async (url: string, fileName: string, fileType: string) => {
+    const preview = fileType === 'image' ? null : window.open('about:blank', '_blank');
+    if (preview) preview.opener = null;
+    try {
+      const signedUrl = await getAttachmentSignedUrl(url);
+      if (!signedUrl) throw new Error('Attachment unavailable');
+      if (fileType === 'image') {
+        setPreviewUrl(signedUrl);
+        setPreviewName(fileName);
+      } else if (preview) {
+        preview.location.replace(signedUrl);
+      }
+    } catch {
+      preview?.close();
+      toast.error('فشل تحميل الملف');
     }
   };
 

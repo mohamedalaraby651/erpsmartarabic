@@ -1,5 +1,9 @@
 # Roadmap
 
+## Selected monitoring fixes — 2026-11-27
+- [x] Restore authorized tenant-scoped bulk customer obligation checks; live signed-in read-only call returned two blockers across five customers, no deletion performed.
+- [x] Resolve private attachment paths on preview/download across admin and shared entity screens; 24 tests passed. Real signing verified; existing file returned NoSuchKey, controls verified with substituted bytes only. No stored files changed. Evidence: docs/governance/MONITORING_FIXES_2026-11-27.md.
+
 ## Selected security fixes — 2026-11-25
 - [x] Journal isolation: pre-write dimension validation and database guard; six regressions, authenticated invalid-reference rejection and legitimate new draft line save/read-back/cleanup verified.
 - [x] Customer balance helper: signed-in/anonymous execution revoked; trusted processing preserved. Live authenticated denial and grants verified; no balances changed.

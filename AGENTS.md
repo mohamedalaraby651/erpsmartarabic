@@ -10,3 +10,5 @@
 - Journal dimension validation resolves every supplied reference within the server-derived tenant before writes and a database guard enforces the same rule on sibling write paths, preventing cross-company accounting links.
 - Supplier payments and balance effects use one tenant-scoped database operation; browser callers never adjust supplier balances directly.
 - Backup restore validates the full payload against database-derived approved fields, same-company references and existing ownership before snapshots or writes; database triggers block company reassignment.
+- Bulk customer obligation validation derives the caller's tenant and checks delete permission inside the RPC before returning any records; execute grants alone must never expose cross-company obligations.
+- Attachment preview/download resolves stored paths through the shared private-storage signing helper at action time; saved URLs are not permanent access authority.

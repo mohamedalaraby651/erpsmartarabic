@@ -39,6 +39,7 @@ import { AttachmentsSearch, AttachmentFilters, defaultFilters } from '@/componen
 import { ATTACHMENT_CATEGORIES } from '@/components/shared/AttachmentUploadForm';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getAttachmentSignedUrl } from '@/lib/storage/attachmentUrl';
 
 const FILE_ICONS = {
   image: Image,
@@ -172,7 +173,10 @@ export default function AttachmentsPage() {
 
   const handleDownload = async (url: string, fileName: string) => {
     try {
-      const response = await fetch(url);
+      const signedUrl = await getAttachmentSignedUrl(url);
+      if (!signedUrl) throw new Error('Attachment unavailable');
+      const response = await fetch(signedUrl);
+      if (!response.ok) throw new Error('Attachment download failed');
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -187,8 +191,18 @@ export default function AttachmentsPage() {
     }
   };
 
-  const handlePreview = (url: string, fileType: string) => {
-    window.open(url, '_blank');
+  const handlePreview = async (url: string) => {
+    // Open synchronously so browsers do not block the tab after signing.
+    const preview = window.open('about:blank', '_blank');
+    if (preview) preview.opener = null;
+    try {
+      const signedUrl = await getAttachmentSignedUrl(url);
+      if (!signedUrl) throw new Error('Attachment unavailable');
+      if (preview) preview.location.replace(signedUrl);
+    } catch {
+      preview?.close();
+      toast.error('فشل تحميل الملف');
+    }
   };
 
   const getCategoryLabel = (category: string | null) => {
@@ -399,7 +413,7 @@ export default function AttachmentsPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() => handlePreview(attachment.file_url, attachment.file_type)}
+                                  onClick={() => handlePreview(attachment.file_url)}
                                   title="معاينة"
                                 >
                                   <Eye className="h-4 w-4" />
