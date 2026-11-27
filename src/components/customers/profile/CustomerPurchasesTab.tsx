@@ -162,12 +162,12 @@ export function CustomerPurchasesTab({ profile, customerName, customerPhone, onP
                       <span className={cn("absolute inset-y-0 start-0 w-1", lk.bar)} aria-hidden />
                       {d.kind === 'invoice' && <Checkbox checked={sel.has(d.id)} onCheckedChange={() => toggleSel(d.id)} aria-label={`تحديد ${d.number}`} />}
                     </td>
-                    <td className="p-2.5"><div className="truncate font-bold">{d.number}</div>{d.subtitle && <div className="truncate text-[11px] text-muted-foreground">{d.subtitle}</div>}</td>
+                    <td className="p-2.5"><div className="truncate font-bold tabular-nums">{d.number}</div>{d.subtitle && <div className="truncate text-[11px] text-muted-foreground">{d.subtitle}</div>}</td>
                     <td className="p-2.5">{KIND_AR[d.kind]}</td>
                     <td className="p-2.5">{fmtShort(d.date)}</td>
                     <td className="p-2.5">{items !== undefined ? `${items} ${items === 1 ? 'صنف' : 'أصناف'}` : '—'}</td>
-                    <td className="p-2.5 font-bold">{formatEGP(d.total)}</td>
-                    <td className={cn("p-2.5 font-bold", d.remaining > 0 ? (d.status === 'overdue' ? 'text-destructive' : 'text-warning') : '')}>
+                    <td className="whitespace-nowrap p-2.5 text-[12.5px] font-bold tabular-nums">{formatEGP(d.total)}</td>
+                    <td className={cn("whitespace-nowrap p-2.5 text-[12.5px] font-bold tabular-nums", d.remaining > 0 ? (d.status === 'overdue' ? 'text-destructive' : 'text-warning') : '')}>
                       {d.kind === 'invoice' ? (d.remaining > 0 ? formatEGP(d.remaining) : '0') : '—'}
                     </td>
                     <td className="p-2.5">
@@ -175,7 +175,7 @@ export function CustomerPurchasesTab({ profile, customerName, customerPhone, onP
                       {d.paidPct !== null ? (
                         <div className="mt-1 w-20">
                           <div className="h-1 overflow-hidden rounded-full bg-muted"><div className={cn("h-full", lk.bar)} style={{ width: `${d.paidPct}%` }} /></div>
-                          <div className="mt-0.5 text-[10px] text-muted-foreground">مدفوع {d.paidPct}%</div>
+                          <div className="mt-0.5 text-[11px] text-muted-foreground">مدفوع {d.paidPct}%</div>
                         </div>
                       ) : <div className={cn("mt-1 h-1 w-20 rounded-full", lk.bar)} />}
                     </td>

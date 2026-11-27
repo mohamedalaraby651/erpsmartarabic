@@ -133,9 +133,9 @@ export function CustomerProfileSidebar({ profile, customerName, creditLimit, for
           <div className="relative shrink-0">
             <Donut paid={m.paid} overdue={m.overdueAmount} pending={pending} />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center leading-tight">
-              <span className="text-lg font-bold text-destructive">{formatEGP(m.outstanding).replace(/\s*ج\.م\.?/, '')}</span>
-              <span className="text-[10px] font-semibold text-destructive">ج.م مستحق</span>
-              {m.overdueAmount > 0 && <span className="text-[10px] font-semibold text-destructive">منه {formatEGP(m.overdueAmount)} متأخر</span>}
+              <span className="text-base font-bold tabular-nums text-destructive">{formatEGP(m.outstanding).replace(/\s*ج\.م\.?/, '')}</span>
+              <span className="text-[11px] font-semibold text-destructive">ج.م مستحق</span>
+              {m.overdueAmount > 0 && <span className="text-[11px] font-semibold text-destructive">منه {formatEGP(m.overdueAmount)} متأخر</span>}
             </div>
           </div>
           <ul className="flex-1 space-y-2 text-[13px]">

@@ -83,7 +83,7 @@ export function CustomerAttachmentsSection({ customerId, forceOpen }: { customer
               return (
                 <div key={a.id} className="flex items-center justify-between gap-2 rounded-xl border border-border p-2.5">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className={cn("flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg text-[9px] font-bold", img ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive")}>
+                    <span className={cn("flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg text-[11px] font-bold", img ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive")}>
                       {img ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}{img ? 'IMG' : 'PDF'}
                     </span>
                     <div className="min-w-0"><div className="truncate text-[13px] font-bold">{a.file_name}</div><div className="text-[11px] text-muted-foreground">{size(a.file_size)} · {fmtDate(a.created_at)}</div></div>

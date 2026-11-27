@@ -23,7 +23,7 @@ const CustomerTabPayments = lazy(() => import("@/components/customers/tabs/Custo
 const CustomerAgingReport = lazy(() => import("@/components/customers/details/CustomerAgingReport"));
 const CustomerReminderSection = lazy(() => import("@/components/customers/dialogs/CustomerReminderDialog"));
 
-export const PROFILE_TABS = ['statement', 'activity', 'purchases', 'payments', 'collection'] as const;
+export const PROFILE_TABS = ['statement', 'activity', 'payments', 'purchases', 'collection'] as const;
 const TAB_ICON: Record<string, LucideIcon> = { statement: List, activity: Activity, purchases: FileText, payments: CreditCard, collection: Target };
 const TAB_AR: Record<string, string> = { statement: 'كشف حساب', activity: 'سجل النشاط', purchases: 'المشتريات', payments: 'المدفوعات', collection: 'مركز التحصيل' };
 

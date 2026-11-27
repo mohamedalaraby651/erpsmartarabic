@@ -37,7 +37,7 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
     { id: 'attachments', label: 'المرفقات' },
   ] as const;
   const th = "p-2 text-start text-xs font-semibold text-muted-foreground";
-  const btn = "inline-flex h-7 items-center gap-1 rounded-full border border-border bg-card px-2.5 text-[11.5px] font-bold hover:bg-muted";
+  const btn = "inline-flex h-7 items-center gap-1 rounded-full border border-border bg-card px-2 text-[11.5px] font-bold hover:bg-muted";
 
   return (
     <div dir="rtl" className="space-y-3 bg-primary/[0.03] p-3">
@@ -78,7 +78,7 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
             {[['رقم الفاتورة', invoice.invoice_number], ['التاريخ', fmtDate(invoice.created_at)], ['الاستحقاق', fmtDate(invoice.due_date)],
               ['طريقة الدفع', days !== null && days > 0 ? `آجل · ${days} يوم` : 'نقدي'], ['المخزن', warehouse ?? '—'], ['الحالة', STATUS_AR[payStatus] ?? payStatus]].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between gap-2 border-b border-border px-1 py-2.5 [&:nth-last-child(-n+3)]:border-0">
-                <dt className="text-muted-foreground">{k}</dt><dd className="whitespace-nowrap font-bold">{v}</dd>
+                <dt className="text-muted-foreground">{k}</dt><dd className="whitespace-nowrap font-bold tabular-nums">{v}</dd>
               </div>
             ))}
           </dl>
@@ -99,9 +99,9 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
       </div>
 
       <div className="sticky bottom-2 z-10 rounded-xl border border-border bg-card p-2.5 shadow-md no-print">
-        <div dir="rtl" className="flex flex-nowrap items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&>*]:shrink-0 [&>*]:whitespace-nowrap">
-          <span className="text-xs font-bold text-muted-foreground">{invoice.invoice_number}</span>
-          {remaining > 0 && <button type="button" onClick={onPay} className="h-7 rounded-full bg-success px-3 text-[11.5px] font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة</button>}
+        <div dir="rtl" className="flex flex-nowrap items-center gap-1 [scrollbar-width:none] [&>*]:shrink-0 [&>*]:whitespace-nowrap">
+          <span className="text-xs font-bold tabular-nums text-muted-foreground">{invoice.invoice_number}</span>
+          {remaining > 0 && <button type="button" onClick={onPay} className="h-7 rounded-full bg-success px-2.5 text-[11.5px] font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة</button>}
           <button type="button" className={btn} onClick={openInvoice}><Printer className="h-3.5 w-3.5" />طباعة</button>
           <button type="button" className={btn} onClick={openInvoice}><Pencil className="h-3.5 w-3.5" />تعديل الفاتورة</button>
           <button type="button" className={btn} onClick={() => navigate('/credit-notes', { state: { prefillInvoiceId: invoice.id } })}>مرتجع جزئي</button>
