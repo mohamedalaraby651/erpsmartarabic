@@ -19,6 +19,10 @@ import { useSeo } from "@/hooks/useSeo";
 import { buildOgImageUrl } from "@/lib/seo/ogImage";
 import { useAnnouncer } from "@/hooks/useAnnouncer";
 import CreditNoteFormDialog from "@/components/credit-notes/CreditNoteFormDialog";
+import PaymentFormDialog from "@/components/payments/PaymentFormDialog";
+import InvoiceFormDialog from "@/components/invoices/InvoiceFormDialog";
+import { InvoicePrintView } from "@/components/print/InvoicePrintView";
+import type { Database } from "@/integrations/supabase/types";
 import { CustomerProfileDesktop } from "@/components/customers/profile/CustomerProfileDesktop";
 import { CustomerSmartAlerts } from "@/components/customers/details/CustomerSmartAlerts";
 import { CustomerPinnedNote } from "@/components/customers/details/CustomerPinnedNote";
@@ -504,6 +508,10 @@ const CustomerDetailsPage = () => {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<CustomerAddress | null>(null);
   const [creditNoteDialogOpen, setCreditNoteDialogOpen] = useState(false);
+  const [returnInvoiceId, setReturnInvoiceId] = useState<string | undefined>();
+  const [payDialog, setPayDialog] = useState<{ open: boolean; invoiceId?: string }>({ open: false });
+  const [invoiceDialog, setInvoiceDialog] = useState<{ open: boolean; invoice: Database['public']['Tables']['invoices']['Row'] | null }>({ open: false, invoice: null });
+  const [printInvoiceId, setPrintInvoiceId] = useState<string | null>(null);
   const { data: upcomingReminders = 0 } = useUpcomingReminders(id);
 
   // ── Cross-device URL ↔ tab/section mapping ───────────────────────────
@@ -632,6 +640,12 @@ const CustomerDetailsPage = () => {
 
   const customer = detail.customer;
 
+  const refreshProfile = () => {
+    for (const k of ['customer', 'customer-invoices', 'customer-invoices-paginated', 'customer-payments', 'customer-payments-paginated', 'customer-financial-summary', 'customer-credit-notes', 'customer-activities', 'customer-chart-data']) {
+      queryClient.invalidateQueries({ queryKey: [k, id] });
+    }
+  };
+
   const handleQuickPay = (invoiceId: string) => {
     navigate('/payments', { state: { prefillCustomerId: id, prefillInvoiceId: invoiceId } });
   };
@@ -690,9 +704,12 @@ const CustomerDetailsPage = () => {
           customer={customer} customerId={id!} detail={detail}
           tab={detail.activeTab} onTabChange={handleTabChange}
           onEdit={() => setEditDialogOpen(true)}
-          onPay={(invoiceId) => invoiceId ? handleQuickPay(invoiceId) : navigate('/payments', { state: { prefillCustomerId: id } })}
-          onNewInvoice={() => navigate('/invoices', { state: { prefillCustomerId: id } })}
+          onPay={(invoiceId) => setPayDialog({ open: true, invoiceId })}
+          onNewInvoice={() => setInvoiceDialog({ open: true, invoice: null })}
           onWhatsApp={handleWhatsApp}
+          onPrintInvoice={setPrintInvoiceId}
+          onEditInvoice={(inv) => setInvoiceDialog({ open: true, invoice: inv })}
+          onReturn={(invoiceId) => { setReturnInvoiceId(invoiceId); setCreditNoteDialogOpen(true); }}
         />
       )}
 
@@ -700,15 +717,27 @@ const CustomerDetailsPage = () => {
       <CustomerAddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} customerId={id!} address={selectedAddress} />
       <CreditNoteFormDialog
         open={creditNoteDialogOpen}
-        onOpenChange={setCreditNoteDialogOpen}
+        onOpenChange={(v) => { setCreditNoteDialogOpen(v); if (!v) setReturnInvoiceId(undefined); }}
         prefillCustomerId={id}
+        prefillInvoiceId={returnInvoiceId}
         onSuccess={() => {
           setCreditNoteDialogOpen(false);
+          refreshProfile();
           queryClient.invalidateQueries({ queryKey: ['customer-credit-notes', id] });
           queryClient.invalidateQueries({ queryKey: ['customer-financial-summary', id] });
           toast({ title: 'تم إنشاء إشعار الإرجاع بنجاح' });
         }}
       />
+
+      {!isMobile && (
+        <>
+          <PaymentFormDialog open={payDialog.open} prefillCustomerId={id} prefillInvoiceId={payDialog.invoiceId}
+            onOpenChange={(v) => { setPayDialog((s) => ({ ...s, open: v })); if (!v) refreshProfile(); }} />
+          <InvoiceFormDialog open={invoiceDialog.open} invoice={invoiceDialog.invoice} prefillCustomerId={id}
+            onOpenChange={(v) => { setInvoiceDialog((s) => ({ ...s, open: v })); if (!v) refreshProfile(); }} />
+          {printInvoiceId && <InvoicePrintView invoiceId={printInvoiceId} open onOpenChange={(v) => { if (!v) setPrintInvoiceId(null); }} />}
+        </>
+      )}
 
       {/* Pull-to-refresh على الموبايل */}
       {isMobile && (

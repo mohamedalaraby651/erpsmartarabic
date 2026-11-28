@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 import { lazy, Suspense, useCallback, useState } from "react";
 import { flushSync } from "react-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,9 +32,10 @@ interface Props {
   customer: Customer; customerId: string; detail: ReturnType<typeof useCustomerDetail>;
   tab: string; onTabChange: (t: string) => void;
   onEdit: () => void; onPay: (invoiceId?: string) => void; onNewInvoice: () => void; onWhatsApp: () => void;
+  onPrintInvoice: (id: string) => void; onEditInvoice: (inv: Database['public']['Tables']['invoices']['Row']) => void; onReturn: (id: string) => void;
 }
 
-export function CustomerProfileDesktop({ customer, customerId, detail, tab, onTabChange, onEdit, onPay, onNewInvoice, onWhatsApp }: Props) {
+export function CustomerProfileDesktop({ customer, customerId, detail, tab, onTabChange, onEdit, onPay, onNewInvoice, onWhatsApp, onPrintInvoice, onEditInvoice, onReturn }: Props) {
   const profile = useCustomerProfileV19(customerId, customer.credit_limit);
   const [printing, setPrinting] = useState(false);
   const [promiseOpen, setPromiseOpen] = useState(false);
@@ -84,7 +86,8 @@ export function CustomerProfileDesktop({ customer, customerId, detail, tab, onTa
               <TabsContent value="activity" className="mt-3"><CustomerTabActivity activities={detail.activities} /></TabsContent>
               <TabsContent value="purchases" className="mt-3" forceMount={printing ? true : undefined}>
                 <CustomerPurchasesTab profile={profile} customerName={customer.name} customerPhone={customer.phone} onPay={onPay}
-                  onPrintStatement={() => onTabChange('statement')} forceOpen={printing} />
+                  onPrintStatement={() => onTabChange('statement')} forceOpen={printing}
+                  onPrintInvoice={onPrintInvoice} onEditInvoice={onEditInvoice} onReturn={onReturn} />
               </TabsContent>
               <TabsContent value="payments" className="mt-3">
                 <CustomerTabPayments payments={detail.payments} customerId={customerId} paginatedData={detail.paginatedPayments} currentPage={detail.paymentPage} pageSize={detail.paymentPageSize} onPageChange={detail.goToPaymentPage} />

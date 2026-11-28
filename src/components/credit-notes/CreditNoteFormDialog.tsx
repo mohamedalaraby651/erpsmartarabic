@@ -45,6 +45,8 @@ interface Props {
   onSuccess: () => void;
   /** Prefill the customer when opening the dialog (e.g. from a customer profile) */
   prefillCustomerId?: string;
+  /** Prefill the invoice to return against (customer profile in-place return) */
+  prefillInvoiceId?: string;
 }
 
 interface ReturnLine {
@@ -65,7 +67,7 @@ interface ReturnLine {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, prefillCustomerId }: Props) {
+export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, prefillCustomerId, prefillInvoiceId }: Props) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [lines, setLines] = useState<ReturnLine[]>([]);
@@ -77,8 +79,8 @@ export default function CreditNoteFormDialog({ open, onOpenChange, onSuccess, pr
   const createDraftMutation = useCreateCreditNoteDraft();
   const { form, submit, isSubmitting, reset: resetHeader } = useFormDialog({
     schema: z.object({ customerId: z.string().min(1, 'اختر العميل'), invoiceId: z.string().min(1, 'اختر الفاتورة'), reason: z.string() }),
-    entity: prefillCustomerId || null,
-    toValues: () => ({ customerId: prefillCustomerId || '', invoiceId: '', reason: '' }),
+    entity: prefillCustomerId ? `${prefillCustomerId}:${prefillInvoiceId || ''}` : null,
+    toValues: () => ({ customerId: prefillCustomerId || '', invoiceId: prefillInvoiceId || '', reason: '' }),
     toPayload: values => values,
     mutationFn: async () => { await submitDraft(); },
     onSuccess: () => {

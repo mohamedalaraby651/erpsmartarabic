@@ -29,9 +29,9 @@ function look(d: Doc): { tone: Tone; bar: string; icon: LucideIcon; label: strin
   return { tone: 'muted', bar: 'bg-border-strong', icon: Clock, label: STATUS_AR[d.status] ?? d.status };
 }
 
-interface Props { profile: CustomerProfileV19; customerName: string; customerPhone?: string | null; onPay: (invoiceId?: string) => void; onPrintStatement: () => void; forceOpen?: boolean }
+interface Props { profile: CustomerProfileV19; customerName: string; customerPhone?: string | null; onPay: (invoiceId?: string) => void; onPrintStatement: () => void; forceOpen?: boolean; onPrintInvoice: (id: string) => void; onEditInvoice: (inv: Invoice) => void; onReturn: (id: string) => void }
 
-export function CustomerPurchasesTab({ profile, customerName, customerPhone, onPay, onPrintStatement, forceOpen }: Props) {
+export function CustomerPurchasesTab({ profile, customerName, customerPhone, onPay, onPrintStatement, forceOpen, onPrintInvoice, onEditInvoice, onReturn }: Props) {
   const [q, setQ] = useState(''); const [status, setStatus] = useState('all'); const [kind, setKind] = useState<'all' | Kind>('all');
   const [last3, setLast3] = useState(true); const [showFilters, setShowFilters] = useState(false);
   const [open, setOpen] = useState<string | null>(null); const [sel, setSel] = useState<Set<string>>(new Set());
@@ -130,7 +130,7 @@ export function CustomerPurchasesTab({ profile, customerName, customerPhone, onP
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-[13px] no-print">
           <span className="flex items-center gap-2"><Check className="h-4 w-4 rounded bg-primary p-0.5 text-primary-foreground" />تم تحديد <b className="text-primary">{sel.size} فاتورة</b> · إجمالي المتبقي <b className="text-primary">{formatEGP(selRemaining)}</b></span>
           <span className="flex gap-2">
-            <button type="button" onClick={() => onPay()} className="h-8 rounded-full bg-success px-4 text-xs font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة واحدة للمحدد</button>
+            <button type="button" onClick={() => onPay(sel.size === 1 ? [...sel][0] : undefined)} className="h-8 rounded-full bg-success px-4 text-xs font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة واحدة للمحدد</button>
             <button type="button" onClick={onPrintStatement} className="h-8 rounded-full border border-border bg-card px-4 text-xs font-bold hover:bg-muted">طباعة كشف</button>
             <button type="button" onClick={() => setSel(new Set())} className="h-8 px-2 text-xs font-bold text-destructive hover:underline">إلغاء التحديد</button>
           </span>
@@ -191,7 +191,8 @@ export function CustomerPurchasesTab({ profile, customerName, customerPhone, onP
                   {isOpen && inv && (
                     <tr className="border-b-2 border-primary"><td colSpan={9} className="p-0">
                       <ExpandableInvoiceRow invoice={inv} customerName={customerName} customerPhone={customerPhone} payments={profile.payments.filter((p) => p.invoice_id === inv.id)}
-                        returns={profile.creditNotes.filter((c) => c.invoice_id === inv.id)} onPay={() => onPay(inv.id)} />
+                        returns={profile.creditNotes.filter((c) => c.invoice_id === inv.id)} onPay={() => onPay(inv.id)}
+                        onPrint={() => onPrintInvoice(inv.id)} onEdit={() => onEditInvoice(inv)} onReturn={() => onReturn(inv.id)} />
                     </td></tr>
                   )}
                 </Fragment>

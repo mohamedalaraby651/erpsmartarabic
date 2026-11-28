@@ -18,9 +18,9 @@ type Payment = Database['public']['Tables']['payments']['Row'];
 type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
 const STATUS_AR: Record<string, string> = { paid: 'مدفوعة', partial: 'سداد جزئي', pending: 'غير مدفوعة', overdue: 'متأخرة', cancelled: 'ملغاة', draft: 'مسودة', approved: 'معتمدة', posted: 'مرحّلة' };
 
-interface Props { invoice: Invoice; customerName: string; customerPhone?: string | null; payments: Payment[]; returns: CreditNote[]; onPay: () => void }
+interface Props { invoice: Invoice; customerName: string; customerPhone?: string | null; payments: Payment[]; returns: CreditNote[]; onPay: () => void; onPrint: () => void; onEdit: () => void; onReturn: () => void }
 
-export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, payments, returns, onPay }: Props) {
+export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, payments, returns, onPay, onPrint, onEdit, onReturn }: Props) {
   const navigate = useNavigate();
   const [tab, setTab] = useState<'items' | 'payments' | 'returns' | 'notes' | 'attachments'>('items');
   const { data: lines = [], isLoading } = useQuery({ queryKey: ['invoice-lines', invoice.id], queryFn: () => customerProfileRepository.invoiceLines(invoice.id) });
@@ -72,7 +72,7 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
         <section className="rounded-xl border border-border bg-card p-3 print-card">
           <div className="mb-2 flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-[15px] font-bold"><TintedIcon icon={FileText} tone="primary" />بيانات الفاتورة</h4>
-            <button type="button" onClick={openInvoice} aria-label="تعديل الفاتورة" className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted no-print"><Pencil className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={onEdit} aria-label="تعديل الفاتورة" className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted no-print"><Pencil className="h-3.5 w-3.5" /></button>
           </div>
           <dl dir="rtl" className="grid grid-cols-[minmax(max-content,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] gap-x-4 text-[13px]">
             {[['رقم الفاتورة', invoice.invoice_number], ['التاريخ', fmtDate(invoice.created_at)], ['الاستحقاق', fmtDate(invoice.due_date)],
@@ -102,14 +102,14 @@ export function ExpandableInvoiceRow({ invoice, customerName, customerPhone, pay
         <div dir="rtl" className="flex flex-nowrap items-center gap-1 [scrollbar-width:none] [&>*]:shrink-0 [&>*]:whitespace-nowrap">
           <span className="text-xs font-bold tabular-nums text-muted-foreground">{invoice.invoice_number}</span>
           {remaining > 0 && <button type="button" onClick={onPay} className="h-7 rounded-full bg-success px-2.5 text-[11.5px] font-bold text-success-foreground hover:bg-success/90">تسجيل دفعة</button>}
-          <button type="button" className={btn} onClick={openInvoice}><Printer className="h-3.5 w-3.5" />طباعة</button>
-          <button type="button" className={btn} onClick={openInvoice}><Pencil className="h-3.5 w-3.5" />تعديل الفاتورة</button>
-          <button type="button" className={btn} onClick={() => navigate('/credit-notes', { state: { prefillInvoiceId: invoice.id } })}>مرتجع جزئي</button>
+          <button type="button" className={btn} onClick={onPrint}><Printer className="h-3.5 w-3.5" />طباعة</button>
+          <button type="button" className={btn} onClick={onEdit}><Pencil className="h-3.5 w-3.5" />تعديل الفاتورة</button>
+          <button type="button" className={btn} onClick={onReturn}>مرتجع جزئي</button>
           <button type="button" className={cn(btn, "border-2 border-success text-success hover:bg-success/10")}
             onClick={() => openWhatsApp(customerPhone, `السيد/ ${customerName}، فاتورة ${invoice.invoice_number} بقيمة ${formatEGP(Number(invoice.total_amount))}، المتبقي ${formatEGP(remaining)}.`)}>
             <MessageCircle className="h-3.5 w-3.5" />إرسال للعميل
           </button>
-          <button type="button" className={btn} onClick={openInvoice}>PDF</button>
+          <button type="button" className={btn} onClick={onPrint}>PDF</button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button type="button" className={btn}>المزيد<MoreHorizontal className="h-3.5 w-3.5" /></button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
